@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "docker-compose run --rm --no-deps defindex-soroban make build"
+    "build": "docker-compose run --rm --no-deps defindex-soroban make build",
+    "dev": "echo HELLOOOOOOO"
   },
   "dependencies": {},
   "devDependencies": {}
