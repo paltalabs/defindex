@@ -8,7 +8,7 @@
     }
   },
   "scripts": {
-    "dev": "NODE_ENV=development next dev",
+    "dev": "NODE_ENV=development next dev -p 3050",
     "node": "pnpm run -F contracts node",
     "dev-and-node": "concurrently \"pnpm dev\" \"pnpm node\" --names \"Next,Node\" --kill-others",
     "build": "NODE_ENV=production next build",
