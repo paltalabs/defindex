@@ -9,6 +9,17 @@ services:
       - defindex-network
     command: tail -f /dev/null
 
+  stellar:
+    image: stellar/quickstart:latest@sha256:b7f5a1b2c8ec06cb30a1b79b377ad2bc762cf8cb69ce1fcf7b91185b2acd8a15
+    container_name: stellar
+    networks:
+      - defindex-network
+    ports:
+      - "8000:8000"
+    command: --local --enable-soroban-diagnostic-events
+    stdin_open: true
+    tty: true
+
 networks:
   defindex-network:
     driver: bridge

@@ -1,14 +1,34 @@
-# Turborepo starter
+# DeFindex Monorepo
 
-This is an official starter Turborepo.
+## Smart contracts
 
-## Using this example
-
-Run the following command:
+To build the smart contracts simple run
 
 ```sh
-npx create-turbo@latest
+yarn build --filter contracts
 ```
+
+from the src directory
+
+### development
+
+To test and develop the smart contracts first you would need to start the docker containers by running
+
+```sh
+docker compose up -d
+```
+
+This will start a standalone stellar instance where you can deploy and test smart contracts
+
+now you can attach into the docker container by running
+
+```sh
+docker exec --tty --interactive defindex-soroban bash
+```
+
+while inside the docker container you can deploy build and test the smart contracts
+
+to build while being inside the container simply run `make build`
 
 ## What's inside?
 
@@ -40,42 +60,3 @@ To build all apps and packages, run the following command:
 cd my-turborepo
 pnpm build
 ```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-pnpm dev
-```
-
-### Remote Caching
-
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup), then enter the following commands:
-
-```
-cd my-turborepo
-npx turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-npx turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turbo.build/repo/docs/core-concepts/monorepos/running-tasks)
-- [Caching](https://turbo.build/repo/docs/core-concepts/caching)
-- [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching)
-- [Filtering](https://turbo.build/repo/docs/core-concepts/monorepos/filtering)
-- [Configuration Options](https://turbo.build/repo/docs/reference/configuration)
-- [CLI Usage](https://turbo.build/repo/docs/reference/command-line-reference)

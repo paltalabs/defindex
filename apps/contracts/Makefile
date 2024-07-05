@@ -1,4 +1,4 @@
-SUBDIRS = $(shell find . -maxdepth 1 -mindepth 1 -type d | grep -v node_modules | grep -v target | grep -v dist | xargs echo)
+SUBDIRS = $(shell find . -maxdepth 1 -mindepth 1 -type d | grep -v node_modules | grep -v target | grep -v dist | grep -v .turbo | xargs echo)
 default: build
 
 all: adapters defindex factory

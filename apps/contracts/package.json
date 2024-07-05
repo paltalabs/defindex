@@ -2,7 +2,9 @@
   "name": "contracts",
   "version": "0.1.0",
   "private": true,
-  "scripts": {},
+  "scripts": {
+    "build": "docker-compose run --rm --no-deps defindex-soroban make build"
+  },
   "dependencies": {},
   "devDependencies": {}
 }
