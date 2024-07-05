@@ -1,0 +1,14 @@
+services:
+  defindex-soroban:
+    image: esteblock/soroban-preview:21.0.1
+    container_name: defindex-soroban
+    volumes:
+      - ./apps/contracts:/workspace
+    ipc: host
+    networks:
+      - defindex-network
+    command: tail -f /dev/null
+
+networks:
+  defindex-network:
+    driver: bridge
