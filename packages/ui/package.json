@@ -3,23 +3,39 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
+    "./wasd": "./src/wasd.tsx",
+    "./test": "./src/test.tsx",
     "./button": "./src/button.tsx",
     "./card": "./src/card.tsx",
     "./code": "./src/code.tsx"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",
-    "generate:component": "turbo gen react-component"
+    "generate:component": "turbo gen react-component",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "devDependencies": {
+    "@chromatic-com/storybook": "^1.6.1",
     "@repo/eslint-config": "*",
     "@repo/typescript-config": "*",
+    "@storybook/addon-essentials": "8.1.10",
+    "@storybook/addon-interactions": "8.1.10",
+    "@storybook/addon-links": "8.1.10",
+    "@storybook/addon-onboarding": "8.1.10",
+    "@storybook/addon-webpack5-compiler-swc": "^1.0.4",
+    "@storybook/blocks": "8.1.10",
+    "@storybook/react": "8.1.10",
+    "@storybook/react-webpack5": "8.1.10",
+    "@storybook/test": "8.1.10",
     "@turbo/gen": "^1.12.4",
-    "@types/node": "^20.11.24",
     "@types/eslint": "^8.56.5",
+    "@types/node": "^20.11.24",
     "@types/react": "^18.2.61",
     "@types/react-dom": "^18.2.19",
     "eslint": "^8.57.0",
+    "eslint-plugin-storybook": "^0.8.0",
+    "storybook": "8.1.10",
     "typescript": "^5.3.3"
   },
   "dependencies": {
