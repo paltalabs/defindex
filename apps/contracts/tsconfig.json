@@ -1,18 +1,14 @@
-// {
-//   "extends": "@repo/typescript-config/nextjs.json",
-//   "compilerOptions": {
-//     "plugins": [
-//       {
-//         "name": "next"
-//       }
-//     ]
-//   },
-//   "include": [
-//     "next-env.d.ts",
-//     "next.config.js",
-//     "**/*.ts",
-//     "**/*.tsx",
-//     ".next/types/**/*.ts"
-//   ],
-//   "exclude": ["node_modules"]
-// }
+{
+  "compilerOptions": {
+    "lib": ["es2023"],
+    "module": "node16",
+    "target": "es2022",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node16",
+    "outDir": "./dist"
+  },
+  "include": ["src", "dist"]
+}
