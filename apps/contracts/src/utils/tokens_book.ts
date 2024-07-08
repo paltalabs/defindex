@@ -1,10 +1,9 @@
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { existsSync, readFileSync, writeFileSync } from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
 
 export interface Asset {
   name: string;
@@ -29,26 +28,29 @@ export class TokensBook {
     this.fileName = fileName;
   }
 
-  static loadFromFile(tokensBookPath: string = '../../.soroban', fileName: string = 'tokens.json') {
+  static loadFromFile(
+    tokensBookPath: string = "../../.soroban",
+    fileName: string = "tokens.json"
+  ) {
     const filePath = path.join(__dirname, tokensBookPath, fileName);
     let networks: NetworkTokens[];
 
     if (existsSync(filePath)) {
-      const fileContent = readFileSync(filePath, { encoding: 'utf-8' });
+      const fileContent = readFileSync(filePath, { encoding: "utf-8" });
       networks = JSON.parse(fileContent);
     } else {
       // If the file doesn't exist, create a new empty array for networks
       networks = [
         {
-          network: 'mainnet',
+          network: "mainnet",
           assets: [],
         },
         {
-          network: 'testnet',
+          network: "testnet",
           assets: [],
         },
         {
-          network: 'standalone',
+          network: "standalone",
           assets: [],
         },
       ];
@@ -58,7 +60,7 @@ export class TokensBook {
   }
 
   writeToFile() {
-    const filePath = path.join(__dirname, '../../.soroban/', this.fileName);
+    const filePath = path.join(__dirname, "../../.soroban/", this.fileName);
     const fileContent = JSON.stringify(this.networks, null, 2);
     writeFileSync(filePath, fileContent);
   }
@@ -66,7 +68,9 @@ export class TokensBook {
   addToken(networkName: string, token: Asset) {
     const network = this.networks.find((n) => n.network === networkName);
     if (network) {
-      const tokenExists = network.assets.some((t) => t.contract === token.contract);
+      const tokenExists = network.assets.some(
+        (t) => t.contract === token.contract
+      );
 
       if (!tokenExists) {
         network.assets.push(token);
@@ -82,7 +86,9 @@ export class TokensBook {
   prependToken(networkName: string, token: Asset) {
     const network = this.networks.find((n) => n.network === networkName);
     if (network) {
-      const tokenExists = network.assets.some((t) => t.contract === token.contract);
+      const tokenExists = network.assets.some(
+        (t) => t.contract === token.contract
+      );
 
       if (!tokenExists) {
         network.assets.unshift(token);
@@ -101,7 +107,9 @@ export class TokensBook {
   }
 
   resetNetworkTokens(networkName: string) {
-    const networkIndex = this.networks.findIndex((n) => n.network === networkName);
+    const networkIndex = this.networks.findIndex(
+      (n) => n.network === networkName
+    );
     if (networkIndex !== -1) {
       this.networks[networkIndex].assets = [];
     } else {

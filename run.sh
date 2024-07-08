@@ -1,0 +1,1 @@
+docker exec --tty --interactive defindex-soroban bash

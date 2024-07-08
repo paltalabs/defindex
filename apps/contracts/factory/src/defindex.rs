@@ -16,7 +16,10 @@ pub fn create_contract(
     let mut salt = Bytes::new(e);
 
     // Append the bytes of the address and name to the salt
-    salt.append(&adapters.clone().to_xdr(e)); 
+    salt.append(&adapters.clone().to_xdr(e));     
+    
+    // let mut value = [0u8; 32];
+    // env.prng().fill(&mut value);
 
     // Use the deployer() method of the current environment to create a new contract instance
     e.deployer()

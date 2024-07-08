@@ -1,6 +1,6 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,7 +10,11 @@ export class AddressBook {
   private hashes: Map<string, string>;
   private fileName: string;
 
-  constructor(ids: Map<string, string>, hashes: Map<string, string>, fileName: string) {
+  constructor(
+    ids: Map<string, string>,
+    hashes: Map<string, string>,
+    fileName: string
+  ) {
     this.ids = ids;
     this.hashes = hashes;
     this.fileName = fileName;
@@ -22,7 +26,10 @@ export class AddressBook {
    * @param network - The network to load the contracts for
    * @returns Contracts object loaded based on the network
    */
-  static loadFromFile(network: string, addressBookPath: string = '../../.soroban') {
+  static loadFromFile(
+    network: string,
+    addressBookPath: string = "../../.soroban"
+  ) {
     const fileName = `${addressBookPath}/${network}.contracts.json`;
     try {
       const contractFile = readFileSync(path.join(__dirname, fileName));
@@ -42,7 +49,7 @@ export class AddressBook {
    * Write the current address book to a file
    */
   writeToFile() {
-    const dirPath = path.join(__dirname, '../../.soroban/');
+    const dirPath = path.join(__dirname, "../../.soroban/");
     const filePath = path.join(__dirname, this.fileName);
 
     if (!existsSync(dirPath)) {
@@ -54,7 +61,7 @@ export class AddressBook {
       (key, value) => {
         if (value instanceof Map) {
           return Object.fromEntries(value);
-        } else if (key !== 'fileName') {
+        } else if (key !== "fileName") {
           // Use strict inequality
           return value;
         }
@@ -76,7 +83,9 @@ export class AddressBook {
     if (contractId != undefined) {
       return contractId;
     } else {
-      console.error(`unable to find address for ${contractKey} in ${this.fileName}`);
+      console.error(
+        `unable to find address for ${contractKey} in ${this.fileName}`
+      );
       throw Error();
     }
   }
@@ -101,7 +110,9 @@ export class AddressBook {
     if (washHash != undefined) {
       return washHash;
     } else {
-      console.error(`unable to find hash for ${contractKey} in ${this.fileName}`);
+      console.error(
+        `unable to find hash for ${contractKey} in ${this.fileName}`
+      );
       throw Error();
     }
   }

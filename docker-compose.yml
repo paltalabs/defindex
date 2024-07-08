@@ -16,7 +16,7 @@ services:
       - defindex-network
     ports:
       - "8000:8000"
-    command: --local --enable-soroban-diagnostic-events
+    command: --local --enable-soroban-rpc --enable-soroban-diagnostic-events
     stdin_open: true
     tty: true
 

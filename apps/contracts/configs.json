@@ -8,19 +8,22 @@
     {
       "network": "standalone",
       "friendbot_url": "http://stellar:8000/friendbot",
+      "horizon_rpc_url": "http://stellar:8000",
       "soroban_rpc_url": "http://stellar:8000/soroban/rpc",
       "soroban_network_passphrase": "Standalone Network ; February 2017"
     },
     {
       "network": "futurenet",
       "friendbot_url": "https://friendbot-futurenet.stellar.org/",
+      "horizon_rpc_url": "https://horizon-futurenet.stellar.org",
       "soroban_rpc_url": "https://rpc-futurenet.stellar.org/",
       "soroban_network_passphrase": "Test SDF Future Network ; October 2022"
     },
     {
       "network": "testnet",
       "friendbot_url": "https://friendbot.stellar.org/",
-      "soroban_rpc_url": "https://soroban-testnet.stellar.org/",
+      "horizon_rpc_url": "https://horizon-testnet.stellar.org",
+      "soroban_rpc_url": "https://testnet.stellar.validationcloud.io/v1/Mewk7YPYiUy3wAlDNlQsIhwxbdumICRYrz2tXS2vOck",
       "soroban_network_passphrase": "Test SDF Network ; September 2015"
     }
   ]

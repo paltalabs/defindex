@@ -23,6 +23,8 @@ This will start a standalone stellar instance where you can deploy and test smar
 now you can attach into the docker container by running
 
 ```sh
+bash run.sh
+# or
 docker exec --tty --interactive defindex-soroban bash
 ```
 
