@@ -1,0 +1,7 @@
+{
+  "out": "./docs",
+  "name": "DeFindex SDK",
+  "theme": "default",
+  "entryPoints": ["src/defindex"],
+  "exclude": ["**/node_modules/**", "**/*.test.ts"]
+}
