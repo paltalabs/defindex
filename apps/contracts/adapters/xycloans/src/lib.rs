@@ -1,19 +1,17 @@
 #![no_std]
-use soroban_sdk::{
-    auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation}, contract, contractimpl, vec, Address, Env, IntoVal, String, Symbol, Val, Vec};
 
 mod event;
 mod storage;
 mod soroswap_router;
 mod xycloans_pool;
 
+use soroban_sdk::{auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation}, contract, contractimpl, vec, Address, Env, IntoVal, Symbol, Val, Vec};
 use storage::{
     extend_instance_ttl, get_soroswap_router_address, get_token_0_address, get_token_1_address, get_xycloans_pool_address, is_initialized, set_initialized, set_soroswap_router_address, set_token_0_address, set_token_1_address, set_xycloans_pool_address
 };
 use soroswap_router::SoroswapRouterClient;
 use xycloans_pool::XycloansPoolClient;
-use defindex_adapter_interface::{DeFindexAdapterTrait, AdapterError};
-
+use defindex_adapter_interface::{AdapterError, DeFindexAdapterTrait};
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), AdapterError> {
     if amount < 0 {
@@ -94,8 +92,8 @@ impl DeFindexAdapterTrait for XycloansAdapter {
         let pair_address = soroswap_router_client.router_pair_for(&token_0_address, &token_1_address);
 
         let mut path: Vec<Address> = Vec::new(&e);
-        path.push_back(token_0_address.clone());
         path.push_back(token_1_address.clone());
+        path.push_back(token_0_address.clone());
 
         let mut args: Vec<Val> = vec![&e];
         args.push_back(from.into_val(&e));
@@ -106,7 +104,7 @@ impl DeFindexAdapterTrait for XycloansAdapter {
             &e,
             InvokerContractAuthEntry::Contract( SubContractInvocation {
                 context: ContractContext {
-                    contract: token_0_address.clone(),
+                    contract: token_1_address.clone(),
                     fn_name: Symbol::new(&e, "transfer"),
                     args: args.clone(),
                 },
@@ -159,7 +157,8 @@ impl DeFindexAdapterTrait for XycloansAdapter {
         e: Env,
         from: Address,
     ) -> Result<i128, AdapterError> {
-        // Constants
+        check_initialized(&e)?;
+
         let xycloans_address = get_xycloans_pool_address(&e);
         let xycloans_pool_client = XycloansPoolClient::new(&e, &xycloans_address);
         
@@ -171,3 +170,5 @@ impl DeFindexAdapterTrait for XycloansAdapter {
         Ok(total)
     }
 }
+
+mod test;

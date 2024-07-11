@@ -1,4 +1,4 @@
 soroban_sdk::contractimport!(
-  file = "./xycloans_pool.wasm"
+  file = "../external_wasms/xycloans/xycloans_pool.wasm"
 );
 pub type XycloansPoolClient<'a> = Client<'a>;
