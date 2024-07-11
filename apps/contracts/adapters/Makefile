@@ -1,4 +1,4 @@
-SUBDIRS = $(shell find . -maxdepth 1 -mindepth 1 -type d | grep -v ./interface | xargs echo)
+SUBDIRS = $(shell find . -maxdepth 1 -mindepth 1 -type d | grep -v ./interface | grep -v ./external_wasms | xargs echo)
 default: build
 
 all: soroswap
