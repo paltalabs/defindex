@@ -174,3 +174,4 @@ impl<'a> XycloansAdapterTest<'a> {
 }
 
 mod initialize;
+mod deposit;

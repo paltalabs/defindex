@@ -73,7 +73,7 @@ impl InitializeTrait for XycloansAdapter {
 impl DeFindexAdapterTrait for XycloansAdapter {
     fn deposit(
         e: Env,
-        usdc_amount: i128,
+        usdc_amount: i128, //TODO: change to amount
         from: Address,
     ) -> Result<(), AdapterError> {
         check_initialized(&e)?;
@@ -150,6 +150,8 @@ impl DeFindexAdapterTrait for XycloansAdapter {
         xycloans_pool_client.update_fee_rewards(&from);
         xycloans_pool_client.withdraw_matured(&from);
 
+        // SWAP XLM TO USDC and return USDC
+
         Ok(())
     }
 
@@ -166,6 +168,8 @@ impl DeFindexAdapterTrait for XycloansAdapter {
         let matured: i128 = xycloans_pool_client.matured(&from);
         
         let total: i128 = shares.checked_add(matured).unwrap();
+
+        // XLM TO USDC QUOTE from SOROSWAP
     
         Ok(total)
     }

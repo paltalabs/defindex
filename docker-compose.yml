@@ -1,6 +1,6 @@
 services:
   defindex-soroban:
-    image: esteblock/soroban-preview:21.0.1
+    image: esteblock/soroban-preview:21.0.1@sha256:b2345967694194c07bc35e03f584788eff95e973659daa3f8ce324fdc621ca13
     container_name: defindex-soroban
     volumes:
       - ./apps/contracts:/workspace
