@@ -6,6 +6,7 @@ use soroban_sdk::{contracttype, Env, Address};
 enum DataKey {
     Initialized,
     SoroswapRouterAddress,
+    SoroswapFactoryAddress,
     XycloansPoolAddress,
     Token0,
     Token1
@@ -38,6 +39,15 @@ pub fn get_soroswap_router_address(e: &Env) -> Address {
     e.storage().instance().get(&DataKey::SoroswapRouterAddress).unwrap()
 }
 
+// Soroswap Factory Address
+pub fn set_soroswap_factory_address(e: &Env, address: Address) {
+    e.storage().instance().set(&DataKey::SoroswapFactoryAddress, &address);
+}
+
+pub fn get_soroswap_factory_address(e: &Env) -> Address {
+    e.storage().instance().get(&DataKey::SoroswapFactoryAddress).unwrap()
+}
+
 // Xycloans Pool Address
 pub fn set_xycloans_pool_address(e: &Env, address: Address) {
     e.storage().instance().set(&DataKey::XycloansPoolAddress, &address);
@@ -48,18 +58,18 @@ pub fn get_xycloans_pool_address(e: &Env) -> Address {
 }
 
 // Tokens
-pub fn set_token_0_address(e: &Env, address: Address) {
+pub fn set_pool_token(e: &Env, address: Address) {
     e.storage().instance().set(&DataKey::Token0, &address);
 }
 
-pub fn get_token_0_address(e: &Env) -> Address {
+pub fn get_pool_token(e: &Env) -> Address {
     e.storage().instance().get(&DataKey::Token0).unwrap()
 }
 
-pub fn set_token_1_address(e: &Env, address: Address) {
+pub fn set_token_in(e: &Env, address: Address) {
     e.storage().instance().set(&DataKey::Token1, &address);
 }
 
-pub fn get_token_1_address(e: &Env) -> Address {
+pub fn get_token_in(e: &Env) -> Address {
     e.storage().instance().get(&DataKey::Token1).unwrap()
 }

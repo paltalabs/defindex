@@ -25,5 +25,5 @@ pub trait DeFindexAdapterTrait {
     fn withdraw(
         e: Env,
         from: Address,
-    ) -> Result<(), AdapterError>;
+    ) -> Result<i128, AdapterError>;
 }

@@ -137,7 +137,7 @@ impl DeFindexAdapterTrait for SoroswapAdapter {
     fn withdraw(
         e: Env,
         from: Address,
-    ) -> Result<(), AdapterError> {
+    ) -> Result<i128, AdapterError> {
         from.require_auth();
         check_initialized(&e)?;
         extend_instance_ttl(&e);
@@ -197,9 +197,9 @@ impl DeFindexAdapterTrait for SoroswapAdapter {
             &u64::MAX,
         );
 
-        // let total_swapped_amount = swap_result.last().unwrap();
+        let total_swapped_amount = swap_result.last().unwrap();
 
-        Ok(())
+        Ok(total_swapped_amount)
     }
 
     fn balance(

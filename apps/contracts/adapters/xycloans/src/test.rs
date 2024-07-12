@@ -74,7 +74,8 @@ pub fn create_soroswap_router<'a>(e: &Env) -> SoroswapRouterClient<'a> {
 pub struct XycloansAdapterTest<'a> {
     env: Env,
     xycloans_pool: XycloansPoolClient<'a>,
-    router_contract: SoroswapRouterClient<'a>,
+    soroswap_router_contract: SoroswapRouterClient<'a>,
+    soroswap_factory_contract: SoroswapFactoryClient<'a>,
     adapter_contract: XycloansAdapterClient<'a>,
     xycloans_admin: Address,
     soroswap_admin: Address,
@@ -89,7 +90,7 @@ impl<'a> XycloansAdapterTest<'a> {
         let env = Env::default();
         env.mock_all_auths();
         let xycloans_pool = create_xycloans_pool(&env);
-        let router_contract = create_soroswap_router(&env);
+        let soroswap_router_contract = create_soroswap_router(&env);
         let adapter_contract = create_xycloans_adapter(&env);
 
         let initial_user_balance: i128 = 20_000_000_000_000_000_000;
@@ -108,7 +109,7 @@ impl<'a> XycloansAdapterTest<'a> {
         token_1.mint(&soroswap_admin, &initial_user_balance);
         token_1.mint(&user, &initial_user_balance);
 
-        let factory_contract = create_soroswap_factory(&env, &soroswap_admin);
+        let soroswap_factory_contract = create_soroswap_factory(&env, &soroswap_admin);
         env.budget().reset_unlimited();
 
         let ledger_timestamp = 100;
@@ -128,10 +129,10 @@ impl<'a> XycloansAdapterTest<'a> {
         assert_eq!(token_0.balance(&user), 0);
         assert_eq!(token_1.balance(&user), initial_user_balance);
 
-        router_contract.initialize(&factory_contract.address);
+        soroswap_router_contract.initialize(&soroswap_factory_contract.address);
 
-        assert_eq!(factory_contract.pair_exists(&token_0.address, &token_1.address), false);
-        let (added_token_0_0, added_token_1_0, added_liquidity_0_1) = router_contract.add_liquidity(
+        assert_eq!(soroswap_factory_contract.pair_exists(&token_0.address, &token_1.address), false);
+        let (added_token_0_0, added_token_1_0, added_liquidity_0_1) = soroswap_router_contract.add_liquidity(
             &token_0.address, //     token_a: Address,
             &token_1.address, //     token_b: Address,
             &amount_0, //     amount_a_desired: i128,
@@ -156,12 +157,13 @@ impl<'a> XycloansAdapterTest<'a> {
         xycloans_pool.initialize(&token_0.address);
 
         // Initialize xycloans adapter
-        // adapter_contract.initialize(&router_contract.address, &xycloans_pool.address, &token_0.address, &token_1.address);
+        // adapter_contract.initialize(&soroswap_router_contract.address, &xycloans_pool.address, &token_0.address, &token_1.address);
 
         XycloansAdapterTest {
             env,
             xycloans_pool,
-            router_contract,
+            soroswap_router_contract,
+            soroswap_factory_contract,
             adapter_contract,
             xycloans_admin,
             soroswap_admin,
@@ -175,3 +177,5 @@ impl<'a> XycloansAdapterTest<'a> {
 
 mod initialize;
 mod deposit;
+mod balance;
+mod withdraw;

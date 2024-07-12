@@ -7,9 +7,9 @@ mod xycloans_pool;
 
 use soroban_sdk::{auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation}, contract, contractimpl, vec, Address, Env, IntoVal, Symbol, Val, Vec};
 use storage::{
-    extend_instance_ttl, get_soroswap_router_address, get_token_0_address, get_token_1_address, get_xycloans_pool_address, is_initialized, set_initialized, set_soroswap_router_address, set_token_0_address, set_token_1_address, set_xycloans_pool_address
+    extend_instance_ttl, get_soroswap_router_address, get_pool_token, get_token_in, get_xycloans_pool_address, is_initialized, set_initialized, set_soroswap_router_address, set_pool_token, set_token_in, set_xycloans_pool_address, set_soroswap_factory_address, get_soroswap_factory_address
 };
-use soroswap_router::SoroswapRouterClient;
+use soroswap_router::{get_amount_out, get_reserves, pair_for, swap, SoroswapRouterClient};
 use xycloans_pool::XycloansPoolClient;
 use defindex_adapter_interface::{AdapterError, DeFindexAdapterTrait};
 
@@ -37,9 +37,10 @@ pub trait InitializeTrait {
     fn initialize(
         e: Env, 
         soroswap_router_address: Address, 
+        soroswap_factory_address: Address, 
         xycloans_pool_address: Address,
-        token_0_address: Address,
-        token_1_address: Address
+        pool_token: Address,
+        token_in: Address
     ) -> Result<(), AdapterError>;
 }
 
@@ -48,9 +49,10 @@ impl InitializeTrait for XycloansAdapter {
     fn initialize(
         e: Env,
         soroswap_router_address: Address,
+        soroswap_factory_address: Address,
         xycloans_pool_address: Address,
-        token_0_address: Address,
-        token_1_address: Address
+        pool_token: Address,
+        token_in: Address
     ) -> Result<(), AdapterError> {
 
         if is_initialized(&e) {
@@ -59,9 +61,10 @@ impl InitializeTrait for XycloansAdapter {
     
         set_initialized(&e);
         set_soroswap_router_address(&e, soroswap_router_address);
+        set_soroswap_factory_address(&e, soroswap_factory_address);
         set_xycloans_pool_address(&e, xycloans_pool_address);
-        set_token_0_address(&e, token_0_address);
-        set_token_1_address(&e, token_1_address);
+        set_pool_token(&e, pool_token);
+        set_token_in(&e, token_in);
 
         event::initialized(&e, true);
         extend_instance_ttl(&e);
@@ -73,56 +76,18 @@ impl InitializeTrait for XycloansAdapter {
 impl DeFindexAdapterTrait for XycloansAdapter {
     fn deposit(
         e: Env,
-        usdc_amount: i128, //TODO: change to amount
+        amount: i128,
         from: Address,
     ) -> Result<(), AdapterError> {
         check_initialized(&e)?;
-        check_nonnegative_amount(usdc_amount)?;
+        check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
         from.require_auth();
 
-        let token_0_address = get_token_0_address(&e);
-        let token_1_address = get_token_1_address(&e);
+        let pool_token = get_pool_token(&e);
+        let token_in = get_token_in(&e);
 
-        // Setting up Soroswap router client
-        let soroswap_router_address = get_soroswap_router_address(&e);
-        let soroswap_router_client = SoroswapRouterClient::new(&e, &soroswap_router_address);
-
-        // This could be hardcoded to perform less instructions
-        let pair_address = soroswap_router_client.router_pair_for(&token_0_address, &token_1_address);
-
-        let mut path: Vec<Address> = Vec::new(&e);
-        path.push_back(token_1_address.clone());
-        path.push_back(token_0_address.clone());
-
-        let mut args: Vec<Val> = vec![&e];
-        args.push_back(from.into_val(&e));
-        args.push_back(pair_address.into_val(&e));
-        args.push_back(usdc_amount.into_val(&e));
-
-        e.authorize_as_current_contract(vec![
-            &e,
-            InvokerContractAuthEntry::Contract( SubContractInvocation {
-                context: ContractContext {
-                    contract: token_1_address.clone(),
-                    fn_name: Symbol::new(&e, "transfer"),
-                    args: args.clone(),
-                },
-                sub_invocations: vec![&e]
-            })
-        ]);
-
-        // let swap_amount = usdc_amount/2;
-        // e.current_contract_address().require_auth();
-        let res = soroswap_router_client.swap_exact_tokens_for_tokens(
-            &usdc_amount,
-            &0,
-            &path,
-            &from,
-            &u64::MAX,
-        );
-
-        let total_swapped_amount = res.last().unwrap();
+        let total_swapped_amount = swap(&e, &from, &token_in, &pool_token, &amount);
 
         // Xycloans Deposit XLM (WORKING)
         let xycloans_address = get_xycloans_pool_address(&e);
@@ -130,13 +95,12 @@ impl DeFindexAdapterTrait for XycloansAdapter {
         xycloans_pool_client.deposit(&from, &total_swapped_amount);
 
         Ok(())
-
     }
 
     fn withdraw(
         e: Env,
         from: Address,
-    ) -> Result<(), AdapterError> {
+    ) -> Result<i128, AdapterError> {
         from.require_auth();
         check_initialized(&e)?;
         extend_instance_ttl(&e);
@@ -148,11 +112,18 @@ impl DeFindexAdapterTrait for XycloansAdapter {
         xycloans_pool_client.withdraw(&from, &shares);
 
         xycloans_pool_client.update_fee_rewards(&from);
+        let matured: i128 = xycloans_pool_client.matured(&from);
         xycloans_pool_client.withdraw_matured(&from);
 
-        // SWAP XLM TO USDC and return USDC
+        // SWAP XLM TOTAL TO USDC and return USDC
+        let total: i128 = shares.checked_add(matured).unwrap();
 
-        Ok(())
+        let pool_token = get_pool_token(&e);
+        let token_in = get_token_in(&e);
+
+        let result = swap(&e, &from, &pool_token, &token_in, &total);
+
+        Ok(result)
     }
 
     fn balance(
@@ -169,9 +140,27 @@ impl DeFindexAdapterTrait for XycloansAdapter {
         
         let total: i128 = shares.checked_add(matured).unwrap();
 
+        // If total is zero, return it
+        if total == 0 {
+            return Ok(total);
+        }
+        
         // XLM TO USDC QUOTE from SOROSWAP
+        let soroswap_factory = get_soroswap_factory_address(&e);
+        let pool_token = get_pool_token(&e);
+        let token_in = get_token_in(&e);
+        
+        // Setting up Soroswap router client
+        let (reserve_0, reserve_1) = get_reserves(
+            e.clone(),
+            soroswap_factory.clone(),
+            pool_token.clone(),
+            token_in.clone(),
+        ).map_err(|_| AdapterError::ProtocolAddressNotFound)?;
+        
+        let amount_out = get_amount_out(total, reserve_0, reserve_1).map_err(|_| AdapterError::ExternalError)?;
     
-        Ok(total)
+        Ok(amount_out)
     }
 }
 
