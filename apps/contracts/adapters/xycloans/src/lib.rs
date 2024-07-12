@@ -33,7 +33,6 @@ fn check_initialized(e: &Env) -> Result<(), AdapterError> {
 struct XycloansAdapter;
 
 pub trait InitializeTrait {
-    /// token_0 is the token that the user is sending and token_1 is the one is being deposit into the pool, if token_0 and token_1 are the same token it should skip the swap in the router?
     fn initialize(
         e: Env, 
         soroswap_router_address: Address, 
