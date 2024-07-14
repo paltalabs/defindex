@@ -98,7 +98,7 @@ function ItemSlider({
   }, [value])
 
   return (
-    <Grid templateColumns="repeat(5, 1fr)" gap={2} alignItems={'center'} my={4}>
+    <Grid templateColumns="repeat(12, 1fr)" alignItems={'center'} my={4}>
       <GridItem colSpan={8} display={'flex'} alignItems={'center'}>
         <h3>{name ? name : address}</h3>
         <IconButton
@@ -111,9 +111,10 @@ function ItemSlider({
           size={'xs'}
         />
       </GridItem>
-      <GridItem colSpan={4} justifySelf={'end'} alignContent={'end'}>
+      <GridItem colSpan={1} colStart={12} justifySelf={'end'} alignContent={'end'}>
         <InputGroup>
           <Input
+            px={2}
             type='number'
             min={0}
             placeholder={value.toString()}
@@ -121,10 +122,10 @@ function ItemSlider({
             onBlur={handleBlur}
             onKeyDown={handleEnter}
             value={inputValue} />
-          <InputRightAddon>%</InputRightAddon>
+          <InputRightAddon px={1}>%</InputRightAddon>
         </InputGroup>
       </GridItem>
-      <GridItem colSpan={12}>
+      <GridItem colSpan={12} mt={4}>
         <Slider
           aria-label='slider-ex-5'
           id='slider'
@@ -153,10 +154,11 @@ function ItemSlider({
           </Tooltip>
         </Slider>
       </GridItem>
-      <GridItem colSpan={12} justifySelf={'end'}>
+      <GridItem colSpan={1} colStart={12} mt={4} justifySelf={'end'}>
         <Button
           onClick={() => { setMax() }}
           colorScheme={'green'}
+          size={'lg'}
         >
           Set Max
         </Button>

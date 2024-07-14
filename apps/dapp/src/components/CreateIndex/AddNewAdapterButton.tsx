@@ -55,7 +55,7 @@ function AddNewAdapterButton() {
     setNewAddress('')
     setNewName('')
     setSelectValue('')
-    setIsInputVisible(!isInputVisible)
+    setIsInputVisible(false)
   }
 
   const handleInputSelect = async (e: any) => {
@@ -104,8 +104,8 @@ function AddNewAdapterButton() {
   }
   return (
     <>
-      <Button colorScheme="green" size="lg" mt={4} onClick={handleOpenModal}>
-        Add adapter +
+      <Button colorScheme="green" size="lg" mt={4} onClick={handleOpenModal} textAlign={'end'}>
+        <AddIcon />
       </Button>
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
         <ModalOverlay backdropFilter='blur(10px)' />
@@ -113,18 +113,19 @@ function AddNewAdapterButton() {
           <ModalHeader>Add new adapter</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            {isInputVisible &&
-              <FormControl>
-                <Input id='address' type='text' placeholder='Address' onChange={handleInput} value={newAddress} />
-                <Input id='name' type='text' placeholder='Name' onChange={handleInput} value={newName} />
-              </FormControl>
-            }
+
             <Select placeholder='Select option' onChange={handleInputSelect} value={selectValue}>
               {defaultAdapters.map((adapter, index) => (
                 <option key={adapter.name} value={adapter.address}>{(adapter.name != '') ? adapter.name : adapter.address}</option>
               ))}
               <option value={'custom'}>Custom</option>
             </Select>
+            {isInputVisible &&
+              <FormControl>
+                <Input mt={4} id='address' type='text' placeholder='Address' onChange={handleInput} value={newAddress} />
+                <Input mt={4} id='name' type='text' placeholder='Name' onChange={handleInput} value={newName} />
+              </FormControl>
+            }
           </ModalBody>
 
           <ModalFooter>
