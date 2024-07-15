@@ -11,7 +11,7 @@ mod soroswap_router;
 mod blend_pool;
 
 use storage::{
-    extend_instance_ttl, 
+    extend_instance_ttl,
     set_initialized, 
     is_initialized, 
     set_soroswap_router_address, 
