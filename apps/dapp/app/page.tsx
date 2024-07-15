@@ -1,14 +1,21 @@
 "use client";
-import Image from "next/image";
-import { Button } from "@repo/ui/button";
-import styles from "./page.module.css";
 import { Container, Grid } from '@chakra-ui/react'
-import CreateIndex from "../src/components/CreateIndex/CreateIndex";
+import { useSorobanReact } from '@soroban-react/core'
+import { DeployIndex } from "../src/components/DeployIndex/DeployIndex";
+import { DepositToIndex } from "@/components/DepositToIndex/DepositToIndex";
+import ConnectButton from "@/components/ConnectButton";
 
 export default function Home() {
+  const { address } = useSorobanReact()
   return (
     <Container className='' centerContent alignItems={'center'}>
-      <CreateIndex />
+      <ConnectButton />
+      {address && (
+        <>
+          <DeployIndex />
+          <DepositToIndex />
+        </>
+      )}
     </Container>
   );
 }
