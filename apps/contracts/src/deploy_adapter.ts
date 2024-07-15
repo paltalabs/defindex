@@ -1,4 +1,4 @@
-import { Address, nativeToScVal, xdr } from "@stellar/stellar-sdk";
+import { Address, xdr } from "@stellar/stellar-sdk";
 import { AddressBook } from "./utils/address_book.js";
 import {
   airdropAccount,
@@ -40,6 +40,34 @@ export async function deployContracts(addressBook: AddressBook) {
     addressBook,
     "initialize",
     soroswapAdapterInitParams,
+    loadedConfig.admin
+  );
+
+  console.log("-------------------------------------------------------");
+  console.log("Deploying Xycloans Adapter");
+  console.log("-------------------------------------------------------");
+  await installContract("xycloans_adapter", addressBook, loadedConfig.admin);
+  await deployContract(
+    "xycloans_adapter",
+    "xycloans_adapter",
+    addressBook,
+    loadedConfig.admin
+  );
+
+  const xycloansAdapterInitParams: xdr.ScVal[] = [
+    new Address(routerAddress).toScVal(),
+    new Address("CARJOYYBHVV2Y5GXEXIZFJJRRAWQBJ4DB2IJEPVHL2I3XKNHUB2HZWDX").toScVal(),
+    new Address("CAANIOU6EUE6JCVR3HU2VER3YX3VRWGCVIQJSQCKHRBL34O7MMNMDMD7").toScVal(),
+    new Address("CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC").toScVal(),
+    new Address("CCGCRYUTDRP52NOPS35FL7XIOZKKGQWSP3IYFE6B66KD4YOGJMWVC5PR").toScVal(),
+  ];
+
+  console.log("Initializing Xycloans Adapter");
+  await invokeContract(
+    "xycloans_adapter",
+    addressBook,
+    "initialize",
+    xycloansAdapterInitParams,
     loadedConfig.admin
   );
 }

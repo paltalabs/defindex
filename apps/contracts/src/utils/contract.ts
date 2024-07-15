@@ -26,6 +26,8 @@ const CONTRACT_REL_PATH: object = {
     "../../target/wasm32-unknown-unknown/release/defindex_factory.optimized.wasm",
   soroswap_adapter:
     "../../target/wasm32-unknown-unknown/release/soroswap_adapter.optimized.wasm",
+  xycloans_adapter:
+    "../../target/wasm32-unknown-unknown/release/xycloans_adapter.optimized.wasm",
 };
 
 const network = process.argv[2];
