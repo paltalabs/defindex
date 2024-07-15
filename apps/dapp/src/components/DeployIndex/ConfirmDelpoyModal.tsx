@@ -1,6 +1,18 @@
 import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
-import { AddIcon } from "@chakra-ui/icons"
-import { Box, Button, CircularProgress, IconButton, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Text, useSteps } from "@chakra-ui/react"
+import { 
+  Box, 
+  Button, 
+  CircularProgress, 
+  IconButton, 
+  Modal, 
+  ModalBody, 
+  ModalCloseButton, 
+  ModalContent, 
+  ModalFooter, 
+  ModalHeader, 
+  ModalOverlay, 
+  Text, 
+  useSteps } from "@chakra-ui/react"
 import {
   Address,
   nativeToScVal,
@@ -21,15 +33,15 @@ interface Status {
 }
 export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
   const { goToNext, setActiveStep, activeStep } = useSteps({
-    index: 3
+    index: 0
   })
   const factory = useFactoryCallback()
   const adapters = useAppSelector(state => state.adapters.adapters)
   const dispatch = useAppDispatch();
   const [status, setStatus] = useState<Status>({
-    isSuccess: true,
+    isSuccess: false,
     hasError: false,
-    message: 'Index deployed successfully.'
+    message: undefined
   })
   const deployDefindex = async () => {
     const adapterAddressPairScVal = adapters.map((adapter, index) => {
@@ -145,7 +157,6 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
           </ModalFooter>
         </ModalContent>
       </Modal>
-      <h1>modal Open {`${isOpen}`}</h1>
     </>
   )
 }
