@@ -26,7 +26,7 @@ fn check_initialized(e: &Env) -> Result<(), ContractError> {
     }
 }
 
-pub trait AllocatorTrait {
+pub trait DeFindexTrait {
     fn initialize(e: Env, adapters: Vec<AdapterParams>) -> Result<(), ContractError>;
 
     fn deposit(e: Env, amount: i128, from: Address) -> Result<(), ContractError>;
@@ -45,10 +45,10 @@ pub trait AllocatorTrait {
 }
 
 #[contract]
-pub struct Allocator;
+pub struct DeFindex;
 
 #[contractimpl]
-impl AllocatorTrait for Allocator {
+impl DeFindexTrait for DeFindex {
     fn initialize(e: Env, adapters: Vec<AdapterParams>) -> Result<(), ContractError> {
         if is_initialized(&e) {
             return Err(ContractError::AlreadyInitialized);

@@ -5,6 +5,7 @@
   "scripts": {
     "build": "docker-compose run --rm --no-deps defindex-soroban make build",
     "deploy-factory": "tsc && node dist/deploy_factory.js",
+    "deploy-adapter": "tsc && node dist/deploy_adapter.js",
     "test": "tsc && node dist/test.js"
   },
   "type": "module",
