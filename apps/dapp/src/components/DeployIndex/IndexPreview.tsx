@@ -25,9 +25,13 @@ export const IndexPreview = ({ data }: { data: any }) => {
           {data.map((adapter: any, index: number) => (
             <Tr key={index} sx={{ cursor: 'default' }}>
               <Td>{adapter.name}</Td>
-              <Tooltip label={adapter.address}>
-                <Td sx={{ cursor: 'pointer' }} textAlign={'center'}>{shortenAddress(adapter.address)}</Td>
-              </Tooltip>
+
+              <Td sx={{ cursor: 'pointer' }} textAlign={'center'}>
+                <Tooltip label={adapter.address}>
+                  <p>{shortenAddress(adapter.address)}</p>
+                </Tooltip>
+              </Td>
+
               <Td textAlign={'end'}>{adapter.value}%</Td>
             </Tr>
           ))}

@@ -3,13 +3,13 @@
     "network": "testnet",
     "adapters": [
       {
-        "name": "Soroswap XLM/USDC",
+        "name": "Soroswap adapter",
         "address": "CCAEZKPNZDGZ444S2IXY2VY2BDXMYFHHKI3JCDXUODBNTY4NSSRXDIP2",
         "value": 0
       },
       {
-        "address": "CC6ANOVYEWLBQ3GU54EYK6NZJIQDP5Y2SE7FOTM32VXBCQBBSU5B3ROP",
-        "name": "Soroswap defindex 2",
+        "address": "CAQW67YEY2XIHL3RDOSRGXZFZFKRF7OD25EHXNZBV56Z24B3NUMSIPZM",
+        "name": "XYCloans",
         "value": 0
       },
       {
