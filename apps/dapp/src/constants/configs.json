@@ -1,0 +1,29 @@
+[
+  {
+    "network": "testnet",
+    "factory": "CCU3FB55SFRFMQORBBERXW2XVFFXTHW3YUIB5UZ267FDCIFXJPQ2WQBF",
+    "adapters": [
+      {
+        "name": "Soroswap adapter",
+        "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
+        "value": 0
+      },
+      {
+        "address": "CAQW67YEY2XIHL3RDOSRGXZFZFKRF7OD25EHXNZBV56Z24B3NUMSIPZM",
+        "name": "XYCloans",
+        "value": 0
+      }
+    ]
+  },
+  {
+    "network": "public",
+    "factory": "",
+    "adapters": [
+      {
+        "name": "Soroswap",
+        "address": "",
+        "value": 0
+      }
+    ]
+  }
+]
