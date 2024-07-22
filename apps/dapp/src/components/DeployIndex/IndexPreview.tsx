@@ -10,32 +10,19 @@ import {
   Tooltip
 } from '@chakra-ui/react'
 import { shortenAddress } from '@/helpers/shortenAddress'
-import { PieChart, pieArcLabelClasses } from '@mui/x-charts'
+import { PieChart } from '@mui/x-charts'
+import { ChartData } from './ConfirmDelpoyModal'
 
-export const IndexPreview = ({ data }: { data: any }) => {
-  const myData = data.map((adapter: any, index: number) => {
-    return {
-      id: index,
-      label: adapter.name,
-      value: adapter.value
-    }
-  })
+export const IndexPreview = ({ data }: { data: ChartData[] }) => {
   return (
     <>
       <Box display='flex' my={4}>
         <PieChart
           series={[
             {
-              data: myData,
+              data: data,
             },
           ]}
-          sx={{
-            [`& .${pieArcLabelClasses.root}`]: {
-              fill: 'white',
-              fontWeight: 'bold',
-            },
-          }}
-          tooltip={{ trigger: 'item' }}
           width={500}
           height={200}
         />
@@ -50,16 +37,14 @@ export const IndexPreview = ({ data }: { data: any }) => {
             </Tr>
           </Thead>
           <Tbody>
-            {data.map((adapter: any, index: number) => (
+            {data.map((adapter: ChartData, index: number) => (
               <Tr key={index} sx={{ cursor: 'default' }}>
-                <Td>{adapter.name}</Td>
-
+                <Td>{adapter.label}</Td>
                 <Td sx={{ cursor: 'pointer' }} textAlign={'center'}>
                   <Tooltip label={adapter.address}>
-                    <p>{shortenAddress(adapter.address)}</p>
+                    {adapter.address ? shortenAddress(adapter.address) : '-'}
                   </Tooltip>
                 </Td>
-
                 <Td textAlign={'end'}>{adapter.value}%</Td>
               </Tr>
             ))}

@@ -3,7 +3,6 @@ import {
   Box, 
   Button, 
   CircularProgress, 
-  IconButton, 
   Modal, 
   ModalBody, 
   ModalCloseButton, 
@@ -23,7 +22,7 @@ import { pushIndex } from '@/store/lib/features/walletStore'
 import { useFactoryCallback, FactoryMethod } from '@/hooks/useFactory'
 import { IndexPreview } from "./IndexPreview";
 import { DeploySteps } from "./DeploySteps";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { WarningIcon, CheckCircleIcon } from '@chakra-ui/icons'
 
 interface Status {
@@ -31,18 +30,28 @@ interface Status {
   hasError: boolean,
   message: string | undefined,
 }
+
+export interface ChartData {
+  id: number
+  label: string
+  value: number
+  address?: string
+  color?: string
+}
+
 export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
   const { goToNext, setActiveStep, activeStep } = useSteps({
     index: 0
-  })
-  const factory = useFactoryCallback()
-  const adapters = useAppSelector(state => state.adapters.adapters)
+  });
+  const factory = useFactoryCallback();
+  const adapters = useAppSelector(state => state.adapters.adapters);
   const dispatch = useAppDispatch();
+  const [chartData, setChartData] = useState<ChartData[]>([]);
   const [status, setStatus] = useState<Status>({
     isSuccess: false,
     hasError: false,
     message: undefined
-  })
+  });
   const deployDefindex = async () => {
     const adapterAddressPairScVal = adapters.map((adapter, index) => {
       console.log('🥑', adapter)
@@ -67,7 +76,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
 
     const createDefindexParams: xdr.ScVal[] = [adapterAddressesScVal];
 
-    goToNext()
+    goToNext();
     const result: any = await factory(
       FactoryMethod.CREATE_DEFINDEX,
       createDefindexParams,
@@ -92,26 +101,53 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
           })
           return
         } */
-    console.log('🥑result', await result)
+    console.log('🥑result', await result);
     const parsedResult = scValToNative(result.returnValue);
-    dispatch(pushIndex(parsedResult))
-    setActiveStep(3)
+    dispatch(pushIndex(parsedResult));
+    setActiveStep(3);
     setStatus({
       isSuccess: true,
       hasError: false,
       message: 'Index deployed successfully.'
-    })
+    });
     return result;
   }
+
   const handleCloseModal = () => {
     setStatus({
       isSuccess: false,
       hasError: false,
       message: undefined
-    })
-    setActiveStep(0)
-    onClose()
+    });
+    setActiveStep(0);
+    onClose();
   }
+
+  useEffect(() => {
+    const newChartData: ChartData[] = adapters.map((adapter: any, index: number) => {
+      return {
+        id: index,
+        label: adapter.name,
+        address: adapter.address,
+        value: adapter.value,
+      }
+    });
+    const total = newChartData.reduce((acc: number, curr: any) => acc + curr.value, 0)
+    if (total == 100) {
+      setChartData(newChartData);
+      return;
+    } else {
+      newChartData.push({
+        id: newChartData.length,
+        label: 'Unassigned',
+        value: 100 - newChartData.reduce((acc: number, curr: any) => acc + curr.value, 0),
+        address: undefined,
+        color: '#e0e0e0'
+      })
+      setChartData(newChartData);
+      return;
+    }
+  }, [adapters]);
 
   return (
     <>
@@ -123,7 +159,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
           <ModalBody>
             <DeploySteps activeStep={activeStep} hasError={status.hasError} />
             {activeStep == 0 && (
-              <IndexPreview data={adapters} />
+              <IndexPreview data={chartData} />
             )}
             {activeStep == 1 && (
               <Box textAlign={'center'}>

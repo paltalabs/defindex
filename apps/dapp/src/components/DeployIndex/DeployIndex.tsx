@@ -7,8 +7,7 @@ import {
 } from '@chakra-ui/react'
 import ItemSlider from './Slider'
 import AddNewAdapterButton from './AddNewAdapterButton'
-import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { useFactoryCallback, FactoryMethod } from '@/hooks/useFactory'
+import { useAppSelector } from '@/store/lib/storeHooks'
 
 import { useSorobanReact } from '@soroban-react/core'
 import { ConfirmDelpoyModal } from './ConfirmDelpoyModal'
@@ -45,7 +44,7 @@ export const DeployIndex = () => {
           </GridItem>
         </Grid>
         <Button
-          isDisabled={totalValues! > 100 || adapters.length == 0}
+          isDisabled={totalValues! > 100 || adapters.length == 0 || totalValues == 0}
           isLoading={openConfirm}
           colorScheme="green"
           size="lg"
