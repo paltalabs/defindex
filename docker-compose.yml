@@ -3,11 +3,15 @@ services:
     image: esteblock/soroban-preview:21.0.1@sha256:b2345967694194c07bc35e03f584788eff95e973659daa3f8ce324fdc621ca13
     container_name: defindex-soroban
     volumes:
-      - ./apps/contracts:/workspace
+      - .:/workspace
     ipc: host
     networks:
       - defindex-network
     command: tail -f /dev/null
+    ports:
+      - "3000:3000"
+      - "3010:3010"
+      - "3050:3050"
 
   stellar:
     image: stellar/quickstart:v426-latest-amd64@sha256:274395daab6fa8033b9213f152d56699358917fb01d7c7e95392a37fc00c9d01
