@@ -45,6 +45,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   })
   const deployDefindex = async () => {
     const adapterAddressPairScVal = adapters.map((adapter, index) => {
+      console.log('🥑', adapter)
       return xdr.ScVal.scvMap([
         new xdr.ScMapEntry({
           key: xdr.ScVal.scvSymbol("address"),
@@ -65,13 +66,33 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     const adapterAddressesScVal = xdr.ScVal.scvVec(adapterAddressPairScVal);
 
     const createDefindexParams: xdr.ScVal[] = [adapterAddressesScVal];
-    console.log('deploying Defindex')
+
     goToNext()
     const result: any = await factory(
       FactoryMethod.CREATE_DEFINDEX,
       createDefindexParams,
       true,
     )
+    /* let result: any;
+    try {
+      result = await factory(
+        FactoryMethod.CREATE_DEFINDEX,
+        createDefindexParams,
+        true,
+      )
+    } */
+    /*     catch (e: any) {
+          console.error(e)
+          if (e.toString().includes('ExistingValue')) console.log('Index already exists')
+          setActiveStep(3)
+          setStatus({
+            ...status,
+            hasError: true,
+            message: 'Could not deploy this index, if the problem persist please contact support.'
+          })
+          return
+        } */
+    console.log('🥑result', await result)
     const parsedResult = scValToNative(result.returnValue);
     dispatch(pushIndex(parsedResult))
     setActiveStep(3)
@@ -81,27 +102,6 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       message: 'Index deployed successfully.'
     })
     return result;
-  }
-  const handleDeploy = async () => {
-    console.log('deploying Defindex')
-    try {
-      await deployDefindex()
-    } catch (e) {
-      setActiveStep(3)
-      setStatus({
-        ...status,
-        hasError: true,
-        message: 'Could not deploy this index, if the problem persist please contact support.'
-      })
-    }
-    // const result: any = await factory(
-    //   FactoryMethod.CREATE_DEFINDEX,
-    //   createDefindexParams,
-    //   true,
-    // )
-    // const parsedResult = scValToNative(result.returnValue);
-    // dispatch(pushIndex(parsedResult))
-    // return result;
   }
   const handleCloseModal = () => {
     setStatus({
@@ -150,7 +150,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
               <Button
                 aria-label='add_adapter'
                 colorScheme='green'
-                onClick={handleDeploy}>
+                onClick={deployDefindex}>
                 Deploy
               </Button>
             )}

@@ -78,8 +78,6 @@ function ItemSlider({
   const handleEnter = (e: any) => {
     if (e.key === 'Enter') {
       const val = parseInt(e.target.value)
-      console.log(val)
-      console.log(inputValue.toString().length)
       if (isNaN(val) && inputValue.toString().length === 0) {
         console.log(true)
         setVal(0)
