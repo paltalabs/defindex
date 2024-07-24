@@ -18,7 +18,7 @@
       {
         "address": "CDTSI3ORR5TDTKV7B3JQM5YZ4UAM24C2ZG2OOQOXPFJ5XS7JBOKUNJZC",
         "balance": 100651,
-        "name": "ochentayuno",
+        "name": "Soroswap USDC/XLM",
         "shares": [
           {
             "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
@@ -30,7 +30,7 @@
       {
         "address": "CCA5VJAAVA6KQ5JV453CMQMGGE6KNPI7PNZ7SGPSC3RDTRTQUJ4CALDZ",
         "balance": 2500,
-        "name": "Setentaiseis",
+        "name": "Blend USDC - Soroswap USDC/NGNC",
         "shares": [
           {
             "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
@@ -42,7 +42,7 @@
       {
         "address": "CBEGAWUQMBJGHOWLVOGUMQO3HTIN66BW2NLDF6AZI56GKYZMR475E24Q",
         "balance": 84732,
-        "name": "OxentaiTre",
+        "name": "XYCLoans - Blend",
         "shares": [
           {
             "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
