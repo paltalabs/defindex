@@ -71,7 +71,7 @@ const initialState: WalletState = {
     networkUrl: '',
   },
   indexes:{
-    isLoading: false,
+    isLoading: true,
     createdIndexes: [],
     hasError: false,
   }

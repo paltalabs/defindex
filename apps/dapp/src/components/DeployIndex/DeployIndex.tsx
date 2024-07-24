@@ -25,10 +25,7 @@ export const DeployIndex = () => {
     setOpenConfirm(false)
   }
   return (
-    <Container centerContent maxW={{ sm: '100%', md: '90%', lg: '80%' }} px={0}>
-      <h2>
-        Deploy Index on {activeChain?.name} Chain:
-      </h2>
+    <Container centerContent px={0}>
       <ConfirmDelpoyModal isOpen={openConfirm} onClose={handleClose} />
       <Card variant="outline" p={16} bgColor="whiteAlpha.50">
         <Grid templateColumns={'repeat(12, 2fr)'} alignSelf={'end'}>

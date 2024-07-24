@@ -1,10 +1,9 @@
 "use client";
-import { Container, Grid } from '@chakra-ui/react'
+import { Container } from '@chakra-ui/react'
 import { useSorobanReact } from '@soroban-react/core'
 import { DeployIndex } from "../src/components/DeployIndex/DeployIndex";
-import { DepositToIndex } from "@/components/DepositToIndex/DepositToIndex";
 import ConnectButton from "@/components/Wallet/ConnectButton";
-import AllIndexes from '@/components/ManageIndexes/AllIndexes';
+import ManageIndexes from '@/components/ManageIndexes/ManageIndexes';
 
 export default function Home() {
   const { address } = useSorobanReact()
@@ -12,11 +11,10 @@ export default function Home() {
     <Container textAlign={'center'} mt={16} mx={0} px={0} minW={'100vw'}>
       <ConnectButton />
       {address && (
-        <>
-          <AllIndexes />
-          <DeployIndex />
-          {/*  <DepositToIndex /> */}
-        </>
+        <Container centerContent minW={'100vw'}>
+          <ManageIndexes />
+          {/*   <DeployIndex /> */}
+        </Container>
       )}
     </Container>
   );

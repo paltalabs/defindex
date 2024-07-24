@@ -52,10 +52,8 @@ export const AllIndexes = () => {
   }, [activeChain?.networkPassphrase]);
   return (
     <TableContainer
-      boxShadow='dark-lg'
-      rounded={16}
-      maxWidth={{ sm: '100%', md: '90%', lg: '80%' }}
       mx={'auto'}
+      minW={'100%'}
       p={4}>
       <Table variant="simple">
         <Thead>
@@ -90,7 +88,7 @@ export const AllIndexes = () => {
                 <Stat>
                   <StatHelpText>
                     <StatArrow type='increase' />
-                    23.36%
+                    {index.name.includes('Blend USDC') ? '11.31' : '23.36'}%
                   </StatHelpText>
                 </Stat>
               </Td>
@@ -120,6 +118,7 @@ export const AllIndexes = () => {
                     aria-label='rebalance'
                     size='sm'
                     icon={<SettingsIcon />}
+                    onClick={() => console.log(index)}
                   />
                 </Tooltip>
               </Td>
