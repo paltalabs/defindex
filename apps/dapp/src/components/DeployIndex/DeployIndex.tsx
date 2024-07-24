@@ -4,6 +4,7 @@ import {
   Button,
   Grid,
   GridItem,
+  Container,
 } from '@chakra-ui/react'
 import ItemSlider from './Slider'
 import AddNewAdapterButton from './AddNewAdapterButton'
@@ -24,12 +25,12 @@ export const DeployIndex = () => {
     setOpenConfirm(false)
   }
   return (
-    <>
+    <Container centerContent maxW={{ sm: '100%', md: '90%', lg: '80%' }} px={0}>
       <h2>
         Deploy Index on {activeChain?.name} Chain:
       </h2>
       <ConfirmDelpoyModal isOpen={openConfirm} onClose={handleClose} />
-      <Card variant="outline" px={16} py={16} width={'75vw'} bgColor="whiteAlpha.100">
+      <Card variant="outline" p={16} bgColor="whiteAlpha.50">
         <Grid templateColumns={'repeat(12, 2fr)'} alignSelf={'end'}>
           <GridItem colStart={12}>
             <AddNewAdapterButton />
@@ -53,6 +54,6 @@ export const DeployIndex = () => {
           Deploy DeFindex
         </Button>
       </Card>
-    </>
+    </Container>
   )
 }

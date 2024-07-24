@@ -13,6 +13,44 @@
         "name": "XYCloans",
         "value": 0
       }
+    ],
+    "indexes": [
+      {
+        "address": "CDTSI3ORR5TDTKV7B3JQM5YZ4UAM24C2ZG2OOQOXPFJ5XS7JBOKUNJZC",
+        "balance": 100651,
+        "name": "ochentayuno",
+        "shares": [
+          {
+            "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
+            "index": 0,
+            "share": 81
+          }
+        ]
+      },
+      {
+        "address": "CCA5VJAAVA6KQ5JV453CMQMGGE6KNPI7PNZ7SGPSC3RDTRTQUJ4CALDZ",
+        "balance": 2500,
+        "name": "Setentaiseis",
+        "shares": [
+          {
+            "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
+            "index": 0,
+            "share": 76
+          }
+        ]
+      },
+      {
+        "address": "CBEGAWUQMBJGHOWLVOGUMQO3HTIN66BW2NLDF6AZI56GKYZMR475E24Q",
+        "balance": 84732,
+        "name": "OxentaiTre",
+        "shares": [
+          {
+            "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
+            "index": 0,
+            "share": 83
+          }
+        ]
+      }
     ]
   },
   {
