@@ -57,11 +57,9 @@ export const adaptersSlice = createSlice({
       state.totalValues = state.adapters.reduce((acc, adapter) => acc + adapter.value, 0)
     },
     resetAdapters: (state) => {
-      state = {
-        adapters: [],
-        adapterName: "",
-        totalValues: 0
-      }
+      state.adapters = []
+      state.adapterName = ""
+      state.totalValues = 0
     },
     removeAdapter: (state, action: PayloadAction<Adapter>) => {
       state.adapters = state.adapters.filter(adapter => adapter.address !== action.payload.address)
