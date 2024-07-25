@@ -5,28 +5,43 @@ import {
   Grid,
   GridItem,
   Container,
+  Input,
 } from '@chakra-ui/react'
 import ItemSlider from './Slider'
 import AddNewAdapterButton from './AddNewAdapterButton'
-import { useAppSelector } from '@/store/lib/storeHooks'
+import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 
 import { useSorobanReact } from '@soroban-react/core'
 import { ConfirmDelpoyModal } from './ConfirmDelpoyModal'
+import { setAdapterName } from '@/store/lib/features/adaptersStore'
 
 export const DeployIndex = () => {
-  const [openConfirm, setOpenConfirm] = useState<boolean>(false)
+  const dispatch = useAppDispatch()  
   const adapters = useAppSelector(state => state.adapters.adapters)
-
   const totalValues = useAppSelector(state => state.adapters.totalValues)
+  const [openConfirm, setOpenConfirm] = useState<boolean>(false)
 
   const handleClose = () => {
     setOpenConfirm(false)
   }
+
+  const setName = async (e: any) => {
+    await dispatch(setAdapterName(e.target.value))
+  }
+
   return (
     <Container centerContent minW={'100%'} px={0}>
       <ConfirmDelpoyModal isOpen={openConfirm} onClose={handleClose} />
       <Card variant="outline" p={16} bgColor="whiteAlpha.50">
-        <Grid templateColumns={'repeat(12, 2fr)'} alignSelf={'end'}>
+        <Grid
+          templateColumns={'repeat(12, 2fr)'}
+          alignSelf={'end'}
+          alignContent={'center'}
+          mb={4}
+        >
+          <GridItem colStart={1} colSpan={3}>
+            <Input onChange={setName} placeholder='Defindex name...'></Input>
+          </GridItem>
           <GridItem colStart={12}>
             <AddNewAdapterButton />
           </GridItem>

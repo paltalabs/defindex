@@ -103,7 +103,7 @@ function AddNewAdapterButton() {
   }
   return (
     <>
-      <Button colorScheme="green" size="lg" mt={4} onClick={handleOpenModal} textAlign={'end'}>
+      <Button colorScheme="green" size="md" onClick={handleOpenModal} textAlign={'end'}>
         Add new adapter
       </Button>
       <Modal isOpen={isOpen} onClose={onClose} isCentered>

@@ -45,6 +45,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   });
   const factory = useFactoryCallback();
   const adapters = useAppSelector(state => state.adapters.adapters);
+  const indexName = useAppSelector(state => state.adapters.adapterName)
   const dispatch = useAppDispatch();
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [status, setStatus] = useState<Status>({
@@ -154,7 +155,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       <Modal isOpen={isOpen} onClose={handleCloseModal} isCentered>
         <ModalOverlay />
         <ModalContent minW={'40vw'}>
-          <ModalHeader>Deploying new Index</ModalHeader>
+          <ModalHeader>Deploying {indexName === "" ? 'new index' : indexName}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <DeploySteps activeStep={activeStep} hasError={status.hasError} />

@@ -11,6 +11,7 @@ export interface Adapter {
 
 interface AdaptersState {
   adapters: Adapter[];
+  adapterName: string;
   totalValues?: number;
 }
 
@@ -19,11 +20,12 @@ interface AdaptersState {
 const initialState: AdaptersState = {
   adapters: [
     {
-      address: "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
-      value: 82
+      address: "",
+      value: 0
     }
   ],
-  totalValues: 82
+  adapterName: "",
+  totalValues: 0
 }
 
 //Filtrar adapters por network y retornar array de adapters
@@ -55,8 +57,11 @@ export const adaptersSlice = createSlice({
       state.totalValues = state.adapters.reduce((acc, adapter) => acc + adapter.value, 0)
     },
     resetAdapters: (state) => {
-      state.adapters = []
-      state.totalValues = 0
+      state = {
+        adapters: [],
+        adapterName: "",
+        totalValues: 0
+      }
     },
     removeAdapter: (state, action: PayloadAction<Adapter>) => {
       state.adapters = state.adapters.filter(adapter => adapter.address !== action.payload.address)
@@ -85,10 +90,19 @@ export const adaptersSlice = createSlice({
       })
       state.totalValues = state.adapters.reduce((acc, adapter) => acc + adapter.value, 0)
     },
+    setAdapterName: ((state, action: PayloadAction<string>)=>{
+      state.adapterName = action.payload;
+    })
   }
 })
 
-export const { pushAdapter, resetAdapters, removeAdapter, setAdapterValue, resetAdapterValue } = adaptersSlice.actions
+export const { 
+  pushAdapter, 
+  resetAdapters, 
+  removeAdapter, 
+  setAdapterValue, 
+  resetAdapterValue, 
+  setAdapterName } = adaptersSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectAdapters = (state: RootState) => state.adapters.adapters
