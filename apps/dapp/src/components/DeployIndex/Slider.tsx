@@ -137,8 +137,8 @@ function ItemSlider({
           onMouseEnter={() => setShowTooltip(true)}
           onMouseLeave={() => setShowTooltip(false)}
           onChangeEnd={(val) => setVal(val)}>
-          <SliderTrack>
-            <SliderFilledTrack />
+          <SliderTrack boxShadow={'sm'}>
+            <SliderFilledTrack boxShadow={'dark-lg'} />
           </SliderTrack>
           <Tooltip
             hasArrow

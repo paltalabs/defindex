@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '../store'
 import { ChainMetadata } from '@soroban-react/types'
-import indexes from '@/constants/configs.json'
+import indexes from '@/constants/constants.json'
 import { Networks } from '@stellar/stellar-sdk'
 // Define a type for the slice state
 export interface Index {
@@ -16,6 +16,10 @@ export interface IndexData {
   name: string;
   shares: Index[]
 }
+
+interface SelectedIndex extends IndexData {
+  method: string;
+}
 interface WalletState {
   address: string;
   selectedChain: ChainMetadata;
@@ -23,6 +27,7 @@ interface WalletState {
     isLoading: boolean;
     createdIndexes: IndexData[];
     hasError: boolean;
+    selectedIndex: SelectedIndex | undefined;
   }
 }
 
@@ -74,6 +79,7 @@ const initialState: WalletState = {
     isLoading: true,
     createdIndexes: [],
     hasError: false,
+    selectedIndex: undefined
   }
 }
 
@@ -102,6 +108,9 @@ export const walletSlice = createSlice({
     },
     setIsIndexesLoading: (state, action: PayloadAction<boolean>) => {
       state.indexes.isLoading = action.payload
+    },
+    setSelectedIndex: (state, action: PayloadAction<SelectedIndex>) => {
+      state.indexes.selectedIndex = action.payload
     }
   },
   extraReducers(builder) {
@@ -119,7 +128,7 @@ export const walletSlice = createSlice({
   },
 })
 
-export const { setAddress, setChain, resetWallet, pushIndex, setIsIndexesLoading } = walletSlice.actions
+export const { setAddress, setChain, resetWallet, pushIndex, setIsIndexesLoading, setSelectedIndex } = walletSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectAddress = (state: RootState) => state.wallet.address

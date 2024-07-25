@@ -3172,6 +3172,13 @@
   dependencies:
     "@soroban-react/core" "^9.1.10"
 
+"@soroban-react/connect-button@^9.1.13":
+  version "9.1.13"
+  resolved "https://registry.yarnpkg.com/@soroban-react/connect-button/-/connect-button-9.1.13.tgz#68eff5db3fee1d10ffd25daf109065ed70cde1fb"
+  integrity sha512-TMMb5DpqRysBdHVcNXL3BS9Badeu6ogD2LfdOx54ghVVtKVAU9Pd+mGaJcfk3fAz6MkQdJvQu/gPJo4CUDqxAg==
+  dependencies:
+    "@soroban-react/core" "^9.1.13"
+
 "@soroban-react/contracts@^9.1.13":
   version "9.1.13"
   resolved "https://registry.yarnpkg.com/@soroban-react/contracts/-/contracts-9.1.13.tgz#e50e8e1a03305fbba1c4e74345f521db7c48a53f"
@@ -3288,6 +3295,16 @@
     "@soroban-react/core" "^9.0.4"
     "@soroban-react/types" "^9.0.4"
     "@stellar/stellar-sdk" "11.1.0"
+
+"@soroban-react/wallet-data@9.1.13":
+  version "9.1.13"
+  resolved "https://registry.yarnpkg.com/@soroban-react/wallet-data/-/wallet-data-9.1.13.tgz#954c20f3f73b62b6f565e922e4eb0ed1a1a03e8e"
+  integrity sha512-F5Mg9pGIdjZq6NH6Y+oZ1x+r4gW18ybziDZJEVm1la3tB3lXF2jm9LcJV346Lk97xFR/cHrNcrC7YFLkL1Jbnw==
+  dependencies:
+    "@soroban-react/connect-button" "^9.1.13"
+    "@soroban-react/core" "^9.1.13"
+    "@soroban-react/types" "^9.1.13"
+    "@stellar/stellar-sdk" "12.2.0"
 
 "@soroban-react/xbull@^1.0.1":
   version "1.0.1"

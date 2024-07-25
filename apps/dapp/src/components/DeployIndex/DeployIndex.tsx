@@ -14,8 +14,6 @@ import { useSorobanReact } from '@soroban-react/core'
 import { ConfirmDelpoyModal } from './ConfirmDelpoyModal'
 
 export const DeployIndex = () => {
-
-  const { activeChain } = useSorobanReact()
   const [openConfirm, setOpenConfirm] = useState<boolean>(false)
   const adapters = useAppSelector(state => state.adapters.adapters)
 
@@ -25,7 +23,7 @@ export const DeployIndex = () => {
     setOpenConfirm(false)
   }
   return (
-    <Container centerContent px={0}>
+    <Container centerContent minW={'100%'} px={0}>
       <ConfirmDelpoyModal isOpen={openConfirm} onClose={handleClose} />
       <Card variant="outline" p={16} bgColor="whiteAlpha.50">
         <Grid templateColumns={'repeat(12, 2fr)'} alignSelf={'end'}>

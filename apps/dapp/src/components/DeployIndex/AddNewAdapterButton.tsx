@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Button,
   Modal,
@@ -40,10 +40,9 @@ function AddNewAdapterButton() {
 
   useEffect(() => {
     const tempAdapters = getDefaultAdapters(activeChain?.networkPassphrase || 'Test SDF Network ; September 2015')
-    console.log('tempAdapters', tempAdapters)
     if (!tempAdapters || tempAdapters.length === 0) return;
     setDefaultAdapters(tempAdapters[0]?.adapters as DefaultAdapter[])
-  }, [activeChain])
+  }, [activeChain?.networkPassphrase])
 
   const { isOpen, onOpen, onClose } = useDisclosure()
   const handleOpenModal = () => {
@@ -89,7 +88,7 @@ function AddNewAdapterButton() {
   const addAdapter = async () => {
     const isDefaultAdapter = await defaultAdapters.find(adapter => adapter.address === newAdapter?.address)
     const hasEmptyFields = newAdapter?.address === '' || newAdapter?.name === '' || newName === '' || newAddress === ''
-    const adapterExists = adapters.find(adapter => adapter.address === newAdapter?.address)
+    const adapterExists = adapters.find((adapter: Adapter) => adapter.address === newAdapter?.address)
     if (adapterExists) {
       console.error('Adapter already exists')
       return false
@@ -105,10 +104,10 @@ function AddNewAdapterButton() {
   return (
     <>
       <Button colorScheme="green" size="lg" mt={4} onClick={handleOpenModal} textAlign={'end'}>
-        <AddIcon />
+        Add new adapter
       </Button>
       <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay backdropFilter='blur(10px)' />
+        <ModalOverlay backdropFilter='blur(5px)' />
         <ModalContent >
           <ModalHeader>Add new adapter</ModalHeader>
           <ModalCloseButton />

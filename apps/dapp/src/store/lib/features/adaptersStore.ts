@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '../store'
-import adapters from '@/constants/configs.json'
+import adapters from '@/constants/constants.json'
 import { Networks } from '@stellar/stellar-sdk'
 
 export interface Adapter {
@@ -88,7 +88,7 @@ export const adaptersSlice = createSlice({
   }
 })
 
-export const { pushAdapter, removeAdapter, setAdapterValue, resetAdapterValue } = adaptersSlice.actions
+export const { pushAdapter, resetAdapters, removeAdapter, setAdapterValue, resetAdapterValue } = adaptersSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectAdapters = (state: RootState) => state.adapters.adapters

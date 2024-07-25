@@ -1,5 +1,5 @@
 import { shortenAddress } from '@/helpers/shortenAddress'
-import { walletSlice, fetchDefaultAddresses, Index, IndexData } from '@/store/lib/features/walletStore'
+import { fetchDefaultAddresses, IndexData } from '@/store/lib/features/walletStore'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { ArrowLeftIcon, SettingsIcon } from '@chakra-ui/icons'
 import {
@@ -41,7 +41,14 @@ const SkeletonRow = () => {
     </Tr>
   )
 }
-export const AllIndexes = () => {
+export const AllIndexes = ({
+  handleOpenDeployIndex,
+  handleOpenDeposit
+}: {
+  handleOpenDeployIndex: (method: string, args?: any) => any,
+  handleOpenDeposit: (method: string, args?: any) => any
+}) => {
+
   const { activeChain, address } = useSorobanReact()
   const dispatch = useAppDispatch();
   const Indexes = useAppSelector(state => state.wallet.indexes)
@@ -73,7 +80,7 @@ export const AllIndexes = () => {
         {(!isLoading && createdIndexes?.length != undefined) && <Tbody>
           {createdIndexes.map((index: IndexData, i: number) => (
             <Tr key={i}>
-              <Td>{index.name}</Td>
+              <Td>{index.name ? index.name : index.address}</Td>
               <Td sx={{ cursor: 'pointer' }} textAlign={'center'}>
                 <Tooltip
                   placement='bottom'
@@ -88,7 +95,7 @@ export const AllIndexes = () => {
                 <Stat>
                   <StatHelpText>
                     <StatArrow type='increase' />
-                    {index.name.includes('Blend USDC') ? '11.31' : '23.36'}%
+                    {index.name?.includes('Blend USDC') ? '11.31' : '23.36'}%
                   </StatHelpText>
                 </Stat>
               </Td>
@@ -100,6 +107,7 @@ export const AllIndexes = () => {
                     aria-label='deposit'
                     size='sm'
                     icon={<ArrowLeftIcon __css={{ transform: 'rotate(90deg)' }} />}
+                    onClick={() => handleOpenDeposit('deposit', index)}
                   />
                 </Tooltip>
                 <Tooltip hasArrow label={'Withdraw'} rounded={'lg'}>
@@ -109,6 +117,7 @@ export const AllIndexes = () => {
                     aria-label='withdraw'
                     size='sm'
                     icon={<ArrowLeftIcon __css={{ transform: 'rotate(-90deg)' }} />}
+                    onClick={() => handleOpenDeposit('withdraw', index)}
                   />
                 </Tooltip>
                 <Tooltip hasArrow label={'Rebalance'} rounded={'lg'}>
@@ -118,7 +127,7 @@ export const AllIndexes = () => {
                     aria-label='rebalance'
                     size='sm'
                     icon={<SettingsIcon />}
-                    onClick={() => console.log(index)}
+                    onClick={() => handleOpenDeployIndex('edit_index', index)}
                   />
                 </Tooltip>
               </Td>

@@ -10,13 +10,70 @@ import {
   ModalContent,
   ModalOverlay
 } from "@chakra-ui/react"
-import { AddIcon, SearchIcon } from "@chakra-ui/icons"
+import { SearchIcon } from "@chakra-ui/icons"
 import AllIndexes from "./AllIndexes"
 import { useState } from "react"
 import { DeployIndex } from "../DeployIndex/DeployIndex"
+import { useAppDispatch } from "@/store/lib/storeHooks"
+import { pushAdapter, resetAdapters } from "@/store/lib/features/adaptersStore"
+import { shortenAddress } from "@/helpers/shortenAddress"
+import { DepositToIndex } from "../DepositToIndex/DepositToIndex"
+import { setSelectedIndex } from "@/store/lib/features/walletStore"
 
 export const ManageIndexes = () => {
-  const [isOpen, setIsOpen] = useState(false)
+  const [modalStatus, setModalStatus] = useState<{
+    deployIndex: {
+      isOpen: boolean
+    },
+    deposit: {
+      isOpen: boolean
+    }
+  }>({
+    deployIndex: {
+      isOpen: false
+    },
+    deposit: {
+      isOpen: false
+    }
+  })
+  const dispatch = useAppDispatch()
+  const handleOpenDeployIndex = async (method: string, args?: any) => {
+    switch (method) {
+      case 'create_defindex':
+        await dispatch(resetAdapters())
+        setModalStatus({ ...modalStatus, deployIndex: { isOpen: true } })
+        break
+      case 'edit_index':
+        await dispatch(resetAdapters())
+        for (const item of args.shares) {
+          const newAdapter = {
+            address: item.address,
+            value: item.share,
+            name: item.name ? item.name : shortenAddress(item.address)
+          }
+          await dispatch(pushAdapter(newAdapter))
+        }
+        setModalStatus({ ...modalStatus, deployIndex: { isOpen: true } })
+        break
+    }
+  }
+
+  const handleOpenDeposit = async (method: string, args?: any) => {
+    switch (method) {
+      case 'deposit':
+        setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
+        await dispatch(setSelectedIndex({ ...args, method: 'deposit' }))
+        console.log(args)
+        break
+      case 'withdraw':
+        setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
+        await dispatch(setSelectedIndex({ ...args, method: 'withdraw' }))
+        console.log(args)
+        break
+    }
+  }
+
+
   return (
     <>
       <Grid
@@ -52,20 +109,32 @@ export const ManageIndexes = () => {
             rounded={18}
             aria-label="add-index"
             colorScheme="green"
-            onClick={() => setIsOpen(true)}
+            onClick={() => handleOpenDeployIndex('create_defindex')}
           >
             Add Index
           </Button>
           {/* <IconButton aria-label="add-index" colorScheme="green" icon={<AddIcon />} /> */}
         </GridItem>
         <GridItem colSpan={12} colStart={1} colEnd={13}>
-          <AllIndexes />
+          <AllIndexes handleOpenDeployIndex={handleOpenDeployIndex} handleOpenDeposit={handleOpenDeposit} />
         </GridItem>
       </Grid>
-      <Modal isOpen={isOpen} onClose={() => setIsOpen(!isOpen)}>
+      <Modal
+        isOpen={modalStatus.deployIndex.isOpen}
+        onClose={() => setModalStatus({ ...modalStatus, deployIndex: { isOpen: false } })}
+      >
         <ModalOverlay />
-        <ModalContent>
+        <ModalContent minW={{ sm: '100%', md: '80%', lg: '60%', }}>
           <DeployIndex />
+        </ModalContent>
+      </Modal>
+      <Modal
+        isOpen={modalStatus.deposit.isOpen}
+        onClose={() => setModalStatus({ ...modalStatus, deposit: { isOpen: false } })}
+      >
+        <ModalOverlay />
+        <ModalContent minW={{ sm: '100%', md: '80%', lg: '60%', }}>
+          <DepositToIndex />
         </ModalContent>
       </Modal>
     </>

@@ -1,12 +1,21 @@
 import { DefindexMethod, useDefindexCallback } from '@/hooks/useDefindex'
 import { useAppSelector } from '@/store/lib/storeHooks'
-import { Button, Card, Input, Radio, RadioGroup, Stack } from '@chakra-ui/react'
+import {
+  Button,
+  Card,
+  Input,
+  Textarea,
+  Text,
+  Grid,
+  GridItem,
+  InputGroup,
+  InputRightAddon
+} from '@chakra-ui/react'
 import { useSorobanReact } from '@soroban-react/core'
 import { Address, nativeToScVal, scValToNative, xdr } from '@stellar/stellar-sdk'
 import React, { useEffect, useState } from 'react'
 
 export const DepositToIndex = () => {
-  const [defindex_address, set_defindex_address] = useState<string>(String)
   const [amount, set_amount] = useState<number>(0)
   const [balance, set_balance] = useState<number>(0)
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -14,7 +23,7 @@ export const DepositToIndex = () => {
   const { address } = useSorobanReact();
   const defindex = useDefindexCallback()
 
-  const createdIndexes = useAppSelector(state => state.wallet.createdIndexes)
+  const selectedIndex = useAppSelector(state => state.wallet.indexes.selectedIndex)
 
   const depositDefindex = async () => {
     if (!address || !amount) return;
@@ -27,7 +36,7 @@ export const DepositToIndex = () => {
     console.log('deploying Defindex')
     const result = await defindex(
       DefindexMethod.DEPOSIT,
-      defindex_address,
+      selectedIndex?.address!,
       depositParams,
       true,
     )
@@ -46,7 +55,7 @@ export const DepositToIndex = () => {
     console.log('withdraw Defindex')
     const result = await defindex(
       DefindexMethod.WITHDRAW,
-      defindex_address,
+      selectedIndex?.address!,
       withdrawParams,
       true,
     )
@@ -56,10 +65,11 @@ export const DepositToIndex = () => {
   }
 
   useEffect(() => {
-    getBalance()
-  }, [defindex_address, isLoading])
+    //getBalance()
+    console.log(selectedIndex)
+  }, [selectedIndex, isLoading])
 
-  const getBalance = async () => {
+/*   const getBalance = async () => {
     if (!address) return;
     if (defindex_address.length == 56) {
       const balanceParams: xdr.ScVal[] = [
@@ -78,7 +88,7 @@ export const DepositToIndex = () => {
       const parsedResult = sum / Math.pow(10, 7)
       set_balance(parsedResult)
     }
-  }
+  } */
 
   const setAmount = (e: any) => {
     if (Number.isNaN(e)) return;
@@ -87,20 +97,37 @@ export const DepositToIndex = () => {
 
   return (
     <>
-      <h2>DepositToIndex</h2>
       <Card variant="outline" px={16} py={16} bgColor="whiteAlpha.100">
-        <RadioGroup defaultValue='0' onChange={(e) => set_defindex_address(e)}>
-          <Stack>
-            {createdIndexes.map((index, i) => (
-              <Radio value={index} key={i}>{index}</Radio>
-            ))}
-          </Stack>
-        </RadioGroup>
-        <Input my={4} type="text" onChange={(e) => set_defindex_address(e.target.value)} placeholder='Defindex address' value={defindex_address} />
-        <Input my={4} type="text" onChange={(e) => setAmount(Number(e.target.value))} placeholder='Amount' value={amount} />
-        <Button isDisabled={defindex_address.length < 56} my={4} colorScheme='green' onClick={depositDefindex}>Deposit</Button>
-        <Button isDisabled={defindex_address.length < 56} my={4} colorScheme='blue' onClick={withdrawDefindex}>Withdraw</Button>
-        <h2>Balance: {balance}</h2>
+        <Grid templateColumns="repeat(12, 1fr)" gap={6}>
+          <GridItem colSpan={12}>
+            <Text fontSize='xl'>{selectedIndex?.method === 'deposit' ? 'Deposit to' : 'Withdraw from'}:</Text>
+          </GridItem>
+          <GridItem colSpan={12}>
+            <Textarea
+              defaultValue={selectedIndex?.address}
+              rows={1}
+              textAlign={'center'}
+              readOnly
+              resize={'none'} />
+          </GridItem>
+          <GridItem colSpan={4} colEnd={13} textAlign={'end'}>
+            <h2>Current index balance: {selectedIndex?.balance}</h2>
+          </GridItem>
+          <GridItem colSpan={6} textAlign={'end'} alignContent={'center'}>
+            <Text fontSize='lg'>Amount to {selectedIndex?.method && selectedIndex.method}:</Text>
+          </GridItem>
+          <GridItem colSpan={6} colEnd={13} textAlign={'end'} >
+            <InputGroup alignContent={'center'} alignItems={'center'}>
+              <Input my={4} type="text" onChange={(e) => setAmount(Number(e.target.value))} placeholder='Amount' value={amount} />
+              <InputRightAddon>$ USDC</InputRightAddon>
+            </InputGroup>
+          </GridItem>
+        </Grid>
+
+
+        <Button isDisabled={amount < 0.0000001} my={4} colorScheme='green' onClick={depositDefindex}>{selectedIndex?.method === 'deposit' ? 'Deposit' : 'Withdraw'}</Button>
+        {/* <Button isDisabled={defindex_address.length < 56} my={4} colorScheme='green' onClick={depositDefindex}>Deposit</Button>
+        <Button isDisabled={defindex_address.length < 56} my={4} colorScheme='blue' onClick={withdrawDefindex}>Withdraw</Button> */}
       </Card>
     </>
   )

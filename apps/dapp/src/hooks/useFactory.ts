@@ -2,7 +2,7 @@ import { useSorobanReact } from "@soroban-react/core";
 import { useCallback } from "react";
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { TxResponse, contractInvoke } from '@soroban-react/contracts';
-import configs from '@/constants/configs.json'
+import configs from '@/constants/constants.json'
 
 export enum FactoryMethod {
     CREATE_DEFINDEX = "create_defindex",
