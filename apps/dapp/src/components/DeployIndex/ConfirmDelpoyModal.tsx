@@ -24,6 +24,7 @@ import { IndexPreview } from "./IndexPreview";
 import { DeploySteps } from "./DeploySteps";
 import { useEffect, useState } from "react";
 import { WarningIcon, CheckCircleIcon } from '@chakra-ui/icons'
+import { resetAdapters } from "@/store/lib/features/adaptersStore";
 
 interface Status {
   isSuccess: boolean,
@@ -55,7 +56,6 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   });
   const deployDefindex = async () => {
     const adapterAddressPairScVal = adapters.map((adapter, index) => {
-      console.log('🥑', adapter)
       return xdr.ScVal.scvMap([
         new xdr.ScMapEntry({
           key: xdr.ScVal.scvSymbol("address"),
@@ -78,31 +78,24 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     const createDefindexParams: xdr.ScVal[] = [adapterAddressesScVal];
 
     goToNext();
-    const result: any = await factory(
-      FactoryMethod.CREATE_DEFINDEX,
-      createDefindexParams,
-      true,
-    )
-    /* let result: any;
+    let result: any;
     try {
       result = await factory(
         FactoryMethod.CREATE_DEFINDEX,
         createDefindexParams,
         true,
       )
-    } */
-    /*     catch (e: any) {
-          console.error(e)
-          if (e.toString().includes('ExistingValue')) console.log('Index already exists')
-          setActiveStep(3)
-          setStatus({
-            ...status,
-            hasError: true,
-            message: 'Could not deploy this index, if the problem persist please contact support.'
-          })
-          return
-        } */
-    console.log('🥑result', await result);
+    }
+    catch (e: any) {
+      console.error(e)
+      setActiveStep(3)
+      setStatus({
+        ...status,
+        hasError: true,
+        message: e.toString()
+      })
+      return
+    }
     const parsedResult = scValToNative(result.returnValue);
     dispatch(pushIndex(parsedResult));
     setActiveStep(3);
@@ -114,13 +107,14 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     return result;
   }
 
-  const handleCloseModal = () => {
+  const handleCloseModal = async () => {
     setStatus({
       isSuccess: false,
       hasError: false,
       message: undefined
     });
     setActiveStep(0);
+    await dispatch(resetAdapters())
     onClose();
   }
 
@@ -150,6 +144,16 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     }
   }, [adapters]);
 
+  const autoCloseModal = async () => {
+    await new Promise(resolve => setTimeout(resolve, 5000))
+    handleCloseModal();
+  }
+
+  useEffect(() => {
+    if (status.isSuccess || status.hasError) {
+      autoCloseModal();
+    }
+  }, [status.isSuccess, status.hasError])
   return (
     <>
       <Modal isOpen={isOpen} onClose={handleCloseModal} isCentered>

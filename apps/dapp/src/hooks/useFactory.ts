@@ -38,10 +38,11 @@ export function useFactoryCallback() {
               ) throw result;
               return result
             } catch (e: any) {
-              console.error(e)
-              if (e.toString().includes('ExistingValue')) console.log('Index already exists')
-              return e
+              console.log(e)
+              const error = e.toString()
+              if(error.includes('ExistingValue')) throw new Error('Index already exists.')
+              if(error.includes('Sign')) throw new Error('Request denied by user. Please try to sign again.')
+              throw new Error('Failed to create index. If the problem persists, please contact support.')
             }
-        }
-        , [sorobanContext, factoryAddress])
+        }, [sorobanContext, factoryAddress])
 }

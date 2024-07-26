@@ -68,6 +68,7 @@ export const AllIndexes = ({
             <Th>Name</Th>
             <Th textAlign={'center'}>Address</Th>
             <Th textAlign={'center'}>Balance</Th>
+            <Th textAlign={'center'}>Status</Th>
             <Th textAlign={'center'}>% APR</Th>
             <Th textAlign={'center'}>Options</Th>
           </Tr>
@@ -91,6 +92,7 @@ export const AllIndexes = ({
                 </Tooltip>
               </Td>
               <Td textAlign={'center'}>${index.balance}</Td>
+              <Td textAlign={'center'}>{index.name?.includes('Blend USDC') ? '200' : '400'}</Td>
               <Td textAlign={'center'}>
                 <Stat>
                   <StatHelpText>
