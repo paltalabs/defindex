@@ -66,17 +66,13 @@ $$
 Thus, we have:
 
 $$
-
 m^{afterSwap}_{USDC} = p_{XLM}(m_{XLM}) \cdot M_{XLM} \cdot \frac{m_{dfTokens}}{T_{dfTokens}} < p_0 \cdot M_{XLM} \cdot \frac{m_{dfTokens}}{T_{dfTokens}} = m_{USDC}
-
 $$
 
 In summary:
 
 $$
-
 m^{afterSwap}_{USDC} < m_{USDC}
-
 $$
 
 This inequality shows that the user would request more USDC than what they can actually receive after the swap. This discrepancy leads to a potential loss of funds for DeFindex, highlighting why we can't rely on swapping assets during the deposit process.
