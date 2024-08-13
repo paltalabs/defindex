@@ -51,10 +51,10 @@ $$
 m_{XLM} = M_{XLM} \cdot \frac{m_{dfTokens}}{T_{dfTokens}}
 $$
 
-The USDC received after the swap $m^{out}_{USDC}$ would then be:
+The USDC received after the swap $m^{USDCout}$ would then be:
 
 $$
-m^{out}_{USDC} = p_{XLM}(m_{XLM}) \cdot m_{XLM} = p_{XLM}(m_{XLM}) \cdot M_{XLM} \cdot \frac{m_{dfTokens}}{T_{dfTokens}}
+m_{USDCout} = p_{XLM}(m_{XLM}) \cdot m_{XLM} = p_{XLM}(m_{XLM}) \cdot M_{XLM} \cdot \frac{m_{dfTokens}}{T_{dfTokens}}
 $$
 
 Since $p_0$ is the nominal price and $p_{XLM}(m_{XLM})$ is the actual price after liquidation:
@@ -72,7 +72,7 @@ $$
 In summary:
 
 $$
-m^{out}_{USDC} < m_{USDC}
+m_{USDCout} < m_{USDC}
 $$
 
 This inequality shows that the user would request more USDC than what they can actually receive after the swap. This discrepancy leads to a potential loss of funds for DeFindex, highlighting why we can't rely on swapping assets during the deposit process.
