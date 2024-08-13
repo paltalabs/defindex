@@ -60,10 +60,14 @@ $$
 Since $p_0$ is the nominal price and $p_{XLM}(m_{XLM})$ is the actual price after liquidation:
 
 $$
-p_{XLM}(m_{XLM}) < p_0 \quad \text{for any } m_{XLM} > 0
+p_{XLM}(m_{XLM}) < p_0 \quad \forall m_{XLM} > 0
 $$
 
 Thus, we have:
+
+$$
+p_{XLM}(m_{XLM}) \cdot M_{XLM} \cdot \frac{m_{dfTokens}}{T_{dfTokens}} < p_0 \cdot M_{XLM} \cdot \frac{m_{dfTokens}}{T_{dfTokens}}
+$$
 
 $$
 m^{afterSwap}_{USDC} = p_{XLM}(m_{XLM}) \cdot M_{XLM} \cdot \frac{m_{dfTokens}}{T_{dfTokens}} < p_0 \cdot M_{XLM} \cdot \frac{m_{dfTokens}}{T_{dfTokens}} = m_{USDC}
