@@ -69,10 +69,6 @@ $$
 p_{XLM}(m_{XLM}) \cdot M_{XLM} \cdot \frac{m_{dfTokens}}{T_{dfTokens}} < p_0 \cdot M_{XLM} \cdot \frac{m_{dfTokens}}{T_{dfTokens}}
 $$
 
-$$
-m^{afterSwap}_{USDC} = p_{XLM}(m_{XLM}) \cdot M_{XLM} \cdot \frac{m_{dfTokens}}{T_{dfTokens}} < p_0 \cdot M_{XLM} \cdot \frac{m_{dfTokens}}{T_{dfTokens}} = m_{USDC}
-$$
-
 In summary:
 
 $$
