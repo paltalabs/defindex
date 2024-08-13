@@ -51,7 +51,7 @@ $$
 m_{XLM} = M_{XLM} \cdot \frac{m_{dfTokens}}{T_{dfTokens}}
 $$
 
-The USDC received after the swap $m^{USDCout}$ would then be:
+The USDC received after the swap $m_{USDCout}$ would then be:
 
 $$
 m_{USDCout} = p_{XLM}(m_{XLM}) \cdot m_{XLM} = p_{XLM}(m_{XLM}) \cdot M_{XLM} \cdot \frac{m_{dfTokens}}{T_{dfTokens}}
