@@ -76,3 +76,5 @@ m_{USDCout} < m_{USDC}
 $$
 
 This inequality shows that the user would request more USDC than what they can actually receive after the swap. This discrepancy leads to a potential loss of funds for DeFindex, highlighting why we can't rely on swapping assets during the deposit process.
+
+We can argue that when using any fixed price per share, the amount of USDC received after a swap, denoted as $m_{USDCout}$, will differ from the expected amount $m_{USDC}$. This discrepancy introduces a vulnerability, making the protocol susceptible to manipulation.
