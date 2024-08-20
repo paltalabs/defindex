@@ -7,6 +7,10 @@ This contract enables users to invest in and withdraw from a DeFindex using a si
 
 The specific paths used for asset swaps, as well as the proportion of the output assets, are determined off-chain.
 
+### Functions
+- `deposit`: Allows users to deposit assets into the DeFindex.
+- `zap`: Allows users to deposit assets into the DeFindex using a single asset. This function receives the amount of one asset and an array of Soroswap's Aggregator Swap transactions. This array is computed offchain using the best path and the proportion of the output assets. 
+- `zap_deposit`: 
 ## DeFindex
 This contract serves as the core of the DeFindex platform, responsible for managing assets, executing strategies, and ensuring proper asset rebalancing. It operates with three primary roles: Deployer, Manager, and Emergency Manager. Additionally, the contract functions as a token, similar to a liquidity pool token, referred to as the dfToken.
 
@@ -57,6 +61,7 @@ When a DeFindex is deployed, the Deployer sets the strategies and the initial pr
 
 Strategies are required to report the amount of underlying assets they hold, ensuring that when shares of the DeFindex liquidity pool token are minted, they reflect the correct asset proportions.
 #### Functions
+- `assets`: Returns the assets of the DeFindex and its proportions.
 - `set_strategy`: Allows the Manager to add/remove the strategies.
 - `withdraw_from_strategies`: Allows the Manager to withdraw assets from a strategy, letting them as IDLE funds.
 - `invest_in_strategies`: Allows the Manager to invest IDLE fund assets in a strategy.
