@@ -12,14 +12,12 @@ This contract serves as the core of the DeFindex platform, responsible for manag
 
 While anyone can invest in a DeFindex, only the Manager and Emergency Manager have the authority to move funds between the DeFindex and its associated strategies.
 
-The contract also holds funds not currently invested in any strategy, known as IDLE funds. These funds act as a safety buffer, allowing the Emergency Manager to withdraw assets from underperforming strategies and store them as IDLE funds.
-
-Key functions of the contract include balance retrieval, and investment and withdrawal operations from the strategies.
+The contract also holds funds not currently invested in any strategy, known as IDLE funds. These funds act as a safety buffer, allowing the Emergency Manager to withdraw assets from underperforming or unhealthy strategies and store them as IDLE funds.
 
 ### Initialization
 The DeFindex contract is initialized with a predefined proportion of assets. Let's say 1 token A, 2 token B, and 3 token C. The contract will hold these assets in the right proportion. When a user deposits assets into the DeFindex, they receive dfTokens in return, representing their share of the DeFindex's assets. In the following documents we talk of dfTokens and shares as the same thing.
 
-This is proportion is used for the first deposit made to the DeFindex. The Manager can later modify these proportions in response to changing conditions. Also, the performance of the Strategies will change the proportion of the assets.
+This is proportion is used for the first deposit made to the DeFindex. The Manager can later modify these proportions in response to changing conditions. Also, the performance of the Strategies may change the proportion of the assets.
 
 Strategies are stored in instance storage, since we expect to have DeFindex with a small number of strategies. 
 
@@ -42,6 +40,15 @@ where:
 - $m_s$: Amount of shares to burn
 - $M_s$: Total supply of dfTokens (shares)
 - $A_i$: Total amount of asset $i$ held by the **DeFindex**
+
+Then, the withdrawal function will liquidate the positions in the strategies to get the remaining assets. As in the following equation:
+$$
+a_i = a_{i, \text{IDLE}} + a_{i, \text{Strategy}} \quad \forall a_i>a_{i, \text{IDLE}}
+$$
+
+Where:
+- $a_{i, \text{IDLE}}$: Amount of asset $i$ to get from the IDLE funds
+- $a_{i, \text{Strategy}}$: Amount of asset $i$ to get from the strategies
 
 ### Rebalancing
 Rebalancing is managed by the Manager, who can shift funds from one strategy to another, thereby adjusting the proportions of the underlying assets. For example, the Deployer might initially set a ratio of 2 USDC to 1 XLM for a DeFindex, but this ratio can change based on strategy yields or rebalancing actions by the Manager.
