@@ -1,0 +1,5 @@
+root: ./apps/docs
+
+structure:  
+    readme: ./apps/docs/README.md
+    summary: ./apps/docs/SUMMARY.md
