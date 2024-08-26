@@ -78,3 +78,40 @@ $$
 This inequality shows that the user would request more USDC than what they can actually receive after the swap. This discrepancy leads to a potential loss of funds for DeFindex, highlighting why we can't rely on swapping assets during the deposit process.
 
 We can argue that when using any fixed price per share, the amount of USDC received after a swap, denoted as $m_{USDCout}$, will differ from the expected amount $m_{USDC}$. This discrepancy introduces a vulnerability, making the protocol susceptible to manipulation.
+
+
+
+**Calculating Price Per Share (PPS)**:
+
+The PPS is a crucial metric for ensuring users receive the correct value for their dfTokens. It is calculated as follows:
+
+$$
+\text{PPS} = \frac{\text{Total Assets}}{\text{Total Supply of dfTokens}}
+$$
+
+Where:
+
+- **Total Assets**: The sum of the value of assets managed by all adapters plus any idle assets held directly by the DeFindex contract.
+- **Total Supply of dfTokens**: The total number of dfTokens issued to users.
+
+To illustrate, consider the following scenario:
+
+- DeFindex has three adapters managing different investments:
+    - Adapter A manages $50,000 in a liquidity pool.
+    - Adapter B manages $30,000 in a lending pool.
+    - Adapter C manages $20,000 in a staking protocol.
+- The DeFindex contract holds an additional $10,000 in idle assets.
+
+The Total Assets would be:
+
+$$
+50,000 + 30,000 + 20,000 + 10,000 = 110,000 \text{ USDC} 
+$$
+
+If the Total Supply of dfTokens is 100,000, the PPS would be:
+
+$$
+\text{PPS} = \frac{110,000 \text{ USDC}}{100,000 \text{ dfTokens}} = 1.1 \text{ USDC per dfToken} 
+$$
+
+This calculation ensures users can accurately determine the value of their holdings in DeFindex, promoting transparency and trust.

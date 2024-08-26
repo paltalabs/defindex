@@ -6,7 +6,9 @@
 
 A vault or "Allocator Vault" in V3 refers to an [ERC-4626 compliant](https://github.com/yearn/yearn-vaults-v3/blob/master/contracts/VaultV3.vy#L40) contract that takes in user deposits, mints shares corresponding to the user's share of the underlying assets held in that vault, and then allocates the underlying asset to an array of different "strategies" that earn yield on that asset.
 
-- **Stategy**: A strategy in V3 refers to a yield-generating contract added to a vault that has the needed ERC-4626 interface. The strategy takes the underlying asset and deploys it to a single source, generating yield on that asset.
+- **Stategy**: A strategy or Opportunioty in V3 refers to a yield-generating contract added to a vault that has the needed ERC-4626 interface. The strategy takes the underlying asset and deploys it to a single source, generating yield on that asset.
+
+- **Shares or Vault Tokens**: Tokens that will represents an user participation in a specific Yearn Vault. Depositors receive shares proportional to their deposit amount
 
 # Yearn V3 Main Smart Contracts
 
@@ -140,12 +142,18 @@ The strategy contract in Yearn V3 focuses on specific yield-generating tasks, de
 - **_freeFunds**: Frees assets when needed.
 - **_harvestAndReport**: Harvests rewards, redeploys idle funds, and reports the strategy's total assets.
 
+Reference:
+- [BaseStrategy](https://docs.yearn.fi/developers/smart-contracts/V3/Current-v3.0.2/BaseStrategy)
+- [TokenizedStrategy](https://docs.yearn.fi/developers/smart-contracts/V3/Current-v3.0.2/TokenizedStrategy)
+
 ### Fee and Price Per Share (PPS) Management
 
 ### Fee Management
+Fees are a percentage charged each time a V3 vault or strategy "reports".
+In Yearn V3 there are also **Protocol Fees**, which are a percentage of the total performance fees, that will go to Yearn for providing the infrastucture. Yearn Governande is responsible to set this percentage. It can be set for all Vaults or for individual vaults and strategies. Allowing full customization of the system.
 
 - **Default and Custom Protocol Fees**: The factory contract allows setting default and custom protocol fees for vaults and strategies.
-- **Fee Recipient**: Protocol fees are sent to the designated fee recipient, with the remaining fees going to the vault or strategy-specific recipient.
+- **Fee Recipient**: Protocol fees are sent to the designated fee recipient, with the remaining fees going to the vault or strategy-specific recipient (vaults managers).
 
 ### Price Per Share (PPS) Calculation
 
@@ -153,50 +161,47 @@ The PPS is calculated based on the total assets and total supply of shares withi
 
 ```jsx
 @view
+@internal
+def _convert_to_assets(shares: uint256, rounding: Rounding) -> uint256:
+    """ 
+    assets = shares * (total_assets / total_supply) --- (== price_per_share * shares)
+    """
+    if shares == max_value(uint256) or shares == 0:
+        return shares
+
+    total_supply: uint256 = self._total_supply()
+    # if total_supply is 0, price_per_share is 1
+    if total_supply == 0: 
+        return shares
+
+    numerator: uint256 = shares * self._total_assets()
+    amount: uint256 = numerator / total_supply
+    if rounding == Rounding.ROUND_UP and numerator % total_supply != 0:
+        amount += 1
+
+    return amount
+
+@view
 @external
 def pricePerShare() -> uint256:
     return self._convert_to_assets(10 ** convert(self.decimals, uint256), Rounding.ROUND_DOWN)
 
 ```
 
-This function provides the PPS, ensuring precise asset-to-share conversion.
+This function provides the PPS, ensuring precise share-to-asset confeversion.
+
+In pricePerShare, we are converting 10**decimals units of shares into asset, meaning, an exact unit of share. Meaning `pricePerShare() === convert_to_assets(1)`
+
 
 **Calculating Price Per Share (PPS)**:
 
-- The PPS is a crucial metric for ensuring users receive the correct value for their dfTokens. It is calculated as follows:
+The PPS is a crucial metric for ensuring users receive the correct value for their dfTokens. It is calculated as follows:
 
 $$
 \text{PPS} = \frac{\text{Total Assets}}{\text{Total Supply of dfTokens}}
 $$
 
-Where:
-
-- **Total Assets**: The sum of the value of assets managed by all adapters plus any idle assets held directly by the DeFindex contract.
-- **Total Supply of dfTokens**: The total number of dfTokens issued to users.
-
-To illustrate, consider the following scenario:
-
-- DeFindex has three adapters managing different investments:
-    - Adapter A manages $50,000 in a liquidity pool.
-    - Adapter B manages $30,000 in a lending pool.
-    - Adapter C manages $20,000 in a staking protocol.
-- The DeFindex contract holds an additional $10,000 in idle assets.
-
-The Total Assets would be:
-
-$$
-50,000 + 30,000 + 20,000 + 10,000 = 110,000 \text{ USDC} 
-$$
-
-If the Total Supply of dfTokens is 100,000, the PPS would be:
-
-$$
-\text{PPS} = \frac{110,000 \text{ USDC}}{100,000 \text{ dfTokens}} = 1.1 \text{ USDC per dfToken} 
-$$
-
-This calculation ensures users can accurately determine the value of their holdings in DeFindex, promoting transparency and trust.
-
-## Problems of Yearn Finance V3
+## Limitations of Yearn Finance V3
 
 - Does not support multi-asset strategies: For example you can't invest on a vault composed by a strategy of USDC on Aave and another strategy of USDC-WETH on Uniswap.
 - Price Per Shares (PPS), ConvertToShares and ConvertToAssets functions need to be described in a single asset.

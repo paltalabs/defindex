@@ -1,4 +1,8 @@
 # Set Protocol
+https://www.tokensets.com/#/
+https://docs.tokensets.com/protocol/litepaper
+https://docs.tokensets.com/
+
 
 Set Protocol is a decentralized platform that enables the creation, management, and trading of tokenized investment portfolios, known as Sets. By leveraging Ethereum smart contracts, Set Protocol allows users to automate and rebalance their portfolios based on predefined strategies, making complex financial maneuvers accessible to both novice and experienced investors. These Sets can include a diverse range of assets, from cryptocurrencies to tokenized traditional assets, providing broad exposure and diversification. Set Protocol's intuitive interface and advanced features empower users to maximize returns while minimizing risks, making it a powerful tool for modern digital asset management.
 
@@ -10,7 +14,7 @@ However, a user needs to have the underlying assets to mint a Set token, which c
 
 That’s defined at the beginning as an arbitrary parameter. For example, I can define 1 SetToken to have 1WBTC, 2WETH and 3USDC. Then, if I want to mint 10 SetTokens I need to have 10WBTC, 20WETH, 30USDC.
 
-It can be added a module to mint SetTokens with only one Asset   https://docs.tokensets.com/developers/guides-and-tutorials/protocol/nav-issuance . It uses oracles to identify how much you can mint. “The issuer receives a proportional amount of SetTokens on issuance based on the calculated net asset value of the Set using **oracle prices**.”
+It can be added a module to mint SetTokens with only one Asset, which is the [NAV (Net Asset Value) Issuance](https://docs.tokensets.com/developers/guides-and-tutorials/protocol/nav-issuance) . It uses oracles to identify how much you can mint. “The issuer receives a proportional amount of SetTokens on issuance based on the calculated net asset value of the Set using **oracle prices**.”
 
 # TokenSets
 
