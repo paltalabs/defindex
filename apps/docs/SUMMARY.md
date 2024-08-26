@@ -1,7 +1,7 @@
 # Table of contents
 
 - [DeFindex Protocol](README.md) 
-- [Concepts](01-introduction/README.md)
+- [Introduction](01-introduction/README.md)
 - [Whitepaper](10-whitepaper/README.md)
     -[Introduction](10-whitepaper/01-introduction/README.md)
     -[State of the Art](10-whitepaper/02-state-of-the-art/README.md)
