@@ -12,7 +12,7 @@ The specific paths used for asset swaps, as well as the proportion of the output
 - `zap`: Allows users to deposit assets into the DeFindex using a single asset. This function receives the amount of one asset and an array of Soroswap's Aggregator Swap transactions. This array is computed offchain using the best path and the proportion of the output assets. 
 - `zap_deposit`: It executes a zap and a deposit in a single transaction.
 - `withdraw`: Allows users to withdraw assets from the DeFindex.
-- `zap_withdraw`: Allows users to withdraw assets from the DeFindex and receive a single asset. This function receives the amount of one asset and an array of Soroswap's Aggregator Swap transactions. This array is computed offchain using the best path and the proportion of the output assets.
+- `zap_withdraw`: Allows users to withdraw assets from the DeFindex and receive a single asset. This function receives the amount of one asset and an array of Soroswap's Aggregator Swap transactions. This array is computed offchain using the best path and the proportion of the output assets. 
 
 ## DeFindex
 This contract serves as the core of the DeFindex platform, responsible for managing assets, executing strategies, and ensuring proper asset rebalancing. It operates with three primary roles: Deployer, Fee Receiver, Manager, and Emergency Manager. Additionally, the contract functions as a token, similar to a liquidity pool token, referred to as the dfToken.
