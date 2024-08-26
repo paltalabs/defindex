@@ -42,3 +42,7 @@ DeFindex generates revenue through protocol fees, which include:
 - Protocol Fees: For transactions such as trading and borrowing.
 
 These fees are designed to incentivize protocol development and cover operational costs.
+<<<<<<< HEAD
+=======
+```
+>>>>>>> a7fdd85c321dae6c94fcb7b7edf9c7948290aba6
