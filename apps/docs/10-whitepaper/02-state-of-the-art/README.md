@@ -1,1 +1,2 @@
-Literature Review or Background
+# State of the Art
+From all types of DeFi protocols that achieve similar goals currently available on different ecosystem, we have selected 2 to define the basic concepts for DeFidex. These are Yearn.Finance and TokenSets.
