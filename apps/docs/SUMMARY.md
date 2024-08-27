@@ -16,6 +16,7 @@
             * [DeFindex Vault](./10-whitepaper/03-the-defindex-approach/02-contracts/01-vault-contract.md)
             * [DeFindex Strategy](./10-whitepaper/03-the-defindex-approach/02-contracts/02-strategy-contract.md)
             * [DeFindex Zapper](./10-whitepaper/03-the-defindex-approach/02-contracts/02-zapper-contract.md)
+    * [Strategy Examples](./10-whitepaper/04-strategies-examples.md)
     * [Appendix](./10-whitepaper/10-appendix/README.md)
         * [Why Not Swap in Deposit](./10-whitepaper/10-appendix/01-why-we-cant-swap-on-deposit-or-withdraw.md)
 
