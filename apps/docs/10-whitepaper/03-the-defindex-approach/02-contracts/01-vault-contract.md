@@ -1,25 +1,10 @@
-# Contracts
 
-There are 3 main contracts: Zapper, DeFindex and Strategy (formerly known as Adapter). 
+# DeFindex Vault Contract
+This contract serves as the core of the DeFindex platform, responsible for managing assets, executing strategies, and ensuring proper asset rebalancing. It operates with four primary roles: **Deployer**, **Fee Receiver**, **Manager**, and **Emergency Manager**. Additionally, the contract functions as a token referred to as the dfToken that represents the shares of the vault.
 
-## Zapper
-This contract enables users to invest in and withdraw from a DeFindex using a single asset. For instance, if a DeFindex requires both USDC and XLM, the Zapper contract allows users to deposit USDC, automatically swapping the USDC for XLM and depositing both assets into the DeFindex according to a predefined ratio. Similarly, the Zapper contract facilitates withdrawals by swapping the XLM back to USDC before returning the funds to the user.
+While anyone can invest in a DeFindex, only the Manager and Emergency Manager have the authority to move funds between strategies or even outside strategies and into the Vault itself.
 
-The specific paths used for asset swaps, as well as the proportion of the output assets, are determined off-chain.
-
-### Functions
-- `deposit`: Allows users to deposit assets into the DeFindex.
-- `zap`: Allows users to deposit assets into the DeFindex using a single asset. This function receives the amount of one asset and an array of Soroswap's Aggregator Swap transactions. This array is computed offchain using the best path and the proportion of the output assets. 
-- `zap_deposit`: It executes a zap and a deposit in a single transaction.
-- `withdraw`: Allows users to withdraw assets from the DeFindex.
-- `zap_withdraw`: Allows users to withdraw assets from the DeFindex and receive a single asset. This function receives the amount of one asset and an array of Soroswap's Aggregator Swap transactions. This array is computed offchain using the best path and the proportion of the output assets. 
-
-## DeFindex
-This contract serves as the core of the DeFindex platform, responsible for managing assets, executing strategies, and ensuring proper asset rebalancing. It operates with three primary roles: Deployer, Fee Receiver, Manager, and Emergency Manager. Additionally, the contract functions as a token, similar to a liquidity pool token, referred to as the dfToken.
-
-While anyone can invest in a DeFindex, only the Manager and Emergency Manager have the authority to move funds between the DeFindex and its associated strategies.
-
-The contract also holds funds not currently invested in any strategy, known as IDLE funds. These funds act as a safety buffer, allowing the Emergency Manager to withdraw assets from underperforming or unhealthy strategies and store them as IDLE funds.
+The contract also holds funds not currently invested in any strategy, known as **IDLE funds**. These funds act as a safety buffer, allowing the Emergency Manager to withdraw assets from underperforming or unhealthy strategies and store them as IDLE funds.
 
 ### Initialization
 The DeFindex contract is initialized with a predefined proportion of assets. Let's say 1 token A, 2 token B, and 3 token C. The contract will hold these assets in the right proportion. When a user deposits assets into the DeFindex, they receive dfTokens in return, representing their share of the DeFindex's assets. In the following documents we talk of dfTokens and shares as the same thing.
@@ -104,20 +89,3 @@ In the ideal escenario, once the user deposits the assets, the DeFindex will inv
 In this case, the DeFindex will store the assets as IDLE funds, and the Manager will need to execute a function called `invest_idle_funds` to allocate the assets to the strategies.
 
 The same happens when a user withdraws the assets. The DeFindex will store the assets as IDLE funds, and the Manager will need to execute a function called `withdraw_idle_funds` to withdraw the assets from the strategies. Then, the user will be able to withdraw the assets.
-
-## Strategy
-This contract is responsible for generating yields for the DeFindex. It provides key functions such as deposit, withdraw, and balance.
-
-The strategy itself is a `struct` that can be implemented by other developers. This can include DeFi protocol developers or anyone with a compelling strategy designed to generate yields.
-
-A Strategy has only one underlying asset. For instance, a Strategy could be designed to generate yields from a single asset, such as USDC or XLM. The Strategy contract is initialized with the asset it will manage.
-
-In the case of Liquidity pools, the Strategy will manage the liquidity pool token. For instance, if the Strategy is managing a USDC/XLM pool, the Strategy will manage the liquidity pool token.
-
-The main functions for a Strategy are:
-- `initialize`: Initializes the Strategy with the required parameters.
-- `asset`: Returns the asset of the Strategy.
-- `deposit`: Allows the DeFindex to deposit assets into the Strategy.
-- `withdraw`: Allows the DeFindex to withdraw assets from the Strategy.
-- `balance`: Returns the balance of the Strategy.
-- `harvest`: Allows the Strategy to generate yields. In case an action is required for the strategy to generate yields, the `harvest` function will execute it.

@@ -1,8 +1,6 @@
 # DeFindex Whitepaper
-Subtitle (if any)
-Author(s) and their credentials
-Date of publication
-PaltaLabs
-## Abstract
 
-## Table of Content
+Francisco Catrileo | Joaquin Soza | Esteban Iglesias
+
+## Abstract
+DeFindex is a set of Smart Contracts to Interact better with different Descentralized Finance protocols on the Stellar / Soroban Blockchain
