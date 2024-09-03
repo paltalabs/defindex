@@ -12,6 +12,7 @@ crate-type = ["cdylib"]
  
 [dependencies] 
 soroban-sdk = { workspace = true }
+soroban-token-sdk = { workspace = true }
 defindex-adapter-interface = { workspace = true }
 
 [dev-dependencies]
