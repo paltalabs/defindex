@@ -272,15 +272,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "defindex"
-version = "1.0.0"
-dependencies = [
- "defindex-adapter-interface",
- "soroban-sdk",
- "soroban-token-sdk",
-]
-
-[[package]]
 name = "defindex-adapter-interface"
 version = "1.0.0"
 dependencies = [
@@ -292,6 +283,15 @@ name = "defindex-factory"
 version = "1.0.0"
 dependencies = [
  "soroban-sdk",
+]
+
+[[package]]
+name = "defindex-vault"
+version = "1.0.0"
+dependencies = [
+ "defindex-adapter-interface",
+ "soroban-sdk",
+ "soroban-token-sdk",
 ]
 
 [[package]]
