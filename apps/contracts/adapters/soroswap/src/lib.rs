@@ -37,9 +37,13 @@ fn check_initialized(e: &Env) -> Result<(), AdapterError> {
 #[contract]
 struct SoroswapAdapter;
 
+pub trait InitializeTrait {
+    fn initialize(e: Env, protocol_address: Address) -> Result<(), AdapterError>;
+}
+
 #[contractimpl]
-impl DeFindexAdapterTrait for SoroswapAdapter {
-    /// Initializes the contract and sets the phoenix multihop address
+impl InitializeTrait for SoroswapAdapter {
+    /// Initializes the contract and sets the soroswap router address
     fn initialize(
         e: Env,
         protocol_address: Address,
@@ -55,7 +59,10 @@ impl DeFindexAdapterTrait for SoroswapAdapter {
         extend_instance_ttl(&e);
         Ok(())
     }
+}
 
+#[contractimpl]
+impl DeFindexAdapterTrait for SoroswapAdapter {
     fn deposit(
         e: Env,
         amount: i128,
@@ -130,7 +137,7 @@ impl DeFindexAdapterTrait for SoroswapAdapter {
     fn withdraw(
         e: Env,
         from: Address,
-    ) -> Result<(), AdapterError> {
+    ) -> Result<i128, AdapterError> {
         from.require_auth();
         check_initialized(&e)?;
         extend_instance_ttl(&e);
@@ -190,9 +197,9 @@ impl DeFindexAdapterTrait for SoroswapAdapter {
             &u64::MAX,
         );
 
-        // let total_swapped_amount = swap_result.last().unwrap();
+        let total_swapped_amount = swap_result.last().unwrap();
 
-        Ok(())
+        Ok(total_swapped_amount)
     }
 
     fn balance(

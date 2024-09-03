@@ -9,5 +9,6 @@ pub enum AdapterError {
     NegativeNotAllowed = 403,
     ProtocolAddressNotFound = 404,
     DeadlineExpired = 405,
+    ExternalError = 406
 }
 

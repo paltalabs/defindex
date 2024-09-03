@@ -1,0 +1,65 @@
+{
+  "folders": [
+    {
+      "name": "Root",
+      "path": "./",
+    },
+    {
+      "name": "Contracts",
+      "path": "apps/contracts",
+    },
+    {
+      "name": "Dapp",
+      "path": "apps/dapp",
+    },
+    {
+      "name": "Docs",
+      "path": "apps/docs",
+    },
+    {
+      "name": "Landing",
+      "path": "apps/landing",
+    },
+    {
+      "name": "DeFindex Dart SDK",
+      "path": "packages/defindex-dart-sdk",
+    },
+    {
+      "name": "DeFindex SDK",
+      "path": "packages/defindex-sdk",
+    },
+    {
+      "name": "DeFindex UI",
+      "path": "packages/ui",
+    },
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/CVS": true,
+      "**/.DS_Store": true,
+      "**/Thumbs.db": true,
+      "**/pnpm-lock.yaml": true,
+      "**/package-lock.json": true,
+      "**/.turbo": true,
+      "**/.next": true,
+      "**/.vercel": true,
+    },
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit",
+      "source.fixAll.eslint": "explicit",
+    },
+    "peacock.color": "#8758FF",
+    "workbench.colorCustomizations": {
+      "sash.hoverBorder": "#ac8bff",
+      "statusBar.background": "#467c16",
+      "statusBar.foreground": "#e7e7e7",
+      "statusBarItem.hoverBackground": "#ac8bff",
+      "statusBarItem.remoteBackground": "#467c16",
+      "statusBarItem.remoteForeground": "#e7e7e7",
+    },
+  },
+}
