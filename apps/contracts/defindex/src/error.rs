@@ -12,4 +12,7 @@ pub enum ContractError {
     NeedToWait = 406,
     ArithmeticError = 407,
     LengthMismatch = 408,
+    Unauthorized = 409,
+    RoleNotFound = 410,
+    ValueNotInitialized = 411,
 }

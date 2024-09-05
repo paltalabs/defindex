@@ -7,10 +7,12 @@ use soroban_token_sdk::metadata::TokenMetadata;
 
 
 
-mod token;
+mod access;
 mod error;
 mod models;
 mod storage;
+mod token;
+mod utils;
 
 pub use error::ContractError;
 
