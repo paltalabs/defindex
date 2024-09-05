@@ -1,22 +1,13 @@
-use soroban_sdk::{contracttype, Address, Env, String};
+use soroban_sdk::{contracttype, Address, Env};
 
 #[derive(Clone)]
 #[contracttype]
 
 enum DataKey {
-    Initialized,
     TotalAdapters,
     IdleFunds,
     Shares(u32),
     Adapters(u32),
-}
-
-pub fn set_initialized(e: &Env, initialized: bool) {
-    e.storage().instance().set(&DataKey::Initialized, &initialized);
-}
-
-pub fn is_initialized(e: &Env) -> bool {
-    e.storage().instance().has(&DataKey::Initialized)
 }
 
 pub fn set_share(e: &Env, index: u32, share: u32) {

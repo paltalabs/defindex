@@ -5,10 +5,9 @@ use crate::error::ContractError;
 #[derive(Clone)]
 #[contracttype]
 pub enum RolesDataKey {
-    Deployer,         // Role: Deployer
+    EmergencyManager, // Role: Emergency Manager
     FeeReceiver,      // Role: Fee Receiver
     Manager,          // Role: Manager
-    EmergencyManager, // Role: Emergency Manager
 }
 
 #[derive(Clone)]
@@ -83,22 +82,13 @@ impl AccessControlTrait for AccessControl {
 
 // Role-specific setters and getters
 impl AccessControl {
-    pub fn set_deployer(&self, deployer: &Address) {
-        self.require_role(&RolesDataKey::Manager);
-        self.set_role(&RolesDataKey::Deployer, deployer);
-    }
-
-    pub fn get_deployer(&self) -> Option<Address> {
-        self.get_role(&RolesDataKey::Deployer)
-    }
-
     pub fn set_fee_receiver(&self, caller: &Address, fee_receiver: &Address) {
         self.require_any_role(&[RolesDataKey::Manager, RolesDataKey::FeeReceiver], caller);
         self.set_role(&RolesDataKey::FeeReceiver, fee_receiver);
     }
 
-    pub fn get_fee_receiver(&self) -> Option<Address> {
-        self.get_role(&RolesDataKey::FeeReceiver)
+    pub fn get_fee_receiver(&self) -> Result<Address, ContractError> {
+        self.check_role(&RolesDataKey::FeeReceiver)
     }
 
     pub fn set_manager(&self, manager: &Address) {
@@ -106,16 +96,16 @@ impl AccessControl {
         self.set_role(&RolesDataKey::Manager, manager);
     }
 
-    pub fn get_manager(&self) -> Option<Address> {
-        self.get_role(&RolesDataKey::Manager)
+    pub fn get_manager(&self) -> Result<Address, ContractError> {
+        self.check_role(&RolesDataKey::Manager)
     }
 
-    pub fn set_emergency_manager(&self, user: &Address, emergency_manager: &Address) {
+    pub fn set_emergency_manager(&self, emergency_manager: &Address) {
         self.require_role(&RolesDataKey::Manager);
         self.set_role(&RolesDataKey::EmergencyManager, emergency_manager);
     }
 
-    pub fn get_emergency_manager(&self) -> Option<Address> {
-        self.get_role(&RolesDataKey::EmergencyManager)
+    pub fn get_emergency_manager(&self) -> Result<Address, ContractError> {
+        self.check_role(&RolesDataKey::EmergencyManager)
     }
 }

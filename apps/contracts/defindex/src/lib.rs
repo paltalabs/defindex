@@ -1,23 +1,25 @@
 #![no_std]
+use access::{AccessControl, AccessControlTrait, RolesDataKey};
+use interface::AdminInterfaceTrait;
 use soroban_sdk::{
-    auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation},
-    contract, contractimpl, vec, Address, Env, IntoVal, String, Symbol, Val, Vec,
+    contract, contractimpl, panic_with_error, Address, Env, String, Vec
 };
 use soroban_token_sdk::metadata::TokenMetadata;
-
-
+use crate::interface::VaultTrait;
 
 mod access;
 mod error;
+mod interface;
 mod models;
 mod storage;
+mod test;
 mod token;
 mod utils;
 
 pub use error::ContractError;
 
 use storage::{
-    get_adapter, get_share, get_total_adapters, is_initialized, set_adapter, set_initialized,
+    get_adapter, get_share, get_total_adapters, set_adapter,
     set_share, set_total_adapters,
 };
 
@@ -26,49 +28,44 @@ use defindex_adapter_interface::DeFindexAdapterClient;
 use token::write_metadata;
 
 fn check_initialized(e: &Env) -> Result<(), ContractError> {
-    if is_initialized(e) {
+    let access_control = AccessControl::new(&e);
+    if access_control.has_role(&RolesDataKey::Manager) {
         Ok(())
     } else {
-        Err(ContractError::NotInitialized)
+        panic_with_error!(&e, ContractError::NotInitialized);
     }
 }
 
-pub trait AllocatorTrait {
-    fn initialize(e: Env, adapters: Vec<AdapterParams>) -> Result<(), ContractError>;
-
-    fn deposit(e: Env, amount: i128, from: Address) -> Result<(), ContractError>;
-
-    fn withdraw(
-        e: Env,
-        from: Address,
-    ) -> Result<(), ContractError>;
-
-    fn emergency_withdraw(
-        e: Env,
-        from: Address,
-    ) -> Result<(), ContractError>;
-
-    fn shares(
-        e: Env,
-        from: Address,
-    ) -> Result<Vec<i128>, ContractError>;
-
-    fn get_adapter_address(e: Env) -> Address;
-
-    fn current_invested_funds(e: Env) -> i128;
+pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
+    if amount < 0 {
+        Err(ContractError::NegativeNotAllowed)
+    } else {
+        Ok(())
+    }
 }
 
 #[contract]
-pub struct Allocator;
+pub struct DeFindexVault;
 
 #[contractimpl]
-impl AllocatorTrait for Allocator {
-    fn initialize(e: Env, adapters: Vec<AdapterParams>) -> Result<(), ContractError> {
-        if is_initialized(&e) {
-            return Err(ContractError::AlreadyInitialized);
+impl VaultTrait for DeFindexVault {
+    fn initialize(
+        e: Env, 
+        emergency_manager: Address, 
+        fee_receiver: Address, 
+        manager: Address, 
+        adapters: Vec<AdapterParams>
+    ) -> Result<(), ContractError> {
+        let access_control = AccessControl::new(&e);
+        if access_control.has_role(&RolesDataKey::Manager) {
+            panic_with_error!(&e, ContractError::AlreadyInitialized);
         }
 
-        // should verify that shares are not more than 100%
+        access_control.set_role(&RolesDataKey::EmergencyManager, &emergency_manager);
+        access_control.set_role(&RolesDataKey::FeeReceiver, &fee_receiver);
+        access_control.set_role(&RolesDataKey::Manager, &manager);
+
+        //TODO: Name of the tokens should be created by the strategy taken place?
         let decimal: u32 = 7;
         let name: String = String::from_str(&e, "dfToken");
         let symbol: String = String::from_str(&e, "DFT");
@@ -82,7 +79,6 @@ impl AllocatorTrait for Allocator {
             },
         );
 
-        set_initialized(&e, true);
         set_total_adapters(&e, &adapters.len());
 
         for adapter in adapters.iter() {
@@ -95,6 +91,7 @@ impl AllocatorTrait for Allocator {
 
     fn deposit(e: Env, amount: i128, from: Address) -> Result<(), ContractError> {
         check_initialized(&e)?;
+        check_nonnegative_amount(amount)?;
         from.require_auth();
 
         let total_adapters = get_total_adapters(&e);
@@ -183,4 +180,35 @@ impl AllocatorTrait for Allocator {
     }
 }
 
-mod test;
+#[contractimpl]
+impl AdminInterfaceTrait for DeFindexVault {  
+    fn set_fee_receiver(e: Env, caller: Address, fee_receiver: Address) {
+        let access_control = AccessControl::new(&e);
+        access_control.set_fee_receiver(&caller, &fee_receiver)
+    }
+  
+    fn get_fee_receiver(e: Env) -> Result<Address, ContractError> {
+        let access_control = AccessControl::new(&e);
+        access_control.get_fee_receiver()
+    }
+  
+    fn set_manager(e: Env, manager: Address) {
+        let access_control = AccessControl::new(&e);
+        access_control.set_manager(&manager)
+    }
+  
+    fn get_manager(e: Env) -> Result<Address, ContractError> {
+        let access_control = AccessControl::new(&e);
+        access_control.get_manager()
+    }
+  
+    fn set_emergency_manager(e: Env, emergency_manager: Address) {
+        let access_control = AccessControl::new(&e);
+        access_control.set_emergency_manager(&emergency_manager)
+    }
+  
+    fn get_emergency_manager(e: Env) -> Result<Address, ContractError> {
+        let access_control = AccessControl::new(&e);
+        access_control.get_emergency_manager()
+    }
+}
