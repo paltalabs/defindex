@@ -6,6 +6,7 @@ use soroban_sdk::{contracttype, Address, Env, String};
 enum DataKey {
     Initialized,
     TotalAdapters,
+    IdleFunds,
     Shares(u32),
     Adapters(u32),
 }
@@ -45,4 +46,12 @@ pub fn set_total_adapters(e: &Env, n: &u32) {
 
 pub fn get_total_adapters(e: &Env) -> u32 {
     e.storage().instance().get(&DataKey::TotalAdapters).unwrap()
+}
+
+pub fn set_idle_funds(e: &Env, n: &i128) {
+    e.storage().instance().set(&DataKey::IdleFunds, n);
+}
+
+pub fn get_idle_funds(e: &Env) -> i128 {
+    e.storage().instance().get(&DataKey::IdleFunds).unwrap()
 }

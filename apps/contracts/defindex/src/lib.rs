@@ -52,6 +52,8 @@ pub trait AllocatorTrait {
     ) -> Result<Vec<i128>, ContractError>;
 
     fn get_adapter_address(e: Env) -> Address;
+
+    fn current_invested_funds(e: Env) -> i128;
 }
 
 #[contract]
@@ -172,6 +174,10 @@ impl AllocatorTrait for Allocator {
 
     fn get_adapter_address(e: Env) -> Address {
         get_adapter(&e, 0)
+    }
+
+    fn current_invested_funds(e: Env) -> i128 {
+        0i128
     }
 }
 
