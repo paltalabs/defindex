@@ -10,7 +10,6 @@ use crate::interface::VaultTrait;
 mod access;
 mod error;
 mod interface;
-mod models;
 mod storage;
 mod test;
 mod token;
@@ -19,11 +18,9 @@ mod utils;
 pub use error::ContractError;
 
 use storage::{
-    get_adapter, get_share, get_total_adapters, set_adapter,
-    set_share, set_total_adapters,
+    get_strategy, get_strategy_name, get_total_strategies, set_ratio, set_strategy, set_strategy_name, set_token, set_total_strategies, set_total_tokens, StrategyParams
 };
 
-use models::AdapterParams;
 use defindex_adapter_interface::DeFindexAdapterClient;
 use token::write_metadata;
 
@@ -54,8 +51,10 @@ impl VaultTrait for DeFindexVault {
         e: Env, 
         emergency_manager: Address, 
         fee_receiver: Address, 
-        manager: Address, 
-        adapters: Vec<AdapterParams>
+        manager: Address,
+        tokens: Vec<Address>,
+        ratios: Vec<u32>,
+        strategies: Vec<StrategyParams>
     ) -> Result<(), ContractError> {
         let access_control = AccessControl::new(&e);
         if access_control.has_role(&RolesDataKey::Manager) {
@@ -66,26 +65,35 @@ impl VaultTrait for DeFindexVault {
         access_control.set_role(&RolesDataKey::FeeReceiver, &fee_receiver);
         access_control.set_role(&RolesDataKey::Manager, &manager);
 
-        //TODO: Name of the tokens should be created by the strategy taken place?
+        // Store tokens and their ratios
+        let total_tokens = tokens.len();
+        set_total_tokens(&e, total_tokens as u32);
+        for (i, token) in tokens.iter().enumerate() {
+            set_token(&e, i as u32, &token);
+            set_ratio(&e, i as u32, ratios.get(i as u32).unwrap());
+        }
+
+        // Store strategies
+        let total_strategies = strategies.len();
+        set_total_strategies(&e, total_strategies as u32);
+        for (i, strategy) in strategies.iter().enumerate() {
+            set_strategy(&e, i as u32, &strategy.address);
+            set_strategy_name(&e, i as u32, &strategy.name);
+        }
+
+        // Metadata for the contract's token (unchanged)
         let decimal: u32 = 7;
         let name: String = String::from_str(&e, "dfToken");
         let symbol: String = String::from_str(&e, "DFT");
-    
+
         write_metadata(
             &e,
             TokenMetadata {
-                decimal ,
+                decimal,
                 name,
                 symbol,
             },
         );
-
-        set_total_adapters(&e, &adapters.len());
-
-        for adapter in adapters.iter() {
-            set_share(&e, adapter.index, adapter.share);
-            set_adapter(&e, adapter.index, &adapter.address);
-        }
 
         Ok(())
     }
@@ -95,25 +103,20 @@ impl VaultTrait for DeFindexVault {
         check_nonnegative_amount(amount)?;
         from.require_auth();
 
-        let total_adapters = get_total_adapters(&e);
+        let total_strategies = get_total_strategies(&e);
         let total_amount_used: i128 = 0;
 
-        for i in 0..total_adapters {
-            let adapter_share = get_share(&e, i);
+        for i in 0..total_strategies {
+            let strategy_address = get_strategy(&e, i);
+            let strategy_client = DeFindexAdapterClient::new(&e, &strategy_address);
 
-            let adapter_address = get_adapter(&e, i);
-            let adapter_client = DeFindexAdapterClient::new(&e, &adapter_address);
-
-            let adapter_amount = if i == (total_adapters - 1) {
+            let adapter_amount = if i == (total_strategies - 1) {
                 amount - total_amount_used
             } else {
                 amount
-                    .checked_mul(adapter_share.into())
-                    .and_then(|prod| prod.checked_div(100))
-                    .ok_or(ContractError::ArithmeticError)?
             };
 
-            adapter_client.deposit(&adapter_amount, &from);
+            strategy_client.deposit(&adapter_amount, &from);
             //should run deposit functions on adapters
         }
 
@@ -126,13 +129,13 @@ impl VaultTrait for DeFindexVault {
     ) -> Result<(), ContractError>{
         check_initialized(&e)?;
         from.require_auth();
-        let total_adapters = get_total_adapters(&e);
+        let total_strategies = get_total_strategies(&e);
 
-        for i in 0..total_adapters {
-            let adapter_address = get_adapter(&e, i);
-            let adapter_client = DeFindexAdapterClient::new(&e, &adapter_address);
+        for i in 0..total_strategies {
+            let strategy_address = get_strategy(&e, i);
+            let strategy_client = DeFindexAdapterClient::new(&e, &strategy_address);
 
-            adapter_client.withdraw(&from);
+            strategy_client.withdraw(&from);
         }
 
         Ok(())
@@ -144,20 +147,33 @@ impl VaultTrait for DeFindexVault {
     ) -> Result<(), ContractError>{
         check_initialized(&e)?;
         from.require_auth();
-        let total_adapters = get_total_adapters(&e);
+        let total_strategies = get_total_strategies(&e);
 
-        for i in 0..total_adapters {
-            let adapter_address = get_adapter(&e, i);
-            let adapter_client = DeFindexAdapterClient::new(&e, &adapter_address);
+        for i in 0..total_strategies {
+            let strategy_address = get_strategy(&e, i);
+            let strategy_client = DeFindexAdapterClient::new(&e, &strategy_address);
 
-            adapter_client.withdraw(&from);
+            strategy_client.withdraw(&from);
         }
 
         Ok(())
     }
 
-    fn get_adapter_address(e: Env) -> Address {
-        get_adapter(&e, 0)
+    fn get_strategies(e: Env) -> Vec<StrategyParams> {
+        let total_strategies = get_total_strategies(&e);
+        let mut strategies = Vec::new(&e);
+
+        for i in 0..total_strategies {
+            let strategy_address = get_strategy(&e, i);
+            let strategy_name = get_strategy_name(&e, i);
+
+            strategies.push_back(StrategyParams {
+                name: strategy_name,
+                address: strategy_address,
+            });
+        }
+
+        strategies
     }
 
     fn current_invested_funds(e: Env) -> i128 {

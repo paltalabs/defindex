@@ -1,6 +1,6 @@
 #![cfg(test)]
 extern crate std;
-use crate::models::AdapterParams;
+use crate::storage::StrategyParams;
 use crate::{DeFindexVault, DeFindexVaultClient};
 use soroban_sdk::token::{
     StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient,
@@ -10,7 +10,8 @@ use soroban_sdk::{
     Address, 
     testutils::Address as _,
     Vec,
-    vec as sorobanvec
+    vec as sorobanvec,
+    String
 };
 use std::vec;
 
@@ -31,12 +32,11 @@ pub(crate) fn get_token_admin_client<'a>(
     SorobanTokenAdminClient::new(e, address)
 }
 
-pub(crate) fn create_adapter_params(test: &DeFindexVaultTest) -> Vec<AdapterParams> {
+pub(crate) fn create_strategy_params(test: &DeFindexVaultTest) -> Vec<StrategyParams> {
     sorobanvec![
         &test.env,
-        AdapterParams {
-            index: 0u32,
-            share: 100u32,
+        StrategyParams {
+            name: String::from_str(&test.env, "Strategy 1"),
             address: test.adapter_address.clone(),
         }
     ]
@@ -80,7 +80,6 @@ impl<'a> DeFindexVaultTest<'a> {
         
         //TODO: Adapter mockup (should be an strategy later on)
         let adapter_address = Address::generate(&env);
-
 
         DeFindexVaultTest {
             env,

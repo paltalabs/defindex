@@ -7,6 +7,7 @@ pub enum ContractError {
     // Initialization Errors (1xx)
     NotInitialized = 100,
     AlreadyInitialized = 101,
+    InvalidRatio = 102,
 
     // Validation Errors (2xx)
     NegativeNotAllowed = 200,

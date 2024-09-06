@@ -1,7 +1,6 @@
-use soroban_sdk::{symbol_short, testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation}, Address, IntoVal, Symbol};
+use soroban_sdk::{testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation}, Address, IntoVal, Symbol, Vec, vec as sorobanvec};
 
-use crate::error::ContractError;
-use crate::test::{create_adapter_params, DeFindexVaultTest};
+use crate::test::{DeFindexVaultTest, create_strategy_params};
 
 extern crate alloc;
 use alloc::vec;
@@ -9,8 +8,11 @@ use alloc::vec;
 #[test]
 fn test_set_new_fee_receiver_by_fee_receiver() {
     let test = DeFindexVaultTest::setup();
-    let adapter_params = create_adapter_params(&test);
-    test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &adapter_params);
+    let strategy_params = create_strategy_params(&test);
+    let tokens: Vec<Address> = sorobanvec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
+    let ratios: Vec<u32> = sorobanvec![&test.env, 1, 1];
+
+    test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &tokens, &ratios, &strategy_params);
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
     assert_eq!(fee_receiver_role, test.fee_receiver);
@@ -26,8 +28,11 @@ fn test_set_new_fee_receiver_by_fee_receiver() {
 #[test]
 fn test_set_new_fee_receiver_by_manager() {
     let test = DeFindexVaultTest::setup();
-    let adapter_params = create_adapter_params(&test);
-    test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &adapter_params);
+    let strategy_params = create_strategy_params(&test);
+    let tokens: Vec<Address> = sorobanvec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
+    let ratios: Vec<u32> = sorobanvec![&test.env, 1, 1];
+
+    test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &tokens, &ratios, &strategy_params);
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
     assert_eq!(fee_receiver_role, test.fee_receiver);
@@ -44,8 +49,11 @@ fn test_set_new_fee_receiver_by_manager() {
 #[should_panic(expected = "HostError: Error(Contract, #400)")] // Unauthorized
 fn test_set_new_fee_receiver_by_emergency_manager() {
     let test = DeFindexVaultTest::setup();
-    let adapter_params = create_adapter_params(&test);
-    test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &adapter_params);
+    let strategy_params = create_strategy_params(&test);
+    let tokens: Vec<Address> = sorobanvec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
+    let ratios: Vec<u32> = sorobanvec![&test.env, 1, 1];
+
+    test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &tokens, &ratios, &strategy_params);
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
     assert_eq!(fee_receiver_role, test.fee_receiver);
@@ -59,8 +67,11 @@ fn test_set_new_fee_receiver_by_emergency_manager() {
 #[should_panic(expected = "HostError: Error(Contract, #400)")] // Unauthorized
 fn test_set_new_fee_receiver_invalid_sender() {
   let test = DeFindexVaultTest::setup();
-  let adapter_params = create_adapter_params(&test);
-  test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &adapter_params);
+  let strategy_params = create_strategy_params(&test);
+  let tokens: Vec<Address> = sorobanvec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
+  let ratios: Vec<u32> = sorobanvec![&test.env, 1, 1];
+
+  test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &tokens, &ratios, &strategy_params);
 
   let fee_receiver_role = test.defindex_contract.get_fee_receiver();
   assert_eq!(fee_receiver_role, test.fee_receiver);
@@ -73,8 +84,11 @@ fn test_set_new_fee_receiver_invalid_sender() {
 #[test]
 fn test_set_new_manager_by_manager() {
     let test = DeFindexVaultTest::setup();
-    let adapter_params = create_adapter_params(&test);
-    test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &adapter_params);
+    let strategy_params = create_strategy_params(&test);
+    let tokens: Vec<Address> = sorobanvec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
+    let ratios: Vec<u32> = sorobanvec![&test.env, 1, 1];
+
+    test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &tokens, &ratios, &strategy_params);
 
     let manager_role = test.defindex_contract.get_manager();
     assert_eq!(manager_role, test.manager);

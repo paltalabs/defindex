@@ -1,14 +1,16 @@
 use soroban_sdk::{Address, Env, Vec};
 
-use crate::{models::AdapterParams, ContractError};
+use crate::{storage::StrategyParams, ContractError};
 
 pub trait VaultTrait {
   fn initialize(
       e: Env, 
       emergency_manager: Address, 
       fee_receiver: Address, 
-      manager: Address, 
-      adapters: Vec<AdapterParams>
+      manager: Address,
+      tokens: Vec<Address>,
+      ratios: Vec<u32>,
+      strategies: Vec<StrategyParams>
   ) -> Result<(), ContractError>;
 
   fn deposit(e: Env, amount: i128, from: Address) -> Result<(), ContractError>;
@@ -23,7 +25,7 @@ pub trait VaultTrait {
       from: Address,
   ) -> Result<(), ContractError>;
 
-  fn get_adapter_address(e: Env) -> Address;
+  fn get_strategies(e: Env) -> Vec<StrategyParams>;
 
   fn current_invested_funds(e: Env) -> i128;
 }
