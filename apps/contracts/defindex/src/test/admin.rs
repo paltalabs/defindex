@@ -100,37 +100,3 @@ fn test_set_new_manager_by_manager() {
     let new_manager_role = test.defindex_contract.get_manager();
     assert_eq!(new_manager_role, users[0]);
 }
-
-// #[test]
-// // #[should_panic(expected = "HostError: Error(Contract, #400)")] // Unauthorized
-// fn test_set_new_manager_by_fee_receiver() {
-//     let test = DeFindexVaultTest::setup();
-//     let adapter_params = create_adapter_params(&test);
-//     test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &adapter_params);
-
-//     let manager_role = test.defindex_contract.get_manager();
-//     assert_eq!(manager_role, test.manager);
-
-//     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
-//     test.defindex_contract.set_manager(&users[0]);
-
-//     // let new_manager_role = test.defindex_contract.get_manager();
-//     // assert_eq!(new_manager_role, users[0]);
-// }
-
-// #[test]
-// #[should_panic(expected = "HostError: Error(Contract, #400)")] // Unauthorized
-// fn test_set_new_manager_by_emergency_manager() {
-//     let test = DeFindexVaultTest::setup();
-//     let adapter_params = create_adapter_params(&test);
-//     test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &adapter_params);
-
-//     let manager_role = test.defindex_contract.get_manager();
-//     assert_eq!(manager_role, test.manager);
-
-//     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
-//     // Trying to set the new manager with emergency manager
-//     test.defindex_contract.set_manager(&test.emergency_manager);
-
-//     let new_manager_role = test.defindex_contract.get_manager();
-//     assert_eq!(new_manager_role, users
