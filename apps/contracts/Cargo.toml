@@ -13,6 +13,7 @@ repository = "https://github.com/paltalabs/defindex"
 
 [workspace.dependencies]
 soroban-sdk = "21.0.1-preview.3"
+soroban-token-sdk = { version = "21.0.1-preview.3" }
 # soroswap-library = "0.3.0"
 defindex-adapter-interface={ path="./adapters/interface", package="defindex-adapter-interface" }
 

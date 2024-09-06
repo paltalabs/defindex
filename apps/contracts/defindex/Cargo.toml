@@ -1,5 +1,5 @@
 [package]
-name = "defindex"
+name = "defindex-vault"
 version = { workspace = true }
 authors = ["coderipper <joaquin@paltalabs.io>"]
 license = { workspace = true }
@@ -12,6 +12,7 @@ crate-type = ["cdylib"]
  
 [dependencies] 
 soroban-sdk = { workspace = true }
+soroban-token-sdk = { workspace = true }
 defindex-adapter-interface = { workspace = true }
 
 [dev-dependencies]

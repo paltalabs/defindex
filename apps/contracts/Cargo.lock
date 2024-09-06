@@ -272,14 +272,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "defindex"
-version = "1.0.0"
-dependencies = [
- "defindex-adapter-interface",
- "soroban-sdk",
-]
-
-[[package]]
 name = "defindex-adapter-interface"
 version = "1.0.0"
 dependencies = [
@@ -291,6 +283,15 @@ name = "defindex-factory"
 version = "1.0.0"
 dependencies = [
  "soroban-sdk",
+]
+
+[[package]]
+name = "defindex-vault"
+version = "1.0.0"
+dependencies = [
+ "defindex-adapter-interface",
+ "soroban-sdk",
+ "soroban-token-sdk",
 ]
 
 [[package]]
@@ -1147,6 +1148,15 @@ dependencies = [
  "stellar-xdr",
  "syn",
  "thiserror",
+]
+
+[[package]]
+name = "soroban-token-sdk"
+version = "21.0.1-preview.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "167f126a89d05058cb0225da9593e6f36c442174745614d71be78afa44e5057e"
+dependencies = [
+ "soroban-sdk",
 ]
 
 [[package]]
