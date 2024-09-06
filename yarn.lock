@@ -3455,7 +3455,7 @@
     toml "^3.0.0"
     urijs "^1.19.1"
 
-"@stellar/stellar-sdk@12.2.0", "@stellar/stellar-sdk@^12.0.1", "@stellar/stellar-sdk@^12.1.0":
+"@stellar/stellar-sdk@12.2.0", "@stellar/stellar-sdk@^12.2.0":
   version "12.2.0"
   resolved "https://registry.yarnpkg.com/@stellar/stellar-sdk/-/stellar-sdk-12.2.0.tgz#c449bc52be282c7706aabbd257acbc5aec3345b3"
   integrity sha512-Wy5sDOqb5JvAC76f4sQIV6Pe3JNyZb0PuyVNjwt3/uWsjtxRkFk6s2yTHTefBLWoR+mKxDjO7QfzhycF1v8FXQ==

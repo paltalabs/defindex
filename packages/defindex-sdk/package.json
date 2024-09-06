@@ -16,7 +16,7 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "dependencies": {
-    "@stellar/stellar-sdk": "^12.1.0"
+    "@stellar/stellar-sdk": "^12.2.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
