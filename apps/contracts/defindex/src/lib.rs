@@ -28,6 +28,7 @@ use defindex_adapter_interface::DeFindexAdapterClient;
 use token::write_metadata;
 
 fn check_initialized(e: &Env) -> Result<(), ContractError> {
+    //TODO: Should also check if adapters/strategies have been set
     let access_control = AccessControl::new(&e);
     if access_control.has_role(&RolesDataKey::Manager) {
         Ok(())
@@ -123,6 +124,7 @@ impl VaultTrait for DeFindexVault {
         e: Env,
         from: Address,
     ) -> Result<(), ContractError>{
+        check_initialized(&e)?;
         from.require_auth();
         let total_adapters = get_total_adapters(&e);
 
@@ -140,6 +142,7 @@ impl VaultTrait for DeFindexVault {
         e: Env,
         from: Address,
     ) -> Result<(), ContractError>{
+        check_initialized(&e)?;
         from.require_auth();
         let total_adapters = get_total_adapters(&e);
 
@@ -151,24 +154,6 @@ impl VaultTrait for DeFindexVault {
         }
 
         Ok(())
-    }
-
-
-    fn shares(
-        e: Env,
-        from: Address,
-    ) -> Result<Vec<i128>, ContractError> {
-        let total_adapters = get_total_adapters(&e);
-        let mut total_balances: Vec<i128> = Vec::new(&e);
-
-        for i in 0..total_adapters {
-            let adapter_address = get_adapter(&e, i);
-            let adapter_client = DeFindexAdapterClient::new(&e, &adapter_address);
-
-            total_balances.push_back(adapter_client.balance(&from));
-        }
-
-        Ok(total_balances)
     }
 
     fn get_adapter_address(e: Env) -> Address {

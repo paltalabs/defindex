@@ -1,36 +1,70 @@
-use soroban_sdk::{Address, testutils::Address as _};
-
 use crate::error::ContractError;
 use crate::test::{create_adapter_params, DeFindexVaultTest};
 
 #[test]
-fn test_initializ_and_get_roles() {
+fn test_initialize_and_get_roles() {
     let test = DeFindexVaultTest::setup();
     let adapter_params = create_adapter_params(&test);
     test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &adapter_params);
 
     let manager_role = test.defindex_contract.get_manager();
-    assert_eq!(manager_role, test.manager)
-    //TODO:; Check more roles
+    let fee_receiver_role = test.defindex_contract.get_fee_receiver();
+    let emergency_manager_role = test.defindex_contract.get_emergency_manager();
+  
+    assert_eq!(manager_role, test.manager);
+    assert_eq!(fee_receiver_role, test.fee_receiver);
+    assert_eq!(emergency_manager_role, test.emergency_manager);
 }
 
-// #[test]
-// fn test_get_factory_not_yet_initialized() {
-//     let test = SoroswapRouterTest::setup();
-//     let result = test.contract.try_get_factory();
+#[test]
+fn test_get_roles_not_yet_initialized() {
+    let test = DeFindexVaultTest::setup();
+    let manager_role = test.defindex_contract.try_get_manager();
+    let fee_receiver_role = test.defindex_contract.try_get_manager();
+    let emergency_manager_role = test.defindex_contract.try_get_manager();
 
-//     assert_eq!(result, Err(Ok(CombinedRouterError::RouterNotInitialized)));
-// }
+    assert_eq!(manager_role, Err(Ok(ContractError::RoleNotFound)));
+    assert_eq!(fee_receiver_role, Err(Ok(ContractError::RoleNotFound)));
+    assert_eq!(emergency_manager_role, Err(Ok(ContractError::RoleNotFound)));
+}
 
-// #[test]
-// fn test_initialize_twice() {
-//     let test = SoroswapRouterTest::setup();
-//     test.contract.initialize(&test.factory.address);
+#[test]
+fn test_initialize_twice() {
+    let test = DeFindexVaultTest::setup();
+    let adapter_params = create_adapter_params(&test);
+    test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &adapter_params);
 
-//     let factory_another = Address::generate(&test.env);
-//     let result_second_init = test.contract.try_initialize(&factory_another);
-//     assert_eq!(
-//         result_second_init,
-//         Err(Ok(CombinedRouterError::RouterInitializeAlreadyInitialized))
-//     );
-// }
+    let result_second_init = test.defindex_contract.try_initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &adapter_params);
+    assert_eq!(
+        result_second_init,
+        Err(Ok(ContractError::AlreadyInitialized))
+    );
+}
+
+#[test]
+fn test_deposit_not_yet_initialized() {
+    let test = DeFindexVaultTest::setup();
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+
+    let result = test.defindex_contract.try_deposit(&100i128, &users[0]);
+
+    assert_eq!(result, Err(Ok(ContractError::NotInitialized)));
+}
+
+#[test]
+fn test_withdraw_not_yet_initialized() {
+    let test = DeFindexVaultTest::setup();
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+
+    let result = test.defindex_contract.try_withdraw(&users[0]);
+    assert_eq!(result, Err(Ok(ContractError::NotInitialized)));
+}
+
+#[test]
+fn test_emergency_withdraw_not_yet_initialized() {
+    let test = DeFindexVaultTest::setup();
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+
+    let result = test.defindex_contract.try_emergency_withdraw(&users[0]);
+    assert_eq!(result, Err(Ok(ContractError::NotInitialized)));
+}

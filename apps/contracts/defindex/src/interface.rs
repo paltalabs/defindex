@@ -23,11 +23,6 @@ pub trait VaultTrait {
       from: Address,
   ) -> Result<(), ContractError>;
 
-  fn shares(
-      e: Env,
-      from: Address,
-  ) -> Result<Vec<i128>, ContractError>;
-
   fn get_adapter_address(e: Env) -> Address;
 
   fn current_invested_funds(e: Env) -> i128;
