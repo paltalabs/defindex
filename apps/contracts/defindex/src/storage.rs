@@ -11,7 +11,7 @@ enum DataKey {
 }
 
 pub fn set_initialized(e: &Env, initialized: bool) {
-    e.storage().instance().set(&DataKey::Initialized, &true);
+    e.storage().instance().set(&DataKey::Initialized, &initialized);
 }
 
 pub fn is_initialized(e: &Env) -> bool {
