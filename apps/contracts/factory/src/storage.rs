@@ -7,8 +7,8 @@ use crate::error::FactoryError;
 #[contracttype]
 pub enum DataKey {
     Admin,
-    DefindexWasmHash,
-    PaltaReceiver,
+    DeFindexWasmHash,
+    DeFindexReceiver,
 }
 
 const DAY_IN_LEDGERS: u32 = 17280;
@@ -41,12 +41,12 @@ fn get_persistent_extend_or_error<V: TryFromVal<Env, Val>>(
 }
 
 pub fn get_defi_wasm_hash(e: &Env) -> Result<BytesN<32>, FactoryError>{
-    let key = DataKey::DefindexWasmHash;
+    let key = DataKey::DeFindexWasmHash;
     get_persistent_extend_or_error(&e, &key, FactoryError::NotInitialized)
 }
 
 pub fn put_defi_wasm_hash(e: &Env, pair_wasm_hash: BytesN<32>) {
-    let key = DataKey::DefindexWasmHash;
+    let key = DataKey::DeFindexWasmHash;
     e.storage().persistent().set(&key, &pair_wasm_hash);
     e.storage()
             .persistent()
@@ -68,9 +68,9 @@ pub fn get_admin(e: &Env) -> Address {
 
 // Fee Receiver
 pub fn put_defindex_receiver(e: &Env, address: &Address) {
-    e.storage().instance().set(&DataKey::PaltaReceiver, address);
+    e.storage().instance().set(&DataKey::DeFindexReceiver, address);
 }
 
 pub fn get_defindex_receiver(e: &Env) -> Address {
-    e.storage().instance().get(&DataKey::PaltaReceiver).unwrap()
+    e.storage().instance().get(&DataKey::DeFindexReceiver).unwrap()
 }
