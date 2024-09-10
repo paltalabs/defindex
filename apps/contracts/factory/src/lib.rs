@@ -36,7 +36,8 @@ pub trait FactoryTrait {
         manager: Address,
         tokens: Vec<Address>,
         ratios: Vec<u32>,
-        strategies: Vec<StrategyParams>
+        strategies: Vec<StrategyParams>,
+        salt: BytesN<32>
     ) -> Result<Address, FactoryError>;
 
     // Admin functions
@@ -78,12 +79,13 @@ impl FactoryTrait for DeFindexFactory {
         manager: Address,
         tokens: Vec<Address>,
         ratios: Vec<u32>,
-        strategies: Vec<StrategyParams>
+        strategies: Vec<StrategyParams>,
+        salt: BytesN<32>
     ) -> Result<Address, FactoryError> {
         extend_instance_ttl(&e);
 
         let defi_wasm_hash = get_defi_wasm_hash(&e)?;
-        let defindex_address = create_contract(&e, defi_wasm_hash);
+        let defindex_address = create_contract(&e, defi_wasm_hash, salt);
 
         let defindex_receiver = get_defindex_receiver(&e);
 

@@ -1,4 +1,4 @@
-use soroban_sdk::{vec, Address, Vec};
+use soroban_sdk::{vec, Address, BytesN, Vec};
 
 use crate::test::{create_strategy_params, DeFindexFactoryTest};
 
@@ -13,12 +13,15 @@ fn test_create_defindex_success() {
 
   let strategy_params = create_strategy_params(&test);
 
+  let salt = BytesN::from_array(&test.env, &[0; 32]);
+
   test.factory_contract.create_defindex_vault(
     &test.emergency_manager, 
     &test.fee_receiver,
     &test.manager,
     &tokens,
     &ratios,
-    &strategy_params
+    &strategy_params,
+    &salt
   );
 }

@@ -2,55 +2,84 @@ import {
   Address,
   nativeToScVal,
   scValToNative,
-  xdr,
+  xdr
 } from "@stellar/stellar-sdk";
+import { randomBytes } from "crypto";
 import { AddressBook } from "./utils/address_book.js";
-import { invokeContract, invokeCustomContract } from "./utils/contract.js";
+import { airdropAccount, invokeContract } from "./utils/contract.js";
 import { config } from "./utils/env_config.js";
-import { getCurrentTimePlusOneHour } from "./utils/tx.js";
 
-export async function testAggregator(addressBook: AddressBook) {
+export async function test_factory(addressBook: AddressBook) {
+  if (network != "mainnet") await airdropAccount(loadedConfig.admin);
+  let account = await loadedConfig.horizonRpc.loadAccount(
+    loadedConfig.admin.publicKey()
+  );
+  console.log("publicKey", loadedConfig.admin.publicKey());
+  let balance = account.balances.filter((item) => item.asset_type == "native");
+  console.log("Current Admin account balance:", balance[0].balance);
+
   console.log("-------------------------------------------------------");
-  console.log("Testing Soroswap Aggregator");
+  console.log("Testing Create DeFindex on Factory");
   console.log("-------------------------------------------------------");
 
-  // const usdc_address = "CCGCRYUTDRP52NOPS35FL7XIOZKKGQWSP3IYFE6B66KD4YOGJMWVC5PR"
-  // const xtar_address = "CDPU5TPNUMZ5JY3AUSENSINOEB324WI65AHI7PJBUKR3DJP2ULCBWQCS"
+  const usdc_address = "CCGCRYUTDRP52NOPS35FL7XIOZKKGQWSP3IYFE6B66KD4YOGJMWVC5PR"
+  const xtar_address = "CDPU5TPNUMZ5JY3AUSENSINOEB324WI65AHI7PJBUKR3DJP2ULCBWQCS"
 
-  // console.log("Getting protocols")
-  // const result = await invokeContract(
-  //   'aggregator',
-  //   addressBook,
-  //   'get_protocols',
-  //   [],
-  //   loadedConfig.admin,
-  //   true
-  // );
-  // console.log('🚀 « result:', scValToNative(result.result.retval));
+  const emergencyManager = loadedConfig.getUser("DEFINDEX_EMERGENCY_MANAGER_SECRET_KEY");
+  if (network != "mainnet") await airdropAccount(emergencyManager);
 
-  // console.log("-------------------------------------------------------");
-  // console.log("Starting Balances");
-  // console.log("-------------------------------------------------------");
-  // let usdcUserBalance = await invokeCustomContract(
-  //   usdc_address,
-  //   "balance",
-  //   [new Address(loadedConfig.admin.publicKey()).toScVal()],
-  //   loadedConfig.admin,
-  //   true
-  // );
-  // console.log(
-  //   "USDC USER BALANCE:",
-  //   scValToNative(usdcUserBalance.result.retval)
-  // );
-  // let xtarUserBalance = await invokeCustomContract(
-  //   xtar_address,
-  //   "balance",
-  //   [new Address(loadedConfig.admin.publicKey()).toScVal()],
-  //   loadedConfig.admin,
-  //   true
-  // );
-  // console.log("XTAR USER BALANCE:", scValToNative(xtarUserBalance.result.retval));
+  const feeReceiver = loadedConfig.getUser("DEFINDEX_FEE_RECEIVER_SECRET_KEY");
+  if (network != "mainnet") await airdropAccount(feeReceiver);
 
+  const manager = loadedConfig.getUser("DEFINDEX_MANAGER_SECRET_KEY");
+  if (network != "mainnet") await airdropAccount(manager);
+
+  const tokens = [usdc_address, xtar_address];
+  const ratios = [1, 1];
+
+  const strategyParamsRaw = [
+    {
+      name: "Strategy 1",
+      address: usdc_address, //TODO: Use a deployed strategy address here
+    },
+  ];
+
+  const strategyParamsScVal = strategyParamsRaw.map((param) => {
+    return xdr.ScVal.scvMap([
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvSymbol('address'),
+        val: new Address(param.address).toScVal(),
+      }),
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvSymbol('name'),
+        val: nativeToScVal(param.name, {type: "string"}),
+      }),
+    ]);
+  });
+
+  const strategyParamsScValVec = xdr.ScVal.scvVec(strategyParamsScVal);
+
+  const createDeFindexParams: xdr.ScVal[] = [
+    new Address(emergencyManager.publicKey()).toScVal(),
+    new Address(feeReceiver.publicKey()).toScVal(),
+    new Address(manager.publicKey()).toScVal(),
+    xdr.ScVal.scvVec(tokens.map((token) => new Address(token).toScVal())),
+    xdr.ScVal.scvVec(ratios.map((ratio) => nativeToScVal(ratio, {type: "u32"}))),
+    strategyParamsScValVec,
+    nativeToScVal(randomBytes(32)),
+  ];
+
+  const result = await invokeContract(
+    'defindex_factory',
+    addressBook,
+    'create_defindex_vault',
+    createDeFindexParams,
+    loadedConfig.admin
+  );
+
+  console.log('🚀 « result:', scValToNative(result.returnValue));
+
+  // console.log(nativeToScVal(result.result.retval));
   // const dexDistributionRaw = [
   //   {
   //     protocol_id: "soroswap",
@@ -131,4 +160,4 @@ const addressBook = AddressBook.loadFromFile(network);
 
 const loadedConfig = config(network);
 
-await testAggregator(addressBook);
+await test_factory(addressBook);
