@@ -10,7 +10,7 @@ fn test_initialize_and_get_roles() {
     let tokens: Vec<Address> = vec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
     let ratios: Vec<u32> = vec![&test.env, 1, 1];
 
-    test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &tokens, &ratios, &strategy_params);
+    test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &test.palta_receiver, &tokens, &ratios, &strategy_params);
 
     let manager_role = test.defindex_contract.get_manager();
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
@@ -40,9 +40,9 @@ fn test_initialize_twice() {
     let tokens: Vec<Address> = vec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
     let ratios: Vec<u32> = vec![&test.env, 1, 1];
 
-    test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &tokens, &ratios, &strategy_params);
+    test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &test.palta_receiver, &tokens, &ratios, &strategy_params);
 
-    let result_second_init = test.defindex_contract.try_initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &tokens, &ratios, &strategy_params);
+    let result_second_init = test.defindex_contract.try_initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &test.palta_receiver, &tokens, &ratios, &strategy_params);
     assert_eq!(
         result_second_init,
         Err(Ok(ContractError::AlreadyInitialized))

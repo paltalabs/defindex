@@ -8,6 +8,7 @@ pub trait VaultTrait {
       emergency_manager: Address, 
       fee_receiver: Address, 
       manager: Address,
+      defindex_receiver: Address,
       tokens: Vec<Address>,
       ratios: Vec<u32>,
       strategies: Vec<StrategyParams>

@@ -52,6 +52,7 @@ pub struct DeFindexVaultTest<'a> {
     token1: SorobanTokenClient<'a>,
     emergency_manager: Address,
     fee_receiver: Address,
+    palta_receiver: Address,
     manager: Address,
     adapter_address: Address,
 }
@@ -65,6 +66,7 @@ impl<'a> DeFindexVaultTest<'a> {
         
         let emergency_manager = Address::generate(&env);
         let fee_receiver = Address::generate(&env);
+        let palta_receiver = Address::generate(&env);
         let manager = Address::generate(&env);
         
         let token0_admin = Address::generate(&env);
@@ -90,6 +92,7 @@ impl<'a> DeFindexVaultTest<'a> {
             token1,
             emergency_manager,
             fee_receiver,
+            palta_receiver,
             manager,
             adapter_address
         }
