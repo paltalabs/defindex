@@ -4,12 +4,18 @@ use soroban_sdk::{self, contracterror};
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
 #[repr(u32)]
 pub enum ContractError {
-    NotInitialized = 401,
-    AlreadyInitialized = 402,
-    NegativeNotAllowed = 403,
-    ProtocolAddressNotFound = 404,
-    DeadlineExpired = 405,
-    NeedToWait = 406,
-    ArithmeticError = 407,
-    LengthMismatch = 408,
+    // Initialization Errors (10x)
+    NotInitialized = 100,
+    AlreadyInitialized = 101,
+    InvalidRatio = 102,
+
+    // Validation Errors (11x)
+    NegativeNotAllowed = 110,
+
+    // Arithmetic Errors (12x)
+    ArithmeticError = 120,
+
+    // Authorization/Role-based Errors (13x)
+    Unauthorized = 130,
+    RoleNotFound = 131,
 }

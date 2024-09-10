@@ -1,117 +1,122 @@
 #![no_std]
+use access::{AccessControl, AccessControlTrait, RolesDataKey};
+use interface::AdminInterfaceTrait;
 use soroban_sdk::{
-    auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation},
-    contract, contractimpl, vec, Address, Env, IntoVal, String, Symbol, Val, Vec,
+    contract, contractimpl, panic_with_error, Address, Env, String, Vec
 };
 use soroban_token_sdk::metadata::TokenMetadata;
+use crate::interface::VaultTrait;
 
-
-
-mod token;
+mod access;
 mod error;
-mod models;
+mod interface;
 mod storage;
+mod test;
+mod token;
+mod utils;
 
 pub use error::ContractError;
 
 use storage::{
-    get_adapter, get_share, get_total_adapters, is_initialized, set_adapter, set_initialized,
-    set_share, set_total_adapters,
+    get_strategy, get_strategy_name, get_total_strategies, set_ratio, set_strategy, set_strategy_name, set_token, set_total_strategies, set_total_tokens, StrategyParams
 };
 
-use models::AdapterParams;
 use defindex_adapter_interface::DeFindexAdapterClient;
 use token::write_metadata;
 
 fn check_initialized(e: &Env) -> Result<(), ContractError> {
-    if is_initialized(e) {
+    //TODO: Should also check if adapters/strategies have been set
+    let access_control = AccessControl::new(&e);
+    if access_control.has_role(&RolesDataKey::Manager) {
         Ok(())
     } else {
-        Err(ContractError::NotInitialized)
+        panic_with_error!(&e, ContractError::NotInitialized);
     }
 }
 
-pub trait AllocatorTrait {
-    fn initialize(e: Env, adapters: Vec<AdapterParams>) -> Result<(), ContractError>;
-
-    fn deposit(e: Env, amount: i128, from: Address) -> Result<(), ContractError>;
-
-    fn withdraw(
-        e: Env,
-        from: Address,
-    ) -> Result<(), ContractError>;
-
-    fn emergency_withdraw(
-        e: Env,
-        from: Address,
-    ) -> Result<(), ContractError>;
-
-    fn shares(
-        e: Env,
-        from: Address,
-    ) -> Result<Vec<i128>, ContractError>;
-
-    fn get_adapter_address(e: Env) -> Address;
+pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
+    if amount < 0 {
+        Err(ContractError::NegativeNotAllowed)
+    } else {
+        Ok(())
+    }
 }
 
 #[contract]
-pub struct Allocator;
+pub struct DeFindexVault;
 
 #[contractimpl]
-impl AllocatorTrait for Allocator {
-    fn initialize(e: Env, adapters: Vec<AdapterParams>) -> Result<(), ContractError> {
-        if is_initialized(&e) {
-            return Err(ContractError::AlreadyInitialized);
+impl VaultTrait for DeFindexVault {
+    fn initialize(
+        e: Env, 
+        emergency_manager: Address, 
+        fee_receiver: Address, 
+        manager: Address,
+        tokens: Vec<Address>,
+        ratios: Vec<u32>,
+        strategies: Vec<StrategyParams>
+    ) -> Result<(), ContractError> {
+        let access_control = AccessControl::new(&e);
+        if access_control.has_role(&RolesDataKey::Manager) {
+            panic_with_error!(&e, ContractError::AlreadyInitialized);
         }
 
-        // should verify that shares are not more than 100%
+        access_control.set_role(&RolesDataKey::EmergencyManager, &emergency_manager);
+        access_control.set_role(&RolesDataKey::FeeReceiver, &fee_receiver);
+        access_control.set_role(&RolesDataKey::Manager, &manager);
+
+        // Store tokens and their ratios
+        let total_tokens = tokens.len();
+        set_total_tokens(&e, total_tokens as u32);
+        for (i, token) in tokens.iter().enumerate() {
+            set_token(&e, i as u32, &token);
+            set_ratio(&e, i as u32, ratios.get(i as u32).unwrap());
+        }
+
+        // Store strategies
+        let total_strategies = strategies.len();
+        set_total_strategies(&e, total_strategies as u32);
+        for (i, strategy) in strategies.iter().enumerate() {
+            set_strategy(&e, i as u32, &strategy.address);
+            set_strategy_name(&e, i as u32, &strategy.name);
+        }
+
+        // Metadata for the contract's token (unchanged)
         let decimal: u32 = 7;
         let name: String = String::from_str(&e, "dfToken");
         let symbol: String = String::from_str(&e, "DFT");
-    
+
         write_metadata(
             &e,
             TokenMetadata {
-                decimal ,
+                decimal,
                 name,
                 symbol,
             },
         );
-
-        set_initialized(&e, true);
-        set_total_adapters(&e, &adapters.len());
-
-        for adapter in adapters.iter() {
-            set_share(&e, adapter.index, adapter.share);
-            set_adapter(&e, adapter.index, &adapter.address);
-        }
 
         Ok(())
     }
 
     fn deposit(e: Env, amount: i128, from: Address) -> Result<(), ContractError> {
         check_initialized(&e)?;
+        check_nonnegative_amount(amount)?;
         from.require_auth();
 
-        let total_adapters = get_total_adapters(&e);
+        let total_strategies = get_total_strategies(&e);
         let total_amount_used: i128 = 0;
 
-        for i in 0..total_adapters {
-            let adapter_share = get_share(&e, i);
+        for i in 0..total_strategies {
+            let strategy_address = get_strategy(&e, i);
+            let strategy_client = DeFindexAdapterClient::new(&e, &strategy_address);
 
-            let adapter_address = get_adapter(&e, i);
-            let adapter_client = DeFindexAdapterClient::new(&e, &adapter_address);
-
-            let adapter_amount = if i == (total_adapters - 1) {
+            let adapter_amount = if i == (total_strategies - 1) {
                 amount - total_amount_used
             } else {
                 amount
-                    .checked_mul(adapter_share.into())
-                    .and_then(|prod| prod.checked_div(100))
-                    .ok_or(ContractError::ArithmeticError)?
             };
 
-            adapter_client.deposit(&adapter_amount, &from);
+            strategy_client.deposit(&adapter_amount, &from);
             //should run deposit functions on adapters
         }
 
@@ -122,14 +127,15 @@ impl AllocatorTrait for Allocator {
         e: Env,
         from: Address,
     ) -> Result<(), ContractError>{
+        check_initialized(&e)?;
         from.require_auth();
-        let total_adapters = get_total_adapters(&e);
+        let total_strategies = get_total_strategies(&e);
 
-        for i in 0..total_adapters {
-            let adapter_address = get_adapter(&e, i);
-            let adapter_client = DeFindexAdapterClient::new(&e, &adapter_address);
+        for i in 0..total_strategies {
+            let strategy_address = get_strategy(&e, i);
+            let strategy_client = DeFindexAdapterClient::new(&e, &strategy_address);
 
-            adapter_client.withdraw(&from);
+            strategy_client.withdraw(&from);
         }
 
         Ok(())
@@ -139,40 +145,71 @@ impl AllocatorTrait for Allocator {
         e: Env,
         from: Address,
     ) -> Result<(), ContractError>{
+        check_initialized(&e)?;
         from.require_auth();
-        let total_adapters = get_total_adapters(&e);
+        let total_strategies = get_total_strategies(&e);
 
-        for i in 0..total_adapters {
-            let adapter_address = get_adapter(&e, i);
-            let adapter_client = DeFindexAdapterClient::new(&e, &adapter_address);
+        for i in 0..total_strategies {
+            let strategy_address = get_strategy(&e, i);
+            let strategy_client = DeFindexAdapterClient::new(&e, &strategy_address);
 
-            adapter_client.withdraw(&from);
+            strategy_client.withdraw(&from);
         }
 
         Ok(())
     }
 
+    fn get_strategies(e: Env) -> Vec<StrategyParams> {
+        let total_strategies = get_total_strategies(&e);
+        let mut strategies = Vec::new(&e);
 
-    fn shares(
-        e: Env,
-        from: Address,
-    ) -> Result<Vec<i128>, ContractError> {
-        let total_adapters = get_total_adapters(&e);
-        let mut total_balances: Vec<i128> = Vec::new(&e);
+        for i in 0..total_strategies {
+            let strategy_address = get_strategy(&e, i);
+            let strategy_name = get_strategy_name(&e, i);
 
-        for i in 0..total_adapters {
-            let adapter_address = get_adapter(&e, i);
-            let adapter_client = DeFindexAdapterClient::new(&e, &adapter_address);
-
-            total_balances.push_back(adapter_client.balance(&from));
+            strategies.push_back(StrategyParams {
+                name: strategy_name,
+                address: strategy_address,
+            });
         }
 
-        Ok(total_balances)
+        strategies
     }
 
-    fn get_adapter_address(e: Env) -> Address {
-        get_adapter(&e, 0)
+    fn current_invested_funds(e: Env) -> i128 {
+        0i128
     }
 }
 
-mod test;
+#[contractimpl]
+impl AdminInterfaceTrait for DeFindexVault {  
+    fn set_fee_receiver(e: Env, caller: Address, fee_receiver: Address) {
+        let access_control = AccessControl::new(&e);
+        access_control.set_fee_receiver(&caller, &fee_receiver)
+    }
+  
+    fn get_fee_receiver(e: Env) -> Result<Address, ContractError> {
+        let access_control = AccessControl::new(&e);
+        access_control.get_fee_receiver()
+    }
+  
+    fn set_manager(e: Env, manager: Address) {
+        let access_control = AccessControl::new(&e);
+        access_control.set_manager(&manager)
+    }
+  
+    fn get_manager(e: Env) -> Result<Address, ContractError> {
+        let access_control = AccessControl::new(&e);
+        access_control.get_manager()
+    }
+  
+    fn set_emergency_manager(e: Env, emergency_manager: Address) {
+        let access_control = AccessControl::new(&e);
+        access_control.set_emergency_manager(&emergency_manager)
+    }
+  
+    fn get_emergency_manager(e: Env) -> Result<Address, ContractError> {
+        let access_control = AccessControl::new(&e);
+        access_control.get_emergency_manager()
+    }
+}
