@@ -11,15 +11,41 @@ use soroban_sdk::{
     Vec,
 };
 use error::FactoryError;
-use defindex::{create_contract, AdapterParams};
-use storage::*;
+use defindex::{create_contract, StrategyParams};
+use storage::{ extend_instance_ttl, get_admin, get_defi_wasm_hash, get_palta_receiver, has_admin, put_admin, put_defi_wasm_hash, put_palta_receiver };
 
-pub trait SoroswapFactoryTrait {
-    fn initialize(e: Env, defindex_wasm_hash: BytesN<32>) -> Result<(), FactoryError>;
-
-    fn create_defindex(e: Env, adapters: Vec<AdapterParams>) -> Result<Address, FactoryError>;
+fn check_initialized(e: &Env) -> Result<(), FactoryError> {
+    if !has_admin(e) {
+        return Err(FactoryError::NotInitialized);
+    } 
+    Ok(())
 }
 
+pub trait SoroswapFactoryTrait {
+    fn initialize(
+        e: Env, 
+        admin: Address,
+        fee_receiver: Address,
+        defindex_wasm_hash: BytesN<32>
+    ) -> Result<(), FactoryError>;
+
+    fn create_defindex_vault(
+        e: Env, 
+        emergency_manager: Address, 
+        fee_receiver: Address, 
+        manager: Address,
+        tokens: Vec<Address>,
+        ratios: Vec<u32>,
+        strategies: Vec<StrategyParams>
+    ) -> Result<Address, FactoryError>;
+
+    // Admin functions
+    fn set_new_admin(e: Env, new_admin: Address) -> Result<(), FactoryError>;
+    fn get_admin(e: Env) -> Result<Address, FactoryError>;
+
+    fn set_fee_receiver(e: Env, new_fee_receiver: Address) -> Result<(), FactoryError>;
+    fn get_palta_receiver(e: Env) -> Result<Address, FactoryError>;
+}
 
 #[contract]
 struct SoroswapFactory;
@@ -27,25 +53,84 @@ struct SoroswapFactory;
 #[contractimpl]
 impl SoroswapFactoryTrait for SoroswapFactory {
 
-fn initialize(e: Env, defi_wasm_hash: BytesN<32>) -> Result<(), FactoryError> {
-    put_defi_wasm_hash(&e, defi_wasm_hash);
+    fn initialize(
+        e: Env, 
+        admin: Address, 
+        fee_receiver: Address, 
+        defi_wasm_hash: BytesN<32>
+    ) -> Result<(), FactoryError> {
+        if has_admin(&e) {
+            return Err(FactoryError::AlreadyInitialized);
+        }
 
-    extend_instance_ttl(&e);
-    Ok(())
+        put_admin(&e, &admin);
+        put_palta_receiver(&e, &fee_receiver);
+        put_defi_wasm_hash(&e, defi_wasm_hash);
+
+        extend_instance_ttl(&e);
+        Ok(())
+    }
+
+    fn create_defindex_vault(
+        e: Env, 
+        emergency_manager: Address, 
+        fee_receiver: Address, 
+        manager: Address,
+        tokens: Vec<Address>,
+        ratios: Vec<u32>,
+        strategies: Vec<StrategyParams>
+    ) -> Result<Address, FactoryError> {
+        extend_instance_ttl(&e);
+
+        let defi_wasm_hash = get_defi_wasm_hash(&e)?;
+        let defindex_address = create_contract(&e, defi_wasm_hash);
+
+        // TODO: Should add the palta receiver to the initialize mthod for the defindex_vault
+        // let palta_receiver = get_palta_receiver(&e);
+
+        defindex::Client::new(&e, &defindex_address).initialize(
+            &emergency_manager,
+            &fee_receiver,
+            &manager,
+            &tokens,
+            &ratios,
+            &strategies
+        );
+
+        Ok(defindex_address)
+    }
+
+    fn set_new_admin(e: Env, new_admin: Address) -> Result<(), FactoryError> {
+        check_initialized(&e)?;
+        extend_instance_ttl(&e);
+        let admin = get_admin(&e);
+        admin.require_auth();
+
+        put_admin(&e, &new_admin);
+        Ok(())
+    }
+
+    fn get_admin(e: Env) -> Result<Address, FactoryError> {
+        check_initialized(&e)?;
+        extend_instance_ttl(&e);
+        Ok(get_admin(&e))
+    }
+
+    fn set_fee_receiver(e: Env, new_fee_receiver: Address) -> Result<(), FactoryError> {
+        check_initialized(&e)?;
+        extend_instance_ttl(&e);
+        let admin = get_admin(&e);
+        admin.require_auth();
+
+        put_palta_receiver(&e, &new_fee_receiver);
+        Ok(())
+    }
+
+    fn get_palta_receiver(e: Env) -> Result<Address, FactoryError> {
+        check_initialized(&e)?;
+        extend_instance_ttl(&e);
+        Ok(get_palta_receiver(&e))
+    }
 }
 
-fn create_defindex(e: Env, adapters: Vec<AdapterParams>) -> Result<Address, FactoryError> {
-    extend_instance_ttl(&e);
-
-    let defi_wasm_hash = get_defi_wasm_hash(&e)?;
-    let defindex_address = create_contract(&e, defi_wasm_hash, adapters.clone());
-
-    defindex::Client::new(&e, &defindex_address).initialize(
-        &adapters
-    );
-
-    Ok(defindex_address)
-}
-
-
-}
+mod test;

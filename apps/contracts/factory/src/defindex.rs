@@ -3,23 +3,21 @@
 use soroban_sdk::{contracttype, contracterror, xdr::ToXdr, Address, Bytes, BytesN, Env, Vec};
 
 soroban_sdk::contractimport!(
-    file = "../target/wasm32-unknown-unknown/release/defindex.optimized.wasm"
+    file = "../target/wasm32-unknown-unknown/release/defindex_vault.optimized.wasm"
 );
 
 // Define a function to create a new contract instance
 pub fn create_contract(
     e: &Env, // Pass in the current environment as an argument
     defindex_wasm_hash: BytesN<32>, // Pass in the hash of the token contract's WASM file
-    adapters: Vec<AdapterParams>
 ) -> Address {
     
-    let mut salt = Bytes::new(e);
-
     // Append the bytes of the address and name to the salt
-    salt.append(&adapters.clone().to_xdr(e));     
+    // salt.append(&adapters.clone().to_xdr(e));     
     
-    // let mut value = [0u8; 32];
-    // env.prng().fill(&mut value);
+    let mut value = [0u8; 32];
+    e.prng().fill(&mut value);
+    let salt = Bytes::from_array(&e, &value);
 
     // Use the deployer() method of the current environment to create a new contract instance
     e.deployer()

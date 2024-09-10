@@ -1,12 +1,14 @@
 use soroban_sdk::{
-    contracttype, BytesN, Env, Val, TryFromVal
+    contracttype, Address, BytesN, Env, TryFromVal, Val
 };
 use crate::error::FactoryError;
 
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
+    Admin,
     DefindexWasmHash,
+    PaltaReceiver,
 }
 
 const DAY_IN_LEDGERS: u32 = 17280;
@@ -49,4 +51,26 @@ pub fn put_defi_wasm_hash(e: &Env, pair_wasm_hash: BytesN<32>) {
     e.storage()
             .persistent()
             .extend_ttl(&key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT)
+}
+
+// Admin
+pub fn has_admin(e: &Env) -> bool {
+    e.storage().instance().has(&DataKey::Admin)
+}
+
+pub fn put_admin(e: &Env, admin: &Address) {
+    e.storage().instance().set(&DataKey::Admin, admin);
+}
+
+pub fn get_admin(e: &Env) -> Address {
+    e.storage().instance().get(&DataKey::Admin).unwrap()
+}
+
+// Fee Receiver
+pub fn put_palta_receiver(e: &Env, address: &Address) {
+    e.storage().instance().set(&DataKey::PaltaReceiver, address);
+}
+
+pub fn get_palta_receiver(e: &Env) -> Address {
+    e.storage().instance().get(&DataKey::PaltaReceiver).unwrap()
 }
