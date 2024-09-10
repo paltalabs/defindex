@@ -60,7 +60,7 @@ impl<'a> DeFindexVaultTest<'a> {
     fn setup() -> Self {
 
         let env = Env::default();
-        env.mock_all_auths();
+        // env.mock_all_auths();
         let defindex_contract = create_defindex_vault(&env);
         
         let emergency_manager = Address::generate(&env);
