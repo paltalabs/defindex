@@ -100,7 +100,7 @@ fn test_set_new_fee_receiver_by_manager() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #1400)")] // Unauthorized
+#[should_panic(expected = "HostError: Error(Contract, #130)")] // Unauthorized
 fn test_set_new_fee_receiver_by_emergency_manager() {
     let test = DeFindexVaultTest::setup();
     let strategy_params = create_strategy_params(&test);
@@ -118,7 +118,7 @@ fn test_set_new_fee_receiver_by_emergency_manager() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #1400)")] // Unauthorized
+#[should_panic(expected = "HostError: Error(Contract, #130)")] // Unauthorized
 fn test_set_new_fee_receiver_invalid_sender() {
   let test = DeFindexVaultTest::setup();
   let strategy_params = create_strategy_params(&test);
