@@ -12,7 +12,7 @@ use soroban_sdk::{
 };
 use error::FactoryError;
 use defindex::{create_contract, StrategyParams};
-use storage::{ extend_instance_ttl, get_admin, get_defi_wasm_hash, get_palta_receiver, has_admin, put_admin, put_defi_wasm_hash, put_palta_receiver };
+use storage::{ extend_instance_ttl, get_admin, get_defi_wasm_hash, get_defindex_receiver, has_admin, put_admin, put_defi_wasm_hash, put_defindex_receiver };
 
 fn check_initialized(e: &Env) -> Result<(), FactoryError> {
     if !has_admin(e) {
@@ -21,11 +21,11 @@ fn check_initialized(e: &Env) -> Result<(), FactoryError> {
     Ok(())
 }
 
-pub trait SoroswapFactoryTrait {
+pub trait FactoryTrait {
     fn initialize(
         e: Env, 
         admin: Address,
-        fee_receiver: Address,
+        defindex_receiver: Address,
         defindex_wasm_hash: BytesN<32>
     ) -> Result<(), FactoryError>;
 
@@ -44,19 +44,19 @@ pub trait SoroswapFactoryTrait {
     fn get_admin(e: Env) -> Result<Address, FactoryError>;
 
     fn set_fee_receiver(e: Env, new_fee_receiver: Address) -> Result<(), FactoryError>;
-    fn get_palta_receiver(e: Env) -> Result<Address, FactoryError>;
+    fn get_defindex_receiver(e: Env) -> Result<Address, FactoryError>;
 }
 
 #[contract]
-struct SoroswapFactory;
+struct DeFindexFactory;
 
 #[contractimpl]
-impl SoroswapFactoryTrait for SoroswapFactory {
+impl FactoryTrait for DeFindexFactory {
 
     fn initialize(
         e: Env, 
         admin: Address, 
-        fee_receiver: Address, 
+        defindex_receiver: Address, 
         defi_wasm_hash: BytesN<32>
     ) -> Result<(), FactoryError> {
         if has_admin(&e) {
@@ -64,7 +64,7 @@ impl SoroswapFactoryTrait for SoroswapFactory {
         }
 
         put_admin(&e, &admin);
-        put_palta_receiver(&e, &fee_receiver);
+        put_defindex_receiver(&e, &defindex_receiver);
         put_defi_wasm_hash(&e, defi_wasm_hash);
 
         extend_instance_ttl(&e);
@@ -85,13 +85,13 @@ impl SoroswapFactoryTrait for SoroswapFactory {
         let defi_wasm_hash = get_defi_wasm_hash(&e)?;
         let defindex_address = create_contract(&e, defi_wasm_hash);
 
-        // TODO: Should add the palta receiver to the initialize mthod for the defindex_vault
-        // let palta_receiver = get_palta_receiver(&e);
+        let defindex_receiver = get_defindex_receiver(&e);
 
         defindex::Client::new(&e, &defindex_address).initialize(
             &emergency_manager,
             &fee_receiver,
             &manager,
+            &defindex_receiver,
             &tokens,
             &ratios,
             &strategies
@@ -122,14 +122,14 @@ impl SoroswapFactoryTrait for SoroswapFactory {
         let admin = get_admin(&e);
         admin.require_auth();
 
-        put_palta_receiver(&e, &new_fee_receiver);
+        put_defindex_receiver(&e, &new_fee_receiver);
         Ok(())
     }
 
-    fn get_palta_receiver(e: Env) -> Result<Address, FactoryError> {
+    fn get_defindex_receiver(e: Env) -> Result<Address, FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-        Ok(get_palta_receiver(&e))
+        Ok(get_defindex_receiver(&e))
     }
 }
 

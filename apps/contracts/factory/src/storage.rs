@@ -67,10 +67,10 @@ pub fn get_admin(e: &Env) -> Address {
 }
 
 // Fee Receiver
-pub fn put_palta_receiver(e: &Env, address: &Address) {
+pub fn put_defindex_receiver(e: &Env, address: &Address) {
     e.storage().instance().set(&DataKey::PaltaReceiver, address);
 }
 
-pub fn get_palta_receiver(e: &Env) -> Address {
+pub fn get_defindex_receiver(e: &Env) -> Address {
     e.storage().instance().get(&DataKey::PaltaReceiver).unwrap()
 }
