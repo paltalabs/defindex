@@ -1,52 +1,66 @@
-# DeFindex Monorepo
+# 📊 DeFindex Monorepo
 
-## Smart contracts
+## 🔎 What's inside?
 
-To build the smart contracts simple run
+This repo includes the following packages/apps:
 
-```sh
-yarn build --filter contracts
-```
+### 🥑 Apps and Packages
+- `Contracts`: [Soroban smart contracts](https://stellar.org/soroban) for the app.
+- `Dapp`: a [Next.js](https://nextjs.org/) & [Soroban React](https://soroban-react.paltalabs.io/) app to manage the indexes.
+- `Docs`: a [Gitbook](https://www.gitbook.com/) app to autogenerate the docs of the apps.
+- `Landing`: : a [Next.js](https://nextjs.org/) app thats shows relevant info about the project.
+- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
+- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
+- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
 
-from the src directory
+Each package/app is crafted with 100% love by the paltalabs team🥑.
 
-### development
+## 🐋 Development container:
 
-To test and develop the smart contracts first you would need to start the docker containers by running
+First run the following code in a new terminal located in the repo folder to initalize the container:
 
 ```sh
 docker compose up -d
 ```
-
-This will start a standalone stellar instance where you can deploy and test smart contracts
-
-now you can attach into the docker container by running
-
+then, once the container is up, run:
 ```sh
 bash run.sh
 # or
 docker exec --tty --interactive defindex-soroban bash
 ```
+to explore and use the container.
 
-while inside the docker container you can deploy build and test the smart contracts
+Once inside the container, install the project dependencies by running:
+```sh
+yarn
+```
 
-to build while being inside the container simply run `make build`
+### ⚙️ Running apps:
+ To run the development instances of the apps simply run `yarn dev`. Turbo repo will automatically run all the apps together.
+ If you need to run just one app add the flag `--filter appname`. The code should look like:
+ ```sh
+yarn dev --filter dapp
+```
 
-## What's inside?
+### 🔨 Build & test Smart contracts:
+while inside the docker container you can deploy build and test the smart contracts.
+to make this happen, please move into the contracts app folder `cd apps/contracts` and
+run `make build`.
 
-This Turborepo includes the following packages/apps:
+## 📄 Smart contracts
 
-### Apps and Packages
+To build the smart contracts simply run:
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+```sh
+yarn build --filter contracts
+```
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+from the repo root folder.
 
-### Utilities
+> [!NOTE]
+> This should be run from outside the container.
+
+## 🔧 Utilities
 
 This Turborepo has some additional tools already setup for you:
 
@@ -54,11 +68,11 @@ This Turborepo has some additional tools already setup for you:
 - [ESLint](https://eslint.org/) for code linting
 - [Prettier](https://prettier.io) for code formatting
 
-### Build
+## 🛠️ Build
 
 To build all apps and packages, run the following command:
 
 ```
 cd my-turborepo
-pnpm build
+yarn build
 ```
