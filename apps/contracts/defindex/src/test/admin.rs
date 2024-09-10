@@ -1,4 +1,4 @@
-use soroban_sdk::{testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation}, Address, IntoVal, Symbol, Vec, vec as sorobanvec};
+use soroban_sdk::{testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke}, vec as sorobanvec, Address, IntoVal, Symbol, Vec};
 
 use crate::test::{DeFindexVaultTest, create_strategy_params};
 
@@ -19,7 +19,34 @@ fn test_set_new_fee_receiver_by_fee_receiver() {
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
     // Fee Receiver is setting the new fee receiver
-    test.defindex_contract.set_fee_receiver(&test.fee_receiver, &users[0]);
+    test.defindex_contract
+    .mock_auths(&[
+        MockAuth {
+            address: &test.fee_receiver,
+            invoke: 
+                &MockAuthInvoke {
+                    contract: &test.defindex_contract.address.clone(),
+                    fn_name: "set_fee_receiver",
+                    args: (&test.fee_receiver, &users[0]).into_val(&test.env),
+                    sub_invokes: &[],
+                },
+        }
+    ])
+    .set_fee_receiver(&test.fee_receiver, &users[0]);
+
+    let expected_auth = AuthorizedInvocation {
+        // Top-level authorized function is `deploy` with all the arguments.
+        function: AuthorizedFunction::Contract((
+            test.defindex_contract.address.clone(),
+            Symbol::new(&test.env, "set_fee_receiver"),
+            (
+                &test.fee_receiver, users[0].clone()
+            )
+                .into_val(&test.env),
+        )),
+        sub_invocations: vec![], 
+    };
+    assert_eq!(test.env.auths(), vec![(test.fee_receiver, expected_auth)]);
 
     let new_fee_receiver_role = test.defindex_contract.get_fee_receiver();
     assert_eq!(new_fee_receiver_role, users[0]);
@@ -39,14 +66,41 @@ fn test_set_new_fee_receiver_by_manager() {
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
     // Now Manager is setting the new fee receiver
-    test.defindex_contract.set_fee_receiver(&test.manager, &users[0]);
+    test.defindex_contract
+    .mock_auths(&[
+        MockAuth {
+            address: &test.manager.clone(),
+            invoke: 
+                &MockAuthInvoke {
+                    contract: &test.defindex_contract.address.clone(),
+                    fn_name: "set_fee_receiver",
+                    args: (&test.manager, &users[0]).into_val(&test.env),
+                    sub_invokes: &[],
+                },
+        }
+    ])
+    .set_fee_receiver(&test.manager, &users[0]);
+
+    let expected_auth = AuthorizedInvocation {
+        // Top-level authorized function is `deploy` with all the arguments.
+        function: AuthorizedFunction::Contract((
+            test.defindex_contract.address.clone(),
+            Symbol::new(&test.env, "set_fee_receiver"),
+            (
+                &test.manager, users[0].clone()
+            )
+                .into_val(&test.env),
+        )),
+        sub_invocations: vec![], 
+    };
+    assert_eq!(test.env.auths(), vec![(test.manager, expected_auth)]);
 
     let new_fee_receiver_role = test.defindex_contract.get_fee_receiver();
     assert_eq!(new_fee_receiver_role, users[0]);
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #400)")] // Unauthorized
+#[should_panic(expected = "HostError: Error(Contract, #1400)")] // Unauthorized
 fn test_set_new_fee_receiver_by_emergency_manager() {
     let test = DeFindexVaultTest::setup();
     let strategy_params = create_strategy_params(&test);
@@ -64,7 +118,7 @@ fn test_set_new_fee_receiver_by_emergency_manager() {
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #400)")] // Unauthorized
+#[should_panic(expected = "HostError: Error(Contract, #1400)")] // Unauthorized
 fn test_set_new_fee_receiver_invalid_sender() {
   let test = DeFindexVaultTest::setup();
   let strategy_params = create_strategy_params(&test);
@@ -95,7 +149,20 @@ fn test_set_new_manager_by_manager() {
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
     // Manager is setting the new manager
-    test.defindex_contract.set_manager(&users[0]);
+    test.defindex_contract
+    .mock_auths(&[
+        MockAuth {
+            address: &test.manager.clone(),
+            invoke: 
+                &MockAuthInvoke {
+                    contract: &test.defindex_contract.address.clone(),
+                    fn_name: "set_manager",
+                    args: (&users[0],).into_val(&test.env),
+                    sub_invokes: &[],
+                },
+        }
+    ])
+    .set_manager(&users[0]);
 
     let expected_auth = AuthorizedInvocation {
         // Top-level authorized function is `deploy` with all the arguments.
