@@ -17,6 +17,7 @@ enum DataKey {
     StrategyName(u32), // Strategy names by index
     TotalStrategies,   // Total number of strategies
     IdleFunds,
+    DeFindexReceiver
 }
 
 // Token Management
@@ -76,4 +77,13 @@ pub fn set_idle_funds(e: &Env, n: &i128) {
 
 pub fn get_idle_funds(e: &Env) -> i128 {
     e.storage().instance().get(&DataKey::IdleFunds).unwrap()
+}
+
+// PaltaLabs Fee Receiver
+pub fn set_defindex_receiver(e: &Env, address: &Address) {
+    e.storage().instance().set(&DataKey::DeFindexReceiver, address);
+}
+
+pub fn get_defindex_receiver(e: &Env) -> i128 {
+    e.storage().instance().get(&DataKey::DeFindexReceiver).unwrap()
 }

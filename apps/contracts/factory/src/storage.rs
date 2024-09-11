@@ -1,12 +1,15 @@
 use soroban_sdk::{
-    contracttype, BytesN, Env, Val, TryFromVal
+    contracttype, Address, BytesN, Env, Map, TryFromVal, Val
 };
 use crate::error::FactoryError;
 
 #[derive(Clone)]
 #[contracttype]
 pub enum DataKey {
-    DefindexWasmHash,
+    Admin,
+    DeFindexWasmHash,
+    DeFindexReceiver,
+    DeFindexesMap
 }
 
 const DAY_IN_LEDGERS: u32 = 17280;
@@ -39,14 +42,57 @@ fn get_persistent_extend_or_error<V: TryFromVal<Env, Val>>(
 }
 
 pub fn get_defi_wasm_hash(e: &Env) -> Result<BytesN<32>, FactoryError>{
-    let key = DataKey::DefindexWasmHash;
+    let key = DataKey::DeFindexWasmHash;
     get_persistent_extend_or_error(&e, &key, FactoryError::NotInitialized)
 }
 
 pub fn put_defi_wasm_hash(e: &Env, pair_wasm_hash: BytesN<32>) {
-    let key = DataKey::DefindexWasmHash;
+    let key = DataKey::DeFindexWasmHash;
     e.storage().persistent().set(&key, &pair_wasm_hash);
     e.storage()
             .persistent()
             .extend_ttl(&key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT)
+}
+
+// Storing deployed defindexes
+pub fn get_deployed_defindexes(e: &Env) -> Result<Map<u32, Address>, FactoryError> {
+    let key = DataKey::DeFindexesMap;
+    get_persistent_extend_or_error(&e, &key, FactoryError::EmptyMap)
+}
+
+fn put_deployed_defindexes(e: &Env, deployed_defindexes: Map<u32, Address>) {
+    let key = DataKey::DeFindexesMap;
+    e.storage().persistent().set(&key, &deployed_defindexes);
+    e.storage()
+            .persistent()
+            .extend_ttl(&key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT)
+}
+
+pub fn add_new_defindex(e: &Env, defindex_address: Address) {
+    let mut deployed_defindexes: Map<u32, Address> = get_deployed_defindexes(&e).unwrap_or(Map::new(&e));
+    let new_id = deployed_defindexes.len() as u32;
+    deployed_defindexes.set(new_id, defindex_address);
+    put_deployed_defindexes(&e, deployed_defindexes);
+}
+
+// Admin
+pub fn has_admin(e: &Env) -> bool {
+    e.storage().instance().has(&DataKey::Admin)
+}
+
+pub fn put_admin(e: &Env, admin: &Address) {
+    e.storage().instance().set(&DataKey::Admin, admin);
+}
+
+pub fn get_admin(e: &Env) -> Address {
+    e.storage().instance().get(&DataKey::Admin).unwrap()
+}
+
+// Fee Receiver
+pub fn put_defindex_receiver(e: &Env, address: &Address) {
+    e.storage().instance().set(&DataKey::DeFindexReceiver, address);
+}
+
+pub fn get_defindex_receiver(e: &Env) -> Address {
+    e.storage().instance().get(&DataKey::DeFindexReceiver).unwrap()
 }

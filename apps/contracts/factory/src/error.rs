@@ -6,4 +6,5 @@ use soroban_sdk::{self, contracterror};
 pub enum FactoryError {
     NotInitialized = 401,
     AlreadyInitialized = 402,
+    EmptyMap = 403,
 }

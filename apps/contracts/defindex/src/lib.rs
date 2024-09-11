@@ -18,7 +18,7 @@ mod utils;
 pub use error::ContractError;
 
 use storage::{
-    get_strategy, get_strategy_name, get_total_strategies, set_ratio, set_strategy, set_strategy_name, set_token, set_total_strategies, set_total_tokens, StrategyParams
+    get_strategy, get_strategy_name, get_total_strategies, set_defindex_receiver, set_ratio, set_strategy, set_strategy_name, set_token, set_total_strategies, set_total_tokens, StrategyParams
 };
 
 use defindex_adapter_interface::DeFindexAdapterClient;
@@ -52,6 +52,7 @@ impl VaultTrait for DeFindexVault {
         emergency_manager: Address, 
         fee_receiver: Address, 
         manager: Address,
+        defindex_receiver: Address,
         tokens: Vec<Address>,
         ratios: Vec<u32>,
         strategies: Vec<StrategyParams>
@@ -64,6 +65,9 @@ impl VaultTrait for DeFindexVault {
         access_control.set_role(&RolesDataKey::EmergencyManager, &emergency_manager);
         access_control.set_role(&RolesDataKey::FeeReceiver, &fee_receiver);
         access_control.set_role(&RolesDataKey::Manager, &manager);
+
+        // Set Paltalabs Fee Receiver
+        set_defindex_receiver(&e, &defindex_receiver);
 
         // Store tokens and their ratios
         let total_tokens = tokens.len();

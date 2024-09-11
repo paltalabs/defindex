@@ -20,7 +20,7 @@ import { createTxBuilder, invoke, invokeTransaction } from "./tx.js";
 
 // Relative paths from __dirname
 const CONTRACT_REL_PATH: object = {
-  defindex:
+  defindex_vault:
     "../../target/wasm32-unknown-unknown/release/defindex_vault.optimized.wasm",
   defindex_factory:
     "../../target/wasm32-unknown-unknown/release/defindex_factory.optimized.wasm",

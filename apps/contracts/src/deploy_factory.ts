@@ -20,7 +20,7 @@ export async function deployContracts(addressBook: AddressBook) {
   console.log("-------------------------------------------------------");
   console.log("Deploying DeFindex Factory");
   console.log("-------------------------------------------------------");
-  await installContract("defindex", addressBook, loadedConfig.admin);
+  await installContract("defindex_vault", addressBook, loadedConfig.admin);
   await installContract("defindex_factory", addressBook, loadedConfig.admin);
   await deployContract(
     "defindex_factory",
@@ -29,8 +29,13 @@ export async function deployContracts(addressBook: AddressBook) {
     loadedConfig.admin
   );
 
+  const defindexReceiver = loadedConfig.getUser("DEFINDEX_RECEIVER_SECRET_KEY");
+  if (network != "mainnet") await airdropAccount(defindexReceiver);
+  
   const factoryInitParams: xdr.ScVal[] = [
-    nativeToScVal(Buffer.from(addressBook.getWasmHash("defindex"), "hex")),
+    new Address(loadedConfig.admin.publicKey()).toScVal(),
+    new Address(defindexReceiver.publicKey()).toScVal(),
+    nativeToScVal(Buffer.from(addressBook.getWasmHash("defindex_vault"), "hex")),
   ];
 
   console.log("Initializing DeFindex Factory");
