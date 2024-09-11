@@ -99,7 +99,7 @@ impl FactoryTrait for DeFindexFactory {
             &strategies
         );
 
-        add_new_defindex(&e, defindex_address.clone())?;
+        add_new_defindex(&e, defindex_address.clone());
         Ok(defindex_address)
     }
 

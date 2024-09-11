@@ -68,12 +68,11 @@ fn put_deployed_defindexes(e: &Env, deployed_defindexes: Map<u32, Address>) {
             .extend_ttl(&key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT)
 }
 
-pub fn add_new_defindex(e: &Env, defindex_address: Address) -> Result<(), FactoryError> {
-    let mut deployed_defindexes = get_deployed_defindexes(&e)?;
+pub fn add_new_defindex(e: &Env, defindex_address: Address) {
+    let mut deployed_defindexes: Map<u32, Address> = get_deployed_defindexes(&e).unwrap_or(Map::new(&e));
     let new_id = deployed_defindexes.len() as u32;
     deployed_defindexes.set(new_id, defindex_address);
     put_deployed_defindexes(&e, deployed_defindexes);
-    Ok(())
 }
 
 // Admin
