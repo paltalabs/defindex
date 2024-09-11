@@ -9,8 +9,8 @@ fn test_initialize_and_get_storage() {
 
     test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &test.defindex_wasm_hash);
 
-    let factory_admin = test.factory_contract.get_admin();
-    let factory_defindex_receiver = test.factory_contract.get_defindex_receiver();
+    let factory_admin = test.factory_contract.admin();
+    let factory_defindex_receiver = test.factory_contract.defindex_receiver();
   
     assert_eq!(factory_admin, test.admin);
     assert_eq!(factory_defindex_receiver, test.defindex_receiver);
@@ -19,8 +19,8 @@ fn test_initialize_and_get_storage() {
 #[test]
 fn test_get_storage_not_yet_initialized() {
     let test = DeFindexFactoryTest::setup();
-    let factory_admin = test.factory_contract.try_get_admin();
-    let factory_defindex_receiver = test.factory_contract.try_get_defindex_receiver();
+    let factory_admin = test.factory_contract.try_admin();
+    let factory_defindex_receiver = test.factory_contract.try_defindex_receiver();
 
     assert_eq!(factory_admin, Err(Ok(FactoryError::NotInitialized)));
     assert_eq!(factory_defindex_receiver, Err(Ok(FactoryError::NotInitialized)));

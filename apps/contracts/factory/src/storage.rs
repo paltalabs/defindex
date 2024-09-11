@@ -1,5 +1,5 @@
 use soroban_sdk::{
-    contracttype, Address, BytesN, Env, TryFromVal, Val
+    contracttype, Address, BytesN, Env, Map, TryFromVal, Val
 };
 use crate::error::FactoryError;
 
@@ -9,6 +9,7 @@ pub enum DataKey {
     Admin,
     DeFindexWasmHash,
     DeFindexReceiver,
+    DeFindexesMap
 }
 
 const DAY_IN_LEDGERS: u32 = 17280;
@@ -51,6 +52,28 @@ pub fn put_defi_wasm_hash(e: &Env, pair_wasm_hash: BytesN<32>) {
     e.storage()
             .persistent()
             .extend_ttl(&key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT)
+}
+
+// Storing deployed defindexes
+pub fn get_deployed_defindexes(e: &Env) -> Result<Map<u32, Address>, FactoryError> {
+    let key = DataKey::DeFindexesMap;
+    get_persistent_extend_or_error(&e, &key, FactoryError::EmptyMap)
+}
+
+fn put_deployed_defindexes(e: &Env, deployed_defindexes: Map<u32, Address>) {
+    let key = DataKey::DeFindexesMap;
+    e.storage().persistent().set(&key, &deployed_defindexes);
+    e.storage()
+            .persistent()
+            .extend_ttl(&key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT)
+}
+
+pub fn add_new_defindex(e: &Env, defindex_address: Address) -> Result<(), FactoryError> {
+    let mut deployed_defindexes = get_deployed_defindexes(&e)?;
+    let new_id = deployed_defindexes.len() as u32;
+    deployed_defindexes.set(new_id, defindex_address);
+    put_deployed_defindexes(&e, deployed_defindexes);
+    Ok(())
 }
 
 // Admin

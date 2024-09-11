@@ -5,14 +5,11 @@ mod storage;
 mod error;
 
 use soroban_sdk::{
-    contract,
-    contractimpl,
-    Address, BytesN, Env,
-    Vec,
+    contract, contractimpl, Address, BytesN, Env, Map, Vec
 };
 use error::FactoryError;
 use defindex::{create_contract, StrategyParams};
-use storage::{ extend_instance_ttl, get_admin, get_defi_wasm_hash, get_defindex_receiver, has_admin, put_admin, put_defi_wasm_hash, put_defindex_receiver };
+use storage::{ add_new_defindex, extend_instance_ttl, get_admin, get_defi_wasm_hash, get_defindex_receiver, get_deployed_defindexes, has_admin, put_admin, put_defi_wasm_hash, put_defindex_receiver };
 
 fn check_initialized(e: &Env) -> Result<(), FactoryError> {
     if !has_admin(e) {
@@ -42,10 +39,13 @@ pub trait FactoryTrait {
 
     // Admin functions
     fn set_new_admin(e: Env, new_admin: Address) -> Result<(), FactoryError>;
-    fn get_admin(e: Env) -> Result<Address, FactoryError>;
-
-    fn set_fee_receiver(e: Env, new_fee_receiver: Address) -> Result<(), FactoryError>;
-    fn get_defindex_receiver(e: Env) -> Result<Address, FactoryError>;
+    fn set_defindex_receiver(e: Env, new_fee_receiver: Address) -> Result<(), FactoryError>;
+    
+    
+    // Read Methods
+    fn admin(e: Env) -> Result<Address, FactoryError>;
+    fn defindex_receiver(e: Env) -> Result<Address, FactoryError>;
+    fn deployed_defindexes(e: Env) -> Result<Map<u32, Address>, FactoryError>;
 }
 
 #[contract]
@@ -99,6 +99,7 @@ impl FactoryTrait for DeFindexFactory {
             &strategies
         );
 
+        add_new_defindex(&e, defindex_address.clone())?;
         Ok(defindex_address)
     }
 
@@ -112,13 +113,7 @@ impl FactoryTrait for DeFindexFactory {
         Ok(())
     }
 
-    fn get_admin(e: Env) -> Result<Address, FactoryError> {
-        check_initialized(&e)?;
-        extend_instance_ttl(&e);
-        Ok(get_admin(&e))
-    }
-
-    fn set_fee_receiver(e: Env, new_fee_receiver: Address) -> Result<(), FactoryError> {
+    fn set_defindex_receiver(e: Env, new_fee_receiver: Address) -> Result<(), FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
         let admin = get_admin(&e);
@@ -128,10 +123,22 @@ impl FactoryTrait for DeFindexFactory {
         Ok(())
     }
 
-    fn get_defindex_receiver(e: Env) -> Result<Address, FactoryError> {
+    fn admin(e: Env) -> Result<Address, FactoryError> {
+        check_initialized(&e)?;
+        extend_instance_ttl(&e);
+        Ok(get_admin(&e))
+    }
+
+    fn defindex_receiver(e: Env) -> Result<Address, FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
         Ok(get_defindex_receiver(&e))
+    }
+    
+    fn deployed_defindexes(e: Env) -> Result<Map<u32, Address>, FactoryError> {
+        check_initialized(&e)?;
+        extend_instance_ttl(&e);
+        get_deployed_defindexes(&e)
     }
 }
 

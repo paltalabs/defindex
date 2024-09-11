@@ -40,7 +40,7 @@ fn test_set_new_admin_by_admin() {
     };
     assert_eq!(test.env.auths(), vec![(test.admin, expected_auth)]);
 
-    let new_admin: Address = test.factory_contract.get_admin();
+    let new_admin: Address = test.factory_contract.admin();
     assert_eq!(new_admin, users[0]);
 }
 
@@ -69,7 +69,7 @@ fn test_set_new_admin_by_unauthorized() {
 }
 
 #[test]
-fn test_set_fee_receiver_by_admin() {
+fn test_set_defindex_receiver_by_admin() {
     let test = DeFindexFactoryTest::setup();
 
     test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &test.defindex_wasm_hash);
@@ -82,18 +82,18 @@ fn test_set_fee_receiver_by_admin() {
             invoke: 
                 &MockAuthInvoke {
                     contract: &test.factory_contract.address.clone(),
-                    fn_name: "set_fee_receiver",
+                    fn_name: "set_defindex_receiver",
                     args: (&users[0],).into_val(&test.env),
                     sub_invokes: &[],
                 },
         }
     ])
-    .set_fee_receiver(&users[0]);
+    .set_defindex_receiver(&users[0]);
 
     let expected_auth = AuthorizedInvocation {
         function: AuthorizedFunction::Contract((
             test.factory_contract.address.clone(),
-            Symbol::new(&test.env, "set_fee_receiver"),
+            Symbol::new(&test.env, "set_defindex_receiver"),
             (
                 users[0].clone(),
             )
@@ -103,7 +103,7 @@ fn test_set_fee_receiver_by_admin() {
     };
     assert_eq!(test.env.auths(), vec![(test.admin, expected_auth)]);
 
-    let new_fee_receiver: Address = test.factory_contract.get_defindex_receiver();
+    let new_fee_receiver: Address = test.factory_contract.defindex_receiver();
     assert_eq!(new_fee_receiver, users[0]);
 }
 
@@ -122,11 +122,11 @@ fn test_set_fee_receiver_by_unauthorized() {
             invoke: 
                 &MockAuthInvoke {
                     contract: &test.factory_contract.address.clone(),
-                    fn_name: "set_fee_receiver",
+                    fn_name: "set_defindex_receiver",
                     args: (&users[0],).into_val(&test.env),
                     sub_invokes: &[],
                 },
         }
     ])
-    .set_fee_receiver(&users[0]);
+    .set_defindex_receiver(&users[0]);
 }
