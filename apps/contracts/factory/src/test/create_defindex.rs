@@ -24,4 +24,7 @@ fn test_create_defindex_success() {
     &strategy_params,
     &salt
   );
+
+  let deployed_defindexes = test.factory_contract.deployed_defindexes();
+  assert_eq!(deployed_defindexes.len(), 1);
 }
