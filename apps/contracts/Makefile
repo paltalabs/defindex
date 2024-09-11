@@ -1,4 +1,4 @@
-SUBDIRS = adapters defindex factory
+SUBDIRS = strategies defindex factory
 
 default: build
 

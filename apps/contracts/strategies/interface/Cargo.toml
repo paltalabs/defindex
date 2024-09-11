@@ -1,5 +1,5 @@
 [package]
-name = "defindex-adapter-interface"
+name = "defindex-strategy-interface"
 version = { workspace = true }
 authors = ["coderipper <joaquin@paltalabs.io>"]
 license = { workspace = true }

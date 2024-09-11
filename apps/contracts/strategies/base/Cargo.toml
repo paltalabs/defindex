@@ -1,5 +1,5 @@
 [package]
-name = "soroswap_adapter"
+name = "base_strategy"
 version = { workspace = true }
 authors = ["coderipper <joaquin@paltalabs.io>"]
 license = { workspace = true }
@@ -12,7 +12,7 @@ crate-type = ["cdylib"]
  
 [dependencies] 
 soroban-sdk = { workspace = true }
-defindex-adapter-interface = { workspace = true }
+defindex-strategy-interface = { workspace = true }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }

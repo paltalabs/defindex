@@ -21,7 +21,7 @@ use storage::{
     get_strategy, get_strategy_name, get_total_strategies, set_defindex_receiver, set_ratio, set_strategy, set_strategy_name, set_token, set_total_strategies, set_total_tokens, StrategyParams
 };
 
-use defindex_adapter_interface::DeFindexAdapterClient;
+use defindex_strategy_interface::DeFindexAdapterClient;
 use token::write_metadata;
 
 fn check_initialized(e: &Env) -> Result<(), ContractError> {

@@ -16,7 +16,7 @@ use storage::{
 };
 use soroswap_router::SoroswapRouterClient;
 use soroswap_pair::SoroswapPairClient;
-use defindex_adapter_interface::{DeFindexAdapterTrait, AdapterError};
+use defindex_strategy_interface::{DeFindexAdapterTrait, AdapterError};
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), AdapterError> {
     if amount < 0 {

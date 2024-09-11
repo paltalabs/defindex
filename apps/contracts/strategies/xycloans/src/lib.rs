@@ -11,7 +11,7 @@ use storage::{
 };
 use soroswap_router::{get_amount_out, get_reserves, pair_for, swap, SoroswapRouterClient};
 use xycloans_pool::XycloansPoolClient;
-use defindex_adapter_interface::{AdapterError, DeFindexAdapterTrait};
+use defindex_strategy_interface::{AdapterError, DeFindexAdapterTrait};
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), AdapterError> {
     if amount < 0 {

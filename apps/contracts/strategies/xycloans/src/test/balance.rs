@@ -1,4 +1,4 @@
-use defindex_adapter_interface::AdapterError;
+use defindex_strategy_interface::AdapterError;
 use crate::test::XycloansAdapterTest;
 
 #[test]
