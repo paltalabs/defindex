@@ -36,6 +36,7 @@ struct XycloansAdapter;
 impl DeFindexStrategyTrait for XycloansAdapter {
     fn initialize(
         e: Env,
+        _asset: Address,
         init_args: Vec<Val>,
     ) -> Result<(), StrategyError> {
 
@@ -59,6 +60,13 @@ impl DeFindexStrategyTrait for XycloansAdapter {
         event::initialized(&e, true);
         extend_instance_ttl(&e);
         Ok(())
+    }
+
+    fn asset(e: Env) -> Result<Address, StrategyError> {
+        check_initialized(&e)?;
+        extend_instance_ttl(&e);
+
+        Ok(get_token_in(&e))
     }
 
     fn deposit(

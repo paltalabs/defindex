@@ -16,7 +16,7 @@ fn test_withdraw() {
     ).into_val(&test.env);
 
     // Initialize Adapter
-    test.adapter_contract.initialize(&init_fn_args);
+    test.adapter_contract.initialize(&test.token_0.address, &init_fn_args);
 
     test.adapter_contract.deposit(&1_000_000_000_000_000_000, &test.user);
     assert_eq!(test.token_1.balance(&test.user), 19_000_000_000_000_000_000);

@@ -13,8 +13,12 @@ pub trait DeFindexStrategyTrait {
     /// Initializes the strategy with the required parameters.
     fn initialize(
         env: Env,
+        asset: Address,
         init_args: Vec<Val>,
     ) -> Result<(), StrategyError>;
+
+    /// Returns the underlying asset address of the strategy.
+    fn asset(env: Env) -> Result<Address, StrategyError>;
 
     /// Allows the DeFindex to deposit assets into the strategy.
     fn deposit(

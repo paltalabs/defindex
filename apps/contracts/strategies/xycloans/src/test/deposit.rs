@@ -16,7 +16,7 @@ fn test_deposit() {
     ).into_val(&test.env);
 
     // Initialize Adapter
-    test.adapter_contract.initialize(&init_fn_args);
+    test.adapter_contract.initialize(&test.token_0.address, &init_fn_args);
 
     test.adapter_contract.deposit(&1_000_000_000_000_000_000, &test.user);
     assert_eq!(test.token_1.balance(&test.user), 19_000_000_000_000_000_000);
@@ -36,7 +36,7 @@ fn deposit_amount_in_negative() {
     ).into_val(&test.env);
 
     // Initialize Adapter
-    test.adapter_contract.initialize(&init_fn_args);
+    test.adapter_contract.initialize(&test.token_0.address, &init_fn_args);
 
     let result = test.adapter_contract.try_deposit(&-1_000_000_000_000_000_000, &test.user);
     assert_eq!(
@@ -60,7 +60,7 @@ fn deposit_amount_insufficient_input() {
     ).into_val(&test.env);
 
     // Initialize Adapter
-    test.adapter_contract.initialize(&init_fn_args);
+    test.adapter_contract.initialize(&test.token_0.address, &init_fn_args);
 
     test.adapter_contract.deposit(&100_000_000_000_000_000_000, &test.user);
 }

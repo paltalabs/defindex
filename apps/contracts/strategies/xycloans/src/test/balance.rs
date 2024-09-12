@@ -23,7 +23,7 @@ fn test_balance_not_deposited() {
     ).into_val(&test.env);
 
     // Initialize Adapter
-    test.adapter_contract.initialize(&init_fn_args);
+    test.adapter_contract.initialize(&test.token_0.address, &init_fn_args);
 
     let balance = test.adapter_contract.balance(&test.user);
     assert_eq!(balance, 0);
@@ -43,7 +43,7 @@ fn test_balance_deposited() {
     ).into_val(&test.env);
 
     // Initialize Adapter
-    test.adapter_contract.initialize(&init_fn_args);
+    test.adapter_contract.initialize(&test.token_0.address, &init_fn_args);
 
     test.adapter_contract.deposit(&1_000_000_000_000_000_000, &test.user);
     assert_eq!(test.token_1.balance(&test.user), 19_999_999_999_999_000_000);

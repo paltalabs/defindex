@@ -41,6 +41,7 @@ struct SoroswapAdapter;
 impl DeFindexStrategyTrait for SoroswapAdapter {
     fn initialize(
         e: Env,
+        _asset: Address,
         init_args: Vec<Val>,
     ) -> Result<(), StrategyError> {
         if is_initialized(&e) {
@@ -55,6 +56,14 @@ impl DeFindexStrategyTrait for SoroswapAdapter {
         event::initialized(&e, true);
         extend_instance_ttl(&e);
         Ok(())
+    }
+
+    fn asset(e: Env) -> Result<Address, StrategyError> {
+        check_initialized(&e)?;
+        extend_instance_ttl(&e);
+
+        let protocol_address = get_soroswap_router_address(&e);
+        Ok(protocol_address)
     }
 
     fn deposit(

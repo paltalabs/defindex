@@ -16,7 +16,7 @@ fn test_initialize() {
     ).into_val(&test.env);
 
     // Initialize Adapter
-    test.adapter_contract.initialize(&init_fn_args);
+    test.adapter_contract.initialize(&test.token_0.address, &init_fn_args);
 }
 
 #[test]
@@ -33,9 +33,9 @@ fn test_initialize_twice() {
     ).into_val(&test.env);
 
     // Initialize Adapter
-    test.adapter_contract.initialize(&init_fn_args);
+    test.adapter_contract.initialize(&test.token_0.address, &init_fn_args);
 
-    let result_second_init = test.adapter_contract.try_initialize(&init_fn_args);
+    let result_second_init = test.adapter_contract.try_initialize(&test.token_0.address,&init_fn_args);
 
     assert_eq!(
         result_second_init,
