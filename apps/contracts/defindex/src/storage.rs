@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, Address, Env, String};
+use soroban_sdk::{contracttype, Address, Env, String, Vec};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -27,6 +27,15 @@ pub fn set_token(e: &Env, index: u32, token: &Address) {
 
 pub fn get_token(e: &Env, index: u32) -> Address {
     e.storage().instance().get(&DataKey::Tokens(index)).unwrap()
+}
+
+pub fn get_tokens(e: &Env) -> Vec<Address> {
+    let total_tokens = get_total_tokens(e);
+    let mut tokens = Vec::new(e);
+    for i in 0..total_tokens {
+        tokens.push_back(get_token(e, i));
+    }
+    tokens
 }
 
 pub fn set_ratio(e: &Env, index: u32, ratio: u32) {

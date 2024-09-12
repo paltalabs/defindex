@@ -14,12 +14,14 @@ mod storage;
 mod test;
 mod token;
 mod utils;
+mod funds;
 
 pub use error::ContractError;
 
 use storage::{
     get_strategy, get_strategy_name, get_total_strategies, set_defindex_receiver, set_ratio, set_strategy, set_strategy_name, set_token, set_total_strategies, set_total_tokens, StrategyParams
 };
+use funds::{get_current_idle_funds, get_current_invested_funds, get_total_managed_funds};
 
 use defindex_strategy_interface::DeFindexStrategyClient;
 use token::write_metadata;
@@ -183,29 +185,16 @@ impl VaultTrait for DeFindexVault {
     }
 
     fn get_total_managed_funds(e: &Env) -> Map<Address, i128> {
-        // return dummy map
-        let mut map: Map<Address, i128> = Map::new(e);
-        let dummy_address = e.current_contract_address();
-        map.set(dummy_address, 0);
-        map
-
+        get_total_managed_funds(e)
     }
 
     fn get_current_invested_funds(e: &Env) -> Map<Address, i128> {
-        // return dummy map
-        let mut map: Map<Address, i128> = Map::new(e);
-        let dummy_address = e.current_contract_address();
-        map.set(dummy_address, 0);
-        map
+        get_current_invested_funds(e)
 
     }
   
     fn get_current_idle_funds(e: &Env) -> Map<Address, i128> {
-        // return dummy map
-        let mut map: Map<Address, i128> = Map::new(e);
-        let dummy_address = e.current_contract_address();
-        map.set(dummy_address, 0);
-        map
+        get_current_idle_funds(e)
 
     }
 }
