@@ -1,7 +1,7 @@
 [workspace]
-members = ["adapters/*", "defindex", "factory"]
+members = ["strategies/*", "defindex", "factory"]
 exclude = [
-    "adapters/external_wasms"
+    "strategies/external_wasms"
 ]
 resolver = "2"
 
@@ -15,7 +15,7 @@ repository = "https://github.com/paltalabs/defindex"
 soroban-sdk = "21.0.1-preview.3"
 soroban-token-sdk = { version = "21.0.1-preview.3" }
 # soroswap-library = "0.3.0"
-defindex-adapter-interface={ path="./adapters/interface", package="defindex-adapter-interface" }
+defindex-strategy-interface={ path="./strategies/interface", package="defindex-strategy-interface" }
 
 [profile.release]
 opt-level = "z"

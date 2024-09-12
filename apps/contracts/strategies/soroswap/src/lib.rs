@@ -16,41 +16,39 @@ use storage::{
 };
 use soroswap_router::SoroswapRouterClient;
 use soroswap_pair::SoroswapPairClient;
-use defindex_adapter_interface::{DeFindexAdapterTrait, AdapterError};
+use defindex_strategy_interface::{DeFindexStrategyTrait, StrategyError};
 
-pub fn check_nonnegative_amount(amount: i128) -> Result<(), AdapterError> {
+pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
     if amount < 0 {
-        Err(AdapterError::NegativeNotAllowed)
+        Err(StrategyError::NegativeNotAllowed)
     } else {
         Ok(())
     }
 }
 
-fn check_initialized(e: &Env) -> Result<(), AdapterError> {
+fn check_initialized(e: &Env) -> Result<(), StrategyError> {
     if is_initialized(e) {
         Ok(())
     } else {
-        Err(AdapterError::NotInitialized)
+        Err(StrategyError::NotInitialized)
     }
 }
 
 #[contract]
 struct SoroswapAdapter;
 
-pub trait InitializeTrait {
-    fn initialize(e: Env, protocol_address: Address) -> Result<(), AdapterError>;
-}
-
 #[contractimpl]
-impl InitializeTrait for SoroswapAdapter {
-    /// Initializes the contract and sets the soroswap router address
+impl DeFindexStrategyTrait for SoroswapAdapter {
     fn initialize(
         e: Env,
-        protocol_address: Address,
-    ) -> Result<(), AdapterError> {
+        _asset: Address,
+        init_args: Vec<Val>,
+    ) -> Result<(), StrategyError> {
         if is_initialized(&e) {
-            return Err(AdapterError::AlreadyInitialized);
+            return Err(StrategyError::AlreadyInitialized);
         }
+
+        let protocol_address = init_args.get(0).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
     
         set_initialized(&e);
         set_soroswap_router_address(&e, protocol_address);
@@ -59,15 +57,20 @@ impl InitializeTrait for SoroswapAdapter {
         extend_instance_ttl(&e);
         Ok(())
     }
-}
 
-#[contractimpl]
-impl DeFindexAdapterTrait for SoroswapAdapter {
+    fn asset(e: Env) -> Result<Address, StrategyError> {
+        check_initialized(&e)?;
+        extend_instance_ttl(&e);
+
+        let protocol_address = get_soroswap_router_address(&e);
+        Ok(protocol_address)
+    }
+
     fn deposit(
         e: Env,
         amount: i128,
         from: Address,
-    ) -> Result<(), AdapterError> {
+    ) -> Result<(), StrategyError> {
         from.require_auth();
         check_initialized(&e)?;
         check_nonnegative_amount(amount)?;
@@ -134,10 +137,18 @@ impl DeFindexAdapterTrait for SoroswapAdapter {
         Ok(())
     }
 
+    fn harvest(e: Env) -> Result<(), StrategyError> {
+        check_initialized(&e)?;
+        extend_instance_ttl(&e);
+
+        Ok(())
+    }
+
     fn withdraw(
         e: Env,
+        amount: i128,
         from: Address,
-    ) -> Result<i128, AdapterError> {
+    ) -> Result<i128, StrategyError> {
         from.require_auth();
         check_initialized(&e)?;
         extend_instance_ttl(&e);
@@ -205,7 +216,7 @@ impl DeFindexAdapterTrait for SoroswapAdapter {
     fn balance(
         e: Env,
         from: Address,
-    ) -> Result<i128, AdapterError> {
+    ) -> Result<i128, StrategyError> {
         // Constants
         const SCALE: i128 = 10_000_000; // A scaling factor to maintain precision within 7 decimals
     
@@ -223,7 +234,7 @@ impl DeFindexAdapterTrait for SoroswapAdapter {
     
         // Ensure no division by zero
         if total_lp_tokens == 0 {
-            return Err(AdapterError::NegativeNotAllowed);
+            return Err(StrategyError::NegativeNotAllowed);
         }
     
         // Calculate the user's share of the pool as a scaled integer
@@ -235,7 +246,7 @@ impl DeFindexAdapterTrait for SoroswapAdapter {
     
         // Ensure no division by zero in price calculation
         if reserve_xlm == 0 {
-            return Err(AdapterError::NegativeNotAllowed);
+            return Err(StrategyError::NegativeNotAllowed);
         }
     
         // Calculate the price of XLM in USDC as a scaled integer

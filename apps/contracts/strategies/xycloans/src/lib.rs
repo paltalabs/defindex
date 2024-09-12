@@ -11,53 +11,44 @@ use storage::{
 };
 use soroswap_router::{get_amount_out, get_reserves, pair_for, swap, SoroswapRouterClient};
 use xycloans_pool::XycloansPoolClient;
-use defindex_adapter_interface::{AdapterError, DeFindexAdapterTrait};
+use defindex_strategy_interface::{StrategyError, DeFindexStrategyTrait};
 
-pub fn check_nonnegative_amount(amount: i128) -> Result<(), AdapterError> {
+pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
     if amount < 0 {
-        Err(AdapterError::NegativeNotAllowed)
+        Err(StrategyError::NegativeNotAllowed)
     } else {
         Ok(())
     }
 }
 
-fn check_initialized(e: &Env) -> Result<(), AdapterError> {
+fn check_initialized(e: &Env) -> Result<(), StrategyError> {
     if is_initialized(e) {
         Ok(())
     } else {
-        Err(AdapterError::NotInitialized)
+        Err(StrategyError::NotInitialized)
     }
 }
 
 #[contract]
 struct XycloansAdapter;
 
-pub trait InitializeTrait {
-    /// token_0 is the token that the user is sending and token_1 is the one is being deposit into the pool, if token_0 and token_1 are the same token it should skip the swap in the router?
-    fn initialize(
-        e: Env, 
-        soroswap_router_address: Address, 
-        soroswap_factory_address: Address, 
-        xycloans_pool_address: Address,
-        pool_token: Address,
-        token_in: Address
-    ) -> Result<(), AdapterError>;
-}
-
 #[contractimpl]
-impl InitializeTrait for XycloansAdapter {
+impl DeFindexStrategyTrait for XycloansAdapter {
     fn initialize(
         e: Env,
-        soroswap_router_address: Address,
-        soroswap_factory_address: Address,
-        xycloans_pool_address: Address,
-        pool_token: Address,
-        token_in: Address
-    ) -> Result<(), AdapterError> {
+        _asset: Address,
+        init_args: Vec<Val>,
+    ) -> Result<(), StrategyError> {
 
         if is_initialized(&e) {
-            return Err(AdapterError::AlreadyInitialized);
+            return Err(StrategyError::AlreadyInitialized);
         }
+
+        let soroswap_router_address = init_args.get(0).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
+        let soroswap_factory_address = init_args.get(1).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
+        let xycloans_pool_address = init_args.get(2).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
+        let pool_token = init_args.get(3).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
+        let token_in = init_args.get(4).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
     
         set_initialized(&e);
         set_soroswap_router_address(&e, soroswap_router_address);
@@ -70,15 +61,19 @@ impl InitializeTrait for XycloansAdapter {
         extend_instance_ttl(&e);
         Ok(())
     }
-}
 
-#[contractimpl]
-impl DeFindexAdapterTrait for XycloansAdapter {
+    fn asset(e: Env) -> Result<Address, StrategyError> {
+        check_initialized(&e)?;
+        extend_instance_ttl(&e);
+
+        Ok(get_token_in(&e))
+    }
+
     fn deposit(
         e: Env,
         amount: i128,
         from: Address,
-    ) -> Result<(), AdapterError> {
+    ) -> Result<(), StrategyError> {
         check_initialized(&e)?;
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
@@ -97,10 +92,18 @@ impl DeFindexAdapterTrait for XycloansAdapter {
         Ok(())
     }
 
+    fn harvest(e: Env) -> Result<(), StrategyError> {
+        check_initialized(&e)?;
+        extend_instance_ttl(&e);
+
+        Ok(())
+    }
+
     fn withdraw(
         e: Env,
+        amount: i128,
         from: Address,
-    ) -> Result<i128, AdapterError> {
+    ) -> Result<i128, StrategyError> {
         from.require_auth();
         check_initialized(&e)?;
         extend_instance_ttl(&e);
@@ -129,7 +132,7 @@ impl DeFindexAdapterTrait for XycloansAdapter {
     fn balance(
         e: Env,
         from: Address,
-    ) -> Result<i128, AdapterError> {
+    ) -> Result<i128, StrategyError> {
         check_initialized(&e)?;
 
         let xycloans_address = get_xycloans_pool_address(&e);
@@ -156,9 +159,9 @@ impl DeFindexAdapterTrait for XycloansAdapter {
             soroswap_factory.clone(),
             pool_token.clone(),
             token_in.clone(),
-        ).map_err(|_| AdapterError::ProtocolAddressNotFound)?;
+        ).map_err(|_| StrategyError::ProtocolAddressNotFound)?;
         
-        let amount_out = get_amount_out(total, reserve_0, reserve_1).map_err(|_| AdapterError::ExternalError)?;
+        let amount_out = get_amount_out(total, reserve_0, reserve_1).map_err(|_| StrategyError::ExternalError)?;
     
         Ok(amount_out)
     }
