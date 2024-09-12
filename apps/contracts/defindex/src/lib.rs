@@ -15,6 +15,7 @@ mod test;
 mod token;
 mod utils;
 mod funds;
+mod strategies;
 
 pub use error::ContractError;
 

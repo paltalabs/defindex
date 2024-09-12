@@ -63,6 +63,15 @@ pub fn get_strategy(e: &Env, index: u32) -> Address {
     e.storage().instance().get(&DataKey::Strategy(index)).unwrap()
 }
 
+pub fn get_strategies(e: &Env) -> Vec<Address> {
+    let total_strategies = get_total_strategies(e);
+    let mut strategies = Vec::new(e);
+    for i in 0..total_strategies {
+        strategies.push_back(get_strategy(e, i));
+    }
+    strategies
+}
+
 pub fn set_strategy_name(e: &Env, index: u32, name: &String) {
     e.storage().instance().set(&DataKey::StrategyName(index), name);
 }
