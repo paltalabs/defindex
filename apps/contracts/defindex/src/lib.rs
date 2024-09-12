@@ -2,7 +2,7 @@
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use interface::AdminInterfaceTrait;
 use soroban_sdk::{
-    contract, contractimpl, panic_with_error, Address, Env, String, Vec
+    contract, contractimpl, panic_with_error, Address, Env, String, Vec, Map
 };
 use soroban_token_sdk::metadata::TokenMetadata;
 use crate::interface::VaultTrait;
@@ -182,8 +182,31 @@ impl VaultTrait for DeFindexVault {
         strategies
     }
 
-    fn current_invested_funds(e: Env) -> i128 {
-        0i128
+    fn get_total_managed_funds(e: &Env) -> Map<Address, i128> {
+        // return dummy map
+        let mut map: Map<Address, i128> = Map::new(e);
+        let dummy_address = e.current_contract_address();
+        map.set(dummy_address, 0);
+        map
+
+    }
+
+    fn get_current_invested_funds(e: &Env) -> Map<Address, i128> {
+        // return dummy map
+        let mut map: Map<Address, i128> = Map::new(e);
+        let dummy_address = e.current_contract_address();
+        map.set(dummy_address, 0);
+        map
+
+    }
+  
+    fn get_current_idle_funds(e: &Env) -> Map<Address, i128> {
+        // return dummy map
+        let mut map: Map<Address, i128> = Map::new(e);
+        let dummy_address = e.current_contract_address();
+        map.set(dummy_address, 0);
+        map
+
     }
 }
 
