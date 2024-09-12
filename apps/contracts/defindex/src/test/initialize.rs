@@ -64,7 +64,7 @@ fn test_withdraw_not_yet_initialized() {
     let test = DeFindexVaultTest::setup();
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
-    let result = test.defindex_contract.try_withdraw(&users[0]);
+    let result = test.defindex_contract.try_withdraw(&100i128,&users[0]);
     assert_eq!(result, Err(Ok(ContractError::NotInitialized)));
 }
 
@@ -73,6 +73,6 @@ fn test_emergency_withdraw_not_yet_initialized() {
     let test = DeFindexVaultTest::setup();
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
-    let result = test.defindex_contract.try_emergency_withdraw(&users[0]);
+    let result = test.defindex_contract.try_emergency_withdraw(&100i128,&users[0]);
     assert_eq!(result, Err(Ok(ContractError::NotInitialized)));
 }

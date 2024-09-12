@@ -21,7 +21,7 @@ use storage::{
     get_strategy, get_strategy_name, get_total_strategies, set_defindex_receiver, set_ratio, set_strategy, set_strategy_name, set_token, set_total_strategies, set_total_tokens, StrategyParams
 };
 
-use defindex_strategy_interface::DeFindexAdapterClient;
+use defindex_strategy_interface::DeFindexStrategyClient;
 use token::write_metadata;
 
 fn check_initialized(e: &Env) -> Result<(), ContractError> {
@@ -112,7 +112,7 @@ impl VaultTrait for DeFindexVault {
 
         for i in 0..total_strategies {
             let strategy_address = get_strategy(&e, i);
-            let strategy_client = DeFindexAdapterClient::new(&e, &strategy_address);
+            let strategy_client = DeFindexStrategyClient::new(&e, &strategy_address);
 
             let adapter_amount = if i == (total_strategies - 1) {
                 amount - total_amount_used
@@ -129,6 +129,7 @@ impl VaultTrait for DeFindexVault {
 
     fn withdraw(
         e: Env,
+        amount: i128,
         from: Address,
     ) -> Result<(), ContractError>{
         check_initialized(&e)?;
@@ -137,9 +138,9 @@ impl VaultTrait for DeFindexVault {
 
         for i in 0..total_strategies {
             let strategy_address = get_strategy(&e, i);
-            let strategy_client = DeFindexAdapterClient::new(&e, &strategy_address);
+            let strategy_client = DeFindexStrategyClient::new(&e, &strategy_address);
 
-            strategy_client.withdraw(&from);
+            strategy_client.withdraw(&amount, &from);
         }
 
         Ok(())
@@ -147,6 +148,7 @@ impl VaultTrait for DeFindexVault {
 
     fn emergency_withdraw(
         e: Env,
+        amount: i128,
         from: Address,
     ) -> Result<(), ContractError>{
         check_initialized(&e)?;
@@ -155,9 +157,9 @@ impl VaultTrait for DeFindexVault {
 
         for i in 0..total_strategies {
             let strategy_address = get_strategy(&e, i);
-            let strategy_client = DeFindexAdapterClient::new(&e, &strategy_address);
+            let strategy_client = DeFindexStrategyClient::new(&e, &strategy_address);
 
-            strategy_client.withdraw(&from);
+            strategy_client.withdraw(&amount, &from);
         }
 
         Ok(())

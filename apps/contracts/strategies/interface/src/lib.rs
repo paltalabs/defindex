@@ -1,29 +1,41 @@
 #![no_std]
 
-use soroban_sdk::{contractclient, contractspecfn, Address, Env};
+use soroban_sdk::{contractclient, contractspecfn, Address, Env, Val, Vec};
 pub struct Spec;
 
 mod error;
-pub use error::AdapterError;
+pub use error::StrategyError;
 
-/// Interface for SoroswapAggregatorProxy
 #[contractspecfn(name = "Spec", export = false)]
-#[contractclient(name = "DeFindexAdapterClient")]
+#[contractclient(name = "DeFindexStrategyClient")]
 
-pub trait DeFindexAdapterTrait {
+pub trait DeFindexStrategyTrait {
+    /// Initializes the strategy with the required parameters.
+    fn initialize(
+        env: Env,
+        init_args: Vec<Val>,
+    ) -> Result<(), StrategyError>;
+
+    /// Allows the DeFindex to deposit assets into the strategy.
     fn deposit(
         env: Env,
         amount: i128,
         from: Address
-    ) -> Result<(), AdapterError>;
+    ) -> Result<(), StrategyError>;
 
+    /// Generates yields for the strategy, performing any required actions.
+    fn harvest(env: Env) -> Result<(), StrategyError>;
+
+    /// Returns the balance of the strategy for the given address.
     fn balance(
-        e: Env,
+        env: Env,
         from: Address,
-    ) -> Result<i128, AdapterError>;
+    ) -> Result<i128, StrategyError>;
     
+    /// Allows the DeFindex to withdraw assets from the strategy.
     fn withdraw(
-        e: Env,
+        env: Env,
+        amount: i128, // Specify the amount to withdraw.
         from: Address,
-    ) -> Result<i128, AdapterError>;
+    ) -> Result<i128, StrategyError>;
 }
