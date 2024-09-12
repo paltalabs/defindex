@@ -116,3 +116,5 @@ impl DeFindexStrategyTrait for BaseStrategy {
         Ok(read_balance(&e, from))
     }
 }
+
+mod test;
