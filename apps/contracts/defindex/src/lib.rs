@@ -2,7 +2,7 @@
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use interface::AdminInterfaceTrait;
 use soroban_sdk::{
-    contract, contractimpl, panic_with_error, Address, Env, String, Vec
+    contract, contractimpl, panic_with_error, token::{TokenClient, TokenInterface}, Address, Env, String, Vec
 };
 use soroban_token_sdk::metadata::TokenMetadata;
 use crate::interface::VaultTrait;
@@ -18,11 +18,11 @@ mod utils;
 pub use error::ContractError;
 
 use storage::{
-    get_strategy, get_strategy_name, get_total_strategies, set_defindex_receiver, set_ratio, set_strategy, set_strategy_name, set_token, set_total_strategies, set_total_tokens, StrategyParams
+    get_idle_funds, get_strategy, get_strategy_name, get_total_strategies, set_defindex_receiver, set_ratio, set_strategy, set_strategy_name, set_token, set_total_strategies, set_total_tokens, spend_idle_funds, StrategyParams
 };
 
 use defindex_strategy_interface::DeFindexStrategyClient;
-use token::write_metadata;
+use token::{write_metadata, VaultToken};
 
 fn check_initialized(e: &Env) -> Result<(), ContractError> {
     //TODO: Should also check if adapters/strategies have been set
@@ -133,17 +133,41 @@ impl VaultTrait for DeFindexVault {
         from: Address,
     ) -> Result<(), ContractError>{
         check_initialized(&e)?;
+        check_nonnegative_amount(amount)?;
         from.require_auth();
-        let total_strategies = get_total_strategies(&e);
 
-        for i in 0..total_strategies {
-            let strategy_address = get_strategy(&e, i);
-            let strategy_client = DeFindexStrategyClient::new(&e, &strategy_address);
+        let defindex_address = e.current_contract_address();
 
-            strategy_client.withdraw(&amount, &from);
+        let df_user_balance = VaultToken::balance(e.clone(), from.clone());
+        if df_user_balance < amount {
+            panic_with_error!(&e, ContractError::InsufficientBalance);
         }
 
-        Ok(())
+        let idle_funds = get_idle_funds(&e);
+        
+        if idle_funds >= amount {
+            // Withdraw from idle funds
+            TokenClient::new(&e, &defindex_address).transfer(&defindex_address, &from, &amount);
+            spend_idle_funds(&e, amount);
+            Ok(())
+        } else {
+            // Withdraw from strategies
+            // TODO: Should we implement a queue for withdrawing from strategies? now it will withdraw from the first strategy that has enough balance
+            let total_strategies = get_total_strategies(&e);
+
+            for i in 0..total_strategies {
+                let strategy_address = get_strategy(&e, i);
+                let strategy_client = DeFindexStrategyClient::new(&e, &strategy_address);
+
+                let strategy_balance = strategy_client.balance(&from);
+                if strategy_balance >= amount {
+                    strategy_client.withdraw(&amount, &from);
+                    TokenClient::new(&e, &defindex_address).transfer(&defindex_address, &from, &amount);
+                    return Ok(());
+                }
+            }
+            panic_with_error!(&e, ContractError::InsufficientBalance);
+        }
     }
 
     fn emergency_withdraw(

@@ -71,15 +71,32 @@ pub fn get_total_strategies(e: &Env) -> u32 {
 }
 
 // Idle Funds Management
-pub fn set_idle_funds(e: &Env, n: &i128) {
-    e.storage().instance().set(&DataKey::IdleFunds, n);
+fn set_idle_funds(e: &Env, amount: i128) {
+    e.storage().instance().set(&DataKey::IdleFunds, &amount);
 }
 
 pub fn get_idle_funds(e: &Env) -> i128 {
     e.storage().instance().get(&DataKey::IdleFunds).unwrap()
 }
 
-// PaltaLabs Fee Receiver
+pub fn receive_idle_funds(e: &Env, amount: i128) {
+    let balance = get_idle_funds(e);
+
+    let new_balance = balance.checked_add(amount)
+        .expect("Integer overflow occurred while adding balance.");
+
+    set_idle_funds(e, new_balance);
+}
+
+pub fn spend_idle_funds(e: &Env, amount: i128) {
+    let balance = get_idle_funds(e);
+    if balance < amount {
+        panic!("insufficient balance");
+    }
+    set_idle_funds(e, balance - amount);
+}
+
+// DeFindex Fee Receiver
 pub fn set_defindex_receiver(e: &Env, address: &Address) {
     e.storage().instance().set(&DataKey::DeFindexReceiver, address);
 }
