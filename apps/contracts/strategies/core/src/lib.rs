@@ -1,9 +1,9 @@
 #![no_std]
-
 use soroban_sdk::{contractclient, contractspecfn, Address, Env, Val, Vec};
 pub struct Spec;
 
 mod error;
+pub mod event;
 pub use error::StrategyError;
 
 #[contractspecfn(name = "Spec", export = false)]
@@ -28,7 +28,7 @@ pub trait DeFindexStrategyTrait {
     ) -> Result<(), StrategyError>;
 
     /// Generates yields for the strategy, performing any required actions.
-    fn harvest(env: Env) -> Result<(), StrategyError>;
+    fn harvest(env: Env, from: Address) -> Result<(), StrategyError>;
 
     /// Returns the balance of the strategy for the given address.
     fn balance(
