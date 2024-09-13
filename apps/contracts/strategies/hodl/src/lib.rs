@@ -30,10 +30,10 @@ fn check_initialized(e: &Env) -> Result<(), StrategyError> {
 }
 
 #[contract]
-struct BaseStrategy;
+struct HodlStrategy;
 
 #[contractimpl]
-impl DeFindexStrategyTrait for BaseStrategy {
+impl DeFindexStrategyTrait for HodlStrategy {
     fn initialize(
         e: Env,
         asset: Address,

@@ -1,6 +1,6 @@
 #![cfg(test)]
 extern crate std;
-use crate::{BaseStrategy, BaseStrategyClient};
+use crate::{HodlStrategy, HodlStrategyClient};
 use soroban_sdk::token::{
     StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient,
 };
@@ -14,8 +14,8 @@ use soroban_sdk::{
 use std::vec;
 
 // Base Strategy Contract
-fn create_base_strategy<'a>(e: &Env) -> BaseStrategyClient<'a> {
-    BaseStrategyClient::new(e, &e.register_contract(None, BaseStrategy {}))
+fn create_hodl_strategy<'a>(e: &Env) -> HodlStrategyClient<'a> {
+    HodlStrategyClient::new(e, &e.register_contract(None, HodlStrategy {}))
 }
 
 // Create Test Token
@@ -31,19 +31,19 @@ pub(crate) fn get_token_admin_client<'a>(
 }
 
 
-pub struct BaseStrategyTest<'a> {
+pub struct HodlStrategyTest<'a> {
     env: Env,
-    strategy: BaseStrategyClient<'a>,
+    strategy: HodlStrategyClient<'a>,
     token0_admin_client: SorobanTokenAdminClient<'a>,
     token0: SorobanTokenClient<'a>,
 }
 
-impl<'a> BaseStrategyTest<'a> {
+impl<'a> HodlStrategyTest<'a> {
     fn setup() -> Self {
 
         let env = Env::default();
         env.mock_all_auths();
-        let strategy = create_base_strategy(&env);
+        let strategy = create_hodl_strategy(&env);
         
         let token0_admin = Address::generate(&env);
         let token0 = create_token_contract(&env, &token0_admin);
@@ -52,7 +52,7 @@ impl<'a> BaseStrategyTest<'a> {
         let init_fn_args: Vec<Val> = (0,).into_val(&env);
         strategy.initialize(&token0.address, &init_fn_args);
 
-        BaseStrategyTest {
+        HodlStrategyTest {
             env,
             strategy,
             token0_admin_client,
@@ -71,8 +71,8 @@ impl<'a> BaseStrategyTest<'a> {
 
 #[test]
 fn test_deposit_and_withdrawal_flow() {
-    let test = BaseStrategyTest::setup();
-    let users = BaseStrategyTest::generate_random_users(&test.env, 1);
+    let test = HodlStrategyTest::setup();
+    let users = HodlStrategyTest::generate_random_users(&test.env, 1);
 
     let amount: i128 = 10_000_000;
     // Minting token 0 to the user

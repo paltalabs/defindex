@@ -1,5 +1,5 @@
 [package]
-name = "base_strategy"
+name = "hodl_strategy"
 version = { workspace = true }
 authors = ["coderipper <joaquin@paltalabs.io>"]
 license = { workspace = true }

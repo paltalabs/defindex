@@ -7,8 +7,8 @@ test: build
 
 build:
 	cargo build --target wasm32-unknown-unknown --release
-	soroban contract optimize --wasm ../../target/wasm32-unknown-unknown/release/base_strategy.wasm
-	@rm ../../target/wasm32-unknown-unknown/release/base_strategy.wasm
+	soroban contract optimize --wasm ../../target/wasm32-unknown-unknown/release/hodl_strategy.wasm
+	@rm ../../target/wasm32-unknown-unknown/release/hodl_strategy.wasm
 
 fmt:
 	cargo fmt --all --check
