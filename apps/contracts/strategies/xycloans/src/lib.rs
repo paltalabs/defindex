@@ -11,7 +11,7 @@ use storage::{
 };
 use soroswap_router::{get_amount_out, get_reserves, pair_for, swap, SoroswapRouterClient};
 use xycloans_pool::XycloansPoolClient;
-use defindex_strategy_interface::{StrategyError, DeFindexStrategyTrait};
+use defindex_strategy_core::{StrategyError, DeFindexStrategyTrait};
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
     if amount < 0 {
@@ -92,7 +92,7 @@ impl DeFindexStrategyTrait for XycloansAdapter {
         Ok(())
     }
 
-    fn harvest(e: Env) -> Result<(), StrategyError> {
+    fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
 

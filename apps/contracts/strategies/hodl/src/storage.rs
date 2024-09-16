@@ -28,7 +28,7 @@ pub fn is_initialized(e: &Env) -> bool {
 }
 
 // Underlying asset
-pub fn set_underlying_asset(e: &Env, address: Address) {
+pub fn set_underlying_asset(e: &Env, address: &Address) {
     e.storage().instance().set(&DataKey::UnderlyingAsset, &address);
 }
 

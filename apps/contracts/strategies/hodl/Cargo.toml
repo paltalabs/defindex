@@ -1,5 +1,5 @@
 [package]
-name = "base_strategy"
+name = "hodl_strategy"
 version = { workspace = true }
 authors = ["coderipper <joaquin@paltalabs.io>"]
 license = { workspace = true }
@@ -12,7 +12,7 @@ crate-type = ["cdylib"]
  
 [dependencies] 
 soroban-sdk = { workspace = true }
-defindex-strategy-interface = { workspace = true }
+defindex-strategy-core = { workspace = true }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }

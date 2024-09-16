@@ -16,7 +16,7 @@ use storage::{
 };
 use soroswap_router::SoroswapRouterClient;
 use soroswap_pair::SoroswapPairClient;
-use defindex_strategy_interface::{DeFindexStrategyTrait, StrategyError};
+use defindex_strategy_core::{DeFindexStrategyTrait, StrategyError};
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
     if amount < 0 {
@@ -137,7 +137,7 @@ impl DeFindexStrategyTrait for SoroswapAdapter {
         Ok(())
     }
 
-    fn harvest(e: Env) -> Result<(), StrategyError> {
+    fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
 
