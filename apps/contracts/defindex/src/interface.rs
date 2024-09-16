@@ -40,6 +40,8 @@ pub trait VaultTrait {
 
   fn get_current_idle_funds(e: &Env) -> Map<Address, i128>;
 
+  fn balance(e: Env, from: Address) -> i128;
+
 }
 
 pub trait AdminInterfaceTrait {

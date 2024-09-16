@@ -27,7 +27,7 @@ use storage::{
 use funds::{get_current_idle_funds, get_current_invested_funds, get_total_managed_funds};
 
 use defindex_strategy_core::DeFindexStrategyClient;
-use token::{write_metadata, VaultToken};
+use token::{internal_burn, internal_mint, write_metadata, VaultToken};
 
 fn check_initialized(e: &Env) -> Result<(), ContractError> {
     //TODO: Should also check if adapters/strategies have been set
@@ -116,20 +116,7 @@ impl VaultTrait for DeFindexVault {
         let total_amount_used: i128 = 0;
 
         // 1dfToken = [token:ratio]
-
-        for i in 0..total_strategies {
-            let strategy_address = get_strategy(&e, i);
-            let strategy_client = DeFindexStrategyClient::new(&e, &strategy_address);
-
-            let adapter_amount = if i == (total_strategies - 1) {
-                amount - total_amount_used
-            } else {
-                amount
-            };
-
-            strategy_client.deposit(&adapter_amount, &from);
-            //should run deposit functions on adapters
-        }
+        internal_mint(e, from, amount);
 
         Ok(())
     }
@@ -209,7 +196,7 @@ impl VaultTrait for DeFindexVault {
         }
     
         // Burn the dfTokens after the successful withdrawal
-        VaultToken::burn(e.clone(), from.clone(), df_amount);
+        internal_burn(e.clone(), from.clone(), df_amount);
     
         Ok(())
     }
@@ -262,6 +249,10 @@ impl VaultTrait for DeFindexVault {
     fn get_current_idle_funds(e: &Env) -> Map<Address, i128> {
         get_current_idle_funds(e)
 
+    }
+
+    fn balance(e: Env, from: Address) -> i128 {
+        VaultToken::balance(e, from)
     }
 }
 
