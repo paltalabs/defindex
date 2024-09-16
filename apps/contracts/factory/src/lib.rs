@@ -1,6 +1,7 @@
 #![no_std]
 
 mod defindex;
+mod events;
 mod storage;
 mod error;
 
@@ -68,6 +69,7 @@ impl FactoryTrait for DeFindexFactory {
         put_defindex_receiver(&e, &defindex_receiver);
         put_defi_wasm_hash(&e, defi_wasm_hash);
 
+        events::emit_initialized(&e, admin, defindex_receiver);
         extend_instance_ttl(&e);
         Ok(())
     }
@@ -100,6 +102,7 @@ impl FactoryTrait for DeFindexFactory {
         );
 
         add_new_defindex(&e, defindex_address.clone());
+        events::emit_create_defindex_vault(&e, emergency_manager, fee_receiver, manager, tokens, ratios, strategies);
         Ok(defindex_address)
     }
 
@@ -110,6 +113,7 @@ impl FactoryTrait for DeFindexFactory {
         admin.require_auth();
 
         put_admin(&e, &new_admin);
+        events::emit_new_admin(&e, new_admin);
         Ok(())
     }
 
@@ -120,6 +124,7 @@ impl FactoryTrait for DeFindexFactory {
         admin.require_auth();
 
         put_defindex_receiver(&e, &new_fee_receiver);
+        events::emit_new_defindex_receiver(&e, new_fee_receiver);
         Ok(())
     }
 
