@@ -1,4 +1,4 @@
-use soroban_sdk::{Address, Env, Vec};
+use soroban_sdk::{Address, Env, Vec, Map};
 
 use crate::{storage::StrategyParams, ContractError};
 
@@ -14,7 +14,11 @@ pub trait VaultTrait {
       strategies: Vec<StrategyParams>
   ) -> Result<(), ContractError>;
 
-  fn deposit(e: Env, amount: i128, from: Address) -> Result<(), ContractError>;
+  fn deposit(
+    e: Env,
+    amount: i128, 
+    from: Address
+  ) -> Result<(), ContractError>;
 
   fn withdraw(
       e: Env,
@@ -30,7 +34,12 @@ pub trait VaultTrait {
 
   fn get_strategies(e: Env) -> Vec<StrategyParams>;
 
-  fn current_invested_funds(e: Env) -> i128;
+  fn get_total_managed_funds(e: &Env) -> Map<Address, i128>;
+
+  fn get_current_invested_funds(e: &Env) -> Map<Address, i128>;
+
+  fn get_current_idle_funds(e: &Env) -> Map<Address, i128>;
+
 }
 
 pub trait AdminInterfaceTrait {

@@ -2,7 +2,7 @@
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use interface::AdminInterfaceTrait;
 use soroban_sdk::{
-    contract, contractimpl, panic_with_error, token::{TokenClient, TokenInterface}, Address, Env, String, Vec
+    contract, contractimpl, panic_with_error, token::{TokenClient, TokenInterface}, Address, Env, Map, String, Vec
 };
 use soroban_token_sdk::metadata::TokenMetadata;
 use crate::interface::VaultTrait;
@@ -14,12 +14,15 @@ mod storage;
 mod test;
 mod token;
 mod utils;
+mod funds;
+mod strategies;
 
 pub use error::ContractError;
 
 use storage::{
     get_idle_funds, get_strategy, get_strategy_name, get_total_strategies, set_defindex_receiver, set_ratio, set_strategy, set_strategy_name, set_token, set_total_strategies, set_total_tokens, spend_idle_funds, StrategyParams
 };
+use funds::{get_current_idle_funds, get_current_invested_funds, get_total_managed_funds};
 
 use defindex_strategy_core::DeFindexStrategyClient;
 use token::{write_metadata, VaultToken};
@@ -206,8 +209,18 @@ impl VaultTrait for DeFindexVault {
         strategies
     }
 
-    fn current_invested_funds(e: Env) -> i128 {
-        0i128
+    fn get_total_managed_funds(e: &Env) -> Map<Address, i128> {
+        get_total_managed_funds(e)
+    }
+
+    fn get_current_invested_funds(e: &Env) -> Map<Address, i128> {
+        get_current_invested_funds(e)
+
+    }
+  
+    fn get_current_idle_funds(e: &Env) -> Map<Address, i128> {
+        get_current_idle_funds(e)
+
     }
 }
 
