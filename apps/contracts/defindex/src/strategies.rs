@@ -6,7 +6,8 @@ pub fn get_strategy_client(
     e: &Env,
     index: u32,
 ) -> DeFindexStrategyClient {
-    let strategy_address = get_strategy(&e, index.clone());
+    let strategy = get_strategy(&e, index.clone());
+    let strategy_address = strategy.address;
     // if adapter.paused {
     //     return Err(AggregatorError::ProtocolPaused);
     // }

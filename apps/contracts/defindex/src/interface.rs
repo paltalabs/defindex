@@ -1,6 +1,6 @@
 use soroban_sdk::{Address, Env, Vec, Map};
 
-use crate::{storage::StrategyParams, ContractError};
+use crate::{models::Strategy, ContractError};
 
 pub trait VaultTrait {
   fn initialize(
@@ -11,7 +11,7 @@ pub trait VaultTrait {
       defindex_receiver: Address,
       tokens: Vec<Address>,
       ratios: Vec<u32>,
-      strategies: Vec<StrategyParams>
+      strategies: Vec<Strategy>
   ) -> Result<(), ContractError>;
 
   fn deposit(
@@ -32,7 +32,7 @@ pub trait VaultTrait {
       from: Address,
   ) -> Result<(), ContractError>;
 
-  fn get_strategies(e: Env) -> Vec<StrategyParams>;
+  fn get_strategies(e: Env) -> Vec<Strategy>;
 
   fn get_total_managed_funds(e: &Env) -> Map<Address, i128>;
 

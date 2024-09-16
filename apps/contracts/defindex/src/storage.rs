@@ -1,5 +1,7 @@
 use soroban_sdk::{contracttype, Address, Env, String, Vec};
 
+use crate::{models::Strategy};
+
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct StrategyParams {
@@ -13,8 +15,7 @@ enum DataKey {
     Tokens(u32),       // Token Addresses by index
     Ratios(u32),       // Ratios corresponding to tokens
     TotalTokens,       // Total number of tokens
-    Strategy(u32),     // Strategy addresses by index
-    StrategyName(u32), // Strategy names by index
+    Strategy(u32),     // Strategy by index
     TotalStrategies,   // Total number of strategies
     IdleFunds,
     DeFindexReceiver
@@ -55,29 +56,18 @@ pub fn get_total_tokens(e: &Env) -> u32 {
 }
 
 // Strategy Management
-pub fn set_strategy(e: &Env, index: u32, strategy: &Address) {
+pub fn set_strategy(e: &Env, index: u32, strategy: &Strategy) {
     e.storage().instance().set(&DataKey::Strategy(index), strategy);
 }
 
-pub fn get_strategy(e: &Env, index: u32) -> Address {
+pub fn get_strategy(e: &Env, index: u32) -> Strategy {
     e.storage().instance().get(&DataKey::Strategy(index)).unwrap()
-}
 
-pub fn get_strategies(e: &Env) -> Vec<Address> {
-    let total_strategies = get_total_strategies(e);
-    let mut strategies = Vec::new(e);
-    for i in 0..total_strategies {
-        strategies.push_back(get_strategy(e, i));
-    }
-    strategies
-}
-
-pub fn set_strategy_name(e: &Env, index: u32, name: &String) {
-    e.storage().instance().set(&DataKey::StrategyName(index), name);
-}
-
-pub fn get_strategy_name(e: &Env, index: u32) -> String {
-    e.storage().instance().get(&DataKey::StrategyName(index)).unwrap()
+    // TODO implement errors like this
+    // match e.storage().instance().get(&DataKey::Adapter(protocol_id)) {
+    //     Some(adapter) => Ok(adapter),
+    //     None => Err(AggregatorError::ProtocolNotFound),
+    // }
 }
 
 pub fn set_total_strategies(e: &Env, n: u32) {
@@ -86,7 +76,18 @@ pub fn set_total_strategies(e: &Env, n: u32) {
 
 pub fn get_total_strategies(e: &Env) -> u32 {
     e.storage().instance().get(&DataKey::TotalStrategies).unwrap()
+    // TODO not use unwrap
 }
+
+pub fn get_strategies(e: &Env) -> Vec<Strategy> {
+    let total_strategies = get_total_strategies(e);
+    let mut strategies = Vec::new(e);
+    for i in 0..total_strategies {
+        strategies.push_back(get_strategy(e, i));
+    }
+    strategies
+}
+
 
 // Idle Funds Management
 fn set_idle_funds(e: &Env, amount: i128) {
