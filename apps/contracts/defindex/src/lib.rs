@@ -18,12 +18,20 @@ mod token;
 mod utils;
 mod funds;
 mod strategies;
+mod models;
 
 pub use error::ContractError;
 
 use storage::{
-    get_idle_funds, get_strategy, get_strategy_name, get_total_strategies, set_defindex_receiver, set_ratio, set_strategy, set_strategy_name, set_token, set_total_strategies, set_total_tokens, spend_idle_funds, StrategyParams
+    get_idle_funds,
+    get_strategy, 
+    get_strategies,
+    get_total_strategies, 
+    set_defindex_receiver, 
+    set_ratio, set_strategy,
+    set_token, set_total_strategies, set_total_tokens, spend_idle_funds
 };
+use models::{Strategy};
 use funds::{get_current_idle_funds, get_current_invested_funds, get_total_managed_funds};
 
 use defindex_strategy_core::DeFindexStrategyClient;
@@ -60,7 +68,7 @@ impl VaultTrait for DeFindexVault {
         defindex_receiver: Address,
         tokens: Vec<Address>,
         ratios: Vec<u32>,
-        strategies: Vec<StrategyParams>
+        strategies: Vec<Strategy>
     ) -> Result<(), ContractError> {
         let access_control = AccessControl::new(&e);
         if access_control.has_role(&RolesDataKey::Manager) {
@@ -86,8 +94,7 @@ impl VaultTrait for DeFindexVault {
         let total_strategies = strategies.len();
         set_total_strategies(&e, total_strategies as u32);
         for (i, strategy) in strategies.iter().enumerate() {
-            set_strategy(&e, i as u32, &strategy.address);
-            set_strategy_name(&e, i as u32, &strategy.name);
+            set_strategy(&e, i as u32, &strategy);
         }
 
         // Metadata for the contract's token (unchanged)
@@ -112,7 +119,7 @@ impl VaultTrait for DeFindexVault {
         check_nonnegative_amount(amount)?;
         from.require_auth();
 
-        let total_strategies = get_total_strategies(&e);
+        let total_strategies = get_total_strategies(&e); 
         let total_amount_used: i128 = 0;
 
         // 1dfToken = [token:ratio]
@@ -211,8 +218,8 @@ impl VaultTrait for DeFindexVault {
         let total_strategies = get_total_strategies(&e);
 
         for i in 0..total_strategies {
-            let strategy_address = get_strategy(&e, i);
-            let strategy_client = DeFindexStrategyClient::new(&e, &strategy_address);
+            let strategy = get_strategy(&e, i);
+            let strategy_client = DeFindexStrategyClient::new(&e, &strategy.address);
 
             strategy_client.withdraw(&amount, &from);
         }
@@ -220,21 +227,9 @@ impl VaultTrait for DeFindexVault {
         Ok(())
     }
 
-    fn get_strategies(e: Env) -> Vec<StrategyParams> {
-        let total_strategies = get_total_strategies(&e);
-        let mut strategies = Vec::new(&e);
-
-        for i in 0..total_strategies {
-            let strategy_address = get_strategy(&e, i);
-            let strategy_name = get_strategy_name(&e, i);
-
-            strategies.push_back(StrategyParams {
-                name: strategy_name,
-                address: strategy_address,
-            });
-        }
-
-        strategies
+    fn get_strategies(e: Env) -> Vec<Strategy> {
+        // TODO: CHECK INITIALIZED
+        get_strategies(&e)
     }
 
     fn get_total_managed_funds(e: &Env) -> Map<Address, i128> {

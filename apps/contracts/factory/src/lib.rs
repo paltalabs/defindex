@@ -9,7 +9,7 @@ use soroban_sdk::{
     contract, contractimpl, Address, BytesN, Env, Map, Vec
 };
 use error::FactoryError;
-use defindex::{create_contract, StrategyParams};
+use defindex::{create_contract, Strategy};
 use storage::{ add_new_defindex, extend_instance_ttl, get_admin, get_defi_wasm_hash, get_defindex_receiver, get_deployed_defindexes, has_admin, put_admin, put_defi_wasm_hash, put_defindex_receiver };
 
 fn check_initialized(e: &Env) -> Result<(), FactoryError> {
@@ -34,7 +34,7 @@ pub trait FactoryTrait {
         manager: Address,
         tokens: Vec<Address>,
         ratios: Vec<u32>,
-        strategies: Vec<StrategyParams>,
+        strategies: Vec<Strategy>,
         salt: BytesN<32>
     ) -> Result<Address, FactoryError>;
 
@@ -81,7 +81,7 @@ impl FactoryTrait for DeFindexFactory {
         manager: Address,
         tokens: Vec<Address>,
         ratios: Vec<u32>,
-        strategies: Vec<StrategyParams>,
+        strategies: Vec<Strategy>,
         salt: BytesN<32>
     ) -> Result<Address, FactoryError> {
         extend_instance_ttl(&e);
