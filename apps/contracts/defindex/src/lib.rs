@@ -170,6 +170,7 @@ impl VaultTrait for DeFindexVault {
                 } else {
                     // Partial amount from idle funds
                     total_amount_to_transfer = idle_balance;
+                    // If we want to keep a minimum amount of idle funds we should add it here so it weithdraws the required amount for the withdrawal and some more to keep the minimum 
                     let mut remaining_amount = required_amount - idle_balance;
     
                     // Now, withdraw the remaining amount from strategies
