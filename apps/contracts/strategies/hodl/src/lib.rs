@@ -99,7 +99,7 @@ impl DeFindexStrategyTrait for HodlStrategy {
         extend_instance_ttl(&e);
 
         let contract_address = e.current_contract_address();
-        
+
         let underlying_asset = get_underlying_asset(&e);
         TokenClient::new(&e, &underlying_asset).transfer(&contract_address, &from, &amount);
 

@@ -22,7 +22,7 @@ pub trait VaultTrait {
 
   fn withdraw(
       e: Env,
-      amount: i128,
+      df_amount: i128,
       from: Address,
   ) -> Result<(), ContractError>;
 

@@ -5,6 +5,8 @@ use soroban_sdk::{
     contract, contractimpl, panic_with_error, token::{TokenClient, TokenInterface}, Address, Env, Map, String, Vec
 };
 use soroban_token_sdk::metadata::TokenMetadata;
+use strategies::get_strategy_client;
+use utils::calculate_withdrawal_amounts;
 use crate::interface::VaultTrait;
 
 mod access;
@@ -113,6 +115,8 @@ impl VaultTrait for DeFindexVault {
         let total_strategies = get_total_strategies(&e);
         let total_amount_used: i128 = 0;
 
+        // 1dfToken = [token:ratio]
+
         for i in 0..total_strategies {
             let strategy_address = get_strategy(&e, i);
             let strategy_client = DeFindexStrategyClient::new(&e, &strategy_address);
@@ -132,45 +136,81 @@ impl VaultTrait for DeFindexVault {
 
     fn withdraw(
         e: Env,
-        amount: i128,
+        df_amount: i128,
         from: Address,
-    ) -> Result<(), ContractError>{
+    ) -> Result<(), ContractError> {
         check_initialized(&e)?;
-        check_nonnegative_amount(amount)?;
+        check_nonnegative_amount(df_amount)?;
         from.require_auth();
-
-        let defindex_address = e.current_contract_address();
-
+    
+        // Check if the user has enough dfTokens
         let df_user_balance = VaultToken::balance(e.clone(), from.clone());
-        if df_user_balance < amount {
+        if df_user_balance < df_amount {
             panic_with_error!(&e, ContractError::InsufficientBalance);
         }
-
-        let idle_funds = get_idle_funds(&e);
-        
-        if idle_funds >= amount {
-            // Withdraw from idle funds
-            TokenClient::new(&e, &defindex_address).transfer(&defindex_address, &from, &amount);
-            spend_idle_funds(&e, amount);
-            Ok(())
-        } else {
-            // Withdraw from strategies
-            // TODO: Should we implement a queue for withdrawing from strategies? now it will withdraw from the first strategy that has enough balance
-            let total_strategies = get_total_strategies(&e);
-
-            for i in 0..total_strategies {
-                let strategy_address = get_strategy(&e, i);
-                let strategy_client = DeFindexStrategyClient::new(&e, &strategy_address);
-
-                let strategy_balance = strategy_client.balance(&from);
-                if strategy_balance >= amount {
-                    strategy_client.withdraw(&amount, &from);
-                    TokenClient::new(&e, &defindex_address).transfer(&defindex_address, &from, &amount);
-                    return Ok(());
+    
+        // Calculate the withdrawal amounts for each token based on the dfToken amount
+        let withdrawal_amounts = calculate_withdrawal_amounts(&e, df_amount)?;
+    
+        // Get idle funds for each token
+        let idle_funds = get_current_idle_funds(&e);
+    
+        // Loop through each token and handle the withdrawal
+        for (token_address, required_amount) in withdrawal_amounts.iter() {
+            let mut total_amount_to_transfer = 0;
+    
+            // Get idle funds for this specific token, if it exists
+            let idle_balance = idle_funds.get(token_address.clone()).unwrap_or(0);
+    
+            // Withdraw as much as possible from idle funds
+            if idle_balance > 0 {
+                if idle_balance >= required_amount {
+                    // If idle funds cover the full amount, no need to check strategies
+                    total_amount_to_transfer = required_amount;
+                } else {
+                    // Partial amount from idle funds
+                    total_amount_to_transfer = idle_balance;
+                    let mut remaining_amount = required_amount - idle_balance;
+    
+                    // Now, withdraw the remaining amount from strategies
+                    let total_strategies = get_total_strategies(&e);
+                    for i in 0..total_strategies {
+                        let strategy_client = get_strategy_client(&e, i);
+                        
+                        // Check if the strategy supports this token via the asset method
+                        let strategy_asset = strategy_client.asset();
+                        if strategy_asset == token_address {
+                            let strategy_balance = strategy_client.balance(&from);
+                            if strategy_balance >= remaining_amount {
+                                strategy_client.withdraw(&remaining_amount, &from);
+                                total_amount_to_transfer += remaining_amount;
+                                break;
+                            } else {
+                                // Withdraw as much as possible from this strategy
+                                strategy_client.withdraw(&strategy_balance, &from);
+                                total_amount_to_transfer += strategy_balance;
+    
+                                // Reduce remaining amount by the amount withdrawn
+                                remaining_amount -= strategy_balance;
+                            }
+                        }
+    
+                        // If no strategies can fulfill the remaining amount, throw an error
+                        if remaining_amount > 0 && i == total_strategies - 1 {
+                            panic_with_error!(&e, ContractError::InsufficientBalance);
+                        }
+                    }
                 }
             }
-            panic_with_error!(&e, ContractError::InsufficientBalance);
+    
+            // Perform the transfer once the total amount to transfer has been calculated
+            TokenClient::new(&e, &token_address).transfer(&e.current_contract_address(), &from, &total_amount_to_transfer);
         }
+    
+        // Burn the dfTokens after the successful withdrawal
+        VaultToken::burn(e.clone(), from.clone(), df_amount);
+    
+        Ok(())
     }
 
     fn emergency_withdraw(
