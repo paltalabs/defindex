@@ -1,4 +1,4 @@
-use defindex_strategy_interface::StrategyError;
+use defindex_strategy_core::StrategyError;
 use soroban_sdk::{Val, Vec, IntoVal};
 use crate::test::XycloansAdapterTest;
 

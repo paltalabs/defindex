@@ -1,5 +1,5 @@
 [package]
-name = "defindex-strategy-interface"
+name = "defindex-strategy-core"
 version = { workspace = true }
 authors = ["coderipper <joaquin@paltalabs.io>"]
 license = { workspace = true }

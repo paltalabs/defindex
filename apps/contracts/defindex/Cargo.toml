@@ -13,7 +13,7 @@ crate-type = ["cdylib"]
 [dependencies] 
 soroban-sdk = { workspace = true }
 soroban-token-sdk = { workspace = true }
-defindex-strategy-interface = { workspace = true }
+defindex-strategy-core = { workspace = true }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
