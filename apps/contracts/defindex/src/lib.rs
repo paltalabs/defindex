@@ -33,7 +33,7 @@ use models::{Strategy, Asset};
 use funds::{get_current_idle_funds, get_current_invested_funds, get_total_managed_funds};
 
 use defindex_strategy_core::DeFindexStrategyClient;
-use token::{write_metadata, VaultToken};
+use token::{write_metadata, VaultToken, internal_mint};
 
 fn check_initialized(e: &Env) -> Result<(), ContractError> {
     //TODO: Should also check if adapters/strategies have been set
@@ -53,18 +53,20 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
     }
 }
 
-pub fn get_optimal_amount_enforcing_asset_i(
+pub fn get_optimal_amounts_and_shares_to_mint_enforcing_asset_i(
     e: &Env,
     total_managed_funds: &Map<Address, i128>,
     assets: &Vec<Asset>,
     amounts_desired: &Vec<i128>,
-    i: &u32) -> Vec<i128> {
+    i: &u32) -> (Vec<i128>, i128) {
     // we have to calculate the optimal amount to deposit for the rest of the assets
     // we need the total amount managed by this vault in order for the deposit to be proportional
     // reserve (total manage funds) of the asset we are enforcing
     let reserve_target = total_managed_funds.get(assets.get(*i).unwrap().address).unwrap(); // i128
     if reserve_target == 0 {
-        return amounts_desired.clone()
+        // return sum of amounts desired as shares
+        return (amounts_desired.clone(), amounts_desired.iter().sum()) // first shares will be equal to the first amounts_desired
+        // TODO, this amounts desired might be too little?
         // this might be the first deposit... in this case, the ratio will be enforced by the first depositor
         // TODO: might happen that the reserve_target is zero because everything is in one asset!?
         // in this case we ned to check the ratio
@@ -78,19 +80,21 @@ pub fn get_optimal_amount_enforcing_asset_i(
             optimal_amounts.push_back(amount_desired_target);
         } else {
             // amount = amount_desired_target * reserve[j] / reserve_target
+            // factor is (amount_desired_target  / reserve_target;)
             let amount = reserve * amount_desired_target  / reserve_target;
             optimal_amounts.push_back(amount);
         }
         
     }
-    optimal_amounts
+    let shares_to_mint = 0; // TODO: calculate the shares to mint = total_supply * amount_desired_target  / reserve_target
+    (optimal_amounts, shares_to_mint)
 }
 
-pub fn get_deposit_amounts(
+pub fn get_deposit_amounts_and_shares_to_mint(
     e: &Env, 
-    assets: Vec<Asset>,
-    amounts_desired: Vec<i128>, 
-    amounts_min: Vec<i128>) -> Vec<i128> {
+    assets: &Vec<Asset>,
+    amounts_desired: &Vec<i128>, 
+    amounts_min: &Vec<i128>) -> (Vec<i128>, i128) {
     // here we have already 3 vectors with same length, and all vectors are corrclty organized.
     // meaning that amounts_desired[i] is the amount desired for asset[i] and amounts_min[i] is the minimum amount for asset[i]
 
@@ -102,7 +106,7 @@ pub fn get_deposit_amounts(
     let total_managed_funds = get_total_managed_funds(e); // Map<Address, i128>// a number for each asset
     for i in 0..assets.len() {
         // TODO dont enforce asset i if ratio of asset i is 0... in this case we need to enforce the next one
-        let optimal_amounts = get_optimal_amount_enforcing_asset_i(
+        let (optimal_amounts, shares_to_mint) = get_optimal_amounts_and_shares_to_mint_enforcing_asset_i(
                                 &e,
                                 &total_managed_funds,
                                 &assets,
@@ -138,7 +142,7 @@ pub fn get_deposit_amounts(
             continue;
         } 
         else {
-            return optimal_amounts;
+            return (optimal_amounts, shares_to_mint);
         }
 
     }
@@ -211,45 +215,43 @@ impl VaultTrait for DeFindexVault {
         from: Address) -> Result<(), ContractError> {
 
         check_initialized(&e)?;
-        // check_nonnegative_amount(amount)?;
         from.require_auth();
 
         // get assets
         let assets = get_assets(&e);
-
         // assets lenght should be equal to amounts_desired and amounts_min length
         let assets_length = assets.len();
         if assets_length != amounts_desired.len() || assets_length != amounts_min.len() {
             panic!("Invalid amounts"); // TODO transform panic in error
         }
 
-        let amounts = if assets_length == 1 {
-            amounts_desired
+        // for every amount desired, check non negative
+        for amount in amounts_desired.iter() {
+            check_nonnegative_amount(amount)?;
+        }
+
+        let (amounts, shares_to_mint) = if assets_length == 1 {
+            let shares = 0; //TODO
+            (amounts_desired, shares)
         }
         else {
-            get_deposit_amounts(&e, assets, amounts_desired, amounts_min)
+            get_deposit_amounts_and_shares_to_mint(&e, &assets, &amounts_desired, &amounts_min)
         };
 
+        // for every asset, 
+        for (i, amount) in amounts.iter().enumerate() {
+            if amount > 0 {
+                let asset = assets.get(i as u32).unwrap();
+                let asset_client = TokenClient::new(&e, &asset.address);
+                // send the current amount to this contract
+                asset_client.transfer(&from, &e.current_contract_address(), &amount);
+                // increase the 
+            }
 
-        // let total_strategies = get_total_strategies(&e); 
-        // let total_amount_used: i128 = 0;
-        // // I want instead to have a vec of amounts to be deposited, with a minimum amount of each.
+        }
 
-        // // 1dfToken = [token:ratio]
-
-        // for i in 0..total_strategies {
-        //     let strategy = get_strategy(&e, i);
-        //     let strategy_client = DeFindexStrategyClient::new(&e, &strategy.address);
-
-        //     let adapter_amount = if i == (total_strategies - 1) {
-        //         amount - total_amount_used
-        //     } else {
-        //         amount
-        //     };
-
-        //     strategy_client.deposit(&adapter_amount, &from);
-        //     //should run deposit functions on adapters
-        // }
+        // now we mint the corresponding dfTOkenb
+        internal_mint(e, from, shares_to_mint);
 
         Ok(())
     }
