@@ -53,92 +53,37 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
     }
 }
 
-
-// /// Given a pair of tokens, a desired and minimum amount of tokens to provide as liquidity, this function calculates
-// /// the correct amounts of tokens to add to the pool. If the pool doesn't exist, it creates one.
-// ///
-// /// It considers the desired and minimum amounts for both tokens and calculates the optimal distribution to
-// /// satisfy these requirements while taking into account the current reserves in the pool.
-// ///
-// /// # Arguments
-// /// * `e` - The contract environment (`Env`) in which the contract is executing.
-// /// * `token_a` - The address of the first token in the pair.
-// /// * `token_b` - The address of the second token in the pair.
-// /// * `amount_a_desired` - The desired amount of the first token to add.
-// /// * `amount_b_desired` - The desired amount of the second token to add.
-// /// * `amount_a_min` - The minimum required amount of the first token to add.
-// /// * `amount_b_min` - The minimum required amount of the second token to add.
-// ///
-// /// # Returns
-// /// A tuple containing the calculated amounts of token A and B to be added to the pool.
-// fn add_liquidity_amounts(
-//     e: Env,
-//     factory: Address,
-//     token_a: Address,
-//     token_b: Address,
-//     amount_a_desired: i128,
-//     amount_b_desired: i128,
-//     amount_a_min: i128,
-//     amount_b_min: i128,
-// ) -> Result<(i128, i128), CombinedRouterError> {
-//     // checks if the pair exists; otherwise, creates the pair
-//     let factory_client = SoroswapFactoryClient::new(&e, &factory);
-//     if !factory_client.pair_exists(&token_a, &token_b) {
-//         factory_client.create_pair(&token_a, &token_b);
-//     }
-
-//     let (reserve_a, reserve_b) = soroswap_library::get_reserves(
-//         e.clone(),
-//         factory.clone(),
-//         token_a.clone(),
-//         token_b.clone(),
-//     )?;
-
-//     // When there is no liquidity (first deposit)
-//     if reserve_a == 0 && reserve_b == 0 {
-//         Ok((amount_a_desired, amount_b_desired))
-//     } else {
-//         // We try first with the amount a desired:
-//         let amount_b_optimal = soroswap_library::quote(
-//             amount_a_desired.clone(),
-//             reserve_a.clone(),
-//             reserve_b.clone(),
-//         )?;
-
-//         if amount_b_optimal <= amount_b_desired {
-//             if amount_b_optimal < amount_b_min {
-//                 return Err(SoroswapRouterError::InsufficientBAmount.into());
-//             }
-//             Ok((amount_a_desired, amount_b_optimal))
-//         }
-//         // If not, we can try with the amount b desired
-//         else {
-//             let amount_a_optimal = soroswap_library::quote(amount_b_desired, reserve_b, reserve_a).map_err(SoroswapLibraryError::from)?;
-
-//             // This should happen anyway. Because if we were not able to fulfill with our amount_b_desired for our amount_a_desired
-//             // It is to expect that the amount_a_optimal for that lower amount_b_desired to be lower than the amount_a_desired
-//             assert!(amount_a_optimal <= amount_a_desired);
-
-//             if amount_a_optimal < amount_a_min {
-//                 return Err(SoroswapRouterError::InsufficientAAmount.into());
-//             }
-//             Ok((amount_a_optimal, amount_b_desired))
-//         }
-//     }
-// }
-
-pub fn get_optimal_amount_enforcing_asset_i(e: &Env, assets: &Vec<Asset>, amount_desired: &i128, i: &u32) -> Vec<i128> {
+pub fn get_optimal_amount_enforcing_asset_i(
+    e: &Env,
+    total_managed_funds: &Map<Address, i128>,
+    assets: &Vec<Asset>,
+    amounts_desired: &Vec<i128>,
+    i: &u32) -> Vec<i128> {
     // we have to calculate the optimal amount to deposit for the rest of the assets
-    // and then we see if it is possible to deposit that amount, considering the amounts_min
-    // if it is not possible, we calculate the optimal amount considering the next asset and so on
-    // if it is not possible to deposit the optimal amount for the last asset, we throw an error
-    let length = assets.len();
-    // return an array of 0 length length
-    let mut amounts = Vec::new(e);
-    for j in 0..length {
-        amounts.push_back(0);
+    // we need the total amount managed by this vault in order for the deposit to be proportional
+    // reserve (total manage funds) of the asset we are enforcing
+    let reserve_target = total_managed_funds.get(assets.get(*i).unwrap().address).unwrap(); // i128
+    if reserve_target == 0 {
+        return amounts_desired.clone()
+        // this might be the first deposit... in this case, the ratio will be enforced by the first depositor
+        // TODO: might happen that the reserve_target is zero because everything is in one asset!?
+        // in this case we ned to check the ratio
     }
-    amounts
+    let amount_desired_target = amounts_desired.get(*i).unwrap(); // i128
+
+    let mut optimal_amounts = Vec::new(e);
+
+    for (j, (_asset_address, reserve)) in total_managed_funds.iter().enumerate() {
+        if j == (*i as usize) {
+            optimal_amounts.push_back(amount_desired_target);
+        } else {
+            // amount = amount_desired_target * reserve[j] / reserve_target
+            let amount = reserve * amount_desired_target  / reserve_target;
+            optimal_amounts.push_back(amount);
+        }
+        
+    }
+    optimal_amounts
 }
 
 pub fn get_deposit_amounts(
@@ -153,8 +98,16 @@ pub fn get_deposit_amounts(
     // and then we see if it is possible to deposit that amount, considering the amounts_min
     // if it is not possible, we calculate the optimal amount considering the next asset and so on
     // if it is not possible to deposit the optimal amount for the last asset, we throw an error
+    
+    let total_managed_funds = get_total_managed_funds(e); // Map<Address, i128>// a number for each asset
     for i in 0..assets.len() {
-        let optimal_amounts = get_optimal_amount_enforcing_asset_i(&e, &assets, &amounts_desired.get(i).unwrap(), &i);
+        // TODO dont enforce asset i if ratio of asset i is 0... in this case we need to enforce the next one
+        let optimal_amounts = get_optimal_amount_enforcing_asset_i(
+                                &e,
+                                &total_managed_funds,
+                                &assets,
+                                &amounts_desired, 
+                                &i);
         
         // if optimal _amounts[i]  is less than amounts_desired[i], but greater than amouints_min[i], then we cfalculate with the next one
         
