@@ -19,7 +19,7 @@ mod token;
 mod utils;
 
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
-use funds::{get_current_idle_funds, get_current_invested_funds, get_total_managed_funds};
+use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds};
 use interface::{AdminInterfaceTrait, VaultTrait};
 use models::{Asset, Strategy};
 use storage::{
@@ -42,11 +42,11 @@ pub struct DeFindexVault;
 impl VaultTrait for DeFindexVault {
     fn initialize(
         e: Env,
+        assets: Vec<Asset>,
+        manager: Address,
         emergency_manager: Address,
         fee_receiver: Address,
-        manager: Address,
         defindex_receiver: Address,
-        assets: Vec<Asset>,
     ) -> Result<(), ContractError> {
         let access_control = AccessControl::new(&e);
         if access_control.has_role(&RolesDataKey::Manager) {
@@ -153,7 +153,7 @@ impl VaultTrait for DeFindexVault {
         let withdrawal_amounts = calculate_withdrawal_amounts(&e, df_amount)?;
 
         // Get idle funds for each token
-        let idle_funds = get_current_idle_funds(&e);
+        let idle_funds = fetch_current_idle_funds(&e);
 
         // Loop through each token and handle the withdrawal
         for (asset, required_amount) in withdrawal_amounts.iter() {
@@ -244,16 +244,16 @@ impl VaultTrait for DeFindexVault {
         get_assets(&e)
     }
 
-    fn get_total_managed_funds(e: &Env) -> Map<Address, i128> {
-        get_total_managed_funds(e)
+    fn fetch_total_managed_funds(e: &Env) -> Map<Address, i128> {
+        fetch_total_managed_funds(e)
     }
 
-    fn get_current_invested_funds(e: &Env) -> Map<Address, i128> {
-        get_current_invested_funds(e)
+    fn fetch_current_invested_funds(e: &Env) -> Map<Address, i128> {
+        fetch_current_invested_funds(e)
     }
 
-    fn get_current_idle_funds(e: &Env) -> Map<Address, i128> {
-        get_current_idle_funds(e)
+    fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128> {
+        fetch_current_idle_funds(e)
     }
 }
 

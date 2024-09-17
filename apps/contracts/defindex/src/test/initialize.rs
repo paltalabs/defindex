@@ -24,11 +24,11 @@ fn test_initialize_and_get_roles() {
     ];
 
     test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
-        &test.manager,
         &test.defindex_receiver,
-        &assets,
     );
 
     let manager_role = test.defindex_contract.get_manager();
@@ -72,19 +72,19 @@ fn test_initialize_twice() {
     ];
 
     test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
-        &test.manager,
         &test.defindex_receiver,
-        &assets,
     );
 
     let result_second_init = test.defindex_contract.try_initialize(
+        &assets,
+        &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
-        &test.manager,
         &test.defindex_receiver,
-        &assets,
     );
 
     assert_eq!(

@@ -2,7 +2,7 @@ use soroban_sdk::{panic_with_error, Address, Env, Map, Vec};
 
 use crate::{
     access::{AccessControl, AccessControlTrait, RolesDataKey},
-    funds::get_total_managed_funds,
+    funds::fetch_total_managed_funds,
     models::Asset,
     storage::get_assets,
     ContractError,
@@ -108,7 +108,7 @@ pub fn calculate_deposit_amounts_and_shares_to_mint(
     // if it is not possible, we calculate the optimal amount considering the next asset and so on
     // if it is not possible to deposit the optimal amount for the last asset, we throw an error
 
-    let total_managed_funds = get_total_managed_funds(e); // Map<Address, i128>// a number for each asset
+    let total_managed_funds = fetch_total_managed_funds(e); // Map<Address, i128>// a number for each asset
     for i in 0..assets.len() {
         // TODO dont enforce asset i if ratio of asset i is 0... in this case we need to enforce the next one
         let (optimal_amounts, shares_to_mint) =
