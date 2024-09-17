@@ -24,7 +24,7 @@ pub use error::ContractError;
 
 use storage::{
     set_defindex_receiver, 
-    set_asset, set_total_assets, 
+    set_asset, set_total_assets, get_assets,
     set_total_strategies,spend_idle_funds,
     get_idle_funds,
     get_strategy, get_strategies, get_total_strategies, set_strategy,
@@ -53,8 +53,145 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
     }
 }
 
-pub fn get_deposit_amounts(e: &Env, amounts_desired: Vec<i128>, amounts_min: Vec<i128>) -> Vec<i128> {
-    amounts_desired
+
+// /// Given a pair of tokens, a desired and minimum amount of tokens to provide as liquidity, this function calculates
+// /// the correct amounts of tokens to add to the pool. If the pool doesn't exist, it creates one.
+// ///
+// /// It considers the desired and minimum amounts for both tokens and calculates the optimal distribution to
+// /// satisfy these requirements while taking into account the current reserves in the pool.
+// ///
+// /// # Arguments
+// /// * `e` - The contract environment (`Env`) in which the contract is executing.
+// /// * `token_a` - The address of the first token in the pair.
+// /// * `token_b` - The address of the second token in the pair.
+// /// * `amount_a_desired` - The desired amount of the first token to add.
+// /// * `amount_b_desired` - The desired amount of the second token to add.
+// /// * `amount_a_min` - The minimum required amount of the first token to add.
+// /// * `amount_b_min` - The minimum required amount of the second token to add.
+// ///
+// /// # Returns
+// /// A tuple containing the calculated amounts of token A and B to be added to the pool.
+// fn add_liquidity_amounts(
+//     e: Env,
+//     factory: Address,
+//     token_a: Address,
+//     token_b: Address,
+//     amount_a_desired: i128,
+//     amount_b_desired: i128,
+//     amount_a_min: i128,
+//     amount_b_min: i128,
+// ) -> Result<(i128, i128), CombinedRouterError> {
+//     // checks if the pair exists; otherwise, creates the pair
+//     let factory_client = SoroswapFactoryClient::new(&e, &factory);
+//     if !factory_client.pair_exists(&token_a, &token_b) {
+//         factory_client.create_pair(&token_a, &token_b);
+//     }
+
+//     let (reserve_a, reserve_b) = soroswap_library::get_reserves(
+//         e.clone(),
+//         factory.clone(),
+//         token_a.clone(),
+//         token_b.clone(),
+//     )?;
+
+//     // When there is no liquidity (first deposit)
+//     if reserve_a == 0 && reserve_b == 0 {
+//         Ok((amount_a_desired, amount_b_desired))
+//     } else {
+//         // We try first with the amount a desired:
+//         let amount_b_optimal = soroswap_library::quote(
+//             amount_a_desired.clone(),
+//             reserve_a.clone(),
+//             reserve_b.clone(),
+//         )?;
+
+//         if amount_b_optimal <= amount_b_desired {
+//             if amount_b_optimal < amount_b_min {
+//                 return Err(SoroswapRouterError::InsufficientBAmount.into());
+//             }
+//             Ok((amount_a_desired, amount_b_optimal))
+//         }
+//         // If not, we can try with the amount b desired
+//         else {
+//             let amount_a_optimal = soroswap_library::quote(amount_b_desired, reserve_b, reserve_a).map_err(SoroswapLibraryError::from)?;
+
+//             // This should happen anyway. Because if we were not able to fulfill with our amount_b_desired for our amount_a_desired
+//             // It is to expect that the amount_a_optimal for that lower amount_b_desired to be lower than the amount_a_desired
+//             assert!(amount_a_optimal <= amount_a_desired);
+
+//             if amount_a_optimal < amount_a_min {
+//                 return Err(SoroswapRouterError::InsufficientAAmount.into());
+//             }
+//             Ok((amount_a_optimal, amount_b_desired))
+//         }
+//     }
+// }
+
+pub fn get_optimal_amount_enforcing_asset_i(e: &Env, assets: &Vec<Asset>, amount_desired: &i128, i: &u32) -> Vec<i128> {
+    // we have to calculate the optimal amount to deposit for the rest of the assets
+    // and then we see if it is possible to deposit that amount, considering the amounts_min
+    // if it is not possible, we calculate the optimal amount considering the next asset and so on
+    // if it is not possible to deposit the optimal amount for the last asset, we throw an error
+    let length = assets.len();
+    // return an array of 0 length length
+    let mut amounts = Vec::new(e);
+    for j in 0..length {
+        amounts.push_back(0);
+    }
+    amounts
+}
+
+pub fn get_deposit_amounts(
+    e: &Env, 
+    assets: Vec<Asset>,
+    amounts_desired: Vec<i128>, 
+    amounts_min: Vec<i128>) -> Vec<i128> {
+    // here we have already 3 vectors with same length, and all vectors are corrclty organized.
+    // meaning that amounts_desired[i] is the amount desired for asset[i] and amounts_min[i] is the minimum amount for asset[i]
+
+    // for each index, we calculate the optimal amount to deposit for the rest of the assets
+    // and then we see if it is possible to deposit that amount, considering the amounts_min
+    // if it is not possible, we calculate the optimal amount considering the next asset and so on
+    // if it is not possible to deposit the optimal amount for the last asset, we throw an error
+    for i in 0..assets.len() {
+        let optimal_amounts = get_optimal_amount_enforcing_asset_i(&e, &assets, &amounts_desired.get(i).unwrap(), &i);
+        
+        // if optimal _amounts[i]  is less than amounts_desired[i], but greater than amouints_min[i], then we cfalculate with the next one
+        
+        // Flag to indicate if we should skip the current asset {i} and continue
+        let mut should_skip = false;
+        
+        for j in i+1..assets.len() {
+            // if optimal_amounts.get(j)  is less than amounts_desired.get(j), then we check if is at least more than the minimum, if yes, this might work!
+            if optimal_amounts.get(j).unwrap() <= amounts_desired.get(j).unwrap() {
+                // if not, this will never work, because the optimal amount with that amount_min 
+                if optimal_amounts.get(j).unwrap() < amounts_min.get(j).unwrap() {
+                    panic!("insufficient amount"); // TODO transform panic in error
+                }
+                // if not, this is great. we continue, hoping this will be the answer
+            }
+            else{
+               // If the optimal amount is greater to the desired amount, we skip the current asset {i}
+               should_skip = true;
+               // if we are in the last asset, we should throw an error
+                if j == assets.len() - 1 {
+                     panic!("didnt find optimal amounts"); // TODO transform panic in error
+                }
+               break; // Skip further checks for this asset {i}
+
+            }
+        }
+        if should_skip {
+            continue;
+        } 
+        else {
+            return optimal_amounts;
+        }
+
+    }
+    panic!("didnt finfd");
+    
+    
 }
 
 #[contract]
@@ -124,7 +261,22 @@ impl VaultTrait for DeFindexVault {
         // check_nonnegative_amount(amount)?;
         from.require_auth();
 
-        let amounts = get_deposit_amounts(&e, amounts_desired, amounts_min);
+        // get assets
+        let assets = get_assets(&e);
+
+        // assets lenght should be equal to amounts_desired and amounts_min length
+        let assets_length = assets.len();
+        if assets_length != amounts_desired.len() || assets_length != amounts_min.len() {
+            panic!("Invalid amounts"); // TODO transform panic in error
+        }
+
+        let amounts = if assets_length == 1 {
+            amounts_desired
+        }
+        else {
+            get_deposit_amounts(&e, assets, amounts_desired, amounts_min)
+        };
+
 
         // let total_strategies = get_total_strategies(&e); 
         // let total_amount_used: i128 = 0;
