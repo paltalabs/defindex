@@ -1,6 +1,6 @@
 use soroban_sdk::{vec as sorobanvec, Address, Vec};
 
-use crate::models::{Asset};
+use crate::models::Asset;
 
 use crate::error::ContractError;
 use crate::test::{create_strategy_params, DeFindexVaultTest};
@@ -11,8 +11,14 @@ fn test_initialize_and_get_roles() {
     let strategy_params = create_strategy_params(&test);
     let assets: Vec<Asset> = sorobanvec![
         &test.env,
-        Asset { address: test.token0.address.clone(), ratio: 1 },
-        Asset { address: test.token1.address.clone(), ratio: 1 }
+        Asset {
+            address: test.token0.address.clone(),
+            ratio: 1
+        },
+        Asset {
+            address: test.token1.address.clone(),
+            ratio: 1
+        }
     ];
 
     test.defindex_contract.initialize(
@@ -21,12 +27,13 @@ fn test_initialize_and_get_roles() {
         &test.manager,
         &test.defindex_receiver,
         &assets,
-        &strategy_params);
+        &strategy_params,
+    );
 
     let manager_role = test.defindex_contract.get_manager();
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
     let emergency_manager_role = test.defindex_contract.get_emergency_manager();
-  
+
     assert_eq!(manager_role, test.manager);
     assert_eq!(fee_receiver_role, test.fee_receiver);
     assert_eq!(emergency_manager_role, test.emergency_manager);
@@ -48,11 +55,17 @@ fn test_get_roles_not_yet_initialized() {
 fn test_initialize_twice() {
     let test = DeFindexVaultTest::setup();
     let strategy_params = create_strategy_params(&test);
-    
+
     let assets: Vec<Asset> = sorobanvec![
         &test.env,
-        Asset { address: test.token0.address.clone(), ratio: 1 },
-        Asset { address: test.token1.address.clone(), ratio: 1 }
+        Asset {
+            address: test.token0.address.clone(),
+            ratio: 1
+        },
+        Asset {
+            address: test.token1.address.clone(),
+            ratio: 1
+        }
     ];
 
     test.defindex_contract.initialize(
@@ -61,7 +74,8 @@ fn test_initialize_twice() {
         &test.manager,
         &test.defindex_receiver,
         &assets,
-        &strategy_params);
+        &strategy_params,
+    );
 
     let result_second_init = test.defindex_contract.try_initialize(
         &test.emergency_manager,
@@ -69,7 +83,8 @@ fn test_initialize_twice() {
         &test.manager,
         &test.defindex_receiver,
         &assets,
-        &strategy_params);
+        &strategy_params,
+    );
 
     assert_eq!(
         result_second_init,
@@ -93,7 +108,7 @@ fn test_withdraw_not_yet_initialized() {
     let test = DeFindexVaultTest::setup();
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
-    let result = test.defindex_contract.try_withdraw(&100i128,&users[0]);
+    let result = test.defindex_contract.try_withdraw(&100i128, &users[0]);
     assert_eq!(result, Err(Ok(ContractError::NotInitialized)));
 }
 
@@ -102,6 +117,8 @@ fn test_emergency_withdraw_not_yet_initialized() {
     let test = DeFindexVaultTest::setup();
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
-    let result = test.defindex_contract.try_emergency_withdraw(&100i128,&users[0]);
+    let result = test
+        .defindex_contract
+        .try_emergency_withdraw(&100i128, &users[0]);
     assert_eq!(result, Err(Ok(ContractError::NotInitialized)));
 }

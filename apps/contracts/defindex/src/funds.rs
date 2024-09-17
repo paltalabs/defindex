@@ -1,9 +1,9 @@
-use soroban_sdk::{Env, Map, Address};
-use soroban_sdk::token::{TokenClient};
+use soroban_sdk::token::TokenClient;
+use soroban_sdk::{Address, Env, Map};
 
+use crate::models::Asset;
 use crate::storage::{get_assets, get_total_strategies};
-use crate::strategies::{get_strategy_client};
-use crate::models::{Asset};
+use crate::strategies::get_strategy_client;
 
 // Helper functions
 fn get_idle_funds_for_asset(e: &Env, asset: &Asset) -> i128 {
@@ -24,7 +24,7 @@ fn get_invested_funds_for_asset(e: &Env, asset: &Asset) -> i128 {
 // Pub functions
 
 pub fn get_current_idle_funds(e: &Env) -> Map<Address, i128> {
-    let assets= get_assets(e);
+    let assets = get_assets(e);
     let mut map: Map<Address, i128> = Map::new(e);
     for asset in assets {
         map.set(asset.address.clone(), get_idle_funds_for_asset(e, &asset));
@@ -33,17 +33,19 @@ pub fn get_current_idle_funds(e: &Env) -> Map<Address, i128> {
 }
 
 pub fn get_current_invested_funds(e: &Env) -> Map<Address, i128> {
-    let assets= get_assets(e);
+    let assets = get_assets(e);
     let mut map: Map<Address, i128> = Map::new(e);
     for asset in assets {
-        map.set(asset.address.clone(), get_invested_funds_for_asset(e, &asset));
+        map.set(
+            asset.address.clone(),
+            get_invested_funds_for_asset(e, &asset),
+        );
     }
     map
-
 }
 
 pub fn get_total_managed_funds(e: &Env) -> Map<Address, i128> {
-    let assets= get_assets(e);
+    let assets = get_assets(e);
     let mut map: Map<Address, i128> = Map::new(e);
     for asset in assets {
         let idle_funds = get_idle_funds_for_asset(e, &asset);
@@ -52,5 +54,3 @@ pub fn get_total_managed_funds(e: &Env) -> Map<Address, i128> {
     }
     map
 }
-
-

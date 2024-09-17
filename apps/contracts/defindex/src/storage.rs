@@ -1,17 +1,17 @@
 use soroban_sdk::{contracttype, Address, Env, String, Vec};
 
-use crate::{models::{Strategy, Asset}};
+use crate::models::{Asset, Strategy};
 
 #[derive(Clone)]
 #[contracttype]
 enum DataKey {
-    Asset(u32),       // Asset Addresse by index
-    Ratios(u32),       // Ratios corresponding to tokens
-    TotalAssets,       // Total number of tokens
-    Strategy(u32),     // Strategy by index
-    TotalStrategies,   // Total number of strategies
+    Asset(u32),      // Asset Addresse by index
+    Ratios(u32),     // Ratios corresponding to tokens
+    TotalAssets,     // Total number of tokens
+    Strategy(u32),   // Strategy by index
+    TotalStrategies, // Total number of strategies
     IdleFunds,
-    DeFindexReceiver
+    DeFindexReceiver,
 }
 
 // Assets Management
@@ -40,14 +40,18 @@ pub fn get_assets(e: &Env) -> Vec<Asset> {
     assets
 }
 
-
 // Strategy Management
 pub fn set_strategy(e: &Env, index: u32, strategy: &Strategy) {
-    e.storage().instance().set(&DataKey::Strategy(index), strategy);
+    e.storage()
+        .instance()
+        .set(&DataKey::Strategy(index), strategy);
 }
 
 pub fn get_strategy(e: &Env, index: u32) -> Strategy {
-    e.storage().instance().get(&DataKey::Strategy(index)).unwrap()
+    e.storage()
+        .instance()
+        .get(&DataKey::Strategy(index))
+        .unwrap()
 
     // TODO implement errors like this
     // match e.storage().instance().get(&DataKey::Adapter(protocol_id)) {
@@ -61,7 +65,10 @@ pub fn set_total_strategies(e: &Env, n: u32) {
 }
 
 pub fn get_total_strategies(e: &Env) -> u32 {
-    e.storage().instance().get(&DataKey::TotalStrategies).unwrap()
+    e.storage()
+        .instance()
+        .get(&DataKey::TotalStrategies)
+        .unwrap()
     // TODO not use unwrap
 }
 
@@ -73,7 +80,6 @@ pub fn get_strategies(e: &Env) -> Vec<Strategy> {
     }
     strategies
 }
-
 
 // Idle Funds Management
 fn set_idle_funds(e: &Env, amount: i128) {
@@ -87,7 +93,8 @@ pub fn get_idle_funds(e: &Env) -> i128 {
 pub fn receive_idle_funds(e: &Env, amount: i128) {
     let balance = get_idle_funds(e);
 
-    let new_balance = balance.checked_add(amount)
+    let new_balance = balance
+        .checked_add(amount)
         .expect("Integer overflow occurred while adding balance.");
 
     set_idle_funds(e, new_balance);
@@ -103,9 +110,14 @@ pub fn spend_idle_funds(e: &Env, amount: i128) {
 
 // DeFindex Fee Receiver
 pub fn set_defindex_receiver(e: &Env, address: &Address) {
-    e.storage().instance().set(&DataKey::DeFindexReceiver, address);
+    e.storage()
+        .instance()
+        .set(&DataKey::DeFindexReceiver, address);
 }
 
 pub fn get_defindex_receiver(e: &Env) -> i128 {
-    e.storage().instance().get(&DataKey::DeFindexReceiver).unwrap()
+    e.storage()
+        .instance()
+        .get(&DataKey::DeFindexReceiver)
+        .unwrap()
 }
