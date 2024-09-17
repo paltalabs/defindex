@@ -7,3 +7,10 @@ pub struct Strategy {
     pub name: String,
     pub paused: bool,
 }
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Asset {
+    pub address: Address,
+    pub ratio: i128,
+}

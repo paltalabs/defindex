@@ -1,6 +1,7 @@
 use soroban_sdk::{testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke}, vec as sorobanvec, Address, IntoVal, Symbol, Vec};
 
 use crate::test::{DeFindexVaultTest, create_strategy_params};
+use crate::models::{Asset};
 
 extern crate alloc;
 use alloc::vec;
@@ -9,10 +10,22 @@ use alloc::vec;
 fn test_set_new_fee_receiver_by_fee_receiver() {
     let test = DeFindexVaultTest::setup();
     let strategy_params = create_strategy_params(&test);
-    let tokens: Vec<Address> = sorobanvec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
-    let ratios: Vec<u32> = sorobanvec![&test.env, 1, 1];
+    // let tokens: Vec<Address> = sorobanvec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
+    // let ratios: Vec<u32> = sorobanvec![&test.env, 1, 1];
 
-    test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &test.defindex_receiver, &tokens, &ratios, &strategy_params);
+    let assets: Vec<Asset> = sorobanvec![
+        &test.env,
+        Asset { address: test.token0.address.clone(), ratio: 1 },
+        Asset { address: test.token1.address.clone(), ratio: 1 }
+    ];
+
+    test.defindex_contract.initialize(
+        &test.emergency_manager,
+        &test.fee_receiver,
+        &test.manager,
+        &test.defindex_receiver,
+        &assets,
+        &strategy_params);
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
     assert_eq!(fee_receiver_role, test.fee_receiver);
@@ -56,10 +69,23 @@ fn test_set_new_fee_receiver_by_fee_receiver() {
 fn test_set_new_fee_receiver_by_manager() {
     let test = DeFindexVaultTest::setup();
     let strategy_params = create_strategy_params(&test);
-    let tokens: Vec<Address> = sorobanvec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
-    let ratios: Vec<u32> = sorobanvec![&test.env, 1, 1];
+    // let tokens: Vec<Address> = sorobanvec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
+    // let ratios: Vec<u32> = sorobanvec![&test.env, 1, 1];
 
-    test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &test.defindex_receiver, &tokens, &ratios, &strategy_params);
+    let assets: Vec<Asset> = sorobanvec![
+        &test.env,
+        Asset { address: test.token0.address.clone(), ratio: 1 },
+        Asset { address: test.token1.address.clone(), ratio: 1 }
+    ];
+
+    test.defindex_contract.initialize(
+        &test.emergency_manager,
+        &test.fee_receiver,
+        &test.manager,
+        &test.defindex_receiver,
+        &assets,
+        &strategy_params);
+
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
     assert_eq!(fee_receiver_role, test.fee_receiver);
@@ -104,10 +130,22 @@ fn test_set_new_fee_receiver_by_manager() {
 fn test_set_new_fee_receiver_by_emergency_manager() {
     let test = DeFindexVaultTest::setup();
     let strategy_params = create_strategy_params(&test);
-    let tokens: Vec<Address> = sorobanvec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
-    let ratios: Vec<u32> = sorobanvec![&test.env, 1, 1];
+    // let tokens: Vec<Address> = sorobanvec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
+    // let ratios: Vec<u32> = sorobanvec![&test.env, 1, 1];
 
-    test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &test.defindex_receiver, &tokens, &ratios, &strategy_params);
+    let assets: Vec<Asset> = sorobanvec![
+        &test.env,
+        Asset { address: test.token0.address.clone(), ratio: 1 },
+        Asset { address: test.token1.address.clone(), ratio: 1 }
+    ];
+
+    test.defindex_contract.initialize(
+        &test.emergency_manager,
+        &test.fee_receiver,
+        &test.manager,
+        &test.defindex_receiver,
+        &assets,
+        &strategy_params);
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
     assert_eq!(fee_receiver_role, test.fee_receiver);
@@ -122,10 +160,21 @@ fn test_set_new_fee_receiver_by_emergency_manager() {
 fn test_set_new_fee_receiver_invalid_sender() {
   let test = DeFindexVaultTest::setup();
   let strategy_params = create_strategy_params(&test);
-  let tokens: Vec<Address> = sorobanvec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
-  let ratios: Vec<u32> = sorobanvec![&test.env, 1, 1];
 
-  test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &test.defindex_receiver, &tokens, &ratios, &strategy_params);
+
+    let assets: Vec<Asset> = sorobanvec![
+        &test.env,
+        Asset { address: test.token0.address.clone(), ratio: 1 },
+        Asset { address: test.token1.address.clone(), ratio: 1 }
+    ];
+
+    test.defindex_contract.initialize(
+        &test.emergency_manager,
+        &test.fee_receiver,
+        &test.manager,
+        &test.defindex_receiver,
+        &assets,
+        &strategy_params);
 
   let fee_receiver_role = test.defindex_contract.get_fee_receiver();
   assert_eq!(fee_receiver_role, test.fee_receiver);
@@ -139,10 +188,20 @@ fn test_set_new_fee_receiver_invalid_sender() {
 fn test_set_new_manager_by_manager() {
     let test = DeFindexVaultTest::setup();
     let strategy_params = create_strategy_params(&test);
-    let tokens: Vec<Address> = sorobanvec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
-    let ratios: Vec<u32> = sorobanvec![&test.env, 1, 1];
+    let assets: Vec<Asset> = sorobanvec![
+        &test.env,
+        Asset { address: test.token0.address.clone(), ratio: 1 },
+        Asset { address: test.token1.address.clone(), ratio: 1 }
+    ];
 
-    test.defindex_contract.initialize(&test.emergency_manager, &test.fee_receiver, &test.manager, &test.defindex_receiver, &tokens, &ratios, &strategy_params);
+    test.defindex_contract.initialize(
+        &test.emergency_manager,
+        &test.fee_receiver,
+        &test.manager,
+        &test.defindex_receiver,
+        &assets,
+        &strategy_params);
+
 
     let manager_role = test.defindex_contract.get_manager();
     assert_eq!(manager_role, test.manager);

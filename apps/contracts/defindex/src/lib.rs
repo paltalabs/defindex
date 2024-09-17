@@ -23,15 +23,13 @@ mod models;
 pub use error::ContractError;
 
 use storage::{
-    get_idle_funds,
-    get_strategy, 
-    get_strategies,
-    get_total_strategies, 
     set_defindex_receiver, 
-    set_ratio, set_strategy,
-    set_token, set_total_strategies, set_total_tokens, spend_idle_funds
+    set_asset, set_total_assets, 
+    set_total_strategies,spend_idle_funds,
+    get_idle_funds,
+    get_strategy, get_strategies, get_total_strategies, set_strategy,
 };
-use models::{Strategy};
+use models::{Strategy, Asset};
 use funds::{get_current_idle_funds, get_current_invested_funds, get_total_managed_funds};
 
 use defindex_strategy_core::DeFindexStrategyClient;
@@ -55,6 +53,10 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
     }
 }
 
+pub fn get_deposit_amounts(e: &Env, amounts_desired: Vec<i128>, amounts_min: Vec<i128>) -> Vec<i128> {
+    amounts_desired
+}
+
 #[contract]
 pub struct DeFindexVault;
 
@@ -66,8 +68,7 @@ impl VaultTrait for DeFindexVault {
         fee_receiver: Address, 
         manager: Address,
         defindex_receiver: Address,
-        tokens: Vec<Address>,
-        ratios: Vec<u32>,
+        assets: Vec<Asset>,
         strategies: Vec<Strategy>
     ) -> Result<(), ContractError> {
         let access_control = AccessControl::new(&e);
@@ -83,11 +84,10 @@ impl VaultTrait for DeFindexVault {
         set_defindex_receiver(&e, &defindex_receiver);
 
         // Store tokens and their ratios
-        let total_tokens = tokens.len();
-        set_total_tokens(&e, total_tokens as u32);
-        for (i, token) in tokens.iter().enumerate() {
-            set_token(&e, i as u32, &token);
-            set_ratio(&e, i as u32, ratios.get(i as u32).unwrap());
+        let total_tokens = assets.len();
+        set_total_assets(&e, total_tokens as u32);
+        for (i, asset) in assets.iter().enumerate() {
+            set_asset(&e, i as u32, &asset);
         }
 
         // Store strategies
@@ -114,29 +114,37 @@ impl VaultTrait for DeFindexVault {
         Ok(())
     }
 
-    fn deposit(e: Env, amount: i128, from: Address) -> Result<(), ContractError> {
+    fn deposit(
+        e: Env,
+        amounts_desired: Vec<i128>, 
+        amounts_min: Vec<i128>,
+        from: Address) -> Result<(), ContractError> {
+
         check_initialized(&e)?;
-        check_nonnegative_amount(amount)?;
+        // check_nonnegative_amount(amount)?;
         from.require_auth();
 
-        let total_strategies = get_total_strategies(&e); 
-        let total_amount_used: i128 = 0;
+        let amounts = get_deposit_amounts(&e, amounts_desired, amounts_min);
 
-        // 1dfToken = [token:ratio]
+        // let total_strategies = get_total_strategies(&e); 
+        // let total_amount_used: i128 = 0;
+        // // I want instead to have a vec of amounts to be deposited, with a minimum amount of each.
 
-        for i in 0..total_strategies {
-            let strategy = get_strategy(&e, i);
-            let strategy_client = DeFindexStrategyClient::new(&e, &strategy.address);
+        // // 1dfToken = [token:ratio]
 
-            let adapter_amount = if i == (total_strategies - 1) {
-                amount - total_amount_used
-            } else {
-                amount
-            };
+        // for i in 0..total_strategies {
+        //     let strategy = get_strategy(&e, i);
+        //     let strategy_client = DeFindexStrategyClient::new(&e, &strategy.address);
 
-            strategy_client.deposit(&adapter_amount, &from);
-            //should run deposit functions on adapters
-        }
+        //     let adapter_amount = if i == (total_strategies - 1) {
+        //         amount - total_amount_used
+        //     } else {
+        //         amount
+        //     };
+
+        //     strategy_client.deposit(&adapter_amount, &from);
+        //     //should run deposit functions on adapters
+        // }
 
         Ok(())
     }

@@ -1,59 +1,45 @@
 use soroban_sdk::{contracttype, Address, Env, String, Vec};
 
-use crate::{models::Strategy};
-
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct StrategyParams {
-    pub name: String,
-    pub address: Address,
-}
+use crate::{models::{Strategy, Asset}};
 
 #[derive(Clone)]
 #[contracttype]
 enum DataKey {
-    Tokens(u32),       // Token Addresses by index
+    Asset(u32),       // Asset Addresse by index
     Ratios(u32),       // Ratios corresponding to tokens
-    TotalTokens,       // Total number of tokens
+    TotalAssets,       // Total number of tokens
     Strategy(u32),     // Strategy by index
     TotalStrategies,   // Total number of strategies
     IdleFunds,
     DeFindexReceiver
 }
 
-// Token Management
-pub fn set_token(e: &Env, index: u32, token: &Address) {
-    e.storage().instance().set(&DataKey::Tokens(index), token);
+// Assets Management
+pub fn set_asset(e: &Env, index: u32, asset: &Asset) {
+    e.storage().instance().set(&DataKey::Asset(index), asset);
 }
 
-pub fn get_token(e: &Env, index: u32) -> Address {
-    e.storage().instance().get(&DataKey::Tokens(index)).unwrap()
+pub fn get_asset(e: &Env, index: u32) -> Asset {
+    e.storage().instance().get(&DataKey::Asset(index)).unwrap()
 }
 
-pub fn get_tokens(e: &Env) -> Vec<Address> {
-    let total_tokens = get_total_tokens(e);
-    let mut tokens = Vec::new(e);
-    for i in 0..total_tokens {
-        tokens.push_back(get_token(e, i));
+pub fn set_total_assets(e: &Env, n: u32) {
+    e.storage().instance().set(&DataKey::TotalAssets, &n);
+}
+
+pub fn get_total_assets(e: &Env) -> u32 {
+    e.storage().instance().get(&DataKey::TotalAssets).unwrap()
+}
+
+pub fn get_assets(e: &Env) -> Vec<Asset> {
+    let total_assets = get_total_assets(e);
+    let mut assets = Vec::new(e);
+    for i in 0..total_assets {
+        assets.push_back(get_asset(e, i));
     }
-    tokens
+    assets
 }
 
-pub fn set_ratio(e: &Env, index: u32, ratio: u32) {
-    e.storage().instance().set(&DataKey::Ratios(index), &ratio);
-}
-
-pub fn get_ratio(e: &Env, index: u32) -> u32 {
-    e.storage().instance().get(&DataKey::Ratios(index)).unwrap()
-}
-
-pub fn set_total_tokens(e: &Env, n: u32) {
-    e.storage().instance().set(&DataKey::TotalTokens, &n);
-}
-
-pub fn get_total_tokens(e: &Env) -> u32 {
-    e.storage().instance().get(&DataKey::TotalTokens).unwrap()
-}
 
 // Strategy Management
 pub fn set_strategy(e: &Env, index: u32, strategy: &Strategy) {
