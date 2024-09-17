@@ -27,7 +27,7 @@ use storage::{
     set_defindex_receiver, set_strategy, set_total_assets, set_total_strategies, spend_idle_funds,
 };
 use strategies::get_strategy_client;
-use token::{internal_mint, write_metadata, VaultToken};
+use token::{internal_mint, internal_burn, write_metadata, VaultToken};
 use utils::{
     calculate_deposit_amounts_and_shares_to_mint, calculate_withdrawal_amounts, check_initialized,
     check_nonnegative_amount,
@@ -219,8 +219,8 @@ impl VaultTrait for DeFindexVault {
         }
 
         // Burn the dfTokens after the successful withdrawal
-        VaultToken::burn(e.clone(), from.clone(), df_amount);
-
+        internal_burn(e.clone(), from.clone(), df_amount);
+    
         Ok(())
     }
 
