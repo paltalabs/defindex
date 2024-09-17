@@ -13,11 +13,13 @@ fn test_initialize_and_get_roles() {
         &test.env,
         Asset {
             address: test.token0.address.clone(),
-            ratio: 1
+            ratio: 1,
+            strategies: strategy_params.clone()
         },
         Asset {
             address: test.token1.address.clone(),
-            ratio: 1
+            ratio: 1,
+            strategies: strategy_params.clone()
         }
     ];
 
@@ -27,7 +29,6 @@ fn test_initialize_and_get_roles() {
         &test.manager,
         &test.defindex_receiver,
         &assets,
-        &strategy_params,
     );
 
     let manager_role = test.defindex_contract.get_manager();
@@ -60,11 +61,13 @@ fn test_initialize_twice() {
         &test.env,
         Asset {
             address: test.token0.address.clone(),
-            ratio: 1
+            ratio: 1,
+            strategies: strategy_params.clone()
         },
         Asset {
             address: test.token1.address.clone(),
-            ratio: 1
+            ratio: 1,
+            strategies: strategy_params.clone()
         }
     ];
 
@@ -74,7 +77,6 @@ fn test_initialize_twice() {
         &test.manager,
         &test.defindex_receiver,
         &assets,
-        &strategy_params,
     );
 
     let result_second_init = test.defindex_contract.try_initialize(
@@ -83,7 +85,6 @@ fn test_initialize_twice() {
         &test.manager,
         &test.defindex_receiver,
         &assets,
-        &strategy_params,
     );
 
     assert_eq!(

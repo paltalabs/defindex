@@ -23,8 +23,8 @@ use funds::{get_current_idle_funds, get_current_invested_funds, get_total_manage
 use interface::{AdminInterfaceTrait, VaultTrait};
 use models::{Asset, Strategy};
 use storage::{
-    get_assets, get_idle_funds, get_strategies, get_strategy, get_total_strategies, set_asset,
-    set_defindex_receiver, set_strategy, set_total_assets, set_total_strategies, spend_idle_funds,
+    get_assets, get_idle_funds, set_asset,
+    set_defindex_receiver, set_total_assets, spend_idle_funds,
 };
 use strategies::get_strategy_client;
 use token::{internal_mint, internal_burn, write_metadata, VaultToken};
@@ -47,7 +47,6 @@ impl VaultTrait for DeFindexVault {
         manager: Address,
         defindex_receiver: Address,
         assets: Vec<Asset>,
-        strategies: Vec<Strategy>,
     ) -> Result<(), ContractError> {
         let access_control = AccessControl::new(&e);
         if access_control.has_role(&RolesDataKey::Manager) {
@@ -61,18 +60,11 @@ impl VaultTrait for DeFindexVault {
         // Set Paltalabs Fee Receiver
         set_defindex_receiver(&e, &defindex_receiver);
 
-        // Store tokens and their ratios
-        let total_tokens = assets.len();
-        set_total_assets(&e, total_tokens as u32);
+        // Store Assets Objects
+        let total_assets = assets.len();
+        set_total_assets(&e, total_assets as u32);
         for (i, asset) in assets.iter().enumerate() {
             set_asset(&e, i as u32, &asset);
-        }
-
-        // Store strategies
-        let total_strategies = strategies.len();
-        set_total_strategies(&e, total_strategies as u32);
-        for (i, strategy) in strategies.iter().enumerate() {
-            set_strategy(&e, i as u32, &strategy);
         }
 
         // Metadata for the contract's token (unchanged)
@@ -149,6 +141,8 @@ impl VaultTrait for DeFindexVault {
         check_nonnegative_amount(df_amount)?;
         from.require_auth();
 
+        //TODO: Should burn df tokens as the first thing to do
+
         // Check if the user has enough dfTokens
         let df_user_balance = VaultToken::balance(e.clone(), from.clone());
         if df_user_balance < df_amount {
@@ -162,48 +156,54 @@ impl VaultTrait for DeFindexVault {
         let idle_funds = get_current_idle_funds(&e);
 
         // Loop through each token and handle the withdrawal
-        for (token_address, required_amount) in withdrawal_amounts.iter() {
+        for (asset, required_amount) in withdrawal_amounts.iter() {
             let mut total_amount_to_transfer = 0;
 
             // Get idle funds for this specific token, if it exists
-            let idle_balance = idle_funds.get(token_address.clone()).unwrap_or(0);
+            let idle_balance = idle_funds.get(asset.address.clone()).unwrap_or(0);
 
             // Withdraw as much as possible from idle funds
-            if idle_balance > 0 {
+            // REVIEW: This check is not necesary
+            if idle_balance > 0 { 
                 if idle_balance >= required_amount {
+                    // REF
                     // If idle funds cover the full amount, no need to check strategies
                     total_amount_to_transfer = required_amount;
                 } else {
                     // Partial amount from idle funds
+                    // REIVEW? WHAT?
                     total_amount_to_transfer = idle_balance;
                     // If we want to keep a minimum amount of idle funds we should add it here so it weithdraws the required amount for the withdrawal and some more to keep the minimum
+                    // REVIEW remaining_amount is getting initialized again here... so what is the purpose?
                     let mut remaining_amount = required_amount - idle_balance;
 
-                    // Now, withdraw the remaining amount from strategies
-                    let total_strategies = get_total_strategies(&e);
-                    for i in 0..total_strategies {
-                        let strategy_client = get_strategy_client(&e, i);
+                    // Now, withdraw the remaining amount from the supported strategies
+                    // TODO: is there any preference? should we withdraw from the strategy with the most funds first?
+            
+                    for strategy in asset.strategies.iter() {
+                        let strategy_client = get_strategy_client(&e, strategy.address);
 
                         // Check if the strategy supports this token via the asset method
-                        let strategy_asset = strategy_client.asset();
-                        if strategy_asset == token_address {
-                            let strategy_balance = strategy_client.balance(&from);
-                            if strategy_balance >= remaining_amount {
-                                strategy_client.withdraw(&remaining_amount, &from);
-                                total_amount_to_transfer += remaining_amount;
-                                break;
-                            } else {
-                                // Withdraw as much as possible from this strategy
-                                strategy_client.withdraw(&strategy_balance, &from);
-                                total_amount_to_transfer += strategy_balance;
 
-                                // Reduce remaining amount by the amount withdrawn
-                                remaining_amount -= strategy_balance;
-                            }
+                        let strategy_balance = strategy_client.balance(&from);
+                        if strategy_balance >= remaining_amount {
+                            strategy_client.withdraw(&remaining_amount, &from);
+                            total_amount_to_transfer += remaining_amount;
+                            break;
+                        } else {
+                            // Withdraw as much as possible from this strategy
+                            strategy_client.withdraw(&strategy_balance, &from);
+                            total_amount_to_transfer += strategy_balance;
+
+                            // Reduce remaining amount by the amount withdrawn
+                            remaining_amount -= strategy_balance;
                         }
-
+        
                         // If no strategies can fulfill the remaining amount, throw an error
-                        if remaining_amount > 0 && i == total_strategies - 1 {
+                        // REVIEW: this is dangerous
+                        // this means that total_amount_to_transfer should always be equal to required_amount
+                        // so whats the purpose of that variable?
+                        if remaining_amount > 0 { // TODO && i == total_strategies - 1 
                             panic_with_error!(&e, ContractError::InsufficientBalance);
                         }
                     }
@@ -211,7 +211,7 @@ impl VaultTrait for DeFindexVault {
             }
 
             // Perform the transfer once the total amount to transfer has been calculated
-            TokenClient::new(&e, &token_address).transfer(
+            TokenClient::new(&e, &asset.address).transfer(
                 &e.current_contract_address(),
                 &from,
                 &total_amount_to_transfer,
@@ -227,21 +227,21 @@ impl VaultTrait for DeFindexVault {
     fn emergency_withdraw(e: Env, amount: i128, from: Address) -> Result<(), ContractError> {
         check_initialized(&e)?;
         from.require_auth();
-        let total_strategies = get_total_strategies(&e);
-
-        for i in 0..total_strategies {
-            let strategy = get_strategy(&e, i);
-            let strategy_client = DeFindexStrategyClient::new(&e, &strategy.address);
-
-            strategy_client.withdraw(&amount, &from);
+        let assets = get_assets(&e);
+        for asset in assets.iter() {
+            for strategy in asset.strategies.iter() {
+                let strategy_client = DeFindexStrategyClient::new(&e, &strategy.address);
+                // TODO. amount cannot be defined by the user... unless the user also defines the strategy address
+                strategy_client.withdraw(&amount, &from);
+            }
+            
         }
 
         Ok(())
     }
 
-    fn get_strategies(e: Env) -> Vec<Strategy> {
-        // TODO: CHECK INITIALIZED
-        get_strategies(&e)
+    fn get_assets(e: Env) -> Vec<Asset> {
+        get_assets(&e)
     }
 
     fn get_total_managed_funds(e: &Env) -> Map<Address, i128> {

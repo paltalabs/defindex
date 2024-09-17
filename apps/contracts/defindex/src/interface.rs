@@ -13,7 +13,6 @@ pub trait VaultTrait {
         manager: Address,
         defindex_receiver: Address,
         tokens: Vec<Asset>,
-        strategies: Vec<Strategy>,
     ) -> Result<(), ContractError>;
 
     fn deposit(
@@ -27,7 +26,7 @@ pub trait VaultTrait {
 
     fn emergency_withdraw(e: Env, amount: i128, from: Address) -> Result<(), ContractError>;
 
-    fn get_strategies(e: Env) -> Vec<Strategy>;
+    fn get_assets(e: Env) -> Vec<Asset>;
 
     fn get_total_managed_funds(e: &Env) -> Map<Address, i128>;
 

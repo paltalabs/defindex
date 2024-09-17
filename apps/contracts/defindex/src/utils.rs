@@ -39,8 +39,8 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
 pub fn calculate_withdrawal_amounts(
     e: &Env,
     df_token_amount: i128, // The amount of dfTokens to withdraw
-) -> Result<Map<Address, i128>, ContractError> {
-    let mut withdrawal_amounts = Map::<Address, i128>::new(e);
+) -> Result<Map<Asset, i128>, ContractError> {
+    let mut withdrawal_amounts = Map::<Asset, i128>::new(e);
     let assets = get_assets(e);
 
     let total_ratio = assets.iter().fold(0, |acc, asset| acc + asset.ratio);
@@ -49,7 +49,7 @@ pub fn calculate_withdrawal_amounts(
     for (i, asset) in assets.iter().enumerate() {
         // Calculate how much of this token corresponds to the dfToken amount
         let token_withdraw_amount = (df_token_amount * asset.ratio) / total_ratio; // Proportional to the total ratio sum
-        withdrawal_amounts.set(asset.address.clone(), token_withdraw_amount);
+        withdrawal_amounts.set(asset, token_withdraw_amount);
     }
 
     Ok(withdrawal_amounts)

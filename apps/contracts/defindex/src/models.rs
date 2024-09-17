@@ -13,4 +13,5 @@ pub struct Strategy {
 pub struct Asset {
     pub address: Address,
     pub ratio: i128,
+    pub strategies: Vec<Strategy>,
 }

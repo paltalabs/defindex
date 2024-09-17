@@ -13,9 +13,8 @@ fn get_idle_funds_for_asset(e: &Env, asset: &Asset) -> i128 {
 fn get_invested_funds_for_asset(e: &Env, asset: &Asset) -> i128 {
     let total_strategies = get_total_strategies(e);
     let mut invested_funds = 0;
-    for i in 0..total_strategies {
-        let strategy_client = get_strategy_client(e, i);
-        // TODO: Every strategy will work with an specific asset!
+    for strategy in asset.strategies.iter() {
+        let strategy_client = get_strategy_client(e, strategy.address);
         invested_funds += strategy_client.balance(&e.current_contract_address());
     }
     invested_funds

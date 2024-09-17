@@ -12,7 +12,8 @@ fn test_withdraw_success() {
         &test.env,
         Asset {
             address: test.token0.address.clone(),
-            ratio: 1
+            ratio: 1,
+            strategies: strategy_params.clone()
         }
     ];
 
@@ -21,8 +22,7 @@ fn test_withdraw_success() {
         &test.fee_receiver,
         &test.manager,
         &test.defindex_receiver,
-        &assets,
-        &strategy_params,
+        &assets
     );
     let amount = 1000i128;
     
