@@ -1,17 +1,18 @@
 import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
-import { 
-  Box, 
-  Button, 
-  CircularProgress, 
-  Modal, 
-  ModalBody, 
-  ModalCloseButton, 
-  ModalContent, 
-  ModalFooter, 
-  ModalHeader, 
-  ModalOverlay, 
-  Text, 
-  useSteps } from "@chakra-ui/react"
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  Text,
+  useSteps
+} from "@chakra-ui/react"
 import {
   Address,
   nativeToScVal,
@@ -55,6 +56,9 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     message: undefined
   });
   const deployDefindex = async () => {
+
+    const emergencyManager = new Address('
+
     const adapterAddressPairScVal = adapters.map((adapter, index) => {
       return xdr.ScVal.scvMap([
         new xdr.ScMapEntry({
@@ -81,7 +85,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     let result: any;
     try {
       result = await factory(
-        FactoryMethod.CREATE_DEFINDEX,
+        FactoryMethod.CREATE_DEFINDEX_VAULT,
         createDefindexParams,
         true,
       )
