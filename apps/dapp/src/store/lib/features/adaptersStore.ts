@@ -9,7 +9,7 @@ export interface Adapter {
   name?: string;
 }
 
-interface AdaptersState {
+export interface AdaptersState {
   adapters: Adapter[];
   adapterName: string;
   totalValues?: number;
@@ -40,7 +40,7 @@ export const getDefaultAdapters = (network: string) => {
         return adapter.network === 'testnet'
     }
   })
-  if(filteredAdapters.length === 0){
+  if (filteredAdapters.length === 0) {
     return [adapters[0]]
   }
   return filteredAdapters
@@ -88,18 +88,18 @@ export const adaptersSlice = createSlice({
       })
       state.totalValues = state.adapters.reduce((acc, adapter) => acc + adapter.value, 0)
     },
-    setAdapterName: ((state, action: PayloadAction<string>)=>{
+    setAdapterName: ((state, action: PayloadAction<string>) => {
       state.adapterName = action.payload;
     })
   }
 })
 
-export const { 
-  pushAdapter, 
-  resetAdapters, 
-  removeAdapter, 
-  setAdapterValue, 
-  resetAdapterValue, 
+export const {
+  pushAdapter,
+  resetAdapters,
+  removeAdapter,
+  setAdapterValue,
+  resetAdapterValue,
   setAdapterName } = adaptersSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type

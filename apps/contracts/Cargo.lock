@@ -272,14 +272,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "defindex-adapter-interface"
+name = "defindex-factory"
 version = "1.0.0"
 dependencies = [
  "soroban-sdk",
 ]
 
 [[package]]
-name = "defindex-factory"
+name = "defindex-strategy-core"
 version = "1.0.0"
 dependencies = [
  "soroban-sdk",
@@ -289,7 +289,7 @@ dependencies = [
 name = "defindex-vault"
 version = "1.0.0"
 dependencies = [
- "defindex-adapter-interface",
+ "defindex-strategy-core",
  "soroban-sdk",
  "soroban-token-sdk",
 ]
@@ -519,6 +519,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
 dependencies = [
  "digest",
+]
+
+[[package]]
+name = "hodl_strategy"
+version = "1.0.0"
+dependencies = [
+ "defindex-strategy-core",
+ "soroban-sdk",
 ]
 
 [[package]]
@@ -1173,10 +1181,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "soroswap_adapter"
+name = "soroswap_strategy"
 version = "1.0.0"
 dependencies = [
- "defindex-adapter-interface",
+ "defindex-strategy-core",
  "soroban-sdk",
 ]
 
@@ -1495,7 +1503,7 @@ checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
 name = "xycloans_adapter"
 version = "1.0.0"
 dependencies = [
- "defindex-adapter-interface",
+ "defindex-strategy-core",
  "soroban-sdk",
 ]
 
