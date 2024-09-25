@@ -52,13 +52,38 @@ run `make build`.
 To build the smart contracts simply run:
 
 ```sh
-yarn build --filter contracts
+bash run
+cd apps/contracts
+make build
 ```
 
 from the repo root folder.
 
-> [!NOTE]
-> This should be run from outside the container.
+### Deploy Factory contract
+Before deploying any contract, you need to setup your secrets:
+
+So, create a `.env` file in the `apps/contracts` folder with the following content:
+```sh
+cp apps/contracts/.env.example apps/contracts/.env
+```
+and fill in the values for the `ADMIN_SECRET_KEY`, `DEFINDEX_RECEIVER_SECRET_KEY` and `MAINNET_RPC_URL` variables.
+
+To deploy the factory contract run:
+```sh
+bash run.sh
+cd apps/contracts
+yarn deploy-factory
+```
+### Publish addresses
+Once you have deployed an instance of the factory contract. You can publish the addresses to be used by anyone on the network.
+To do this run:
+```sh
+bash run.sh
+cd apps/contracts
+yarn publish-addresses <network>
+```
+where `<network>` is the network you are deploying to. The options are `testnet` or `mainnet`.
+
 
 ## 🔧 Utilities
 
