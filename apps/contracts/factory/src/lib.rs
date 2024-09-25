@@ -9,7 +9,7 @@ use soroban_sdk::{
     contract, contractimpl, Address, BytesN, Env, Map, Vec
 };
 use error::FactoryError;
-use defindex::{create_contract, StrategyParams};
+use defindex::{create_contract, Asset};
 use storage::{ add_new_defindex, extend_instance_ttl, get_admin, get_defi_wasm_hash, get_defindex_receiver, get_deployed_defindexes, has_admin, put_admin, put_defi_wasm_hash, put_defindex_receiver };
 
 fn check_initialized(e: &Env) -> Result<(), FactoryError> {
@@ -32,9 +32,7 @@ pub trait FactoryTrait {
         emergency_manager: Address, 
         fee_receiver: Address, 
         manager: Address,
-        tokens: Vec<Address>,
-        ratios: Vec<u32>,
-        strategies: Vec<StrategyParams>,
+        assets: Vec<Asset>,
         salt: BytesN<32>
     ) -> Result<Address, FactoryError>;
 
@@ -79,9 +77,7 @@ impl FactoryTrait for DeFindexFactory {
         emergency_manager: Address, 
         fee_receiver: Address, 
         manager: Address,
-        tokens: Vec<Address>,
-        ratios: Vec<u32>,
-        strategies: Vec<StrategyParams>,
+        assets: Vec<Asset>,
         salt: BytesN<32>
     ) -> Result<Address, FactoryError> {
         extend_instance_ttl(&e);
@@ -96,13 +92,11 @@ impl FactoryTrait for DeFindexFactory {
             &fee_receiver,
             &manager,
             &defindex_receiver,
-            &tokens,
-            &ratios,
-            &strategies
+            &assets,
         );
 
         add_new_defindex(&e, defindex_address.clone());
-        events::emit_create_defindex_vault(&e, emergency_manager, fee_receiver, manager, tokens, ratios, strategies);
+        events::emit_create_defindex_vault(&e, emergency_manager, fee_receiver, manager, assets);
         Ok(defindex_address)
     }
 

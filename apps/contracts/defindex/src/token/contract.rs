@@ -3,7 +3,7 @@
 use crate::token::allowance::{read_allowance, spend_allowance, write_allowance};
 use crate::token::balance::{read_balance, receive_balance, spend_balance};
 use crate::token::metadata::{read_decimal, read_name, read_symbol};
-use crate::token::total_supply::{read_total_supply, increase_total_supply, decrease_total_supply};
+use crate::token::total_supply::{decrease_total_supply, increase_total_supply, read_total_supply};
 
 #[cfg(test)]
 use crate::token::storage_types::{AllowanceDataKey, AllowanceValue, DataKey};
@@ -20,16 +20,16 @@ fn check_nonnegative_amount(amount: i128) {
 
 pub fn internal_burn(e: Env, from: Address, amount: i128) {
     check_nonnegative_amount(amount);
- 
+
     e.storage()
         .instance()
         .extend_ttl(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
-    
+
     spend_balance(&e, from.clone(), amount);
     decrease_total_supply(&e, amount);
 
     TokenUtils::new(&e).events().burn(from, amount);
-} 
+}
 
 pub fn internal_mint(e: Env, to: Address, amount: i128) {
     check_nonnegative_amount(amount);
@@ -37,20 +37,20 @@ pub fn internal_mint(e: Env, to: Address, amount: i128) {
     e.storage()
         .instance()
         .extend_ttl(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
-        
+
     receive_balance(&e, to.clone(), amount);
     increase_total_supply(&e, amount);
 
-    TokenUtils::new(&e).events().mint(e.current_contract_address(), to, amount);
+    TokenUtils::new(&e)
+        .events()
+        .mint(e.current_contract_address(), to, amount);
 }
-
 
 #[contract]
 pub struct VaultToken;
 
 #[contractimpl]
 impl VaultToken {
-
     pub fn total_supply(e: Env) -> i128 {
         read_total_supply(&e)
     }
@@ -64,7 +64,7 @@ impl VaultToken {
 }
 
 #[contractimpl]
-impl token::Interface for VaultToken { 
+impl token::Interface for VaultToken {
     fn allowance(e: Env, from: Address, spender: Address) -> i128 {
         e.storage()
             .instance()

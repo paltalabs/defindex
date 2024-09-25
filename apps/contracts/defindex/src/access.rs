@@ -1,6 +1,6 @@
-use soroban_sdk::{contracttype, panic_with_error, Address, Env};
-use crate::utils::bump_instance;
 use crate::error::ContractError;
+use crate::utils::bump_instance;
+use soroban_sdk::{contracttype, panic_with_error, Address, Env};
 
 #[derive(Clone)]
 #[contracttype]
@@ -45,39 +45,39 @@ impl AccessControlTrait for AccessControl {
     }
 
     fn check_role(&self, key: &RolesDataKey) -> Result<Address, ContractError> {
-      if !self.has_role(key) {
-          panic_with_error!(&self.0, ContractError::RoleNotFound);
-      }
-      self.get_role(key).ok_or(ContractError::RoleNotFound)
+        if !self.has_role(key) {
+            panic_with_error!(&self.0, ContractError::RoleNotFound);
+        }
+        self.get_role(key).ok_or(ContractError::RoleNotFound)
     }
 
     fn require_role(&self, key: &RolesDataKey) {
         let role = match self.check_role(key) {
-          Ok(v) => v,
-          Err(err) => panic_with_error!(self.0, err),
+            Ok(v) => v,
+            Err(err) => panic_with_error!(self.0, err),
         };
 
         role.require_auth();
     }
 
     fn require_any_role(&self, keys: &[RolesDataKey], caller: &Address) {
-      let mut authorized = false;
+        let mut authorized = false;
 
-      // Check if the caller has any of the provided roles
-      for key in keys {
-          if let Some(role_address) = self.get_role(key) {
-              if role_address == *caller {
-                  role_address.require_auth();
-                  authorized = true;
-                  break;
-              }
-          }
-      }
+        // Check if the caller has any of the provided roles
+        for key in keys {
+            if let Some(role_address) = self.get_role(key) {
+                if role_address == *caller {
+                    role_address.require_auth();
+                    authorized = true;
+                    break;
+                }
+            }
+        }
 
-      if !authorized {
-          panic_with_error!(&self.0, ContractError::Unauthorized);
-      }
-  }
+        if !authorized {
+            panic_with_error!(&self.0, ContractError::Unauthorized);
+        }
+    }
 }
 
 // Role-specific setters and getters
