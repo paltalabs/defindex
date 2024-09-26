@@ -1,10 +1,32 @@
 use defindex_strategy_core::DeFindexStrategyClient;
 use soroban_sdk::{Env, Address};
 
-use crate::{storage::{get_asset, get_total_assets, set_asset}, ContractError};
+use crate::{models::{Asset, Strategy}, storage::{get_asset, get_assets, get_total_assets, set_asset}, ContractError};
 
 pub fn get_strategy_client(e: &Env, address: Address) -> DeFindexStrategyClient {
     DeFindexStrategyClient::new(&e, &address)
+}
+
+/// Finds the asset corresponding to the given strategy address.
+pub fn get_strategy_asset(e: &Env, strategy_address: &Address) -> Result<Asset, ContractError> {
+    let assets = get_assets(e);
+
+    for asset in assets.iter() {
+        if asset.strategies.iter().any(|strategy| &strategy.address == strategy_address) {
+            return Ok(asset);
+        }
+    }
+
+    Err(ContractError::StrategyNotFound)
+}
+
+/// Finds the strategy struct corresponding to the given strategy address within the given asset.
+pub fn get_strategy_struct(strategy_address: &Address, asset: &Asset) -> Result<Strategy, ContractError> {
+    asset
+        .strategies
+        .iter()
+        .find(|strategy| &strategy.address == strategy_address && !strategy.paused)
+        .ok_or(ContractError::StrategyNotFound)
 }
 
 /// Pauses a strategy by setting its `paused` field to `true`.

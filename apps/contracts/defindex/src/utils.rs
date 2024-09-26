@@ -35,21 +35,28 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
     }
 }
 
-/// Converts dfToken amount into corresponding token amounts based on their ratio.
+/// Converts dfToken amount into corresponding token amounts for each strategy based on their ratio.
+/// returns a map of strategy address to token amount
 pub fn calculate_withdrawal_amounts(
     e: &Env,
     df_token_amount: i128, // The amount of dfTokens to withdraw
-) -> Result<Map<Asset, i128>, ContractError> {
-    let mut withdrawal_amounts = Map::<Asset, i128>::new(e);
+) -> Result<Map<Address, i128>, ContractError> {
+    let mut withdrawal_amounts = Map::<Address, i128>::new(e);
     let assets = get_assets(e);
 
-    let total_ratio = assets.iter().fold(0, |acc, asset| acc + asset.ratio);
+    // Loop through each asset and calculate proportional amounts for each strategy
+    for asset in assets.iter() {
+        let total_strategy_ratio: i128 = asset.strategies.iter().map(|s| s.ratio).sum();
 
-    // Iterate through all assets and calculate how much of each should be withdrawn
-    for (i, asset) in assets.iter().enumerate() {
-        // Calculate how much of this token corresponds to the dfToken amount
-        let token_withdraw_amount = (df_token_amount * asset.ratio) / total_ratio; // Proportional to the total ratio sum
-        withdrawal_amounts.set(asset, token_withdraw_amount);
+        // Calculate the withdrawal amount for each strategy within this asset
+        for strategy in asset.strategies.iter() {
+            if strategy.paused {
+                continue; // Skip paused strategies
+            }
+
+            let strategy_share = (df_token_amount * strategy.ratio) / total_strategy_ratio;
+            withdrawal_amounts.set(strategy.address.clone(), strategy_share);
+        }
     }
 
     Ok(withdrawal_amounts)
