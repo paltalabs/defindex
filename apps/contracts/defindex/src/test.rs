@@ -1,7 +1,5 @@
 #![cfg(test)]
 extern crate std;
-use crate::models::Strategy;
-use crate::{DeFindexVault, DeFindexVaultClient};
 use soroban_sdk::token::{
     StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient,
 };
@@ -23,8 +21,18 @@ fn create_hodl_strategy<'a>(e: & Env, asset: & Address) -> HodlStrategyClient<'a
 }
 
 // DeFindex Vault Contract
-fn create_defindex_vault<'a>(e: &Env) -> DeFindexVaultClient<'a> {
-    DeFindexVaultClient::new(e, &e.register_contract(None, DeFindexVault {}))
+pub mod defindex_vault {
+    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/defindex_vault.optimized.wasm");
+    pub type DeFindexVaultClient<'a> = Client<'a>;
+}
+use defindex_vault::{DeFindexVaultClient, Strategy};
+
+fn create_defindex_vault<'a>(
+    e: & Env
+) -> DeFindexVaultClient<'a> {
+    let address = &e.register_contract_wasm(None, defindex_vault::WASM);
+    let client = DeFindexVaultClient::new(e, address);
+    client
 }
 
 // Create Test Token

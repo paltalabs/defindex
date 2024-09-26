@@ -3,8 +3,7 @@ use soroban_sdk::{
     vec as sorobanvec, Address, IntoVal, Symbol, Vec,
 };
 
-use crate::models::Asset;
-use crate::test::{create_strategy_params, DeFindexVaultTest};
+use crate::test::{create_strategy_params, defindex_vault::Asset, DeFindexVaultTest};
 
 extern crate alloc;
 use alloc::vec;

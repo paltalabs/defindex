@@ -24,7 +24,11 @@ pub trait VaultTrait {
 
     fn withdraw(e: Env, df_amount: i128, from: Address) -> Result<(), ContractError>;
 
-    fn emergency_withdraw(e: Env, amount: i128, from: Address) -> Result<(), ContractError>;
+    fn emergency_withdraw(e: Env, strategy_address: Address, caller: Address) -> Result<(), ContractError>;
+
+    fn pause_strategy(e: Env, strategy_address: Address, caller: Address) -> Result<(), ContractError>;
+    
+    fn unpause_strategy(e: Env, strategy_address: Address, caller: Address) -> Result<(), ContractError>;
 
     fn get_assets(e: Env) -> Vec<Asset>;
 
@@ -33,8 +37,6 @@ pub trait VaultTrait {
     fn get_current_invested_funds(e: &Env) -> Map<Address, i128>;
 
     fn get_current_idle_funds(e: &Env) -> Map<Address, i128>;
-
-    fn balance(e: Env, from: Address) -> i128;
 }
 
 pub trait AdminInterfaceTrait {

@@ -1,7 +1,6 @@
 use soroban_sdk::{vec as sorobanvec, Address, Vec};
 
-use crate::test::{create_strategy_params, DeFindexVaultTest};
-use crate::Asset;
+use crate::test::{create_strategy_params, defindex_vault::Asset, DeFindexVaultTest};
 
 #[test]
 fn test_withdraw_success() {

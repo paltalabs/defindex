@@ -1,5 +1,4 @@
 #![no_std]
-use defindex_strategy_core::DeFindexStrategyClient;
 use soroban_sdk::{
     contract, contractimpl, panic_with_error,
     token::{TokenClient, TokenInterface},
@@ -26,7 +25,7 @@ use storage::{
     get_assets, set_asset,
     set_defindex_receiver, set_total_assets,
 };
-use strategies::get_strategy_client;
+use strategies::{get_strategy_client, pause_strategy, unpause_strategy};
 use token::{internal_mint, internal_burn, write_metadata, VaultToken};
 use utils::{
     calculate_deposit_amounts_and_shares_to_mint, calculate_withdrawal_amounts, check_initialized,
@@ -222,20 +221,79 @@ impl VaultTrait for DeFindexVault {
         Ok(())
     }
 
-    fn emergency_withdraw(e: Env, amount: i128, from: Address) -> Result<(), ContractError> {
+    fn emergency_withdraw(e: Env, strategy_address: Address, caller: Address) -> Result<(), ContractError> {
         check_initialized(&e)?;
-        from.require_auth();
+    
+        // Ensure the caller is the Manager or Emergency Manager
+        let access_control = AccessControl::new(&e);
+        access_control.require_any_role(&[RolesDataKey::EmergencyManager, RolesDataKey::Manager], &caller);
+    
+        // Find the strategy and its associated asset
+        let mut asset_to_withdraw_from = None;
         let assets = get_assets(&e);
         for asset in assets.iter() {
             for strategy in asset.strategies.iter() {
-                let strategy_client = DeFindexStrategyClient::new(&e, &strategy.address);
-                // TODO. amount cannot be defined by the user... unless the user also defines the strategy address
-                strategy_client.withdraw(&amount, &from);
+                if strategy.address == strategy_address {
+                    asset_to_withdraw_from = Some(asset.clone());
+                    break;
+                }
             }
-            
+            if asset_to_withdraw_from.is_some() {
+                break;
+            }
         }
+    
+        // Ensure the strategy exists and is active
+        if asset_to_withdraw_from.is_none() {
+            return Err(ContractError::StrategyNotFound);
+        }
+    
+        let asset = asset_to_withdraw_from.unwrap();
+        let mut target_strategy = None;
+        for strategy in asset.strategies.iter() {
+            if strategy.address == strategy_address && !strategy.paused {
+                target_strategy = Some(strategy.clone());
+                break;
+            }
+        }
+    
+        if target_strategy.is_none() {
+            return Err(ContractError::StrategyPausedOrNotFound);
+        }
+    
+        let strategy = target_strategy.unwrap();
+    
+        // Withdraw all assets from the strategy
+        let strategy_client = get_strategy_client(&e, strategy.address.clone());
+        let strategy_balance = strategy_client.balance(&e.current_contract_address());
+    
+        if strategy_balance > 0 {
+            strategy_client.withdraw(&strategy_balance, &e.current_contract_address());
 
+            //TODO: Should we check if the idle funds are corresponding to the strategy balance withdrawed?
+        }
+    
+        
+        // Pause the strategy
+        pause_strategy(&e, strategy_address.clone())?;
+    
         Ok(())
+    }
+
+    fn pause_strategy(e: Env, strategy_address: Address, caller: Address) -> Result<(), ContractError> {
+        // Ensure the caller is the Manager or Emergency Manager
+        let access_control = AccessControl::new(&e);
+        access_control.require_any_role(&[RolesDataKey::EmergencyManager, RolesDataKey::Manager], &caller);
+
+        pause_strategy(&e, strategy_address)
+    }
+    
+    fn unpause_strategy(e: Env, strategy_address: Address, caller: Address) -> Result<(), ContractError> {
+        // Ensure the caller is the Manager or Emergency Manager
+        let access_control = AccessControl::new(&e);
+        access_control.require_any_role(&[RolesDataKey::EmergencyManager, RolesDataKey::Manager], &caller);
+
+        unpause_strategy(&e, strategy_address)
     }
 
     fn get_assets(e: Env) -> Vec<Asset> {
@@ -252,10 +310,6 @@ impl VaultTrait for DeFindexVault {
 
     fn get_current_idle_funds(e: &Env) -> Map<Address, i128> {
         get_current_idle_funds(e)
-    }
-
-    fn balance(e: Env, from: Address) -> i128 {
-        VaultToken::balance(e, from)
     }
 }
 

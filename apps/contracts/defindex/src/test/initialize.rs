@@ -1,9 +1,6 @@
 use soroban_sdk::{vec as sorobanvec, Address, Vec};
 
-use crate::models::Asset;
-
-use crate::error::ContractError;
-use crate::test::{create_strategy_params, DeFindexVaultTest};
+use crate::test::{create_strategy_params, defindex_vault::{Asset, ContractError}, DeFindexVaultTest};
 
 #[test]
 fn test_initialize_and_get_roles() {
@@ -118,8 +115,10 @@ fn test_emergency_withdraw_not_yet_initialized() {
     let test = DeFindexVaultTest::setup();
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
+    let strategy_params = create_strategy_params(&test);
+
     let result = test
         .defindex_contract
-        .try_emergency_withdraw(&100i128, &users[0]);
+        .try_emergency_withdraw(&strategy_params.first().unwrap().address, &users[0]);
     assert_eq!(result, Err(Ok(ContractError::NotInitialized)));
 }

@@ -19,4 +19,8 @@ pub enum ContractError {
     // Authorization/Role-based Errors (13x)
     Unauthorized = 130,
     RoleNotFound = 131,
+
+    // Strategy Errors (14x)
+    StrategyNotFound = 140,
+    StrategyPausedOrNotFound = 141,
 }

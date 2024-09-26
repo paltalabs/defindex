@@ -1,13 +1,12 @@
-use soroban_sdk::{contracttype, Address, Env, String, Vec};
+use soroban_sdk::{contracttype, Address, Env, Vec};
 
-use crate::models::{Asset, Strategy};
+use crate::models::Asset;
 
 #[derive(Clone)]
 #[contracttype]
 enum DataKey {
     Asset(u32),      // Asset Addresse by index
     TotalAssets,     // Total number of tokens
-    Strategy(u32),   // Strategy by index
     DeFindexReceiver,
 }
 
@@ -35,26 +34,6 @@ pub fn get_assets(e: &Env) -> Vec<Asset> {
         assets.push_back(get_asset(e, i));
     }
     assets
-}
-
-// Strategy Management
-pub fn set_strategy(e: &Env, index: u32, strategy: &Strategy) {
-    e.storage()
-        .instance()
-        .set(&DataKey::Strategy(index), strategy);
-}
-
-pub fn get_strategy(e: &Env, index: u32) -> Strategy {
-    e.storage()
-        .instance()
-        .get(&DataKey::Strategy(index))
-        .unwrap()
-
-    // TODO implement errors like this
-    // match e.storage().instance().get(&DataKey::Adapter(protocol_id)) {
-    //     Some(adapter) => Ok(adapter),
-    //     None => Err(AggregatorError::ProtocolNotFound),
-    // }
 }
 
 // DeFindex Fee Receiver
