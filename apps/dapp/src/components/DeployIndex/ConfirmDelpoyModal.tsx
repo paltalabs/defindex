@@ -27,6 +27,8 @@ import { useEffect, useState } from "react";
 import { WarningIcon, CheckCircleIcon } from '@chakra-ui/icons'
 import { resetAdapters } from "@/store/lib/features/adaptersStore";
 
+import { randomBytes } from "crypto";
+
 interface Status {
   isSuccess: boolean,
   hasError: boolean,
@@ -57,7 +59,57 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   });
   const deployDefindex = async () => {
 
-    const emergencyManager = new Address('
+    const emergencyManager = new Address('GAFS3TLVM2GO66QMOZJHJFP463K3ZKAPGU23WBMCPPFXIG7OUDMDDNTM')
+    const feeReceiver = new Address('GCWCI55WCOFF73ZL7NQAKJG4TTFPLE4Y23Z7KDXYLSF5Y3LX5XH7UNES')
+    const manager = new Address('GCRSJ7BPRVHE3SCQMS7XRDPAPCUYNZ4EK5X7OA5UIUDTSN7DP2SLMTQJ')
+    const salt = randomBytes(32)
+
+    const xlm_address = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+
+    const tokens = [xlm_address];
+    const ratios = [1];
+
+    const strategyParamsRaw = [
+      {
+        name: "Strategy 1",
+        address: "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W", //TODO: Use a deployed strategy address here
+      },
+    ];
+
+    const strategyParamsScVal = strategyParamsRaw.map((param) => {
+      return xdr.ScVal.scvMap([
+        new xdr.ScMapEntry({
+          key: xdr.ScVal.scvSymbol('address'),
+          val: new Address(param.address).toScVal(),
+        }),
+        new xdr.ScMapEntry({
+          key: xdr.ScVal.scvSymbol('name'),
+          val: nativeToScVal(param.name, { type: "string" }),
+        }),
+      ]);
+    });
+
+    const strategyParamsScValVec = xdr.ScVal.scvVec(strategyParamsScVal);
+
+    const createDefindexParams: xdr.ScVal[] = [
+      emergencyManager.toScVal(),
+      feeReceiver.toScVal(),
+      manager.toScVal(),
+      xdr.ScVal.scvVec(tokens.map((token) => new Address(token).toScVal())),
+      xdr.ScVal.scvVec(ratios.map((ratio) => nativeToScVal(ratio, { type: "u32" }))),
+      strategyParamsScValVec,
+      nativeToScVal(salt),
+    ];
+
+
+    //   fn create_defindex_vault(
+    //     e: Env, 
+    //     emergency_manager: Address, 
+    //     fee_receiver: Address, 
+    //     manager: Address,
+    //     assets: Vec<Asset>,
+    //     salt: BytesN<32>
+    // ) -> Result<Address, FactoryError> {
 
     const adapterAddressPairScVal = adapters.map((adapter, index) => {
       return xdr.ScVal.scvMap([
@@ -79,7 +131,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
 
     const adapterAddressesScVal = xdr.ScVal.scvVec(adapterAddressPairScVal);
 
-    const createDefindexParams: xdr.ScVal[] = [adapterAddressesScVal];
+    // const createDefindexParams: xdr.ScVal[] = [adapterAddressesScVal];
 
     goToNext();
     let result: any;
