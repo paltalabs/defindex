@@ -37,8 +37,16 @@ fn test_emergency_withdraw_success() {
     // Deposit
     test.defindex_contract.deposit(&sorobanvec![&test.env, amount], &sorobanvec![&test.env, amount], &users[0]);
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    // let df_balance = test.defindex_contract.balance(&users[0]);
     // assert_eq!(df_balance, amount);
+
+    // Balance of the token0 on the vault should be 0 since it is invested in the strategy
+    let vault_balance_of_token = test.token0.balance(&test.defindex_contract.address);
+    assert_eq!(vault_balance_of_token, 0i128);
+
+    // Balance of the token0 on the strategy should be the amount deposited
+    let strategy_balance_for_vault = test.strategy_client.balance(&test.defindex_contract.address);
+    assert_eq!(strategy_balance_for_vault, amount);
 
     test.defindex_contract.emergency_withdraw(&strategy_params.first().unwrap().address, &test.emergency_manager);
 
