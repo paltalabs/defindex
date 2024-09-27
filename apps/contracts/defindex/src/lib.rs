@@ -334,6 +334,7 @@ impl VaultManagementTrait for DeFindexVault {
         for investment in investments.iter() {
             let strategy_address = &investment.strategy;
             let amount_to_invest = investment.amount;
+            check_nonnegative_amount(amount_to_invest.clone())?;
     
             // Find the corresponding asset for the strategy
             let asset = get_strategy_asset(&e, strategy_address)?;
