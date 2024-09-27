@@ -33,6 +33,8 @@ pub trait VaultTrait {
     fn fetch_current_invested_funds(e: &Env) -> Map<Address, i128>;
 
     fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128>;
+
+    fn user_balance(e: Env, from: Address) -> i128;
 }
 
 pub trait AdminInterfaceTrait {

@@ -31,7 +31,6 @@ fn fetch_idle_funds_for_asset(e: &Env, asset: &Asset) -> i128 {
 /// # Returns
 /// * The total invested balance (i128) of the asset across all strategies.
 fn fetch_invested_funds_for_asset(e: &Env, asset: &Asset) -> i128 {
-    let total_strategies = get_total_strategies(e);
     let mut invested_funds = 0;
     for strategy in asset.strategies.iter() {
         let strategy_client = get_strategy_client(e, strategy.address);

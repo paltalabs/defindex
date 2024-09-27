@@ -120,14 +120,16 @@ impl VaultTrait for DeFindexVault {
 
         let (amounts, shares_to_mint) = if assets_length == 1 {
         // If Total Assets == 1
-            let shares = if VaultToken::total_supply()==0{
+            let shares = if VaultToken::total_supply(e.clone())==0{
                 // TODO In this case we might also want to mint a MINIMUM LIQUIDITY to be locked forever in the contract
                 // this might be for security and practical reasons as well
-                amounts_desired
+                // amounts_desired
+                0
             } else{
                 let total_managed_funds = fetch_total_managed_funds(&e);
-                VaultToken::total_supply() * amounts_desired[0] / total_managed_funds.get(assets[0].address.clone()).unwrap()
-            }
+                //VaultToken::total_supply(e)// * amounts_desired.get(0).unwrap() / total_managed_funds.get(assets.get(0).unwrap().address.clone()).unwrap()
+                0
+            };
             (amounts_desired, shares)
         } else {
         // If Total Assets > 1
@@ -275,7 +277,7 @@ impl VaultTrait for DeFindexVault {
         fetch_current_idle_funds(e)
     }
 
-    fn balance(e: Env, from: Address) -> i128 {
+    fn user_balance(e: Env, from: Address) -> i128 {
         VaultToken::balance(e, from)
     }
 }
