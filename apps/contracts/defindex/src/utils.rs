@@ -6,6 +6,8 @@ use crate::{
     models::Asset,
     storage::get_assets,
     ContractError,
+    token::{VaultToken}
+
 };
 
 pub const DAY_IN_LEDGERS: u32 = 17280;
@@ -75,6 +77,7 @@ pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
                                                                         // this might be the first deposit... in this case, the ratio will be enforced by the first depositor
                                                                         // TODO: might happen that the reserve_target is zero because everything is in one asset!?
                                                                         // in this case we ned to check the ratio
+        // TODO VERY DANGEROUS.
     }
     let amount_desired_target = amounts_desired.get(*i).unwrap(); // i128
 
@@ -90,7 +93,8 @@ pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
             optimal_amounts.push_back(amount);
         }
     }
-    let shares_to_mint = 0; // TODO: calculate the shares to mint = total_supply * amount_desired_target  / reserve_target
+    //TODO: calculate the shares to mint = total_supply * amount_desired_target  / reserve_target
+    let shares_to_mint = VaultToken::total_supply(e.clone()) * amount_desired_target / reserve_target;
     (optimal_amounts, shares_to_mint)
 }
 /// Calculates the optimal amounts to deposit for a set of assets, along with the shares to mint.
