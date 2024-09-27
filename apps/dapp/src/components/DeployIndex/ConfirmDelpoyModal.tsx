@@ -114,7 +114,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       message: undefined
     });
     setActiveStep(0);
-    await dispatch(resetStrategies())
+    //await dispatch(resetStrategies())
     onClose();
   }
 

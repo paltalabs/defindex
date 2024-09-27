@@ -90,7 +90,7 @@ export const ManageIndexes = () => {
       >
         <GridItem
           colStart={2}
-          colEnd={9}>
+          colEnd={8}>
           <InputGroup>
             <Input
               placeholder='Index address'
@@ -108,18 +108,18 @@ export const ManageIndexes = () => {
             </InputRightElement>
           </InputGroup>
         </GridItem>
-        <GridItem colStart={9} colEnd={12} justifyItems={'start'}>
-          <Container display={'flex'} flexDirection={'row'}>
+        <GridItem colStart={8} colEnd={12} justifyItems={'start'}>
+          <Container display={'flex'} flexDirection={'row'} justifyContent={'end'}>
             <ConnectButton />
-            <Button
+            {!!address && <Button
               rounded={18}
-              sx={{ ml: 4 }}
+              sx={{ px: 6 }}
               aria-label="add-index"
               colorScheme="green"
               onClick={() => handleOpenDeployIndex('create_defindex')}
             >
               Add Index
-            </Button>
+            </Button>}
           </Container>
         </GridItem>
         <GridItem colSpan={12} colStart={1} colEnd={13}>
