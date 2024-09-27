@@ -17,12 +17,10 @@ fn test_set_new_fee_receiver_by_fee_receiver() {
         &test.env,
         Asset {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
         Asset {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
@@ -78,12 +76,10 @@ fn test_set_new_fee_receiver_by_manager() {
         &test.env,
         Asset {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
         Asset {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
@@ -140,12 +136,10 @@ fn test_set_new_fee_receiver_by_emergency_manager() {
         &test.env,
         Asset {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
         Asset {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
@@ -177,12 +171,10 @@ fn test_set_new_fee_receiver_invalid_sender() {
         &test.env,
         Asset {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
         Asset {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
@@ -212,12 +204,10 @@ fn test_set_new_manager_by_manager() {
         &test.env,
         Asset {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
         Asset {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
