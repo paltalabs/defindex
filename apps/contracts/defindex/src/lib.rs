@@ -1,4 +1,5 @@
 #![no_std]
+use investment::{execute_investment, prepare_investment};
 use soroban_sdk::{
     contract, contractimpl, panic_with_error,
     token::{TokenClient, TokenInterface},
@@ -11,6 +12,7 @@ mod error;
 mod events;
 mod funds;
 mod interface;
+mod investment;
 mod models;
 mod storage;
 mod strategies;
@@ -327,48 +329,22 @@ impl VaultManagementTrait for DeFindexVault {
         // Get the current idle funds for all assets
         let idle_funds = get_current_idle_funds(&e);
     
-        // Create a map to track how much we are trying to invest per asset
-        let mut total_investment_per_asset: Map<Address, i128> = Map::new(&e);
-    
-        // First, calculate total investment per asset and check idle funds at the same time
-        for investment in investments.iter() {
-            let strategy_address = &investment.strategy;
-            let amount_to_invest = investment.amount;
-            check_nonnegative_amount(amount_to_invest.clone())?;
-    
-            // Find the corresponding asset for the strategy
-            let asset = get_strategy_asset(&e, strategy_address)?;
-    
-            // Get the current total investment for this asset and add the current amount
-            let current_investment = total_investment_per_asset
-                .get(asset.address.clone())
-                .unwrap_or(0);
-            let updated_investment = current_investment + amount_to_invest;
-    
-            // Update the total investment for this asset
-            total_investment_per_asset.set(asset.address.clone(), updated_investment);
-    
-            // Check if the total investment exceeds the available idle funds for this asset
-            let idle_balance = idle_funds.get(asset.address.clone()).unwrap_or(0);
-            if updated_investment > idle_balance {
-                return Err(ContractError::NotEnoughFunds);
-            }
-        }
+        // Prepare investments based on current idle funds
+        // This checks if the total investment exceeds the idle funds
+        prepare_investment(&e, investments.clone(), idle_funds)?;
     
         // Now proceed with the actual investments if all checks passed
-        for investment in investments.iter() {
-            let strategy_address = &investment.strategy;
-            let amount_to_invest = investment.amount;
-    
-            // Find the corresponding asset for the strategy
-            // This ensures that the vault has this strategy in its list of assets
-            get_strategy_asset(&e, strategy_address)?;
-    
-            // If everything is correct, transfer the amount to the strategy
-            let strategy_client = get_strategy_client(&e, strategy_address.clone());
-            strategy_client.deposit(&amount_to_invest, &e.current_contract_address());
-        }
-    
+        execute_investment(&e, investments)?;
+
+        // auto invest mockup
+        // if auto_invest {
+        //     let idle_funds = get_current_idle_funds(&e);
+            
+        //     // Prepare investments based on current ratios of invested funds
+        //     let investments = calculate_investments_based_on_ratios(&e);
+        //     prepare_investment(&e, investments.clone(), idle_funds)?;
+        //     execute_investment(&e, investments)?;
+        // }
         Ok(())
     }
 }

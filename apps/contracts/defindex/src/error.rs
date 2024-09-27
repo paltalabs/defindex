@@ -12,10 +12,11 @@ pub enum ContractError {
     // Validation Errors (11x)
     NegativeNotAllowed = 110,
     InsufficientBalance = 111,
-    NotEnoughFunds = 112,
+    NotEnoughIdleFunds = 112,
 
     // Arithmetic Errors (12x)
     ArithmeticError = 120,
+    Overflow = 121,
 
     // Authorization/Role-based Errors (13x)
     Unauthorized = 130,
