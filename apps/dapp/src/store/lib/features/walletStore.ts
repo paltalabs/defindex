@@ -20,7 +20,7 @@ export interface IndexData {
 interface SelectedIndex extends IndexData {
   method: string;
 }
-interface WalletState {
+export interface WalletState {
   address: string;
   selectedChain: ChainMetadata;
   indexes: {
@@ -46,10 +46,10 @@ const getDefaultIndexes = async (network: string) => {
         return index.network === 'testnet'
     }
   })
-  if(filteredIndexes.length === 0){
-    return [indexes[0]?.indexes]    
+  if (filteredIndexes.length === 0) {
+    return [indexes[0]?.indexes]
   }
-  if(!filteredIndexes[0]?.indexes) return
+  if (!filteredIndexes[0]?.indexes) return
 
   await new Promise(resolve => setTimeout(resolve, 1500))
   return filteredIndexes[0]?.indexes
@@ -60,7 +60,7 @@ export const fetchDefaultAddresses = createAsyncThunk(
   async (network: string) => {
     console.log('fetching default indexes from', network)
     const defaultIndexes = await getDefaultIndexes(network)
-    const defaultAdresses =   defaultIndexes?.map((index:any) => {
+    const defaultAdresses = defaultIndexes?.map((index: any) => {
       return index
     })
     return defaultAdresses
@@ -75,7 +75,7 @@ const initialState: WalletState = {
     network: '',
     networkUrl: '',
   },
-  indexes:{
+  indexes: {
     isLoading: true,
     createdIndexes: [],
     hasError: false,

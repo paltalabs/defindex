@@ -21,10 +21,10 @@ mod utils;
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds};
 use interface::{AdminInterfaceTrait, VaultTrait};
-use models::{Asset, Strategy};
+use models::Asset;
 use storage::{
-    get_assets, get_idle_funds, set_asset,
-    set_defindex_receiver, set_total_assets, spend_idle_funds,
+    get_assets, set_asset,
+    set_defindex_receiver, set_total_assets,
 };
 use strategies::get_strategy_client;
 use token::{internal_mint, internal_burn, write_metadata, VaultToken};
@@ -162,13 +162,14 @@ impl VaultTrait for DeFindexVault {
         check_nonnegative_amount(df_amount)?;
         from.require_auth();
 
-        //TODO: Should burn df tokens as the first thing to do
-
         // Check if the user has enough dfTokens
         let df_user_balance = VaultToken::balance(e.clone(), from.clone());
         if df_user_balance < df_amount {
             panic_with_error!(&e, ContractError::InsufficientBalance);
         }
+
+        // Burn the dfTokens
+        internal_burn(e.clone(), from.clone(), df_amount);
 
         // Calculate the withdrawal amounts for each token based on the dfToken amount
         let withdrawal_amounts = calculate_withdrawal_amounts(&e, df_amount)?;
@@ -238,9 +239,6 @@ impl VaultTrait for DeFindexVault {
                 &total_amount_to_transfer,
             );
         }
-
-        // Burn the dfTokens after the successful withdrawal
-        internal_burn(e.clone(), from.clone(), df_amount);
     
         Ok(())
     }
@@ -275,6 +273,10 @@ impl VaultTrait for DeFindexVault {
 
     fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128> {
         fetch_current_idle_funds(e)
+    }
+
+    fn balance(e: Env, from: Address) -> i128 {
+        VaultToken::balance(e, from)
     }
 }
 

@@ -1,6 +1,6 @@
 //! Definition of the Events used in the contract
 use soroban_sdk::{contracttype, symbol_short, Address, Env, Vec};
-use crate::defindex::Strategy;
+use crate::defindex::Asset;
 
 // INITIALIZED
 #[contracttype]
@@ -26,9 +26,7 @@ pub struct CreateDeFindexEvent {
     pub emergency_manager: Address, 
     pub fee_receiver: Address, 
     pub manager: Address,
-    pub tokens: Vec<Address>,
-    pub ratios: Vec<u32>,
-    pub strategies: Vec<Strategy>,
+    pub assets: Vec<Asset>
 }
 
 /// Publishes an `CreateDeFindexEvent` to the event stream.
@@ -37,17 +35,13 @@ pub(crate) fn emit_create_defindex_vault(
     emergency_manager: Address, 
     fee_receiver: Address, 
     manager: Address,
-    tokens: Vec<Address>,
-    ratios: Vec<u32>,
-    strategies: Vec<Strategy>,
+    assets: Vec<Asset>,
 ) {
     let event = CreateDeFindexEvent { 
       emergency_manager,
       fee_receiver,
       manager,
-      tokens,
-      ratios,
-      strategies,
+      assets,
     };
 
     e.events()

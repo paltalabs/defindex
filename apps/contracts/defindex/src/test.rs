@@ -8,6 +8,20 @@ use soroban_sdk::token::{
 use soroban_sdk::{testutils::Address as _, vec as sorobanvec, Address, Env, String, Vec};
 use std::vec;
 
+// DeFindex Hodl Strategy Contract
+mod hodl_strategy {
+    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/hodl_strategy.optimized.wasm");
+    pub type HodlStrategyClient<'a> = Client<'a>;
+}
+use hodl_strategy::HodlStrategyClient;
+
+fn create_hodl_strategy<'a>(e: & Env, asset: & Address) -> HodlStrategyClient<'a> {
+    let contract_address = &e.register_contract_wasm(None, hodl_strategy::WASM);
+    let hodl_strategy = HodlStrategyClient::new(e, contract_address); 
+    hodl_strategy.initialize(&asset, &sorobanvec![&e]);
+    hodl_strategy
+}
+
 // DeFindex Vault Contract
 fn create_defindex_vault<'a>(e: &Env) -> DeFindexVaultClient<'a> {
     DeFindexVaultClient::new(e, &e.register_contract(None, DeFindexVault {}))
@@ -30,7 +44,7 @@ pub(crate) fn create_strategy_params(test: &DeFindexVaultTest) -> Vec<Strategy> 
         &test.env,
         Strategy {
             name: String::from_str(&test.env, "Strategy 1"),
-            address: test.adapter_address.clone(),
+            address: test.strategy_client.address.clone(),
             paused: false
         }
     ]
@@ -47,7 +61,7 @@ pub struct DeFindexVaultTest<'a> {
     fee_receiver: Address,
     defindex_receiver: Address,
     manager: Address,
-    adapter_address: Address,
+    strategy_client: HodlStrategyClient<'a>,
 }
 
 impl<'a> DeFindexVaultTest<'a> {
@@ -72,8 +86,7 @@ impl<'a> DeFindexVaultTest<'a> {
 
         // token1_admin_client.mint(to, amount);
 
-        //TODO: Adapter mockup (should be an strategy later on)
-        let adapter_address = Address::generate(&env);
+        let strategy_client = create_hodl_strategy(&env, &token0.address);
 
         DeFindexVaultTest {
             env,
@@ -86,7 +99,7 @@ impl<'a> DeFindexVaultTest<'a> {
             fee_receiver,
             defindex_receiver,
             manager,
-            adapter_address,
+            strategy_client,
         }
     }
 

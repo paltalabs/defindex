@@ -29,19 +29,23 @@ fn test_withdraw_success() {
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
     
     test.token0_admin_client.mint(&users[0], &amount);
-
+    let user_balance = test.token0.balance(&users[0]);
+    assert_eq!(user_balance, amount);
     // here youll need to create a client for a token with the same address
 
-    // let df_balance = test.defindex_contract.balance(&users[0]);
-    // assert_eq!(df_balance, 0i128);
+    let df_balance = test.defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, 0i128);
 
-    // test.defindex_contract.deposit(&amount, &users[0]);
+    test.defindex_contract.deposit(&sorobanvec![&test.env, amount], &sorobanvec![&test.env, amount], &users[0]);
 
-    // let df_balance = test.defindex_contract.balance(&users[0]);
-    // assert_eq!(df_balance, amount);
+    let df_balance = test.defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, amount);
 
-    // test.defindex_contract.withdraw(&df_balance, &users[0]);
+    test.defindex_contract.withdraw(&df_balance, &users[0]);
     
-    // let df_balance = test.defindex_contract.balance(&users[0]);
-    // assert_eq!(df_balance, 0i128);
+    let df_balance = test.defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, 0i128);
+
+    let user_balance = test.token0.balance(&users[0]);
+    assert_eq!(user_balance, amount);
 }

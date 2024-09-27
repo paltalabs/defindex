@@ -1,7 +1,7 @@
 use soroban_sdk::{vec, Address, BytesN, Vec};
 
 use crate::error::FactoryError;
-use crate::test::{create_strategy_params, DeFindexFactoryTest};
+use crate::test::{create_asset_params, DeFindexFactoryTest};
 
 #[test]
 fn test_initialize_and_get_storage() {
@@ -43,19 +43,14 @@ fn test_initialize_twice() {
 fn test_create_defindex_not_yet_initialized() {
     let test = DeFindexFactoryTest::setup();
 
-    let tokens: Vec<Address> = vec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
-    let ratios: Vec<u32> = vec![&test.env, 1, 1];
-
-    let strategy_params = create_strategy_params(&test);
+    let asset_params = create_asset_params(&test);
     let salt = BytesN::from_array(&test.env, &[0; 32]);
     
     let result = test.factory_contract.try_create_defindex_vault(
         &test.emergency_manager, 
         &test.fee_receiver,
         &test.manager,
-        &tokens,
-        &ratios,
-        &strategy_params,
+        &asset_params,
         &salt
     );
 
