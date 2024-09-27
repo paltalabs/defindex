@@ -123,12 +123,12 @@ impl VaultTrait for DeFindexVault {
             let shares = if VaultToken::total_supply(e.clone())==0{
                 // TODO In this case we might also want to mint a MINIMUM LIQUIDITY to be locked forever in the contract
                 // this might be for security and practical reasons as well
-                // amounts_desired
-                0
+                // shares will be equal to the amount desired to deposit, just for simplicity
+                amounts_desired.get(0).unwrap() // here we have already check same lenght
             } else{
+                // in this case we will mint a share proportional to the total managed funds
                 let total_managed_funds = fetch_total_managed_funds(&e);
-                //VaultToken::total_supply(e)// * amounts_desired.get(0).unwrap() / total_managed_funds.get(assets.get(0).unwrap().address.clone()).unwrap()
-                0
+                VaultToken::total_supply(e.clone()) * amounts_desired.get(0).unwrap() / total_managed_funds.get(assets.get(0).unwrap().address.clone()).unwrap()
             };
             (amounts_desired, shares)
         } else {
