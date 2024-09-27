@@ -1,5 +1,5 @@
-{
-  "extends": "@repo/typescript-config/nextjs.json",
+{ 
+ "extends": "@repo/typescript-config/nextjs.json",
   "compilerOptions": {
     "target": "es5",
     "lib": ["dom", "dom.iterable", "esnext"],
@@ -10,10 +10,13 @@
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
+    "incremental": true,
+    "baseUrl": ".",
+    "types": ["@testing-library/jest-dom"],
     "plugins": [
       {
         "name": "next"
@@ -22,13 +25,13 @@
     "paths": {
       "@/*": ["./src/*"],
       "root/*": ["../../*"],
-    }
+    },
   },
   "include": [
     "next-env.d.ts",
-    "next.config.js",
     "**/*.ts",
     "**/*.tsx",
+    "types.d.ts",
     ".next/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
