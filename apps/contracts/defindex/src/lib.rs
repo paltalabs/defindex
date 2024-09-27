@@ -8,6 +8,7 @@ use soroban_token_sdk::metadata::TokenMetadata;
 
 mod access;
 mod error;
+mod events;
 mod funds;
 mod interface;
 mod models;
@@ -117,7 +118,7 @@ impl VaultTrait for DeFindexVault {
             )
         };
 
-        // for every asset,
+        // for every asset
         for (i, amount) in amounts.iter().enumerate() {
             if amount > 0 {
                 let asset = assets.get(i as u32).unwrap();
