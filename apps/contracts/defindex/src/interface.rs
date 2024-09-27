@@ -168,7 +168,7 @@ pub trait AdminInterfaceTrait {
     ///
     /// # Returns:
     /// * `()` - No return value.
-    fn set_fee_receiver(e: Env, caller: Address, fee_receiver: Address);
+    fn set_fee_receiver(e: Env, caller: Address, new_fee_receiver: Address);
 
     /// Retrieves the current fee receiver address for the vault.
     ///
@@ -189,7 +189,7 @@ pub trait AdminInterfaceTrait {
     ///
     /// # Returns:
     /// * `()` - No return value.
-    fn set_manager(e: Env, manager: Address);
+    fn set_manager(e: Env, new_manager: Address);
 
     /// Retrieves the current manager address for the vault.
     ///
@@ -210,7 +210,7 @@ pub trait AdminInterfaceTrait {
     ///
     /// # Returns:
     /// * `()` - No return value.
-    fn set_emergency_manager(e: Env, emergency_manager: Address);
+    fn set_emergency_manager(e: Env, new_emergency_manager: Address);
 
     /// Retrieves the current emergency manager address for the vault.
     ///

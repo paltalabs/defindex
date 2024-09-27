@@ -1,77 +1,207 @@
-//! Definition of the Events used in the contract
+//! Definition of the Events used in the DeFindex Vault contract
 use soroban_sdk::{contracttype, symbol_short, Address, Env, Vec};
-use crate::defindex::Asset;
+use crate::models::Asset;
 
-// INITIALIZED
+// INITIALIZED VAULT EVENT
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct InitializedEvent {
-    pub admin: Address,
-    pub defindex_receiver: Address,
-}
-
-pub(crate) fn emit_initialized(e: &Env, admin: Address, defindex_receiver: Address) {
-    let event: InitializedEvent = InitializedEvent {
-        admin,
-        defindex_receiver,
-    };
-    e.events()
-        .publish(("DeFindexFactory", symbol_short!("init")), event);
-}
-
-// CREATE DEFINDEX VAULT EVENT
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct CreateDeFindexEvent {
-    pub emergency_manager: Address, 
-    pub fee_receiver: Address, 
+pub struct InitializedVaultEvent {
+    pub emergency_manager: Address,
+    pub fee_receiver: Address,
     pub manager: Address,
-    pub assets: Vec<Asset>
+    pub defindex_receiver: Address,
+    pub assets: Vec<Asset>,
 }
 
-/// Publishes an `CreateDeFindexEvent` to the event stream.
-pub(crate) fn emit_create_defindex_vault(
-    e: &Env, 
-    emergency_manager: Address, 
-    fee_receiver: Address, 
+/// Publishes an `InitializedVaultEvent` to the event stream.
+pub(crate) fn emit_initialized_vault(
+    e: &Env,
+    emergency_manager: Address,
+    fee_receiver: Address,
     manager: Address,
+    defindex_receiver: Address,
     assets: Vec<Asset>,
 ) {
-    let event = CreateDeFindexEvent { 
-      emergency_manager,
-      fee_receiver,
-      manager,
-      assets,
+    let event = InitializedVaultEvent {
+        emergency_manager,
+        fee_receiver,
+        manager,
+        defindex_receiver,
+        assets,
     };
 
     e.events()
-        .publish(("DeFindexFactory", symbol_short!("create")), event);
+        .publish(("DeFindexVault", symbol_short!("init")), event);
 }
 
-// NEW ADMIN EVENT
+// DEPOSIT EVENT
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct NewAdminEvent {
-    pub new_admin: Address,
+pub struct DepositEvent {
+    pub depositor: Address,
+    pub amounts: Vec<i128>,
+    pub df_tokens_minted: i128,
 }
 
-pub(crate) fn emit_new_admin(e: &Env, new_admin: Address) {
-    let event = NewAdminEvent { new_admin };
+/// Publishes a `DepositEvent` to the event stream.
+pub(crate) fn emit_deposit_event(
+    e: &Env,
+    depositor: Address,
+    amounts: Vec<i128>,
+    df_tokens_minted: i128,
+) {
+    let event = DepositEvent {
+        depositor,
+        amounts,
+        df_tokens_minted,
+    };
 
     e.events()
-        .publish(("DeFindexFactory", symbol_short!("nadmin")), event);
+        .publish(("DeFindexVault", symbol_short!("deposit")), event);
 }
 
-// NEW DEFINDEX RECEIVER EVENT
+// WITHDRAW EVENT
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct NewDeFindexReceiverEvent {
-    pub new_defindex_receiver: Address,
+pub struct WithdrawEvent {
+    pub withdrawer: Address,
+    pub df_tokens_burned: i128,
+    pub amounts_withdrawn: Vec<i128>,
 }
 
-pub(crate) fn emit_new_defindex_receiver(e: &Env, new_defindex_receiver: Address) {
-    let event = NewDeFindexReceiverEvent { new_defindex_receiver };
+/// Publishes a `WithdrawEvent` to the event stream.
+pub(crate) fn emit_withdraw_event(
+    e: &Env,
+    withdrawer: Address,
+    df_tokens_burned: i128,
+    amounts_withdrawn: Vec<i128>,
+) {
+    let event = WithdrawEvent {
+        withdrawer,
+        df_tokens_burned,
+        amounts_withdrawn,
+    };
 
     e.events()
-        .publish(("DeFindexFactory", symbol_short!("nreceiver")), event);
+        .publish(("DeFindexVault", symbol_short!("withdraw")), event);
+}
+
+// EMERGENCY WITHDRAW EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct EmergencyWithdrawEvent {
+    pub caller: Address,
+    pub strategy_address: Address,
+    pub amount_withdrawn: i128,
+}
+
+/// Publishes an `EmergencyWithdrawEvent` to the event stream.
+pub(crate) fn emit_emergency_withdraw_event(
+    e: &Env,
+    caller: Address,
+    strategy_address: Address,
+    amount_withdrawn: i128,
+) {
+    let event = EmergencyWithdrawEvent {
+        caller,
+        strategy_address,
+        amount_withdrawn,
+    };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("ewithdraw")), event);
+}
+
+// STRATEGY PAUSED EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct StrategyPausedEvent {
+    pub strategy_address: Address,
+    pub caller: Address,
+}
+
+/// Publishes a `StrategyPausedEvent` to the event stream.
+pub(crate) fn emit_strategy_paused_event(e: &Env, strategy_address: Address, caller: Address) {
+    let event = StrategyPausedEvent {
+        strategy_address,
+        caller,
+    };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("paused")), event);
+}
+
+// STRATEGY UNPAUSED EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct StrategyUnpausedEvent {
+    pub strategy_address: Address,
+    pub caller: Address,
+}
+
+/// Publishes a `StrategyUnpausedEvent` to the event stream.
+pub(crate) fn emit_strategy_unpaused_event(e: &Env, strategy_address: Address, caller: Address) {
+    let event = StrategyUnpausedEvent {
+        strategy_address,
+        caller,
+    };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("unpaused")), event);
+}
+
+// FEE RECEIVER CHANGED EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FeeReceiverChangedEvent {
+    pub new_fee_receiver: Address,
+    pub caller: Address,
+}
+
+/// Publishes a `FeeReceiverChangedEvent` to the event stream.
+pub(crate) fn emit_fee_receiver_changed_event(e: &Env, new_fee_receiver: Address, caller: Address) {
+    let event = FeeReceiverChangedEvent {
+        new_fee_receiver,
+        caller,
+    };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("nreceiver")), event);
+}
+
+// MANAGER CHANGED EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ManagerChangedEvent {
+    pub new_manager: Address,
+}
+
+/// Publishes a `ManagerChangedEvent` to the event stream.
+pub(crate) fn emit_manager_changed_event(e: &Env, new_manager: Address) {
+    let event = ManagerChangedEvent {
+        new_manager,
+    };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("nmanager")), event);
+}
+
+// EMERGENCY MANAGER CHANGED EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct EmergencyManagerChangedEvent {
+    pub new_emergency_manager: Address,
+}
+
+/// Publishes an `EmergencyManagerChangedEvent` to the event stream.
+pub(crate) fn emit_emergency_manager_changed_event(
+    e: &Env,
+    new_emergency_manager: Address,
+) {
+    let event = EmergencyManagerChangedEvent {
+        new_emergency_manager,
+    };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("nemanager")), event);
 }

@@ -81,6 +81,8 @@ impl VaultTrait for DeFindexVault {
             },
         );
 
+        events::emit_initialized_vault(&e, emergency_manager, fee_receiver, manager, defindex_receiver, assets);
+
         Ok(())
     }
 
@@ -194,13 +196,17 @@ impl VaultTrait for DeFindexVault {
         }
     
         // Perform the transfers for the total amounts
+        let mut amounts_withdrawn: Vec<i128> = Vec::new(&e);
         for (asset_address, total_amount) in total_amounts_to_transfer.iter() {
             TokenClient::new(&e, &asset_address).transfer(
                 &e.current_contract_address(),
                 &from,
                 &total_amount,
             );
+            amounts_withdrawn.push_back(total_amount);
         }
+
+        events::emit_withdraw_event(&e, from, df_amount, amounts_withdrawn);
     
         Ok(())
     }
@@ -230,6 +236,7 @@ impl VaultTrait for DeFindexVault {
         // Pause the strategy
         pause_strategy(&e, strategy_address.clone())?;
     
+        events::emit_emergency_withdraw_event(&e, caller, strategy_address, strategy_balance);
         Ok(())
     }
 
@@ -238,7 +245,9 @@ impl VaultTrait for DeFindexVault {
         let access_control = AccessControl::new(&e);
         access_control.require_any_role(&[RolesDataKey::EmergencyManager, RolesDataKey::Manager], &caller);
 
-        pause_strategy(&e, strategy_address)
+        pause_strategy(&e, strategy_address.clone())?;
+        events::emit_strategy_paused_event(&e, strategy_address, caller);
+        Ok(())
     }
     
     fn unpause_strategy(e: Env, strategy_address: Address, caller: Address) -> Result<(), ContractError> {
@@ -246,7 +255,9 @@ impl VaultTrait for DeFindexVault {
         let access_control = AccessControl::new(&e);
         access_control.require_any_role(&[RolesDataKey::EmergencyManager, RolesDataKey::Manager], &caller);
 
-        unpause_strategy(&e, strategy_address)
+        unpause_strategy(&e, strategy_address.clone())?;
+        events::emit_strategy_unpaused_event(&e, strategy_address, caller);
+        Ok(())
     }
 
     fn get_assets(e: Env) -> Vec<Asset> {
@@ -268,9 +279,11 @@ impl VaultTrait for DeFindexVault {
 
 #[contractimpl]
 impl AdminInterfaceTrait for DeFindexVault {
-    fn set_fee_receiver(e: Env, caller: Address, fee_receiver: Address) {
+    fn set_fee_receiver(e: Env, caller: Address, new_fee_receiver: Address) {
         let access_control = AccessControl::new(&e);
-        access_control.set_fee_receiver(&caller, &fee_receiver)
+        access_control.set_fee_receiver(&caller, &new_fee_receiver);
+
+        events::emit_fee_receiver_changed_event(&e, new_fee_receiver, caller);
     }
 
     fn get_fee_receiver(e: Env) -> Result<Address, ContractError> {
@@ -280,7 +293,9 @@ impl AdminInterfaceTrait for DeFindexVault {
 
     fn set_manager(e: Env, manager: Address) {
         let access_control = AccessControl::new(&e);
-        access_control.set_manager(&manager)
+        access_control.set_manager(&manager);
+
+        events::emit_manager_changed_event(&e, manager);
     }
 
     fn get_manager(e: Env) -> Result<Address, ContractError> {
@@ -290,7 +305,9 @@ impl AdminInterfaceTrait for DeFindexVault {
 
     fn set_emergency_manager(e: Env, emergency_manager: Address) {
         let access_control = AccessControl::new(&e);
-        access_control.set_emergency_manager(&emergency_manager)
+        access_control.set_emergency_manager(&emergency_manager);
+
+        events::emit_emergency_manager_changed_event(&e, emergency_manager);
     }
 
     fn get_emergency_manager(e: Env) -> Result<Address, ContractError> {
