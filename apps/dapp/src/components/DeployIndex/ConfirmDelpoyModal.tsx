@@ -1,17 +1,18 @@
 import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
-import { 
-  Box, 
-  Button, 
-  CircularProgress, 
-  Modal, 
-  ModalBody, 
-  ModalCloseButton, 
-  ModalContent, 
-  ModalFooter, 
-  ModalHeader, 
-  ModalOverlay, 
-  Text, 
-  useSteps } from "@chakra-ui/react"
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
+  Text,
+  useSteps
+} from "@chakra-ui/react"
 import {
   Address,
   nativeToScVal,
@@ -25,6 +26,8 @@ import { DeploySteps } from "./DeploySteps";
 import { useEffect, useState } from "react";
 import { WarningIcon, CheckCircleIcon } from '@chakra-ui/icons'
 import { resetStrategies, Strategy } from "@/store/lib/features/strategiesStore";
+
+import { randomBytes } from "crypto";
 
 interface Status {
   isSuccess: boolean,
@@ -55,33 +58,55 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     message: undefined
   });
   const deployDefindex = async () => {
-    const strategyAddressPairScVal = strategies.map((strategy, index) => {
+
+    const emergencyManager = new Address('GAFS3TLVM2GO66QMOZJHJFP463K3ZKAPGU23WBMCPPFXIG7OUDMDDNTM')
+    const feeReceiver = new Address('GCWCI55WCOFF73ZL7NQAKJG4TTFPLE4Y23Z7KDXYLSF5Y3LX5XH7UNES')
+    const manager = new Address('GCRSJ7BPRVHE3SCQMS7XRDPAPCUYNZ4EK5X7OA5UIUDTSN7DP2SLMTQJ')
+    const salt = randomBytes(32)
+
+    const xlm_address = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
+
+    const tokens = [xlm_address];
+    const ratios = [1];
+
+    const strategyParamsRaw = [
+      {
+        name: "Strategy 1",
+        address: "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W", //TODO: Use a deployed strategy address here
+      },
+    ];
+
+    const strategyParamsScVal = strategyParamsRaw.map((param) => {
       return xdr.ScVal.scvMap([
         new xdr.ScMapEntry({
-          key: xdr.ScVal.scvSymbol("address"),
-          val: (new Address(strategy.address)).toScVal(),
-
+          key: xdr.ScVal.scvSymbol('address'),
+          val: new Address(param.address).toScVal(),
         }),
         new xdr.ScMapEntry({
-          key: xdr.ScVal.scvSymbol("index"),
-          val: xdr.ScVal.scvU32(index),
-        }),
-        new xdr.ScMapEntry({
-          key: xdr.ScVal.scvSymbol("share"),
-          val: xdr.ScVal.scvU32(strategy.value),
+          key: xdr.ScVal.scvSymbol('name'),
+          val: nativeToScVal(param.name, { type: "string" }),
         }),
       ]);
     });
 
-    const strategyAddressesScVal = xdr.ScVal.scvVec(strategyAddressPairScVal);
+    const strategyParamsScValVec = xdr.ScVal.scvVec(strategyParamsScVal);
 
-    const createDefindexParams: xdr.ScVal[] = [strategyAddressesScVal];
+    const createDefindexParams: xdr.ScVal[] = [
+      emergencyManager.toScVal(),
+      feeReceiver.toScVal(),
+      manager.toScVal(),
+      xdr.ScVal.scvVec(tokens.map((token) => new Address(token).toScVal())),
+      xdr.ScVal.scvVec(ratios.map((ratio) => nativeToScVal(ratio, { type: "u32" }))),
+      strategyParamsScValVec,
+      nativeToScVal(salt),
+    ];
+
 
     goToNext();
     let result: any;
     try {
       result = await factory(
-        FactoryMethod.CREATE_DEFINDEX,
+        FactoryMethod.CREATE_DEFINDEX_VAULT,
         createDefindexParams,
         true,
       )
@@ -178,7 +203,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
                 <Text mt={4}>{`${status.message}`}</Text>
               </Box>
             )}
-            {(activeStep == 3 && !!!status.hasError) && (
+            {(activeStep == 3 && !status.hasError) && (
               <Box mt={8} textAlign={'center'}>
                 <CheckCircleIcon boxSize={'4em'} color={'green'} />
                 <Text mt={4}>{`${status.message}`}</Text>
