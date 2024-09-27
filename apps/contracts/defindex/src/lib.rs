@@ -20,8 +20,8 @@ mod utils;
 
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use funds::{get_current_idle_funds, get_current_invested_funds, get_total_managed_funds};
-use interface::{AdminInterfaceTrait, VaultTrait};
-use models::Asset;
+use interface::{AdminInterfaceTrait, VaultTrait, VaultManagementTrait};
+use models::{Asset, Investment};
 use storage::{
     get_assets, set_asset,
     set_defindex_receiver, set_total_assets,
@@ -313,5 +313,61 @@ impl AdminInterfaceTrait for DeFindexVault {
     fn get_emergency_manager(e: Env) -> Result<Address, ContractError> {
         let access_control = AccessControl::new(&e);
         access_control.get_emergency_manager()
+    }
+}
+
+#[contractimpl]
+impl VaultManagementTrait for DeFindexVault {
+    fn invest(e: Env, investments: Vec<Investment>) -> Result<(), ContractError> {
+        check_initialized(&e)?;
+    
+        let access_control = AccessControl::new(&e);
+        access_control.require_role(&RolesDataKey::Manager);
+    
+        // Get the current idle funds for all assets
+        let idle_funds = get_current_idle_funds(&e);
+    
+        // Create a map to track how much we are trying to invest per asset
+        let mut total_investment_per_asset: Map<Address, i128> = Map::new(&e);
+    
+        // First, calculate total investment per asset and check idle funds at the same time
+        for investment in investments.iter() {
+            let strategy_address = &investment.strategy;
+            let amount_to_invest = investment.amount;
+    
+            // Find the corresponding asset for the strategy
+            let asset = get_strategy_asset(&e, strategy_address)?;
+    
+            // Get the current total investment for this asset and add the current amount
+            let current_investment = total_investment_per_asset
+                .get(asset.address.clone())
+                .unwrap_or(0);
+            let updated_investment = current_investment + amount_to_invest;
+    
+            // Update the total investment for this asset
+            total_investment_per_asset.set(asset.address.clone(), updated_investment);
+    
+            // Check if the total investment exceeds the available idle funds for this asset
+            let idle_balance = idle_funds.get(asset.address.clone()).unwrap_or(0);
+            if updated_investment > idle_balance {
+                return Err(ContractError::NotEnoughFunds);
+            }
+        }
+    
+        // Now proceed with the actual investments if all checks passed
+        for investment in investments.iter() {
+            let strategy_address = &investment.strategy;
+            let amount_to_invest = investment.amount;
+    
+            // Find the corresponding asset for the strategy
+            // This ensures that the vault has this strategy in its list of assets
+            get_strategy_asset(&e, strategy_address)?;
+    
+            // If everything is correct, transfer the amount to the strategy
+            let strategy_client = get_strategy_client(&e, strategy_address.clone());
+            strategy_client.deposit(&amount_to_invest, &e.current_contract_address());
+        }
+    
+        Ok(())
     }
 }

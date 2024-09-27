@@ -1,7 +1,7 @@
 use soroban_sdk::{Address, Env, Map, Vec};
 
 use crate::{
-    models::Asset,
+    models::{Asset, Investment},
     ContractError,
 };
 
@@ -220,4 +220,18 @@ pub trait AdminInterfaceTrait {
     /// # Returns:
     /// * `Result<Address, ContractError>` - The emergency manager address if successful, otherwise returns a ContractError.
     fn get_emergency_manager(e: Env) -> Result<Address, ContractError>;
+}
+
+pub trait VaultManagementTrait {
+
+    /// Invests the vault's idle funds into the specified strategies.
+    /// 
+    /// # Arguments:
+    /// * `e` - The environment.
+    /// * `investment` - A vector of `Investment` structs representing the amount to invest in each strategy.
+    /// * `caller` - The address of the caller.
+    /// 
+    /// # Returns:
+    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
+    fn invest(e: Env, investment: Vec<Investment>) -> Result<(), ContractError>;
 }

@@ -16,3 +16,10 @@ pub struct Asset {
     pub ratio: i128,
     pub strategies: Vec<Strategy>,
 }
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Investment {
+    pub strategy: Address,
+    pub amount: i128,
+}
