@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '../store'
 import axios from 'axios'
+import { getRemoteConfig } from '@/helpers/getRemoteConfig';
 
 
 export interface Strategy {
@@ -30,10 +31,9 @@ const initialState: StrategiesState = {
 //Filtrar Strategies por network y retornar array de Strategies
 export const getDefaultStrategies = async (network: string) => {
   try {
-    const {data: remoteStrategies} = await axios.get(`https://raw.githubusercontent.com/paltalabs/defindex/refs/heads/main/public/${network}.contracts.json`)
+    const remoteStrategies = await getRemoteConfig(network)
     const strategies: Strategy[] = []
     for(let strategy in remoteStrategies.ids){
-      console.log(strategy)
       if(strategy.includes('strategy')){
         const parsedName = strategy.split('_')[0]
         if(!parsedName) continue

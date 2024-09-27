@@ -2,7 +2,7 @@ import { useSorobanReact } from "@soroban-react/core";
 import { useCallback } from "react";
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { TxResponse, contractInvoke } from '@soroban-react/contracts';
-import configs from '@/constants/constants.json'
+import { getRemoteConfig } from "@/helpers/getRemoteConfig";
 
 export enum FactoryMethod {
     CREATE_DEFINDEX = "create_defindex",
@@ -12,17 +12,17 @@ const isObject = (val: unknown) => typeof val === 'object' && val !== null && !A
 
 export function useFactoryCallback() {
     const sorobanContext = useSorobanReact();
-    const factoryAddress = ()=>{
-      const address = configs.filter((item:any)=>item.network === sorobanContext.activeChain?.network)[0]?.factory
-      return address;
-    }
+    const { activeChain } = sorobanContext;
+    const factoryAddress = getRemoteConfig(activeChain?.name?.toLowerCase() as string).then((config) => {
+      return config.ids.defindex_factory as string
+    })
 
     return useCallback(
         async (method: FactoryMethod, args?: StellarSdk.xdr.ScVal[], signAndSend?: boolean) => {
             console.log("Factory Callback called")
             try {
               const result = (await contractInvoke({
-                contractAddress: factoryAddress() as string,
+                contractAddress: await factoryAddress,
                 method: method,
                 args: args,
                 sorobanContext,
