@@ -102,37 +102,6 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     ];
 
 
-    //   fn create_defindex_vault(
-    //     e: Env, 
-    //     emergency_manager: Address, 
-    //     fee_receiver: Address, 
-    //     manager: Address,
-    //     assets: Vec<Asset>,
-    //     salt: BytesN<32>
-    // ) -> Result<Address, FactoryError> {
-
-    const adapterAddressPairScVal = adapters.map((adapter, index) => {
-      return xdr.ScVal.scvMap([
-        new xdr.ScMapEntry({
-          key: xdr.ScVal.scvSymbol("address"),
-          val: (new Address(adapter.address)).toScVal(),
-
-        }),
-        new xdr.ScMapEntry({
-          key: xdr.ScVal.scvSymbol("index"),
-          val: xdr.ScVal.scvU32(index),
-        }),
-        new xdr.ScMapEntry({
-          key: xdr.ScVal.scvSymbol("share"),
-          val: xdr.ScVal.scvU32(adapter.value),
-        }),
-      ]);
-    });
-
-    const adapterAddressesScVal = xdr.ScVal.scvVec(adapterAddressPairScVal);
-
-    // const createDefindexParams: xdr.ScVal[] = [adapterAddressesScVal];
-
     goToNext();
     let result: any;
     try {
@@ -234,7 +203,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
                 <Text mt={4}>{`${status.message}`}</Text>
               </Box>
             )}
-            {(activeStep == 3 && !!!status.hasError) && (
+            {(activeStep == 3 && !status.hasError) && (
               <Box mt={8} textAlign={'center'}>
                 <CheckCircleIcon boxSize={'4em'} color={'green'} />
                 <Text mt={4}>{`${status.message}`}</Text>
