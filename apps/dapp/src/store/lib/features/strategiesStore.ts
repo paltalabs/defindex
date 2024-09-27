@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '../store'
-import strategies from '@/constants/constants.json'
-import { Networks } from '@stellar/stellar-sdk'
+import axios from 'axios'
+
 
 export interface Strategy {
   address: string;
@@ -14,7 +14,6 @@ export interface StrategiesState {
   strategyName: string;
   totalValues?: number;
 }
-
 
 // Define the initial state using that type
 const initialState: StrategiesState = {
@@ -29,21 +28,28 @@ const initialState: StrategiesState = {
 }
 
 //Filtrar Strategies por network y retornar array de Strategies
-export const getDefaultStrategies = (network: string) => {
-  const filteredStrategies = strategies.filter(strategy => {
-    switch (network) {
-      case Networks.TESTNET:
-        return strategy.network === 'testnet'
-      case Networks.PUBLIC:
-        return strategy.network === 'public'
-      default:
-        return strategy.network === 'testnet'
+export const getDefaultStrategies = async (network: string) => {
+  try {
+    const {data: remoteStrategies} = await axios.get(`https://raw.githubusercontent.com/paltalabs/defindex/refs/heads/main/public/${network}.contracts.json`)
+    const strategies: Strategy[] = []
+    for(let strategy in remoteStrategies.ids){
+      console.log(strategy)
+      if(strategy.includes('strategy')){
+        const parsedName = strategy.split('_')[0]
+        if(!parsedName) continue
+        const prettierName = parsedName.charAt(0).toUpperCase() + parsedName.slice(1)
+        strategies.push({
+          address: remoteStrategies.ids[strategy],
+          name: parsedName ? prettierName : '',
+          value: 0
+        })
+      }
     }
-  })
-  if (filteredStrategies.length === 0) {
-    return [strategies[0]]
+    return strategies
+  } catch (error) {
+    console.error(error)
+    return []
   }
-  return filteredStrategies
 }
 
 
