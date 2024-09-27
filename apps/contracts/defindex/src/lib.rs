@@ -64,10 +64,20 @@ impl VaultTrait for DeFindexVault {
         let total_assets = assets.len();
         set_total_assets(&e, total_assets as u32);
         for (i, asset) in assets.iter().enumerate() {
+            // for every asset, we need to check that the list of strategyes indeed support this asset
+            
+            // TODO Fix, currently failing
+            // for strategy in asset.strategies.iter() {
+            //     let strategy_client = DeFindexStrategyClient::new(&e, &strategy.address);
+            //     if strategy_client.asset() != asset.address {
+            //         panic_with_error!(&e, ContractError::StrategyDoesNotSupportAsset);
+            //     }
+            // }
             set_asset(&e, i as u32, &asset);
         }
 
         // Metadata for the contract's token (unchanged)
+        // TODO: Name should be concatenated with some other name giving when initializing. Check how soroswap pairs  token are called.
         let decimal: u32 = 7;
         let name: String = String::from_str(&e, "dfToken");
         let symbol: String = String::from_str(&e, "DFT");
@@ -81,6 +91,7 @@ impl VaultTrait for DeFindexVault {
             },
         );
 
+        // TODO: Emit event
         Ok(())
     }
 
@@ -105,11 +116,21 @@ impl VaultTrait for DeFindexVault {
         for amount in amounts_desired.iter() {
             check_nonnegative_amount(amount)?;
         }
+        // for amount min is not necesary to check if it is negative
 
         let (amounts, shares_to_mint) = if assets_length == 1 {
-            let shares = 0; //TODO
+        // If Total Assets == 1
+            let shares = if VaultToken::total_supply()==0{
+                // TODO In this case we might also want to mint a MINIMUM LIQUIDITY to be locked forever in the contract
+                // this might be for security and practical reasons as well
+                amounts_desired
+            } else{
+                let total_managed_funds = fetch_total_managed_funds(&e);
+                VaultToken::total_supply() * amounts_desired[0] / total_managed_funds.get(assets[0].address.clone()).unwrap()
+            }
             (amounts_desired, shares)
         } else {
+        // If Total Assets > 1
             calculate_deposit_amounts_and_shares_to_mint(
                 &e,
                 &assets,
