@@ -24,7 +24,7 @@ import { IndexPreview } from "./IndexPreview";
 import { DeploySteps } from "./DeploySteps";
 import { useEffect, useState } from "react";
 import { WarningIcon, CheckCircleIcon } from '@chakra-ui/icons'
-import { resetAdapters } from "@/store/lib/features/adaptersStore";
+import { resetStrategies, Strategy } from "@/store/lib/features/strategiesStore";
 
 interface Status {
   isSuccess: boolean,
@@ -45,8 +45,8 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     index: 0
   });
   const factory = useFactoryCallback();
-  const adapters = useAppSelector(state => state.adapters.adapters);
-  const indexName = useAppSelector(state => state.adapters.adapterName)
+  const strategies: Strategy[] = useAppSelector(state => state.strategies.strategies);
+  const indexName = useAppSelector(state => state.strategies.strategyName)
   const dispatch = useAppDispatch();
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [status, setStatus] = useState<Status>({
@@ -55,11 +55,11 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     message: undefined
   });
   const deployDefindex = async () => {
-    const adapterAddressPairScVal = adapters.map((adapter, index) => {
+    const strategyAddressPairScVal = strategies.map((strategy, index) => {
       return xdr.ScVal.scvMap([
         new xdr.ScMapEntry({
           key: xdr.ScVal.scvSymbol("address"),
-          val: (new Address(adapter.address)).toScVal(),
+          val: (new Address(strategy.address)).toScVal(),
 
         }),
         new xdr.ScMapEntry({
@@ -68,14 +68,14 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
         }),
         new xdr.ScMapEntry({
           key: xdr.ScVal.scvSymbol("share"),
-          val: xdr.ScVal.scvU32(adapter.value),
+          val: xdr.ScVal.scvU32(strategy.value),
         }),
       ]);
     });
 
-    const adapterAddressesScVal = xdr.ScVal.scvVec(adapterAddressPairScVal);
+    const strategyAddressesScVal = xdr.ScVal.scvVec(strategyAddressPairScVal);
 
-    const createDefindexParams: xdr.ScVal[] = [adapterAddressesScVal];
+    const createDefindexParams: xdr.ScVal[] = [strategyAddressesScVal];
 
     goToNext();
     let result: any;
@@ -114,17 +114,17 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       message: undefined
     });
     setActiveStep(0);
-    await dispatch(resetAdapters())
+    await dispatch(resetStrategies())
     onClose();
   }
 
   useEffect(() => {
-    const newChartData: ChartData[] = adapters.map((adapter: any, index: number) => {
+    const newChartData: ChartData[] = strategies.map((strategy: any, index: number) => {
       return {
         id: index,
-        label: adapter.name,
-        address: adapter.address,
-        value: adapter.value,
+        label: strategy.name,
+        address: strategy.address,
+        value: strategy.value,
       }
     });
     const total = newChartData.reduce((acc: number, curr: any) => acc + curr.value, 0)
@@ -142,7 +142,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       setChartData(newChartData);
       return;
     }
-  }, [adapters]);
+  }, [strategies]);
 
   const autoCloseModal = async () => {
     await new Promise(resolve => setTimeout(resolve, 5000))
@@ -189,7 +189,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
           <ModalFooter>
             {(activeStep == 0 && !status.hasError) && (
               <Button
-                aria-label='add_adapter'
+                aria-label='add_strategy'
                 colorScheme='green'
                 onClick={deployDefindex}>
                 Deploy

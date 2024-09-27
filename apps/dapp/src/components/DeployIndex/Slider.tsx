@@ -15,13 +15,13 @@ import {
 } from '@chakra-ui/react'
 import { DeleteIcon } from '@chakra-ui/icons'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { setAdapterValue, removeAdapter } from '@/store/lib/features/adaptersStore'
+import { setStrategyValue, removeStrategy } from '@/store/lib/features/strategiesStore'
 
 
 function ItemSlider({
   address = 'Address',
   value = 0,
-  name = "Soroswap adapter"
+  name = "Soroswap strategy"
 }: {
   address: string,
   value: number,
@@ -30,14 +30,14 @@ function ItemSlider({
   const dispatch = useAppDispatch()
   const [showTooltip, setShowTooltip] = React.useState(false)
 
-  const totalValues = useAppSelector(state => state.adapters.totalValues)
+  const totalValues = useAppSelector(state => state.strategies.totalValues)
   const [inputValue, setInputValue] = React.useState<number | string>(value)
 
   const setVal = (val: number) => {
     const total = totalValues! - value + val
     if (total <= 100) {
       setInputValue(val)
-      dispatch(setAdapterValue({ address, value: val }))
+      dispatch(setStrategyValue({ address, value: val }))
     } else {
       setMax()
     }
@@ -47,7 +47,7 @@ function ItemSlider({
     const rest = 100 - totalValues!
     const newVal = value + rest
     setInputValue(newVal)
-    dispatch(setAdapterValue({ address, value: newVal }))
+    dispatch(setStrategyValue({ address, value: newVal }))
   }
 
   const handleValueInput = (e: any) => {
@@ -87,8 +87,8 @@ function ItemSlider({
   }
 
   const handleDelete = () => {
-    dispatch(setAdapterValue({ address, value: 0 }))
-    dispatch(removeAdapter({ address: address, value: 0 }))
+    dispatch(setStrategyValue({ address, value: 0 }))
+    dispatch(removeStrategy({ address: address, value: 0 }))
   }
 
   useEffect(() => {

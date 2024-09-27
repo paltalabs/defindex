@@ -1,5 +1,6 @@
 import {
   Button,
+  Container,
   Grid,
   GridItem,
   IconButton,
@@ -15,12 +16,15 @@ import AllIndexes from "./AllIndexes"
 import { useState } from "react"
 import { DeployIndex } from "../DeployIndex/DeployIndex"
 import { useAppDispatch } from "@/store/lib/storeHooks"
-import { pushAdapter, resetAdapters } from "@/store/lib/features/adaptersStore"
+import { pushStrategy, resetStrategies } from "@/store/lib/features/strategiesStore"
 import { shortenAddress } from "@/helpers/shortenAddress"
 import { DepositToIndex } from "../DepositToIndex/DepositToIndex"
 import { setSelectedIndex } from "@/store/lib/features/walletStore"
+import ConnectButton from "../Wallet/ConnectButton"
+import { useSorobanReact } from "@soroban-react/core"
 
 export const ManageIndexes = () => {
+  const { address } = useSorobanReact()
   const [modalStatus, setModalStatus] = useState<{
     deployIndex: {
       isOpen: boolean
@@ -40,18 +44,18 @@ export const ManageIndexes = () => {
   const handleOpenDeployIndex = async (method: string, args?: any) => {
     switch (method) {
       case 'create_defindex':
-        await dispatch(resetAdapters())
+        await dispatch(resetStrategies())
         setModalStatus({ ...modalStatus, deployIndex: { isOpen: true } })
         break
       case 'edit_index':
-        await dispatch(resetAdapters())
+        await dispatch(resetStrategies())
         for (const item of args.shares) {
-          const newAdapter = {
+          const newStrategy = {
             address: item.address,
             value: item.share,
             name: item.name ? item.name : shortenAddress(item.address)
           }
-          await dispatch(pushAdapter(newAdapter))
+          await dispatch(pushStrategy(newStrategy))
         }
         setModalStatus({ ...modalStatus, deployIndex: { isOpen: true } })
         break
@@ -104,16 +108,19 @@ export const ManageIndexes = () => {
             </InputRightElement>
           </InputGroup>
         </GridItem>
-        <GridItem colStart={11} justifyItems={'start'}>
-          <Button
-            rounded={18}
-            aria-label="add-index"
-            colorScheme="green"
-            onClick={() => handleOpenDeployIndex('create_defindex')}
-          >
-            Add Index
-          </Button>
-          {/* <IconButton aria-label="add-index" colorScheme="green" icon={<AddIcon />} /> */}
+        <GridItem colStart={9} colEnd={12} justifyItems={'start'}>
+          <Container display={'flex'} flexDirection={'row'}>
+            <ConnectButton />
+            <Button
+              rounded={18}
+              sx={{ ml: 4 }}
+              aria-label="add-index"
+              colorScheme="green"
+              onClick={() => handleOpenDeployIndex('create_defindex')}
+            >
+              Add Index
+            </Button>
+          </Container>
         </GridItem>
         <GridItem colSpan={12} colStart={1} colEnd={13}>
           <AllIndexes handleOpenDeployIndex={handleOpenDeployIndex} handleOpenDeposit={handleOpenDeposit} />

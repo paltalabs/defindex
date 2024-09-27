@@ -2,9 +2,9 @@
   {
     "network": "testnet",
     "factory": "CCU3FB55SFRFMQORBBERXW2XVFFXTHW3YUIB5UZ267FDCIFXJPQ2WQBF",
-    "adapters": [
+    "strategies": [
       {
-        "name": "Soroswap adapter",
+        "name": "Soroswap strategy",
         "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
         "value": 0
       },
@@ -56,7 +56,7 @@
   {
     "network": "public",
     "factory": "",
-    "adapters": [
+    "strategies": [
       {
         "name": "Soroswap",
         "address": "",

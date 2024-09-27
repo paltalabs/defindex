@@ -8,17 +8,17 @@ import {
   Input,
 } from '@chakra-ui/react'
 import ItemSlider from './Slider'
-import AddNewAdapterButton from './AddNewAdapterButton'
+import AddNewStrategyButton from './AddNewStrategyButton'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 
 import { useSorobanReact } from '@soroban-react/core'
 import { ConfirmDelpoyModal } from './ConfirmDelpoyModal'
-import { setAdapterName } from '@/store/lib/features/adaptersStore'
+import { setStrategyName, Strategy } from '@/store/lib/features/strategiesStore'
 
 export const DeployIndex = () => {
   const dispatch = useAppDispatch()  
-  const adapters = useAppSelector(state => state.adapters.adapters)
-  const totalValues = useAppSelector(state => state.adapters.totalValues)
+  const strategies: Strategy[] = useAppSelector(state => state.strategies.strategies)
+  const totalValues = useAppSelector(state => state.strategies.totalValues)
   const [openConfirm, setOpenConfirm] = useState<boolean>(false)
 
   const handleClose = () => {
@@ -26,7 +26,7 @@ export const DeployIndex = () => {
   }
 
   const setName = async (e: any) => {
-    await dispatch(setAdapterName(e.target.value))
+    await dispatch(setStrategyName(e.target.value))
   }
 
   return (
@@ -43,11 +43,11 @@ export const DeployIndex = () => {
             <Input onChange={setName} placeholder='Defindex name...'></Input>
           </GridItem>
           <GridItem colStart={12}>
-            <AddNewAdapterButton />
+            <AddNewStrategyButton />
           </GridItem>
         </Grid>
-        {adapters.map((adapter, index) => (
-          <ItemSlider key={index} name={adapter.name} address={adapter.address} value={adapter.value} />
+        {strategies.map((strategy, index) => (
+          <ItemSlider key={index} name={strategy.name} address={strategy.address} value={strategy.value} />
         ))}
         <Grid templateColumns={'repeat(8, 2fr)'} dir='reverse'>
           <GridItem colStart={8} textAlign={'end'}>
@@ -55,7 +55,7 @@ export const DeployIndex = () => {
           </GridItem>
         </Grid>
         <Button
-          isDisabled={totalValues! > 100 || adapters.length == 0 || totalValues == 0}
+          isDisabled={totalValues! > 100 || strategies.length == 0 || totalValues == 0}
           isLoading={openConfirm}
           colorScheme="green"
           size="lg"
