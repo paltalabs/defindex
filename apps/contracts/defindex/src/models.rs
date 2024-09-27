@@ -13,5 +13,6 @@ pub struct Strategy {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Asset {
     pub address: Address,
+    pub ratio: i128,
     pub strategies: Vec<Strategy>,
 }

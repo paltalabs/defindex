@@ -62,6 +62,26 @@ pub fn calculate_withdrawal_amounts(
     Ok(withdrawal_amounts)
 }
 
+/// Converts dfToken amount into corresponding token amounts based on their ratio.
+// pub fn calculate_withdrawal_amounts(
+//     e: &Env,
+//     df_token_amount: i128, // The amount of dfTokens to withdraw
+// ) -> Result<Map<Asset, i128>, ContractError> {
+//     let mut withdrawal_amounts = Map::<Asset, i128>::new(e);
+//     let assets = get_assets(e);
+
+//     let total_ratio = assets.iter().fold(0, |acc, asset| acc + asset.ratio);
+
+//     // Iterate through all assets and calculate how much of each should be withdrawn
+//     for (i, asset) in assets.iter().enumerate() {
+//         // Calculate how much of this token corresponds to the dfToken amount
+//         let token_withdraw_amount = (df_token_amount * asset.ratio) / total_ratio; // Proportional to the total ratio sum
+//         withdrawal_amounts.set(asset, token_withdraw_amount);
+//     }
+
+//     Ok(withdrawal_amounts)
+// }
+
 pub fn get_optimal_amounts_and_shares_to_mint_enforcing_asset_i(
     e: &Env,
     total_managed_funds: &Map<Address, i128>,
