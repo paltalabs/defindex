@@ -351,6 +351,7 @@ impl VaultManagementTrait for DeFindexVault {
     
         let access_control = AccessControl::new(&e);
         access_control.require_role(&RolesDataKey::Manager);
+        e.current_contract_address().require_auth();
     
         // Get the current idle funds for all assets
         let idle_funds = fetch_current_idle_funds(&e);

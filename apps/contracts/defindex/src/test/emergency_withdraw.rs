@@ -1,6 +1,6 @@
-use soroban_sdk::{vec as sorobanvec, Address, Vec};
+use soroban_sdk::{vec as sorobanvec, Vec};
 
-use crate::test::{create_strategy_params, defindex_vault::Asset, DeFindexVaultTest};
+use crate::test::{create_strategy_params, defindex_vault::{Asset, Investment}, DeFindexVaultTest};
 
 #[test]
 fn test_emergency_withdraw_success() {
@@ -37,18 +37,42 @@ fn test_emergency_withdraw_success() {
     // Deposit
     test.defindex_contract.deposit(&sorobanvec![&test.env, amount], &sorobanvec![&test.env, amount], &users[0]);
 
-    // let df_balance = test.defindex_contract.balance(&users[0]);
-    // assert_eq!(df_balance, amount);
+    let df_balance = test.defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, amount);
 
-    // Balance of the token0 on the vault should be 0 since it is invested in the strategy
+    // Balance of the token0 on the vault should be `amount` since it is deposited into the vault first
     let vault_balance_of_token = test.token0.balance(&test.defindex_contract.address);
-    assert_eq!(vault_balance_of_token, 0i128);
+    assert_eq!(vault_balance_of_token, amount);
 
-    // Balance of the token0 on the strategy should be the amount deposited
-    let strategy_balance_for_vault = test.strategy_client.balance(&test.defindex_contract.address);
-    assert_eq!(strategy_balance_for_vault, amount);
+    // Should invest the funds
+    let investments = sorobanvec![
+        &test.env,
+        Investment {
+            amount: amount.clone(),
+            strategy: strategy_params.first().unwrap().address.clone()
+        }
+    ];
+    test.defindex_contract.invest(&investments);
+    
+    // Balance of the token0 on the vault should be 0
+    let vault_balance_of_token = test.token0.balance(&test.defindex_contract.address);
+    assert_eq!(vault_balance_of_token, 0);
+
+    // Balance of the strategy should be `amount`
+    let strategy_balance = test.strategy_client.balance(&test.defindex_contract.address);
+    assert_eq!(strategy_balance, amount);
 
     test.defindex_contract.emergency_withdraw(&strategy_params.first().unwrap().address, &test.emergency_manager);
 
-    // TODO: Keep writing tests here
+    // Balance of the strategy should be 0
+    let strategy_balance = test.strategy_client.balance(&test.defindex_contract.address);
+    assert_eq!(strategy_balance, 0);
+
+    // Balance of the token0 on the vault should be `amount`
+    let vault_balance_of_token = test.token0.balance(&test.defindex_contract.address);
+    assert_eq!(vault_balance_of_token, amount);
+
+    // check if strategy is paused
+    let asset = test.defindex_contract.get_assets().first().unwrap();
+    assert_eq!(asset.strategies.first().unwrap().paused, true);
 }
