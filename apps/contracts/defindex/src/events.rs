@@ -37,20 +37,20 @@ pub(crate) fn emit_initialized_vault(
 // DEPOSIT EVENT
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DepositEvent {
+pub struct VaultDepositEvent {
     pub depositor: Address,
     pub amounts: Vec<i128>,
     pub df_tokens_minted: i128,
 }
 
-/// Publishes a `DepositEvent` to the event stream.
+/// Publishes a `VaultDepositEvent` to the event stream.
 pub(crate) fn emit_deposit_event(
     e: &Env,
     depositor: Address,
     amounts: Vec<i128>,
     df_tokens_minted: i128,
 ) {
-    let event = DepositEvent {
+    let event = VaultDepositEvent {
         depositor,
         amounts,
         df_tokens_minted,
@@ -63,20 +63,20 @@ pub(crate) fn emit_deposit_event(
 // WITHDRAW EVENT
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct WithdrawEvent {
+pub struct VaultWithdrawEvent {
     pub withdrawer: Address,
     pub df_tokens_burned: i128,
     pub amounts_withdrawn: Vec<i128>,
 }
 
-/// Publishes a `WithdrawEvent` to the event stream.
+/// Publishes a `VaultWithdrawEvent` to the event stream.
 pub(crate) fn emit_withdraw_event(
     e: &Env,
     withdrawer: Address,
     df_tokens_burned: i128,
     amounts_withdrawn: Vec<i128>,
 ) {
-    let event = WithdrawEvent {
+    let event = VaultWithdrawEvent {
         withdrawer,
         df_tokens_burned,
         amounts_withdrawn,

@@ -133,9 +133,9 @@ impl VaultTrait for DeFindexVault {
         }
 
         // now we mint the corresponding dfTOkenb
-        internal_mint(e, from, shares_to_mint);
+        internal_mint(e.clone(), from.clone(), shares_to_mint);
 
-        // TODO: emit events
+        events::emit_deposit_event(&e, from, amounts, shares_to_mint);
         // TODO return amounts and shares to mint
         Ok(())
     }
