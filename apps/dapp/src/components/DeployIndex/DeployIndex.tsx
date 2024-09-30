@@ -6,6 +6,7 @@ import {
   GridItem,
   Container,
   Input,
+  Text,
 } from '@chakra-ui/react'
 import ItemSlider from './Slider'
 import AddNewStrategyButton from './AddNewStrategyButton'
@@ -16,7 +17,7 @@ import { ConfirmDelpoyModal } from './ConfirmDelpoyModal'
 import { setStrategyName, Strategy } from '@/store/lib/features/strategiesStore'
 
 export const DeployIndex = () => {
-  const dispatch = useAppDispatch()  
+  const dispatch = useAppDispatch()
   const strategies: Strategy[] = useAppSelector(state => state.strategies.strategies)
   const totalValues = useAppSelector(state => state.strategies.totalValues)
   const [openConfirm, setOpenConfirm] = useState<boolean>(false)
@@ -35,12 +36,30 @@ export const DeployIndex = () => {
       <Card variant="outline" p={16} bgColor="whiteAlpha.50">
         <Grid
           templateColumns={'repeat(12, 2fr)'}
+          templateRows={'repeat(5, 1fr)'}
           alignSelf={'end'}
           alignContent={'center'}
           mb={4}
         >
           <GridItem colStart={1} colSpan={3}>
             <Input onChange={setName} placeholder='Defindex name...'></Input>
+          </GridItem><GridItem colStart={1} colSpan={3} rowStart={3}>
+            <Text mt={4}>Manager</Text>
+          </GridItem>
+          <GridItem colStart={4} colSpan={3} rowStart={3}>
+            <Input onChange={setName} placeholder='GAFS3TLVM...'></Input>
+          </GridItem>
+          <GridItem colStart={8} colSpan={3} rowStart={3}>
+            <Text mt={4}>Emergency Manager</Text>
+          </GridItem>
+          <GridItem colStart={11} colSpan={3} rowStart={3}>
+            <Input onChange={setName} placeholder='GAFS3TLVM...'></Input>
+          </GridItem>
+          <GridItem colStart={1} colSpan={3} rowStart={5}>
+            <Text mt={4}>Fee Receiver</Text>
+          </GridItem>
+          <GridItem colStart={4} colSpan={3} rowStart={5}>
+            <Input onChange={setName} placeholder='GAFS3TLVM...'></Input>
           </GridItem>
           <GridItem colStart={12}>
             <AddNewStrategyButton />
