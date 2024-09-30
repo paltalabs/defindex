@@ -2,7 +2,7 @@ import { SorobanContextType, useSorobanReact } from "@soroban-react/core";
 import { useCallback, useEffect, useState } from "react";
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { TxResponse, contractInvoke } from '@soroban-react/contracts';
-import configs from '@/constants/constants.json'
+import { getRemoteConfig } from "@/helpers/getRemoteConfig";
 import { fetchFactoryAddress } from "@/utils/factory";
 
 export enum FactoryMethod {
