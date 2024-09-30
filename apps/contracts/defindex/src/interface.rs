@@ -24,11 +24,11 @@ pub trait VaultTrait {
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn initialize(
         e: Env,
+        assets: Vec<Asset>,
+        manager: Address,
         emergency_manager: Address,
         fee_receiver: Address,
-        manager: Address,
         defindex_receiver: Address,
-        tokens: Vec<Asset>,
     ) -> Result<(), ContractError>;
 
     /// Handles deposits into the DeFindex Vault.
@@ -129,8 +129,8 @@ pub trait VaultTrait {
     ///
     /// # Returns:
     /// * `Map<Address, i128>` - A map of asset addresses to their total managed amounts.
-    fn get_total_managed_funds(e: &Env) -> Map<Address, i128>;
-
+    fn fetch_total_managed_funds(e: &Env) -> Map<Address, i128>;
+    
     /// Returns the current invested funds, representing the total assets allocated to strategies.
     ///
     /// This function provides a map where the key is the asset address and the value is the total amount
@@ -141,7 +141,7 @@ pub trait VaultTrait {
     ///
     /// # Returns:
     /// * `Map<Address, i128>` - A map of asset addresses to their total invested amounts.
-    fn get_current_invested_funds(e: &Env) -> Map<Address, i128>;
+    fn fetch_current_invested_funds(e: &Env) -> Map<Address, i128>;
 
     /// Returns the current idle funds, representing the total assets held directly by the vault (not invested).
     ///
@@ -153,7 +153,9 @@ pub trait VaultTrait {
     ///
     /// # Returns:
     /// * `Map<Address, i128>` - A map of asset addresses to their total idle amounts.
-    fn get_current_idle_funds(e: &Env) -> Map<Address, i128>;
+    fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128>;
+
+    fn user_balance(e: Env, from: Address) -> i128;
 }
 
 pub trait AdminInterfaceTrait {

@@ -88,11 +88,11 @@ impl FactoryTrait for DeFindexFactory {
         let defindex_receiver = get_defindex_receiver(&e);
 
         defindex::Client::new(&e, &defindex_address).initialize(
+            &assets,
             &emergency_manager,
             &fee_receiver,
             &manager,
             &defindex_receiver,
-            &assets,
         );
 
         add_new_defindex(&e, defindex_address.clone());

@@ -50,6 +50,7 @@ pub(crate) fn create_asset_params(test: &DeFindexFactoryTest) -> Vec<Asset> {
                     address: test.strategy_address.clone(),
                     name: String::from_str(&test.env, "Strategy 1"),
                     paused: false,
+                    ratio: 1i128
                 }
             ],
         }

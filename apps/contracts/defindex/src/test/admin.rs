@@ -28,11 +28,11 @@ fn test_set_new_fee_receiver_by_fee_receiver() {
     ];
 
     test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
-        &test.manager,
         &test.defindex_receiver,
-        &assets
     );
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
@@ -89,11 +89,11 @@ fn test_set_new_fee_receiver_by_manager() {
     ];
 
     test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
-        &test.manager,
         &test.defindex_receiver,
-        &assets
     );
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
@@ -151,11 +151,11 @@ fn test_set_new_fee_receiver_by_emergency_manager() {
     ];
 
     test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
-        &test.manager,
         &test.defindex_receiver,
-        &assets
     );
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
@@ -188,11 +188,11 @@ fn test_set_new_fee_receiver_invalid_sender() {
     ];
 
     test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
-        &test.manager,
         &test.defindex_receiver,
-        &assets
     );
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
@@ -223,11 +223,11 @@ fn test_set_new_manager_by_manager() {
     ];
 
     test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
-        &test.manager,
         &test.defindex_receiver,
-        &assets
     );
 
     let manager_role = test.defindex_contract.get_manager();

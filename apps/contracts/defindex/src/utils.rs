@@ -2,10 +2,12 @@ use soroban_sdk::{panic_with_error, Address, Env, Map, Vec};
 
 use crate::{
     access::{AccessControl, AccessControlTrait, RolesDataKey},
-    funds::get_total_managed_funds,
+    funds::fetch_total_managed_funds,
     models::{Asset, Investment},
     storage::get_assets,
     ContractError,
+    token::VaultToken
+
 };
 
 pub const DAY_IN_LEDGERS: u32 = 17280;
@@ -82,7 +84,7 @@ pub fn calculate_withdrawal_amounts(
 //     Ok(withdrawal_amounts)
 // }
 
-pub fn get_optimal_amounts_and_shares_to_mint_enforcing_asset_i(
+pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
     e: &Env,
     total_managed_funds: &Map<Address, i128>,
     assets: &Vec<Asset>,
@@ -102,6 +104,7 @@ pub fn get_optimal_amounts_and_shares_to_mint_enforcing_asset_i(
                                                                         // this might be the first deposit... in this case, the ratio will be enforced by the first depositor
                                                                         // TODO: might happen that the reserve_target is zero because everything is in one asset!?
                                                                         // in this case we ned to check the ratio
+        // TODO VERY DANGEROUS.
     }
     let amount_desired_target = amounts_desired.get(*i).unwrap(); // i128
 
@@ -117,29 +120,49 @@ pub fn get_optimal_amounts_and_shares_to_mint_enforcing_asset_i(
             optimal_amounts.push_back(amount);
         }
     }
-    let shares_to_mint = 0; // TODO: calculate the shares to mint = total_supply * amount_desired_target  / reserve_target
+    //TODO: calculate the shares to mint = total_supply * amount_desired_target  / reserve_target
+    let shares_to_mint = VaultToken::total_supply(e.clone()) * amount_desired_target / reserve_target;
     (optimal_amounts, shares_to_mint)
 }
-
+/// Calculates the optimal amounts to deposit for a set of assets, along with the shares to mint.
+/// This function iterates over a list of assets and checks if the desired deposit amounts
+/// match the optimal deposit strategy, based on current managed funds and asset ratios.
+/// 
+/// If the desired amount for a given asset cannot be achieved due to constraints (e.g., it's below the minimum amount),
+/// the function attempts to find an optimal solution by adjusting the amounts of subsequent assets.
+/// 
+/// # Arguments
+/// * `e` - The current environment.
+/// * `assets` - A vector of assets for which deposits are being calculated.
+/// * `amounts_desired` - A vector of desired amounts for each asset.
+/// * `amounts_min` - A vector of minimum amounts for each asset, below which deposits are not allowed.
+/// 
+/// # Returns
+/// A tuple containing:
+/// * A vector of optimal amounts to deposit for each asset.
+/// * The number of shares to mint based on the optimal deposits.
+///
+/// # Errors
+/// If no valid deposit configuration can be found that satisfies the minimum amounts for all assets, the function
+/// will return an error.
+///
+/// # Panics
+/// The function may panic if it encounters invalid states (e.g., insufficient amounts) but TODO: these should
+/// be replaced with proper error handling.
 pub fn calculate_deposit_amounts_and_shares_to_mint(
     e: &Env,
     assets: &Vec<Asset>,
     amounts_desired: &Vec<i128>,
     amounts_min: &Vec<i128>,
 ) -> (Vec<i128>, i128) {
-    // here we have already 3 vectors with same length, and all vectors are corrclty organized.
-    // meaning that amounts_desired[i] is the amount desired for asset[i] and amounts_min[i] is the minimum amount for asset[i]
+    // Retrieve the total managed funds for each asset as a Map<Address, i128>.
+    let total_managed_funds = fetch_total_managed_funds(e); 
 
-    // for each index, we calculate the optimal amount to deposit for the rest of the assets
-    // and then we see if it is possible to deposit that amount, considering the amounts_min
-    // if it is not possible, we calculate the optimal amount considering the next asset and so on
-    // if it is not possible to deposit the optimal amount for the last asset, we throw an error
-
-    let total_managed_funds = get_total_managed_funds(e); // Map<Address, i128>// a number for each asset
+    // Iterate over each asset in the assets vector.
     for i in 0..assets.len() {
-        // TODO dont enforce asset i if ratio of asset i is 0... in this case we need to enforce the next one
+        // Calculate the optimal amounts and the number of shares to mint for the given asset at index `i`.
         let (optimal_amounts, shares_to_mint) =
-            get_optimal_amounts_and_shares_to_mint_enforcing_asset_i(
+            calculate_optimal_amounts_and_shares_with_enforced_asset(
                 &e,
                 &total_managed_funds,
                 &assets,
@@ -147,36 +170,41 @@ pub fn calculate_deposit_amounts_and_shares_to_mint(
                 &i,
             );
 
-        // if optimal _amounts[i]  is less than amounts_desired[i], but greater than amouints_min[i], then we cfalculate with the next one
-
-        // Flag to indicate if we should skip the current asset {i} and continue
+        // Flag to skip the current asset if necessary.
         let mut should_skip = false;
 
+        // Check if the calculated optimal amounts meet the desired or minimum requirements.
         for j in i + 1..assets.len() {
-            // if optimal_amounts.get(j)  is less than amounts_desired.get(j), then we check if is at least more than the minimum, if yes, this might work!
+            // If the optimal amount for asset[j] is less than the desired amount,
+            // but at least greater than the minimum amount, it is acceptable.
             if optimal_amounts.get(j).unwrap() <= amounts_desired.get(j).unwrap() {
-                // if not, this will never work, because the optimal amount with that amount_min
+                // If the optimal amount is below the minimum, we cannot proceed with this asset.
                 if optimal_amounts.get(j).unwrap() < amounts_min.get(j).unwrap() {
-                    panic!("insufficient amount"); // TODO transform panic in error
+                    panic!("insufficient amount"); // TODO: Replace panic with an error return.
                 }
-                // if not, this is great. we continue, hoping this will be the answer
             } else {
-                // If the optimal amount is greater to the desired amount, we skip the current asset {i}
+                // If the optimal amount exceeds the desired amount, we skip the current asset {i}.
                 should_skip = true;
-                // if we are in the last asset, we should throw an error
+
+                // If we've reached the last asset and still don't find a solution, throw an error.
                 if j == assets.len() - 1 {
-                    panic!("didnt find optimal amounts"); // TODO transform panic in error
+                    panic!("didn't find optimal amounts"); // TODO: Replace panic with an error return.
                 }
-                break; // Skip further checks for this asset {i}
+                break;
             }
         }
+
+        // If we should skip this asset, continue to the next one.
         if should_skip {
             continue;
         } else {
+            // Return the calculated optimal amounts and shares to mint.
             return (optimal_amounts, shares_to_mint);
         }
     }
-    panic!("didnt finfd");
+
+    // If no solution was found after iterating through all assets, throw an error.
+    panic!("didn't find optimal amounts");
 }
 
 // Calculates the amounts to invest in each strategy based on the current ratio of invested funds.
