@@ -37,15 +37,15 @@ export const IndexPreview = ({ data }: { data: ChartData[] }) => {
             </Tr>
           </Thead>
           <Tbody>
-            {data.map((adapter: ChartData, index: number) => (
+            {data.map((strategy: ChartData, index: number) => (
               <Tr key={index} sx={{ cursor: 'default' }}>
-                <Td>{adapter.label}</Td>
+                <Td>{strategy.label}</Td>
                 <Td sx={{ cursor: 'pointer' }} textAlign={'center'}>
-                  <Tooltip label={adapter.address}>
-                    {adapter.address ? shortenAddress(adapter.address) : '-'}
+                  <Tooltip label={strategy.address}>
+                    {strategy.address ? shortenAddress(strategy.address) : '-'}
                   </Tooltip>
                 </Td>
-                <Td textAlign={'end'}>{adapter.value}%</Td>
+                <Td textAlign={'end'}>{strategy.value}%</Td>
               </Tr>
             ))}
           </Tbody>

@@ -1,15 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit'
 import walletSlice from './features/walletStore'
-import adaptersSlice from './features/adaptersStore'
+import strategiesSlice from './features/strategiesStore'
 import type { WalletState } from './features/walletStore'
-import type { AdaptersState } from './features/adaptersStore'
+import type { StrategiesState } from './features/strategiesStore'
 
 
 export const makeStore = () => {
   return configureStore({
     reducer: {
       wallet: walletSlice,
-      adapters: adaptersSlice
+      strategies: strategiesSlice
     },
   })
 }
@@ -17,6 +17,6 @@ export const makeStore = () => {
 export type AppStore = ReturnType<typeof makeStore>
 export type RootState = ReturnType<AppStore['getState']> & {
   wallet: WalletState,
-  adapters: AdaptersState
+  strategies: StrategiesState
 }
 export type AppDispatch = AppStore['dispatch']

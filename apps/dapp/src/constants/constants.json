@@ -2,18 +2,6 @@
   {
     "network": "testnet",
     "factory": "CCU3FB55SFRFMQORBBERXW2XVFFXTHW3YUIB5UZ267FDCIFXJPQ2WQBF",
-    "adapters": [
-      {
-        "name": "Soroswap adapter",
-        "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
-        "value": 0
-      },
-      {
-        "address": "CAQW67YEY2XIHL3RDOSRGXZFZFKRF7OD25EHXNZBV56Z24B3NUMSIPZM",
-        "name": "XYCloans",
-        "value": 0
-      }
-    ],
     "indexes": [
       {
         "address": "CDTSI3ORR5TDTKV7B3JQM5YZ4UAM24C2ZG2OOQOXPFJ5XS7JBOKUNJZC",
@@ -56,11 +44,35 @@
   {
     "network": "public",
     "factory": "",
-    "adapters": [
+    "indexes": [
       {
-        "name": "Soroswap",
-        "address": "",
-        "value": 0
+        "address": "CDTSI3ORR5TDTKV7B3JQM5YZ4UAM24C2ZG2OOQOXPFJ5XS7JBOKUNJZC",
+        "balance": 100651,
+        "name": "Soroswap USDC/XLM",
+        "shares": [
+          {
+            "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
+            "index": 0,
+            "share": 100
+          }
+        ]
+      },
+      {
+        "address": "CBEGAWUQMBJGHOWLVOGUMQO3HTIN66BW2NLDF6AZI56GKYZMR475E24Q",
+        "balance": 84732,
+        "name": "XYCLoans - Blend",
+        "shares": [
+          {
+            "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
+            "index": 0,
+            "share": 83
+          },
+          {
+            "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
+            "index": 0,
+            "share": 17
+          }
+        ]
       }
     ]
   }
