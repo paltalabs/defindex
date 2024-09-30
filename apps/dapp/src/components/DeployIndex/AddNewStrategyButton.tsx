@@ -16,7 +16,7 @@ import {
 } from '@chakra-ui/react'
 import { AddIcon } from '@chakra-ui/icons'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { pushStrategy, getDefaultStrategies, Strategy } from '@/store/lib/features/strategiesStore'
+import { pushStrategy, getDefaultStrategies, Strategy } from '@/store/lib/features/vaultStore'
 import { useSorobanReact } from '@soroban-react/core'
 
 interface DefaultStrategy {

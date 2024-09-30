@@ -14,7 +14,7 @@ import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 
 import { useSorobanReact } from '@soroban-react/core'
 import { ConfirmDelpoyModal } from './ConfirmDelpoyModal'
-import { setStrategyName, Strategy } from '@/store/lib/features/strategiesStore'
+import { setName, Strategy } from '@/store/lib/features/vaultStore'
 
 export const DeployIndex = () => {
   const dispatch = useAppDispatch()
@@ -26,8 +26,8 @@ export const DeployIndex = () => {
     setOpenConfirm(false)
   }
 
-  const setName = async (e: any) => {
-    await dispatch(setStrategyName(e.target.value))
+  const setVaultName = async (e: any) => {
+    await dispatch(setName(e.target.value))
   }
 
   return (
@@ -42,24 +42,24 @@ export const DeployIndex = () => {
           mb={4}
         >
           <GridItem colStart={1} colSpan={3}>
-            <Input onChange={setName} placeholder='Defindex name...'></Input>
+            <Input onChange={setVaultName} placeholder='Defindex name...'></Input>
           </GridItem><GridItem colStart={1} colSpan={3} rowStart={3}>
             <Text mt={4}>Manager</Text>
           </GridItem>
           <GridItem colStart={4} colSpan={3} rowStart={3}>
-            <Input onChange={setName} placeholder='GAFS3TLVM...'></Input>
+            <Input onChange={setVaultName} placeholder='GAFS3TLVM...'></Input>
           </GridItem>
           <GridItem colStart={8} colSpan={3} rowStart={3}>
             <Text mt={4}>Emergency Manager</Text>
           </GridItem>
           <GridItem colStart={11} colSpan={3} rowStart={3}>
-            <Input onChange={setName} placeholder='GAFS3TLVM...'></Input>
+            <Input onChange={setVaultName} placeholder='GAFS3TLVM...'></Input>
           </GridItem>
           <GridItem colStart={1} colSpan={3} rowStart={5}>
             <Text mt={4}>Fee Receiver</Text>
           </GridItem>
           <GridItem colStart={4} colSpan={3} rowStart={5}>
-            <Input onChange={setName} placeholder='GAFS3TLVM...'></Input>
+            <Input onChange={setVaultName} placeholder='GAFS3TLVM...'></Input>
           </GridItem>
           <GridItem colStart={12}>
             <AddNewStrategyButton />

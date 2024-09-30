@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/react'
 import { DeleteIcon } from '@chakra-ui/icons'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { setStrategyValue, removeStrategy } from '@/store/lib/features/strategiesStore'
+import { setStrategyValue, removeStrategy } from '@/store/lib/features/vaultStore'
 
 
 function ItemSlider({

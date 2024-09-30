@@ -25,7 +25,7 @@ import { IndexPreview } from "./IndexPreview";
 import { DeploySteps } from "./DeploySteps";
 import { useEffect, useState } from "react";
 import { WarningIcon, CheckCircleIcon } from '@chakra-ui/icons'
-import { resetStrategies, Strategy } from "@/store/lib/features/strategiesStore";
+import { resetStrategies, Strategy } from "@/store/lib/features/vaultStore";
 
 import { randomBytes } from "crypto";
 
@@ -49,7 +49,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   });
   const factory = useFactoryCallback();
   const strategies: Strategy[] = useAppSelector(state => state.strategies.strategies);
-  const indexName = useAppSelector(state => state.strategies.strategyName)
+  const indexName = useAppSelector(state => state.strategies.name)
   const dispatch = useAppDispatch();
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [status, setStatus] = useState<Status>({
