@@ -1,8 +1,9 @@
+import { ReactNode } from "react";
 import { Providers } from "../src/providers/main-provider";
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode,
+    children: ReactNode,
 }) {
   return (
     <html lang='en'>
