@@ -4,11 +4,10 @@ import { SorobanReactProvider } from '@soroban-react/core';
 import { futurenet, sandbox, standalone, testnet } from '@soroban-react/chains';
 import { freighter } from '@soroban-react/freighter';
 import type { ChainMetadata, Connector } from "@soroban-react/types";
-import { xbull } from '@soroban-react/xbull';
 import { lobstr } from '@soroban-react/lobstr'
 
 const chains: ChainMetadata[] = [sandbox, standalone, futurenet, testnet];
-export const connectors: Connector[] = [freighter(), xbull(), lobstr()]
+export const connectors: Connector[] = [freighter(), lobstr()]
 
 
 export default function MySorobanReactProvider({ children }: { children: React.ReactNode }) {
@@ -16,7 +15,7 @@ export default function MySorobanReactProvider({ children }: { children: React.R
   return (
     <SorobanReactProvider
       chains={chains}
-      appName={"Example Stellar App"}
+      appName={"Defindex"}
       activeChain={testnet}
       connectors={connectors}>
       {children}
