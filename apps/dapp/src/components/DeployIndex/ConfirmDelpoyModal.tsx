@@ -11,7 +11,7 @@ import {
   ModalHeader,
   ModalOverlay,
   Text,
-  useSteps
+  useSteps,
 } from "@chakra-ui/react"
 import {
   Address,
@@ -48,8 +48,12 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     index: 0
   });
   const factory = useFactoryCallback();
-  const strategies: Strategy[] = useAppSelector(state => state.strategies.strategies);
-  const indexName = useAppSelector(state => state.strategies.name)
+  const strategies: Strategy[] = useAppSelector(state => state.newVault.strategies);
+  const indexName = useAppSelector(state => state.newVault.name)
+  const managerString = useAppSelector(state => state.newVault.manager)
+  const emergencyManagerString = useAppSelector(state => state.newVault.emergencyManager)
+  const feeReceiverString = useAppSelector(state => state.newVault.feeReceiver)
+
   const dispatch = useAppDispatch();
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [status, setStatus] = useState<Status>({
@@ -57,11 +61,35 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     hasError: false,
     message: undefined
   });
+
+  const [deployDisabled, setDeployDisabled] = useState(true);
+
+  useEffect(() => {
+    if (strategies.length > 0 && managerString !== "" && emergencyManagerString !== "" && feeReceiverString !== "") {
+      setDeployDisabled(false);
+    } else {
+      setDeployDisabled(true);
+    }
+  }, [strategies, managerString, emergencyManagerString, feeReceiverString])
+
   const deployDefindex = async () => {
 
-    const emergencyManager = new Address('GAFS3TLVM2GO66QMOZJHJFP463K3ZKAPGU23WBMCPPFXIG7OUDMDDNTM')
-    const feeReceiver = new Address('GCWCI55WCOFF73ZL7NQAKJG4TTFPLE4Y23Z7KDXYLSF5Y3LX5XH7UNES')
-    const manager = new Address('GCRSJ7BPRVHE3SCQMS7XRDPAPCUYNZ4EK5X7OA5UIUDTSN7DP2SLMTQJ')
+    if (managerString === "" || managerString === undefined) {
+      console.log("Set manager please")
+      return
+    }
+    if (emergencyManagerString === "" || emergencyManagerString === undefined) {
+      console.log("Set emergency manager please")
+      return
+    }
+    if (feeReceiverString === "" || feeReceiverString === undefined) {
+      console.log("Set fee receiver please")
+      return
+    }
+
+    const emergencyManager = new Address(emergencyManagerString)
+    const feeReceiver = new Address(feeReceiverString)
+    const manager = new Address(managerString)
     const salt = randomBytes(32)
 
     const xlm_address = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
@@ -214,6 +242,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
           <ModalFooter>
             {(activeStep == 0 && !status.hasError) && (
               <Button
+                isDisabled={deployDisabled}
                 aria-label='add_strategy'
                 colorScheme='green'
                 onClick={deployDefindex}>

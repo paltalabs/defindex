@@ -102,7 +102,16 @@ export const newVaultSlice = createSlice({
     },
     setName: ((state, action: PayloadAction<string>) => {
       state.name = action.payload;
-    })
+    }),
+    setManager: ((state, action: PayloadAction<string>) => {
+      state.manager = action.payload;
+    }),
+    setEmergencyManager: ((state, action: PayloadAction<string>) => {
+      state.emergencyManager = action.payload;
+    }),
+    setFeeReceiver: ((state, action: PayloadAction<string>) => {
+      state.feeReceiver = action.payload;
+    }),
   }
 })
 
@@ -112,10 +121,14 @@ export const {
   removeStrategy,
   setStrategyValue,
   resetStrategyValue,
-  setName } = newVaultSlice.actions
+  setName,
+  setManager,
+  setEmergencyManager,
+  setFeeReceiver
+} = newVaultSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
-export const selectStrategies = (state: RootState) => state.strategies.strategies
-export const selectTotalValues = (state: RootState) => state.strategies.totalValues
+export const selectStrategies = (state: RootState) => state.newVault.strategies
+export const selectTotalValues = (state: RootState) => state.newVault.totalValues
 
 export default newVaultSlice.reducer

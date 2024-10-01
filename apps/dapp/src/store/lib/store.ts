@@ -9,7 +9,7 @@ export const makeStore = () => {
   return configureStore({
     reducer: {
       wallet: walletSlice,
-      strategies: newVaultSlice
+      newVault: newVaultSlice
     },
   })
 }
@@ -17,6 +17,6 @@ export const makeStore = () => {
 export type AppStore = ReturnType<typeof makeStore>
 export type RootState = ReturnType<AppStore['getState']> & {
   wallet: WalletState,
-  strategies: NewVaultState
+  newVault: NewVaultState
 }
 export type AppDispatch = AppStore['dispatch']

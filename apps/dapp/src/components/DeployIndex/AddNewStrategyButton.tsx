@@ -27,7 +27,7 @@ interface DefaultStrategy {
 
 
 function AddNewStrategyButton() {
-  const strategies = useAppSelector(state => state.strategies.strategies)
+  const strategies = useAppSelector(state => state.newVault.strategies)
   const dispatch = useAppDispatch();
   const { activeChain } = useSorobanReact()
   const [defaultStrategies, setDefaultStrategies] = useState<Strategy[]>([])

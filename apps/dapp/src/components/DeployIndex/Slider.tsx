@@ -30,7 +30,7 @@ function ItemSlider({
   const dispatch = useAppDispatch()
   const [showTooltip, setShowTooltip] = React.useState(false)
 
-  const totalValues = useAppSelector(state => state.strategies.totalValues)
+  const totalValues = useAppSelector(state => state.newVault.totalValues)
   const [inputValue, setInputValue] = React.useState<number | string>(value)
 
   const setVal = (val: number) => {
