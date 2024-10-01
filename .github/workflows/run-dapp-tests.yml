@@ -53,5 +53,5 @@ jobs:
           node-version: '18.18.2'
 
       - name: Run jest tests
-        run: yarn test:dapp
+        run: yarn exec jest apps/dapp
 
