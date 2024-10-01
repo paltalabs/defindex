@@ -10,7 +10,7 @@ const customJestConfig = {
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   testEnvironment: "jsdom",
   transform: {
-    '^.+\\.tsx?$': 'babel-jest',
+    "^.+.tsx?$": ["ts-jest",{}],
   }
 };
 
