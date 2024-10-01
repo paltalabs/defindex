@@ -4,6 +4,7 @@ import {
   Box,
   Button,
   CircularProgress,
+  Link,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -25,15 +26,19 @@ import { useFactoryCallback, FactoryMethod } from '@/hooks/useFactory'
 import { IndexPreview } from "./IndexPreview";
 import { DeploySteps } from "./DeploySteps";
 import { useEffect, useState } from "react";
-import { WarningIcon, CheckCircleIcon } from '@chakra-ui/icons'
-import { resetStrategies, Strategy } from "@/store/lib/features/strategiesStore";
+import { WarningIcon, CheckCircleIcon, ExternalLinkIcon } from '@chakra-ui/icons'
+import { Strategy } from "@/store/lib/features/strategiesStore";
+import { useSorobanReact } from "@soroban-react/core";
 
 import { randomBytes } from "crypto";
+
 
 interface Status {
   isSuccess: boolean,
   hasError: boolean,
   message: string | undefined,
+  network: "public" | "testnet" | undefined,
+  txHash: string | undefined
 }
 
 export interface ChartData {
@@ -48,6 +53,8 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   const { goToNext, setActiveStep, activeStep } = useSteps({
     index: 0
   });
+  const sorobanContext = useSorobanReact();
+  const { activeChain } = sorobanContext;
   const factory = useFactoryCallback();
   const strategies: Strategy[] = useAppSelector(state => state.strategies.strategies);
   const indexName = useAppSelector(state => state.strategies.strategyName)
@@ -56,7 +63,9 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   const [status, setStatus] = useState<Status>({
     isSuccess: false,
     hasError: false,
-    message: undefined
+    network: undefined,
+    message: undefined,
+    txHash: undefined
   });
   const deployDefindex = async () => {
 
@@ -118,26 +127,32 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       setStatus({
         ...status,
         hasError: true,
-        message: e.toString()
+        message: e.toString(),
+        txHash: undefined,
       })
       return
     }
+    console.log(result.txHash)
     const parsedResult = scValToNative(result.returnValue);
     dispatch(pushIndex(parsedResult));
     setActiveStep(3);
     setStatus({
+      ...status,
       isSuccess: true,
       hasError: false,
-      message: 'Index deployed successfully.'
+      message: 'Index deployed successfully.',
+      txHash: result.txHash
     });
     return result;
   }
 
   const handleCloseModal = async () => {
     setStatus({
+      ...status,
       isSuccess: false,
       hasError: false,
-      message: undefined
+      message: undefined,
+      txHash: undefined
     });
     setActiveStep(0);
     //await dispatch(resetStrategies())
@@ -171,7 +186,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   }, [strategies]);
 
   const autoCloseModal = async () => {
-    await new Promise(resolve => setTimeout(resolve, 5000))
+    await new Promise(resolve => setTimeout(resolve, 30000))
     handleCloseModal();
   }
 
@@ -180,6 +195,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       autoCloseModal();
     }
   }, [status.isSuccess, status.hasError])
+
   return (
     <>
       <Modal isOpen={isOpen} onClose={handleCloseModal} isCentered>
@@ -204,11 +220,18 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
                 <Text mt={4}>{`${status.message}`}</Text>
               </Box>
             )}
-            {(activeStep == 3 && !status.hasError) && (
-              <Box mt={8} textAlign={'center'}>
-                <CheckCircleIcon boxSize={'4em'} color={'green'} />
-                <Text mt={4}>{`${status.message}`}</Text>
-              </Box>
+            {(activeStep == 3 && status.isSuccess === true && status.txHash != undefined) && (
+              <>
+                <Box mt={8} textAlign={'center'}>
+                  <CheckCircleIcon boxSize={'4em'} color={'green'} />
+                  <Text mt={4}>{`${status.message}`}</Text>
+                </Box>
+                <Box mt={8} textAlign={'center'}>
+                  <Link mt={4} href={`https://stellar.expert/explorer/${activeChain?.name?.toLowerCase()}/tx/${status.txHash}`} isExternal>
+                    View on explorer <ExternalLinkIcon mx='2px' />
+                  </Link>
+                </Box>
+              </>
             )}
           </ModalBody>
 
