@@ -56,5 +56,5 @@ jobs:
         run: cd apps/dapp
 
       - name: Run jest tests
-        run: yarn exec jest apps/dapp
+        run: yarn jest
 
