@@ -11,8 +11,6 @@ import {
 import ItemSlider from './Slider'
 import AddNewStrategyButton from './AddNewStrategyButton'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-
-import { useSorobanReact } from '@soroban-react/core'
 import { ConfirmDelpoyModal } from './ConfirmDelpoyModal'
 import { setStrategyName, Strategy } from '@/store/lib/features/strategiesStore'
 
