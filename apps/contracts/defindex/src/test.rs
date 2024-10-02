@@ -115,3 +115,4 @@ impl<'a> DeFindexVaultTest<'a> {
 mod admin;
 mod initialize;
 mod withdraw;
+mod deposit;
