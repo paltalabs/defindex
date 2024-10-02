@@ -2,10 +2,49 @@ use soroban_sdk::{vec as sorobanvec, Address, Vec};
 
 use crate::test::{create_strategy_params, DeFindexVaultTest};
 use crate::Asset;
+use crate::ContractError;
 
 #[test]
 fn deposit_amounts_desired_wrong_length() {
-    todo!();
+    
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let strategy_params = create_strategy_params(&test);
+    
+    // initialize with 2 assets
+    let assets: Vec<Asset> = sorobanvec![
+        &test.env,
+        Asset {
+            address: test.token0.address.clone(),
+            ratio: 1,
+            strategies: strategy_params.clone()
+        },
+        Asset {
+            address: test.token1.address.clone(),
+            ratio: 1,
+            strategies: strategy_params.clone()
+        }
+    ];
+
+    test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
+        &test.emergency_manager,
+        &test.fee_receiver,
+        &test.defindex_receiver,
+    );
+    let amount = 1000i128;
+    
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+    
+
+    let response = test.defindex_contract.try_deposit(
+        &sorobanvec![&test.env, amount], // wrong amount desired
+        &sorobanvec![&test.env, amount, amount], 
+        &users[0]);
+
+    assert_eq!(response, Err(Ok(ContractError::WrongAmuntsLength)));
+
 }
 
 
