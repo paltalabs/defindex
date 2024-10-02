@@ -28,6 +28,7 @@ import { WarningIcon, CheckCircleIcon } from '@chakra-ui/icons'
 import { resetStrategies, Strategy } from "@/store/lib/features/vaultStore";
 
 import { randomBytes } from "crypto";
+import { StrategyMethod, useStrategyCallback } from "@/hooks/useStrategy";
 
 interface Status {
   isSuccess: boolean,
@@ -62,15 +63,56 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     message: undefined
   });
 
+  const [loadingAssets, setLoadingAssets] = useState(true);
+  const [assets, setAssets] = useState<string[]>([]);
+
   const [deployDisabled, setDeployDisabled] = useState(true);
 
+  const strategyCallback = useStrategyCallback();
+
   useEffect(() => {
-    if (strategies.length > 0 && managerString !== "" && emergencyManagerString !== "" && feeReceiverString !== "") {
+    if (
+      strategies.length > 0
+      && managerString !== ""
+      && emergencyManagerString !== ""
+      && feeReceiverString !== ""
+      && assets.length > 0
+      && loadingAssets === false
+    ) {
       setDeployDisabled(false);
     } else {
       setDeployDisabled(true);
     }
   }, [strategies, managerString, emergencyManagerString, feeReceiverString])
+
+  useEffect(() => {
+    const fetchAssets = async () => {
+      setLoadingAssets(true);
+      try {
+        const assetsPromises = strategies.map((param) =>
+          strategyCallback(
+            param.address,
+            StrategyMethod.ASSET,
+            undefined,
+            false
+          ).then((result) => {
+            const resultScval = result as xdr.ScVal;
+            const asset = scValToNative(resultScval);
+            return asset;
+          })
+        );
+        const assetsArray = await Promise.all(assetsPromises);
+        setAssets(assetsArray);
+        setLoadingAssets(false);
+      } catch (error) {
+        console.error(error);
+        setLoadingAssets(false);
+      }
+    };
+
+    fetchAssets();
+
+  }, [strategies]);
 
   const deployDefindex = async () => {
 
@@ -92,19 +134,9 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     const manager = new Address(managerString)
     const salt = randomBytes(32)
 
-    const xlm_address = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
-
-    const tokens = [xlm_address];
     const ratios = [1];
 
-    const strategyParamsRaw = [
-      {
-        name: "Strategy 1",
-        address: "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W", //TODO: Use a deployed strategy address here
-      },
-    ];
-
-    const strategyParamsScVal = strategyParamsRaw.map((param) => {
+    const strategyParamsScVal = strategies.map((param) => {
       return xdr.ScVal.scvMap([
         new xdr.ScMapEntry({
           key: xdr.ScVal.scvSymbol('address'),
@@ -123,7 +155,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       emergencyManager.toScVal(),
       feeReceiver.toScVal(),
       manager.toScVal(),
-      xdr.ScVal.scvVec(tokens.map((token) => new Address(token).toScVal())),
+      xdr.ScVal.scvVec(assets.map((token) => new Address(token).toScVal())),
       xdr.ScVal.scvVec(ratios.map((ratio) => nativeToScVal(ratio, { type: "u32" }))),
       strategyParamsScValVec,
       nativeToScVal(salt),
