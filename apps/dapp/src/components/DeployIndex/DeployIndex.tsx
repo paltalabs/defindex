@@ -6,19 +6,18 @@ import {
   GridItem,
   Container,
   Input,
+  Text,
 } from '@chakra-ui/react'
 import ItemSlider from './Slider'
-import AddNewAdapterButton from './AddNewAdapterButton'
+import AddNewStrategyButton from './AddNewStrategyButton'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-
-import { useSorobanReact } from '@soroban-react/core'
 import { ConfirmDelpoyModal } from './ConfirmDelpoyModal'
-import { setAdapterName } from '@/store/lib/features/adaptersStore'
+import { setStrategyName, Strategy } from '@/store/lib/features/strategiesStore'
 
 export const DeployIndex = () => {
-  const dispatch = useAppDispatch()  
-  const adapters = useAppSelector(state => state.adapters.adapters)
-  const totalValues = useAppSelector(state => state.adapters.totalValues)
+  const dispatch = useAppDispatch()
+  const strategies: Strategy[] = useAppSelector(state => state.strategies.strategies)
+  const totalValues = useAppSelector(state => state.strategies.totalValues)
   const [openConfirm, setOpenConfirm] = useState<boolean>(false)
 
   const handleClose = () => {
@@ -26,7 +25,7 @@ export const DeployIndex = () => {
   }
 
   const setName = async (e: any) => {
-    await dispatch(setAdapterName(e.target.value))
+    await dispatch(setStrategyName(e.target.value))
   }
 
   return (
@@ -35,19 +34,37 @@ export const DeployIndex = () => {
       <Card variant="outline" p={16} bgColor="whiteAlpha.50">
         <Grid
           templateColumns={'repeat(12, 2fr)'}
+          templateRows={'repeat(5, 1fr)'}
           alignSelf={'end'}
           alignContent={'center'}
           mb={4}
         >
           <GridItem colStart={1} colSpan={3}>
             <Input onChange={setName} placeholder='Defindex name...'></Input>
+          </GridItem><GridItem colStart={1} colSpan={3} rowStart={3}>
+            <Text mt={4}>Manager</Text>
+          </GridItem>
+          <GridItem colStart={4} colSpan={3} rowStart={3}>
+            <Input onChange={setName} placeholder='GAFS3TLVM...'></Input>
+          </GridItem>
+          <GridItem colStart={8} colSpan={3} rowStart={3}>
+            <Text mt={4}>Emergency Manager</Text>
+          </GridItem>
+          <GridItem colStart={11} colSpan={3} rowStart={3}>
+            <Input onChange={setName} placeholder='GAFS3TLVM...'></Input>
+          </GridItem>
+          <GridItem colStart={1} colSpan={3} rowStart={5}>
+            <Text mt={4}>Fee Receiver</Text>
+          </GridItem>
+          <GridItem colStart={4} colSpan={3} rowStart={5}>
+            <Input onChange={setName} placeholder='GAFS3TLVM...'></Input>
           </GridItem>
           <GridItem colStart={12}>
-            <AddNewAdapterButton />
+            <AddNewStrategyButton />
           </GridItem>
         </Grid>
-        {adapters.map((adapter, index) => (
-          <ItemSlider key={index} name={adapter.name} address={adapter.address} value={adapter.value} />
+        {strategies.map((strategy, index) => (
+          <ItemSlider key={index} name={strategy.name} address={strategy.address} value={strategy.value} />
         ))}
         <Grid templateColumns={'repeat(8, 2fr)'} dir='reverse'>
           <GridItem colStart={8} textAlign={'end'}>
@@ -55,7 +72,7 @@ export const DeployIndex = () => {
           </GridItem>
         </Grid>
         <Button
-          isDisabled={totalValues! > 100 || adapters.length == 0 || totalValues == 0}
+          isDisabled={totalValues! > 100 || strategies.length == 0 || totalValues == 0}
           isLoading={openConfirm}
           colorScheme="green"
           size="lg"
