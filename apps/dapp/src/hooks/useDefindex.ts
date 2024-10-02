@@ -7,6 +7,9 @@ export enum DefindexMethod {
     DEPOSIT = "deposit",
     BALANCE = "balance",
     WITHDRAW = "withdraw",
+    GETMANAGER = "get_manager",
+    GETEMERGENCYMANAGER = "get_emergency_manager",
+    GETFEERECEIVER = "get_fee_receiver",
 }
 
 const isObject = (val: unknown) => typeof val === 'object' && val !== null && !Array.isArray(val);

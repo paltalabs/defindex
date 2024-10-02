@@ -1,4 +1,5 @@
 import { shortenAddress } from '@/helpers/shortenAddress'
+import { DefindexMethod, useDefindexCallback } from '@/hooks/useDefindex'
 import { fetchDefaultAddresses, IndexData } from '@/store/lib/features/walletStore'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { ArrowLeftIcon, SettingsIcon } from '@chakra-ui/icons'
@@ -18,6 +19,7 @@ import {
   IconButton,
 } from '@chakra-ui/react'
 import { useSorobanReact } from '@soroban-react/core'
+import { scValToNative } from '@stellar/stellar-sdk'
 import { useEffect, useState } from 'react'
 
 const SkeletonRow = () => {
@@ -48,12 +50,41 @@ export const AllIndexes = ({
   handleOpenDeployIndex: (method: string, args?: any) => any,
   handleOpenDeposit: (method: string, args?: any) => any
 }) => {
-
+  const defindex = useDefindexCallback()
   const { activeChain, address } = useSorobanReact()
   const dispatch = useAppDispatch();
   const Indexes = useAppSelector(state => state.wallet.indexes)
   const isLoading = Indexes.isLoading
   const createdIndexes = Indexes.createdIndexes
+
+  const getRoles = async () => {
+    const selectedIndex = 'CD5NL55J4JYMALHCPIF3YADCWDRJNLM3XOFMZ6IOH5K4AOGINB4VB3BP'
+    const manager: any = await defindex(
+      DefindexMethod.GETMANAGER,
+      selectedIndex,
+      undefined,
+      false,
+    )
+    console.log('✨Manager', manager)
+    const parsedManager = scValToNative(manager)
+    console.log('✨Manager', parsedManager)
+    /*  const emergencyManager: any = await defindex(
+       DefindexMethod.GETEMERGENCYMANAGER,
+       selectedIndex,
+       undefined,
+       false,
+     )
+     const parsedEmergencyManager = scValToNative(emergencyManager.returnValue)
+     console.log('✨Emergency Manager', parsedEmergencyManager)
+     const feeReceiver: any = await defindex(
+       DefindexMethod.GETFEERECEIVER,
+       selectedIndex,
+       undefined,
+       false,
+     )
+     const parsedFeeReceiver = scValToNative(feeReceiver.returnValue)
+     console.log('✨Fee reciever', parsedFeeReceiver) */
+  }
   useEffect(() => {
     dispatch(fetchDefaultAddresses(activeChain?.networkPassphrase!))
   }, [activeChain?.networkPassphrase]);
@@ -130,6 +161,16 @@ export const AllIndexes = ({
                     size='sm'
                     icon={<SettingsIcon />}
                     onClick={() => handleOpenDeployIndex('edit_index', index)}
+                  />
+                </Tooltip>
+                <Tooltip hasArrow label={'GetRole'} rounded={'lg'}>
+                  <IconButton
+                    mx={1}
+                    colorScheme='teal'
+                    aria-label='rebalance'
+                    size='sm'
+                    icon={<SettingsIcon />}
+                    onClick={() => getRoles()}
                   />
                 </Tooltip>
               </Td>
