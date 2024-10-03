@@ -112,7 +112,7 @@ impl VaultTrait for DeFindexVault {
         // assets lenght should be equal to amounts_desired and amounts_min length
         let assets_length = assets.len();
         if assets_length != amounts_desired.len() || assets_length != amounts_min.len() {
-            panic!("Invalid amounts"); // TODO transform panic in error
+            panic_with_error!(&e, ContractError::WrongAmuntsLength);
         }
 
         // for every amount desired, check non negative
