@@ -21,7 +21,7 @@ import { setEmergencyManager, setFeeReceiver, setManager } from '@/store/lib/fea
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 
 
-export const IndexPreview = ({ data }: { data: ChartData[] }) => {
+export const VaultPreview = ({ data }: { data: ChartData[] }) => {
   const dispatch = useAppDispatch()
   const handleManagerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setManager(event.target.value))

@@ -2,7 +2,7 @@ import { Stack, Step, StepIcon, StepIndicator, Stepper, StepSeparator, StepStatu
 import { WarningIcon } from '@chakra-ui/icons'
 
 const steps = [
-  { title: 'Review Index', description: 'Review index' },
+  { title: 'Review Vault', description: 'Review vault' },
   { title: 'Sign transaction', description: 'Sign transaction' },
   { title: 'Wait for confirmation', description: 'Result' },
 ]

@@ -1,6 +1,6 @@
 import { shortenAddress } from '@/helpers/shortenAddress'
-import { DefindexMethod, useDefindexCallback } from '@/hooks/useDefindex'
-import { fetchDefaultAddresses, IndexData } from '@/store/lib/features/walletStore'
+import { VaultMethod, useVaultCallback } from '@/hooks/useVault'
+import { fetchDefaultAddresses, VaultData } from '@/store/lib/features/walletStore'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { ArrowLeftIcon, SettingsIcon } from '@chakra-ui/icons'
 import {
@@ -43,25 +43,25 @@ const SkeletonRow = () => {
     </Tr>
   )
 }
-export const AllIndexes = ({
-  handleOpenDeployIndex,
+export const AllVaults = ({
+  handleOpenDeployVault,
   handleOpenDeposit
 }: {
-  handleOpenDeployIndex: (method: string, args?: any) => any,
+  handleOpenDeployVault: (method: string, args?: any) => any,
   handleOpenDeposit: (method: string, args?: any) => any
 }) => {
-  const defindex = useDefindexCallback()
+  const vault = useVaultCallback()
   const { activeChain, address } = useSorobanReact()
   const dispatch = useAppDispatch();
-  const Indexes = useAppSelector(state => state.wallet.indexes)
-  const isLoading = Indexes.isLoading
-  const createdIndexes = Indexes.createdIndexes
+  const vaults = useAppSelector(state => state.wallet.vaults)
+  const isLoading = vaults.isLoading
+  const createdVaults = vaults.createdVaults
 
   const getRoles = async () => {
-    const selectedIndex = 'CD5NL55J4JYMALHCPIF3YADCWDRJNLM3XOFMZ6IOH5K4AOGINB4VB3BP'
-    const manager: any = await defindex(
-      DefindexMethod.GETMANAGER,
-      selectedIndex,
+    const selectedVault = 'CD5NL55J4JYMALHCPIF3YADCWDRJNLM3XOFMZ6IOH5K4AOGINB4VB3BP'
+    const manager: any = await vault(
+      VaultMethod.GETMANAGER,
+      selectedVault,
       undefined,
       false,
     )
@@ -109,26 +109,26 @@ export const AllIndexes = ({
           <SkeletonRow />
           <SkeletonRow />
         </Tbody>}
-        {(!isLoading && createdIndexes?.length != undefined) && <Tbody>
-          {createdIndexes.map((index: IndexData, i: number) => (
+        {(!isLoading && createdVaults?.length != undefined) && <Tbody>
+          {createdVaults.map((vault: VaultData, i: number) => (
             <Tr key={i}>
-              <Td>{index.name ? index.name : index.address}</Td>
+              <Td>{vault.name ? vault.name : vault.address}</Td>
               <Td sx={{ cursor: 'pointer' }} textAlign={'center'}>
                 <Tooltip
                   placement='bottom'
-                  label={index.address}
+                  label={vault.address}
                   textAlign={'center'}
                   rounded={'lg'}>
-                  {index.address ? shortenAddress(index.address) : '-'}
+                  {vault.address ? shortenAddress(vault.address) : '-'}
                 </Tooltip>
               </Td>
-              <Td textAlign={'center'}>${index.balance}</Td>
-              <Td textAlign={'center'}>{index.name?.includes('Blend USDC') ? '200' : '400'}</Td>
+              <Td textAlign={'center'}>${vault.balance}</Td>
+              <Td textAlign={'center'}>{vault.name?.includes('Blend USDC') ? '200' : '400'}</Td>
               <Td textAlign={'center'}>
                 <Stat>
                   <StatHelpText>
                     <StatArrow type='increase' />
-                    {index.name?.includes('Blend USDC') ? '11.31' : '23.36'}%
+                    {vault.name?.includes('Blend USDC') ? '11.31' : '23.36'}%
                   </StatHelpText>
                 </Stat>
               </Td>
@@ -140,7 +140,7 @@ export const AllIndexes = ({
                     aria-label='deposit'
                     size='sm'
                     icon={<ArrowLeftIcon __css={{ transform: 'rotate(90deg)' }} />}
-                    onClick={() => handleOpenDeposit('deposit', index)}
+                    onClick={() => handleOpenDeposit('deposit', vault)}
                   />
                 </Tooltip>
                 <Tooltip hasArrow label={'Withdraw'} rounded={'lg'}>
@@ -150,7 +150,7 @@ export const AllIndexes = ({
                     aria-label='withdraw'
                     size='sm'
                     icon={<ArrowLeftIcon __css={{ transform: 'rotate(-90deg)' }} />}
-                    onClick={() => handleOpenDeposit('withdraw', index)}
+                    onClick={() => handleOpenDeposit('withdraw', vault)}
                   />
                 </Tooltip>
                 <Tooltip hasArrow label={'Rebalance'} rounded={'lg'}>
@@ -160,7 +160,7 @@ export const AllIndexes = ({
                     aria-label='rebalance'
                     size='sm'
                     icon={<SettingsIcon />}
-                    onClick={() => handleOpenDeployIndex('edit_index', index)}
+                    onClick={() => handleOpenDeployVault('edit_vault', vault)}
                   />
                 </Tooltip>
                 <Tooltip hasArrow label={'GetRole'} rounded={'lg'}>
@@ -183,4 +183,4 @@ export const AllIndexes = ({
 }
 
 
-export default AllIndexes
+export default AllVaults

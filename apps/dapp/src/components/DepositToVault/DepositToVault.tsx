@@ -1,4 +1,4 @@
-import { DefindexMethod, useDefindexCallback } from '@/hooks/useDefindex'
+import { VaultMethod, useVaultCallback } from '@/hooks/useVault'
 import { useAppSelector } from '@/store/lib/storeHooks'
 import {
   Button,
@@ -15,17 +15,17 @@ import { useSorobanReact } from '@soroban-react/core'
 import { Address, nativeToScVal, scValToNative, xdr } from '@stellar/stellar-sdk'
 import React, { useEffect, useState } from 'react'
 
-export const DepositToIndex = () => {
+export const DepositToVault = () => {
   const [amount, set_amount] = useState<number>(0)
   const [balance, set_balance] = useState<number>(0)
   const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const { address } = useSorobanReact();
-  const defindex = useDefindexCallback()
+  const vault = useVaultCallback()
 
-  const selectedIndex = useAppSelector(state => state.wallet.indexes.selectedIndex)
+  const selectedIndex = useAppSelector(state => state.wallet.vaults.selectedVault)
 
-  const depositDefindex = async () => {
+  const depositToVault = async () => {
     if (!address || !amount) return;
 
     const depositParams: xdr.ScVal[] = [
@@ -34,8 +34,8 @@ export const DepositToIndex = () => {
     ];
 
     console.log('deploying Defindex')
-    const result = await defindex(
-      DefindexMethod.DEPOSIT,
+    const result = await vault(
+      VaultMethod.DEPOSIT,
       selectedIndex?.address!,
       depositParams,
       true,
@@ -45,7 +45,7 @@ export const DepositToIndex = () => {
     return result;
   }
 
-  const withdrawDefindex = async () => {
+  const withdrawVault = async () => {
     if (!address) return;
 
     const withdrawParams: xdr.ScVal[] = [
@@ -53,8 +53,8 @@ export const DepositToIndex = () => {
     ];
 
     console.log('withdraw Defindex')
-    const result = await defindex(
-      DefindexMethod.WITHDRAW,
+    const result = await vault(
+      VaultMethod.WITHDRAW,
       selectedIndex?.address!,
       withdrawParams,
       true,
@@ -69,26 +69,26 @@ export const DepositToIndex = () => {
     console.log(selectedIndex)
   }, [selectedIndex, isLoading])
 
-/*   const getBalance = async () => {
-    if (!address) return;
-    if (defindex_address.length == 56) {
-      const balanceParams: xdr.ScVal[] = [
-        new Address(address).toScVal()
-      ];
-
-      console.log('Defindex balance')
-      const result: any = await defindex(
-        DefindexMethod.BALANCE,
-        defindex_address,
-        balanceParams,
-        false,
-      )
-      const nativeResult = scValToNative(result)
-      const sum = nativeResult.reduce((acc: number, val: number) => Number(acc) + Number(val), 0);
-      const parsedResult = sum / Math.pow(10, 7)
-      set_balance(parsedResult)
-    }
-  } */
+  /*   const getBalance = async () => {
+      if (!address) return;
+      if (defindex_address.length == 56) {
+        const balanceParams: xdr.ScVal[] = [
+          new Address(address).toScVal()
+        ];
+  
+        console.log('Defindex balance')
+        const result: any = await defindex(
+          VaultMethod.BALANCE,
+          defindex_address,
+          balanceParams,
+          false,
+        )
+        const nativeResult = scValToNative(result)
+        const sum = nativeResult.reduce((acc: number, val: number) => Number(acc) + Number(val), 0);
+        const parsedResult = sum / Math.pow(10, 7)
+        set_balance(parsedResult)
+      }
+    } */
 
   const setAmount = (e: any) => {
     if (Number.isNaN(e)) return;
@@ -125,7 +125,7 @@ export const DepositToIndex = () => {
         </Grid>
 
 
-        <Button isDisabled={amount < 0.0000001} my={4} colorScheme='green' onClick={depositDefindex}>{selectedIndex?.method === 'deposit' ? 'Deposit' : 'Withdraw'}</Button>
+        <Button isDisabled={amount < 0.0000001} my={4} colorScheme='green' onClick={depositToVault}>{selectedIndex?.method === 'deposit' ? 'Deposit' : 'Withdraw'}</Button>
         {/* <Button isDisabled={defindex_address.length < 56} my={4} colorScheme='green' onClick={depositDefindex}>Deposit</Button>
         <Button isDisabled={defindex_address.length < 56} my={4} colorScheme='blue' onClick={withdrawDefindex}>Withdraw</Button> */}
       </Card>

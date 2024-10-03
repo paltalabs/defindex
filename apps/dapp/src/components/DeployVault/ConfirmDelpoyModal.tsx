@@ -21,9 +21,9 @@ import {
   scValToNative,
   xdr,
 } from "@stellar/stellar-sdk";
-import { pushIndex } from '@/store/lib/features/walletStore'
+import { pushVault } from '@/store/lib/features/walletStore'
 import { useFactoryCallback, FactoryMethod } from '@/hooks/useFactory'
-import { IndexPreview } from "./IndexPreview";
+import { VaultPreview } from "./VaultPreview";
 import { DeploySteps } from "./DeploySteps";
 import { useEffect, useState } from "react";
 import { WarningIcon, CheckCircleIcon, ExternalLinkIcon } from '@chakra-ui/icons'
@@ -193,13 +193,13 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     }
     console.log(result.txHash)
     const parsedResult = scValToNative(result.returnValue);
-    dispatch(pushIndex(parsedResult));
+    dispatch(pushVault(parsedResult));
     setActiveStep(3);
     setStatus({
       ...status,
       isSuccess: true,
       hasError: false,
-      message: 'Index deployed successfully.',
+      message: 'DeFindex deployed successfully.',
       txHash: result.txHash
     });
     return result;
@@ -265,7 +265,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
           <ModalBody>
             <DeploySteps activeStep={activeStep} hasError={status.hasError} />
             {activeStep == 0 && (
-              <IndexPreview data={chartData} />
+              <VaultPreview data={chartData} />
             )}
             {activeStep == 1 && (
               <Box textAlign={'center'}>

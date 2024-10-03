@@ -2,7 +2,7 @@
   {
     "network": "testnet",
     "factory": "CCU3FB55SFRFMQORBBERXW2XVFFXTHW3YUIB5UZ267FDCIFXJPQ2WQBF",
-    "indexes": [
+    "vaults": [
       {
         "address": "CD5NL55J4JYMALHCPIF3YADCWDRJNLM3XOFMZ6IOH5K4AOGINB4VB3BP",
         "balance": 100651,
@@ -44,7 +44,7 @@
   {
     "network": "public",
     "factory": "",
-    "indexes": [
+    "vaults": [
       {
         "address": "CDTSI3ORR5TDTKV7B3JQM5YZ4UAM24C2ZG2OOQOXPFJ5XS7JBOKUNJZC",
         "balance": 100651,

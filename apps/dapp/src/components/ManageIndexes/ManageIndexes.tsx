@@ -13,28 +13,28 @@ import {
   ModalOverlay
 } from "@chakra-ui/react"
 import { SearchIcon } from "@chakra-ui/icons"
-import AllIndexes from "./AllIndexes"
+import AllVaults from "./AllVaults"
 import { useState } from "react"
-import { DeployIndex } from "../DeployIndex/DeployIndex"
+import { DeployVault } from "../DeployVault/DeployVault"
 import { useAppDispatch } from "@/store/lib/storeHooks"
 import { pushStrategy, resetStrategies } from "@/store/lib/features/vaultStore"
 import { shortenAddress } from "@/helpers/shortenAddress"
-import { DepositToIndex } from "../DepositToIndex/DepositToIndex"
-import { setSelectedIndex } from "@/store/lib/features/walletStore"
+import { DepositToVault } from "../DepositToVault/DepositToVault"
+import { setSelectedVault } from "@/store/lib/features/walletStore"
 import ConnectButton from "../Wallet/ConnectButton"
 import { useSorobanReact } from "@soroban-react/core"
 
-export const ManageIndexes = () => {
+export const ManageVaultes = () => {
   const { address } = useSorobanReact()
   const [modalStatus, setModalStatus] = useState<{
-    deployIndex: {
+    deployVault: {
       isOpen: boolean
     },
     deposit: {
       isOpen: boolean
     }
   }>({
-    deployIndex: {
+    deployVault: {
       isOpen: false
     },
     deposit: {
@@ -42,13 +42,13 @@ export const ManageIndexes = () => {
     }
   })
   const dispatch = useAppDispatch()
-  const handleOpenDeployIndex = async (method: string, args?: any) => {
+  const handleOpenDeployVault = async (method: string, args?: any) => {
     switch (method) {
-      case 'create_defindex':
+      case 'create_vault':
         await dispatch(resetStrategies())
-        setModalStatus({ ...modalStatus, deployIndex: { isOpen: true } })
+        setModalStatus({ ...modalStatus, deployVault: { isOpen: true } })
         break
-      case 'edit_index':
+      case 'edit_vault':
         await dispatch(resetStrategies())
         for (const item of args.shares) {
           const newStrategy = {
@@ -58,7 +58,7 @@ export const ManageIndexes = () => {
           }
           await dispatch(pushStrategy(newStrategy))
         }
-        setModalStatus({ ...modalStatus, deployIndex: { isOpen: true } })
+        setModalStatus({ ...modalStatus, deployVault: { isOpen: true } })
         break
     }
   }
@@ -67,12 +67,12 @@ export const ManageIndexes = () => {
     switch (method) {
       case 'deposit':
         setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
-        await dispatch(setSelectedIndex({ ...args, method: 'deposit' }))
+        await dispatch(setSelectedVault({ ...args, method: 'deposit' }))
         console.log(args)
         break
       case 'withdraw':
         setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
-        await dispatch(setSelectedIndex({ ...args, method: 'withdraw' }))
+        await dispatch(setSelectedVault({ ...args, method: 'withdraw' }))
         console.log(args)
         break
     }
@@ -94,7 +94,7 @@ export const ManageIndexes = () => {
           colEnd={8}>
           <InputGroup>
             <Input
-              placeholder='Index address'
+              placeholder='Vault address'
               boxShadow='md'
               rounded={18}
             />
@@ -102,7 +102,7 @@ export const ManageIndexes = () => {
               <IconButton
                 rounded={32}
                 size={'sm'}
-                aria-label="search-index"
+                aria-label="search-Vault"
                 colorScheme="green"
                 variant={'ghost'}
                 icon={<SearchIcon />} />
@@ -115,25 +115,25 @@ export const ManageIndexes = () => {
             {!!address && <Button
               rounded={18}
               sx={{ px: 6 }}
-              aria-label="add-index"
+              aria-label="add-Vault"
               colorScheme="green"
-              onClick={() => handleOpenDeployIndex('create_defindex')}
+              onClick={() => handleOpenDeployVault('create_defVault')}
             >
-              Add Index
+              Add Vault
             </Button>}
           </Container>
         </GridItem>
         <GridItem colSpan={12} colStart={1} colEnd={13}>
-          <AllIndexes handleOpenDeployIndex={handleOpenDeployIndex} handleOpenDeposit={handleOpenDeposit} />
+          <AllVaults handleOpenDeployVault={handleOpenDeployVault} handleOpenDeposit={handleOpenDeposit} />
         </GridItem>
       </Grid>
       <Modal
-        isOpen={modalStatus.deployIndex.isOpen}
-        onClose={() => setModalStatus({ ...modalStatus, deployIndex: { isOpen: false } })}
+        isOpen={modalStatus.deployVault.isOpen}
+        onClose={() => setModalStatus({ ...modalStatus, deployVault: { isOpen: false } })}
       >
         <ModalOverlay />
         <ModalContent minW={{ sm: '100%', md: '80%', lg: '60%', }}>
-          <DeployIndex />
+          <DeployVault />
         </ModalContent>
       </Modal>
       <Modal
@@ -142,11 +142,11 @@ export const ManageIndexes = () => {
       >
         <ModalOverlay />
         <ModalContent minW={{ sm: '100%', md: '80%', lg: '60%', }}>
-          <DepositToIndex />
+          <DepositToVault />
         </ModalContent>
       </Modal>
     </>
   )
 }
 
-export default ManageIndexes
+export default ManageVaultes
