@@ -1,3 +1,4 @@
+import React from "react"
 import { Button } from '@chakra-ui/react'
 import { useSorobanReact } from '@soroban-react/core'
 import { ConnectWalletModal } from './ConnectWalletModal'
@@ -16,7 +17,7 @@ export const ConnectButton = () => {
     <>
 
       <ConnectWalletModal isOpen={isModalOpen} onClose={handleClose} />
-      <Button colorScheme='green' onClick={handleClick}>
+      <Button sx={{ mx: 4, px: 6 }} colorScheme='green' onClick={handleClick} rounded={18}>
         {address ? 'Disconnect' : 'Connect'}
       </Button>
     </>

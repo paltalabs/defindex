@@ -1,8 +1,10 @@
+import React from "react";
 import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
 import {
   Box,
   Button,
   CircularProgress,
+  Link,
   Modal,
   ModalBody,
   ModalCloseButton,
@@ -24,15 +26,19 @@ import { useFactoryCallback, FactoryMethod } from '@/hooks/useFactory'
 import { IndexPreview } from "./IndexPreview";
 import { DeploySteps } from "./DeploySteps";
 import { useEffect, useState } from "react";
-import { WarningIcon, CheckCircleIcon } from '@chakra-ui/icons'
-import { resetAdapters } from "@/store/lib/features/adaptersStore";
+import { WarningIcon, CheckCircleIcon, ExternalLinkIcon } from '@chakra-ui/icons'
+import { Strategy } from "@/store/lib/features/strategiesStore";
+import { useSorobanReact } from "@soroban-react/core";
 
 import { randomBytes } from "crypto";
+
 
 interface Status {
   isSuccess: boolean,
   hasError: boolean,
   message: string | undefined,
+  network: "public" | "testnet" | undefined,
+  txHash: string | undefined
 }
 
 export interface ChartData {
@@ -47,15 +53,19 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   const { goToNext, setActiveStep, activeStep } = useSteps({
     index: 0
   });
+  const sorobanContext = useSorobanReact();
+  const { activeChain } = sorobanContext;
   const factory = useFactoryCallback();
-  const adapters = useAppSelector(state => state.adapters.adapters);
-  const indexName = useAppSelector(state => state.adapters.adapterName)
+  const strategies: Strategy[] = useAppSelector(state => state.strategies.strategies);
+  const indexName = useAppSelector(state => state.strategies.strategyName)
   const dispatch = useAppDispatch();
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [status, setStatus] = useState<Status>({
     isSuccess: false,
     hasError: false,
-    message: undefined
+    network: undefined,
+    message: undefined,
+    txHash: undefined
   });
   const deployDefindex = async () => {
 
@@ -117,39 +127,45 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       setStatus({
         ...status,
         hasError: true,
-        message: e.toString()
+        message: e.toString(),
+        txHash: undefined,
       })
       return
     }
+    console.log(result.txHash)
     const parsedResult = scValToNative(result.returnValue);
     dispatch(pushIndex(parsedResult));
     setActiveStep(3);
     setStatus({
+      ...status,
       isSuccess: true,
       hasError: false,
-      message: 'Index deployed successfully.'
+      message: 'Index deployed successfully.',
+      txHash: result.txHash
     });
     return result;
   }
 
   const handleCloseModal = async () => {
     setStatus({
+      ...status,
       isSuccess: false,
       hasError: false,
-      message: undefined
+      message: undefined,
+      txHash: undefined
     });
     setActiveStep(0);
-    await dispatch(resetAdapters())
+    //await dispatch(resetStrategies())
     onClose();
   }
 
   useEffect(() => {
-    const newChartData: ChartData[] = adapters.map((adapter: any, index: number) => {
+    const newChartData: ChartData[] = strategies.map((strategy: any, index: number) => {
       return {
         id: index,
-        label: adapter.name,
-        address: adapter.address,
-        value: adapter.value,
+        label: strategy.name,
+        address: strategy.address,
+        value: strategy.value,
       }
     });
     const total = newChartData.reduce((acc: number, curr: any) => acc + curr.value, 0)
@@ -167,10 +183,10 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       setChartData(newChartData);
       return;
     }
-  }, [adapters]);
+  }, [strategies]);
 
   const autoCloseModal = async () => {
-    await new Promise(resolve => setTimeout(resolve, 5000))
+    await new Promise(resolve => setTimeout(resolve, 30000))
     handleCloseModal();
   }
 
@@ -179,6 +195,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       autoCloseModal();
     }
   }, [status.isSuccess, status.hasError])
+
   return (
     <>
       <Modal isOpen={isOpen} onClose={handleCloseModal} isCentered>
@@ -203,18 +220,25 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
                 <Text mt={4}>{`${status.message}`}</Text>
               </Box>
             )}
-            {(activeStep == 3 && !status.hasError) && (
-              <Box mt={8} textAlign={'center'}>
-                <CheckCircleIcon boxSize={'4em'} color={'green'} />
-                <Text mt={4}>{`${status.message}`}</Text>
-              </Box>
+            {(activeStep == 3 && status.isSuccess === true && status.txHash != undefined) && (
+              <>
+                <Box mt={8} textAlign={'center'}>
+                  <CheckCircleIcon boxSize={'4em'} color={'green'} />
+                  <Text mt={4}>{`${status.message}`}</Text>
+                </Box>
+                <Box mt={8} textAlign={'center'}>
+                  <Link mt={4} href={`https://stellar.expert/explorer/${activeChain?.name?.toLowerCase()}/tx/${status.txHash}`} isExternal>
+                    View on explorer <ExternalLinkIcon mx='2px' />
+                  </Link>
+                </Box>
+              </>
             )}
           </ModalBody>
 
           <ModalFooter>
             {(activeStep == 0 && !status.hasError) && (
               <Button
-                aria-label='add_adapter'
+                aria-label='add_strategy'
                 colorScheme='green'
                 onClick={deployDefindex}>
                 Deploy

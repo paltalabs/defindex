@@ -2,7 +2,7 @@ import { SorobanContextType, useSorobanReact } from "@soroban-react/core";
 import { useCallback, useEffect, useState } from "react";
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { TxResponse, contractInvoke } from '@soroban-react/contracts';
-import configs from '@/constants/constants.json'
+import { getRemoteConfig } from "@/helpers/getRemoteConfig";
 import { fetchFactoryAddress } from "@/utils/factory";
 
 export enum FactoryMethod {
@@ -19,7 +19,7 @@ export const useFactory = () => {
   useEffect(() => {
     if (!sorobanContext) return;
 
-    if (activeChain?.id !== 'mainnet' && activeChain?.id !== 'testnet') {
+    if (activeChain?.name?.toLowerCase() !== 'public' && activeChain?.name?.toLowerCase() !== 'testnet') {
       throw new Error(`Invalid network when fetching factory address: ${activeChain?.id}. It should be mainnet or testnet`);
     }
 
