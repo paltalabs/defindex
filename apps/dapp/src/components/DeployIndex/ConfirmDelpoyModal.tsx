@@ -13,7 +13,7 @@ import {
   ModalHeader,
   ModalOverlay,
   Text,
-  useSteps
+  useSteps,
 } from "@chakra-ui/react"
 import {
   Address,
@@ -27,11 +27,11 @@ import { IndexPreview } from "./IndexPreview";
 import { DeploySteps } from "./DeploySteps";
 import { useEffect, useState } from "react";
 import { WarningIcon, CheckCircleIcon, ExternalLinkIcon } from '@chakra-ui/icons'
-import { Strategy } from "@/store/lib/features/strategiesStore";
+import { Strategy } from "@/store/lib/features/vaultStore";
 import { useSorobanReact } from "@soroban-react/core";
 
 import { randomBytes } from "crypto";
-
+import { StrategyMethod, useStrategyCallback } from "@/hooks/useStrategy";
 
 interface Status {
   isSuccess: boolean,
@@ -56,8 +56,12 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   const sorobanContext = useSorobanReact();
   const { activeChain } = sorobanContext;
   const factory = useFactoryCallback();
-  const strategies: Strategy[] = useAppSelector(state => state.strategies.strategies);
-  const indexName = useAppSelector(state => state.strategies.strategyName)
+  const strategies: Strategy[] = useAppSelector(state => state.newVault.strategies);
+  const indexName = useAppSelector(state => state.newVault.name)
+  const managerString = useAppSelector(state => state.newVault.manager)
+  const emergencyManagerString = useAppSelector(state => state.newVault.emergencyManager)
+  const feeReceiverString = useAppSelector(state => state.newVault.feeReceiver)
+
   const dispatch = useAppDispatch();
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [status, setStatus] = useState<Status>({
@@ -67,26 +71,81 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     message: undefined,
     txHash: undefined
   });
+
+  const [loadingAssets, setLoadingAssets] = useState(true);
+  const [assets, setAssets] = useState<string[]>([]);
+
+  const [deployDisabled, setDeployDisabled] = useState(true);
+
+  const strategyCallback = useStrategyCallback();
+
+  useEffect(() => {
+    if (
+      strategies.length > 0
+      && managerString !== ""
+      && emergencyManagerString !== ""
+      && feeReceiverString !== ""
+      && assets.length > 0
+      && loadingAssets === false
+    ) {
+      setDeployDisabled(false);
+    } else {
+      setDeployDisabled(true);
+    }
+  }, [strategies, managerString, emergencyManagerString, feeReceiverString])
+
+  useEffect(() => {
+    const fetchAssets = async () => {
+      setLoadingAssets(true);
+      try {
+        const assetsPromises = strategies.map((param) =>
+          strategyCallback(
+            param.address,
+            StrategyMethod.ASSET,
+            undefined,
+            false
+          ).then((result) => {
+            const resultScval = result as xdr.ScVal;
+            const asset = scValToNative(resultScval);
+            return asset;
+          })
+        );
+        const assetsArray = await Promise.all(assetsPromises);
+        setAssets(assetsArray);
+        setLoadingAssets(false);
+      } catch (error) {
+        console.error(error);
+        setLoadingAssets(false);
+      }
+    };
+
+    fetchAssets();
+
+  }, [strategies]);
+
   const deployDefindex = async () => {
 
-    const emergencyManager = new Address('GAFS3TLVM2GO66QMOZJHJFP463K3ZKAPGU23WBMCPPFXIG7OUDMDDNTM')
-    const feeReceiver = new Address('GCWCI55WCOFF73ZL7NQAKJG4TTFPLE4Y23Z7KDXYLSF5Y3LX5XH7UNES')
-    const manager = new Address('GCRSJ7BPRVHE3SCQMS7XRDPAPCUYNZ4EK5X7OA5UIUDTSN7DP2SLMTQJ')
+    if (managerString === "" || managerString === undefined) {
+      console.log("Set manager please")
+      return
+    }
+    if (emergencyManagerString === "" || emergencyManagerString === undefined) {
+      console.log("Set emergency manager please")
+      return
+    }
+    if (feeReceiverString === "" || feeReceiverString === undefined) {
+      console.log("Set fee receiver please")
+      return
+    }
+
+    const emergencyManager = new Address(emergencyManagerString)
+    const feeReceiver = new Address(feeReceiverString)
+    const manager = new Address(managerString)
     const salt = randomBytes(32)
 
-    const xlm_address = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
-
-    const tokens = [xlm_address];
     const ratios = [1];
 
-    const strategyParamsRaw = [
-      {
-        name: "Strategy 1",
-        address: "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W", //TODO: Use a deployed strategy address here
-      },
-    ];
-
-    const strategyParamsScVal = strategyParamsRaw.map((param) => {
+    const strategyParamsScVal = strategies.map((param) => {
       return xdr.ScVal.scvMap([
         new xdr.ScMapEntry({
           key: xdr.ScVal.scvSymbol('address'),
@@ -105,7 +164,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       emergencyManager.toScVal(),
       feeReceiver.toScVal(),
       manager.toScVal(),
-      xdr.ScVal.scvVec(tokens.map((token) => new Address(token).toScVal())),
+      xdr.ScVal.scvVec(assets.map((token) => new Address(token).toScVal())),
       xdr.ScVal.scvVec(ratios.map((ratio) => nativeToScVal(ratio, { type: "u32" }))),
       strategyParamsScValVec,
       nativeToScVal(salt),
@@ -238,6 +297,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
           <ModalFooter>
             {(activeStep == 0 && !status.hasError) && (
               <Button
+                isDisabled={deployDisabled}
                 aria-label='add_strategy'
                 colorScheme='green'
                 onClick={deployDefindex}>
