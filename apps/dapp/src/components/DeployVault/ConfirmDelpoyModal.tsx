@@ -191,7 +191,6 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       })
       return
     }
-    console.log(result.txHash)
     const parsedResult = scValToNative(result.returnValue);
     dispatch(pushVault(parsedResult));
     setActiveStep(3);
