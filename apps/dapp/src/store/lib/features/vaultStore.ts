@@ -10,22 +10,28 @@ export interface Strategy {
   name?: string;
 }
 
-export interface StrategiesState {
+export interface NewVaultState {
   strategies: Strategy[];
-  strategyName: string;
+  name: string;
   totalValues?: number;
+  emergencyManager?: string;
+  manager?: string;
+  feeReceiver?: string;
 }
 
 // Define the initial state using that type
-const initialState: StrategiesState = {
+const initialState: NewVaultState = {
   strategies: [
     {
       address: "",
       value: 0
     }
   ],
-  strategyName: "",
-  totalValues: 0
+  name: "",
+  totalValues: 0,
+  emergencyManager: "",
+  manager: "",
+  feeReceiver: "",
 }
 
 //Filtrar Strategies por network y retornar array de Strategies
@@ -33,10 +39,10 @@ export const getDefaultStrategies = async (network: string) => {
   try {
     const remoteStrategies = await getRemoteConfig(network)
     const strategies: Strategy[] = []
-    for(let strategy in remoteStrategies.ids){
-      if(strategy.includes('strategy')){
+    for (let strategy in remoteStrategies.ids) {
+      if (strategy.includes('strategy')) {
         const parsedName = strategy.split('_')[0]
-        if(!parsedName) continue
+        if (!parsedName) continue
         const prettierName = parsedName.charAt(0).toUpperCase() + parsedName.slice(1)
         strategies.push({
           address: remoteStrategies.ids[strategy],
@@ -54,7 +60,7 @@ export const getDefaultStrategies = async (network: string) => {
 
 
 
-export const strategiesSlice = createSlice({
+export const newVaultSlice = createSlice({
   name: 'Strategies',
   initialState,
   reducers: {
@@ -64,7 +70,7 @@ export const strategiesSlice = createSlice({
     },
     resetStrategies: (state) => {
       state.strategies = []
-      state.strategyName = ""
+      state.name = ""
       state.totalValues = 0
     },
     removeStrategy: (state, action: PayloadAction<Strategy>) => {
@@ -94,9 +100,18 @@ export const strategiesSlice = createSlice({
       })
       state.totalValues = state.strategies.reduce((acc, Strategy) => acc + Strategy.value, 0)
     },
-    setStrategyName: ((state, action: PayloadAction<string>) => {
-      state.strategyName = action.payload;
-    })
+    setName: ((state, action: PayloadAction<string>) => {
+      state.name = action.payload;
+    }),
+    setManager: ((state, action: PayloadAction<string>) => {
+      state.manager = action.payload;
+    }),
+    setEmergencyManager: ((state, action: PayloadAction<string>) => {
+      state.emergencyManager = action.payload;
+    }),
+    setFeeReceiver: ((state, action: PayloadAction<string>) => {
+      state.feeReceiver = action.payload;
+    }),
   }
 })
 
@@ -106,10 +121,14 @@ export const {
   removeStrategy,
   setStrategyValue,
   resetStrategyValue,
-  setStrategyName } = strategiesSlice.actions
+  setName,
+  setManager,
+  setEmergencyManager,
+  setFeeReceiver
+} = newVaultSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
-export const selectStrategies = (state: RootState) => state.strategies.strategies
-export const selectTotalValues = (state: RootState) => state.strategies.totalValues
+export const selectStrategies = (state: RootState) => state.newVault.strategies
+export const selectTotalValues = (state: RootState) => state.newVault.totalValues
 
-export default strategiesSlice.reducer
+export default newVaultSlice.reducer

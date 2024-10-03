@@ -1,3 +1,4 @@
+import React from "react"
 import { Button } from '@chakra-ui/react'
 import { useSorobanReact } from '@soroban-react/core'
 import { ConnectWalletModal } from './ConnectWalletModal'

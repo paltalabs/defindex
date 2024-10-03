@@ -15,7 +15,7 @@ import {
 } from '@chakra-ui/react'
 import { DeleteIcon } from '@chakra-ui/icons'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { setStrategyValue, removeStrategy } from '@/store/lib/features/strategiesStore'
+import { setStrategyValue, removeStrategy } from '@/store/lib/features/vaultStore'
 
 
 function ItemSlider({
@@ -30,7 +30,7 @@ function ItemSlider({
   const dispatch = useAppDispatch()
   const [showTooltip, setShowTooltip] = React.useState(false)
 
-  const totalValues = useAppSelector(state => state.strategies.totalValues)
+  const totalValues = useAppSelector(state => state.newVault.totalValues)
   const [inputValue, setInputValue] = React.useState<number | string>(value)
 
   const setVal = (val: number) => {

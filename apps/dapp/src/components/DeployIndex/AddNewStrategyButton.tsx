@@ -1,3 +1,4 @@
+import React from 'react'
 import { useEffect, useState } from 'react'
 import {
   Button,
@@ -16,7 +17,7 @@ import {
 } from '@chakra-ui/react'
 import { AddIcon } from '@chakra-ui/icons'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { pushStrategy, getDefaultStrategies, Strategy } from '@/store/lib/features/strategiesStore'
+import { pushStrategy, getDefaultStrategies, Strategy } from '@/store/lib/features/vaultStore'
 import { useSorobanReact } from '@soroban-react/core'
 
 interface DefaultStrategy {
@@ -27,7 +28,7 @@ interface DefaultStrategy {
 
 
 function AddNewStrategyButton() {
-  const strategies = useAppSelector(state => state.strategies.strategies)
+  const strategies = useAppSelector(state => state.newVault.strategies)
   const dispatch = useAppDispatch();
   const { activeChain } = useSorobanReact()
   const [defaultStrategies, setDefaultStrategies] = useState<Strategy[]>([])

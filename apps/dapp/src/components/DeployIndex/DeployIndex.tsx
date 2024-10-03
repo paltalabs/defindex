@@ -11,23 +11,21 @@ import {
 import ItemSlider from './Slider'
 import AddNewStrategyButton from './AddNewStrategyButton'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-
-import { useSorobanReact } from '@soroban-react/core'
 import { ConfirmDelpoyModal } from './ConfirmDelpoyModal'
-import { setStrategyName, Strategy } from '@/store/lib/features/strategiesStore'
+import { setName, Strategy } from '@/store/lib/features/vaultStore'
 
 export const DeployIndex = () => {
   const dispatch = useAppDispatch()
-  const strategies: Strategy[] = useAppSelector(state => state.strategies.strategies)
-  const totalValues = useAppSelector(state => state.strategies.totalValues)
+  const strategies: Strategy[] = useAppSelector(state => state.newVault.strategies)
+  const totalValues = useAppSelector(state => state.newVault.totalValues)
   const [openConfirm, setOpenConfirm] = useState<boolean>(false)
 
   const handleClose = () => {
     setOpenConfirm(false)
   }
 
-  const setName = async (e: any) => {
-    await dispatch(setStrategyName(e.target.value))
+  const setVaultName = async (e: any) => {
+    await dispatch(setName(e.target.value))
   }
 
   return (
@@ -36,30 +34,14 @@ export const DeployIndex = () => {
       <Card variant="outline" p={16} bgColor="whiteAlpha.50">
         <Grid
           templateColumns={'repeat(12, 2fr)'}
-          templateRows={'repeat(5, 1fr)'}
           alignSelf={'end'}
           alignContent={'center'}
           mb={4}
         >
           <GridItem colStart={1} colSpan={3}>
-            <Input onChange={setName} placeholder='Defindex name...'></Input>
+            <Input onChange={setVaultName} placeholder='Defindex name...'></Input>
           </GridItem><GridItem colStart={1} colSpan={3} rowStart={3}>
             <Text mt={4}>Manager</Text>
-          </GridItem>
-          <GridItem colStart={4} colSpan={3} rowStart={3}>
-            <Input onChange={setName} placeholder='GAFS3TLVM...'></Input>
-          </GridItem>
-          <GridItem colStart={8} colSpan={3} rowStart={3}>
-            <Text mt={4}>Emergency Manager</Text>
-          </GridItem>
-          <GridItem colStart={11} colSpan={3} rowStart={3}>
-            <Input onChange={setName} placeholder='GAFS3TLVM...'></Input>
-          </GridItem>
-          <GridItem colStart={1} colSpan={3} rowStart={5}>
-            <Text mt={4}>Fee Receiver</Text>
-          </GridItem>
-          <GridItem colStart={4} colSpan={3} rowStart={5}>
-            <Input onChange={setName} placeholder='GAFS3TLVM...'></Input>
           </GridItem>
           <GridItem colStart={12}>
             <AddNewStrategyButton />

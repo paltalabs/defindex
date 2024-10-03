@@ -19,7 +19,7 @@ export const useFactory = () => {
   useEffect(() => {
     if (!sorobanContext) return;
 
-    if (activeChain?.id !== 'mainnet' && activeChain?.id !== 'testnet') {
+    if (activeChain?.name?.toLowerCase() !== 'public' && activeChain?.name?.toLowerCase() !== 'testnet') {
       throw new Error(`Invalid network when fetching factory address: ${activeChain?.id}. It should be mainnet or testnet`);
     }
 
