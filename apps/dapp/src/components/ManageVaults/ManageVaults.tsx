@@ -50,7 +50,7 @@ export const ManageVaultes = () => {
         break
       case 'edit_vault':
         await dispatch(resetStrategies())
-        for (const item of args.shares) {
+        for (const item of args.strategies) {
           const newStrategy = {
             address: item.address,
             value: item.share,
@@ -117,7 +117,7 @@ export const ManageVaultes = () => {
               sx={{ px: 6 }}
               aria-label="add-Vault"
               colorScheme="green"
-              onClick={() => handleOpenDeployVault('create_defVault')}
+              onClick={() => handleOpenDeployVault('create_vault')}
             >
               Add Vault
             </Button>}
