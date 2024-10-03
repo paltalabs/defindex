@@ -8,6 +8,7 @@ enum DataKey {
     Asset(u32),      // Asset Addresse by index
     TotalAssets,     // Total number of tokens
     DeFindexReceiver,
+    Factory,
 }
 
 // Assets Management
@@ -47,5 +48,19 @@ pub fn get_defindex_receiver(e: &Env) -> i128 {
     e.storage()
         .instance()
         .get(&DataKey::DeFindexReceiver)
+        .unwrap()
+}
+
+// DeFindex Factory
+pub fn set_factory(e: &Env, address: &Address) {
+    e.storage()
+        .instance()
+        .set(&DataKey::Factory, address);
+}
+
+pub fn get_factory(e: &Env) -> Address {
+    e.storage()
+        .instance()
+        .get(&DataKey::Factory)
         .unwrap()
 }

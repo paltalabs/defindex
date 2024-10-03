@@ -8,12 +8,14 @@ use crate::defindex::Asset;
 pub struct InitializedEvent {
     pub admin: Address,
     pub defindex_receiver: Address,
+    pub fee_rate: u32,
 }
 
-pub(crate) fn emit_initialized(e: &Env, admin: Address, defindex_receiver: Address) {
+pub(crate) fn emit_initialized(e: &Env, admin: Address, defindex_receiver: Address, fee_rate: u32) {
     let event: InitializedEvent = InitializedEvent {
         admin,
         defindex_receiver,
+        fee_rate,
     };
     e.events()
         .publish(("DeFindexFactory", symbol_short!("init")), event);
@@ -74,4 +76,18 @@ pub(crate) fn emit_new_defindex_receiver(e: &Env, new_defindex_receiver: Address
 
     e.events()
         .publish(("DeFindexFactory", symbol_short!("nreceiver")), event);
+}
+
+// NEW FEE RATE EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct NewFeeRateEvent {
+    pub new_fee_rate: u32,
+}
+
+pub(crate) fn emit_new_fee_rate(e: &Env, new_fee_rate: u32) {
+    let event = NewFeeRateEvent { new_fee_rate };
+
+    e.events()
+        .publish(("DeFindexFactory", symbol_short!("nfee_rate")), event);
 }

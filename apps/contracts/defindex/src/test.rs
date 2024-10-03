@@ -35,6 +35,21 @@ fn create_defindex_vault<'a>(
     client
 }
 
+// DeFindex Factory Contract
+// pub mod defindex_factory {
+//     soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/defindex_factory.optimized.wasm");
+//     pub type DeFindexFactoryClient<'a> = Client<'a>;
+// }
+// use defindex_factory::DeFindexFactoryClient;
+
+// fn create_defindex_factory<'a>(
+//     e: & Env
+// ) -> DeFindexFactoryClient<'a> {
+//     let address = &e.register_contract_wasm(None, defindex_factory::WASM);
+//     let client = DeFindexFactoryClient::new(e, address);
+//     client
+// }
+
 // Create Test Token
 pub(crate) fn create_token_contract<'a>(e: &Env, admin: &Address) -> SorobanTokenClient<'a> {
     SorobanTokenClient::new(e, &e.register_stellar_asset_contract(admin.clone()))
@@ -61,6 +76,7 @@ pub(crate) fn create_strategy_params(test: &DeFindexVaultTest) -> Vec<Strategy> 
 
 pub struct DeFindexVaultTest<'a> {
     env: Env,
+    defindex_factory: Address,
     defindex_contract: DeFindexVaultClient<'a>,
     token0_admin_client: SorobanTokenAdminClient<'a>,
     token0: SorobanTokenClient<'a>,
@@ -77,6 +93,10 @@ impl<'a> DeFindexVaultTest<'a> {
     fn setup() -> Self {
         let env = Env::default();
         // env.mock_all_auths();
+
+        // Mockup, should be the factory contract
+        let defindex_factory = Address::generate(&env);
+
         let defindex_contract = create_defindex_vault(&env);
 
         let emergency_manager = Address::generate(&env);
@@ -99,6 +119,7 @@ impl<'a> DeFindexVaultTest<'a> {
 
         DeFindexVaultTest {
             env,
+            defindex_factory,
             defindex_contract,
             token0_admin_client,
             token0,

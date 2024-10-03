@@ -14,11 +14,12 @@ pub trait VaultTrait {
     /// 
     /// # Arguments:
     /// * `e` - The environment.
+    /// * `assets` - A vector of `Asset` structs representing the assets and their associated strategies.
+    /// * `manager` - The address responsible for managing the vault.
     /// * `emergency_manager` - The address with emergency control over the vault.
     /// * `fee_receiver` - The address that will receive fees from the vault.
-    /// * `manager` - The address responsible for managing the vault.
     /// * `defindex_receiver` - The address that will receive fees for DeFindex from the vault.
-    /// * `tokens` - A vector of `Asset` structs representing the assets and their associated strategies.
+    /// * `factory` - The address of the factory that deployed the vault.
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
@@ -29,6 +30,7 @@ pub trait VaultTrait {
         emergency_manager: Address,
         fee_receiver: Address,
         defindex_receiver: Address,
+        factory: Address,
     ) -> Result<(), ContractError>;
 
     /// Handles deposits into the DeFindex Vault.

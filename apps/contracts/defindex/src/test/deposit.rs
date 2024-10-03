@@ -1,8 +1,7 @@
-use soroban_sdk::{vec as sorobanvec, Address, Vec};
+use soroban_sdk::{vec as sorobanvec, Vec};
 
 use crate::test::{create_strategy_params, DeFindexVaultTest};
-use crate::Asset;
-use crate::ContractError;
+use crate::test::defindex_vault::{Asset, ContractError};
 
 #[test]
 fn deposit_amounts_desired_wrong_length() {
@@ -32,6 +31,7 @@ fn deposit_amounts_desired_wrong_length() {
         &test.emergency_manager,
         &test.fee_receiver,
         &test.defindex_receiver,
+        &test.defindex_factory,
     );
     let amount = 1000i128;
     

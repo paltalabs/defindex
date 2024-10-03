@@ -22,6 +22,7 @@ fn test_withdraw_success() {
         &test.emergency_manager,
         &test.fee_receiver,
         &test.defindex_receiver,
+        &test.defindex_factory,
     );
     let amount = 1000i128;
     

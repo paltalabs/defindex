@@ -25,8 +25,7 @@ use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_
 use interface::{AdminInterfaceTrait, VaultTrait, VaultManagementTrait};
 use models::{Asset, Investment};
 use storage::{
-    get_assets, set_asset,
-    set_defindex_receiver, set_total_assets,
+    get_assets, set_asset, set_defindex_receiver, set_factory, set_total_assets
 };
 use strategies::{get_strategy_asset, get_strategy_client, get_strategy_struct, pause_strategy, unpause_strategy};
 use token::{internal_mint, internal_burn, write_metadata, VaultToken};
@@ -49,6 +48,7 @@ impl VaultTrait for DeFindexVault {
         emergency_manager: Address,
         fee_receiver: Address,
         defindex_receiver: Address,
+        factory: Address,
     ) -> Result<(), ContractError> {
         let access_control = AccessControl::new(&e);
         if access_control.has_role(&RolesDataKey::Manager) {
@@ -61,6 +61,9 @@ impl VaultTrait for DeFindexVault {
 
         // Set Paltalabs Fee Receiver
         set_defindex_receiver(&e, &defindex_receiver);
+
+        // Set the factory address
+        set_factory(&e, &factory);
 
         // Store Assets Objects
         let total_assets = assets.len();

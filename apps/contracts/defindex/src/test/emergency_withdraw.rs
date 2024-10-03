@@ -18,10 +18,11 @@ fn test_emergency_withdraw_success() {
 
     test.defindex_contract.initialize(
         &assets,
+        &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
-        &test.manager,
-        &test.defindex_receiver
+        &test.defindex_receiver,
+        &test.defindex_factory,
     );
     let amount = 1000i128;
     
