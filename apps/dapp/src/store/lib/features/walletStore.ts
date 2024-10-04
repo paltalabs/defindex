@@ -12,9 +12,12 @@ export interface Vault {
 }
 export interface VaultData {
   address: string;
-  balance: number;
+  totalValues: number;
+  emergencyManager?: string;
+  feeReceiver?: string;
+  manager?: string;
   name: string;
-  shares: Vault[]
+  strategies: Vault[];
 }
 
 interface SelectedVault extends VaultData {
@@ -58,7 +61,6 @@ const getDefaultVaults = async (network: string) => {
 export const fetchDefaultAddresses = createAsyncThunk(
   'wallet/fetchDefaultVaults',
   async (network: string) => {
-    console.log('fetching default DeFindexes from', network)
     const defaultVaults = await getDefaultVaults(network)
     const defaultAdresses = defaultVaults?.map((index: any) => {
       return index
@@ -111,6 +113,16 @@ export const walletSlice = createSlice({
     },
     setSelectedVault: (state, action: PayloadAction<SelectedVault>) => {
       state.vaults.selectedVault = action.payload
+    },
+    setVaultRoles: (state, action: PayloadAction<any>) => { 
+      console.log(action.payload)
+      const vaultIndex = state.vaults.createdVaults.findIndex(vault => vault.address === action.payload.address);
+      if (vaultIndex !== -1) {
+        state.vaults.createdVaults[vaultIndex] = {
+          ...state.vaults.createdVaults[vaultIndex],
+          ...action.payload
+        };
+      }
     }
   },
   extraReducers(builder) {
@@ -128,7 +140,15 @@ export const walletSlice = createSlice({
   },
 })
 
-export const { setAddress, setChain, resetWallet, pushVault, setIsVaultsLoading, setSelectedVault } = walletSlice.actions
+export const { 
+  setAddress, 
+  setChain, 
+  resetWallet, 
+  pushVault, 
+  setIsVaultsLoading, 
+  setSelectedVault, 
+  setVaultRoles 
+} = walletSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectAddress = (state: RootState) => state.wallet.address

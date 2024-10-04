@@ -27,7 +27,7 @@ import { VaultPreview } from "./VaultPreview";
 import { DeploySteps } from "./DeploySteps";
 import { useEffect, useState } from "react";
 import { WarningIcon, CheckCircleIcon, ExternalLinkIcon } from '@chakra-ui/icons'
-import { Strategy } from "@/store/lib/features/vaultStore";
+import { NewVaultState, Strategy } from "@/store/lib/features/vaultStore";
 import { useSorobanReact } from "@soroban-react/core";
 
 import { randomBytes } from "crypto";
@@ -56,7 +56,8 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   const sorobanContext = useSorobanReact();
   const { activeChain } = sorobanContext;
   const factory = useFactoryCallback();
-  const strategies: Strategy[] = useAppSelector(state => state.newVault.strategies);
+  const newVault: NewVaultState = useAppSelector(state => state.newVault);
+  const strategies: Strategy[] = newVault.strategies;
   const indexName = useAppSelector(state => state.newVault.name)
   const managerString = useAppSelector(state => state.newVault.manager)
   const emergencyManagerString = useAppSelector(state => state.newVault.emergencyManager)
@@ -191,8 +192,13 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       })
       return
     }
-    const parsedResult = scValToNative(result.returnValue);
-    dispatch(pushVault(parsedResult));
+    const parsedResult: string = scValToNative(result.returnValue);
+    if (parsedResult.length !== 56) throw new Error('Invalid result')
+    const tempVault: any = {
+      ...newVault,
+      address: parsedResult
+    }
+    dispatch(pushVault(tempVault));
     setActiveStep(3);
     setStatus({
       ...status,

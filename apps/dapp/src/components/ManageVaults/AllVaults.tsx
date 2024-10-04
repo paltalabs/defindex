@@ -1,6 +1,6 @@
 import { shortenAddress } from '@/helpers/shortenAddress'
 import { VaultMethod, useVaultCallback } from '@/hooks/useVault'
-import { fetchDefaultAddresses, VaultData } from '@/store/lib/features/walletStore'
+import { fetchDefaultAddresses, setIsVaultsLoading, setVaultRoles, VaultData } from '@/store/lib/features/walletStore'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { ArrowLeftIcon, SettingsIcon } from '@chakra-ui/icons'
 import {
@@ -57,37 +57,70 @@ export const AllVaults = ({
   const isLoading = vaults.isLoading
   const createdVaults = vaults.createdVaults
 
-  const getRoles = async () => {
-    const selectedVault = 'CD5NL55J4JYMALHCPIF3YADCWDRJNLM3XOFMZ6IOH5K4AOGINB4VB3BP'
-    const manager: any = await vault(
-      VaultMethod.GETMANAGER,
-      selectedVault,
-      undefined,
-      false,
-    )
-    console.log('✨Manager', manager)
-    const parsedManager = scValToNative(manager)
-    console.log('✨Manager', parsedManager)
-    /*  const emergencyManager: any = await defindex(
-       DefindexMethod.GETEMERGENCYMANAGER,
-       selectedIndex,
-       undefined,
-       false,
-     )
-     const parsedEmergencyManager = scValToNative(emergencyManager.returnValue)
-     console.log('✨Emergency Manager', parsedEmergencyManager)
-     const feeReceiver: any = await defindex(
-       DefindexMethod.GETFEERECEIVER,
-       selectedIndex,
-       undefined,
-       false,
-     )
-     const parsedFeeReceiver = scValToNative(feeReceiver.returnValue)
-     console.log('✨Fee reciever', parsedFeeReceiver) */
+  const getRoles = async (selectedVault: string) => {
+    setIsVaultsLoading(true)
+    try {
+      const manager: any = await vault(
+        VaultMethod.GETMANAGER,
+        selectedVault,
+        undefined,
+        false,
+      )
+      const emergencyManager: any = await vault(
+        VaultMethod.GETEMERGENCYMANAGER,
+        selectedVault,
+        undefined,
+        false,
+      )
+      const feeReceiver: any = await vault(
+        VaultMethod.GETFEERECEIVER,
+        selectedVault,
+        undefined,
+        false,
+      )
+      const parsedManager = scValToNative(manager)
+      const parsedEmergencyManager = scValToNative(emergencyManager)
+      const parsedFeeReceiver = scValToNative(feeReceiver)
+      return {
+        address: selectedVault,
+        manager: parsedManager,
+        emergencyManager: parsedEmergencyManager,
+        feeReceiver: parsedFeeReceiver
+      }
+    } catch (e: any) {
+      if (e.toString().includes('MissingValue')) {
+        console.warn(`The vault ${shortenAddress(selectedVault)} is missing some values, some features may not work as expected`)
+      } else {
+        console.error(e)
+      }
+      return {
+        address: selectedVault,
+        manager: undefined,
+        emergencyManager: undefined,
+        feeReceiver: undefined
+      }
+    } finally {
+      setIsVaultsLoading(false)
+    }
   }
+
+  const fetchVaultRoles = async () => {
+    for (const vault of createdVaults) {
+      const roles = await getRoles(vault.address)
+      await dispatch(setVaultRoles(roles))
+    }
+  }
+
   useEffect(() => {
     dispatch(fetchDefaultAddresses(activeChain?.networkPassphrase!))
-  }, [activeChain?.networkPassphrase]);
+  }, [activeChain?.networkPassphrase, address]);
+
+  useEffect(() => {
+    if (createdVaults?.length > 0) {
+      fetchVaultRoles()
+    }
+  }, [createdVaults.length, address])
+
   return (
     <TableContainer
       mx={'auto'}
@@ -101,7 +134,9 @@ export const AllVaults = ({
             <Th textAlign={'center'}>Balance</Th>
             <Th textAlign={'center'}>Status</Th>
             <Th textAlign={'center'}>% APR</Th>
-            <Th textAlign={'center'}>Options</Th>
+            {address && (
+              <Th textAlign={'center'}>Options</Th>
+            )}
           </Tr>
         </Thead>
         {isLoading && <Tbody>
@@ -122,7 +157,7 @@ export const AllVaults = ({
                   {vault.address ? shortenAddress(vault.address) : '-'}
                 </Tooltip>
               </Td>
-              <Td textAlign={'center'}>${vault.balance}</Td>
+              <Td textAlign={'center'}>${vault.totalValues}</Td>
               <Td textAlign={'center'}>{vault.name?.includes('Blend USDC') ? '200' : '400'}</Td>
               <Td textAlign={'center'}>
                 <Stat>
@@ -132,6 +167,7 @@ export const AllVaults = ({
                   </StatHelpText>
                 </Stat>
               </Td>
+              {address && (
               <Td textAlign={'center'}>
                 <Tooltip hasArrow label={'Deposit'} rounded={'lg'}>
                   <IconButton
@@ -153,27 +189,20 @@ export const AllVaults = ({
                     onClick={() => handleOpenDeposit('withdraw', vault)}
                   />
                 </Tooltip>
-                <Tooltip hasArrow label={'Rebalance'} rounded={'lg'}>
-                  <IconButton
-                    mx={1}
-                    colorScheme='teal'
-                    aria-label='rebalance'
-                    size='sm'
-                    icon={<SettingsIcon />}
-                    onClick={() => handleOpenDeployVault('edit_vault', vault)}
-                  />
-                </Tooltip>
-                <Tooltip hasArrow label={'GetRole'} rounded={'lg'}>
-                  <IconButton
-                    mx={1}
-                    colorScheme='teal'
-                    aria-label='rebalance'
-                    size='sm'
-                    icon={<SettingsIcon />}
-                    onClick={() => getRoles()}
-                  />
-                </Tooltip>
+                  {(address == vault.manager) && 
+                    <Tooltip hasArrow label={'Rebalance'} rounded={'lg'}>
+                      <IconButton
+                        mx={1}
+                        colorScheme='teal'
+                        aria-label='rebalance'
+                        size='sm'
+                        icon={<SettingsIcon />}
+                        onClick={() => handleOpenDeployVault('edit_vault', vault)}
+                      />
+                    </Tooltip>}
               </Td>
+              )}
+
             </Tr>
           ))}
         </Tbody>}

@@ -5,9 +5,12 @@
     "vaults": [
       {
         "address": "CD5NL55J4JYMALHCPIF3YADCWDRJNLM3XOFMZ6IOH5K4AOGINB4VB3BP",
-        "balance": 100651,
+        "totalValues": 100651,
         "name": "Hodl strategy",
-        "shares": [
+        "emergencyManager": "",
+        "manager": "",
+        "feeReceiver": "",
+        "strategies": [
           {
             "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
             "index": 0,
@@ -16,10 +19,13 @@
         ]
       },
       {
-        "address": "CCA5VJAAVA6KQ5JV453CMQMGGE6KNPI7PNZ7SGPSC3RDTRTQUJ4CALDZ",
-        "balance": 2500,
+        "address": "CD2653ALCQRUWTQTZF5JA2XNEJUKQTPISC3DW6GQTGY6UAUPYFFDXBTR",
+        "totalValues": 2500,
         "name": "Blend USDC - Soroswap USDC/NGNC",
-        "shares": [
+        "emergencyManager": "",
+        "manager": "",
+        "feeReceiver": "",
+        "strategies": [
           {
             "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
             "index": 0,
@@ -29,9 +35,12 @@
       },
       {
         "address": "CBEGAWUQMBJGHOWLVOGUMQO3HTIN66BW2NLDF6AZI56GKYZMR475E24Q",
-        "balance": 84732,
+        "totalValues": 84732,
         "name": "XYCLoans - Blend",
-        "shares": [
+        "emergencyManager": "",
+        "manager": "",
+        "feeReceiver": "",
+        "strategies": [
           {
             "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
             "index": 0,
@@ -44,36 +53,6 @@
   {
     "network": "public",
     "factory": "",
-    "vaults": [
-      {
-        "address": "CDTSI3ORR5TDTKV7B3JQM5YZ4UAM24C2ZG2OOQOXPFJ5XS7JBOKUNJZC",
-        "balance": 100651,
-        "name": "Soroswap USDC/XLM",
-        "shares": [
-          {
-            "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
-            "index": 0,
-            "share": 100
-          }
-        ]
-      },
-      {
-        "address": "CBEGAWUQMBJGHOWLVOGUMQO3HTIN66BW2NLDF6AZI56GKYZMR475E24Q",
-        "balance": 84732,
-        "name": "XYCLoans - Blend",
-        "shares": [
-          {
-            "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
-            "index": 0,
-            "share": 83
-          },
-          {
-            "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
-            "index": 0,
-            "share": 17
-          }
-        ]
-      }
-    ]
+    "vaults": []
   }
 ]

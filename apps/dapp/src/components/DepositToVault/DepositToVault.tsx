@@ -111,7 +111,7 @@ export const DepositToVault = () => {
               resize={'none'} />
           </GridItem>
           <GridItem colSpan={4} colEnd={13} textAlign={'end'}>
-            <h2>Current index balance: {selectedIndex?.balance}</h2>
+            <h2>Current index balance: {selectedIndex?.totalValues}</h2>
           </GridItem>
           <GridItem colSpan={6} textAlign={'end'} alignContent={'center'}>
             <Text fontSize='lg'>Amount to {selectedIndex?.method && selectedIndex.method}:</Text>
