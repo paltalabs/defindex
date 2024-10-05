@@ -9,7 +9,7 @@ use soroban_sdk::{
     contract, contractimpl, Address, BytesN, Env, Map, Vec
 };
 use error::FactoryError;
-use defindex::{create_contract, Asset};
+use defindex::{create_contract, AssetAllocation};
 use storage::{ add_new_defindex, extend_instance_ttl, get_admin, get_defi_wasm_hash, get_defindex_receiver, get_deployed_defindexes, get_fee_rate, has_admin, put_admin, put_defi_wasm_hash, put_defindex_receiver, put_fee_rate };
 
 fn check_initialized(e: &Env) -> Result<(), FactoryError> {
@@ -33,7 +33,7 @@ pub trait FactoryTrait {
         emergency_manager: Address, 
         fee_receiver: Address, 
         manager: Address,
-        assets: Vec<Asset>,
+        assets: Vec<AssetAllocation>,
         salt: BytesN<32>
     ) -> Result<Address, FactoryError>;
 
@@ -81,7 +81,7 @@ impl FactoryTrait for DeFindexFactory {
         emergency_manager: Address, 
         fee_receiver: Address, 
         manager: Address,
-        assets: Vec<Asset>,
+        assets: Vec<AssetAllocation>,
         salt: BytesN<32>
     ) -> Result<Address, FactoryError> {
         extend_instance_ttl(&e);

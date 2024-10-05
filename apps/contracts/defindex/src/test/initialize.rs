@@ -1,19 +1,19 @@
 use soroban_sdk::{vec as sorobanvec, Address, Vec};
 
-use crate::test::{create_strategy_params, defindex_vault::{Asset, ContractError}, DeFindexVaultTest};
+use crate::test::{create_strategy_params, defindex_vault::{AssetAllocation, ContractError}, DeFindexVaultTest};
 
 #[test]
 fn test_initialize_and_get_roles() {
     let test = DeFindexVaultTest::setup();
     let strategy_params = create_strategy_params(&test);
-    let assets: Vec<Asset> = sorobanvec![
+    let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
-        Asset {
+        AssetAllocation {
             address: test.token0.address.clone(),
             ratio: 1,
             strategies: strategy_params.clone()
         },
-        Asset {
+        AssetAllocation {
             address: test.token1.address.clone(),
             ratio: 1,
             strategies: strategy_params.clone()
@@ -55,14 +55,14 @@ fn test_initialize_twice() {
     let test = DeFindexVaultTest::setup();
     let strategy_params = create_strategy_params(&test);
 
-    let assets: Vec<Asset> = sorobanvec![
+    let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
-        Asset {
+        AssetAllocation {
             address: test.token0.address.clone(),
             ratio: 1,
             strategies: strategy_params.clone()
         },
-        Asset {
+        AssetAllocation {
             address: test.token1.address.clone(),
             ratio: 1,
             strategies: strategy_params.clone()

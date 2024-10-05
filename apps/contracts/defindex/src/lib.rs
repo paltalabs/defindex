@@ -10,6 +10,7 @@ use soroban_token_sdk::metadata::TokenMetadata;
 mod access;
 mod error;
 mod events;
+mod fee;
 mod funds;
 mod interface;
 mod investment;
@@ -23,7 +24,7 @@ mod utils;
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds};
 use interface::{AdminInterfaceTrait, VaultTrait, VaultManagementTrait};
-use models::{Asset, Investment};
+use models::{AssetAllocation, Investment};
 use storage::{
     get_assets, set_asset, set_defindex_receiver, set_factory, set_total_assets
 };
@@ -43,7 +44,7 @@ pub struct DeFindexVault;
 impl VaultTrait for DeFindexVault {
     fn initialize(
         e: Env,
-        assets: Vec<Asset>,
+        assets: Vec<AssetAllocation>,
         manager: Address,
         emergency_manager: Address,
         fee_receiver: Address,
@@ -287,7 +288,7 @@ impl VaultTrait for DeFindexVault {
         Ok(())
     }
 
-    fn get_assets(e: Env) -> Vec<Asset> {
+    fn get_assets(e: Env) -> Vec<AssetAllocation> {
         get_assets(&e)
     }
 

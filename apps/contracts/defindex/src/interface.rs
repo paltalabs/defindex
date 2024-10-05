@@ -1,7 +1,7 @@
 use soroban_sdk::{Address, Env, Map, Vec};
 
 use crate::{
-    models::{Asset, Investment},
+    models::{AssetAllocation, Investment},
     ContractError,
 };
 
@@ -14,7 +14,7 @@ pub trait VaultTrait {
     /// 
     /// # Arguments:
     /// * `e` - The environment.
-    /// * `assets` - A vector of `Asset` structs representing the assets and their associated strategies.
+    /// * `assets` - A vector of `AssetAllocation` structs representing the assets and their associated strategies.
     /// * `manager` - The address responsible for managing the vault.
     /// * `emergency_manager` - The address with emergency control over the vault.
     /// * `fee_receiver` - The address that will receive fees from the vault.
@@ -25,7 +25,7 @@ pub trait VaultTrait {
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn initialize(
         e: Env,
-        assets: Vec<Asset>,
+        assets: Vec<AssetAllocation>,
         manager: Address,
         emergency_manager: Address,
         fee_receiver: Address,
@@ -118,8 +118,8 @@ pub trait VaultTrait {
     /// * `e` - The environment.
     ///
     /// # Returns:
-    /// * `Vec<Asset>` - A vector of `Asset` structs representing the assets managed by the vault.
-    fn get_assets(e: Env) -> Vec<Asset>;
+    /// * `Vec<AssetAllocation>` - A vector of `AssetAllocation` structs representing the assets managed by the vault.
+    fn get_assets(e: Env) -> Vec<AssetAllocation>;
 
     /// Returns the total managed funds of the vault, including both invested and idle funds.
     ///

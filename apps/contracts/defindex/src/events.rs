@@ -1,6 +1,6 @@
 //! Definition of the Events used in the DeFindex Vault contract
 use soroban_sdk::{contracttype, symbol_short, Address, Env, Vec};
-use crate::models::Asset;
+use crate::models::AssetAllocation;
 
 // INITIALIZED VAULT EVENT
 #[contracttype]
@@ -10,7 +10,7 @@ pub struct InitializedVaultEvent {
     pub fee_receiver: Address,
     pub manager: Address,
     pub defindex_receiver: Address,
-    pub assets: Vec<Asset>,
+    pub assets: Vec<AssetAllocation>,
 }
 
 /// Publishes an `InitializedVaultEvent` to the event stream.
@@ -20,7 +20,7 @@ pub(crate) fn emit_initialized_vault(
     fee_receiver: Address,
     manager: Address,
     defindex_receiver: Address,
-    assets: Vec<Asset>,
+    assets: Vec<AssetAllocation>,
 ) {
     let event = InitializedVaultEvent {
         emergency_manager,

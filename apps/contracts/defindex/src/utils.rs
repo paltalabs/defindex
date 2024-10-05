@@ -3,7 +3,7 @@ use soroban_sdk::{panic_with_error, Address, Env, Map, Vec};
 use crate::{
     access::{AccessControl, AccessControlTrait, RolesDataKey},
     funds::fetch_total_managed_funds,
-    models::{Asset, Investment},
+    models::{AssetAllocation, Investment},
     storage::get_assets,
     ContractError,
     token::VaultToken
@@ -68,8 +68,8 @@ pub fn calculate_withdrawal_amounts(
 // pub fn calculate_withdrawal_amounts(
 //     e: &Env,
 //     df_token_amount: i128, // The amount of dfTokens to withdraw
-// ) -> Result<Map<Asset, i128>, ContractError> {
-//     let mut withdrawal_amounts = Map::<Asset, i128>::new(e);
+// ) -> Result<Map<AssetAllocation, i128>, ContractError> {
+//     let mut withdrawal_amounts = Map::<AssetAllocation, i128>::new(e);
 //     let assets = get_assets(e);
 
 //     let total_ratio = assets.iter().fold(0, |acc, asset| acc + asset.ratio);
@@ -87,7 +87,7 @@ pub fn calculate_withdrawal_amounts(
 pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
     e: &Env,
     total_managed_funds: &Map<Address, i128>,
-    assets: &Vec<Asset>,
+    assets: &Vec<AssetAllocation>,
     amounts_desired: &Vec<i128>,
     i: &u32,
 ) -> (Vec<i128>, i128) {
@@ -151,7 +151,7 @@ pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
 /// be replaced with proper error handling.
 pub fn calculate_deposit_amounts_and_shares_to_mint(
     e: &Env,
-    assets: &Vec<Asset>,
+    assets: &Vec<AssetAllocation>,
     amounts_desired: &Vec<i128>,
     amounts_min: &Vec<i128>,
 ) -> (Vec<i128>, i128) {

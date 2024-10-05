@@ -1,7 +1,7 @@
 use soroban_sdk::{vec as sorobanvec, Vec};
 
 use crate::test::{create_strategy_params, DeFindexVaultTest};
-use crate::test::defindex_vault::{Asset, ContractError};
+use crate::test::defindex_vault::{AssetAllocation, ContractError};
 
 #[test]
 fn deposit_amounts_desired_wrong_length() {
@@ -11,14 +11,14 @@ fn deposit_amounts_desired_wrong_length() {
     let strategy_params = create_strategy_params(&test);
     
     // initialize with 2 assets
-    let assets: Vec<Asset> = sorobanvec![
+    let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
-        Asset {
+        AssetAllocation {
             address: test.token0.address.clone(),
             ratio: 1,
             strategies: strategy_params.clone()
         },
-        Asset {
+        AssetAllocation {
             address: test.token1.address.clone(),
             ratio: 1,
             strategies: strategy_params.clone()
@@ -79,9 +79,9 @@ fn deposit_several_assets() {
 //     let test = DeFindexVaultTest::setup();
 //     test.env.mock_all_auths();
 //     let strategy_params = create_strategy_params(&test);
-//     let assets: Vec<Asset> = sorobanvec![
+//     let assets: Vec<AssetAllocation> = sorobanvec![
 //         &test.env,
-//         Asset {
+//         AssetAllocation {
 //             address: test.token0.address.clone(),
 //             ratio: 1,
 //             strategies: strategy_params.clone()

@@ -1,15 +1,15 @@
 use soroban_sdk::{vec as sorobanvec, Vec};
 
-use crate::test::{create_strategy_params, defindex_vault::{Asset, Investment}, DeFindexVaultTest};
+use crate::test::{create_strategy_params, defindex_vault::{AssetAllocation, Investment}, DeFindexVaultTest};
 
 #[test]
 fn test_emergency_withdraw_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params = create_strategy_params(&test);
-    let assets: Vec<Asset> = sorobanvec![
+    let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
-        Asset {
+        AssetAllocation {
             address: test.token0.address.clone(),
             ratio: 1,
             strategies: strategy_params.clone()
