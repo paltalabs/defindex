@@ -41,6 +41,9 @@ pub fn assess_fees(e: &Env, time_elapsed: u64, fee_rate: u32) -> Result<(), Cont
         total_fees_in_dftokens += df_tokens_to_mint;
     }
 
+    // now it should be possible to calculate the total fees in dfTokens
+    // fetch_total_managed_funds returns a map of address and i128 all of the funds there should correspond to the total supply of dfTokens
+    // so we can calculate the amount of dfTokens that corresponds to the total_fees_per_asset which is also a Map<Address, i128>    
 
     // Mint the total fees as dfTokens
     // mint_fees(e, total_fees_in_dftokens)?;
