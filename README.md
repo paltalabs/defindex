@@ -21,7 +21,7 @@ First run the following code in a new terminal located in the repo folder to ini
 
 ```sh
 docker compose up -d
-```
+``` 
 then, once the container is up, run:
 ```sh
 bash run.sh

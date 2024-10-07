@@ -8,11 +8,11 @@ use crate::{
 pub trait VaultTrait {
     fn initialize(
         e: Env,
+        assets: Vec<Asset>,
+        manager: Address,
         emergency_manager: Address,
         fee_receiver: Address,
-        manager: Address,
         defindex_receiver: Address,
-        tokens: Vec<Asset>,
     ) -> Result<(), ContractError>;
 
     fn deposit(
@@ -28,13 +28,13 @@ pub trait VaultTrait {
 
     fn get_assets(e: Env) -> Vec<Asset>;
 
-    fn get_total_managed_funds(e: &Env) -> Map<Address, i128>;
+    fn fetch_total_managed_funds(e: &Env) -> Map<Address, i128>;
 
-    fn get_current_invested_funds(e: &Env) -> Map<Address, i128>;
+    fn fetch_current_invested_funds(e: &Env) -> Map<Address, i128>;
 
-    fn get_current_idle_funds(e: &Env) -> Map<Address, i128>;
+    fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128>;
 
-    fn balance(e: Env, from: Address) -> i128;
+    fn user_balance(e: Env, from: Address) -> i128;
 }
 
 pub trait AdminInterfaceTrait {

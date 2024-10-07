@@ -19,7 +19,7 @@ mod token;
 mod utils;
 
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
-use funds::{get_current_idle_funds, get_current_invested_funds, get_total_managed_funds};
+use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds};
 use interface::{AdminInterfaceTrait, VaultTrait};
 use models::Asset;
 use storage::{
@@ -42,11 +42,11 @@ pub struct DeFindexVault;
 impl VaultTrait for DeFindexVault {
     fn initialize(
         e: Env,
+        assets: Vec<Asset>,
+        manager: Address,
         emergency_manager: Address,
         fee_receiver: Address,
-        manager: Address,
         defindex_receiver: Address,
-        assets: Vec<Asset>,
     ) -> Result<(), ContractError> {
         let access_control = AccessControl::new(&e);
         if access_control.has_role(&RolesDataKey::Manager) {
@@ -64,10 +64,20 @@ impl VaultTrait for DeFindexVault {
         let total_assets = assets.len();
         set_total_assets(&e, total_assets as u32);
         for (i, asset) in assets.iter().enumerate() {
+            // for every asset, we need to check that the list of strategyes indeed support this asset
+            
+            // TODO Fix, currently failing
+            // for strategy in asset.strategies.iter() {
+            //     let strategy_client = DeFindexStrategyClient::new(&e, &strategy.address);
+            //     if strategy_client.asset() != asset.address {
+            //         panic_with_error!(&e, ContractError::StrategyDoesNotSupportAsset);
+            //     }
+            // }
             set_asset(&e, i as u32, &asset);
         }
 
         // Metadata for the contract's token (unchanged)
+        // TODO: Name should be concatenated with some other name giving when initializing. Check how soroswap pairs  token are called.
         let decimal: u32 = 7;
         let name: String = String::from_str(&e, "dfToken");
         let symbol: String = String::from_str(&e, "DFT");
@@ -81,6 +91,7 @@ impl VaultTrait for DeFindexVault {
             },
         );
 
+        // TODO: Emit event
         Ok(())
     }
 
@@ -98,18 +109,30 @@ impl VaultTrait for DeFindexVault {
         // assets lenght should be equal to amounts_desired and amounts_min length
         let assets_length = assets.len();
         if assets_length != amounts_desired.len() || assets_length != amounts_min.len() {
-            panic!("Invalid amounts"); // TODO transform panic in error
+            panic_with_error!(&e, ContractError::WrongAmuntsLength);
         }
 
         // for every amount desired, check non negative
         for amount in amounts_desired.iter() {
             check_nonnegative_amount(amount)?;
         }
+        // for amount min is not necesary to check if it is negative
 
         let (amounts, shares_to_mint) = if assets_length == 1 {
-            let shares = 0; //TODO
+        // If Total Assets == 1
+            let shares = if VaultToken::total_supply(e.clone())==0{
+                // TODO In this case we might also want to mint a MINIMUM LIQUIDITY to be locked forever in the contract
+                // this might be for security and practical reasons as well
+                // shares will be equal to the amount desired to deposit, just for simplicity
+                amounts_desired.get(0).unwrap() // here we have already check same lenght
+            } else{
+                // in this case we will mint a share proportional to the total managed funds
+                let total_managed_funds = fetch_total_managed_funds(&e);
+                VaultToken::total_supply(e.clone()) * amounts_desired.get(0).unwrap() / total_managed_funds.get(assets.get(0).unwrap().address.clone()).unwrap()
+            };
             (amounts_desired, shares)
         } else {
+        // If Total Assets > 1
             calculate_deposit_amounts_and_shares_to_mint(
                 &e,
                 &assets,
@@ -154,7 +177,7 @@ impl VaultTrait for DeFindexVault {
         let withdrawal_amounts = calculate_withdrawal_amounts(&e, df_amount)?;
 
         // Get idle funds for each token
-        let idle_funds = get_current_idle_funds(&e);
+        let idle_funds = fetch_current_idle_funds(&e);
 
         // Loop through each token and handle the withdrawal
         for (asset, required_amount) in withdrawal_amounts.iter() {
@@ -242,19 +265,19 @@ impl VaultTrait for DeFindexVault {
         get_assets(&e)
     }
 
-    fn get_total_managed_funds(e: &Env) -> Map<Address, i128> {
-        get_total_managed_funds(e)
+    fn fetch_total_managed_funds(e: &Env) -> Map<Address, i128> {
+        fetch_total_managed_funds(e)
     }
 
-    fn get_current_invested_funds(e: &Env) -> Map<Address, i128> {
-        get_current_invested_funds(e)
+    fn fetch_current_invested_funds(e: &Env) -> Map<Address, i128> {
+        fetch_current_invested_funds(e)
     }
 
-    fn get_current_idle_funds(e: &Env) -> Map<Address, i128> {
-        get_current_idle_funds(e)
+    fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128> {
+        fetch_current_idle_funds(e)
     }
 
-    fn balance(e: Env, from: Address) -> i128 {
+    fn user_balance(e: Env, from: Address) -> i128 {
         VaultToken::balance(e, from)
     }
 }
