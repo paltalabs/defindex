@@ -2,7 +2,7 @@ import { shortenAddress } from '@/helpers/shortenAddress'
 import { VaultMethod, useVaultCallback } from '@/hooks/useVault'
 import { fetchDefaultAddresses, setIsVaultsLoading, setVaultRoles, VaultData } from '@/store/lib/features/walletStore'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { ArrowLeftIcon, SettingsIcon } from '@chakra-ui/icons'
+import { ArrowLeftIcon, SettingsIcon, WarningTwoIcon } from '@chakra-ui/icons'
 import {
   Table,
   Thead,
@@ -168,28 +168,28 @@ export const AllVaults = ({
                 </Stat>
               </Td>
               {address && (
-              <Td textAlign={'center'}>
-                <Tooltip hasArrow label={'Deposit'} rounded={'lg'}>
-                  <IconButton
-                    mx={1}
-                    colorScheme='blue'
-                    aria-label='deposit'
-                    size='sm'
-                    icon={<ArrowLeftIcon __css={{ transform: 'rotate(90deg)' }} />}
-                    onClick={() => handleOpenDeposit('deposit', vault)}
-                  />
-                </Tooltip>
-                <Tooltip hasArrow label={'Withdraw'} rounded={'lg'}>
-                  <IconButton
-                    mx={1}
-                    colorScheme='orange'
-                    aria-label='withdraw'
-                    size='sm'
-                    icon={<ArrowLeftIcon __css={{ transform: 'rotate(-90deg)' }} />}
-                    onClick={() => handleOpenDeposit('withdraw', vault)}
-                  />
-                </Tooltip>
-                  {(address == vault.manager) && 
+                <Td textAlign={'center'}>
+                  <Tooltip hasArrow label={'Deposit'} rounded={'lg'}>
+                    <IconButton
+                      mx={1}
+                      colorScheme='blue'
+                      aria-label='deposit'
+                      size='sm'
+                      icon={<ArrowLeftIcon __css={{ transform: 'rotate(90deg)' }} />}
+                      onClick={() => handleOpenDeposit('deposit', vault)}
+                    />
+                  </Tooltip>
+                  <Tooltip hasArrow label={'Withdraw'} rounded={'lg'}>
+                    <IconButton
+                      mx={1}
+                      colorScheme='orange'
+                      aria-label='withdraw'
+                      size='sm'
+                      icon={<ArrowLeftIcon __css={{ transform: 'rotate(-90deg)' }} />}
+                      onClick={() => handleOpenDeposit('withdraw', vault)}
+                    />
+                  </Tooltip>
+                  {(address == vault.manager) &&
                     <Tooltip hasArrow label={'Rebalance'} rounded={'lg'}>
                       <IconButton
                         mx={1}
@@ -200,7 +200,19 @@ export const AllVaults = ({
                         onClick={() => handleOpenDeployVault('edit_vault', vault)}
                       />
                     </Tooltip>}
-              </Td>
+                  {(address == vault.emergencyManager || address == vault.manager) &&
+                    <Tooltip hasArrow label={'Emergency withdraw'} rounded={'lg'}>
+                      <IconButton
+                        mx={1}
+                        colorScheme='yellow'
+                        aria-label='emergency-withdraw'
+                        size='sm'
+                        icon={<WarningTwoIcon
+                          color={'white'} />}
+                        onClick={() => handleOpenDeposit('emergency_withdraw', vault)}
+                      />
+                    </Tooltip>}
+                </Td>
               )}
 
             </Tr>

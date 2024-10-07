@@ -75,6 +75,11 @@ export const ManageVaultes = () => {
         await dispatch(setSelectedVault({ ...args, method: 'withdraw' }))
         console.log(args)
         break
+      case 'emergency_withdraw':
+        setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
+        await dispatch(setSelectedVault({ ...args, method: 'emergency_withdraw' }))
+        console.log(args)
+        break
     }
   }
 

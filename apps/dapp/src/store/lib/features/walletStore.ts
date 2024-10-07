@@ -4,6 +4,7 @@ import type { RootState } from '../store'
 import { ChainMetadata } from '@soroban-react/types'
 import vaults from '@/constants/constants.json'
 import { Networks } from '@stellar/stellar-sdk'
+import { VaultMethod } from '@/hooks/useVault'
 // Define a type for the slice state
 export interface Vault {
   address: string;
@@ -21,7 +22,7 @@ export interface VaultData {
 }
 
 interface SelectedVault extends VaultData {
-  method: string;
+  method: VaultMethod;
 }
 export interface WalletState {
   address: string;
@@ -115,7 +116,6 @@ export const walletSlice = createSlice({
       state.vaults.selectedVault = action.payload
     },
     setVaultRoles: (state, action: PayloadAction<any>) => { 
-      console.log(action.payload)
       const vaultIndex = state.vaults.createdVaults.findIndex(vault => vault.address === action.payload.address);
       if (vaultIndex !== -1) {
         state.vaults.createdVaults[vaultIndex] = {

@@ -2,6 +2,7 @@ import { useSorobanReact } from "@soroban-react/core";
 import { useCallback } from "react";
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { TxResponse, contractInvoke } from '@soroban-react/contracts';
+import { useAppSelector } from "@/store/lib/storeHooks";
 
 export enum VaultMethod {
     DEPOSIT = "deposit",
@@ -10,6 +11,7 @@ export enum VaultMethod {
     GETMANAGER = "get_manager",
     GETEMERGENCYMANAGER = "get_emergency_manager",
     GETFEERECEIVER = "get_fee_receiver",
+    EMERGENCY_WITHDRAW = "emergency_withdraw",
 }
 
 const isObject = (val: unknown) => typeof val === 'object' && val !== null && !Array.isArray(val);
@@ -17,9 +19,9 @@ const isObject = (val: unknown) => typeof val === 'object' && val !== null && !A
 export function useVaultCallback() {
     const sorobanContext = useSorobanReact();
 
+
     return useCallback(
         async (method: VaultMethod, address: string, args?: StellarSdk.xdr.ScVal[], signAndSend?: boolean) => {
-            console.log("Vault Callback called")
             const result = (await contractInvoke({
                 contractAddress: address,
                 method: method,
