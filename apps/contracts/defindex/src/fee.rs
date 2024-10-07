@@ -41,6 +41,15 @@ pub fn assess_fees(e: &Env, time_elapsed: u64, fee_rate: u32) -> Result<(), Cont
         total_fees_in_dftokens += df_tokens_to_mint;
     }
 
+    // fetch_total_managed_funds should correspond to the total supply of dfTokens
+    // `total_fees_per_asset` (is the same Map as fetch_total_managed_funds but with the amounts corresponding to fees) is a map of asset addresses and their corresponding fees in dfTokens
+    // for example
+    // total_fees_per_asset = {
+    //   usdc: 1000,
+    //   xlm: 10200,
+    // };
+    // and this should be represented as dfTokens... how? need a helper function to convert the fees to dfTokens
+
     // now it should be possible to calculate the total fees in dfTokens
     // fetch_total_managed_funds returns a map of address and i128 all of the funds there should correspond to the total supply of dfTokens
     // so we can calculate the amount of dfTokens that corresponds to the total_fees_per_asset which is also a Map<Address, i128>    
