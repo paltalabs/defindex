@@ -6,7 +6,7 @@ use crate::test::{create_asset_params, DeFindexFactoryTest};
 fn test_create_defindex_success() {
   let test = DeFindexFactoryTest::setup();
 
-  test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &test.defindex_wasm_hash);
+  test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &100u32, &test.defindex_wasm_hash);
 
   let asset_params = create_asset_params(&test);
 

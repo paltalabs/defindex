@@ -9,7 +9,8 @@ pub enum DataKey {
     Admin,
     DeFindexWasmHash,
     DeFindexReceiver,
-    DeFindexesMap
+    DeFindexesMap,
+    FeeRate,
 }
 
 const DAY_IN_LEDGERS: u32 = 17280;
@@ -95,4 +96,13 @@ pub fn put_defindex_receiver(e: &Env, address: &Address) {
 
 pub fn get_defindex_receiver(e: &Env) -> Address {
     e.storage().instance().get(&DataKey::DeFindexReceiver).unwrap()
+}
+
+// Fee Rate BPS (MAX BPS = 10000)
+pub fn put_fee_rate(e: &Env, value: &u32) {
+    e.storage().instance().set(&DataKey::FeeRate, value);
+}
+
+pub fn get_fee_rate(e: &Env) -> u32 {
+    e.storage().instance().get(&DataKey::FeeRate).unwrap()
 }

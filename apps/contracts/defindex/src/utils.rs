@@ -3,10 +3,10 @@ use soroban_sdk::{panic_with_error, Address, Env, Map, Vec};
 use crate::{
     access::{AccessControl, AccessControlTrait, RolesDataKey},
     funds::fetch_total_managed_funds,
-    models::Asset,
+    models::{AssetAllocation, Investment},
     storage::get_assets,
     ContractError,
-    token::{VaultToken}
+    token::VaultToken
 
 };
 
@@ -37,30 +37,57 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
     }
 }
 
-/// Converts dfToken amount into corresponding token amounts based on their ratio.
+/// Converts dfToken amount into corresponding token amounts for each strategy based on their ratio.
+/// returns a map of strategy address to token amount
 pub fn calculate_withdrawal_amounts(
     e: &Env,
     df_token_amount: i128, // The amount of dfTokens to withdraw
-) -> Result<Map<Asset, i128>, ContractError> {
-    let mut withdrawal_amounts = Map::<Asset, i128>::new(e);
+) -> Result<Map<Address, i128>, ContractError> {
+    let mut withdrawal_amounts = Map::<Address, i128>::new(e);
     let assets = get_assets(e);
 
-    let total_ratio = assets.iter().fold(0, |acc, asset| acc + asset.ratio);
+    // Loop through each asset and calculate proportional amounts for each strategy
+    for asset in assets.iter() {
+        let total_strategy_ratio: i128 = asset.strategies.iter().map(|s| s.ratio).sum();
 
-    // Iterate through all assets and calculate how much of each should be withdrawn
-    for (i, asset) in assets.iter().enumerate() {
-        // Calculate how much of this token corresponds to the dfToken amount
-        let token_withdraw_amount = (df_token_amount * asset.ratio) / total_ratio; // Proportional to the total ratio sum
-        withdrawal_amounts.set(asset, token_withdraw_amount);
+        // Calculate the withdrawal amount for each strategy within this asset
+        for strategy in asset.strategies.iter() {
+            if strategy.paused {
+                continue; // Skip paused strategies
+            }
+
+            let strategy_share = (df_token_amount * strategy.ratio) / total_strategy_ratio;
+            withdrawal_amounts.set(strategy.address.clone(), strategy_share);
+        }
     }
 
     Ok(withdrawal_amounts)
 }
 
+/// Converts dfToken amount into corresponding token amounts based on their ratio.
+// pub fn calculate_withdrawal_amounts(
+//     e: &Env,
+//     df_token_amount: i128, // The amount of dfTokens to withdraw
+// ) -> Result<Map<AssetAllocation, i128>, ContractError> {
+//     let mut withdrawal_amounts = Map::<AssetAllocation, i128>::new(e);
+//     let assets = get_assets(e);
+
+//     let total_ratio = assets.iter().fold(0, |acc, asset| acc + asset.ratio);
+
+//     // Iterate through all assets and calculate how much of each should be withdrawn
+//     for (i, asset) in assets.iter().enumerate() {
+//         // Calculate how much of this token corresponds to the dfToken amount
+//         let token_withdraw_amount = (df_token_amount * asset.ratio) / total_ratio; // Proportional to the total ratio sum
+//         withdrawal_amounts.set(asset, token_withdraw_amount);
+//     }
+
+//     Ok(withdrawal_amounts)
+// }
+
 pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
     e: &Env,
     total_managed_funds: &Map<Address, i128>,
-    assets: &Vec<Asset>,
+    assets: &Vec<AssetAllocation>,
     amounts_desired: &Vec<i128>,
     i: &u32,
 ) -> (Vec<i128>, i128) {
@@ -124,7 +151,7 @@ pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
 /// be replaced with proper error handling.
 pub fn calculate_deposit_amounts_and_shares_to_mint(
     e: &Env,
-    assets: &Vec<Asset>,
+    assets: &Vec<AssetAllocation>,
     amounts_desired: &Vec<i128>,
     amounts_min: &Vec<i128>,
 ) -> (Vec<i128>, i128) {
@@ -179,3 +206,24 @@ pub fn calculate_deposit_amounts_and_shares_to_mint(
     // If no solution was found after iterating through all assets, throw an error.
     panic!("didn't find optimal amounts");
 }
+
+// Calculates the amounts to invest in each strategy based on the current ratio of invested funds.
+// The function returns a Vec<Investment> where each element contains a strategy address and the amount to be invested.
+//
+// # Parameters
+// - `e`: The environment object, containing all relevant contract data.
+//
+// # Returns
+// A Vec of `Investment` structs, each containing a strategy address and the calculated amount to invest.
+// pub fn calculate_investments_based_on_ratios(
+//     e: &Env,
+// ) -> Result<Vec<Investment>, ContractError> {
+//     // i should get all managed funds
+//     let total_managed_funds = get_total_managed_funds(e);
+
+    
+//     // Create a vector to store the investment amounts for each strategy
+//     let mut investments: Vec<Investment> = Vec::new(e);
+
+//     Ok(investments)
+// }

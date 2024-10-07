@@ -1,6 +1,6 @@
 #![cfg(test)]
 extern crate std;
-use crate::defindex::{Asset, Strategy};
+use crate::defindex::{AssetAllocation, Strategy};
 use crate::{DeFindexFactory, DeFindexFactoryClient};
 use soroban_sdk::token::{
     StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient,
@@ -38,10 +38,10 @@ pub(crate) fn get_token_admin_client<'a>(
     SorobanTokenAdminClient::new(e, address)
 }
 
-pub(crate) fn create_asset_params(test: &DeFindexFactoryTest) -> Vec<Asset> {
+pub(crate) fn create_asset_params(test: &DeFindexFactoryTest) -> Vec<AssetAllocation> {
     sorobanvec![
         &test.env,
-        Asset {
+        AssetAllocation {
             address: test.token0.address.clone(),
             ratio: 1i128,
             strategies: sorobanvec![
@@ -50,6 +50,7 @@ pub(crate) fn create_asset_params(test: &DeFindexFactoryTest) -> Vec<Asset> {
                     address: test.strategy_address.clone(),
                     name: String::from_str(&test.env, "Strategy 1"),
                     paused: false,
+                    ratio: 1i128
                 }
             ],
         }
