@@ -72,7 +72,6 @@ pub fn convert_fee_to_dftokens(e: &Env, asset_fee: i128, asset_address: Address)
 pub fn calculate_total_vault_value(e: &Env, total_managed_funds: &Map<Address, i128>) -> i128 {
   let mut total_value = 0i128;
   for (asset_address, amount) in total_managed_funds.iter() {
-      // You could add some logic here if you need to fetch the current market value of assets
       total_value += amount;
   }
   total_value
