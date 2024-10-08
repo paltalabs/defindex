@@ -13,6 +13,12 @@ import {
   Grid,
   GridItem,
   Input,
+  FormControl,
+  FormLabel,
+  FormErrorMessage,
+  InputGroup,
+  IconButton,
+  InputRightElement,
 } from '@chakra-ui/react'
 import { shortenAddress } from '@/helpers/shortenAddress'
 import { PieChart } from '@mui/x-charts'
@@ -20,31 +26,40 @@ import { ChartData } from './ConfirmDelpoyModal'
 import { setEmergencyManager, setFeeReceiver, setManager } from '@/store/lib/features/vaultStore'
 import { useAppDispatch } from '@/store/lib/storeHooks'
 import { StrKey } from '@stellar/stellar-sdk'
+import { LinkIcon } from '@chakra-ui/icons'
+import { useSorobanReact } from '@soroban-react/core'
 
 
 interface FormControlInterface {
   manager: {
     isValid: boolean | undefined;
+    value: string | undefined;
   },
   emergencyManager: {
     isValid: boolean | undefined;
+    value: string | undefined;
   },
   feeReceiver: {
     isValid: boolean | undefined;
+    value: string | undefined;
   },
 }
 export const VaultPreview = ({ data }: { data: ChartData[] }) => {
 
   const dispatch = useAppDispatch()
+  const { address } = useSorobanReact()
   const [formControl, setFormControl] = useState<FormControlInterface>({
     manager: {
       isValid: undefined,
+      value: undefined
     },
     emergencyManager: {
       isValid: undefined,
+      value: undefined
     },
     feeReceiver: {
       isValid: undefined,
+      value: undefined
     },
   })
   const isValidAddress = (address: string) => {
@@ -54,53 +69,64 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
       return false
     }
   }
-  const handleManagerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const isValid = isValidAddress(event.target.value)
+  const handleManagerChange = (input: string) => {
+    const isValid = isValidAddress(input)
     while (!isValid) {
       setFormControl({
         ...formControl,
         manager: {
+          value: input,
           isValid: false,
         }
       })
       dispatch(setManager(''))
       return
     }
-    setFormControl({
-      ...formControl,
-      manager: {
-        isValid: true,
-      }
-    })
-    dispatch(setManager(event.target.value))
+    if (isValid) {
+      setFormControl({
+        ...formControl,
+        manager: {
+          value: input,
+          isValid: true
+        }
+      })
+      dispatch(setManager(input))
+    }
+    return;
   };
 
-  const handleEmergencyManagerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const isValid = isValidAddress(event.target.value)
+  const handleEmergencyManagerChange = (input: string) => {
+    const isValid = isValidAddress(input)
     while (!isValid) {
       setFormControl({
         ...formControl,
         emergencyManager: {
+          value: input,
           isValid: false,
         }
       })
       dispatch(setEmergencyManager(''))
       return
     }
-    setFormControl({
-      ...formControl,
-      emergencyManager: {
-        isValid: true,
-      }
-    })
-    dispatch(setEmergencyManager(event.target.value))
+    if (isValid) {
+      setFormControl({
+        ...formControl,
+        emergencyManager: {
+          value: input,
+          isValid: true,
+        }
+      })
+      dispatch(setEmergencyManager(input))
+    }
+    return;
   };
-  const handleFeeReceiverChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const isValid = isValidAddress(event.target.value)
+  const handleFeeReceiverChange = (input: string) => {
+    const isValid = isValidAddress(input)
     while (!isValid) {
       setFormControl({
         ...formControl,
         feeReceiver: {
+          value: input,
           isValid: false,
         }
       })
@@ -110,10 +136,11 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
     setFormControl({
       ...formControl,
       feeReceiver: {
+        value: input,
         isValid: true,
       }
     })
-    dispatch(setFeeReceiver(event.target.value))
+    dispatch(setFeeReceiver(input))
   };
 
   return (
@@ -158,45 +185,104 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
       </TableContainer>
       <Box height="20px" />
       <Grid
-        templateColumns={'repeat(8, 2fr)'}
-        templateRows={'repeat(5, 1fr)'}
+        w={'100%'}
+        templateColumns={'repeat(4, 1fr)'}
+        templateRows={'repeat(3, 1fr)'}
         alignSelf={'end'}
-        alignContent={'center'}
-        mb={4}
+        gap={6}
       >
-        <GridItem colStart={2} colSpan={3} rowStart={1}>
-          <Text mt={4}>Manager</Text>
-        </GridItem>
-        <GridItem colStart={5} colSpan={3} rowStart={1}>
-          <Input
-            onChange={handleManagerChange}
-            placeholder='GAFS3TLVM...'
-            isRequired
+        <GridItem colSpan={4} colStart={1} rowStart={1}>
+          <FormControl
             isInvalid={formControl.manager.isValid === false}
-          />
-        </GridItem>
-        <GridItem colStart={2} colSpan={3} rowStart={3}>
-          <Text mt={4}>Emergency Manager</Text>
-        </GridItem>
-        <GridItem colStart={5} colSpan={3} rowStart={3}>
-          <Input
-            onChange={handleEmergencyManagerChange}
-            placeholder='GAFS3TLVM...'
             isRequired
+          >
+            <FormLabel>Manager</FormLabel>
+            <InputGroup>
+              <Input
+                onChange={(event) => handleManagerChange(event?.target.value)}
+                value={formControl.manager.value}
+                placeholder='GAFS3TLVM...'
+                sx={{ pr: 8 }}
+              />
+              <Tooltip label='Use connected address.'>
+                <InputRightElement>
+                  <IconButton
+                    aria-label='Connected address'
+                    icon={<LinkIcon />}
+                    bg={'whiteAlpha.500'}
+                    size={'sm'}
+                    backdropFilter={'blur(1px)'}
+                    onClick={() => handleManagerChange(address!)}
+                  />
+                </InputRightElement>
+              </Tooltip>
+            </InputGroup>
+            <FormErrorMessage>A valid Stellar / Soroban address is required.</FormErrorMessage>
+          </FormControl>
+        </GridItem>
+
+        <GridItem colSpan={4} colStart={1} rowStart={2}>
+          <FormControl
             isInvalid={formControl.emergencyManager.isValid === false}
-          />
-        </GridItem>
-        <GridItem colStart={2} colSpan={3} rowStart={5}>
-          <Text mt={4}>Fee Receiver</Text>
-        </GridItem>
-        <GridItem colStart={5} colSpan={3} rowStart={5}>
-          <Input
-            onChange={handleFeeReceiverChange}
-            placeholder='GAFS3TLVM...'
             isRequired
-            isInvalid={formControl.feeReceiver.isValid === false}
-          />
+          >
+            <FormLabel>Emergency manager</FormLabel>
+            <InputGroup>
+              <Input
+                onChange={(event) => handleEmergencyManagerChange(event?.target.value)}
+                value={formControl.emergencyManager.value}
+                placeholder='GAFS3TLVM...'
+                sx={{ pr: 8 }}
+              />
+              <Tooltip label='Use connected address.'>
+                <InputRightElement>
+                  <IconButton
+                    aria-label='Connected address'
+                    icon={<LinkIcon />}
+                    bg={'whiteAlpha.500'}
+                    size={'sm'}
+                    backdropFilter={'blur(1px)'}
+                    onClick={() => handleEmergencyManagerChange(address!)}
+                  />
+                </InputRightElement>
+              </Tooltip>
+            </InputGroup>
+            <FormErrorMessage>A valid Stellar / Soroban address is required.</FormErrorMessage>
+          </FormControl>
         </GridItem>
+
+        <GridItem colSpan={4} colStart={1} rowStart={3}>
+          <FormControl
+            isInvalid={formControl.feeReceiver.isValid === false}
+            isRequired
+          >
+            <FormLabel>Fee reciever</FormLabel>
+            <InputGroup>
+              <Input
+                onChange={(event) => handleFeeReceiverChange(event?.target.value)}
+                value={formControl.feeReceiver.value}
+                placeholder='GAFS3TLVM...'
+                sx={{ pr: 8 }}
+              />
+              <Tooltip label='Use connected address.'>
+                <InputRightElement>
+                  <IconButton
+                    aria-label='Connected address'
+                    icon={<LinkIcon />}
+                    bg={'whiteAlpha.500'}
+                    size={'sm'}
+                    backdropFilter={'blur(1px)'}
+                    onClick={() => handleFeeReceiverChange(address!)}
+                  />
+                </InputRightElement>
+              </Tooltip>
+            </InputGroup>
+            <FormErrorMessage>A valid Stellar / Soroban address is required.</FormErrorMessage>
+          </FormControl>
+        </GridItem>
+
+
+
       </Grid>
     </>
   )
