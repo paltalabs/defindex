@@ -8,15 +8,23 @@ pub enum ContractError {
     NotInitialized = 100,
     AlreadyInitialized = 101,
     InvalidRatio = 102,
+    StrategyDoesNotSupportAsset=103,
 
     // Validation Errors (11x)
     NegativeNotAllowed = 110,
     InsufficientBalance = 111,
+    WrongAmuntsLength = 112,
+    NotEnoughIdleFunds = 113,
 
     // Arithmetic Errors (12x)
     ArithmeticError = 120,
+    Overflow = 121,
 
     // Authorization/Role-based Errors (13x)
     Unauthorized = 130,
     RoleNotFound = 131,
+
+    // Strategy Errors (14x)
+    StrategyNotFound = 140,
+    StrategyPausedOrNotFound = 141,
 }
