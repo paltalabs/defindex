@@ -67,7 +67,7 @@ pub trait VaultTrait {
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn withdraw(e: Env, df_amount: i128, from: Address) -> Result<(), ContractError>;
+    fn withdraw(e: Env, df_amount: i128, from: Address) -> Result<Vec<i128>, ContractError>;
 
     /// Executes an emergency withdrawal from a specific strategy.
     ///
@@ -158,6 +158,10 @@ pub trait VaultTrait {
     fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128>;
 
     fn user_balance(e: Env, from: Address) -> i128;
+
+    // TODO: DELETE THIS, USED FOR TESTING
+    fn get_asset_amounts_for_dftokens(e: Env, df_token: i128) -> Map<Address, i128>;
+    fn asses_fees(e: Env) -> i128;
 }
 
 pub trait AdminInterfaceTrait {

@@ -1,6 +1,6 @@
 use soroban_sdk::{Address, Env, Map, Symbol, Vec};
 
-use crate::{funds::fetch_total_managed_funds, storage::get_factory, token::VaultToken, ContractError};
+use crate::{funds::fetch_total_managed_funds, storage::get_factory, token::VaultToken, utils::calculate_dftokens_from_asset_amounts, ContractError};
 
 /// Fetches the current fee rate from the factory contract.
 /// The fee rate is expressed in basis points (BPS).
@@ -14,13 +14,12 @@ pub fn fetch_fee_rate(e: &Env) -> u32 {
   )
 }
 
-pub fn assess_fees(e: &Env, time_elapsed: u64, fee_rate: u32) -> Result<(), ContractError> {
+pub fn assess_fees(e: &Env, time_elapsed: u64, fee_rate: u32) -> Result<i128, ContractError> {
 
     let total_managed_funds = fetch_total_managed_funds(e); // Get total managed funds per asset
     let df_token_supply = VaultToken::total_supply(e.clone()); // Get total supply of dfTokens
     
     let seconds_per_year = 31_536_000; // 365 days in seconds
-    let mut total_fees_in_dftokens = 0i128;
 
     let mut total_fees_per_asset: Map<Address, i128> = Map::new(&e);
 
@@ -35,11 +34,13 @@ pub fn assess_fees(e: &Env, time_elapsed: u64, fee_rate: u32) -> Result<(), Cont
         total_fees_per_asset.set(asset_address.clone(), asset_fee);
 
         // Now convert the asset fee into dfTokens based on the total value of the vault
-        let df_tokens_to_mint = convert_fee_to_dftokens(&e, asset_fee, asset_address)?;
+        // let df_tokens_to_mint = convert_fee_to_dftokens(&e, asset_fee, asset_address)?;
         
         // Add the dfTokens to the total fees to mint
-        total_fees_in_dftokens += df_tokens_to_mint;
+        // total_fees_in_dftokens += df_tokens_to_mint;
     }
+
+    let total_fees_in_dftokens = calculate_dftokens_from_asset_amounts(e, total_fees_per_asset)?;
 
     // fetch_total_managed_funds should correspond to the total supply of dfTokens
     // `total_fees_per_asset` (is the same Map as fetch_total_managed_funds but with the amounts corresponding to fees) is a map of asset addresses and their corresponding fees in dfTokens
@@ -60,7 +61,7 @@ pub fn assess_fees(e: &Env, time_elapsed: u64, fee_rate: u32) -> Result<(), Cont
     // Update the last fee assessment timestamp
     // update_last_fee_assessment(e);
 
-  Ok(())
+  Ok(total_fees_in_dftokens)
 }
 
 /// Converts the asset fee into dfTokens based on the asset's value.

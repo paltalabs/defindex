@@ -15,6 +15,8 @@ pub enum ContractError {
     InsufficientBalance = 111,
     WrongAmuntsLength = 112,
     NotEnoughIdleFunds = 113,
+    InsufficientManagedFunds = 114,
+    NoAssetsProvided = 115,
 
     // Arithmetic Errors (12x)
     ArithmeticError = 120,

@@ -1,9 +1,8 @@
 #![no_std]
+use fee::assess_fees;
 use investment::{execute_investment, prepare_investment};
 use soroban_sdk::{
-    contract, contractimpl, panic_with_error,
-    token::{TokenClient, TokenInterface},
-    Address, Env, Map, String, Vec,
+    contract, contractimpl, panic_with_error, token::{TokenClient, TokenInterface}, vec, Address, Env, Map, String, Vec
 };
 use soroban_token_sdk::metadata::TokenMetadata;
 
@@ -31,8 +30,7 @@ use storage::{
 use strategies::{get_strategy_asset, get_strategy_client, get_strategy_struct, pause_strategy, unpause_strategy};
 use token::{internal_mint, internal_burn, write_metadata, VaultToken};
 use utils::{
-    calculate_deposit_amounts_and_shares_to_mint, calculate_withdrawal_amounts, check_initialized,
-    check_nonnegative_amount,
+    calculate_asset_amounts_for_dftokens, calculate_deposit_amounts_and_shares_to_mint, calculate_withdrawal_amounts, check_initialized, check_nonnegative_amount
 };
 
 pub use error::ContractError;
@@ -166,7 +164,7 @@ impl VaultTrait for DeFindexVault {
         Ok(())
     }
 
-    fn withdraw(e: Env, df_amount: i128, from: Address) -> Result<(), ContractError> {
+    fn withdraw(e: Env, df_amount: i128, from: Address) -> Result<Vec<i128>, ContractError> {
         check_initialized(&e)?;
         check_nonnegative_amount(df_amount)?;
         from.require_auth();
@@ -181,7 +179,7 @@ impl VaultTrait for DeFindexVault {
         internal_burn(e.clone(), from.clone(), df_amount);
     
         // Calculate the withdrawal amounts for each strategy based on the dfToken amount
-        let withdrawal_amounts = calculate_withdrawal_amounts(&e, df_amount)?;
+        let withdrawal_amounts = calculate_withdrawal_amounts(&e, df_amount);
     
         // Create a map to store the total amounts to transfer for each asset address
         let mut total_amounts_to_transfer: Map<Address, i128> = Map::new(&e);
@@ -194,49 +192,48 @@ impl VaultTrait for DeFindexVault {
             // Find the corresponding asset address for this strategy
             let asset_address = get_strategy_asset(&e, &strategy_address)?.address;
     
-            // Check idle funds for this asset
-            let idle_balance = idle_funds.get(asset_address.clone()).unwrap_or(0);
+            // // Check idle funds for this asset
+            // let idle_balance = idle_funds.get(asset_address.clone()).unwrap_or(0);
     
-            let mut remaining_amount = required_amount;
+            // let mut remaining_amount = required_amount;
     
-            // Withdraw as much as possible from idle funds first
-            if idle_balance > 0 {
-                if idle_balance >= required_amount {
-                    // Idle funds cover the full amount
-                    let current_amount = total_amounts_to_transfer.get(asset_address.clone()).unwrap_or(0);
-                    total_amounts_to_transfer.set(asset_address.clone(), current_amount + required_amount);
-                    continue;  // No need to withdraw from the strategy
-                } else {
-                    // Partial withdrawal from idle funds
-                    let current_amount = total_amounts_to_transfer.get(asset_address.clone()).unwrap_or(0);
-                    total_amounts_to_transfer.set(asset_address.clone(), current_amount + idle_balance);
-                    remaining_amount = required_amount - idle_balance;  // Update remaining amount
-                }
-            }
+            // // Withdraw as much as possible from idle funds first
+            // if idle_balance > 0 {
+            //     let current_amount = total_amounts_to_transfer.get(asset_address.clone()).unwrap_or(0);
+            //     if idle_balance >= required_amount {
+            //         // Idle funds cover the full amount
+            //         total_amounts_to_transfer.set(asset_address.clone(), current_amount + required_amount);
+            //         continue;  // No need to withdraw from the strategy
+            //     } else {
+            //         // Partial withdrawal from idle funds
+            //         total_amounts_to_transfer.set(asset_address.clone(), current_amount + idle_balance);
+            //         remaining_amount = required_amount - idle_balance;  // Update remaining amount
+            //     }
+            // }
     
             // Withdraw the remaining amount from the strategy
-            let strategy_client = get_strategy_client(&e, strategy_address.clone());
-            strategy_client.withdraw(&remaining_amount, &from);
+            // let strategy_client = get_strategy_client(&e, strategy_address.clone());
+            // strategy_client.withdraw(&remaining_amount, &from);
     
             // Update the total amounts to transfer map
-            let current_amount = total_amounts_to_transfer.get(asset_address.clone()).unwrap_or(0);
-            total_amounts_to_transfer.set(asset_address.clone(), current_amount + remaining_amount);
+            // let current_amount = total_amounts_to_transfer.get(asset_address.clone()).unwrap_or(0);
+            // total_amounts_to_transfer.set(asset_address.clone(), current_amount + remaining_amount);
         }
     
         // Perform the transfers for the total amounts
-        let mut amounts_withdrawn: Vec<i128> = Vec::new(&e);
-        for (asset_address, total_amount) in total_amounts_to_transfer.iter() {
-            TokenClient::new(&e, &asset_address).transfer(
-                &e.current_contract_address(),
-                &from,
-                &total_amount,
-            );
-            amounts_withdrawn.push_back(total_amount);
-        }
+        // let mut amounts_withdrawn: Vec<i128> = Vec::new(&e);
+        // for (asset_address, total_amount) in total_amounts_to_transfer.iter() {
+        //     TokenClient::new(&e, &asset_address).transfer(
+        //         &e.current_contract_address(),
+        //         &from,
+        //         &total_amount,
+        //     );
+        //     amounts_withdrawn.push_back(total_amount);
+        // }
 
-        events::emit_withdraw_event(&e, from, df_amount, amounts_withdrawn);
+        // events::emit_withdraw_event(&e, from, df_amount, amounts_withdrawn.clone());
     
-        Ok(())
+        Ok(vec![&e, df_amount])
     }
 
     fn emergency_withdraw(e: Env, strategy_address: Address, caller: Address) -> Result<(), ContractError> {
@@ -306,6 +303,15 @@ impl VaultTrait for DeFindexVault {
 
     fn user_balance(e: Env, from: Address) -> i128 {
         VaultToken::balance(e, from)
+    }
+
+    // TODO: DELETE THIS, USED FOR TESTING
+    fn get_asset_amounts_for_dftokens(e: Env, df_tokens: i128) -> Map<Address, i128> {
+        calculate_asset_amounts_for_dftokens(&e, df_tokens)
+    }
+
+    fn asses_fees(e: Env) -> i128 {
+        assess_fees(&e, 31_536_000, 100).unwrap()
     }
 }
 

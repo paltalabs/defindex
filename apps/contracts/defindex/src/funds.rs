@@ -20,6 +20,19 @@ fn fetch_idle_funds_for_asset(e: &Env, asset: &AssetAllocation) -> i128 {
     TokenClient::new(e, &asset.address).balance(&e.current_contract_address())
 }
 
+/// Fetches the total funds that are invested for a given asset. 
+/// It iterates through all the strategies associated with the asset and sums their balances.
+/// 
+/// # Arguments
+/// * `e` - The current environment instance.
+/// * `asset` - The asset for which invested funds are being fetched.
+/// 
+/// # Returns
+/// * The total invested balance (i128) of the asset across all strategies.
+pub fn fetch_invested_funds_for_strategy(e: &Env, strategy_address: &Address) -> i128 {
+    let strategy_client = get_strategy_client(e, strategy_address.clone());
+    strategy_client.balance(&e.current_contract_address())
+}
 
 /// Fetches the total funds that are invested for a given asset. 
 /// It iterates through all the strategies associated with the asset and sums their balances.
@@ -30,11 +43,10 @@ fn fetch_idle_funds_for_asset(e: &Env, asset: &AssetAllocation) -> i128 {
 /// 
 /// # Returns
 /// * The total invested balance (i128) of the asset across all strategies.
-fn fetch_invested_funds_for_asset(e: &Env, asset: &AssetAllocation) -> i128 {
+pub fn fetch_invested_funds_for_asset(e: &Env, asset: &AssetAllocation) -> i128 {
     let mut invested_funds = 0;
     for strategy in asset.strategies.iter() {
-        let strategy_client = get_strategy_client(e, strategy.address);
-        invested_funds += strategy_client.balance(&e.current_contract_address());
+        invested_funds += fetch_invested_funds_for_strategy(e, &strategy.address);
     }
     invested_funds
 }
