@@ -2,21 +2,26 @@ import { useSorobanReact } from "@soroban-react/core";
 import { useCallback } from "react";
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { TxResponse, contractInvoke } from '@soroban-react/contracts';
+import { useAppSelector } from "@/store/lib/storeHooks";
 
-export enum DefindexMethod {
+export enum VaultMethod {
     DEPOSIT = "deposit",
     BALANCE = "balance",
     WITHDRAW = "withdraw",
+    GETMANAGER = "get_manager",
+    GETEMERGENCYMANAGER = "get_emergency_manager",
+    GETFEERECEIVER = "get_fee_receiver",
+    EMERGENCY_WITHDRAW = "emergency_withdraw",
 }
 
 const isObject = (val: unknown) => typeof val === 'object' && val !== null && !Array.isArray(val);
 
-export function useDefindexCallback() {
+export function useVaultCallback() {
     const sorobanContext = useSorobanReact();
 
+
     return useCallback(
-        async (method: DefindexMethod, address: string, args?: StellarSdk.xdr.ScVal[], signAndSend?: boolean) => {
-            console.log("Defindex Callback called")
+        async (method: VaultMethod, address: string, args?: StellarSdk.xdr.ScVal[], signAndSend?: boolean) => {
             const result = (await contractInvoke({
                 contractAddress: address,
                 method: method,

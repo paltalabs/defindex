@@ -14,7 +14,7 @@ import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { ConfirmDelpoyModal } from './ConfirmDelpoyModal'
 import { setName, Strategy } from '@/store/lib/features/vaultStore'
 
-export const DeployIndex = () => {
+export const DeployVault = () => {
   const dispatch = useAppDispatch()
   const strategies: Strategy[] = useAppSelector(state => state.newVault.strategies)
   const totalValues = useAppSelector(state => state.newVault.totalValues)
@@ -62,7 +62,7 @@ export const DeployIndex = () => {
           size="lg"
           mt={4}
           onClick={() => setOpenConfirm(true)}>
-          Deploy DeFindex
+          Deploy Defindex
         </Button>
       </Card>
     </Container>

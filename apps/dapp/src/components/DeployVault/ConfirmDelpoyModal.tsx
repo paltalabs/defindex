@@ -21,13 +21,13 @@ import {
   scValToNative,
   xdr,
 } from "@stellar/stellar-sdk";
-import { pushIndex } from '@/store/lib/features/walletStore'
+import { pushVault } from '@/store/lib/features/walletStore'
 import { useFactoryCallback, FactoryMethod } from '@/hooks/useFactory'
-import { IndexPreview } from "./IndexPreview";
+import { VaultPreview } from "./VaultPreview";
 import { DeploySteps } from "./DeploySteps";
 import { useEffect, useState } from "react";
 import { WarningIcon, CheckCircleIcon, ExternalLinkIcon } from '@chakra-ui/icons'
-import { Strategy } from "@/store/lib/features/vaultStore";
+import { NewVaultState, Strategy } from "@/store/lib/features/vaultStore";
 import { useSorobanReact } from "@soroban-react/core";
 
 import { randomBytes } from "crypto";
@@ -56,7 +56,8 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   const sorobanContext = useSorobanReact();
   const { activeChain } = sorobanContext;
   const factory = useFactoryCallback();
-  const strategies: Strategy[] = useAppSelector(state => state.newVault.strategies);
+  const newVault: NewVaultState = useAppSelector(state => state.newVault);
+  const strategies: Strategy[] = newVault.strategies;
   const indexName = useAppSelector(state => state.newVault.name)
   const managerString = useAppSelector(state => state.newVault.manager)
   const emergencyManagerString = useAppSelector(state => state.newVault.emergencyManager)
@@ -191,15 +192,19 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       })
       return
     }
-    console.log(result.txHash)
-    const parsedResult = scValToNative(result.returnValue);
-    dispatch(pushIndex(parsedResult));
+    const parsedResult: string = scValToNative(result.returnValue);
+    if (parsedResult.length !== 56) throw new Error('Invalid result')
+    const tempVault: any = {
+      ...newVault,
+      address: parsedResult
+    }
+    dispatch(pushVault(tempVault));
     setActiveStep(3);
     setStatus({
       ...status,
       isSuccess: true,
       hasError: false,
-      message: 'Index deployed successfully.',
+      message: 'DeFindex deployed successfully.',
       txHash: result.txHash
     });
     return result;
@@ -265,7 +270,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
           <ModalBody>
             <DeploySteps activeStep={activeStep} hasError={status.hasError} />
             {activeStep == 0 && (
-              <IndexPreview data={chartData} />
+              <VaultPreview data={chartData} />
             )}
             {activeStep == 1 && (
               <Box textAlign={'center'}>

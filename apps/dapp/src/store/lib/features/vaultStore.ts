@@ -6,32 +6,34 @@ import { getRemoteConfig } from '@/helpers/getRemoteConfig';
 
 export interface Strategy {
   address: string;
-  value: number;
   name?: string;
+  value: number;
 }
 
 export interface NewVaultState {
-  strategies: Strategy[];
-  name: string;
-  totalValues?: number;
+  address: string;
   emergencyManager?: string;
-  manager?: string;
   feeReceiver?: string;
+  manager?: string;
+  name: string;
+  strategies: Strategy[];
+  totalValues?: number;
 }
 
 // Define the initial state using that type
 const initialState: NewVaultState = {
+  address: "",
+  emergencyManager: "",
+  feeReceiver: "",
+  manager: "",
+  name: "",
   strategies: [
     {
       address: "",
       value: 0
     }
   ],
-  name: "",
   totalValues: 0,
-  emergencyManager: "",
-  manager: "",
-  feeReceiver: "",
 }
 
 //Filtrar Strategies por network y retornar array de Strategies
