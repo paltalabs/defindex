@@ -1,7 +1,7 @@
-use soroban_sdk::{panic_with_error, Address, Env, Map, Vec};
+use soroban_sdk::{panic_with_error, xdr::Asset, Address, Env, Map, Vec};
 
 use crate::{
-    access::{AccessControl, AccessControlTrait, RolesDataKey}, funds::{fetch_invested_funds_for_asset, fetch_invested_funds_for_strategy, fetch_total_managed_funds}, models::{AssetAllocation, Investment}, storage::get_assets, token::VaultToken, ContractError
+    access::{AccessControl, AccessControlTrait, RolesDataKey}, funds::{fetch_invested_funds_for_asset, fetch_invested_funds_for_strategy, fetch_total_managed_funds}, models::{AssetAllocation, Investment, Strategy}, storage::get_assets, token::VaultToken, ContractError
 
 };
 
@@ -32,40 +32,27 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
     }
 }
 
-/// Converts dfToken amount into corresponding token amounts for each strategy based on their ratio.
+/// From an amount, calculates how much to withdraw from each strategy;
 /// returns a map of strategy address to token amount
 pub fn calculate_withdrawal_amounts(
     e: &Env,
-    df_token_amount: i128, // The amount of dfTokens to withdraw
+    amount: i128,
+    asset: AssetAllocation,
 ) -> Map<Address, i128> {
     let mut withdrawal_amounts = Map::<Address, i128>::new(e);
-    let assets = get_assets(e);
 
-    // Step 1: Calculate asset amounts for the given df_token_amount
-    let asset_amounts = calculate_asset_amounts_for_dftokens(e, df_token_amount);
+    let total_invested_in_strategies: i128 = fetch_invested_funds_for_asset(&e, &asset);
 
-    // Step 2: Iterate through each asset and calculate the amounts for each strategy
-    for asset in assets.iter() {
-        // Get the total invested funds for the current asset
-        let total_invested_for_asset = asset_amounts.get(asset.address.clone()).unwrap_or(0);
-
-        // Get total funds in each strategy for this asset
-        let total_invested_in_strategies: i128 = fetch_invested_funds_for_asset(&e, &asset);
-
-        // Step 3: Calculate the withdrawal amount for each strategy within this asset
-        for strategy in asset.strategies.iter() {
-            if strategy.paused {
-                continue; // Skip paused strategies
-            }
-            // Fetch invested funds for the strategy
-            let strategy_invested_funds = fetch_invested_funds_for_strategy(e, &strategy.address);
-
-            // Calculate the strategy's share of the withdrawal amount based on its proportion
-            let strategy_share_of_withdrawal = (total_invested_for_asset * strategy_invested_funds) / total_invested_in_strategies;
-
-            // Set the calculated amount to be withdrawn from this strategy
-            withdrawal_amounts.set(strategy.address.clone(), strategy_share_of_withdrawal);
+    for strategy in asset.strategies.iter() {
+        if strategy.paused {
+            continue;
         }
+
+        let strategy_invested_funds = fetch_invested_funds_for_strategy(e, &strategy.address);
+
+        let strategy_share_of_withdrawal = (amount * strategy_invested_funds) / total_invested_in_strategies;
+
+        withdrawal_amounts.set(strategy.address.clone(), strategy_share_of_withdrawal);
     }
 
     withdrawal_amounts

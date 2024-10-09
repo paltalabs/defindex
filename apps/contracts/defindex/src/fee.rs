@@ -8,9 +8,9 @@ pub fn fetch_fee_rate(e: &Env) -> u32 {
   let factory_address = get_factory(e);
   // Interacts with the factory contract to get the fee rate.
   e.invoke_contract(
-      &factory_address,
-      &Symbol::new(&e, "fee_rate"), 
-      Vec::new(&e)
+    &factory_address,
+    &Symbol::new(&e, "fee_rate"), 
+    Vec::new(&e)
   )
 }
 
@@ -61,28 +61,28 @@ pub fn assess_fees(e: &Env, time_elapsed: u64, fee_rate: u32) -> Result<i128, Co
     // Update the last fee assessment timestamp
     // update_last_fee_assessment(e);
 
-  Ok(total_fees_in_dftokens)
+    Ok(total_fees_in_dftokens)
 }
 
 /// Converts the asset fee into dfTokens based on the asset's value.
 pub fn convert_fee_to_dftokens(e: &Env, asset_fee: i128, asset_address: Address) -> Result<i128, ContractError> {
-  let df_token_supply = VaultToken::total_supply(e.clone());
+    let df_token_supply = VaultToken::total_supply(e.clone());
 
-  // Calculate the value of dfTokens relative to the total managed funds
-  let total_managed_funds = fetch_total_managed_funds(e);
-  let total_vault_value = calculate_total_vault_value(&e, &total_managed_funds);
+    // Calculate the value of dfTokens relative to the total managed funds
+    let total_managed_funds = fetch_total_managed_funds(e);
+    let total_vault_value = calculate_total_vault_value(&e, &total_managed_funds);
 
-  // Convert the asset fee into dfTokens
-  let df_token_value = (df_token_supply * asset_fee) / total_vault_value;
+    // Convert the asset fee into dfTokens
+    let df_token_value = (df_token_supply * asset_fee) / total_vault_value;
 
-  Ok(df_token_value)
+    Ok(df_token_value)
 }
 
 /// Calculates the total value of the vault based on managed funds.
 pub fn calculate_total_vault_value(e: &Env, total_managed_funds: &Map<Address, i128>) -> i128 {
-  let mut total_value = 0i128;
-  for (asset_address, amount) in total_managed_funds.iter() {
-      total_value += amount;
-  }
-  total_value
+    let mut total_value = 0i128;
+    for (asset_address, amount) in total_managed_funds.iter() {
+        total_value += amount;
+    }
+    total_value
 }

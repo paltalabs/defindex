@@ -16,7 +16,6 @@ pub enum ContractError {
     WrongAmuntsLength = 112,
     NotEnoughIdleFunds = 113,
     InsufficientManagedFunds = 114,
-    NoAssetsProvided = 115,
 
     // Arithmetic Errors (12x)
     ArithmeticError = 120,
@@ -29,4 +28,8 @@ pub enum ContractError {
     // Strategy Errors (14x)
     StrategyNotFound = 140,
     StrategyPausedOrNotFound = 141,
+
+    // Asset Errors (15x)
+    AssetNotFound = 150,
+    NoAssetsProvided = 151,
 }
