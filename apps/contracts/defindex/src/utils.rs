@@ -44,6 +44,7 @@ pub fn calculate_withdrawal_amounts(
     let total_invested_in_strategies: i128 = fetch_invested_funds_for_asset(&e, &asset);
 
     for strategy in asset.strategies.iter() {
+        // TODO: if strategy is paused but still holds assets on it shouldnt we withdraw them?
         if strategy.paused {
             continue;
         }
