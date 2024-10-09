@@ -26,22 +26,28 @@ export const DepositToVault = () => {
 
   const vaultOperation = async () => {
     if (!address || !vaultMethod) return;
-    if (vaultMethod != VaultMethod.EMERGENCY_WITHDRAW && !amount) return;
+    if (vaultMethod != VaultMethod.EMERGENCY_WITHDRAW) return;
     console.log('Vault method:', vaultMethod)
     const args: xdr.ScVal[] = [
-      new Address(address).toScVal()
+      new Address(selectedVault.address).toScVal()
     ];
     if (vaultMethod === VaultMethod.EMERGENCY_WITHDRAW) {
       if (!selectedVault?.totalValues) throw new Error('Total values is required');
-      args.unshift(nativeToScVal((selectedVault?.totalValues! * Math.pow(10, 7)), { type: "i128" }),)
+      args.unshift(nativeToScVal((0), { type: "i128" }),)
     } else {
       if (!amount) throw new Error('Amount is required');
       args.unshift(nativeToScVal((amount * Math.pow(10, 7)), { type: "i128" }),)
     }
+    // const result = await vault(
+    //   vaultMethod!,
+    //   selectedVault?.address!,
+    //   args,
+    //   true,
+    // )
     const result = await vault(
-      vaultMethod!,
+      VaultMethod.GETEMERGENCYMANAGER,
       selectedVault?.address!,
-      args,
+      [],
       true,
     )
     return result
@@ -90,16 +96,16 @@ export const DepositToVault = () => {
           </GridItem>
           {vaultMethod != VaultMethod.EMERGENCY_WITHDRAW &&
             <>
-            <GridItem colSpan={6} textAlign={'end'} alignContent={'center'}>
-              <Text fontSize='lg'>Amount to {vaultMethod}:</Text>
-            </GridItem>
+              <GridItem colSpan={6} textAlign={'end'} alignContent={'center'}>
+                <Text fontSize='lg'>Amount to {vaultMethod}:</Text>
+              </GridItem>
 
-            <GridItem colSpan={6} colEnd={13} textAlign={'end'} >
-              <InputGroup alignContent={'center'} alignItems={'center'}>
-                <Input my={4} type="text" onChange={(e) => setAmount(Number(e.target.value))} placeholder='Amount' value={amount} />
-                <InputRightAddon>$ USDC</InputRightAddon>
-              </InputGroup>
-            </GridItem>
+              <GridItem colSpan={6} colEnd={13} textAlign={'end'} >
+                <InputGroup alignContent={'center'} alignItems={'center'}>
+                  <Input my={4} type="text" onChange={(e) => setAmount(Number(e.target.value))} placeholder='Amount' value={amount} />
+                  <InputRightAddon>$ USDC</InputRightAddon>
+                </InputGroup>
+              </GridItem>
             </>
           }
         </Grid>

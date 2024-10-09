@@ -19,30 +19,30 @@
         ]
       },
       {
-        "address": "CD2653ALCQRUWTQTZF5JA2XNEJUKQTPISC3DW6GQTGY6UAUPYFFDXBTR",
+        "address": "CASEPWQK2VX7MGW2C3GHAO46TIP2EDVAOS6AQPTAIJOJSAOAXHRRDTK5",
         "totalValues": 2500,
-        "name": "Blend USDC - Soroswap USDC/NGNC",
+        "name": "Matias Neo Vault",
         "emergencyManager": "",
         "manager": "",
         "feeReceiver": "",
         "strategies": [
           {
-            "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
+            "address": "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W",
             "index": 0,
-            "share": 76
+            "share": 100
           }
         ]
       },
       {
-        "address": "CBEGAWUQMBJGHOWLVOGUMQO3HTIN66BW2NLDF6AZI56GKYZMR475E24Q",
+        "address": "CABOWBZI7BHUJKF2EF5VLX7D22GWUFEZFQ24GDEMLPKQEDT7I2D3LC64",
         "totalValues": 84732,
-        "name": "XYCLoans - Blend",
+        "name": "DevMonster Vault",
         "emergencyManager": "",
         "manager": "",
         "feeReceiver": "",
         "strategies": [
           {
-            "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
+            "address": "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W",
             "index": 0,
             "share": 83
           }
