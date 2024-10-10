@@ -89,14 +89,14 @@ export const ManageVaultes = () => {
       <Grid
         boxShadow='dark-lg'
         rounded={16}
-        templateColumns='repeat(12, 1fr)'
+        templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(12, 1fr)' }}
         gap={4}
         maxW={{ sm: '100%', md: '90%', lg: '80%' }}
         py={6}
       >
         <GridItem
-          colStart={2}
-          colEnd={8}>
+          colStart={{ base: 1, md: 2 }}
+          colEnd={{ base: 13, md: 8 }}>
           <InputGroup>
             <Input
               placeholder='Vault address'
@@ -114,8 +114,12 @@ export const ManageVaultes = () => {
             </InputRightElement>
           </InputGroup>
         </GridItem>
-        <GridItem colStart={8} colEnd={12} justifyItems={'start'}>
-          <Container display={'flex'} flexDirection={'row'} justifyContent={'end'}>
+        <GridItem
+          colStart={{ base: 1, md: 8 }}
+          colEnd={{ base: 13, md: 12 }}
+          justifyItems={'start'}
+        >
+          <Container display={'flex'} flexDirection={{ base: 'column', md: 'row' }} justifyContent={'end'} alignItems={{ base: 'center', md: 'flex-end' }} >
             <ConnectButton />
             {!!address && <Button
               rounded={18}

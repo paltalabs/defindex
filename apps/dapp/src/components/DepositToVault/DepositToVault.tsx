@@ -34,23 +34,23 @@ export const DepositToVault = () => {
     if (vaultMethod === VaultMethod.EMERGENCY_WITHDRAW) {
       if (!selectedVault?.totalValues) throw new Error('Total values is required');
       args.unshift(nativeToScVal((0), { type: "i128" }),)
+      const result = await vault(
+        VaultMethod.GETEMERGENCYMANAGER,
+        selectedVault?.address!,
+        [],
+        true,
+      )
+      return result
     } else {
       if (!amount) throw new Error('Amount is required');
       args.unshift(nativeToScVal((amount * Math.pow(10, 7)), { type: "i128" }),)
     }
-    // const result = await vault(
-    //   vaultMethod!,
-    //   selectedVault?.address!,
-    //   args,
-    //   true,
-    // )
     const result = await vault(
-      VaultMethod.GETEMERGENCYMANAGER,
+      vaultMethod!,
       selectedVault?.address!,
-      [],
+      args,
       true,
     )
-    return result
   }
   const depositToVault = async () => {
     if (!address || !amount) return;

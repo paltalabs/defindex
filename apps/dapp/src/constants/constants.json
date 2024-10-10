@@ -6,7 +6,7 @@
       {
         "address": "CD5NL55J4JYMALHCPIF3YADCWDRJNLM3XOFMZ6IOH5K4AOGINB4VB3BP",
         "totalValues": 100651,
-        "name": "Hodl strategy",
+        "name": "Hodl Vault",
         "emergencyManager": "",
         "manager": "",
         "feeReceiver": "",
@@ -36,6 +36,21 @@
       {
         "address": "CABOWBZI7BHUJKF2EF5VLX7D22GWUFEZFQ24GDEMLPKQEDT7I2D3LC64",
         "totalValues": 84732,
+        "name": "Francisco Vault",
+        "emergencyManager": "",
+        "manager": "",
+        "feeReceiver": "",
+        "strategies": [
+          {
+            "address": "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W",
+            "index": 0,
+            "share": 100
+          }
+        ]
+      },
+      {
+        "address": "CC6OSKOWWKFTSA36KTCHEDSQJVN27YBR4JVJL7TBOILQGKF2WXJXHDSU",
+        "totalValues": 84732,
         "name": "DevMonster Vault",
         "emergencyManager": "",
         "manager": "",
@@ -44,7 +59,7 @@
           {
             "address": "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W",
             "index": 0,
-            "share": 83
+            "share": 100
           }
         ]
       }
