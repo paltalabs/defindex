@@ -17,6 +17,11 @@ import {
   StatHelpText,
   StatArrow,
   IconButton,
+  Box,
+  Stack,
+  Text,
+  VStack,
+  useBreakpointValue
 } from '@chakra-ui/react'
 import { useSorobanReact } from '@soroban-react/core'
 import { scValToNative } from '@stellar/stellar-sdk'
@@ -56,6 +61,8 @@ export const AllVaults = ({
   const vaults = useAppSelector(state => state.wallet.vaults)
   const isLoading = vaults.isLoading
   const createdVaults = vaults.createdVaults
+
+  const isMobile = useBreakpointValue({ base: true, md: false });
 
   const getRoles = async (selectedVault: string) => {
     setIsVaultsLoading(true)
@@ -122,56 +129,114 @@ export const AllVaults = ({
   }, [createdVaults.length, address])
 
   return (
-    <TableContainer
-      mx={'auto'}
-      minW={'100%'}
-      p={4}>
-      <Table variant="simple">
-        <Thead>
-          <Tr>
-            <Th>Name</Th>
-            <Th textAlign={'center'}>Address</Th>
-            <Th textAlign={'center'}>Balance</Th>
-            <Th textAlign={'center'}>Status</Th>
-            <Th textAlign={'center'}>% APR</Th>
-            {address && (
-              <Th textAlign={'center'}>Options</Th>
-            )}
-          </Tr>
-        </Thead>
-        {isLoading && <Tbody>
-          <SkeletonRow />
-          <SkeletonRow />
-          <SkeletonRow />
-        </Tbody>}
-        {(!isLoading && createdVaults?.length != undefined) && <Tbody>
+    <Box mx={'auto'} minW={'100%'} p={4}>
+      {!isMobile ? (
+        <TableContainer>
+          <Table variant="simple">
+            <Thead>
+              <Tr>
+                <Th>Name</Th>
+                <Th textAlign={'center'}>Address</Th>
+                <Th textAlign={'center'}>Balance</Th>
+                <Th textAlign={'center'}>Status</Th>
+                <Th textAlign={'center'}>% APR</Th>
+                {address && (
+                  <Th textAlign={'center'}>Options</Th>
+                )}
+              </Tr>
+            </Thead>
+            {isLoading && <Tbody>
+              <SkeletonRow />
+              <SkeletonRow />
+              <SkeletonRow />
+            </Tbody>}
+            {(!isLoading && createdVaults?.length != undefined) && <Tbody>
+              {createdVaults.map((vault: VaultData, i: number) => (
+                <Tr key={i}>
+                  <Td>{vault.name ? vault.name : vault.address}</Td>
+                  <Td sx={{ cursor: 'pointer' }} textAlign={'center'}>
+                    <Tooltip
+                      placement='bottom'
+                      label={vault.address}
+                      textAlign={'center'}
+                      rounded={'lg'}>
+                      {vault.address ? shortenAddress(vault.address) : '-'}
+                    </Tooltip>
+                  </Td>
+                  <Td textAlign={'center'}>${vault.totalValues}</Td>
+                  <Td textAlign={'center'}>{vault.name?.includes('Blend USDC') ? '200' : '400'}</Td>
+                  <Td textAlign={'center'}>
+                    <Stat>
+                      <StatHelpText>
+                        <StatArrow type='increase' />
+                        {vault.name?.includes('Blend USDC') ? '11.31' : '23.36'}%
+                      </StatHelpText>
+                    </Stat>
+                  </Td>
+                  {address && (
+                    <Td textAlign={'center'}>
+                      <Tooltip hasArrow label={'Deposit'} rounded={'lg'}>
+                        <IconButton
+                          mx={1}
+                          colorScheme='blue'
+                          aria-label='deposit'
+                          size='sm'
+                          icon={<ArrowLeftIcon __css={{ transform: 'rotate(90deg)' }} />}
+                          onClick={() => handleOpenDeposit('deposit', vault)}
+                        />
+                      </Tooltip>
+                      <Tooltip hasArrow label={'Withdraw'} rounded={'lg'}>
+                        <IconButton
+                          mx={1}
+                          colorScheme='orange'
+                          aria-label='withdraw'
+                          size='sm'
+                          icon={<ArrowLeftIcon __css={{ transform: 'rotate(-90deg)' }} />}
+                          onClick={() => handleOpenDeposit('withdraw', vault)}
+                        />
+                      </Tooltip>
+                      {(address == vault.manager) &&
+                        <Tooltip hasArrow label={'Rebalance'} rounded={'lg'}>
+                          <IconButton
+                            mx={1}
+                            colorScheme='teal'
+                            aria-label='rebalance'
+                            size='sm'
+                            icon={<SettingsIcon />}
+                            onClick={() => handleOpenDeployVault('edit_vault', vault)}
+                          />
+                        </Tooltip>}
+                      {(address == vault.emergencyManager || address == vault.manager) &&
+                        <Tooltip hasArrow label={'Emergency withdraw'} rounded={'lg'}>
+                          <IconButton
+                            mx={1}
+                            colorScheme='yellow'
+                            aria-label='emergency-withdraw'
+                            size='sm'
+                            icon={<WarningTwoIcon color={'white'} />}
+                            onClick={() => handleOpenDeposit('emergency_withdraw', vault)}
+                          />
+                        </Tooltip>}
+                    </Td>
+                  )}
+                </Tr>
+              ))}
+            </Tbody>}
+          </Table>
+        </TableContainer>
+      ) : (
+        <VStack spacing={4}>
           {createdVaults.map((vault: VaultData, i: number) => (
-            <Tr key={i}>
-              <Td>{vault.name ? vault.name : vault.address}</Td>
-              <Td sx={{ cursor: 'pointer' }} textAlign={'center'}>
-                <Tooltip
-                  placement='bottom'
-                  label={vault.address}
-                  textAlign={'center'}
-                  rounded={'lg'}>
-                  {vault.address ? shortenAddress(vault.address) : '-'}
-                </Tooltip>
-              </Td>
-              <Td textAlign={'center'}>${vault.totalValues}</Td>
-              <Td textAlign={'center'}>{vault.name?.includes('Blend USDC') ? '200' : '400'}</Td>
-              <Td textAlign={'center'}>
-                <Stat>
-                  <StatHelpText>
-                    <StatArrow type='increase' />
-                    {vault.name?.includes('Blend USDC') ? '11.31' : '23.36'}%
-                  </StatHelpText>
-                </Stat>
-              </Td>
+            <Box key={i} p={4} shadow="md" borderWidth="1px" borderRadius="lg" w="100%">
+              <Text fontSize="lg" fontWeight="bold">{vault.name ? vault.name : vault.address}</Text>
+              <Text >Address: {shortenAddress(vault.address)}</Text>
+              <Text>Balance: ${vault.totalValues}</Text>
+              <Text>Status: {vault.name?.includes('Blend USDC') ? '200' : '400'}</Text>
+              <Text>APR: {vault.name?.includes('Blend USDC') ? '11.31' : '23.36'}%</Text>
               {address && (
-                <Td textAlign={'center'}>
+                <Stack direction="row" spacing={4} mt={2}>
                   <Tooltip hasArrow label={'Deposit'} rounded={'lg'}>
                     <IconButton
-                      mx={1}
                       colorScheme='blue'
                       aria-label='deposit'
                       size='sm'
@@ -181,7 +246,6 @@ export const AllVaults = ({
                   </Tooltip>
                   <Tooltip hasArrow label={'Withdraw'} rounded={'lg'}>
                     <IconButton
-                      mx={1}
                       colorScheme='orange'
                       aria-label='withdraw'
                       size='sm'
@@ -192,7 +256,6 @@ export const AllVaults = ({
                   {(address == vault.manager) &&
                     <Tooltip hasArrow label={'Rebalance'} rounded={'lg'}>
                       <IconButton
-                        mx={1}
                         colorScheme='teal'
                         aria-label='rebalance'
                         size='sm'
@@ -203,25 +266,21 @@ export const AllVaults = ({
                   {(address == vault.emergencyManager || address == vault.manager) &&
                     <Tooltip hasArrow label={'Emergency withdraw'} rounded={'lg'}>
                       <IconButton
-                        mx={1}
                         colorScheme='yellow'
                         aria-label='emergency-withdraw'
                         size='sm'
-                        icon={<WarningTwoIcon
-                          color={'white'} />}
+                        icon={<WarningTwoIcon color={'white'} />}
                         onClick={() => handleOpenDeposit('emergency_withdraw', vault)}
                       />
                     </Tooltip>}
-                </Td>
+                </Stack>
               )}
-
-            </Tr>
+            </Box>
           ))}
-        </Tbody>}
-      </Table>
-    </TableContainer>
+        </VStack>
+      )}
+    </Box>
   )
 }
-
 
 export default AllVaults

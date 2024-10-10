@@ -33,25 +33,23 @@ export const DeployVault = () => {
       <ConfirmDelpoyModal isOpen={openConfirm} onClose={handleClose} />
       <Card variant="outline" p={16} bgColor="whiteAlpha.50">
         <Grid
-          templateColumns={'repeat(12, 2fr)'}
+          templateColumns={['1fr', null, 'repeat(12, 2fr)']}
           alignSelf={'end'}
           alignContent={'center'}
           mb={4}
         >
-          <GridItem colStart={1} colSpan={3}>
+          <GridItem colStart={1} colSpan={[12, null, 3]} mb={{ base: 4, md: 0 }}>
             <Input onChange={setVaultName} placeholder='Defindex name...'></Input>
-          </GridItem><GridItem colStart={1} colSpan={3} rowStart={3}>
-            <Text mt={4}>Manager</Text>
           </GridItem>
-          <GridItem colStart={12}>
+          <GridItem colStart={[1, null, 12]} colSpan={[12, null, 1]} textAlign={['center', null, 'end']}>
             <AddNewStrategyButton />
           </GridItem>
         </Grid>
         {strategies.map((strategy, index) => (
           <ItemSlider key={index} name={strategy.name} address={strategy.address} value={strategy.value} />
         ))}
-        <Grid templateColumns={'repeat(8, 2fr)'} dir='reverse'>
-          <GridItem colStart={8} textAlign={'end'}>
+        <Grid templateColumns={['1fr', null, 'repeat(8, 2fr)']} dir='reverse'>
+          <GridItem colStart={[1, null, 8]} textAlign={['center', null, 'end']}>
             <h2>Total: {totalValues}%</h2>
           </GridItem>
         </Grid>
@@ -61,7 +59,9 @@ export const DeployVault = () => {
           colorScheme="green"
           size="lg"
           mt={4}
-          onClick={() => setOpenConfirm(true)}>
+          onClick={() => setOpenConfirm(true)}
+          w={['100%', null, 'auto']}
+        >
           Deploy Defindex
         </Button>
       </Card>
