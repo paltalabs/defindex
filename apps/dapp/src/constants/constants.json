@@ -62,6 +62,51 @@
             "share": 100
           }
         ]
+      },
+      {
+        "address": "CCYNBPGWJH6W5AIUWQP3I2OF3YJKU3OPVQWXSORT25UPOJD6WH37BXFN",
+        "totalValues": 84732,
+        "name": "Joaquin Vault",
+        "emergencyManager": "",
+        "manager": "",
+        "feeReceiver": "",
+        "strategies": [
+          {
+            "address": "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W",
+            "index": 0,
+            "share": 100
+          }
+        ]
+      },
+      {
+        "address": "CCCSKQI6GKFZXUF7H53MSDZD52MRCOZDTUB3KR4CZM6X6JOXI7D7BR4J",
+        "totalValues": 84732,
+        "name": "Jenny Vault",
+        "emergencyManager": "",
+        "manager": "",
+        "feeReceiver": "",
+        "strategies": [
+          {
+            "address": "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W",
+            "index": 0,
+            "share": 100
+          }
+        ]
+      },
+      {
+        "address": "CC5ONMEC4CIPE2IKM5DAKX7F3EH6MKLWICVSQD5GIUUTMD6ZPBI7EMKM",
+        "totalValues": 84732,
+        "name": "Esteban Vault",
+        "emergencyManager": "",
+        "manager": "",
+        "feeReceiver": "",
+        "strategies": [
+          {
+            "address": "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W",
+            "index": 0,
+            "share": 100
+          }
+        ]
       }
     ]
   },
