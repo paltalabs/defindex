@@ -28,6 +28,7 @@ pub struct CreateDeFindexEvent {
     pub emergency_manager: Address, 
     pub fee_receiver: Address, 
     pub manager: Address,
+    pub vault_share: u32,
     pub assets: Vec<AssetAllocation>
 }
 
@@ -37,12 +38,14 @@ pub(crate) fn emit_create_defindex_vault(
     emergency_manager: Address, 
     fee_receiver: Address, 
     manager: Address,
+    vault_share: u32,
     assets: Vec<AssetAllocation>,
 ) {
     let event = CreateDeFindexEvent { 
       emergency_manager,
       fee_receiver,
       manager,
+      vault_share,
       assets,
     };
 

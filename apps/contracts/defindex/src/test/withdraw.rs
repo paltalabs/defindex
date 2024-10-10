@@ -21,6 +21,7 @@ fn test_withdraw_from_idle_success() {
         &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
+        &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
     );
@@ -33,17 +34,17 @@ fn test_withdraw_from_idle_success() {
     assert_eq!(user_balance, amount);
     // here youll need to create a client for a token with the same address
 
-    let df_balance = test.defindex_contract.user_balance(&users[0]);
+    let df_balance = test.defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
     test.defindex_contract.deposit(&sorobanvec![&test.env, amount], &sorobanvec![&test.env, amount], &users[0]);
 
-    let df_balance = test.defindex_contract.user_balance(&users[0]);
+    let df_balance = test.defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount);
 
     test.defindex_contract.withdraw(&df_balance, &users[0]);
     
-    let df_balance = test.defindex_contract.user_balance(&users[0]);
+    let df_balance = test.defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
     let user_balance = test.token0.balance(&users[0]);
@@ -69,6 +70,7 @@ fn test_withdraw_from_strategy_success() {
         &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
+        &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
     );
@@ -81,12 +83,12 @@ fn test_withdraw_from_strategy_success() {
     assert_eq!(user_balance, amount);
     // here youll need to create a client for a token with the same address
 
-    let df_balance = test.defindex_contract.user_balance(&users[0]);
+    let df_balance = test.defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
     test.defindex_contract.deposit(&sorobanvec![&test.env, amount], &sorobanvec![&test.env, amount], &users[0]);
 
-    let df_balance = test.defindex_contract.user_balance(&users[0]);
+    let df_balance = test.defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount);
 
     let investments = sorobanvec![
@@ -104,7 +106,7 @@ fn test_withdraw_from_strategy_success() {
 
     test.defindex_contract.withdraw(&df_balance, &users[0]);
     
-    let df_balance = test.defindex_contract.user_balance(&users[0]);
+    let df_balance = test.defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
     let user_balance = test.token0.balance(&users[0]);

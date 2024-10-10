@@ -16,6 +16,7 @@ fn test_deposit_success() {
   test.factory_contract.create_defindex_vault(
     &test.emergency_manager, 
     &test.fee_receiver,
+    &2000u32,
     &test.manager,
     &asset_params,
     &salt
@@ -73,6 +74,7 @@ fn test_withdraw_success() {
   test.factory_contract.create_defindex_vault(
     &test.emergency_manager, 
     &test.fee_receiver,
+    &2000u32,
     &test.manager,
     &asset_params,
     &salt
@@ -143,7 +145,7 @@ fn test_withdraw_success() {
   let withdraw_result = defindex_contract.withdraw(&df_balance, &users[0]);
   assert_eq!(withdraw_result, vec![&test.env, 12000i128, 1000i128]);
   
-  let df_balance = defindex_contract.user_balance(&users[0]);
+  let df_balance = defindex_contract.balance(&users[0]);
   assert_eq!(df_balance, 0i128);
 
   let user_balance = test.token0.balance(&users[0]);

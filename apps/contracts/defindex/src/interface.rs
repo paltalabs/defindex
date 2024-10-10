@@ -18,6 +18,7 @@ pub trait VaultTrait {
     /// * `manager` - The address responsible for managing the vault.
     /// * `emergency_manager` - The address with emergency control over the vault.
     /// * `fee_receiver` - The address that will receive fees from the vault.
+    /// * `vault_share` - The percentage of the vault's fees that will be sent to the DeFindex receiver. in BPS.
     /// * `defindex_receiver` - The address that will receive fees for DeFindex from the vault.
     /// * `factory` - The address of the factory that deployed the vault.
     ///
@@ -29,6 +30,7 @@ pub trait VaultTrait {
         manager: Address,
         emergency_manager: Address,
         fee_receiver: Address,
+        vault_share: u32,
         defindex_receiver: Address,
         factory: Address,
     ) -> Result<(), ContractError>;
@@ -157,11 +159,9 @@ pub trait VaultTrait {
     /// * `Map<Address, i128>` - A map of asset addresses to their total idle amounts.
     fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128>;
 
-    fn user_balance(e: Env, from: Address) -> i128;
-
     // TODO: DELETE THIS, USED FOR TESTING
     fn get_asset_amounts_for_dftokens(e: Env, df_token: i128) -> Map<Address, i128>;
-    fn asses_fees(e: Env) -> i128;
+
 }
 
 pub trait AdminInterfaceTrait {

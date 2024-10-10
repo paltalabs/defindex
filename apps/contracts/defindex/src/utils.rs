@@ -1,7 +1,7 @@
-use soroban_sdk::{panic_with_error, xdr::Asset, Address, Env, Map, Vec};
+use soroban_sdk::{panic_with_error, Address, Env, Map, Vec};
 
 use crate::{
-    access::{AccessControl, AccessControlTrait, RolesDataKey}, funds::{fetch_invested_funds_for_asset, fetch_invested_funds_for_strategy, fetch_total_managed_funds}, models::{AssetAllocation, Investment, Strategy}, storage::get_assets, token::VaultToken, ContractError
+    access::{AccessControl, AccessControlTrait, RolesDataKey}, funds::{fetch_invested_funds_for_asset, fetch_invested_funds_for_strategy, fetch_total_managed_funds}, models::AssetAllocation, token::VaultToken, ContractError
 
 };
 

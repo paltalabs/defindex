@@ -1,12 +1,13 @@
 #![no_std]
-use fee::assess_fees;
+use fee::collect_fees;
 use investment::{execute_investment, prepare_investment};
 use soroban_sdk::{
-    contract, contractimpl, panic_with_error, token::{TokenClient, TokenInterface}, vec, Address, Env, Map, String, Vec
+    contract, contractimpl, panic_with_error, token::{TokenClient, TokenInterface}, Address, Env, Map, String, Vec
 };
 use soroban_token_sdk::metadata::TokenMetadata;
 
 mod access;
+mod constants;
 mod error;
 mod events;
 mod fee;
@@ -25,7 +26,7 @@ use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_
 use interface::{AdminInterfaceTrait, VaultTrait, VaultManagementTrait};
 use models::{AssetAllocation, Investment};
 use storage::{
-    get_assets, set_asset, set_defindex_receiver, set_factory, set_total_assets
+    get_assets, set_asset, set_defindex_receiver, set_factory, set_last_fee_assesment, set_total_assets, set_vault_share
 };
 use strategies::{get_asset_allocation_from_address, get_strategy_asset, get_strategy_client, get_strategy_struct, pause_strategy, unpause_strategy};
 use token::{internal_mint, internal_burn, write_metadata, VaultToken};
@@ -46,6 +47,7 @@ impl VaultTrait for DeFindexVault {
         manager: Address,
         emergency_manager: Address,
         fee_receiver: Address,
+        vault_share: u32,
         defindex_receiver: Address,
         factory: Address,
     ) -> Result<(), ContractError> {
@@ -57,6 +59,9 @@ impl VaultTrait for DeFindexVault {
         access_control.set_role(&RolesDataKey::EmergencyManager, &emergency_manager);
         access_control.set_role(&RolesDataKey::FeeReceiver, &fee_receiver);
         access_control.set_role(&RolesDataKey::Manager, &manager);
+
+        // Set Vault Share (in basis points)
+        set_vault_share(&e, &vault_share);
 
         // Set Paltalabs Fee Receiver
         set_defindex_receiver(&e, &defindex_receiver);
@@ -109,6 +114,11 @@ impl VaultTrait for DeFindexVault {
         check_initialized(&e)?;
         from.require_auth();
 
+        // Set LastFeeAssessment if it is the first deposit
+        if VaultToken::total_supply(e.clone())==0{
+            set_last_fee_assesment(&e, &e.ledger().timestamp());
+        }
+
         // get assets
         let assets = get_assets(&e);
         // assets lenght should be equal to amounts_desired and amounts_min length
@@ -160,6 +170,9 @@ impl VaultTrait for DeFindexVault {
         internal_mint(e.clone(), from.clone(), shares_to_mint);
 
         events::emit_deposit_event(&e, from, amounts, shares_to_mint);
+
+        // fees assesment
+        collect_fees(&e)?;
         // TODO return amounts and shares to mint
         Ok(())
     }
@@ -213,6 +226,7 @@ impl VaultTrait for DeFindexVault {
 
             for (strategy_address, amount) in withdrawal_amounts.iter() {
                 let strategy_client = get_strategy_client(&e, strategy_address.clone());
+                // TODO: What if the withdraw method exceeds the instructions limit? since im trying to ithdraw from all strategies of all assets...
                 strategy_client.withdraw(&amount, &e.current_contract_address());
     
                 // Update the total amounts to transfer map
@@ -233,6 +247,9 @@ impl VaultTrait for DeFindexVault {
         }
 
         events::emit_withdraw_event(&e, from, df_amount, amounts_withdrawn.clone());
+
+        // fees assesment
+        collect_fees(&e)?;
     
         Ok(amounts_withdrawn)
     }
@@ -302,17 +319,9 @@ impl VaultTrait for DeFindexVault {
         fetch_current_idle_funds(e)
     }
 
-    fn user_balance(e: Env, from: Address) -> i128 {
-        VaultToken::balance(e, from)
-    }
-
     // TODO: DELETE THIS, USED FOR TESTING
     fn get_asset_amounts_for_dftokens(e: Env, df_tokens: i128) -> Map<Address, i128> {
         calculate_asset_amounts_for_dftokens(&e, df_tokens)
-    }
-
-    fn asses_fees(e: Env) -> i128 {
-        assess_fees(&e, 31_536_000, 100).unwrap()
     }
 }
 

@@ -49,6 +49,7 @@ fn test_create_defindex_not_yet_initialized() {
     let result = test.factory_contract.try_create_defindex_vault(
         &test.emergency_manager, 
         &test.fee_receiver,
+        &2000u32,
         &test.manager,
         &asset_params,
         &salt
