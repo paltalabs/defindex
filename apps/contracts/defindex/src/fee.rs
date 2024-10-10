@@ -1,26 +1,24 @@
 use soroban_sdk::{Address, Env, Map, Symbol, Vec};
 
-use crate::{funds::fetch_total_managed_funds, storage::get_factory, token::VaultToken, ContractError};
+use crate::{access::AccessControl, constants::{MAX_BPS, SECONDS_PER_YEAR}, events, funds::fetch_total_managed_funds, storage::{get_defindex_receiver, get_factory, get_last_fee_assesment, get_vault_share, set_last_fee_assesment}, token::internal_mint, utils::calculate_dftokens_from_asset_amounts, ContractError};
 
 /// Fetches the current fee rate from the factory contract.
 /// The fee rate is expressed in basis points (BPS).
-pub fn fetch_fee_rate(e: &Env) -> u32 {
+fn fetch_fee_rate(e: &Env) -> u32 {
   let factory_address = get_factory(e);
   // Interacts with the factory contract to get the fee rate.
   e.invoke_contract(
-      &factory_address,
-      &Symbol::new(&e, "fee_rate"), 
-      Vec::new(&e)
+    &factory_address,
+    &Symbol::new(&e, "fee_rate"), 
+    Vec::new(&e)
   )
 }
 
-pub fn assess_fees(e: &Env, time_elapsed: u64, fee_rate: u32) -> Result<(), ContractError> {
+fn calculate_fees(e: &Env, time_elapsed: u64, fee_rate: u32) -> Result<i128, ContractError> {
 
     let total_managed_funds = fetch_total_managed_funds(e); // Get total managed funds per asset
-    let df_token_supply = VaultToken::total_supply(e.clone()); // Get total supply of dfTokens
     
-    let seconds_per_year = 31_536_000; // 365 days in seconds
-    let mut total_fees_in_dftokens = 0i128;
+    let seconds_per_year = SECONDS_PER_YEAR; // 365 days in seconds
 
     let mut total_fees_per_asset: Map<Address, i128> = Map::new(&e);
 
@@ -30,58 +28,55 @@ pub fn assess_fees(e: &Env, time_elapsed: u64, fee_rate: u32) -> Result<(), Cont
         let current_asset_value = amount;
 
         // Calculate the fee for this asset based on the fee rate and time elapsed
-        let asset_fee = (current_asset_value * fee_rate as i128 * time_elapsed as i128) / (seconds_per_year * 10_000);
+        let asset_fee = (current_asset_value * fee_rate as i128 * time_elapsed as i128) / (seconds_per_year * MAX_BPS);
 
         total_fees_per_asset.set(asset_address.clone(), asset_fee);
 
-        // Now convert the asset fee into dfTokens based on the total value of the vault
-        let df_tokens_to_mint = convert_fee_to_dftokens(&e, asset_fee, asset_address)?;
-        
-        // Add the dfTokens to the total fees to mint
-        total_fees_in_dftokens += df_tokens_to_mint;
     }
 
-    // fetch_total_managed_funds should correspond to the total supply of dfTokens
-    // `total_fees_per_asset` (is the same Map as fetch_total_managed_funds but with the amounts corresponding to fees) is a map of asset addresses and their corresponding fees in dfTokens
-    // for example
-    // total_fees_per_asset = {
-    //   usdc: 1000,
-    //   xlm: 10200,
-    // };
-    // and this should be represented as dfTokens... how? need a helper function to convert the fees to dfTokens
+    let total_fees_in_dftokens = calculate_dftokens_from_asset_amounts(e, total_fees_per_asset)?;
 
-    // now it should be possible to calculate the total fees in dfTokens
-    // fetch_total_managed_funds returns a map of address and i128 all of the funds there should correspond to the total supply of dfTokens
-    // so we can calculate the amount of dfTokens that corresponds to the total_fees_per_asset which is also a Map<Address, i128>    
+    Ok(total_fees_in_dftokens)
+}
+
+pub fn collect_fees(e: &Env) -> Result<(), ContractError> {
+    let current_timestamp = e.ledger().timestamp();
+    let last_fee_assessment = get_last_fee_assesment(e); 
+
+    let time_elapsed = current_timestamp.checked_sub(last_fee_assessment).unwrap();
+
+    if time_elapsed == 0 {
+        return Ok(());
+    }
+
+    let fee_rate = fetch_fee_rate(e);
+
+    let total_fees = calculate_fees(e, time_elapsed, fee_rate)?;
 
     // Mint the total fees as dfTokens
-    // mint_fees(e, total_fees_in_dftokens)?;
+    mint_fees(e, total_fees)?;
 
     // Update the last fee assessment timestamp
-    // update_last_fee_assessment(e);
+    set_last_fee_assesment(e, &current_timestamp);
 
-  Ok(())
+    Ok(())
 }
 
-/// Converts the asset fee into dfTokens based on the asset's value.
-pub fn convert_fee_to_dftokens(e: &Env, asset_fee: i128, asset_address: Address) -> Result<i128, ContractError> {
-  let df_token_supply = VaultToken::total_supply(e.clone());
+fn mint_fees(e: &Env, total_fees: i128) -> Result<(), ContractError> {
+    let access_control = AccessControl::new(&e);
+    
+    let vault_fee_receiver = access_control.get_fee_receiver()?;
+    let defindex_receiver = get_defindex_receiver(e);
 
-  // Calculate the value of dfTokens relative to the total managed funds
-  let total_managed_funds = fetch_total_managed_funds(e);
-  let total_vault_value = calculate_total_vault_value(&e, &total_managed_funds);
+    let vault_share_bps = get_vault_share(e);
 
-  // Convert the asset fee into dfTokens
-  let df_token_value = (df_token_supply * asset_fee) / total_vault_value;
+    let vault_shares = (total_fees * vault_share_bps as i128) / MAX_BPS;
+    
+    let defindex_shares = total_fees - vault_shares;
 
-  Ok(df_token_value)
-}
+    internal_mint(e.clone(), vault_fee_receiver.clone(), vault_shares);
+    internal_mint(e.clone(), defindex_receiver.clone(), defindex_shares);
 
-/// Calculates the total value of the vault based on managed funds.
-pub fn calculate_total_vault_value(e: &Env, total_managed_funds: &Map<Address, i128>) -> i128 {
-  let mut total_value = 0i128;
-  for (asset_address, amount) in total_managed_funds.iter() {
-      total_value += amount;
-  }
-  total_value
+    events::emit_fees_minted_event(e, defindex_receiver, defindex_shares, vault_fee_receiver, vault_shares);
+    Ok(())
 }

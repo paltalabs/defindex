@@ -32,6 +32,7 @@ fn test_set_new_fee_receiver_by_fee_receiver() {
         &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
+        &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
     );
@@ -94,6 +95,7 @@ fn test_set_new_fee_receiver_by_manager() {
         &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
+        &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
     );
@@ -157,6 +159,7 @@ fn test_set_new_fee_receiver_by_emergency_manager() {
         &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
+        &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
     );
@@ -195,6 +198,7 @@ fn test_set_new_fee_receiver_invalid_sender() {
         &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
+        &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
     );
@@ -231,6 +235,7 @@ fn test_set_new_manager_by_manager() {
         &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
+        &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
     );

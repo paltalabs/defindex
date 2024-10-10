@@ -1,13 +1,13 @@
 #![no_std]
+use fee::collect_fees;
 use investment::{execute_investment, prepare_investment};
 use soroban_sdk::{
-    contract, contractimpl, panic_with_error,
-    token::{TokenClient, TokenInterface},
-    Address, Env, Map, String, Vec,
+    contract, contractimpl, panic_with_error, token::{TokenClient, TokenInterface}, Address, Env, Map, String, Vec
 };
 use soroban_token_sdk::metadata::TokenMetadata;
 
 mod access;
+mod constants;
 mod error;
 mod events;
 mod fee;
@@ -26,13 +26,12 @@ use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_
 use interface::{AdminInterfaceTrait, VaultTrait, VaultManagementTrait};
 use models::{AssetAllocation, Investment};
 use storage::{
-    get_assets, set_asset, set_defindex_receiver, set_factory, set_total_assets
+    get_assets, set_asset, set_defindex_receiver, set_factory, set_last_fee_assesment, set_total_assets, set_vault_share
 };
-use strategies::{get_strategy_asset, get_strategy_client, get_strategy_struct, pause_strategy, unpause_strategy};
+use strategies::{get_asset_allocation_from_address, get_strategy_asset, get_strategy_client, get_strategy_struct, pause_strategy, unpause_strategy};
 use token::{internal_mint, internal_burn, write_metadata, VaultToken};
 use utils::{
-    calculate_deposit_amounts_and_shares_to_mint, calculate_withdrawal_amounts, check_initialized,
-    check_nonnegative_amount,
+    calculate_asset_amounts_for_dftokens, calculate_deposit_amounts_and_shares_to_mint, calculate_withdrawal_amounts, check_initialized, check_nonnegative_amount
 };
 
 pub use error::ContractError;
@@ -48,6 +47,7 @@ impl VaultTrait for DeFindexVault {
         manager: Address,
         emergency_manager: Address,
         fee_receiver: Address,
+        vault_share: u32,
         defindex_receiver: Address,
         factory: Address,
     ) -> Result<(), ContractError> {
@@ -59,6 +59,9 @@ impl VaultTrait for DeFindexVault {
         access_control.set_role(&RolesDataKey::EmergencyManager, &emergency_manager);
         access_control.set_role(&RolesDataKey::FeeReceiver, &fee_receiver);
         access_control.set_role(&RolesDataKey::Manager, &manager);
+
+        // Set Vault Share (in basis points)
+        set_vault_share(&e, &vault_share);
 
         // Set Paltalabs Fee Receiver
         set_defindex_receiver(&e, &defindex_receiver);
@@ -111,6 +114,11 @@ impl VaultTrait for DeFindexVault {
         check_initialized(&e)?;
         from.require_auth();
 
+        // Set LastFeeAssessment if it is the first deposit
+        if VaultToken::total_supply(e.clone())==0{
+            set_last_fee_assesment(&e, &e.ledger().timestamp());
+        }
+
         // get assets
         let assets = get_assets(&e);
         // assets lenght should be equal to amounts_desired and amounts_min length
@@ -162,11 +170,14 @@ impl VaultTrait for DeFindexVault {
         internal_mint(e.clone(), from.clone(), shares_to_mint);
 
         events::emit_deposit_event(&e, from, amounts, shares_to_mint);
+
+        // fees assesment
+        collect_fees(&e)?;
         // TODO return amounts and shares to mint
         Ok(())
     }
 
-    fn withdraw(e: Env, df_amount: i128, from: Address) -> Result<(), ContractError> {
+    fn withdraw(e: Env, df_amount: i128, from: Address) -> Result<Vec<i128>, ContractError> {
         check_initialized(&e)?;
         check_nonnegative_amount(df_amount)?;
         from.require_auth();
@@ -177,11 +188,11 @@ impl VaultTrait for DeFindexVault {
             return Err(ContractError::InsufficientBalance);
         }
     
-        // Burn the dfTokens
+        // Calculate the withdrawal amounts for each asset based on the dfToken amount
+        let asset_amounts = calculate_asset_amounts_for_dftokens(&e, df_amount);
+
+        // Burn the dfTokens after calculating the withdrawal amounts (so total supply is correct)
         internal_burn(e.clone(), from.clone(), df_amount);
-    
-        // Calculate the withdrawal amounts for each strategy based on the dfToken amount
-        let withdrawal_amounts = calculate_withdrawal_amounts(&e, df_amount)?;
     
         // Create a map to store the total amounts to transfer for each asset address
         let mut total_amounts_to_transfer: Map<Address, i128> = Map::new(&e);
@@ -189,38 +200,39 @@ impl VaultTrait for DeFindexVault {
         // Get idle funds for each asset (Map<Address, i128>)
         let idle_funds = fetch_current_idle_funds(&e);
     
-        // Loop through each strategy and handle the withdrawal
-        for (strategy_address, required_amount) in withdrawal_amounts.iter() {
-            // Find the corresponding asset address for this strategy
-            let asset_address = get_strategy_asset(&e, &strategy_address)?.address;
-    
+        // Loop through each asset and handle the withdrawal
+        for (asset_address, required_amount) in asset_amounts.iter() {
             // Check idle funds for this asset
             let idle_balance = idle_funds.get(asset_address.clone()).unwrap_or(0);
-    
+
             let mut remaining_amount = required_amount;
     
             // Withdraw as much as possible from idle funds first
             if idle_balance > 0 {
                 if idle_balance >= required_amount {
                     // Idle funds cover the full amount
-                    let current_amount = total_amounts_to_transfer.get(asset_address.clone()).unwrap_or(0);
-                    total_amounts_to_transfer.set(asset_address.clone(), current_amount + required_amount);
+                    total_amounts_to_transfer.set(asset_address.clone(), required_amount);
                     continue;  // No need to withdraw from the strategy
                 } else {
                     // Partial withdrawal from idle funds
-                    let current_amount = total_amounts_to_transfer.get(asset_address.clone()).unwrap_or(0);
-                    total_amounts_to_transfer.set(asset_address.clone(), current_amount + idle_balance);
+                    total_amounts_to_transfer.set(asset_address.clone(), idle_balance);
                     remaining_amount = required_amount - idle_balance;  // Update remaining amount
                 }
             }
     
-            // Withdraw the remaining amount from the strategy
-            let strategy_client = get_strategy_client(&e, strategy_address.clone());
-            strategy_client.withdraw(&remaining_amount, &from);
+            // Find the corresponding asset address for this strategy
+            let asset_allocation = get_asset_allocation_from_address(&e, asset_address.clone())?;
+            let withdrawal_amounts = calculate_withdrawal_amounts(&e, remaining_amount, asset_allocation);
+
+            for (strategy_address, amount) in withdrawal_amounts.iter() {
+                let strategy_client = get_strategy_client(&e, strategy_address.clone());
+                // TODO: What if the withdraw method exceeds the instructions limit? since im trying to ithdraw from all strategies of all assets...
+                strategy_client.withdraw(&amount, &e.current_contract_address());
     
-            // Update the total amounts to transfer map
-            let current_amount = total_amounts_to_transfer.get(asset_address.clone()).unwrap_or(0);
-            total_amounts_to_transfer.set(asset_address.clone(), current_amount + remaining_amount);
+                // Update the total amounts to transfer map
+                let current_amount = total_amounts_to_transfer.get(strategy_address.clone()).unwrap_or(0);
+                total_amounts_to_transfer.set(asset_address.clone(), current_amount + amount);
+            }
         }
     
         // Perform the transfers for the total amounts
@@ -234,9 +246,12 @@ impl VaultTrait for DeFindexVault {
             amounts_withdrawn.push_back(total_amount);
         }
 
-        events::emit_withdraw_event(&e, from, df_amount, amounts_withdrawn);
+        events::emit_withdraw_event(&e, from, df_amount, amounts_withdrawn.clone());
+
+        // fees assesment
+        collect_fees(&e)?;
     
-        Ok(())
+        Ok(amounts_withdrawn)
     }
 
     fn emergency_withdraw(e: Env, strategy_address: Address, caller: Address) -> Result<(), ContractError> {
@@ -304,8 +319,9 @@ impl VaultTrait for DeFindexVault {
         fetch_current_idle_funds(e)
     }
 
-    fn user_balance(e: Env, from: Address) -> i128 {
-        VaultToken::balance(e, from)
+    // TODO: DELETE THIS, USED FOR TESTING
+    fn get_asset_amounts_for_dftokens(e: Env, df_tokens: i128) -> Map<Address, i128> {
+        calculate_asset_amounts_for_dftokens(&e, df_tokens)
     }
 }
 

@@ -5,7 +5,7 @@ use crate::{DeFindexFactory, DeFindexFactoryClient};
 use soroban_sdk::token::{
     StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient,
 };
-use soroban_sdk::BytesN;
+use soroban_sdk::{BytesN, Val};
 use soroban_sdk::{
     Env, 
     Address, 
@@ -15,6 +15,21 @@ use soroban_sdk::{
     String
 };
 use std::vec;
+
+// DeFindex Hodl Strategy Contract
+mod hodl_strategy {
+    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/hodl_strategy.optimized.wasm");
+    pub type StrategyContractClient<'a> = Client<'a>;
+}
+
+use hodl_strategy::StrategyContractClient;
+
+fn create_strategy_contract<'a>(e: &Env, asset: &Address, init_args: &Vec<Val>) -> StrategyContractClient<'a> {
+    let address = &e.register_contract_wasm(None, hodl_strategy::WASM);
+    let strategy = StrategyContractClient::new(e, address); 
+    strategy.initialize(asset, init_args);
+    strategy
+}  
 
 // DeFindex Vault Contract
 fn create_defindex_factory<'a>(e: &Env) -> DeFindexFactoryClient<'a> {
@@ -47,7 +62,20 @@ pub(crate) fn create_asset_params(test: &DeFindexFactoryTest) -> Vec<AssetAlloca
             strategies: sorobanvec![
                 &test.env,
                 Strategy {
-                    address: test.strategy_address.clone(),
+                    address: test.strategy_contract_token0.address.clone(),
+                    name: String::from_str(&test.env, "Strategy 1"),
+                    paused: false,
+                    ratio: 1i128
+                }
+            ],
+        },
+        AssetAllocation {
+            address: test.token1.address.clone(),
+            ratio: 1i128,
+            strategies: sorobanvec![
+                &test.env,
+                Strategy {
+                    address: test.strategy_contract_token1.address.clone(),
                     name: String::from_str(&test.env, "Strategy 1"),
                     paused: false,
                     ratio: 1i128
@@ -70,7 +98,8 @@ pub struct DeFindexFactoryTest<'a> {
     token0: SorobanTokenClient<'a>,
     token1_admin_client: SorobanTokenAdminClient<'a>,
     token1: SorobanTokenClient<'a>,
-    strategy_address: Address,
+    strategy_contract_token0: StrategyContractClient<'a>,
+    strategy_contract_token1: StrategyContractClient<'a>,
 }
 
 impl<'a> DeFindexFactoryTest<'a> {
@@ -100,7 +129,8 @@ impl<'a> DeFindexFactoryTest<'a> {
 
 
         // TODO: Add a strategy adapter, this is a mockup
-        let strategy_address = Address::generate(&env);
+        let strategy_contract_token0 = create_strategy_contract(&env, &token0.address, &Vec::new(&env));
+        let strategy_contract_token1 = create_strategy_contract(&env, &token1.address, &Vec::new(&env));
 
         DeFindexFactoryTest {
             env,
@@ -115,7 +145,8 @@ impl<'a> DeFindexFactoryTest<'a> {
             token0,
             token1_admin_client,
             token1,
-            strategy_address
+            strategy_contract_token0,
+            strategy_contract_token1
         }
     }
     
@@ -131,3 +162,4 @@ impl<'a> DeFindexFactoryTest<'a> {
 mod admin;
 mod initialize;
 mod create_defindex;
+mod all_flow;

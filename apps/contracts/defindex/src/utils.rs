@@ -1,12 +1,7 @@
 use soroban_sdk::{panic_with_error, Address, Env, Map, Vec};
 
 use crate::{
-    access::{AccessControl, AccessControlTrait, RolesDataKey},
-    funds::fetch_total_managed_funds,
-    models::{AssetAllocation, Investment},
-    storage::get_assets,
-    ContractError,
-    token::VaultToken
+    access::{AccessControl, AccessControlTrait, RolesDataKey}, funds::{fetch_invested_funds_for_asset, fetch_invested_funds_for_strategy, fetch_total_managed_funds}, models::AssetAllocation, token::VaultToken, ContractError
 
 };
 
@@ -37,52 +32,84 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
     }
 }
 
-/// Converts dfToken amount into corresponding token amounts for each strategy based on their ratio.
+/// From an amount, calculates how much to withdraw from each strategy;
 /// returns a map of strategy address to token amount
 pub fn calculate_withdrawal_amounts(
     e: &Env,
-    df_token_amount: i128, // The amount of dfTokens to withdraw
-) -> Result<Map<Address, i128>, ContractError> {
+    amount: i128,
+    asset: AssetAllocation,
+) -> Map<Address, i128> {
     let mut withdrawal_amounts = Map::<Address, i128>::new(e);
-    let assets = get_assets(e);
 
-    // Loop through each asset and calculate proportional amounts for each strategy
-    for asset in assets.iter() {
-        let total_strategy_ratio: i128 = asset.strategies.iter().map(|s| s.ratio).sum();
+    let total_invested_in_strategies: i128 = fetch_invested_funds_for_asset(&e, &asset);
 
-        // Calculate the withdrawal amount for each strategy within this asset
-        for strategy in asset.strategies.iter() {
-            if strategy.paused {
-                continue; // Skip paused strategies
-            }
+    for strategy in asset.strategies.iter() {
+        // TODO: if strategy is paused but still holds assets on it shouldnt we withdraw them?
+        if strategy.paused {
+            continue;
+        }
 
-            let strategy_share = (df_token_amount * strategy.ratio) / total_strategy_ratio;
-            withdrawal_amounts.set(strategy.address.clone(), strategy_share);
+        let strategy_invested_funds = fetch_invested_funds_for_strategy(e, &strategy.address);
+
+        let strategy_share_of_withdrawal = (amount * strategy_invested_funds) / total_invested_in_strategies;
+
+        withdrawal_amounts.set(strategy.address.clone(), strategy_share_of_withdrawal);
+    }
+
+    withdrawal_amounts
+}
+
+pub fn calculate_asset_amounts_for_dftokens(
+    env: &Env,
+    df_token_amount: i128,
+) -> Map<Address, i128> {
+    let mut asset_amounts: Map<Address, i128> = Map::new(&env);
+    let total_supply = VaultToken::total_supply(env.clone());
+    let total_managed_funds = fetch_total_managed_funds(&env);
+
+    // Iterate over each asset and calculate the corresponding amount based on df_token_amount
+    for (asset_address, amount) in total_managed_funds.iter() {
+        let asset_amount = (amount * df_token_amount) / total_supply;
+        asset_amounts.set(asset_address.clone(), asset_amount);
+    }
+
+    asset_amounts
+}
+
+pub fn calculate_dftokens_from_asset_amounts(
+    env: &Env,
+    asset_amounts: Map<Address, i128>, // The input asset amounts
+) -> Result<i128, ContractError> {
+    let total_supply = VaultToken::total_supply(env.clone()); // Total dfToken supply
+    let total_managed_funds = fetch_total_managed_funds(&env); // Fetch all managed assets
+
+    // Initialize the minimum dfTokens corresponding to each asset
+    let mut min_df_tokens: Option<i128> = None;
+
+    // Iterate over each asset in the input map
+    for (asset_address, input_amount) in asset_amounts.iter() {
+        // Get the total managed amount for this asset
+        let managed_amount = total_managed_funds.get(asset_address.clone()).unwrap_or(0);
+
+        // Ensure the managed amount is not zero to prevent division by zero
+        if managed_amount == 0 {
+            return Err(ContractError::InsufficientManagedFunds);
+        }
+
+        // Calculate the dfTokens corresponding to this asset's amount
+        let df_tokens_for_asset = (input_amount * total_supply) / managed_amount;
+
+        // If this is the first asset or if the calculated df_tokens_for_asset is smaller, update the minimum df_tokens
+        if let Some(current_min_df_tokens) = min_df_tokens {
+            min_df_tokens = Some(current_min_df_tokens.min(df_tokens_for_asset));
+        } else {
+            min_df_tokens = Some(df_tokens_for_asset);
         }
     }
 
-    Ok(withdrawal_amounts)
+    // Return the minimum dfTokens across all assets
+    min_df_tokens.ok_or(ContractError::NoAssetsProvided)
 }
-
-/// Converts dfToken amount into corresponding token amounts based on their ratio.
-// pub fn calculate_withdrawal_amounts(
-//     e: &Env,
-//     df_token_amount: i128, // The amount of dfTokens to withdraw
-// ) -> Result<Map<AssetAllocation, i128>, ContractError> {
-//     let mut withdrawal_amounts = Map::<AssetAllocation, i128>::new(e);
-//     let assets = get_assets(e);
-
-//     let total_ratio = assets.iter().fold(0, |acc, asset| acc + asset.ratio);
-
-//     // Iterate through all assets and calculate how much of each should be withdrawn
-//     for (i, asset) in assets.iter().enumerate() {
-//         // Calculate how much of this token corresponds to the dfToken amount
-//         let token_withdraw_amount = (df_token_amount * asset.ratio) / total_ratio; // Proportional to the total ratio sum
-//         withdrawal_amounts.set(asset, token_withdraw_amount);
-//     }
-
-//     Ok(withdrawal_amounts)
-// }
 
 pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
     e: &Env,
