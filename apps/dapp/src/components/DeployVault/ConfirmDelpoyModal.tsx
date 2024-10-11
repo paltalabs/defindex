@@ -54,7 +54,9 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     index: 0
   });
   const sorobanContext = useSorobanReact();
-  const { activeChain } = sorobanContext;
+  // const { activeChain } = sorobanContext;
+  const activeChain = { name: "testnet", networkPassphrase: "Test SDF Network ; September 2015" } // REMOVE_THIS
+
   const factory = useFactoryCallback();
   const newVault: NewVaultState = useAppSelector(state => state.newVault);
   const strategies: Strategy[] = newVault.strategies;
