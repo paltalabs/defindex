@@ -2,13 +2,8 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '../store'
 import axios from 'axios'
 import { getRemoteConfig } from '@/helpers/getRemoteConfig';
+import { Strategy } from './walletStore';
 
-
-export interface Strategy {
-  address: string;
-  name?: string;
-  value: number;
-}
 
 export interface NewVaultState {
   address: string;
@@ -30,7 +25,9 @@ const initialState: NewVaultState = {
   strategies: [
     {
       address: "",
-      value: 0
+      index: "",
+      name: "",
+      share: 0
     }
   ],
   totalValues: 0,
@@ -48,8 +45,9 @@ export const getDefaultStrategies = async (network: string) => {
         const prettierName = parsedName.charAt(0).toUpperCase() + parsedName.slice(1)
         strategies.push({
           address: remoteStrategies.ids[strategy],
+          index: strategy,
           name: parsedName ? prettierName : '',
-          value: 0
+          share: 0,
         })
       }
     }
@@ -68,39 +66,39 @@ export const newVaultSlice = createSlice({
   reducers: {
     pushStrategy: (state, action: PayloadAction<Strategy>) => {
       state.strategies.push(action.payload)
-      state.totalValues = state.strategies.reduce((acc, Strategy) => acc + Strategy.value, 0)
+      state.totalValues = state.strategies.reduce((acc, Strategy) => acc + Strategy.share, 0)
     },
     resetStrategies: (state) => {
       state.strategies = []
       state.name = ""
       state.totalValues = 0
     },
-    removeStrategy: (state, action: PayloadAction<Strategy>) => {
+    removeStrategy: (state, action: PayloadAction<Partial<Strategy>>) => {
       state.strategies = state.strategies.filter(Strategy => Strategy.address !== action.payload.address)
     },
-    setStrategyValue: (state, action: PayloadAction<Strategy>) => {
+    setStrategyValue: (state, action: PayloadAction<Partial<Strategy>>) => {
       state.strategies = state.strategies.map(strategy => {
         if (strategy.address === action.payload.address) {
           return {
             ...strategy,
-            value: action.payload.value
+            share: action.payload.share!
           }
         }
         return strategy
       })
-      state.totalValues = state.strategies.reduce((acc, Strategy) => acc + Strategy.value, 0)
+      state.totalValues = state.strategies.reduce((acc, Strategy) => acc + Strategy.share, 0)
     },
     resetStrategyValue: (state, action: PayloadAction<Strategy>) => {
       state.strategies = state.strategies.map(strategy => {
         if (strategy.address === action.payload.address) {
           return {
             ...strategy,
-            value: 0
+            share: 0
           }
         }
         return strategy
       })
-      state.totalValues = state.strategies.reduce((acc, Strategy) => acc + Strategy.value, 0)
+      state.totalValues = state.strategies.reduce((acc, Strategy) => acc + Strategy.share, 0)
     },
     setName: ((state, action: PayloadAction<string>) => {
       state.name = action.payload;

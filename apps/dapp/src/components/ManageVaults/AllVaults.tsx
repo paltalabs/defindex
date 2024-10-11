@@ -228,7 +228,7 @@ export const AllVaults = ({
         <VStack spacing={4}>
           {createdVaults.map((vault: VaultData, i: number) => (
             <Box key={i} p={4} shadow="md" borderWidth="1px" borderRadius="lg" w="100%">
-              <Text fontSize="lg" fontWeight="bold">{vault.name ? vault.name : vault.address}</Text>
+              <Text fontSize="lg" fontWeight="bold">{vault.name ? vault.name : shortenAddress(vault.address)}</Text>
               <Text >Address: {shortenAddress(vault.address)}</Text>
               <Text>Balance: ${vault.totalValues}</Text>
               <Text>Status: {vault.name?.includes('Blend USDC') ? '200' : '400'}</Text>

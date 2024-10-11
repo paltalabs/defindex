@@ -54,8 +54,9 @@ export const ManageVaultes = () => {
         for (const item of args.strategies) {
           const newStrategy = {
             address: item.address,
-            value: item.share,
-            name: item.name ? item.name : shortenAddress(item.address)
+            share: item.share,
+            name: item.name ? item.name : shortenAddress(item.address),
+            index: item.index
           }
           await dispatch(pushStrategy(newStrategy))
         }
