@@ -130,6 +130,19 @@ export const AllVaults = ({
 
   return (
     <Box mx={'auto'} minW={'100%'} p={4}>
+      <Text>
+        {`createdVaults: ${createdVaults.map((v) => v.address)}`}
+      </Text>
+      <Text>
+        {`loading: ${isLoading}`}
+      </Text>
+      <Text>
+        {`active chain: ${activeChain}`}
+      </Text>
+      <Text>
+        {`loading: ${address}`}
+      </Text>
+
       {!isMobile ? (
         <TableContainer>
           <Table variant="simple">
