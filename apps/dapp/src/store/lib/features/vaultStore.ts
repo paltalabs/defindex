@@ -45,7 +45,7 @@ export const getDefaultStrategies = async (network: string) => {
         const prettierName = parsedName.charAt(0).toUpperCase() + parsedName.slice(1)
         strategies.push({
           address: remoteStrategies.ids[strategy],
-          index: strategy,
+          index: strategies.length.toString(),
           name: parsedName ? prettierName : '',
           share: 0,
         })
