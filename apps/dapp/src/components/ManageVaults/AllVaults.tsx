@@ -57,6 +57,9 @@ export const AllVaults = ({
 }) => {
   const vault = useVaultCallback()
   const { activeChain, address } = useSorobanReact()
+  // const { address } = useSorobanReact()
+  // const activeChain = { id: "testnet", name: "testnet", networkPassphrase: "Test SDF Network ; September 2015" } // REMOVE_THIS
+
   const dispatch = useAppDispatch();
   const vaults = useAppSelector(state => state.wallet.vaults)
   const isLoading = vaults.isLoading
@@ -130,31 +133,22 @@ export const AllVaults = ({
 
   return (
     <Box mx={'auto'} minW={'100%'} p={4}>
-      <Text>
-        {`vaults: ${vaults}`}
-      </Text>
-      <Text>
-        {`vaults.hasError: ${vaults.hasError}`}
-      </Text>
-      <Text>
-        {`vaults.selectedVault: ${vaults.selectedVault}`}
-      </Text>
-      <Text>
-        {`createdVaults: ${createdVaults}`}
-      </Text>
-      <Text>
-        {`createdVaults details: ${createdVaults.map((v) => v.address)}`}
-      </Text>
-      <Text>
-        {`loading: ${isLoading}`}
-      </Text>
+
       <Text>
         {`active chain: ${activeChain?.networkPassphrase}`}
       </Text>
       <Text>
-        {`address: ${address}`}
+        {`active chain.id: ${activeChain?.id}`}
       </Text>
-
+      <Text>
+        {`active chain. network: ${activeChain?.network}`}
+      </Text>
+      <Text>
+        {`active chain.networkUrl: ${activeChain?.networkUrl}`}
+      </Text>
+      <Text>
+        {`active chain.sorobanRpcUrl: ${activeChain?.sorobanRpcUrl}`}
+      </Text>
       {!isMobile ? (
         <TableContainer>
           <Table variant="simple">

@@ -18,7 +18,10 @@ const isObject = (val: unknown) => typeof val === 'object' && val !== null && !A
 
 export function useVaultCallback() {
     const sorobanContext = useSorobanReact();
+    const sorobanContextTestnet = sorobanContext
+    const activeChain = { id: "testnet", name: "testnet", networkPassphrase: "Test SDF Network ; September 2015", sorobanRpcUrl: "https://soroban-testnet.stellar.org/", network: "testnet", networkUrl: "https://horizon-testnet.stellar.org" } // REMOVE_THIS
 
+    sorobanContextTestnet.activeChain = activeChain
 
     return useCallback(
         async (method: VaultMethod, address: string, args?: StellarSdk.xdr.ScVal[], signAndSend?: boolean) => {

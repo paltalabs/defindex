@@ -30,7 +30,8 @@ interface DefaultStrategy {
 function AddNewStrategyButton() {
   const strategies = useAppSelector(state => state.newVault.strategies)
   const dispatch = useAppDispatch();
-  const { activeChain } = useSorobanReact()
+  // const { activeChain } = useSorobanReact() // RESTORE_THIS
+  const activeChain = { name: "testnet", networkPassphrase: "Test SDF Network ; September 2015" } // REMOVE_THIS
   const [defaultStrategies, setDefaultStrategies] = useState<Strategy[]>([])
   const [newStrategy, setNewStrategy] = useState<Strategy>()
   const [newAddress, setNewAddress] = useState<string>()

@@ -13,7 +13,9 @@ const isObject = (val: unknown) => typeof val === 'object' && val !== null && !A
 
 export const useFactory = () => {
   const sorobanContext: SorobanContextType = useSorobanReact();
-  const { activeChain } = sorobanContext;
+  // const { activeChain } = sorobanContext;
+  const activeChain = { id: "testnet", name: "testnet", networkPassphrase: "Test SDF Network ; September 2015" } // REMOVE_THIS
+
   const [address, setAddress] = useState<string>();
 
   useEffect(() => {
