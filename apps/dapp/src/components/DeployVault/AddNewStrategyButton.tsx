@@ -11,21 +11,13 @@ import {
   ModalCloseButton,
   useDisclosure,
   IconButton,
-  FormControl,
   Select,
-  Input
 } from '@chakra-ui/react'
 import { AddIcon } from '@chakra-ui/icons'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { pushStrategy, getDefaultStrategies, Strategy } from '@/store/lib/features/vaultStore'
+import { pushStrategy, getDefaultStrategies } from '@/store/lib/features/vaultStore'
 import { useSorobanReact } from '@soroban-react/core'
-
-interface DefaultStrategy {
-  name: string;
-  address: string;
-  value: number;
-}
-
+import { Strategy } from '@/store/lib/features/walletStore'
 
 function AddNewStrategyButton() {
   const strategies = useAppSelector(state => state.newVault.strategies)
@@ -52,7 +44,7 @@ function AddNewStrategyButton() {
   }
 
   const resetForm = () => {
-    setNewStrategy({ address: '', name: '', value: 0 })
+    setNewStrategy({ address: '', name: '', share: 0, index: '0' })
     setNewAddress('')
     setNewName('')
     setSelectValue('')
