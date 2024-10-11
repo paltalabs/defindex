@@ -133,22 +133,6 @@ export const AllVaults = ({
 
   return (
     <Box mx={'auto'} minW={'100%'} p={4}>
-
-      <Text>
-        {`active chain: ${activeChain?.networkPassphrase}`}
-      </Text>
-      <Text>
-        {`active chain.id: ${activeChain?.id}`}
-      </Text>
-      <Text>
-        {`active chain. network: ${activeChain?.network}`}
-      </Text>
-      <Text>
-        {`active chain.networkUrl: ${activeChain?.networkUrl}`}
-      </Text>
-      <Text>
-        {`active chain.sorobanRpcUrl: ${activeChain?.sorobanRpcUrl}`}
-      </Text>
       {!isMobile ? (
         <TableContainer>
           <Table variant="simple">
