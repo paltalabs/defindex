@@ -1,7 +1,7 @@
 [workspace]
 members = ["strategies/*", "defindex", "factory"]
 exclude = [
-    "strategies/external_wasms"
+    "strategies/external_wasms",
 ]
 resolver = "2"
 

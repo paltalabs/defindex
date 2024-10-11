@@ -205,3 +205,32 @@ pub(crate) fn emit_emergency_manager_changed_event(
     e.events()
         .publish(("DeFindexVault", symbol_short!("nemanager")), event);
 }
+
+// FEES MINTED EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FeesMintedEvent {
+    pub defindex_receiver: Address,
+    pub defindex_shares: i128,
+    pub vault_receiver: Address,
+    pub vault_shares: i128,
+}
+
+/// Publishes an `EmergencyManagerChangedEvent` to the event stream.
+pub(crate) fn emit_fees_minted_event(
+    e: &Env,
+    defindex_receiver: Address,
+    defindex_shares: i128,
+    vault_receiver: Address,
+    vault_shares: i128,
+) {
+    let event = FeesMintedEvent {
+        defindex_receiver,
+        defindex_shares,
+        vault_receiver,
+        vault_shares,
+    };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("mfees")), event);
+}

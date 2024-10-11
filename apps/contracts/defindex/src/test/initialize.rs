@@ -25,6 +25,7 @@ fn test_initialize_and_get_roles() {
         &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
+        &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
     );
@@ -74,6 +75,7 @@ fn test_initialize_twice() {
         &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
+        &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
     );
@@ -83,6 +85,7 @@ fn test_initialize_twice() {
         &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
+        &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
     );

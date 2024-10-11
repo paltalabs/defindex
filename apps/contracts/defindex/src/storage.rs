@@ -9,6 +9,8 @@ enum DataKey {
     TotalAssets,     // Total number of tokens
     DeFindexReceiver,
     Factory,
+    LastFeeAssessment,
+    VaultShare,
 }
 
 // Assets Management
@@ -44,7 +46,7 @@ pub fn set_defindex_receiver(e: &Env, address: &Address) {
         .set(&DataKey::DeFindexReceiver, address);
 }
 
-pub fn get_defindex_receiver(e: &Env) -> i128 {
+pub fn get_defindex_receiver(e: &Env) -> Address {
     e.storage()
         .instance()
         .get(&DataKey::DeFindexReceiver)
@@ -62,5 +64,33 @@ pub fn get_factory(e: &Env) -> Address {
     e.storage()
         .instance()
         .get(&DataKey::Factory)
+        .unwrap()
+}
+
+// Last Fee Assesment
+pub fn set_last_fee_assesment(e: &Env, timestamp: &u64) {
+    e.storage()
+        .instance()
+        .set(&DataKey::LastFeeAssessment, timestamp);
+}
+
+pub fn get_last_fee_assesment(e: &Env) -> u64 {
+    e.storage()
+        .instance()
+        .get(&DataKey::LastFeeAssessment)
+        .unwrap()
+}
+
+// Vault Share
+pub fn set_vault_share(e: &Env, vault_share: &u32) {
+    e.storage()
+        .instance()
+        .set(&DataKey::VaultShare, vault_share);
+}
+
+pub fn get_vault_share(e: &Env) -> u32 {
+    e.storage()
+        .instance()
+        .get(&DataKey::VaultShare)
         .unwrap()
 }

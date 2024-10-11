@@ -32,6 +32,7 @@ pub trait FactoryTrait {
         e: Env, 
         emergency_manager: Address, 
         fee_receiver: Address, 
+        vault_share: u32,
         manager: Address,
         assets: Vec<AssetAllocation>,
         salt: BytesN<32>
@@ -80,6 +81,7 @@ impl FactoryTrait for DeFindexFactory {
         e: Env, 
         emergency_manager: Address, 
         fee_receiver: Address, 
+        vault_share: u32,
         manager: Address,
         assets: Vec<AssetAllocation>,
         salt: BytesN<32>
@@ -98,12 +100,13 @@ impl FactoryTrait for DeFindexFactory {
             &manager,
             &emergency_manager,
             &fee_receiver,
+            &vault_share,
             &defindex_receiver,
             &current_contract,
         );
 
         add_new_defindex(&e, defindex_address.clone());
-        events::emit_create_defindex_vault(&e, emergency_manager, fee_receiver, manager, assets);
+        events::emit_create_defindex_vault(&e, emergency_manager, fee_receiver, manager, vault_share, assets);
         Ok(defindex_address)
     }
 

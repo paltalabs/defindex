@@ -12,6 +12,7 @@
         "feeReceiver": "",
         "strategies": [
           {
+            "name": "Hodl",
             "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
             "index": 0,
             "share": 81
@@ -27,6 +28,7 @@
         "feeReceiver": "",
         "strategies": [
           {
+            "name": "Hodl",
             "address": "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W",
             "index": 0,
             "share": 100
@@ -42,6 +44,7 @@
         "feeReceiver": "",
         "strategies": [
           {
+            "name": "Hodl",
             "address": "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W",
             "index": 0,
             "share": 100
@@ -57,6 +60,7 @@
         "feeReceiver": "",
         "strategies": [
           {
+            "name": "Hodl",
             "address": "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W",
             "index": 0,
             "share": 100
@@ -72,6 +76,7 @@
         "feeReceiver": "",
         "strategies": [
           {
+            "name": "Hodl",
             "address": "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W",
             "index": 0,
             "share": 100
@@ -87,6 +92,7 @@
         "feeReceiver": "",
         "strategies": [
           {
+            "name": "Hodl",
             "address": "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W",
             "index": 0,
             "share": 100
@@ -102,6 +108,7 @@
         "feeReceiver": "",
         "strategies": [
           {
+            "name": "Hodl",
             "address": "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W",
             "index": 0,
             "share": 100
