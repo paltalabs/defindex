@@ -19,10 +19,11 @@ import { DeployVault } from "../DeployVault/DeployVault"
 import { useAppDispatch } from "@/store/lib/storeHooks"
 import { pushStrategy, resetStrategies } from "@/store/lib/features/vaultStore"
 import { shortenAddress } from "@/helpers/shortenAddress"
-import { DepositToVault } from "../DepositToVault/DepositToVault"
+import { InteractWithVault } from "../InteractWithVault/InteractWithVault"
 import { setSelectedVault } from "@/store/lib/features/walletStore"
 import ConnectButton from "../Wallet/ConnectButton"
 import { useSorobanReact } from "@soroban-react/core"
+import { VaultMethod } from "@/hooks/useVault"
 
 export const ManageVaultes = () => {
   const { address } = useSorobanReact()
@@ -65,19 +66,19 @@ export const ManageVaultes = () => {
 
   const handleOpenDeposit = async (method: string, args?: any) => {
     switch (method) {
-      case 'deposit':
+      case VaultMethod.DEPOSIT:
         setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
-        await dispatch(setSelectedVault({ ...args, method: 'deposit' }))
+        await dispatch(setSelectedVault({ ...args, method: VaultMethod.DEPOSIT }))
         console.log(args)
         break
-      case 'withdraw':
+      case VaultMethod.WITHDRAW:
         setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
-        await dispatch(setSelectedVault({ ...args, method: 'withdraw' }))
+        await dispatch(setSelectedVault({ ...args, method: VaultMethod.WITHDRAW }))
         console.log(args)
         break
-      case 'emergency_withdraw':
+      case VaultMethod.EMERGENCY_WITHDRAW:
         setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
-        await dispatch(setSelectedVault({ ...args, method: 'emergency_withdraw' }))
+        await dispatch(setSelectedVault({ ...args, method: VaultMethod.EMERGENCY_WITHDRAW }))
         console.log(args)
         break
     }
@@ -151,7 +152,7 @@ export const ManageVaultes = () => {
       >
         <ModalOverlay />
         <ModalContent minW={{ sm: '100%', md: '80%', lg: '60%', }}>
-          <DepositToVault />
+          <InteractWithVault />
         </ModalContent>
       </Modal>
     </>

@@ -15,7 +15,7 @@ import { useSorobanReact } from '@soroban-react/core'
 import { Address, nativeToScVal, scValToNative, xdr } from '@stellar/stellar-sdk'
 import React, { useEffect, useState } from 'react'
 
-export const DepositToVault = () => {
+export const InteractWithVault = () => {
   const [amount, set_amount] = useState<number>(0)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const selectedVault = useAppSelector(state => state.wallet.vaults.selectedVault)
