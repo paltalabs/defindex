@@ -9,13 +9,14 @@ import {
   Grid,
   GridItem,
   InputGroup,
-  InputRightAddon
+  InputRightAddon,
+  Select
 } from '@chakra-ui/react'
 import { useSorobanReact } from '@soroban-react/core'
 import { Address, nativeToScVal, scValToNative, xdr } from '@stellar/stellar-sdk'
 import React, { useEffect, useState } from 'react'
 
-export const DepositToVault = () => {
+export const InteractWithVault = () => {
   const [amount, set_amount] = useState<number>(0)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const selectedVault = useAppSelector(state => state.wallet.vaults.selectedVault)
@@ -35,9 +36,11 @@ export const DepositToVault = () => {
       if (!selectedVault?.totalValues) throw new Error('Total values is required');
       args.unshift(nativeToScVal((0), { type: "i128" }),)
       const result = await vault(
-        VaultMethod.GETEMERGENCYMANAGER,
+        VaultMethod.EMERGENCY_WITHDRAW,
         selectedVault?.address!,
-        [],
+        [
+          new Address(selectedVault.address).toScVal()
+        ],
         true,
       )
       return result
@@ -51,24 +54,6 @@ export const DepositToVault = () => {
       args,
       true,
     )
-  }
-  const depositToVault = async () => {
-    if (!address || !amount) return;
-
-    const depositParams: xdr.ScVal[] = [
-      nativeToScVal((amount * Math.pow(10, 7)), { type: "i128" }),
-      new Address(address).toScVal()
-    ];
-
-    const result = await vault(
-      VaultMethod.DEPOSIT,
-      selectedVault?.address!,
-      depositParams,
-      true,
-    )
-    setIsLoading(!isLoading)
-    console.log('🚀 ~ deployDefindex ~ result:', result);
-    return result;
   }
 
   const setAmount = (e: any) => {
@@ -105,6 +90,21 @@ export const DepositToVault = () => {
                   <Input my={4} type="text" onChange={(e) => setAmount(Number(e.target.value))} placeholder='Amount' value={amount} />
                   <InputRightAddon>$ USDC</InputRightAddon>
                 </InputGroup>
+              </GridItem>
+            </>
+          }
+          {
+            vaultMethod === VaultMethod.EMERGENCY_WITHDRAW &&
+            <>
+              <GridItem colSpan={6} textAlign={'end'} alignContent={'center'}>
+                <Text fontSize='lg'>Withdraw from strategy:</Text>
+              </GridItem>
+              <GridItem colSpan={6} colEnd={13} textAlign={'end'} >
+                <Select placeholder='Select strategy'>
+                  {selectedVault?.strategies.map((strategy, index) => (
+                    <option value={strategy.address}>{strategy.name}</option>
+                  ))}
+                </Select>
               </GridItem>
             </>
           }

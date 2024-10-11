@@ -21,13 +21,13 @@ import {
   scValToNative,
   xdr,
 } from "@stellar/stellar-sdk";
-import { pushVault } from '@/store/lib/features/walletStore'
+import { pushVault, Strategy } from '@/store/lib/features/walletStore'
 import { useFactoryCallback, FactoryMethod } from '@/hooks/useFactory'
 import { VaultPreview } from "./VaultPreview";
 import { DeploySteps } from "./DeploySteps";
 import { useEffect, useState } from "react";
 import { WarningIcon, CheckCircleIcon, ExternalLinkIcon } from '@chakra-ui/icons'
-import { NewVaultState, Strategy } from "@/store/lib/features/vaultStore";
+import { NewVaultState } from "@/store/lib/features/vaultStore";
 import { useSorobanReact } from "@soroban-react/core";
 
 import { randomBytes } from "crypto";
@@ -226,15 +226,15 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   }
 
   useEffect(() => {
-    const newChartData: ChartData[] = strategies.map((strategy: any, index: number) => {
+    const newChartData: ChartData[] = strategies.map((strategy: Strategy, index: number) => {
       return {
         id: index,
         label: strategy.name,
         address: strategy.address,
-        value: strategy.value,
+        value: strategy.share,
       }
     });
-    const total = newChartData.reduce((acc: number, curr: any) => acc + curr.value, 0)
+    const total = newChartData.reduce((acc: number, curr: ChartData) => acc + curr.value, 0)
     if (total == 100) {
       setChartData(newChartData);
       return;
@@ -242,7 +242,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       newChartData.push({
         id: newChartData.length,
         label: 'Unassigned',
-        value: 100 - newChartData.reduce((acc: number, curr: any) => acc + curr.value, 0),
+        value: 100 - newChartData.reduce((acc: number, curr: ChartData) => acc + curr.value, 0),
         address: undefined,
         color: '#e0e0e0'
       })

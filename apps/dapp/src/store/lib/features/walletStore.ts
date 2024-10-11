@@ -6,10 +6,11 @@ import vaults from '@/constants/constants.json'
 import { Networks } from '@stellar/stellar-sdk'
 import { VaultMethod } from '@/hooks/useVault'
 // Define a type for the slice state
-export interface Vault {
+export interface Strategy {
   address: string;
   index: string;
   share: number;
+  name: string;
 }
 export interface VaultData {
   address: string;
@@ -18,7 +19,7 @@ export interface VaultData {
   feeReceiver?: string;
   manager?: string;
   name: string;
-  strategies: Vault[];
+  strategies: Strategy[];
 }
 
 interface SelectedVault extends VaultData {

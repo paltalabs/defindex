@@ -12,7 +12,8 @@ import ItemSlider from './Slider'
 import AddNewStrategyButton from './AddNewStrategyButton'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { ConfirmDelpoyModal } from './ConfirmDelpoyModal'
-import { setName, Strategy } from '@/store/lib/features/vaultStore'
+import { setName } from '@/store/lib/features/vaultStore'
+import { Strategy } from '@/store/lib/features/walletStore'
 
 export const DeployVault = () => {
   const dispatch = useAppDispatch()
@@ -46,7 +47,7 @@ export const DeployVault = () => {
           </GridItem>
         </Grid>
         {strategies.map((strategy, index) => (
-          <ItemSlider key={index} name={strategy.name} address={strategy.address} value={strategy.value} />
+          <ItemSlider key={index} name={strategy.name} address={strategy.address} share={strategy.share} />
         ))}
         <Grid templateColumns={['1fr', null, 'repeat(8, 2fr)']} dir='reverse'>
           <GridItem colStart={[1, null, 8]} textAlign={['center', null, 'end']}>
