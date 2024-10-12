@@ -20,34 +20,34 @@ import { setStrategyValue, removeStrategy } from '@/store/lib/features/vaultStor
 
 function ItemSlider({
   address = 'Address',
-  value = 0,
+  share = 0,
   name = "Soroswap strategy"
 }: {
   address: string,
-  value: number,
+    share: number,
   name?: string,
 }) {
   const dispatch = useAppDispatch()
   const [showTooltip, setShowTooltip] = React.useState(false)
 
-  const totalValues = useAppSelector(state => state.newVault.totalValues)
-  const [inputValue, setInputValue] = React.useState<number | string>(value)
+  const totalShares = useAppSelector(state => state.newVault.totalValues)
+  const [inputValue, setInputValue] = React.useState<number | string>(share)
 
   const setVal = (val: number) => {
-    const total = totalValues! - value + val
+    const total = totalShares! - share + val
     if (total <= 100) {
       setInputValue(val)
-      dispatch(setStrategyValue({ address, value: val }))
+      dispatch(setStrategyValue({ address, share: val }))
     } else {
       setMax()
     }
   }
 
   const setMax = async () => {
-    const rest = 100 - totalValues!
-    const newVal = value + rest
+    const rest = 100 - totalShares!
+    const newVal = share + rest
     setInputValue(newVal)
-    dispatch(setStrategyValue({ address, value: newVal }))
+    dispatch(setStrategyValue({ address, share: newVal }))
   }
 
   const handleValueInput = (e: any) => {
@@ -87,13 +87,13 @@ function ItemSlider({
   }
 
   const handleDelete = () => {
-    dispatch(setStrategyValue({ address, value: 0 }))
-    dispatch(removeStrategy({ address: address, value: 0 }))
+    dispatch(setStrategyValue({ address, share: 0 }))
+    dispatch(removeStrategy({ address: address, share: 0 }))
   }
 
   useEffect(() => {
-    setInputValue(value)
-  }, [value])
+    setInputValue(share)
+  }, [share])
 
   return (
     <Grid templateColumns="repeat(12, 1fr)" alignItems={'center'} my={4}>
@@ -115,7 +115,7 @@ function ItemSlider({
             px={2}
             type='number'
             min={0}
-            placeholder={value.toString()}
+            placeholder={share.toString()}
             onInput={handleValueInput}
             onBlur={handleBlur}
             onKeyDown={handleEnter}
@@ -127,8 +127,8 @@ function ItemSlider({
         <Slider
           aria-label='slider-ex-5'
           id='slider'
-          defaultValue={value}
-          value={value}
+          defaultValue={share}
+          value={share}
           min={0}
           max={100}
           colorScheme='green'
@@ -146,7 +146,7 @@ function ItemSlider({
             color='white'
             placement='top'
             isOpen={showTooltip}
-            label={`${value}%`}
+            label={`${share}%`}
           >
             <SliderThumb />
           </Tooltip>
