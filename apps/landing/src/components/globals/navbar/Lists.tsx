@@ -11,7 +11,7 @@ const menuItems = [
 ];
 
 function Lists({ toggle }: { toggle?: () => void }) {
-    const { index, setIndex } = useContext(NavigateTab);
+    const { setIndex } = useContext(NavigateTab);
 
     return (
         <div>
