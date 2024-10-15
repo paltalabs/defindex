@@ -3,7 +3,7 @@ import Unit from "@/components/globals/Frequently/Unit";
 
 function Frequently() {
     return (
-        <section className="mb-20 md:mb-[120px]">
+        <section className="mb-20 md:mb-[120px]" id="FAQ">
             <div className="container">
                 <div className="mx-auto max-w-[1216px] grid lg:grid-cols-2">
                     <div className="lg:max-w-[435px] lg:mb-0 mb-12">

@@ -52,13 +52,13 @@ function Footer() {
                                 </Link>
                                 <Link
                                     className="font-manrope text-xs leading-normal text-white duration-200 hover:text-lime-200"
-                                    href="/"
+                                    href="https://paltalabs.io/#contact-us"
                                 >
                                     Contact Us
                                 </Link>
                                 <Link
                                     className="font-manrope text-xs leading-normal text-white duration-200 hover:text-lime-200"
-                                    href="/"
+                                    href="https://paltalabs.io/"
                                 >
                                     About Us
                                 </Link>

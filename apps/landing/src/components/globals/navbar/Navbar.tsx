@@ -34,7 +34,7 @@ function Navbar() {
                         <div className="flex justify-end items-center gap-6">
                             <NextLink
                                 className="hidden outlined-button rounded-3xl border border-lime-200 px-6 py-3 lg:min-h-[60px] sm:flex gap-2.5 items-center justify-center"
-                                href="/"
+                                href="mailto:dev@paltalabs.io"
                             >
                                 <span className="font-extrabold font-manrope text-[14px] lg:text-xs lg:leading-tight text-lime-200">
                                     Schedule a Demo
