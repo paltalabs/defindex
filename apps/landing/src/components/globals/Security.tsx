@@ -34,17 +34,24 @@ function Security() {
                     />
                     <div className="max-w-[1254px] pt-20 sm:pt-32 md:pt-44 xl:pt-[222px] pb-20 sm:pb-28 md:pb-40 xl:pb-[200px] mx-auto flex lg:flex-row flex-col items-center justify-between">
                         <div className="lg:max-w-[600px] lg:mb-0 mb-8">
-                            <p className="uppercase font-familjen-grotesk text-[18px] md:text-[20px] md:text-lg leading-[1.2em] tracking-[-0.03em] text-uppercase text-blue-100">
+                            <p
+                                data-aos="fade-up"
+                                className="uppercase font-familjen-grotesk text-[18px] md:text-[20px] md:text-lg leading-[1.2em] tracking-[-0.03em] text-uppercase text-blue-100"
+                            >
                                 Security & Transparency
                             </p>
-                            <h2 className="font-familjen-grotesk text-[48px] md:text-[64px] leading-[1.11em] xl:text-3xl tracking-[-0.03em] text-linear bg-linear italic">
+                            <h2
+                                data-aos-delay="100"
+                                data-aos="fade-up"
+                                className="font-familjen-grotesk text-[48px] md:text-[64px] leading-[1.11em] xl:text-3xl tracking-[-0.03em] text-linear bg-linear italic"
+                            >
                                 Secure, Transparent, <b>and Decentralized</b>
                             </h2>
                         </div>
                         <div className="lg:max-w-[422px]">
                             <ul className="flex gap-4 lg:gap-8 flex-col ">
                                 {steps.map(({ id, title }) => (
-                                    <li key={id}>
+                                    <li data-aos="fade-up" key={id}>
                                         <div className="flex gap-4 items-center">
                                             <span className="font-familjen-grotesk text-[#DEC9F4] -translate-y-[0.095em] font-bold text-[48px] md:text-[56px] xl:text-[64px]">
                                                 {id}.

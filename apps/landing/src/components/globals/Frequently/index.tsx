@@ -7,10 +7,17 @@ function Frequently() {
             <div className="container">
                 <div className="mx-auto max-w-[1216px] grid lg:grid-cols-2">
                     <div className="lg:max-w-[435px] lg:mb-0 mb-12">
-                        <h2 className="text-linear leading-[1.03em] mb-3 xl:mb-6 bg-linear font-bold font-familjen-grotesk italic text-[48px] sm:text-[56px] lg:text-xl">
+                        <h2
+                            data-aos="fade-up"
+                            className="text-linear leading-[1.03em] mb-3 xl:mb-6 bg-linear font-bold font-familjen-grotesk italic text-[48px] sm:text-[56px] lg:text-xl"
+                        >
                             Frequently Asked Questions
                         </h2>
-                        <p className="font-inter-tight text-[20px] xl:text-lg leading-[1.25em] text-white">
+                        <p
+                            data-aos="fade-up"
+                            data-aos-delay="100"
+                            className="font-inter-tight text-[20px] xl:text-lg leading-[1.25em] text-white"
+                        >
                             Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi
                             ut aliquip ex ea commodo consequat aute irure.
                         </p>

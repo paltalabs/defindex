@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { BorderBeam } from "@/components/ui/border-beam";
 
 interface Props {
     label: string;
@@ -22,16 +23,21 @@ function Solutions(props: Props) {
     return (
         <div>
             <div className="flex gap-4 justify-center flex-col max-w-w-[629px] mb-16 lg:mb-20">
-                <p className="font-familjen-grotesk text-[20px] lg:text-lg uppercase leading-[1.425em] tracking-[-0.03em] text-uppercase text-cyan-950">
+                <p
+                    data-aos="fade-up"
+                    className="font-familjen-grotesk text-[20px] lg:text-lg uppercase leading-[1.425em] tracking-[-0.03em] text-uppercase text-cyan-950"
+                >
                     {label}
                 </p>
                 <h4
+                    data-aos="fade-up"
+                    data-aos-offset="100"
                     className="font-familjen-grotesk max-w-[600px] text-[56px] xl:text-3xl leading-[1.04em] tracking-[-0.03em] text-cyan-950"
                     dangerouslySetInnerHTML={{
                         __html: title.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>"),
                     }}
                 />
-                <div className="flex">
+                <div data-aos-offset="100" data-aos="fade-zoom-in" className="flex">
                     <Link
                         href={learn_more}
                         className="font-extrabold font-manrope text-[14px] xl:text-xs leading-none xl:leading-none text-cyan-950 rounded-3xl bg-lime-200 px-6 py-4 xl:p-6 flex gap-2.5 items-center justify-center"
@@ -40,7 +46,11 @@ function Solutions(props: Props) {
                     </Link>
                 </div>
             </div>
-            <div className="grid sm:grid-cols-4 mb-12 md:mb-16 lg:mb-20">
+            <div
+                data-aos="fade-zoom-in"
+                className="grid overflow-hidden sm:grid-cols-4 relative mb-12 md:mb-16 lg:mb-20 rounded-xl sm:rounded-3xl"
+            >
+                <BorderBeam />
                 <Image
                     width={304}
                     height={329}
@@ -64,7 +74,7 @@ function Solutions(props: Props) {
             </div>
             <div className="flex gap-20">
                 {advices.map(({ describe, title }, index) => (
-                    <div key={index} className="">
+                    <div data-aos="fade-zoom-in" key={index} className="">
                         <b className="font-extrabold font-inter-tight text-[16px] md:text-[20px] xl:text-lg leading-[1.6075em] text-cyan-900/80">
                             {title}
                         </b>{" "}

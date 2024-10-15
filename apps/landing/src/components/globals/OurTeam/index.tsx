@@ -20,10 +20,17 @@ function OurTeam() {
             <div className="container">
                 <div className="pt-24 md:pt-28 xl:pt-[150px]">
                     <div className="max-w-[850px] mx-auto flex gap-2 xl:gap-4 items-center flex-col">
-                        <h2 className="font-familjen-grotesk italic pr-1 text-center text-[48px] md:text-[64px] xl:text-3xl tracking-[-0.03em] text-linear bg-linear">
+                        <h2
+                            data-aos="fade-up"
+                            className="font-familjen-grotesk italic pr-1 text-center text-[48px] md:text-[64px] xl:text-3xl tracking-[-0.03em] text-linear bg-linear"
+                        >
                             Our <b>Team</b>
                         </h2>
-                        <p className="font-inter-tight text-center sm:text-[18px] md:text-[22px] xl:text-lg leading-[1.333em] text-white">
+                        <p
+                            data-aos-delay="100"
+                            data-aos="fade-up"
+                            className="font-inter-tight text-center sm:text-[18px] md:text-[22px] xl:text-lg leading-[1.333em] text-white"
+                        >
                             A diverse team of engineers, developers, and communicators from Latin
                             America. We are also the team behind Soroswap (the First DEX of Soroban,
                             and now AMM aggregator). We also created multiple developer tools such
@@ -31,7 +38,10 @@ function OurTeam() {
                         </p>
                     </div>
                     <div className="py-16 md:py-24 xl:py-[120px]">
-                        <div className="h-[300px] md:h-[400px] xl:h-[522px]">
+                        <div
+                            data-aos="fade-zoom-in"
+                            className="h-[300px] md:h-[400px] xl:h-[522px]"
+                        >
                             <div>
                                 <Slider {...settings}>
                                     {[...Array(12)].map((_, index) => (

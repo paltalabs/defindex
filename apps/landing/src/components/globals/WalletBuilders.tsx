@@ -16,8 +16,12 @@ function WalletBuilders() {
                         onSelect={setIndex}
                         className="mx-auto max-w-[1217px] wallets-tabs"
                     >
-                        <TabList className="grid grid-cols-2 max-w-[808px] mx-auto items-center mb-8 sm:mb-16 xl:mb-[90px]">
+                        <TabList
+                            data-aos="fade-zoom-in"
+                            className="grid grid-cols-2 max-w-[808px] mx-auto items-center mb-8 sm:mb-16 xl:mb-[90px]"
+                        >
                             <Tab
+                                data-aos-offset="50"
                                 role="button"
                                 className="py-4 xl:py-6 cursor-pointer focus:outline-0 rounded-l-3xl px-6 sm:px-12 xl:px-[104px] flex gap-2.5 items-center justify-center border-2 border-cyan-950 font-familjen-grotesk text-[16px] whitespace-nowrap sm:text-[20px] md:text-lg leading-none md:leading-none tracking-[-0.03em] hover:bg-cyan-950/10 duration-75 text-cyan-950"
                             >
