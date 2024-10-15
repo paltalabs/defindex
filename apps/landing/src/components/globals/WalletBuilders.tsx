@@ -62,13 +62,13 @@ function WalletBuilders() {
                                     advices={[
                                         {
                                             title: "Choose Your Strategies:",
-                                            describe: ` .Select from a variety of yield-generating strategies to
+                                            describe: `Select from a variety of yield-generating strategies to
                                             match your users'' needs. Offer a curated portfolio
                                             that maximizes returns while managing risk.`,
                                         },
                                         {
                                             title: "Effortless Integration:",
-                                            describe: `Whether you&apos;re building or managing a wallet,
+                                            describe: `Whether you're building or managing a wallet,
                                             DeFindex provides the developer tools you need. Easily
                                             integrate customizable buttons directly into your app,
                                             enabling your users to start earning yield with just one
@@ -91,19 +91,19 @@ function WalletBuilders() {
                                             id: 1,
                                             icon: "/images/hugeicons_developer.svg",
                                             description:
-                                                "Choose from a variety of DeFi strategies to offer customized portfolios",
+                                                "Develop your own strategies on DeFindex.",
                                         },
                                         {
                                             id: 2,
                                             icon: "/images/eos-icons_blockchain.svg",
                                             description:
-                                                "Developer-friendly tools to seamlessly integrate into your app",
+                                                "Incentivize usage of your protocol through yield opportunities.",
                                         },
                                         {
                                             id: 3,
                                             icon: "/images/iconoir_community.svg",
                                             description:
-                                                "Enhance user engagement with yield-generating accounts",
+                                                "Engage with a growing community of DeFi users.",
                                         },
                                     ]}
                                     advices={[

@@ -29,8 +29,8 @@ const inter = Inter({
 const fonts = [manrope, familjenGrotesk, interTight, inter].map((font) => font.variable).join(" ");
 
 export const metadata: Metadata = {
-    title: "De findex",
-    description: "",
+    title: "Defindex",
+    description: "Diversified DeFi strategies for your users.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

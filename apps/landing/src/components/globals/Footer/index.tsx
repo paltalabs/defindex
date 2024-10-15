@@ -3,10 +3,10 @@ import Link from "next/link";
 import { FaXTwitter, FaDiscord, FaLinkedin, FaGithub } from "react-icons/fa6";
 
 const links: [React.ElementType, string][] = [
-    [FaXTwitter, "/"],
-    [FaDiscord, "/"],
-    [FaLinkedin, "/"],
-    [FaGithub, "/"],
+    [FaXTwitter, "https://x.com/PaltaLabs"],
+    [FaDiscord, "https://discord.gg/CUC26qUTw7"],
+    [FaLinkedin, "https://www.linkedin.com/company/paltalabs"],
+    [FaGithub, "https://github.com/paltalabs/defindex"],
 ];
 
 function Footer() {
@@ -46,7 +46,7 @@ function Footer() {
                                 </b>
                                 <Link
                                     className="font-manrope text-xs leading-normal text-white duration-200 hover:text-lime-200"
-                                    href="/"
+                                    href="#FAQ"
                                 >
                                     FAQ
                                 </Link>
