@@ -1,8 +1,7 @@
 "use client";
-import React from "react";
 import Slider, { Settings } from "react-slick";
-import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import "slick-carousel/slick/slick.css";
 
 function OurTeam() {
     const settings: Settings = {
@@ -14,6 +13,29 @@ function OurTeam() {
         variableWidth: true,
         arrows: false,
     };
+
+    const ourTeam = [
+        {
+            alt: "Esteban Iglesias",
+            image: "/people/person1.png"
+        },
+        {
+            alt: "Francisco Catrileo",
+            image: "/people/person3.png"
+        },
+        {
+            alt: "Joaquin Soza",
+            image: "/people/person2.png"
+        },
+        {
+            alt: "Matias Poblete",
+            image: "/people/person5.png"
+        },
+        {
+            alt: "Jenny",
+            image: "/people/person6.png"
+        }
+    ]
 
     return (
         <section id="our-team">
@@ -34,15 +56,15 @@ function OurTeam() {
                         <div className="h-[300px] md:h-[400px] xl:h-[522px]">
                             <div>
                                 <Slider {...settings}>
-                                    {[...Array(12)].map((_, index) => (
+                                    {ourTeam.map((info, index) => (
                                         <div
                                             className="px-2 md:px-4 grid place-content-center"
                                             key={index}
                                         >
                                             <img
                                                 className="rounded-3xl xl:rounded-[40px] w-ful item-wrapper h-[220px] md:h-[340px] xl:h-[442px] aspect-[407/522]"
-                                                src="https://placehold.co/407x522"
-                                                alt=""
+                                                src={info.image}
+                                                alt={info.alt}
                                             />
                                         </div>
                                     ))}
