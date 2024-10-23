@@ -116,15 +116,9 @@ export const walletSlice = createSlice({
     setSelectedVault: (state, action: PayloadAction<SelectedVault>) => {
       state.vaults.selectedVault = action.payload
     },
-    setVaultRoles: (state, action: PayloadAction<any>) => { 
-      const vaultIndex = state.vaults.createdVaults.findIndex(vault => vault.address === action.payload.address);
-      if (vaultIndex !== -1) {
-        state.vaults.createdVaults[vaultIndex] = {
-          ...state.vaults.createdVaults[vaultIndex],
-          ...action.payload
-        };
-      }
-    }
+    setVaults: (state, action: PayloadAction<VaultData[]>) => {
+      state.vaults.createdVaults = action.payload
+    },
   },
   extraReducers(builder) {
     builder.addCase(fetchDefaultAddresses.pending, (state) => {
@@ -148,7 +142,7 @@ export const {
   pushVault, 
   setIsVaultsLoading, 
   setSelectedVault, 
-  setVaultRoles 
+  setVaults,
 } = walletSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
