@@ -1,33 +1,29 @@
 import { shortenAddress } from '@/helpers/shortenAddress'
+import { FactoryMethod, useFactoryCallback } from '@/hooks/useFactory'
 import { VaultMethod, useVaultCallback } from '@/hooks/useVault'
-import { fetchDefaultAddresses, setIsVaultsLoading, setVaultRoles, VaultData } from '@/store/lib/features/walletStore'
+import { fetchDefaultAddresses, setIsVaultsLoading, setVaults, VaultData } from '@/store/lib/features/walletStore'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { ArrowLeftIcon, SettingsIcon, WarningTwoIcon } from '@chakra-ui/icons'
 import {
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  TableContainer,
-  Tooltip,
-  Skeleton,
-  Stat,
-  StatHelpText,
-  StatArrow,
-  IconButton,
   Box,
+  IconButton,
+  Skeleton,
   Stack,
+  Stat,
+  StatArrow,
+  StatHelpText,
+  Table, Thead, Tbody, Tr, Th, Td, TableContainer,
   Text,
+  Tooltip,
+  useBreakpointValue,
   VStack,
-  useBreakpointValue
 } from '@chakra-ui/react'
 import { useSorobanReact } from '@soroban-react/core'
 import { scValToNative } from '@stellar/stellar-sdk'
 import { useEffect, useState } from 'react'
 
 const SkeletonRow = () => {
+  const { address } = useSorobanReact()
   return (
     <Tr>
       <Td>
@@ -45,6 +41,11 @@ const SkeletonRow = () => {
       <Td>
         <Skeleton height='20px' />
       </Td>
+      {address && (
+        <Td>
+          <Skeleton height='20px' />
+        </Td>
+      )}
     </Tr>
   )
 }
@@ -61,39 +62,31 @@ export const AllVaults = ({
   const vaults = useAppSelector(state => state.wallet.vaults)
   const isLoading = vaults.isLoading
   const createdVaults = vaults.createdVaults
-
+  const factory = useFactoryCallback()
   const isMobile = useBreakpointValue({ base: true, md: false });
 
-  const getRoles = async (selectedVault: string) => {
-    setIsVaultsLoading(true)
+  const [defaultAddresses, setDefaultAddresses] = useState()
+
+  const getVaultInfo = async (selectedVault: string) => {
     try {
-      const manager: any = await vault(
-        VaultMethod.GETMANAGER,
-        selectedVault,
-        undefined,
-        false,
-      )
-      const emergencyManager: any = await vault(
-        VaultMethod.GETEMERGENCYMANAGER,
-        selectedVault,
-        undefined,
-        false,
-      )
-      const feeReceiver: any = await vault(
-        VaultMethod.GETFEERECEIVER,
-        selectedVault,
-        undefined,
-        false,
-      )
-      const parsedManager = scValToNative(manager)
-      const parsedEmergencyManager = scValToNative(emergencyManager)
-      const parsedFeeReceiver = scValToNative(feeReceiver)
-      return {
+      const [manager, emergencyManager, feeReceiver, name, strategies, totalValues] = await Promise.all([
+        vault(VaultMethod.GETMANAGER, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
+        vault(VaultMethod.GETEMERGENCYMANAGER, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
+        vault(VaultMethod.GETFEERECEIVER, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
+        vault(VaultMethod.GETNAME, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
+        vault(VaultMethod.GETSTRATEGIES, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
+        vault(VaultMethod.GETTOTALVALUES, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
+      ]);
+      const newData: VaultData = {
+        name: name || '',
         address: selectedVault,
-        manager: parsedManager,
-        emergencyManager: parsedEmergencyManager,
-        feeReceiver: parsedFeeReceiver
+        manager: manager,
+        emergencyManager: emergencyManager,
+        feeReceiver: feeReceiver,
+        strategies: strategies || [],
+        totalValues: totalValues || 0,
       }
+      return newData
     } catch (e: any) {
       if (e.toString().includes('MissingValue')) {
         console.warn(`The vault ${shortenAddress(selectedVault)} is missing some values, some features may not work as expected`)
@@ -101,37 +94,55 @@ export const AllVaults = ({
         console.error(e)
       }
       return {
+        name: '',
         address: selectedVault,
         manager: undefined,
         emergencyManager: undefined,
-        feeReceiver: undefined
+        feeReceiver: undefined,
+        strategies: [],
+        totalValues: 0,
       }
-    } finally {
-      setIsVaultsLoading(false)
     }
   }
 
-  const fetchVaultRoles = async () => {
-    for (const vault of createdVaults) {
-      const roles = await getRoles(vault.address)
-      await dispatch(setVaultRoles(roles))
-    }
-  }
-
-  useEffect(() => {
+  const getDefaultVaults = async () => {
+    dispatch(setIsVaultsLoading(true))
     dispatch(fetchDefaultAddresses(activeChain?.networkPassphrase!))
-  }, [activeChain?.networkPassphrase, address]);
+  }
+  useEffect(() => {
+
+    getDefaultVaults()
+  }, [activeChain?.networkPassphrase, address])
+
+  const getDefindexVaults = async () => {
+    try {
+      const defindexVaults: any = await factory(FactoryMethod.DEPLOYED_DEFINDEXES)
+      const parsedDefindexVaults = scValToNative(defindexVaults)
+      const defindexVaultsArray = []
+      dispatch(setIsVaultsLoading(true))
+      for (let vault in parsedDefindexVaults) {
+        vault = parsedDefindexVaults[vault]
+        const newData = await getVaultInfo(vault)
+        defindexVaultsArray.push(newData)
+      }
+      dispatch(setVaults(defindexVaultsArray))
+      dispatch(setIsVaultsLoading(false))
+      console.log(defindexVaultsArray, '🟡 defindexVaultsArray')
+    } catch (e: any) {
+      dispatch(setIsVaultsLoading(false))
+      console.error(e)
+    }
+  }
+
 
   useEffect(() => {
-    if (createdVaults?.length > 0) {
-      fetchVaultRoles()
-    }
-  }, [createdVaults.length, address])
+    getDefindexVaults()
+  }, [activeChain?.networkPassphrase, address])
 
   return (
     <Box mx={'auto'} minW={'100%'} p={4}>
       {!isMobile ? (
-        <TableContainer>
+        <TableContainer >
           <Table variant="simple">
             <Thead>
               <Tr>
@@ -146,6 +157,8 @@ export const AllVaults = ({
               </Tr>
             </Thead>
             {isLoading && <Tbody>
+              <SkeletonRow />
+              <SkeletonRow />
               <SkeletonRow />
               <SkeletonRow />
               <SkeletonRow />

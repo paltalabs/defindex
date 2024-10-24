@@ -2,7 +2,7 @@ import { useSorobanReact } from "@soroban-react/core";
 import { useCallback } from "react";
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { TxResponse, contractInvoke } from '@soroban-react/contracts';
-import { useAppSelector } from "@/store/lib/storeHooks";
+
 
 export enum VaultMethod {
     DEPOSIT = "deposit",
@@ -12,7 +12,10 @@ export enum VaultMethod {
     GETEMERGENCYMANAGER = "get_emergency_manager",
     GETFEERECEIVER = "get_fee_receiver",
     EMERGENCY_WITHDRAW = "emergency_withdraw",
-}
+    GETNAME= "name",
+    GETTOTALVALUES = "current_invested_funds",
+    GETSTRATEGIES = "get_strategies",
+}   
 
 const isObject = (val: unknown) => typeof val === 'object' && val !== null && !Array.isArray(val);
 

@@ -7,6 +7,7 @@ import { fetchFactoryAddress } from "@/utils/factory";
 
 export enum FactoryMethod {
   CREATE_DEFINDEX_VAULT = "create_defindex_vault",
+  DEPLOYED_DEFINDEXES = "deployed_defindexes",
 }
 
 const isObject = (val: unknown) => typeof val === 'object' && val !== null && !Array.isArray(val);
@@ -42,8 +43,7 @@ export function useFactoryCallback() {
 
   return useCallback(
     async (method: FactoryMethod, args?: StellarSdk.xdr.ScVal[], signAndSend?: boolean) => {
-      console.log("Factory Callback called")
-      try {
+      if(factoryAddress) try {
         const result = (await contractInvoke({
           contractAddress: factoryAddress as string,
           method: method,
