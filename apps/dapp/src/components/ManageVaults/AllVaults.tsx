@@ -20,9 +20,10 @@ import {
 } from '@chakra-ui/react'
 import { useSorobanReact } from '@soroban-react/core'
 import { scValToNative } from '@stellar/stellar-sdk'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 const SkeletonRow = () => {
+  const { address } = useSorobanReact()
   return (
     <Tr>
       <Td>
@@ -40,6 +41,11 @@ const SkeletonRow = () => {
       <Td>
         <Skeleton height='20px' />
       </Td>
+      {address && (
+        <Td>
+          <Skeleton height='20px' />
+        </Td>
+      )}
     </Tr>
   )
 }
@@ -57,8 +63,9 @@ export const AllVaults = ({
   const isLoading = vaults.isLoading
   const createdVaults = vaults.createdVaults
   const factory = useFactoryCallback()
-
   const isMobile = useBreakpointValue({ base: true, md: false });
+
+  const [defaultAddresses, setDefaultAddresses] = useState()
 
   const getVaultInfo = async (selectedVault: string) => {
     try {
@@ -98,19 +105,33 @@ export const AllVaults = ({
     }
   }
 
-  const getDefindexVaults = async () => {
-    const defindexVaults: any = await factory(FactoryMethod.DEPLOYED_DEFINDEXES)
-    const parsedDefindexVaults = scValToNative(defindexVaults)
-    const defindexVaultsArray = []
+  const getDefaultVaults = async () => {
     dispatch(setIsVaultsLoading(true))
-    for (let vault in parsedDefindexVaults) {
-      vault = parsedDefindexVaults[vault]
-      const newData = await getVaultInfo(vault)
-      defindexVaultsArray.push(newData)
+    dispatch(fetchDefaultAddresses(activeChain?.networkPassphrase!))
+  }
+  useEffect(() => {
+
+    getDefaultVaults()
+  }, [activeChain?.networkPassphrase, address])
+
+  const getDefindexVaults = async () => {
+    try {
+      const defindexVaults: any = await factory(FactoryMethod.DEPLOYED_DEFINDEXES)
+      const parsedDefindexVaults = scValToNative(defindexVaults)
+      const defindexVaultsArray = []
+      dispatch(setIsVaultsLoading(true))
+      for (let vault in parsedDefindexVaults) {
+        vault = parsedDefindexVaults[vault]
+        const newData = await getVaultInfo(vault)
+        defindexVaultsArray.push(newData)
+      }
+      dispatch(setVaults(defindexVaultsArray))
+      dispatch(setIsVaultsLoading(false))
+      console.log(defindexVaultsArray, '🟡 defindexVaultsArray')
+    } catch (e: any) {
+      dispatch(setIsVaultsLoading(false))
+      console.error(e)
     }
-    dispatch(setVaults(defindexVaultsArray))
-    dispatch(setIsVaultsLoading(false))
-    console.log(defindexVaultsArray, '🟡 defindexVaultsArray')
   }
 
 
