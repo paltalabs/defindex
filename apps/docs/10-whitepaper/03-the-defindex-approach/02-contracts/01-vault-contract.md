@@ -14,16 +14,23 @@ Because Strategies are the only one that know exactly the current balance of the
 Or if the Vault executes Strategies at its own name (auth), it should execute a speficic `get_assets_balance` function in the strategy contract to know exactely how many assets it has at a specific moment.
 
 ### Initialization
-The DeFindex Vault contract is initialized with a **pre defined  ratio of assets**. For example, if the vault is initialized with 1 token `A`, 2 tokens `B`, and 3 tokens `C`, the initial ratio of these tokens will be `A:B:C = 1:2:3`.
+The DeFindex Vault contract is structured with specific roles and strategies for managing assets effectively. The key roles include the **Fee Receiver**, **Manager**, and **Emergency Manager**, each responsible for different tasks in managing the Vault. Additionally, a predefined set of strategies determines how assets will be allocated within the Vault. A management fee is also established at the time of initialization, which can later be adjusted by the Fee Receiver. Further details on fee handling are explained later in the document.
 
-When users deposit assets into the DeFindex Vault, they receive dfTokens in exchange, which represent their share of the DeFindex Vaults' assets.
+The allocation ratios for these strategies are not set during the deployment but are defined during the first deposit made into the Vault. For example, imagine a scenario where the Vault is set up to allocate 20% of its assets to a USDC lending pool (like Blend), 30% to another USDC lending pool (such as YieldBlox), and 50% to a USDC-XLM liquidity pool on an Automated Market Maker (AMM) platform (like Soroswap). 
 
-These initial proportions apply to the first deposit made into the DeFindex. However, the Manager has the authority to adjust these proportions as needed to adapt to changing conditions. Additionally, the performance of the Strategies can influence the asset ratio.
+To establish this allocation, the deployer must make a first deposit into the Vault, even if the amount is small. This initial deposit sets the ratio for all future deposits. The deployer is required to hold USDC and the liquidity pool tokens, such as LP-USDC-XLM, to start this process. However, a **zapper contract** simplifies this by automating asset conversion and liquidity pooling. The zapper takes the deployer’s USDC, swaps 25% of it into XLM, and then uses both USDC and XLM to add liquidity to the Soroswap pool. This process generates LP tokens, which is required to complete the first deposit, ensuring the allocation ratios are correctly set. It's worth noting that the first deposit is made within the same transaction that creates and initializes the vault, so the deployer must have at least a minimal amount of assets ready when creating a vault.
 
-**Inmmutable Flags**
-Every Vault should be initialized with some flags that will never be modified
-- FIXED_STRATEGIES. If true, the Manager can add or remove strategies. If false, strategies never be changed.
-- FIXED_RATIO. If true, rebalance is not possible.
+Once the contract is initialized and the first deposit is made, the **Manager** has the authority to adjust the allocation ratios over time. For example, if market conditions change or certain strategies perform better, the Manager can rebalance the allocations between the strategies to optimize performance. However, the Manager is limited to reallocating funds only between the existing strategies. They cannot introduce new strategies, which ensures the safety of user funds by minimizing potential security risks.
+
+This restriction on adding new strategies is a deliberate security feature. Allowing new strategies could increase the attack surface, potentially exposing the Vault to more vulnerabilities. By keeping the strategies fixed, the contract provides a stable and secure environment for users’ assets while still allowing flexibility in reallocating funds between existing strategies.
+
+In summary:
+1. **Roles and strategies are predefined** in the contract.
+2. **Allocation ratios** for these strategies are set during the **first deposit**.
+3. A **zapper contract** helps convert assets and establish the correct ratios.
+4. The **Manager** can adjust allocations but cannot add new strategies, ensuring security and stability.
+
+
 
 ### Investing: Deposit
 When a user deposits assets into the DeFindex, they receive dfTokens that represent their proportional share of the DeFindex's assets. These dfTokens can later be burned to withdraw the corresponding assets.
@@ -84,9 +91,6 @@ To ensure accurate representation of asset proportions, strategies are required 
 #### Functions
 - `assets()`: Returns the assets addresses and amount of each  of them in the DeFindex (and hence its current ratio).
 `[[adress0, amount0], [address1, amount1]]`. TODO: Separate in 2 functions.
-
-- `set_strategy(strategy, bool)`: Allows the Manager to add/remove the strategies. **TODO: Only allow if flag FIXED_STRATEGIES=false**.
-
 - `withdraw_from_strategies`: Allows the Manager to withdraw assets from one or more strategies, letting them as IDLE funds.
 - `invest_in_strategies`: Allows the Manager to invest IDLE fund assets in one or more strategies.
 - `internal_swap`: Allows the Manager to swap one IDLE asset into another IDLE asset supported by the Vault. As arguments, it receives an array of Soroswap's Aggregator Swap arguments.
@@ -95,52 +99,32 @@ To ensure accurate representation of asset proportions, strategies are required 
 Then, a rebalance execution will withdraw assets from the strategies, swap them, and invest them back in the strategies.
 - `emergency_withdraw`: Allows the Emergency Manager to withdraw all assets from a specific Strategy. As arguments, it receives the the address of a Strategy. It also turns off the strategy.
 
-**TODO: To analyze **Vault Users should trust in the Manager as the Manager controls when and how to do a swap, which can incurr in user fund loss.
-
 ### Emergency Management
 The Emergency Manager has the authority to withdraw assets from the DeFindex in case of an emergency. This role is designed to protect users' assets in the event of a critical situation, such as a hack of a underlying protocol or a if a strategy gets unhealthy. The Emergency Manager can withdraw assets from the Strategy and store them as IDLE funds inside the Vault until the situation is resolved. 
 
-The Emergency Manager can also turns off a strategy if it is unhealthy (TODO: in which conditions we can turn off? Only if assets by strategy = 0?). Maybe emergency withdrawal will turn off strategies by default
-
-
 ### Management
-Every DeFindex has a manager, who is responsible for managing the DeFindex. The Manager can add or remove strategies, rebalance the DeFindex, and invest IDLE funds in strategies. 
-
-Apart from rebalancing, the Manager can restore a strategy that has been turned off by the Emergency Manager. And, the Manager can also turn off a strategy if it is unhealthy.
-
-The manager receives fees from the DeFindex. In that way, the Manager has an incentive to make the DeFindex have great yields.
-
-### Adding or removing strategies
-The Manager can add or remove strategies from the DeFindex. However, there is a cooldown period of 7 days to invest in a new strategy. This is to prevent an attack on the Manager that could invest in a malicious strategy and withdraw the funds before the users can withdraw their funds.
-
-TODO: Maybe this will be possible only if `FIXED_STRATEGIES=false`
+Every DeFindex has a manager, who is responsible for managing the DeFindex. The Manager can ebalance the Vault, and invest IDLE funds in strategies. 
 
 ### Fee Collection
-The revenues generated by the strategies are collected as shares of the DeFindex.
-TODO: When should be mint this shares? on every deposit, on every withdrawal? How to reduce tx costs?
+The revenues generated by the strategies are collected as shares of the DeFindex. These shares, or dfTokens, are minted whenever a deposit or withdrawal takes place.
 
-The initial setup recommends a fee of **1%-2% APR on these shares TODO... it is this defined by a DAO?**. For instance, if a DeFindex has 100 shares and the fee is set at 1% APR, the fees collected would be 1 share annually.
-These allocations are recalculated, and minted, whenever a user deposits or withdraws from the DeFindex or when rebalancing occurs.
+The deployer can set a management fee, which can later be adjusted by the Fee Receiver. Additionally, **palta**labs charges a 0.5% APR on the vault shares.
 
-Let's consider an example: Imagine a DeFindex is created with an initial value of 1 USDC per share, and it starts with 100 shares (dfTokens). These 100 USDC are invested in a lending protocol that offers a steady 8% APY. The DeFindex also has a fee of 1% APR. After one year, the investment grows to 108 USDC. Additionally, 1 dfToken is minted as a fee. This results in the DeFindex having 101 dfTokens backed by 108 USDC, making the price per share approximately 1.07 USDC. Consequently, a user holding 100 dfTokens will have a value equivalent to around 107 USDC, while the fee collected will be backed by about 1.07 USDC.
+The recommended initial setup suggests a fee of **0.5%-2% APR on these shares**. For example, if a DeFindex has 100 shares and the fee is set at 0.5% APR, the fees collected annually would be 1 share, split as 0.5 for the Fee Receiver and 0.5 for **palta**labs. The **palta**labs fee is defined in the Factory contract.
 
-The distribution of the collected shares is as follows: 
-- X% to **palta**labs 
-- 100-X% to the Fee Receiver. 
+These allocations are recalculated and minted whenever a user deposits, withdraws from the DeFindex, or when rebalancing occurs.
 
-This X% is defined by the fee setter and can be from 0 to 50%. The idea is that in a near future, this fee setter to be the DeFindex DAO Contract, and the fees goes to the DAO and gets distributed among DFX holders.
+For instance, let's say a DeFindex starts with an initial value of 1 USDC per share and 100 shares (dfTokens). These 100 USDC are invested in a lending protocol offering an 8% APY. The DeFindex also has a 0.5% APR fee. After one year, the investment grows to 108 USDC. Additionally, 1 dfToken is minted as a fee. This means the DeFindex now holds 101 dfTokens backed by 108 USDC, making the price per share approximately 1.07 USDC. As a result, a user holding 100 dfTokens will have a value equivalent to around 107 USDC, while the collected fee will be backed by about 1.07 USDC.
 
-By default X=50%.
+It is expected that the Fee Receiver is associated with the manager, allowing the entity managing the Vault to be compensated through the Fee Receiver. In other words, the Fee Receiver could be the manager using the same address, or it could be a different entity such as a streaming contract, a DAO, or another party.
 
-It is expected that the Fee Receiver is related to the manager, so the entity who manages the DeFindex gets paid through the Fee Receiver. In other words, the Fee Receiver could be the manager itself with the same address or a different one, a streaming contract, a DAO, or any other entity.
-
-### Multi-transaction Actions _(TODO)_
+<!-- ### Multi-transaction Actions _(TODO)_
 
 In the ideal escenario, once the user deposits the assets, the DeFindex will invest this assets in their strategies. However, if there is too many strategies, the amount of CPU instructions required to execute a deposit and allocation of the assets to the strategies could be too high.
 
 In this case, the DeFindex will store the assets as IDLE funds, and the Manager will need to execute a function called `invest_idle_funds` to allocate the assets to the strategies.
 
-The same happens when a user withdraws the assets. The DeFindex will store the assets as IDLE funds, and the Manager will need to execute a function called `withdraw_idle_funds` to withdraw the assets from the strategies. Then, the user will be able to withdraw the assets.
+The same happens when a user withdraws the assets. The DeFindex will store the assets as IDLE funds, and the Manager will need to execute a function called `withdraw_idle_funds` to withdraw the assets from the strategies. Then, the user will be able to withdraw the assets. -->
 
 
 ## Storage Management
