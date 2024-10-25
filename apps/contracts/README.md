@@ -32,3 +32,12 @@ to test the factory to deploy a DeFindex Vault
 yarn test <network>
 ```
 
+### Generate Docs
+```bash 
+cargo doc --package defindex-strategy-core --package defindex-factory --package defindex-vault --no-deps
+```
+
+to publish them, run this to copy all files into /rust_docs
+```bash
+cp -rf /workspace/apps/contracts/target/doc/* /workspace/apps/rust_docs/
+```

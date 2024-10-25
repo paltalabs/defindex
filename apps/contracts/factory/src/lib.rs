@@ -20,6 +20,17 @@ fn check_initialized(e: &Env) -> Result<(), FactoryError> {
 }
 
 pub trait FactoryTrait {
+    /// Initializes the factory contract with the given parameters.
+    /// 
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `admin` - The address of the contract administrator, who can manage settings.
+    /// * `defindex_receiver` - The default address designated to receive a portion of fees.
+    /// * `fee_rate` - The initial annual fee rate (in basis points).
+    /// * `defindex_wasm_hash` - The hash of the DeFindex Vault's WASM file for deploying new vaults.
+    /// 
+    /// # Returns
+    /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, otherwise an error.
     fn initialize(
         e: Env, 
         admin: Address,
@@ -28,6 +39,19 @@ pub trait FactoryTrait {
         defindex_wasm_hash: BytesN<32>
     ) -> Result<(), FactoryError>;
 
+    /// Creates a new DeFindex Vault with specified parameters.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `emergency_manager` - The address assigned emergency control over the vault.
+    /// * `fee_receiver` - The address designated to receive fees from the vault.
+    /// * `vault_share` - The percentage share of fees allocated to the vault's fee receiver.
+    /// * `manager` - The address assigned as the vault manager.
+    /// * `assets` - A vector of `AssetAllocation` structs that define the assets managed by the vault.
+    /// * `salt` - A salt used for ensuring unique addresses for each deployed vault.
+    ///
+    /// # Returns
+    /// * `Result<Address, FactoryError>` - Returns the address of the new vault, or an error if unsuccessful.
     fn create_defindex_vault(
         e: Env, 
         emergency_manager: Address, 
@@ -38,15 +62,74 @@ pub trait FactoryTrait {
         salt: BytesN<32>
     ) -> Result<Address, FactoryError>;
 
-    // Admin functions
+    // --- Admin Functions ---
+    
+    /// Sets a new admin address.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `new_admin` - The new administrator's address.
+    ///
+    /// # Returns
+    /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, or an error if not authorized.
     fn set_new_admin(e: Env, new_admin: Address) -> Result<(), FactoryError>;
+
+    /// Updates the default receiver address for the DeFindex portion of fees.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `new_fee_receiver` - The address of the new fee receiver.
+    ///
+    /// # Returns
+    /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, or an error if not authorized.
     fn set_defindex_receiver(e: Env, new_fee_receiver: Address) -> Result<(), FactoryError>;
+
+    /// Updates the default fee rate for new vaults.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `new_fee_rate` - The new annual fee rate in basis points.
+    ///
+    /// # Returns
+    /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, or an error if not authorized.
     fn set_fee_rate(e: Env, new_fee_rate: u32) -> Result<(), FactoryError>;
     
-    // Read Methods
+    // --- Read Methods ---
+
+    /// Retrieves the current admin's address.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    ///
+    /// # Returns
+    /// * `Result<Address, FactoryError>` - Returns the admin's address or an error if not found.
     fn admin(e: Env) -> Result<Address, FactoryError>;
+    
+    /// Retrieves the current DeFindex receiver's address.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    ///
+    /// # Returns
+    /// * `Result<Address, FactoryError>` - Returns the DeFindex receiver's address or an error if not found.
     fn defindex_receiver(e: Env) -> Result<Address, FactoryError>;
+
+    /// Retrieves a map of all deployed DeFindex vaults.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    ///
+    /// # Returns
+    /// * `Result<Map<u32, Address>, FactoryError>` - Returns a map with vault identifiers and addresses or an error if retrieval fails.
     fn deployed_defindexes(e: Env) -> Result<Map<u32, Address>, FactoryError>;
+
+    /// Retrieves the current fee rate.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    ///
+    /// # Returns
+    /// * `Result<u32, FactoryError>` - Returns the fee rate in basis points or an error if not found.
     fn fee_rate(e: Env) -> Result<u32, FactoryError>;
 }
 
@@ -56,6 +139,17 @@ struct DeFindexFactory;
 #[contractimpl]
 impl FactoryTrait for DeFindexFactory {
 
+    /// Initializes the factory contract with the given parameters.
+    /// 
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `admin` - The address of the contract administrator, who can manage settings.
+    /// * `defindex_receiver` - The default address designated to receive a portion of fees.
+    /// * `fee_rate` - The initial annual fee rate (in basis points).
+    /// * `defindex_wasm_hash` - The hash of the DeFindex Vault's WASM file for deploying new vaults.
+    /// 
+    /// # Returns
+    /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, otherwise an error.
     fn initialize(
         e: Env, 
         admin: Address, 
@@ -77,6 +171,19 @@ impl FactoryTrait for DeFindexFactory {
         Ok(())
     }
 
+    /// Creates a new DeFindex Vault with specified parameters.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `emergency_manager` - The address assigned emergency control over the vault.
+    /// * `fee_receiver` - The address designated to receive fees from the vault.
+    /// * `vault_share` - The percentage share of fees allocated to the vault's fee receiver.
+    /// * `manager` - The address assigned as the vault manager.
+    /// * `assets` - A vector of `AssetAllocation` structs that define the assets managed by the vault.
+    /// * `salt` - A salt used for ensuring unique addresses for each deployed vault.
+    ///
+    /// # Returns
+    /// * `Result<Address, FactoryError>` - Returns the address of the new vault, or an error if unsuccessful.
     fn create_defindex_vault(
         e: Env, 
         emergency_manager: Address, 
@@ -110,6 +217,16 @@ impl FactoryTrait for DeFindexFactory {
         Ok(defindex_address)
     }
 
+    // --- Admin Functions ---
+    
+    /// Sets a new admin address.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `new_admin` - The new administrator's address.
+    ///
+    /// # Returns
+    /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, or an error if not authorized.
     fn set_new_admin(e: Env, new_admin: Address) -> Result<(), FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
@@ -121,6 +238,14 @@ impl FactoryTrait for DeFindexFactory {
         Ok(())
     }
 
+    /// Updates the default receiver address for the DeFindex portion of fees.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `new_fee_receiver` - The address of the new fee receiver.
+    ///
+    /// # Returns
+    /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, or an error if not authorized.
     fn set_defindex_receiver(e: Env, new_fee_receiver: Address) -> Result<(), FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
@@ -132,6 +257,14 @@ impl FactoryTrait for DeFindexFactory {
         Ok(())
     }
 
+    /// Updates the default fee rate for new vaults.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `new_fee_rate` - The new annual fee rate in basis points.
+    ///
+    /// # Returns
+    /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, or an error if not authorized.
     fn set_fee_rate(e: Env, fee_rate: u32) -> Result<(), FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
@@ -143,24 +276,54 @@ impl FactoryTrait for DeFindexFactory {
         Ok(())
     }
 
+    // --- Read Methods ---
+
+    /// Retrieves the current admin's address.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    ///
+    /// # Returns
+    /// * `Result<Address, FactoryError>` - Returns the admin's address or an error if not found.
     fn admin(e: Env) -> Result<Address, FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
         Ok(get_admin(&e))
     }
 
+    /// Retrieves the current DeFindex receiver's address.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    ///
+    /// # Returns
+    /// * `Result<Address, FactoryError>` - Returns the DeFindex receiver's address or an error if not found.
     fn defindex_receiver(e: Env) -> Result<Address, FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
         Ok(get_defindex_receiver(&e))
     }
     
+    /// Retrieves a map of all deployed DeFindex vaults.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    ///
+    /// # Returns
+    /// * `Result<Map<u32, Address>, FactoryError>` - Returns a map with vault identifiers and addresses or an error if retrieval fails.
     fn deployed_defindexes(e: Env) -> Result<Map<u32, Address>, FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
         get_deployed_defindexes(&e)
     }
 
+    /// Retrieves the current fee rate.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    ///
+    /// # Returns
+    /// * `Result<u32, FactoryError>` - Returns the fee rate in basis points or an error if not found.
     fn fee_rate(e: Env) -> Result<u32, FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
