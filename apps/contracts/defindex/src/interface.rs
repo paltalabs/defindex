@@ -160,6 +160,7 @@ pub trait VaultTrait {
     fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128>;
 
     // TODO: DELETE THIS, USED FOR TESTING
+    /// Temporary method for testing purposes.
     fn get_asset_amounts_for_dftokens(e: Env, df_token: i128) -> Map<Address, i128>;
 
 }
