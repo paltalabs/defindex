@@ -10,6 +10,7 @@ import {
   GridItem,
   IconButton,
   Input,
+  InputAddon,
   InputElement,
   Stack,
 } from "@chakra-ui/react"
@@ -25,6 +26,7 @@ import { setSelectedVault } from "@/store/lib/features/walletStore"
 import ConnectButton from "../Wallet/ConnectButton"
 import { useSorobanReact } from "@soroban-react/core"
 import { VaultMethod } from "@/hooks/useVault"
+import { InputGroup } from "../ui/input-group"
 
 export const ManageVaultes = () => {
   const { address } = useSorobanReact()
@@ -101,23 +103,23 @@ export const ManageVaultes = () => {
           colStart={{ base: 1, md: 2 }}
           colEnd={{ base: 13, md: 8 }}>
           <Stack>
-            <Box>
-            <Input
-              placeholder='Vault address'
-              boxShadow='md'
-              rounded={18}
-            />
-              <InputElement>
-              <IconButton
-                rounded={32}
-                size={'sm'}
-                aria-label="search-Vault"
-                colorScheme="green"
+            <InputGroup
+              endElement={
+                <IconButton
+                  rounded={32}
+                  size={'sm'}
+                  aria-label="search-Vault"
+                  colorScheme="green"
                   variant={'ghost'}>
                   <SearchIcon />
-                </IconButton>
-              </InputElement>
-            </Box>
+                </IconButton>}
+            >
+              <Input
+                placeholder='Vault address'
+                boxShadow='md'
+                rounded={18}
+              />
+            </InputGroup>
           </Stack>
         </GridItem>
         <GridItem
