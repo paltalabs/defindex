@@ -22,7 +22,7 @@ mod token;
 mod utils;
 
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
-use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds};
+use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_invested_funds_for_strategy, fetch_total_managed_funds};
 use interface::{AdminInterfaceTrait, VaultTrait, VaultManagementTrait};
 use models::{AssetAllocation, Investment};
 use storage::{
@@ -354,6 +354,7 @@ impl VaultTrait for DeFindexVault {
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn pause_strategy(e: Env, strategy_address: Address, caller: Address) -> Result<(), ContractError> {
         // Ensure the caller is the Manager or Emergency Manager
+        // TODO: Should check if the strategy has any amount invested on it, and return an error if it has, should we let the manager to pause a strategy with funds invested?
         let access_control = AccessControl::new(&e);
         access_control.require_any_role(&[RolesDataKey::EmergencyManager, RolesDataKey::Manager], &caller);
 
@@ -572,6 +573,64 @@ impl VaultManagementTrait for DeFindexVault {
         //     prepare_investment(&e, investments.clone(), idle_funds)?;
         //     execute_investment(&e, investments)?;
         // }
+        Ok(())
+    }
+
+    /// Rebalances the vault’s investments to match the target allocations specified.
+    /// 
+    /// # Arguments:
+    /// * `e` - The environment.
+    /// * `allocations` - A vector of `Investment` structs, each representing a target allocation amount for a specific strategy.
+    /// 
+    /// # Returns:
+    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
+    ///
+    /// # Notes:
+    /// This function adjusts current holdings by withdrawing from over-allocated strategies and
+    /// investing in under-allocated ones to achieve the target allocation.
+    fn rebalance(e: Env, allocations: Vec<Investment>) -> Result<(), ContractError> {
+        check_initialized(&e)?;
+    
+        let access_control = AccessControl::new(&e);
+        access_control.require_role(&RolesDataKey::Manager);
+        // e.current_contract_address().require_auth();
+    
+        // Calculate necessary withdrawals and investments
+        let mut withdrawals = Vec::new(&e); // Vector of (strategy, amount to withdraw)
+        let mut investments: Vec<Investment> = Vec::new(&e); // Vector of (strategy, amount to invest)
+    
+        for allocation in allocations.iter() {
+            let strategy = allocation.strategy;
+            let target_amount = allocation.amount;
+            let current_amount = fetch_invested_funds_for_strategy(&e, &strategy);
+    
+            if current_amount > target_amount {
+                // Calculate amount to withdraw
+                let withdraw_amount = current_amount - target_amount;
+                withdrawals.push_back((strategy.clone(), withdraw_amount));
+            } else if current_amount < target_amount {
+                // Calculate amount to invest
+                let invest_amount = target_amount - current_amount;
+                investments.push_back(
+                    Investment{
+                        strategy: strategy.clone(), 
+                        amount: invest_amount
+                    }
+                );
+            }
+        }
+    
+        // Execute withdrawals
+        for (strategy, amount) in withdrawals.iter() {
+            let strategy_client = get_strategy_client(&e, strategy.clone());
+            strategy_client.withdraw(&amount, &e.current_contract_address());
+        }
+    
+        // Execute investments
+        let idle_funds = fetch_current_idle_funds(&e);
+        prepare_investment(&e, investments.clone(), idle_funds)?;
+        execute_investment(&e, investments)?;
+    
         Ok(())
     }
 }

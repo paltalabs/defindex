@@ -243,4 +243,18 @@ pub trait VaultManagementTrait {
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn invest(e: Env, investment: Vec<Investment>) -> Result<(), ContractError>;
+
+    /// Rebalances the vault’s investments to match the target allocations specified.
+    /// 
+    /// # Arguments:
+    /// * `e` - The environment.
+    /// * `allocations` - A vector of `Investment` structs, each representing a target allocation amount for a specific strategy.
+    /// 
+    /// # Returns:
+    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
+    ///
+    /// # Notes:
+    /// This function adjusts current holdings by withdrawing from over-allocated strategies and
+    /// investing in under-allocated ones to achieve the target allocation.
+    fn rebalance(e: Env, allocations: Vec<Investment>) -> Result<(), ContractError>;
 }
