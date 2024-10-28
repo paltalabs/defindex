@@ -1,4 +1,4 @@
-use soroban_sdk::BytesN;
+use soroban_sdk::{BytesN, String};
 
 use crate::test::{create_asset_params, DeFindexFactoryTest};
 
@@ -16,6 +16,8 @@ fn test_create_defindex_success() {
     &test.emergency_manager, 
     &test.fee_receiver,
     &2000u32,
+    &String::from_str(&test.env, "dfToken"),
+    &String::from_str(&test.env, "DFT"),
     &test.manager,
     &asset_params,
     &salt

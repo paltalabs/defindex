@@ -104,8 +104,8 @@ pub struct DeFindexFactoryTest<'a> {
 
 impl<'a> DeFindexFactoryTest<'a> {
     fn setup() -> Self {
-
         let env = Env::default();
+        env.budget().reset_unlimited();
         // env.mock_all_auths();
         let factory_contract = create_defindex_factory(&env);
         

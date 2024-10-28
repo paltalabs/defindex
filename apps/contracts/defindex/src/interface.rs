@@ -1,4 +1,4 @@
-use soroban_sdk::{Address, Env, Map, Vec};
+use soroban_sdk::{Address, Env, Map, String, Vec};
 
 use crate::{
     models::{AssetAllocation, DexDistribution, Instruction, Investment},
@@ -33,6 +33,8 @@ pub trait VaultTrait {
         vault_share: u32,
         defindex_receiver: Address,
         factory: Address,
+        vault_name: String,
+        vault_symbol: String,
     ) -> Result<(), ContractError>;
 
     /// Handles deposits into the DeFindex Vault.

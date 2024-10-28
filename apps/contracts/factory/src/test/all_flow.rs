@@ -1,4 +1,4 @@
-use soroban_sdk::{vec, BytesN, Map, Vec};
+use soroban_sdk::{vec, BytesN, Map, String, Vec};
 
 use crate::test::{create_asset_params, defindex_vault_contract::{self, Investment}, DeFindexFactoryTest};
 
@@ -17,6 +17,8 @@ fn test_deposit_success() {
     &test.emergency_manager, 
     &test.fee_receiver,
     &2000u32,
+    &String::from_str(&test.env, "dfToken"),
+    &String::from_str(&test.env, "DFT"),
     &test.manager,
     &asset_params,
     &salt
@@ -75,6 +77,8 @@ fn test_withdraw_success() {
     &test.emergency_manager, 
     &test.fee_receiver,
     &2000u32,
+    &String::from_str(&test.env, "dfToken"),
+    &String::from_str(&test.env, "DFT"),
     &test.manager,
     &asset_params,
     &salt

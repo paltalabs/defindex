@@ -69,6 +69,8 @@ impl VaultTrait for DeFindexVault {
         vault_share: u32,
         defindex_receiver: Address,
         factory: Address,
+        vault_name: String,
+        vault_symbol: String,
     ) -> Result<(), ContractError> {
         let access_control = AccessControl::new(&e);
         if access_control.has_role(&RolesDataKey::Manager) {
@@ -105,17 +107,15 @@ impl VaultTrait for DeFindexVault {
         }
 
         // Metadata for the contract's token (unchanged)
-        // TODO: Name should be concatenated with some other name giving when initializing. Check how soroswap pairs  token are called.
+        // TODO: Name should be concatenated with some other name giving when initializing. Check how soroswap pairs token are called.
         let decimal: u32 = 7;
-        let name: String = String::from_str(&e, "dfToken");
-        let symbol: String = String::from_str(&e, "DFT");
 
         write_metadata(
             &e,
             TokenMetadata {
                 decimal,
-                name,
-                symbol,
+                name: vault_name,
+                symbol: vault_symbol,
             },
         );
 
