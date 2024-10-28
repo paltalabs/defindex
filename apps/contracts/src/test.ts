@@ -106,7 +106,7 @@ const passphrase = network === "mainnet" ? Networks.PUBLIC : network === "testne
 
 const loadedConfig = config(network);
 
-// const deployedVault = await test_factory(addressBook);
+const deployedVault = await test_factory(addressBook);
 // await test_vault(deployedVault); 
-await test_vault("CCE7MLKC7R6TIQA37A7EHWEUC3AIXIH5DSOQUSVAARCWDD7257HS4RUG");
+// await test_vault("CCE7MLKC7R6TIQA37A7EHWEUC3AIXIH5DSOQUSVAARCWDD7257HS4RUG");
 
