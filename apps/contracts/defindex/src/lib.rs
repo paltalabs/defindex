@@ -1,4 +1,5 @@
 #![no_std]
+use aggregator::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
 use fee::collect_fees;
 use investment::{execute_investment, prepare_investment};
 use soroban_sdk::{
@@ -7,6 +8,7 @@ use soroban_sdk::{
 use soroban_token_sdk::metadata::TokenMetadata;
 
 mod access;
+mod aggregator;
 mod constants;
 mod error;
 mod events;
@@ -22,13 +24,13 @@ mod token;
 mod utils;
 
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
-use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_invested_funds_for_strategy, fetch_total_managed_funds};
+use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds};
 use interface::{AdminInterfaceTrait, VaultTrait, VaultManagementTrait};
-use models::{AssetAllocation, Investment};
+use models::{ActionType, AssetAllocation, Instruction, Investment, OptionalSwapDetailsExactIn, OptionalSwapDetailsExactOut};
 use storage::{
     get_assets, set_asset, set_defindex_receiver, set_factory, set_last_fee_assesment, set_total_assets, set_vault_share
 };
-use strategies::{get_asset_allocation_from_address, get_strategy_asset, get_strategy_client, get_strategy_struct, pause_strategy, unpause_strategy};
+use strategies::{get_asset_allocation_from_address, get_strategy_asset, get_strategy_client, get_strategy_struct, invest_in_strategy, pause_strategy, unpause_strategy, withdraw_from_strategy};
 use token::{internal_mint, internal_burn, write_metadata, VaultToken};
 use utils::{
     calculate_asset_amounts_for_dftokens, calculate_deposit_amounts_and_shares_to_mint, calculate_withdrawal_amounts, check_initialized, check_nonnegative_amount
@@ -269,9 +271,8 @@ impl VaultTrait for DeFindexVault {
             let withdrawal_amounts = calculate_withdrawal_amounts(&e, remaining_amount, asset_allocation);
 
             for (strategy_address, amount) in withdrawal_amounts.iter() {
-                let strategy_client = get_strategy_client(&e, strategy_address.clone());
                 // TODO: What if the withdraw method exceeds the instructions limit? since im trying to ithdraw from all strategies of all assets...
-                strategy_client.withdraw(&amount, &e.current_contract_address());
+                withdraw_from_strategy(&e, &strategy_address, &amount)?;
     
                 // Update the total amounts to transfer map
                 let current_amount = total_amounts_to_transfer.get(strategy_address.clone()).unwrap_or(0);
@@ -576,60 +577,68 @@ impl VaultManagementTrait for DeFindexVault {
         Ok(())
     }
 
-    /// Rebalances the vault’s investments to match the target allocations specified.
+    /// Rebalances the vault by executing a series of instructions.
     /// 
     /// # Arguments:
     /// * `e` - The environment.
-    /// * `allocations` - A vector of `Investment` structs, each representing a target allocation amount for a specific strategy.
+    /// * `instructions` - A vector of `Instruction` structs representing actions (withdraw, invest, swap, zapper) to be taken.
     /// 
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    ///
-    /// # Notes:
-    /// This function adjusts current holdings by withdrawing from over-allocated strategies and
-    /// investing in under-allocated ones to achieve the target allocation.
-    fn rebalance(e: Env, allocations: Vec<Investment>) -> Result<(), ContractError> {
+    fn rebalance(e: Env, instructions: Vec<Instruction>) -> Result<(), ContractError> {
         check_initialized(&e)?;
     
         let access_control = AccessControl::new(&e);
         access_control.require_role(&RolesDataKey::Manager);
-        // e.current_contract_address().require_auth();
+        e.current_contract_address().require_auth();
     
-        // Calculate necessary withdrawals and investments
-        let mut withdrawals = Vec::new(&e); // Vector of (strategy, amount to withdraw)
-        let mut investments: Vec<Investment> = Vec::new(&e); // Vector of (strategy, amount to invest)
-    
-        for allocation in allocations.iter() {
-            let strategy = allocation.strategy;
-            let target_amount = allocation.amount;
-            let current_amount = fetch_invested_funds_for_strategy(&e, &strategy);
-    
-            if current_amount > target_amount {
-                // Calculate amount to withdraw
-                let withdraw_amount = current_amount - target_amount;
-                withdrawals.push_back((strategy.clone(), withdraw_amount));
-            } else if current_amount < target_amount {
-                // Calculate amount to invest
-                let invest_amount = target_amount - current_amount;
-                investments.push_back(
-                    Investment{
-                        strategy: strategy.clone(), 
-                        amount: invest_amount
+        for instruction in instructions.iter() {
+            match instruction.action {
+                ActionType::Withdraw => match (&instruction.strategy, &instruction.amount) {
+                    (Some(strategy_address), Some(amount)) => {
+                        withdraw_from_strategy(&e, strategy_address, amount)?;
                     }
-                );
+                    _ => return Err(ContractError::MissingInstructionData),
+                },
+                ActionType::Invest => match (&instruction.strategy, &instruction.amount) {
+                    (Some(strategy_address), Some(amount)) => {
+                        invest_in_strategy(&e, strategy_address, amount)?;
+                    }
+                    _ => return Err(ContractError::MissingInstructionData),
+                },
+                ActionType::SwapExactIn => match &instruction.swap_details_exact_in {
+                    OptionalSwapDetailsExactIn::Some(swap_details) => {
+                        internal_swap_exact_tokens_for_tokens(
+                            &e, 
+                            &swap_details.token_in, 
+                            &swap_details.token_out, 
+                            &swap_details.amount_in, 
+                            &swap_details.amount_out_min, 
+                            &swap_details.distribution, 
+                            &swap_details.deadline
+                        )?;
+                    }
+                    _ => return Err(ContractError::MissingInstructionData),
+                },
+                ActionType::SwapExactOut => match &instruction.swap_details_exact_out {
+                    OptionalSwapDetailsExactOut::Some(swap_details) => {
+                        internal_swap_tokens_for_exact_tokens(
+                            &e, 
+                            &swap_details.token_in, 
+                            &swap_details.token_out, 
+                            &swap_details.amount_out, 
+                            &swap_details.amount_in_max, 
+                            &swap_details.distribution, 
+                            &swap_details.deadline
+                        )?;
+                    }
+                    _ => return Err(ContractError::MissingInstructionData),
+                },
+                ActionType::Zapper => {
+                    // TODO: Implement Zapper instructions
+                },
             }
         }
-    
-        // Execute withdrawals
-        for (strategy, amount) in withdrawals.iter() {
-            let strategy_client = get_strategy_client(&e, strategy.clone());
-            strategy_client.withdraw(&amount, &e.current_contract_address());
-        }
-    
-        // Execute investments
-        let idle_funds = fetch_current_idle_funds(&e);
-        prepare_investment(&e, investments.clone(), idle_funds)?;
-        execute_investment(&e, investments)?;
     
         Ok(())
     }

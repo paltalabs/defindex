@@ -1,4 +1,4 @@
-use soroban_sdk::{panic_with_error, Address, Env, Map, Vec};
+use soroban_sdk::{contracttype, panic_with_error, Address, Env, Map, Vec};
 
 use crate::{
     access::{AccessControl, AccessControlTrait, RolesDataKey}, funds::{fetch_invested_funds_for_asset, fetch_invested_funds_for_strategy, fetch_total_managed_funds}, models::AssetAllocation, token::VaultToken, ContractError
@@ -233,24 +233,3 @@ pub fn calculate_deposit_amounts_and_shares_to_mint(
     // If no solution was found after iterating through all assets, throw an error.
     panic!("didn't find optimal amounts");
 }
-
-// Calculates the amounts to invest in each strategy based on the current ratio of invested funds.
-// The function returns a Vec<Investment> where each element contains a strategy address and the amount to be invested.
-//
-// # Parameters
-// - `e`: The environment object, containing all relevant contract data.
-//
-// # Returns
-// A Vec of `Investment` structs, each containing a strategy address and the calculated amount to invest.
-// pub fn calculate_investments_based_on_ratios(
-//     e: &Env,
-// ) -> Result<Vec<Investment>, ContractError> {
-//     // i should get all managed funds
-//     let total_managed_funds = get_total_managed_funds(e);
-
-    
-//     // Create a vector to store the investment amounts for each strategy
-//     let mut investments: Vec<Investment> = Vec::new(e);
-
-//     Ok(investments)
-// }

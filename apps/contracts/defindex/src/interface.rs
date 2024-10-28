@@ -1,7 +1,7 @@
 use soroban_sdk::{Address, Env, Map, Vec};
 
 use crate::{
-    models::{AssetAllocation, Investment},
+    models::{AssetAllocation, DexDistribution, Instruction, Investment},
     ContractError,
 };
 
@@ -244,17 +244,13 @@ pub trait VaultManagementTrait {
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn invest(e: Env, investment: Vec<Investment>) -> Result<(), ContractError>;
 
-    /// Rebalances the vault’s investments to match the target allocations specified.
+    /// Rebalances the vault by executing a series of instructions.
     /// 
     /// # Arguments:
     /// * `e` - The environment.
-    /// * `allocations` - A vector of `Investment` structs, each representing a target allocation amount for a specific strategy.
+    /// * `instructions` - A vector of `Instruction` structs representing actions (withdraw, invest, swap, zapper) to be taken.
     /// 
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    ///
-    /// # Notes:
-    /// This function adjusts current holdings by withdrawing from over-allocated strategies and
-    /// investing in under-allocated ones to achieve the target allocation.
-    fn rebalance(e: Env, allocations: Vec<Investment>) -> Result<(), ContractError>;
+    fn rebalance(e: Env, instructions: Vec<Instruction>) -> Result<(), ContractError>;
 }
