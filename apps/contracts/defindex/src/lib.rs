@@ -1,4 +1,5 @@
 #![no_std]
+use aggregator::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
 use fee::collect_fees;
 use investment::{execute_investment, prepare_investment};
 use soroban_sdk::{
@@ -7,6 +8,7 @@ use soroban_sdk::{
 use soroban_token_sdk::metadata::TokenMetadata;
 
 mod access;
+mod aggregator;
 mod constants;
 mod error;
 mod events;
@@ -24,11 +26,11 @@ mod utils;
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds};
 use interface::{AdminInterfaceTrait, VaultTrait, VaultManagementTrait};
-use models::{AssetAllocation, Investment};
+use models::{ActionType, AssetAllocation, Instruction, Investment, OptionalSwapDetailsExactIn, OptionalSwapDetailsExactOut};
 use storage::{
     get_assets, set_asset, set_defindex_receiver, set_factory, set_last_fee_assesment, set_total_assets, set_vault_share
 };
-use strategies::{get_asset_allocation_from_address, get_strategy_asset, get_strategy_client, get_strategy_struct, pause_strategy, unpause_strategy};
+use strategies::{get_asset_allocation_from_address, get_strategy_asset, get_strategy_client, get_strategy_struct, invest_in_strategy, pause_strategy, unpause_strategy, withdraw_from_strategy};
 use token::{internal_mint, internal_burn, write_metadata, VaultToken};
 use utils::{
     calculate_asset_amounts_for_dftokens, calculate_deposit_amounts_and_shares_to_mint, calculate_withdrawal_amounts, check_initialized, check_nonnegative_amount
@@ -67,6 +69,8 @@ impl VaultTrait for DeFindexVault {
         vault_share: u32,
         defindex_receiver: Address,
         factory: Address,
+        vault_name: String,
+        vault_symbol: String,
     ) -> Result<(), ContractError> {
         let access_control = AccessControl::new(&e);
         if access_control.has_role(&RolesDataKey::Manager) {
@@ -103,17 +107,15 @@ impl VaultTrait for DeFindexVault {
         }
 
         // Metadata for the contract's token (unchanged)
-        // TODO: Name should be concatenated with some other name giving when initializing. Check how soroswap pairs  token are called.
+        // TODO: Name should be concatenated with some other name giving when initializing. Check how soroswap pairs token are called.
         let decimal: u32 = 7;
-        let name: String = String::from_str(&e, "dfToken");
-        let symbol: String = String::from_str(&e, "DFT");
 
         write_metadata(
             &e,
             TokenMetadata {
                 decimal,
-                name,
-                symbol,
+                name: vault_name,
+                symbol: vault_symbol,
             },
         );
 
@@ -269,9 +271,8 @@ impl VaultTrait for DeFindexVault {
             let withdrawal_amounts = calculate_withdrawal_amounts(&e, remaining_amount, asset_allocation);
 
             for (strategy_address, amount) in withdrawal_amounts.iter() {
-                let strategy_client = get_strategy_client(&e, strategy_address.clone());
                 // TODO: What if the withdraw method exceeds the instructions limit? since im trying to ithdraw from all strategies of all assets...
-                strategy_client.withdraw(&amount, &e.current_contract_address());
+                withdraw_from_strategy(&e, &strategy_address, &amount)?;
     
                 // Update the total amounts to transfer map
                 let current_amount = total_amounts_to_transfer.get(strategy_address.clone()).unwrap_or(0);
@@ -354,6 +355,7 @@ impl VaultTrait for DeFindexVault {
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn pause_strategy(e: Env, strategy_address: Address, caller: Address) -> Result<(), ContractError> {
         // Ensure the caller is the Manager or Emergency Manager
+        // TODO: Should check if the strategy has any amount invested on it, and return an error if it has, should we let the manager to pause a strategy with funds invested?
         let access_control = AccessControl::new(&e);
         access_control.require_any_role(&[RolesDataKey::EmergencyManager, RolesDataKey::Manager], &caller);
 
@@ -572,6 +574,72 @@ impl VaultManagementTrait for DeFindexVault {
         //     prepare_investment(&e, investments.clone(), idle_funds)?;
         //     execute_investment(&e, investments)?;
         // }
+        Ok(())
+    }
+
+    /// Rebalances the vault by executing a series of instructions.
+    /// 
+    /// # Arguments:
+    /// * `e` - The environment.
+    /// * `instructions` - A vector of `Instruction` structs representing actions (withdraw, invest, swap, zapper) to be taken.
+    /// 
+    /// # Returns:
+    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
+    fn rebalance(e: Env, instructions: Vec<Instruction>) -> Result<(), ContractError> {
+        check_initialized(&e)?;
+    
+        let access_control = AccessControl::new(&e);
+        access_control.require_role(&RolesDataKey::Manager);
+        e.current_contract_address().require_auth();
+    
+        for instruction in instructions.iter() {
+            match instruction.action {
+                ActionType::Withdraw => match (&instruction.strategy, &instruction.amount) {
+                    (Some(strategy_address), Some(amount)) => {
+                        withdraw_from_strategy(&e, strategy_address, amount)?;
+                    }
+                    _ => return Err(ContractError::MissingInstructionData),
+                },
+                ActionType::Invest => match (&instruction.strategy, &instruction.amount) {
+                    (Some(strategy_address), Some(amount)) => {
+                        invest_in_strategy(&e, strategy_address, amount)?;
+                    }
+                    _ => return Err(ContractError::MissingInstructionData),
+                },
+                ActionType::SwapExactIn => match &instruction.swap_details_exact_in {
+                    OptionalSwapDetailsExactIn::Some(swap_details) => {
+                        internal_swap_exact_tokens_for_tokens(
+                            &e, 
+                            &swap_details.token_in, 
+                            &swap_details.token_out, 
+                            &swap_details.amount_in, 
+                            &swap_details.amount_out_min, 
+                            &swap_details.distribution, 
+                            &swap_details.deadline
+                        )?;
+                    }
+                    _ => return Err(ContractError::MissingInstructionData),
+                },
+                ActionType::SwapExactOut => match &instruction.swap_details_exact_out {
+                    OptionalSwapDetailsExactOut::Some(swap_details) => {
+                        internal_swap_tokens_for_exact_tokens(
+                            &e, 
+                            &swap_details.token_in, 
+                            &swap_details.token_out, 
+                            &swap_details.amount_out, 
+                            &swap_details.amount_in_max, 
+                            &swap_details.distribution, 
+                            &swap_details.deadline
+                        )?;
+                    }
+                    _ => return Err(ContractError::MissingInstructionData),
+                },
+                ActionType::Zapper => {
+                    // TODO: Implement Zapper instructions
+                },
+            }
+        }
+    
         Ok(())
     }
 }

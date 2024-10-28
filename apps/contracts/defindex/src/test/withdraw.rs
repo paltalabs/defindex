@@ -1,4 +1,4 @@
-use soroban_sdk::{vec as sorobanvec, Address, Vec};
+use soroban_sdk::{vec as sorobanvec, Address, String, Vec};
 
 use crate::test::{create_strategy_params, defindex_vault::{AssetAllocation, Investment}, DeFindexVaultTest};
 
@@ -24,6 +24,8 @@ fn test_withdraw_from_idle_success() {
         &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
     );
     let amount = 1000i128;
     
@@ -73,6 +75,8 @@ fn test_withdraw_from_strategy_success() {
         &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
     );
     let amount = 1000i128;
     

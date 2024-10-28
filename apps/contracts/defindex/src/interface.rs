@@ -1,7 +1,7 @@
-use soroban_sdk::{Address, Env, Map, Vec};
+use soroban_sdk::{Address, Env, Map, String, Vec};
 
 use crate::{
-    models::{AssetAllocation, Investment},
+    models::{AssetAllocation, DexDistribution, Instruction, Investment},
     ContractError,
 };
 
@@ -33,6 +33,8 @@ pub trait VaultTrait {
         vault_share: u32,
         defindex_receiver: Address,
         factory: Address,
+        vault_name: String,
+        vault_symbol: String,
     ) -> Result<(), ContractError>;
 
     /// Handles deposits into the DeFindex Vault.
@@ -243,4 +245,14 @@ pub trait VaultManagementTrait {
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn invest(e: Env, investment: Vec<Investment>) -> Result<(), ContractError>;
+
+    /// Rebalances the vault by executing a series of instructions.
+    /// 
+    /// # Arguments:
+    /// * `e` - The environment.
+    /// * `instructions` - A vector of `Instruction` structs representing actions (withdraw, invest, swap, zapper) to be taken.
+    /// 
+    /// # Returns:
+    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
+    fn rebalance(e: Env, instructions: Vec<Instruction>) -> Result<(), ContractError>;
 }
