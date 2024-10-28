@@ -2,23 +2,15 @@ import React, { useState } from 'react'
 import {
   Box,
   Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  TableContainer,
-  Tooltip,
   Text,
   Grid,
   GridItem,
   Input,
-  FormControl,
-  FormLabel,
-  FormErrorMessage,
-  InputGroup,
   IconButton,
-  InputRightElement,
+  Fieldset,
+  Stack,
+  Tooltip,
+  InputAddon,
 } from '@chakra-ui/react'
 import { shortenAddress } from '@/helpers/shortenAddress'
 import { PieChart } from '@mui/x-charts'
@@ -159,30 +151,29 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
       <Text fontSize='lg' fontWeight='bold' mb={2}>
         Strategies
       </Text>
-      <TableContainer>
-        <Table variant={'simple'}>
-          <Thead>
-            <Tr>
-              <Th>Name</Th>
-              <Th textAlign={'center'}>Address</Th>
-              <Th textAlign={'end'}>Percentage</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
+      <Table.Root>
+        <Table.Header>
+          <Table.Row>
+            <Table.Header>Name</Table.Header>
+            <Table.Header textAlign={'center'}>Address</Table.Header>
+            <Table.Header textAlign={'end'}>Percentage</Table.Header>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
             {data.map((strategy: ChartData, index: number) => (
-              <Tr key={index} sx={{ cursor: 'default' }}>
-                <Td>{strategy.label}</Td>
-                <Td sx={{ cursor: 'pointer' }} textAlign={'center'}>
-                  <Tooltip label={strategy.address}>
+              <Table.Row key={index}>
+                <Table.Cell>{strategy.label}</Table.Cell>
+                <Table.Cell textAlign={'center'}>
+                  {/* <Tooltip content={strategy.address}>
                     {strategy.address ? shortenAddress(strategy.address) : '-'}
-                  </Tooltip>
-                </Td>
-                <Td textAlign={'end'}>{strategy.value}%</Td>
-              </Tr>
+                    </Tooltip> */}
+                  {strategy.address ? shortenAddress(strategy.address) : '-'}
+                </Table.Cell>
+                <Table.Cell textAlign={'end'}>{strategy.value}%</Table.Cell>
+              </Table.Row>
             ))}
-          </Tbody>
-        </Table>
-      </TableContainer>
+        </Table.Body>
+      </Table.Root>
       <Box height="20px" />
       <Grid
         w={'100%'}
@@ -192,93 +183,90 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
         gap={6}
       >
         <GridItem colSpan={4} colStart={1} rowStart={1}>
-          <FormControl
-            isInvalid={formControl.manager.isValid === false}
-            isRequired
+          <Fieldset.Root
+            invalid={formControl.manager.isValid === false}
           >
-            <FormLabel>Manager</FormLabel>
-            <InputGroup>
+            <Fieldset.Legend>Manager</Fieldset.Legend>
+            <Stack>
               <Input
                 onChange={(event) => handleManagerChange(event?.target.value)}
                 value={formControl.manager.value}
                 placeholder='GAFS3TLVM...'
-                sx={{ pr: 8 }}
               />
-              <Tooltip label='Use connected address.'>
-                <InputRightElement>
+              {/* <Tooltip content='Use connected address.'>
+                </Tooltip> */}
+              <InputAddon>
                   <IconButton
-                    aria-label='Connected address'
-                    icon={<LinkIcon />}
+                  aria-label='Connected address'
                     bg={'whiteAlpha.500'}
                     size={'sm'}
                     backdropFilter={'blur(1px)'}
                     onClick={() => handleManagerChange(address!)}
-                  />
-                </InputRightElement>
-              </Tooltip>
-            </InputGroup>
-            <FormErrorMessage>A valid Stellar / Soroban address is required.</FormErrorMessage>
-          </FormControl>
+                >
+                  <LinkIcon />
+                </IconButton>
+              </InputAddon>
+            </Stack>
+            <Fieldset.ErrorText>A valid Stellar / Soroban address is required.</Fieldset.ErrorText>
+          </Fieldset.Root>
         </GridItem>
 
         <GridItem colSpan={4} colStart={1} rowStart={2}>
-          <FormControl
-            isInvalid={formControl.emergencyManager.isValid === false}
-            isRequired
+          <Fieldset.Root
+            invalid={formControl.emergencyManager.isValid === false}
           >
-            <FormLabel>Emergency manager</FormLabel>
-            <InputGroup>
+            <Fieldset.Legend>Emergency manager</Fieldset.Legend>
+            <Stack>
               <Input
                 onChange={(event) => handleEmergencyManagerChange(event?.target.value)}
                 value={formControl.emergencyManager.value}
                 placeholder='GAFS3TLVM...'
-                sx={{ pr: 8 }}
               />
-              <Tooltip label='Use connected address.'>
-                <InputRightElement>
+              {/*      <Tooltip label='Use connected address.'>
+                </Tooltip> */}
+              <InputAddon>
                   <IconButton
-                    aria-label='Connected address'
-                    icon={<LinkIcon />}
+                  aria-label='Connected address'
                     bg={'whiteAlpha.500'}
                     size={'sm'}
                     backdropFilter={'blur(1px)'}
                     onClick={() => handleEmergencyManagerChange(address!)}
-                  />
-                </InputRightElement>
-              </Tooltip>
-            </InputGroup>
-            <FormErrorMessage>A valid Stellar / Soroban address is required.</FormErrorMessage>
-          </FormControl>
+                >
+                  <LinkIcon />
+                </IconButton>
+              </InputAddon>
+            </Stack>
+            <Fieldset.ErrorText>A valid Stellar / Soroban address is required.</Fieldset.ErrorText>
+          </Fieldset.Root>
         </GridItem>
 
         <GridItem colSpan={4} colStart={1} rowStart={3}>
-          <FormControl
-            isInvalid={formControl.feeReceiver.isValid === false}
-            isRequired
+          <Fieldset.Root
+            invalid={formControl.feeReceiver.isValid === false}
           >
-            <FormLabel>Fee reciever</FormLabel>
-            <InputGroup>
+            <Fieldset.Legend>Fee reciever</Fieldset.Legend>
+            <Stack>
               <Input
                 onChange={(event) => handleFeeReceiverChange(event?.target.value)}
                 value={formControl.feeReceiver.value}
                 placeholder='GAFS3TLVM...'
-                sx={{ pr: 8 }}
               />
-              <Tooltip label='Use connected address.'>
-                <InputRightElement>
+              {/* <Tooltip label='Use connected address.'>
+                </Tooltip> */}
+              <InputAddon>
                   <IconButton
-                    aria-label='Connected address'
-                    icon={<LinkIcon />}
+                  aria-label='Connected address'
                     bg={'whiteAlpha.500'}
                     size={'sm'}
                     backdropFilter={'blur(1px)'}
                     onClick={() => handleFeeReceiverChange(address!)}
-                  />
-                </InputRightElement>
-              </Tooltip>
-            </InputGroup>
-            <FormErrorMessage>A valid Stellar / Soroban address is required.</FormErrorMessage>
-          </FormControl>
+                >
+                  <LinkIcon />
+                </IconButton>
+              </InputAddon>
+            </Stack>
+            <Fieldset.ErrorText>A valid Stellar / Soroban address is required.</Fieldset.ErrorText>
+          </Fieldset.Root>
         </GridItem>
 
 

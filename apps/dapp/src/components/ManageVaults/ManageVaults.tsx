@@ -1,16 +1,17 @@
 import React from "react"
 import {
+  Box,
   Button,
   Container,
+  DialogBackdrop,
+  DialogContent,
+  DialogRoot,
   Grid,
   GridItem,
   IconButton,
   Input,
-  InputGroup,
-  InputRightElement,
-  Modal,
-  ModalContent,
-  ModalOverlay
+  InputElement,
+  Stack,
 } from "@chakra-ui/react"
 import { SearchIcon } from "@chakra-ui/icons"
 import AllVaults from "./AllVaults"
@@ -99,22 +100,25 @@ export const ManageVaultes = () => {
         <GridItem
           colStart={{ base: 1, md: 2 }}
           colEnd={{ base: 13, md: 8 }}>
-          <InputGroup>
+          <Stack>
+            <Box>
             <Input
               placeholder='Vault address'
               boxShadow='md'
               rounded={18}
             />
-            <InputRightElement>
+              <InputElement>
               <IconButton
                 rounded={32}
                 size={'sm'}
                 aria-label="search-Vault"
                 colorScheme="green"
-                variant={'ghost'}
-                icon={<SearchIcon />} />
-            </InputRightElement>
-          </InputGroup>
+                  variant={'ghost'}>
+                  <SearchIcon />
+                </IconButton>
+              </InputElement>
+            </Box>
+          </Stack>
         </GridItem>
         <GridItem
           colStart={{ base: 1, md: 8 }}
@@ -125,7 +129,6 @@ export const ManageVaultes = () => {
             <ConnectButton />
             {!!address && <Button
               rounded={18}
-              sx={{ px: 6 }}
               aria-label="add-Vault"
               colorScheme="green"
               onClick={() => handleOpenDeployVault('create_vault')}
@@ -138,24 +141,22 @@ export const ManageVaultes = () => {
           <AllVaults handleOpenDeployVault={handleOpenDeployVault} handleOpenDeposit={handleOpenDeposit} />
         </GridItem>
       </Grid>
-      <Modal
-        isOpen={modalStatus.deployVault.isOpen}
-        onClose={() => setModalStatus({ ...modalStatus, deployVault: { isOpen: false } })}
+      <DialogRoot
+        open={modalStatus.deployVault.isOpen}
       >
-        <ModalOverlay />
-        <ModalContent minW={{ sm: '100%', md: '80%', lg: '60%', }}>
+        <DialogBackdrop />
+        <DialogContent minW={{ sm: '100%', md: '80%', lg: '60%', }}>
           <DeployVault />
-        </ModalContent>
-      </Modal>
-      <Modal
-        isOpen={modalStatus.deposit.isOpen}
-        onClose={() => setModalStatus({ ...modalStatus, deposit: { isOpen: false } })}
+        </DialogContent>
+      </DialogRoot>
+      <DialogRoot
+        open={modalStatus.deposit.isOpen}
       >
-        <ModalOverlay />
-        <ModalContent minW={{ sm: '100%', md: '80%', lg: '60%', }}>
+        <DialogBackdrop />
+        <DialogContent minW={{ sm: '100%', md: '80%', lg: '60%', }}>
           <InteractWithVault />
-        </ModalContent>
-      </Modal>
+        </DialogContent>
+      </DialogRoot>
     </>
   )
 }

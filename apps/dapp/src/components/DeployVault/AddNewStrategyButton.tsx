@@ -2,16 +2,19 @@ import React from 'react'
 import { useEffect, useState } from 'react'
 import {
   Button,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  useDisclosure,
+  createListCollection,
+  DialogBackdrop,
+  DialogBody,
+  DialogCloseTrigger,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogRoot,
   IconButton,
-  Select,
+  SelectContent,
+  SelectItem,
+  SelectRoot,
+  SelectValueText,
 } from '@chakra-ui/react'
 import { AddIcon } from '@chakra-ui/icons'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
@@ -38,10 +41,6 @@ function AddNewStrategyButton() {
     fetchStragegies()
   }, [activeChain?.networkPassphrase])
 
-  const { isOpen, onOpen, onClose } = useDisclosure()
-  const handleOpenModal = () => {
-    isOpen ? onClose() : onOpen()
-  }
 
   const resetForm = () => {
     setNewStrategy({ address: '', name: '', share: 0, index: '0' })
@@ -73,40 +72,50 @@ function AddNewStrategyButton() {
     }
     await dispatch(pushStrategy(newStrategy!))
     resetForm()
-    isOpen ? onClose() : onOpen()
   }
+
+  const tempCollection = createListCollection({
+    items: defaultStrategies.map((strategy) => ({
+      key: strategy.address,
+      value: strategy.name,
+    })),
+  })
   return (
     <>
-      <Button colorScheme="green" size="md" onClick={handleOpenModal} textAlign={'end'} isDisabled={defaultStrategies.length === 0}>
+      <Button colorScheme="green" size="md" onClick={() => { console.log('open add strategy modal...') }} textAlign={'end'} disabled={defaultStrategies.length === 0}>
         Add new strategy
       </Button>
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay backdropFilter='blur(5px)' />
-        <ModalContent >
-          <ModalHeader>Add new strategy</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
+      <DialogRoot open={true}>
+        <DialogBackdrop backdropFilter='blur(5px)' />
+        <DialogContent >
+          <DialogHeader>Add new strategy</DialogHeader>
+          <DialogCloseTrigger />
+          <DialogBody>
+            <SelectRoot key={''} collection={tempCollection}>
 
-            <Select placeholder='Select option' onChange={handleInputSelect} value={selectValue}>
+              <SelectContent onChange={handleInputSelect}>
+                <SelectValueText>{'Select strategy'}</SelectValueText>
               {defaultStrategies.map((strategy, index) => (
-                <option key={strategy.name} value={strategy.address}>{(strategy.name != '') ? strategy.name : strategy.address}</option>
+                <SelectItem key={strategy.name} item={strategy.address}>{(strategy.name != '') ? strategy.name : strategy.address}</SelectItem>
               ))}
-            </Select>
-          </ModalBody>
+              </SelectContent>
+            </SelectRoot>
+          </DialogBody>
 
-          <ModalFooter>
-            <Button variant='ghost' mr={3} onClick={onClose}>
+          <DialogFooter>
+            <Button variant='ghost' mr={3}>
               Close
             </Button>
             <IconButton
               aria-label='add_strategy'
               colorScheme='green'
-              icon={<AddIcon />}
               onClick={addStrategy}
-            />
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+            >
+              <AddIcon />
+            </IconButton>
+          </DialogFooter>
+        </DialogContent>
+      </DialogRoot>
     </>
   )
 }

@@ -1,20 +1,17 @@
 import React from "react"
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
+
   Button,
   Grid,
   GridItem,
-  CircularProgress,
-  Text
+  Text,
+  DialogBackdrop, DialogBody, DialogContent, DialogHeader, DialogRoot
 } from '@chakra-ui/react';
 import { Image } from '@chakra-ui/react';
 import { useSorobanReact } from '@soroban-react/core';
 import { useEffect, useState } from 'react';
 import { connectors } from '@/providers/soroban-react-provider';
+import { ProgressCircleRing, ProgressCircleRoot } from "../ui/progress-circle";
 
 const buildWalletsStatus = () => {
   return connectors.map((w) => ({
@@ -83,7 +80,10 @@ export const ConnectWalletModal = ({
       };
     });
     if (selectedWallet?.isLoading) {
-      return (<CircularProgress isIndeterminate size='8px' />);
+      return (
+        <ProgressCircleRoot>
+          <ProgressCircleRing />
+        </ProgressCircleRoot>);
     } else if (!!!(selectedWallet?.isLoading) && selectedWallet?.isInstalled) {
       return (<Text fontWeight={400} fontSize='md' color='green.400'>Connect</Text>);
     } else {
@@ -92,12 +92,12 @@ export const ConnectWalletModal = ({
   }
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader pb={1}>{!address ? 'Connect wallet' : 'About wallet'}</ModalHeader>
+      <DialogRoot open={isOpen}>
+        <DialogBackdrop />
+        <DialogContent>
+          <DialogHeader pb={1}>{!address ? 'Connect wallet' : 'About wallet'}</DialogHeader>
           {!address && (
-            <ModalBody mb={4}>
+            <DialogBody mb={4}>
               {connectors.map((connector, index) => (
                 <Button
                   key={index}
@@ -122,16 +122,16 @@ export const ConnectWalletModal = ({
                   </Grid>
                 </Button>
               ))}
-            </ModalBody>
+            </DialogBody>
           )}
           {address && (
-            <ModalBody>
+            <DialogBody>
               <p>Connected with {address}</p>
               <Button onClick={handleDisconnect}>Disconnect</Button>
-            </ModalBody>
+            </DialogBody>
           )}
-        </ModalContent>
-      </Modal>
+        </DialogContent>
+      </DialogRoot>
     </>
   )
 }

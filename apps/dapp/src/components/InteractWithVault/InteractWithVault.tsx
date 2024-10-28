@@ -8,9 +8,10 @@ import {
   Text,
   Grid,
   GridItem,
-  InputGroup,
-  InputRightAddon,
-  Select
+  Stack,
+  InputAddon,
+  SelectRoot,
+  createListCollection
 } from '@chakra-ui/react'
 import { useSorobanReact } from '@soroban-react/core'
 import { Address, nativeToScVal, scValToNative, xdr } from '@stellar/stellar-sdk'
@@ -60,10 +61,15 @@ export const InteractWithVault = () => {
     if (Number.isNaN(e)) return;
     set_amount(e)
   }
-
+  const collection = createListCollection({
+    items: selectedVault?.strategies?.map((strategy) => ({
+      key: strategy.address,
+      value: strategy.name,
+    })) || []
+  })
   return (
     <>
-      <Card variant="outline" px={16} py={16} bgColor="whiteAlpha.100">
+      <Card.Root variant="outline" px={16} py={16} bgColor="whiteAlpha.100">
         <Grid templateColumns="repeat(12, 1fr)" gap={6}>
           <GridItem colSpan={12}>
             <Text fontSize='xl'>{selectedVault?.method === 'deposit' ? 'Deposit to' : 'Withdraw from'}:</Text>
@@ -86,10 +92,10 @@ export const InteractWithVault = () => {
               </GridItem>
 
               <GridItem colSpan={6} colEnd={13} textAlign={'end'} >
-                <InputGroup alignContent={'center'} alignItems={'center'}>
+              <Stack alignContent={'center'} alignItems={'center'}>
                   <Input my={4} type="text" onChange={(e) => setAmount(Number(e.target.value))} placeholder='Amount' value={amount} />
-                  <InputRightAddon>$ USDC</InputRightAddon>
-                </InputGroup>
+                <InputAddon>$ USDC</InputAddon>
+              </Stack>
               </GridItem>
             </>
           }
@@ -100,17 +106,19 @@ export const InteractWithVault = () => {
                 <Text fontSize='lg'>Withdraw from strategy:</Text>
               </GridItem>
               <GridItem colSpan={6} colEnd={13} textAlign={'end'} >
-                <Select placeholder='Select strategy'>
+                <SelectRoot collection={collection} >
+                </SelectRoot>
+                {/* <Select placeholder='Select strategy'>
                   {selectedVault?.strategies.map((strategy, index) => (
                     <option value={strategy.address}>{strategy.name}</option>
                   ))}
-                </Select>
+                </Select> */}
               </GridItem>
             </>
           }
         </Grid>
-        <Button isDisabled={vaultMethod != VaultMethod.EMERGENCY_WITHDRAW && amount < 0.0000001} my={4} colorScheme='green' onClick={() => vaultOperation()}>{selectedVault?.method.includes('withdraw') ? 'Withdraw' : 'Deposit'}</Button>
-      </Card>
+        <Button disabled={vaultMethod != VaultMethod.EMERGENCY_WITHDRAW && amount < 0.0000001} my={4} colorScheme='green' onClick={() => vaultOperation()}>{selectedVault?.method.includes('withdraw') ? 'Withdraw' : 'Deposit'}</Button>
+      </Card.Root>
     </>
   )
 }

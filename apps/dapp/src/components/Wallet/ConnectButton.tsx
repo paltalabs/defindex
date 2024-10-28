@@ -16,7 +16,7 @@ export const ConnectButton = () => {
   return (
     <>
       <ConnectWalletModal isOpen={isModalOpen} onClose={handleClose} />
-      <Button sx={{ mx: 4, px: 6 }} colorScheme='green' onClick={handleClick} rounded={18} mb={{ base: 4, md: 0 }}>
+      <Button colorScheme='green' onClick={handleClick} rounded={18} mb={{ base: 4, md: 0 }}>
         {address ? 'Disconnect' : 'Connect'}
       </Button>
     </>

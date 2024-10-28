@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import {
   Card,
-  Button,
   Grid,
   GridItem,
   Container,
   Input,
-  Text,
+  Button,
 } from '@chakra-ui/react'
 import ItemSlider from './Slider'
 import AddNewStrategyButton from './AddNewStrategyButton'
@@ -32,7 +31,7 @@ export const DeployVault = () => {
   return (
     <Container centerContent minW={'100%'} px={0}>
       <ConfirmDelpoyModal isOpen={openConfirm} onClose={handleClose} />
-      <Card variant="outline" p={16} bgColor="whiteAlpha.50">
+      <Card.Root variant="outline" p={16} bgColor="whiteAlpha.50">
         <Grid
           templateColumns={['1fr', null, 'repeat(12, 2fr)']}
           alignSelf={'end'}
@@ -55,8 +54,7 @@ export const DeployVault = () => {
           </GridItem>
         </Grid>
         <Button
-          isDisabled={totalValues! > 100 || strategies.length == 0 || totalValues == 0}
-          isLoading={openConfirm}
+          disabled={totalValues! > 100 || strategies.length == 0 || totalValues == 0}
           colorScheme="green"
           size="lg"
           mt={4}
@@ -65,7 +63,7 @@ export const DeployVault = () => {
         >
           Deploy Defindex
         </Button>
-      </Card>
+      </Card.Root>
     </Container>
   )
 }

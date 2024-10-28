@@ -2,7 +2,7 @@
 import React, { ReactNode } from 'react'
 import { StoreProvider } from './store-provider'
 import MySorobanReactProvider from './soroban-react-provider'
-import { ThemeProvider } from './chakra-provider'
+import { Provider } from '@/components/ui/provider'
 import { createTheme, ThemeProvider as MuiProvider } from '@mui/material/styles';
 
 export const Providers = ({ children }: { children: ReactNode }) => {
@@ -17,9 +17,9 @@ export const Providers = ({ children }: { children: ReactNode }) => {
     <StoreProvider>
       <MySorobanReactProvider>
         <MuiProvider theme={theme}>
-          <ThemeProvider>
+          <Provider>
             {children}
-          </ThemeProvider>
+          </Provider>
         </MuiProvider>
       </MySorobanReactProvider>
     </StoreProvider>

@@ -1,21 +1,18 @@
 import React, { useEffect } from 'react'
 import {
-  Slider,
-  SliderTrack,
-  SliderFilledTrack,
-  SliderThumb,
   Button,
-  Tooltip,
   Grid,
   GridItem,
   Input,
-  InputGroup,
-  InputRightAddon,
-  IconButton
+  IconButton,
+  Stack,
+  InputAddon,
+  Slider
 } from '@chakra-ui/react'
 import { DeleteIcon } from '@chakra-ui/icons'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { setStrategyValue, removeStrategy } from '@/store/lib/features/vaultStore'
+
 
 
 function ItemSlider({
@@ -103,14 +100,15 @@ function ItemSlider({
           aria-label='delete__button'
           mx={2}
           onClick={handleDelete}
-          icon={<DeleteIcon />}
           variant='outline'
           colorScheme='red'
           size={'xs'}
-        />
+        >
+          <DeleteIcon />
+        </IconButton>
       </GridItem>
       <GridItem colSpan={1} colStart={12} justifySelf={'end'} alignContent={'end'}>
-        <InputGroup>
+        <Stack>
           <Input
             px={2}
             type='number'
@@ -119,38 +117,36 @@ function ItemSlider({
             onInput={handleValueInput}
             onBlur={handleBlur}
             onKeyDown={handleEnter}
-            value={inputValue} />
-          <InputRightAddon px={1}>%</InputRightAddon>
-        </InputGroup>
+            value={inputValue}
+          >
+            <InputAddon children={'%'} />
+          </Input>
+        </Stack>
       </GridItem>
       <GridItem colSpan={12} mt={4}>
-        <Slider
+        <Slider.Root
+          defaultValue={[share]}
+        ></Slider.Root>
+        {/* <Slider
           aria-label='slider-ex-5'
           id='slider'
-          defaultValue={share}
-          value={share}
           min={0}
           max={100}
           colorScheme='green'
           maxWidth={'100%'}
-          onChange={(v) => { setVal(v) }}
           onMouseEnter={() => setShowTooltip(true)}
           onMouseLeave={() => setShowTooltip(false)}
-          onChangeEnd={(val) => setVal(val)}>
+          >
           <SliderTrack boxShadow={'sm'}>
             <SliderFilledTrack boxShadow={'dark-lg'} />
           </SliderTrack>
           <Tooltip
-            hasArrow
-            bg='green.500'
-            color='white'
-            placement='top'
-            isOpen={showTooltip}
-            label={`${share}%`}
+            open={showTooltip}
+            content={`${share}%`}
           >
             <SliderThumb />
           </Tooltip>
-        </Slider>
+        </Slider> */}
       </GridItem>
       <GridItem colSpan={1} colStart={12} mt={4} justifySelf={'end'}>
         <Button
