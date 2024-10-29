@@ -6,6 +6,7 @@ import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { ArrowLeftIcon, SettingsIcon, WarningTwoIcon } from '@chakra-ui/icons'
 import {
   Box,
+  HStack,
   IconButton,
   Skeleton,
   Stack,
@@ -18,6 +19,7 @@ import { useSorobanReact } from '@soroban-react/core'
 import { scValToNative } from '@stellar/stellar-sdk'
 import { useEffect, useState } from 'react'
 import { Tooltip } from '../ui/tooltip'
+import { StatRoot, StatUpTrend, StatValueText } from '../ui/stat'
 
 const SkeletonRow = () => {
   const { address } = useSorobanReact()
@@ -164,21 +166,24 @@ export const AllVaults = ({
                 <Table.Row key={i}>
                   <Table.Cell>{vault.name ? vault.name : vault.address}</Table.Cell>
                   <Table.Cell textAlign={'center'}>
-                    {/*          <Tooltip
-                      placement='bottom'
-                      label={vault.address}
-                      textAlign={'center'}
-                      rounded={'lg'}>
-                      {vault.address ? shortenAddress(vault.address) : '-'}
-                    </Tooltip> */}
+                    <Tooltip content={vault.address}>
+                      <p>
+                        {vault.address ? shortenAddress(vault.address) : '-'}
+                      </p>
+                    </Tooltip>
                   </Table.Cell>
                   <Table.Cell textAlign={'center'}>${vault.totalValues}</Table.Cell>
                   <Table.Cell textAlign={'center'}>{vault.name?.includes('Blend USDC') ? '200' : '400'}</Table.Cell>
                   <Table.Cell textAlign={'center'}>
+                    <StatRoot>
+                      <StatUpTrend justifyContent={'center'}>
+                        {vault.name?.includes('blend') ? 11.31 : 23.36}
+                      </StatUpTrend>
+                    </StatRoot>
                     {/*      <Stat>
                       <StatHelpText>
                         <StatArrow type='increase' />
-                        {vault.name?.includes('Blend USDC') ? '11.31' : '23.36'}%
+                        
                       </StatHelpText>
                     </Stat>*/}
                   </Table.Cell>
