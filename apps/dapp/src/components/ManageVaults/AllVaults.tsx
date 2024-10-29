@@ -180,12 +180,6 @@ export const AllVaults = ({
                         {vault.name?.includes('blend') ? 11.31 : 23.36}
                       </StatUpTrend>
                     </StatRoot>
-                    {/*      <Stat>
-                      <StatHelpText>
-                        <StatArrow type='increase' />
-                        
-                      </StatHelpText>
-                    </Stat>*/}
                   </Table.Cell>
                   {address && (
                     <Table.Cell textAlign={'center'}>
