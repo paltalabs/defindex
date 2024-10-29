@@ -22,14 +22,13 @@ import { airdropAccount, invokeCustomContract } from "../utils/contract.js";
 import { randomBytes } from "crypto";
 import { config } from "../utils/env_config.js";
 
-export async function test_vault(deployedVault: string, user?: Keypair) {
-    const network = process.argv[2];
-    const loadedConfig = config(network);
+const network = process.argv[2];
 
+export async function depositToVault(deployedVault: string, user?: Keypair) {
     // Create and fund a new user account
     const newUser = user ? user : Keypair.random();
-    console.log('🚀 ~ test_vault ~ newUser.publicKey():', newUser.publicKey());
-    console.log('🚀 ~ test_vault ~ newUser.secret():', newUser.secret());
+    console.log('🚀 ~ depositToVault ~ newUser.publicKey():', newUser.publicKey());
+    console.log('🚀 ~ depositToVault ~ newUser.secret():', newUser.secret());
 
     if (network !== "mainnet") await airdropAccount(newUser);
 
@@ -45,7 +44,7 @@ export async function test_vault(deployedVault: string, user?: Keypair) {
         xdr.ScVal.scvVec(amountsMin.map((min) => nativeToScVal(min, { type: "i128" }))),
         (new Address(newUser.publicKey())).toScVal()
     ];
-    // console.log('🚀 ~ test_vault ~ depositParams:', depositParams);
+    // console.log('🚀 ~ depositToVault ~ depositParams:', depositParams);
 
     try {
 

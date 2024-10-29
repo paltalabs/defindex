@@ -10,7 +10,7 @@ import { randomBytes } from "crypto";
 import { AddressBook } from "./utils/address_book.js";
 import { airdropAccount, invokeContract } from "./utils/contract.js";
 import { config } from "./utils/env_config.js";
-import { getDfTokenBalance, test_vault } from "./tests/vault.js";
+import { getDfTokenBalance, depositToVault } from "./tests/vault.js";
 
 
 export async function test_factory(addressBook: AddressBook) {
@@ -41,7 +41,7 @@ export async function test_factory(addressBook: AddressBook) {
       ratio: BigInt(1),
       strategies: [
         {
-          name: "Strategy 1",
+          name: "Hodl Strategy",
           address: addressBook.getContractId("hodl_strategy")
         }
       ]
@@ -109,8 +109,9 @@ const passphrase = network === "mainnet" ? Networks.PUBLIC : network === "testne
 const loadedConfig = config(network);
 
 const deployedVault = await test_factory(addressBook);
-await test_vault(deployedVault);
+await depositToVault(deployedVault);
+await depositToVault(deployedVault);
 
 // await getDfTokenBalance("CCL54UEU2IGTCMIJOYXELIMVA46CLT3N5OG35XN45APXDZYHYLABF53N", "GDAMXOJUSW6O67UVI6U4LBHI5IIJFUKQVDHPKNFKOIYRLYB2LA6YDAFI", loadedConfig.admin)
-// await test_vault("CCIOE3BLPYOYDFB5KALLDXED2CZT3GJDZSHY453U4TTOIRZLAKMKZPLR");
+// await depositToVault("CCIOE3BLPYOYDFB5KALLDXED2CZT3GJDZSHY453U4TTOIRZLAKMKZPLR");
 
