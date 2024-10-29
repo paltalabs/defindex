@@ -6,12 +6,11 @@ import {
   DialogBackdrop,
   DialogContent,
   DialogRoot,
+  DialogTrigger,
   Grid,
   GridItem,
   IconButton,
   Input,
-  InputAddon,
-  InputElement,
   Stack,
 } from "@chakra-ui/react"
 import { SearchIcon } from "@chakra-ui/icons"
@@ -28,7 +27,7 @@ import { useSorobanReact } from "@soroban-react/core"
 import { VaultMethod } from "@/hooks/useVault"
 import { InputGroup } from "../ui/input-group"
 
-export const ManageVaultes = () => {
+export const ManageVaults = () => {
   const { address } = useSorobanReact()
   const [modalStatus, setModalStatus] = useState<{
     deployVault: {
@@ -46,11 +45,11 @@ export const ManageVaultes = () => {
     }
   })
   const dispatch = useAppDispatch()
-  const handleOpenDeployVault = async (method: string, args?: any) => {
+  const handleOpenDeployVault = async (method: string, value: boolean, args?: any) => {
     switch (method) {
       case 'create_vault':
         await dispatch(resetStrategies())
-        setModalStatus({ ...modalStatus, deployVault: { isOpen: true } })
+        setModalStatus({ ...modalStatus, deployVault: { isOpen: value } })
         break
       case 'edit_vault':
         await dispatch(resetStrategies())
@@ -63,25 +62,25 @@ export const ManageVaultes = () => {
           }
           await dispatch(pushStrategy(newStrategy))
         }
-        setModalStatus({ ...modalStatus, deployVault: { isOpen: true } })
+        setModalStatus({ ...modalStatus, deployVault: { isOpen: value } })
         break
     }
   }
 
-  const handleOpenDeposit = async (method: string, args?: any) => {
+  const handleOpenDeposit = async (method: string, value: boolean, args?: any) => {
     switch (method) {
       case VaultMethod.DEPOSIT:
-        setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
+        setModalStatus({ ...modalStatus, deposit: { isOpen: value } })
         await dispatch(setSelectedVault({ ...args, method: VaultMethod.DEPOSIT }))
         console.log(args)
         break
       case VaultMethod.WITHDRAW:
-        setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
+        setModalStatus({ ...modalStatus, deposit: { isOpen: value } })
         await dispatch(setSelectedVault({ ...args, method: VaultMethod.WITHDRAW }))
         console.log(args)
         break
       case VaultMethod.EMERGENCY_WITHDRAW:
-        setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
+        setModalStatus({ ...modalStatus, deposit: { isOpen: value } })
         await dispatch(setSelectedVault({ ...args, method: VaultMethod.EMERGENCY_WITHDRAW }))
         console.log(args)
         break
@@ -126,36 +125,36 @@ export const ManageVaultes = () => {
           colStart={{ base: 1, md: 8 }}
           colEnd={{ base: 13, md: 12 }}
           justifyItems={'start'}
+          display={'flex'}
         >
-          <Container display={'flex'} flexDirection={{ base: 'column', md: 'row' }} justifyContent={'end'} alignItems={{ base: 'center', md: 'flex-end' }} >
-            <ConnectButton />
-            {!!address && <Button
-              rounded={18}
-              aria-label="add-Vault"
-              colorScheme="green"
-              onClick={() => handleOpenDeployVault('create_vault')}
-            >
-              Add Vault
-            </Button>}
-          </Container>
+          <ConnectButton />
+          {!!address &&
+            <DialogRoot open={modalStatus.deployVault.isOpen} onOpenChange={(e) => { handleOpenDeployVault('create_vault', e.open) }} size={'lg'} placement={'center'}>
+              <DialogBackdrop backdropFilter='blur(1px)' />
+              <DialogTrigger asChild>
+                <Container>
+                  <Button
+                    rounded={18}
+                    aria-label="add-Vault"
+                    colorScheme="green"
+                  >
+                    Add Vault
+                  </Button>
+                </Container>
+              </DialogTrigger>
+              <DeployVault />
+            </DialogRoot>}
         </GridItem>
         <GridItem colSpan={12} colStart={1} colEnd={13}>
           <AllVaults handleOpenDeployVault={handleOpenDeployVault} handleOpenDeposit={handleOpenDeposit} />
         </GridItem>
       </Grid>
-      <DialogRoot
-        open={modalStatus.deployVault.isOpen}
-      >
-        <DialogBackdrop />
-        <DialogContent minW={{ sm: '100%', md: '80%', lg: '60%', }}>
-          <DeployVault />
-        </DialogContent>
-      </DialogRoot>
+
       <DialogRoot
         open={modalStatus.deposit.isOpen}
       >
         <DialogBackdrop />
-        <DialogContent minW={{ sm: '100%', md: '80%', lg: '60%', }}>
+        <DialogContent>
           <InteractWithVault />
         </DialogContent>
       </DialogRoot>
@@ -163,4 +162,4 @@ export const ManageVaultes = () => {
   )
 }
 
-export default ManageVaultes
+export default ManageVaults

@@ -6,6 +6,8 @@ import {
   Container,
   Input,
   Button,
+  Box,
+  DialogTrigger,
 } from '@chakra-ui/react'
 import ItemSlider from './Slider'
 import AddNewStrategyButton from './AddNewStrategyButton'
@@ -13,6 +15,7 @@ import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { ConfirmDelpoyModal } from './ConfirmDelpoyModal'
 import { setName } from '@/store/lib/features/vaultStore'
 import { Strategy } from '@/store/lib/features/walletStore'
+import { DialogBody, DialogCloseTrigger, DialogContent, DialogFooter, DialogHeader, DialogRoot, DialogTitle } from '../ui/dialog'
 
 export const DeployVault = () => {
   const dispatch = useAppDispatch()
@@ -29,10 +32,14 @@ export const DeployVault = () => {
   }
 
   return (
-    <Container centerContent minW={'100%'} px={0}>
-      <ConfirmDelpoyModal isOpen={openConfirm} onClose={handleClose} />
-      <Card.Root variant="outline" p={16} bgColor="whiteAlpha.50">
-        <Grid
+    <>
+      <DialogContent>
+        <DialogHeader>
+          <DialogCloseTrigger />
+          <DialogTitle>Deploy Defindex</DialogTitle>
+        </DialogHeader>
+        <DialogBody>
+          <Grid
           templateColumns={['1fr', null, 'repeat(12, 2fr)']}
           alignSelf={'end'}
           alignContent={'center'}
@@ -53,17 +60,27 @@ export const DeployVault = () => {
             <h2>Total: {totalValues}%</h2>
           </GridItem>
         </Grid>
-        <Button
-          disabled={totalValues! > 100 || strategies.length == 0 || totalValues == 0}
-          colorScheme="green"
-          size="lg"
-          mt={4}
-          onClick={() => setOpenConfirm(true)}
-          w={['100%', null, 'auto']}
-        >
-          Deploy Defindex
-        </Button>
-      </Card.Root>
-    </Container>
+        </DialogBody>
+        <DialogFooter>
+          <DialogRoot open={openConfirm} onOpenChange={(e) => setOpenConfirm(e.open)}>
+            <DialogTrigger asChild>
+              <Button
+                disabled={totalValues! > 100 || strategies.length == 0 || totalValues == 0}
+                colorScheme="green"
+                size="lg"
+                mt={4}
+                onClick={() => setOpenConfirm(true)}
+                w={['100%', null, 'auto']}
+              >
+                Deploy Defindex
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <ConfirmDelpoyModal isOpen={openConfirm} onClose={handleClose} />
+            </DialogContent>
+          </DialogRoot>
+        </DialogFooter>
+      </DialogContent>
+    </>
   )
 }
