@@ -103,3 +103,21 @@ pub fn unpause_strategy(e: &Env, strategy_address: Address) -> Result<(), Contra
     // If no strategy is found, return an error
     Err(ContractError::StrategyNotFound)
 }
+
+pub fn withdraw_from_strategy(e: &Env, strategy_address: &Address, amount: &i128) -> Result<(), ContractError> {
+    let strategy_client = get_strategy_client(e, strategy_address.clone());
+    
+    match strategy_client.try_withdraw(amount, &e.current_contract_address()) {
+        Ok(Ok(_)) => Ok(()),
+        Ok(Err(_)) | Err(_) => Err(ContractError::StrategyWithdrawError),
+    }
+}
+
+pub fn invest_in_strategy(e: &Env, strategy_address: &Address, amount: &i128) -> Result<(), ContractError> {
+    let strategy_client = get_strategy_client(&e, strategy_address.clone());
+    
+    match strategy_client.try_deposit(amount, &e.current_contract_address()) {
+        Ok(Ok(_)) => Ok(()),
+        Ok(Err(_)) | Err(_) => Err(ContractError::StrategyInvestError),
+    }
+}

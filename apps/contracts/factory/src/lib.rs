@@ -6,7 +6,7 @@ mod storage;
 mod error;
 
 use soroban_sdk::{
-    contract, contractimpl, Address, BytesN, Env, Map, Vec
+    contract, contractimpl, Address, BytesN, Env, Map, String, Vec
 };
 use error::FactoryError;
 use defindex::{create_contract, AssetAllocation};
@@ -57,6 +57,8 @@ pub trait FactoryTrait {
         emergency_manager: Address, 
         fee_receiver: Address, 
         vault_share: u32,
+        vault_name: String,
+        vault_symbol: String,
         manager: Address,
         assets: Vec<AssetAllocation>,
         salt: BytesN<32>
@@ -189,6 +191,8 @@ impl FactoryTrait for DeFindexFactory {
         emergency_manager: Address, 
         fee_receiver: Address, 
         vault_share: u32,
+        vault_name: String,
+        vault_symbol: String,
         manager: Address,
         assets: Vec<AssetAllocation>,
         salt: BytesN<32>
@@ -210,6 +214,8 @@ impl FactoryTrait for DeFindexFactory {
             &vault_share,
             &defindex_receiver,
             &current_contract,
+            &vault_name,
+            &vault_symbol,
         );
 
         add_new_defindex(&e, defindex_address.clone());

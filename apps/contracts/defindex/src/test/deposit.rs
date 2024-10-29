@@ -1,4 +1,4 @@
-use soroban_sdk::{vec as sorobanvec, Vec};
+use soroban_sdk::{vec as sorobanvec, String, Vec};
 
 use crate::test::{create_strategy_params, DeFindexVaultTest};
 use crate::test::defindex_vault::{AssetAllocation, ContractError};
@@ -33,6 +33,8 @@ fn deposit_amounts_desired_wrong_length() {
         &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
     );
     let amount = 1000i128;
     

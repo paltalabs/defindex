@@ -147,3 +147,4 @@ mod initialize;
 mod withdraw;
 mod deposit;
 mod emergency_withdraw;
+mod rebalance;
