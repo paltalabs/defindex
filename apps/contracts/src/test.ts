@@ -10,7 +10,6 @@ import { randomBytes } from "crypto";
 import { AddressBook } from "./utils/address_book.js";
 import { airdropAccount, invokeContract } from "./utils/contract.js";
 import { config } from "./utils/env_config.js";
-import { test_vault } from "./tests/vault.js";
 
 
 export async function test_factory(addressBook: AddressBook) {
@@ -38,11 +37,11 @@ export async function test_factory(addressBook: AddressBook) {
   const assets = [
     {
       address: new Address(xlm.contractId(passphrase)),
-      ratio: BigInt(1),
       strategies: [
         {
           name: "Strategy 1",
-          address: addressBook.getContractId("hodl_strategy")
+          address: addressBook.getContractId("hodl_strategy"),
+          paused: false
         }
       ]
     }
@@ -53,10 +52,6 @@ export async function test_factory(addressBook: AddressBook) {
       new xdr.ScMapEntry({
         key: xdr.ScVal.scvSymbol("address"),
         val: asset.address.toScVal(),
-      }),
-      new xdr.ScMapEntry({
-        key: xdr.ScVal.scvSymbol("ratio"),
-        val: nativeToScVal(asset.ratio, { type: "i128" }),
       }),
       new xdr.ScMapEntry({
         key: xdr.ScVal.scvSymbol("strategies"),
@@ -70,6 +65,10 @@ export async function test_factory(addressBook: AddressBook) {
               new xdr.ScMapEntry({
                 key: xdr.ScVal.scvSymbol("name"),
                 val: nativeToScVal(strategy.name, { type: "string" }),
+              }),
+              new xdr.ScMapEntry({
+                key: xdr.ScVal.scvSymbol("paused"),
+                val: nativeToScVal(strategy.name, { type: "bool" }),
               }),
             ])
           )

@@ -11,7 +11,6 @@ fn rebalance() {
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
