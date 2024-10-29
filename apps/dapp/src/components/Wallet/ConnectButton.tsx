@@ -48,8 +48,8 @@ export const ConnectButton = () => {
 
   const handleDisconnect = () => {
     if (!disconnect) return;
-    disconnect();
     setOpen(false);
+    disconnect();
   }
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export const ConnectButton = () => {
   }
   return (
     <>
-      <DialogRoot open={open} size={"lg"} onOpenChange={(e) => { setOpen(e.open) }}>
+      <DialogRoot open={open} size={"lg"} onOpenChange={(e) => { setOpen(e.open) }} placement={'center'}>
         <DialogBackdrop />
         <DialogTrigger asChild >
           <Button colorScheme='green' rounded={18} mb={{ base: 4, md: 0 }}>
