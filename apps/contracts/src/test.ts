@@ -7,6 +7,7 @@ import {
   xdr
 } from "@stellar/stellar-sdk";
 import { randomBytes } from "crypto";
+import { depositToVault } from "./tests/vault.js";
 import { AddressBook } from "./utils/address_book.js";
 import { airdropAccount, invokeContract } from "./utils/contract.js";
 import { config } from "./utils/env_config.js";
@@ -80,7 +81,9 @@ export async function test_factory(addressBook: AddressBook) {
   const createDeFindexParams: xdr.ScVal[] = [
     new Address(emergencyManager.publicKey()).toScVal(),
     new Address(feeReceiver.publicKey()).toScVal(),
-    nativeToScVal(100, { type: "u32" }),  // Setting vault_share as 1 for demonstration
+    nativeToScVal(100, { type: "u32" }),  // Setting vault_share as 100 bps for demonstration
+    nativeToScVal("Test Vault", { type: "string" }),
+    nativeToScVal("DFT-Test-Vault", { type: "string" }),
     new Address(manager.publicKey()).toScVal(),
     xdr.ScVal.scvVec(assetAllocations),
     nativeToScVal(randomBytes(32)),
@@ -95,7 +98,7 @@ export async function test_factory(addressBook: AddressBook) {
   );
 
   console.log('🚀 « DeFindex Vault created with address:', scValToNative(result.returnValue));
-  return result.returnValue;
+  return scValToNative(result.returnValue);
 }
 
 const network = process.argv[2];
@@ -106,6 +109,9 @@ const passphrase = network === "mainnet" ? Networks.PUBLIC : network === "testne
 const loadedConfig = config(network);
 
 const deployedVault = await test_factory(addressBook);
-// await test_vault(deployedVault); 
-// await test_vault("CCE7MLKC7R6TIQA37A7EHWEUC3AIXIH5DSOQUSVAARCWDD7257HS4RUG");
+await depositToVault(deployedVault);
+await depositToVault(deployedVault);
+
+// await getDfTokenBalance("CCL54UEU2IGTCMIJOYXELIMVA46CLT3N5OG35XN45APXDZYHYLABF53N", "GDAMXOJUSW6O67UVI6U4LBHI5IIJFUKQVDHPKNFKOIYRLYB2LA6YDAFI", loadedConfig.admin)
+// await depositToVault("CCIOE3BLPYOYDFB5KALLDXED2CZT3GJDZSHY453U4TTOIRZLAKMKZPLR");
 
