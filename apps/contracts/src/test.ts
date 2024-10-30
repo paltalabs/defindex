@@ -11,6 +11,7 @@ import { AddressBook } from "./utils/address_book.js";
 import { airdropAccount, invokeContract } from "./utils/contract.js";
 import { config } from "./utils/env_config.js";
 import { getDfTokenBalance, depositToVault } from "./tests/vault.js";
+import { checkUserBalance } from "./tests/strategy.js";
 
 
 export async function test_factory(addressBook: AddressBook) {
@@ -109,7 +110,9 @@ const passphrase = network === "mainnet" ? Networks.PUBLIC : network === "testne
 const loadedConfig = config(network);
 
 const deployedVault = await test_factory(addressBook);
-await depositToVault(deployedVault);
+const [user] = await depositToVault(deployedVault);
+const strategyBalance = await checkUserBalance(addressBook.getContractId("hodl_strategy"), user.publicKey(), user)
+console.log('🚀 ~ strategyBalance:', strategyBalance);
 await depositToVault(deployedVault);
 
 // await getDfTokenBalance("CCL54UEU2IGTCMIJOYXELIMVA46CLT3N5OG35XN45APXDZYHYLABF53N", "GDAMXOJUSW6O67UVI6U4LBHI5IIJFUKQVDHPKNFKOIYRLYB2LA6YDAFI", loadedConfig.admin)

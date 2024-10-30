@@ -55,7 +55,6 @@ export async function depositToVault(deployedVault: string, user?: Keypair) {
         console.error("❌ Balance failed:", error);
     }
     try {
-        // TODO: Would this work on Mainnet or Standalone? How does it know which network to use?
         const result = await invokeCustomContract(
             deployedVault,
             "deposit",
@@ -76,6 +75,7 @@ export async function depositToVault(deployedVault: string, user?: Keypair) {
     } catch (error) {
         console.error("❌ Balance failed:", error);
     }
+    return [newUser];
 }
 
 /**
