@@ -32,7 +32,7 @@ Make sure you have the hodl strategy deployed, if not, you can run:
 yarn deploy-hodl <network>
 ```
 
-to test the factory to deploy a DeFindex Vault
+to test the factory to deploy a DeFindex Vault, and deposit there two times, you can run:
 
 ```bash
 yarn test <network>
