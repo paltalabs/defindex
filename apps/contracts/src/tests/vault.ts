@@ -1,14 +1,13 @@
 /**
- * Description: Tests the vault by creating a new user, airdropping funds, and making a deposit.
+ * Description: Deposits a specified amount to the vault for a user and returns the user details along with pre- and post-deposit balances.
  *
  * @param {string} deployedVault - The address of the deployed vault contract.
- * @returns {Promise<void>} Logs the result of the deposit action.
+ * @param {Keypair} [user] - The user Keypair making the deposit. If not provided, a new user will be created.
+ * @returns {Promise<{ user: Keypair, balanceBefore: number, result: any, balanceAfter: number }>} Returns an object with the user, balance before, deposit result, and balance after.
  * @throws Will throw an error if the deposit fails or any step encounters an issue.
  * @example
- * await test_vault("CCE7MLKC7R6TIQA37A7EHWEUC3AIXIH5DSOQUSVAARCWDD7257HS4RUG");
+ * const { user, balanceBefore, result, balanceAfter } = await depositToVault("CCE7MLKC7R6TIQA37A7EHWEUC3AIXIH5DSOQUSVAARCWDD7257HS4RUG", user);
  */
-
-// ./tests/vault.ts
 
 import {
     Address,
@@ -25,14 +24,17 @@ import { config } from "../utils/env_config.js";
 const network = process.argv[2];
 
 export async function depositToVault(deployedVault: string, user?: Keypair) {
-    // Create and fund a new user account
+    // Create and fund a new user account if not provided
     const newUser = user ? user : Keypair.random();
     console.log('🚀 ~ depositToVault ~ newUser.publicKey():', newUser.publicKey());
     console.log('🚀 ~ depositToVault ~ newUser.secret():', newUser.secret());
 
     if (network !== "mainnet") await airdropAccount(newUser);
-
     console.log("New user publicKey:", newUser.publicKey());
+
+    let balanceBefore: number;
+    let balanceAfter: number;
+    let result: any;
 
     // Define deposit parameters
     const depositAmount = BigInt(10000000); // 1 XLM in stroops (1 XLM = 10^7 stroops)
@@ -44,39 +46,41 @@ export async function depositToVault(deployedVault: string, user?: Keypair) {
         xdr.ScVal.scvVec(amountsMin.map((min) => nativeToScVal(min, { type: "i128" }))),
         (new Address(newUser.publicKey())).toScVal()
     ];
-    // console.log('🚀 ~ depositToVault ~ depositParams:', depositParams);
 
     try {
-
-        // Check the user's balance after the deposit
-        const balanceBefore = await getDfTokenBalance(deployedVault, newUser.publicKey(), newUser);
-        console.log("🔢 « dfToken balance before deposit:", balanceBefore)
+        // Check the user's balance before the deposit
+        balanceBefore = await getDfTokenBalance(deployedVault, newUser.publicKey(), newUser);
+        console.log("🔢 « dfToken balance before deposit:", balanceBefore);
     } catch (error) {
-        console.error("❌ Balance failed:", error);
+        console.error("❌ Balance check before deposit failed:", error);
+        throw error;
     }
+
     try {
-        const result = await invokeCustomContract(
+        result = await invokeCustomContract(
             deployedVault,
             "deposit",
             depositParams,
             newUser
         );
-
         console.log("🚀 « Deposit successful:", scValToNative(result.returnValue));
-
     } catch (error) {
         console.error("❌ Deposit failed:", error);
+        throw error;
     }
-    try {
 
+    try {
         // Check the user's balance after the deposit
-        const balanceAfter = await getDfTokenBalance(deployedVault, newUser.publicKey(), newUser);
-        console.log("🔢 « dfToken balance after deposit:", balanceAfter)
+        balanceAfter = await getDfTokenBalance(deployedVault, newUser.publicKey(), newUser);
+        console.log("🔢 « dfToken balance after deposit:", balanceAfter);
     } catch (error) {
-        console.error("❌ Balance failed:", error);
+        console.error("❌ Balance check after deposit failed:", error);
+        throw error;
     }
-    return [newUser];
+
+    return { user: newUser, balanceBefore, result, balanceAfter };
 }
+
 
 /**
  * Description: Retrieves the dfToken balance for a specified user from the vault contract.
@@ -108,4 +112,64 @@ export async function getDfTokenBalance(deployedVault: string, userPublicKey: st
         console.error(`Failed to retrieve dfToken balance for user ${userPublicKey}:`, error);
         throw error;
     }
+}
+
+/**
+ * Description: Withdraws a specified amount from the vault for the user and returns the pre- and post-withdrawal balances.
+ *
+ * @param {string} deployedVault - The address of the deployed vault contract.
+ * @param {BigInt} withdrawAmount - The amount in stroops to withdraw (1 XLM = 10^7 stroops).
+ * @param {Keypair} user - The user Keypair requesting the withdrawal.
+ * @returns {Promise<{ balanceBefore: number, result: any, balanceAfter: number }>} Returns an object with balance before, the withdrawal result, and balance after.
+ * @throws Will throw an error if the withdrawal fails or any step encounters an issue.
+ * @example
+ * const { balanceBefore, result, balanceAfter } = await withdrawFromVault("CCE7MLKC7R6TIQA37A7EHWEUC3AIXIH5DSOQUSVAARCWDD7257HS4RUG", 10000000, user);
+ */
+
+export async function withdrawFromVault(deployedVault: string, withdrawAmount: BigInt, user: Keypair) {
+    console.log('🚀 ~ withdrawFromVault ~ User publicKey:', user.publicKey());
+
+    let balanceBefore: number;
+    let balanceAfter: number;
+    let result: any;
+
+    try {
+        // Check the user's balance before the withdrawal
+        balanceBefore = await getDfTokenBalance(deployedVault, user.publicKey(), user);
+        console.log("🔢 « dfToken balance before withdraw:", balanceBefore);
+    } catch (error) {
+        console.error("❌ Balance check before withdraw failed:", error);
+        throw error;
+    }
+
+    // Define withdraw parameters
+    const amountsToWithdraw = [withdrawAmount];
+    const withdrawParams: xdr.ScVal[] = [
+        xdr.ScVal.scvVec(amountsToWithdraw.map((amount) => nativeToScVal(amount, { type: "i128" }))),
+        (new Address(user.publicKey())).toScVal()
+    ];
+
+    try {
+        result = await invokeCustomContract(
+            deployedVault,
+            "withdraw",
+            withdrawParams,
+            user
+        );
+        console.log("🚀 « Withdrawal successful:", scValToNative(result.returnValue));
+    } catch (error) {
+        console.error("❌ Withdrawal failed:", error);
+        throw error;
+    }
+
+    try {
+        // Check the user's balance after the withdrawal
+        balanceAfter = await getDfTokenBalance(deployedVault, user.publicKey(), user);
+        console.log("🔢 « dfToken balance after withdraw:", balanceAfter);
+    } catch (error) {
+        console.error("❌ Balance check after withdraw failed:", error);
+        throw error;
+    }
+
+    return { balanceBefore, result, balanceAfter };
 }

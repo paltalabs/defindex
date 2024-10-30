@@ -7,7 +7,7 @@ import {
   xdr
 } from "@stellar/stellar-sdk";
 import { randomBytes } from "crypto";
-import { depositToVault } from "./tests/vault.js";
+import { depositToVault, withdrawFromVault } from "./tests/vault.js";
 import { AddressBook } from "./utils/address_book.js";
 import { airdropAccount, invokeContract } from "./utils/contract.js";
 import { config } from "./utils/env_config.js";
@@ -110,9 +110,36 @@ const passphrase = network === "mainnet" ? Networks.PUBLIC : network === "testne
 const loadedConfig = config(network);
 
 const deployedVault = await test_factory(addressBook);
-const [user] = await depositToVault(deployedVault);
-const strategyBalance = await checkUserBalance(addressBook.getContractId("hodl_strategy"), user.publicKey(), user)
-console.log('🚀 ~ strategyBalance:', strategyBalance);
+// Step 1: Deposit to vault and capture initial balances
+const { user, balanceBefore: depositBalanceBefore, result: depositResult, balanceAfter: depositBalanceAfter } = await depositToVault(deployedVault);
+
+// Step 2: Check strategy balance after deposit
+const strategyBalanceAfterDeposit = await checkUserBalance(addressBook.getContractId("hodl_strategy"), user.publicKey(), user);
+
+// Step 3: Withdraw from the vault
+const { balanceBefore: withdrawBalanceBefore, result: withdrawResult, balanceAfter: withdrawBalanceAfter } = await withdrawFromVault(deployedVault, BigInt(5000000), user);
+
+// Step 4: Check strategy balance after withdrawal
+const strategyBalanceAfterWithdraw = await checkUserBalance(addressBook.getContractId("hodl_strategy"), user.publicKey(), user);
+
+// Log a table with all balances
+console.table([
+  {
+    Operation: "Deposit",
+    "Balance Before": depositBalanceBefore,
+    "Deposit Result": depositResult,
+    "Balance After": depositBalanceAfter,
+    "Strategy Balance After": strategyBalanceAfterDeposit
+  },
+  {
+    Operation: "Withdraw",
+    "Balance Before": withdrawBalanceBefore,
+    "Withdraw Result": withdrawResult,
+    "Balance After": withdrawBalanceAfter,
+    "Strategy Balance After": strategyBalanceAfterWithdraw
+  }
+]);
+
 await depositToVault(deployedVault);
 
 // await getDfTokenBalance("CCL54UEU2IGTCMIJOYXELIMVA46CLT3N5OG35XN45APXDZYHYLABF53N", "GDAMXOJUSW6O67UVI6U4LBHI5IIJFUKQVDHPKNFKOIYRLYB2LA6YDAFI", loadedConfig.admin)
