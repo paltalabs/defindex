@@ -1,4 +1,4 @@
 import { depositToVault } from "./vault.js";
 
 // modify the address to the deployed vault
-await depositToVault("CCDWHWOCUNJJO36KXJV7XMDPIEOFMUAVZKVBDFWXMZPRHGFNSET2ZT4Y");
+await depositToVault("CBUTM5B7CG7ISTX5PD5XMDDMSTKFRGVXNKRMZO3TZW5IFGHN5274JJY7");

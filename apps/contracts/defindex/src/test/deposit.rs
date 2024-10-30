@@ -15,12 +15,10 @@ fn deposit_amounts_desired_wrong_length() {
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
@@ -86,7 +84,7 @@ fn deposit_several_assets() {
 //         &test.env,
 //         AssetAllocation {
 //             address: test.token0.address.clone(),
-//             ratio: 1,
+//
 //             strategies: strategy_params.clone()
 //         }
 //     ];
