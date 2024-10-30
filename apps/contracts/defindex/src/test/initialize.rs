@@ -10,12 +10,10 @@ fn test_initialize_and_get_roles() {
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
@@ -62,12 +60,10 @@ fn test_initialize_twice() {
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];

@@ -11,7 +11,6 @@ fn test_withdraw_from_idle_success() {
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
@@ -62,7 +61,6 @@ fn test_withdraw_from_strategy_success() {
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];

@@ -58,27 +58,23 @@ pub(crate) fn create_asset_params(test: &DeFindexFactoryTest) -> Vec<AssetAlloca
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            ratio: 1i128,
             strategies: sorobanvec![
                 &test.env,
                 Strategy {
                     address: test.strategy_contract_token0.address.clone(),
                     name: String::from_str(&test.env, "Strategy 1"),
                     paused: false,
-                    ratio: 1i128
                 }
             ],
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            ratio: 1i128,
             strategies: sorobanvec![
                 &test.env,
                 Strategy {
                     address: test.strategy_contract_token1.address.clone(),
                     name: String::from_str(&test.env, "Strategy 1"),
                     paused: false,
-                    ratio: 1i128
                 }
             ],
         }
