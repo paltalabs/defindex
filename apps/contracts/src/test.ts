@@ -69,7 +69,7 @@ export async function test_factory(addressBook: AddressBook) {
               }),
               new xdr.ScMapEntry({
                 key: xdr.ScVal.scvSymbol("paused"),
-                val: nativeToScVal(strategy.name, { type: "bool" }),
+                val: nativeToScVal(false, { type: "bool" }),
               }),
             ])
           )
