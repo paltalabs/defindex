@@ -119,7 +119,9 @@ export const InteractWithVault = () => {
             my={4}
             colorScheme='green'
             onClick={() => vaultOperation()}>
-            {selectedVault?.method}
+            {selectedVault?.method === VaultMethod.DEPOSIT && 'Deposit' ||
+              selectedVault?.method === VaultMethod.WITHDRAW && 'Withdraw' ||
+              selectedVault?.method === VaultMethod.EMERGENCY_WITHDRAW && 'Emergency Withdraw'}
           </Button>
         </DialogBody>
       </DialogContent>
