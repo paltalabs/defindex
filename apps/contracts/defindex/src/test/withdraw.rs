@@ -1,6 +1,7 @@
 use soroban_sdk::{vec as sorobanvec, String, Vec};
 
 use crate::test::{create_strategy_params, defindex_vault::{AssetAllocation, Investment}, DeFindexVaultTest};
+use super::hodl_strategy::StrategyError;
 
 #[test]
 fn test_withdraw_from_idle_success() {
@@ -26,7 +27,7 @@ fn test_withdraw_from_idle_success() {
         &String::from_str(&test.env, "dfToken"),
         &String::from_str(&test.env, "DFT"),
     );
-    let amount = 1000i128;
+    let amount = 1234567890i128;
     
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
     
@@ -38,18 +39,75 @@ fn test_withdraw_from_idle_success() {
     let df_balance = test.defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
-    test.defindex_contract.deposit(&sorobanvec![&test.env, amount], &sorobanvec![&test.env, amount], &users[0]);
+    // Deposit
+    let amount_to_deposit = 567890i128;
+    test.defindex_contract.deposit(&sorobanvec![&test.env, amount_to_deposit], &sorobanvec![&test.env, amount_to_deposit], &users[0]);
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
-    assert_eq!(df_balance, amount);
-
-    test.defindex_contract.withdraw(&df_balance, &users[0]);
+    // Check Balances after deposit
     
-    let df_balance = test.defindex_contract.balance(&users[0]);
-    assert_eq!(df_balance, 0i128);
-
+    // Token balance of user
     let user_balance = test.token0.balance(&users[0]);
-    assert_eq!(user_balance, amount);
+    assert_eq!(user_balance, amount - amount_to_deposit);
+    
+    // Token balance of vault should be amount_to_deposit
+    // Because balances are still in indle, balances are not in strategy, but in idle
+
+    let vault_balance = test.token0.balance(&test.defindex_contract.address);
+    assert_eq!(vault_balance, amount_to_deposit);
+
+    // Token balance of hodl strategy should be 0 (all in idle)
+    let strategy_balance = test.token0.balance(&test.strategy_client.address);
+    assert_eq!(strategy_balance, 0);
+
+    // Df balance of user should be equal to deposited amount
+    let df_balance = test.defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, amount_to_deposit);
+
+    // user decides to withdraw a portion of deposited amount
+    let amount_to_withdraw = 123456i128;
+    test.defindex_contract.withdraw(&amount_to_withdraw, &users[0]);
+    
+    // Check Balances after withdraw
+
+    // Token balance of user should be amount - amount_to_deposit + amount_to_withdraw
+    let user_balance = test.token0.balance(&users[0]);
+    assert_eq!(user_balance, amount - amount_to_deposit + amount_to_withdraw);
+
+    // Token balance of vault should be amount_to_deposit - amount_to_withdraw
+    let vault_balance = test.token0.balance(&test.defindex_contract.address);
+    assert_eq!(vault_balance, amount_to_deposit - amount_to_withdraw);
+
+    // Token balance of hodl strategy should be 0 (all in idle)
+    let strategy_balance = test.token0.balance(&test.strategy_client.address);
+    assert_eq!(strategy_balance, 0);
+
+    // Df balance of user should be equal to deposited amount - amount_to_withdraw
+    let df_balance = test.defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, amount_to_deposit - amount_to_withdraw);
+
+
+    // user tries to withdraw more than deposited amount
+    let amount_to_withdraw_more = amount_to_deposit + 1;
+    let result = test.defindex_contract.try_withdraw(&amount_to_withdraw_more, &users[0]);
+    // just check if is error
+    assert_eq!(result.is_err(), true);
+    
+    // TODO test corresponding error
+
+    // withdraw remaining balance
+    test.defindex_contract.withdraw(&(amount_to_deposit - amount_to_withdraw), &users[0]);
+
+    // // result is err
+
+    // assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
+
+    // result should be error from contract
+
+    // let df_balance = test.defindex_contract.balance(&users[0]);
+    // assert_eq!(df_balance, 0i128);
+
+    // let user_balance = test.token0.balance(&users[0]);
+    // assert_eq!(user_balance, amount);
 }
 
 #[test]

@@ -7,11 +7,11 @@ use soroban_sdk::{testutils::Address as _, vec as sorobanvec, Address, Env, Stri
 use std::vec;
 
 // DeFindex Hodl Strategy Contract
-mod hodl_strategy {
+pub mod hodl_strategy {
     soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/hodl_strategy.optimized.wasm");
     pub type HodlStrategyClient<'a> = Client<'a>;
 }
-use hodl_strategy::HodlStrategyClient;
+use hodl_strategy::{HodlStrategyClient};
 
 fn create_hodl_strategy<'a>(e: & Env, asset: & Address) -> HodlStrategyClient<'a> {
     let contract_address = &e.register_contract_wasm(None, hodl_strategy::WASM);
