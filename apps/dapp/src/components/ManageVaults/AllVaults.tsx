@@ -51,7 +51,7 @@ export const AllVaults = ({
   handleOpenDeployVault,
   handleOpenDeposit
 }: {
-  handleOpenDeployVault: (method: string, args?: any) => any,
+    handleOpenDeployVault: (method: string, value: boolean, args?: any) => any,
   handleOpenDeposit: (method: string, args?: any) => any
 }) => {
   const vault = useVaultCallback()
@@ -157,8 +157,7 @@ export const AllVaults = ({
               <SkeletonRow />
               <SkeletonRow />
               <SkeletonRow />
-              <SkeletonRow />
-              <SkeletonRow />
+            <SkeletonRow />
           </Table.Body>}
           {(!isLoading && createdVaults?.length != undefined) && <Table.Body>
               {createdVaults.map((vault: VaultData, i: number) => (
@@ -211,7 +210,7 @@ export const AllVaults = ({
                             colorScheme='teal'
                             aria-label='rebalance'
                             size='sm'
-                            onClick={() => handleOpenDeployVault('edit_vault', vault)}
+                            onClick={() => handleOpenDeployVault('edit_vault', true, vault)}
                           >
                             <SettingsIcon />
                           </IconButton>
@@ -240,7 +239,6 @@ export const AllVaults = ({
               <Text fontSize="lg" fontWeight="bold">{vault.name ? vault.name : shortenAddress(vault.address)}</Text>
               <Text >Address: {shortenAddress(vault.address)}</Text>
               <Text>Balance: ${vault.totalValues}</Text>
-              <Text>Status: {vault.name?.includes('Blend USDC') ? '200' : '400'}</Text>
               <Text>APR: {vault.name?.includes('Blend USDC') ? '11.31' : '23.36'}%</Text>
               {address && (
                 <Stack direction="row" mt={2}>
@@ -270,7 +268,7 @@ export const AllVaults = ({
                         colorScheme='teal'
                         aria-label='rebalance'
                         size='sm'
-                        onClick={() => handleOpenDeployVault('edit_vault', vault)}
+                        onClick={() => handleOpenDeployVault('edit_vault', true, vault)}
                       >
                         <SettingsIcon />
                       </IconButton>

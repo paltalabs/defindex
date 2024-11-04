@@ -32,10 +32,9 @@ export const DeployVault = () => {
   }
 
   return (
-    <>
-      <DialogContent>
-        <DialogBody>
-          <Grid
+    <DialogContent>
+      <DialogBody>
+        <Grid
           templateColumns={['1fr', null, 'repeat(12, 2fr)']}
           alignSelf={'end'}
           alignContent={'center'}
@@ -51,32 +50,35 @@ export const DeployVault = () => {
         {strategies.map((strategy, index) => (
           <ItemSlider key={index} name={strategy.name} address={strategy.address} share={strategy.share} />
         ))}
+        {strategies.length > 0 && 
         <Grid templateColumns={['1fr', null, 'repeat(8, 2fr)']} dir='reverse'>
           <GridItem colStart={[1, null, 8]} textAlign={['center', null, 'end']}>
             <h2>Total: {totalValues}%</h2>
           </GridItem>
-        </Grid>
-        </DialogBody>
-        <DialogFooter>
-          <DialogRoot open={openConfirm} onOpenChange={(e) => setOpenConfirm(e.open)}>
-            <DialogTrigger asChild>
-              <Button
-                disabled={totalValues! > 100 || strategies.length == 0 || totalValues == 0}
-                colorScheme="green"
-                size="lg"
-                mt={4}
-                onClick={() => setOpenConfirm(true)}
-                w={['100%', null, 'auto']}
-              >
-                Deploy Defindex
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <ConfirmDelpoyModal isOpen={openConfirm} onClose={handleClose} />
-            </DialogContent>
-          </DialogRoot>
-        </DialogFooter>
-      </DialogContent>
-    </>
+          </Grid>
+        }
+      </DialogBody>
+      <DialogFooter>
+        <DialogRoot open={openConfirm} onOpenChange={(e) => setOpenConfirm(e.open)}>
+          <DialogTrigger>
+            <Button
+              disabled={totalValues! > 100 || strategies.length == 0 || totalValues == 0}
+              colorScheme="green"
+              size="lg"
+              mt={4}
+              w={['100%', null, 'auto']}
+            >
+              Deploy Defindex
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogCloseTrigger />
+            </DialogHeader>
+            <ConfirmDelpoyModal isOpen={openConfirm} onClose={handleClose} />
+          </DialogContent>
+        </DialogRoot>
+      </DialogFooter>
+    </DialogContent>
   )
 }

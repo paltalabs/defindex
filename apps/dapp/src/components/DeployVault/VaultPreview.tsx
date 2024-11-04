@@ -9,8 +9,6 @@ import {
   IconButton,
   Fieldset,
   Stack,
-  Tooltip,
-  InputAddon,
 } from '@chakra-ui/react'
 import { shortenAddress } from '@/helpers/shortenAddress'
 import { PieChart } from '@mui/x-charts'
@@ -20,6 +18,8 @@ import { useAppDispatch } from '@/store/lib/storeHooks'
 import { StrKey } from '@stellar/stellar-sdk'
 import { LinkIcon } from '@chakra-ui/icons'
 import { useSorobanReact } from '@soroban-react/core'
+import { InputGroup } from '../ui/input-group'
+import { Tooltip } from '../ui/tooltip'
 
 
 interface FormControlInterface {
@@ -154,21 +154,20 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
       <Table.Root>
         <Table.Header>
           <Table.Row>
-            <Table.Header>Name</Table.Header>
-            <Table.Header textAlign={'center'}>Address</Table.Header>
-            <Table.Header textAlign={'end'}>Percentage</Table.Header>
+            <Table.Cell>Name</Table.Cell>
+            <Table.Cell textAlign={'center'}>Address</Table.Cell>
+            <Table.Cell textAlign={'end'}>Percentage</Table.Cell>
           </Table.Row>
         </Table.Header>
         <Table.Body>
             {data.map((strategy: ChartData, index: number) => (
               <Table.Row key={index}>
                 <Table.Cell>{strategy.label}</Table.Cell>
-                <Table.Cell textAlign={'center'}>
-                  {/* <Tooltip content={strategy.address}>
-                    {strategy.address ? shortenAddress(strategy.address) : '-'}
-                    </Tooltip> */}
+                <Tooltip content={strategy.address}>
+                  <Table.Cell textAlign={'center'}>
                   {strategy.address ? shortenAddress(strategy.address) : '-'}
-                </Table.Cell>
+                  </Table.Cell>
+                </Tooltip>
                 <Table.Cell textAlign={'end'}>{strategy.value}%</Table.Cell>
               </Table.Row>
             ))}
@@ -188,24 +187,23 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
           >
             <Fieldset.Legend>Manager</Fieldset.Legend>
             <Stack>
-              <Input
-                onChange={(event) => handleManagerChange(event?.target.value)}
-                value={formControl.manager.value}
-                placeholder='GAFS3TLVM...'
-              />
-              {/* <Tooltip content='Use connected address.'>
-                </Tooltip> */}
-              <InputAddon>
+              <InputGroup endElement={
+                <Tooltip content='Use connected wallet'> 
                   <IconButton
-                  aria-label='Connected address'
-                    bg={'whiteAlpha.500'}
+                    aria-label='Connected address'
                     size={'sm'}
-                    backdropFilter={'blur(1px)'}
                     onClick={() => handleManagerChange(address!)}
                 >
                   <LinkIcon />
                 </IconButton>
-              </InputAddon>
+                </Tooltip>
+              }>
+                <Input
+                  onChange={(event) => handleManagerChange(event?.target.value)}
+                  value={formControl.manager.value}
+                  placeholder='GAFS3TLVM...'
+                />
+              </InputGroup>
             </Stack>
             <Fieldset.ErrorText>A valid Stellar / Soroban address is required.</Fieldset.ErrorText>
           </Fieldset.Root>
@@ -217,24 +215,23 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
           >
             <Fieldset.Legend>Emergency manager</Fieldset.Legend>
             <Stack>
-              <Input
-                onChange={(event) => handleEmergencyManagerChange(event?.target.value)}
-                value={formControl.emergencyManager.value}
-                placeholder='GAFS3TLVM...'
-              />
-              {/*      <Tooltip label='Use connected address.'>
-                </Tooltip> */}
-              <InputAddon>
+              <InputGroup endElement={
+                <Tooltip content='Use connected wallet'>
                   <IconButton
-                  aria-label='Connected address'
-                    bg={'whiteAlpha.500'}
+                    aria-label='Connected address'
                     size={'sm'}
-                    backdropFilter={'blur(1px)'}
                     onClick={() => handleEmergencyManagerChange(address!)}
-                >
-                  <LinkIcon />
-                </IconButton>
-              </InputAddon>
+                  >
+                    <LinkIcon />
+                  </IconButton>
+                </Tooltip>
+              }>
+                <Input
+                  onChange={(event) => handleEmergencyManagerChange(event?.target.value)}
+                  value={formControl.emergencyManager.value}
+                  placeholder='GAFS3TLVM...'
+                />
+              </InputGroup>
             </Stack>
             <Fieldset.ErrorText>A valid Stellar / Soroban address is required.</Fieldset.ErrorText>
           </Fieldset.Root>
@@ -246,24 +243,23 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
           >
             <Fieldset.Legend>Fee reciever</Fieldset.Legend>
             <Stack>
-              <Input
-                onChange={(event) => handleFeeReceiverChange(event?.target.value)}
-                value={formControl.feeReceiver.value}
-                placeholder='GAFS3TLVM...'
-              />
-              {/* <Tooltip label='Use connected address.'>
-                </Tooltip> */}
-              <InputAddon>
+              <InputGroup endElement={
+                <Tooltip content='Use connected wallet'>
                   <IconButton
-                  aria-label='Connected address'
-                    bg={'whiteAlpha.500'}
+                    aria-label='Connected address'
                     size={'sm'}
-                    backdropFilter={'blur(1px)'}
                     onClick={() => handleFeeReceiverChange(address!)}
-                >
-                  <LinkIcon />
-                </IconButton>
-              </InputAddon>
+                  >
+                    <LinkIcon />
+                  </IconButton>
+                </Tooltip>
+              }>
+                <Input
+                  onChange={(event) => handleFeeReceiverChange(event?.target.value)}
+                  value={formControl.feeReceiver.value}
+                  placeholder='GAFS3TLVM...'
+                />
+              </InputGroup>
             </Stack>
             <Fieldset.ErrorText>A valid Stellar / Soroban address is required.</Fieldset.ErrorText>
           </Fieldset.Root>

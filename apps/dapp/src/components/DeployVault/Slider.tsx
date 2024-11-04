@@ -1,18 +1,17 @@
 import React, { useEffect } from 'react'
 import {
-  Button,
   Grid,
   GridItem,
   Input,
   IconButton,
-  Stack,
-  InputAddon,
-  Slider
+  HStack,
+  Button
 } from '@chakra-ui/react'
 import { DeleteIcon } from '@chakra-ui/icons'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { setStrategyValue, removeStrategy } from '@/store/lib/features/vaultStore'
-
+import { InputGroup } from '../ui/input-group'
+import { Slider } from '../ui/slider'
 
 
 function ItemSlider({
@@ -25,11 +24,8 @@ function ItemSlider({
   name?: string,
 }) {
   const dispatch = useAppDispatch()
-  const [showTooltip, setShowTooltip] = React.useState(false)
-
   const totalShares = useAppSelector(state => state.newVault.totalValues)
   const [inputValue, setInputValue] = React.useState<number | string>(share)
-
   const setVal = (val: number) => {
     const total = totalShares! - share + val
     if (total <= 100) {
@@ -93,7 +89,8 @@ function ItemSlider({
   }, [share])
 
   return (
-    <Grid templateColumns="repeat(12, 1fr)" alignItems={'center'} my={4}>
+    <>
+      <Grid templateColumns="repeat(12, 1fr)" alignItems={'center'} my={4}>
       <GridItem colSpan={8} display={'flex'} alignItems={'center'}>
         <h3>{name ? name : address}</h3>
         <IconButton
@@ -108,56 +105,43 @@ function ItemSlider({
         </IconButton>
       </GridItem>
       <GridItem colSpan={1} colStart={12} justifySelf={'end'} alignContent={'end'}>
-        <Stack>
-          <Input
-            px={2}
-            type='number'
+          <HStack>
+            <InputGroup endElement={'%'}>
+              <Input
+                px={2}
+                type='number'
+                min={0}
+                width={'82px'}
+                placeholder={share.toString()}
+                onInput={handleValueInput}
+                onBlur={handleBlur}
+                onKeyDown={handleEnter}
+                value={inputValue}
+              />
+            </InputGroup>
+          </HStack>
+        </GridItem>
+        <GridItem colSpan={12} mt={4}>
+          <Slider
             min={0}
-            placeholder={share.toString()}
-            onInput={handleValueInput}
-            onBlur={handleBlur}
-            onKeyDown={handleEnter}
-            value={inputValue}
+            max={100}
+            defaultValue={[0]}
+            maxWidth={'100%'}
+            marks={[0, 25, 50, 75, 100]}
+            value={[inputValue as number]}
+            onValueChange={(val: any) => setVal(val.value[0])}
+          />
+        </GridItem>
+        <GridItem colSpan={1} colStart={12} mt={4} justifySelf={'end'}>
+          <Button
+            onClick={() => { setMax() }}
+            size={'xs'}
           >
-            <InputAddon children={'%'} />
-          </Input>
-        </Stack>
-      </GridItem>
-      <GridItem colSpan={12} mt={4}>
-        <Slider.Root
-          defaultValue={[share]}
-        ></Slider.Root>
-        {/* <Slider
-          aria-label='slider-ex-5'
-          id='slider'
-          min={0}
-          max={100}
-          colorScheme='green'
-          maxWidth={'100%'}
-          onMouseEnter={() => setShowTooltip(true)}
-          onMouseLeave={() => setShowTooltip(false)}
-          >
-          <SliderTrack boxShadow={'sm'}>
-            <SliderFilledTrack boxShadow={'dark-lg'} />
-          </SliderTrack>
-          <Tooltip
-            open={showTooltip}
-            content={`${share}%`}
-          >
-            <SliderThumb />
-          </Tooltip>
-        </Slider> */}
-      </GridItem>
-      <GridItem colSpan={1} colStart={12} mt={4} justifySelf={'end'}>
-        <Button
-          onClick={() => { setMax() }}
-          colorScheme={'green'}
-          size={'lg'}
-        >
-          Set Max
-        </Button>
-      </GridItem>
-    </Grid>
+            Set Max
+          </Button>
+        </GridItem>
+      </Grid>
+    </>
   )
 }
 
