@@ -7,7 +7,7 @@ import {
   HStack,
   Button
 } from '@chakra-ui/react'
-import { DeleteIcon } from '@chakra-ui/icons'
+import { FaRegTrashCan } from "react-icons/fa6";
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { setStrategyValue, removeStrategy } from '@/store/lib/features/vaultStore'
 import { InputGroup } from '../ui/input-group'
@@ -101,7 +101,7 @@ function ItemSlider({
           colorScheme='red'
           size={'xs'}
         >
-          <DeleteIcon />
+            <FaRegTrashCan />
         </IconButton>
       </GridItem>
       <GridItem colSpan={1} colStart={12} justifySelf={'end'} alignContent={'end'}>

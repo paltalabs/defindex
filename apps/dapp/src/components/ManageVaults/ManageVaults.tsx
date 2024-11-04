@@ -1,20 +1,17 @@
 import React from "react"
 import {
   Button,
-  Container,
   Grid,
   GridItem,
   IconButton,
   Input,
   Stack,
 } from "@chakra-ui/react"
-import { SearchIcon } from "@chakra-ui/icons"
 import AllVaults from "./AllVaults"
 import { useState } from "react"
 import { DeployVault } from "../DeployVault/DeployVault"
 import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
 import { pushStrategy, resetStrategies } from "@/store/lib/features/vaultStore"
-import { shortenAddress } from "@/helpers/shortenAddress"
 import { InteractWithVault } from "../InteractWithVault/InteractWithVault"
 import { setSelectedVault, Strategy } from "@/store/lib/features/walletStore"
 import ConnectButton from "../Wallet/ConnectButton"
@@ -22,6 +19,7 @@ import { useSorobanReact } from "@soroban-react/core"
 import { VaultMethod } from "@/hooks/useVault"
 import { InputGroup } from "../ui/input-group"
 import { DialogBackdrop, DialogRoot, DialogTrigger } from "../ui/dialog"
+import { CiSearch } from "react-icons/ci";
 
 export const ManageVaults = () => {
   const { address } = useSorobanReact()
@@ -105,7 +103,7 @@ export const ManageVaults = () => {
                   aria-label="search-Vault"
                   colorScheme="green"
                   variant={'ghost'}>
-                  <SearchIcon />
+                  <CiSearch />
                 </IconButton>}
             >
               <Input

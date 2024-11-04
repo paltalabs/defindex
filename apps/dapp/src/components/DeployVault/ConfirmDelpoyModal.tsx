@@ -3,13 +3,6 @@ import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
 import {
   Box,
   Button,
-  DialogBackdrop,
-  DialogBody,
-  DialogCloseTrigger,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogRoot,
   Link,
   ProgressCircleRoot,
   Text,
@@ -25,7 +18,8 @@ import { useFactoryCallback, FactoryMethod } from '@/hooks/useFactory'
 import { VaultPreview } from "./VaultPreview";
 import { DeploySteps } from "./DeploySteps";
 import { useEffect, useState } from "react";
-import { WarningIcon, CheckCircleIcon } from '@chakra-ui/icons'
+import { PiWarningCircleFill } from "react-icons/pi";
+import { FaCheckCircle } from "react-icons/fa";
 import { NewVaultState } from "@/store/lib/features/vaultStore";
 import { useSorobanReact } from "@soroban-react/core";
 
@@ -33,7 +27,7 @@ import { randomBytes } from "crypto";
 import { StrategyMethod, useStrategyCallback } from "@/hooks/useStrategy";
 import { LuExternalLink } from "react-icons/lu";
 import { ProgressCircleRing } from "../ui/progress-circle";
-import { DialogTitle } from "../ui/dialog";
+import { DialogBody, DialogCloseTrigger, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 
 interface Status {
   isSuccess: boolean,
@@ -285,14 +279,14 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
             )}
             {(activeStep == 3 && status.hasError) && (
               <Box mt={8} textAlign={'center'}>
-                <WarningIcon boxSize={'4em'} color={'red'} />
+            <PiWarningCircleFill />
                 <Text mt={4}>{`${status.message}`}</Text>
               </Box>
             )}
             {(activeStep == 3 && status.isSuccess === true && status.txHash != undefined) && (
               <>
                 <Box mt={8} textAlign={'center'}>
-                  <CheckCircleIcon boxSize={'4em'} color={'green'} />
+              <FaCheckCircle />
                   <Text mt={4}>{`${status.message}`}</Text>
                 </Box>
                 <Box mt={8} textAlign={'center'}>

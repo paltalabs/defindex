@@ -6,7 +6,7 @@ import {
   IconButton,
   NativeSelectField,
 } from '@chakra-ui/react'
-import { AddIcon } from '@chakra-ui/icons'
+import { MdAdd } from 'react-icons/md'
 import {  
   DialogBackdrop,
   DialogBody,
@@ -108,7 +108,7 @@ function AddNewStrategyButton() {
             colorScheme='green'
             onClick={addStrategy}
           >
-            <AddIcon />
+            <MdAdd />
           </IconButton>
         </DialogFooter>
       </DialogContent>

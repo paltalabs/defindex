@@ -3,7 +3,9 @@ import { FactoryMethod, useFactoryCallback } from '@/hooks/useFactory'
 import { VaultMethod, useVaultCallback } from '@/hooks/useVault'
 import { fetchDefaultAddresses, setIsVaultsLoading, setVaults, VaultData } from '@/store/lib/features/walletStore'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { ArrowLeftIcon, SettingsIcon, WarningTwoIcon } from '@chakra-ui/icons'
+import { PiHandDepositLight, PiHandWithdrawLight } from "react-icons/pi";
+import { IoIosWarning } from "react-icons/io";
+
 import {
   Box,
   IconButton,
@@ -19,14 +21,12 @@ import { scValToNative } from '@stellar/stellar-sdk'
 import { useEffect, useState } from 'react'
 import { Tooltip } from '../ui/tooltip'
 import { StatRoot, StatUpTrend } from '../ui/stat'
+import { LuSettings2 } from 'react-icons/lu'
 
 const SkeletonRow = () => {
   const { address } = useSorobanReact()
   return (
     <Table.Row>
-      <Table.Cell>
-        <Skeleton height='20px' />
-      </Table.Cell>
       <Table.Cell>
         <Skeleton height='20px' />
       </Table.Cell>
@@ -188,7 +188,7 @@ export const AllVaults = ({
                           size='sm'
                           onClick={() => handleOpenDeposit(VaultMethod.DEPOSIT, vault)}
                         >
-                          <ArrowLeftIcon css={{ transform: 'rotate(90deg)' }} />
+                          <PiHandDepositLight />
                         </IconButton>
                       </Tooltip>
                       <Tooltip content={'Withdraw'}>
@@ -200,7 +200,7 @@ export const AllVaults = ({
 
                           onClick={() => handleOpenDeposit(VaultMethod.WITHDRAW, vault)}
                         >
-                          <ArrowLeftIcon css={{ transform: 'rotate(-90deg)' }} />
+                          <PiHandWithdrawLight />
                         </IconButton>
                       </Tooltip>
                       {(address == vault.manager) &&
@@ -212,7 +212,7 @@ export const AllVaults = ({
                             size='sm'
                             onClick={() => handleOpenDeployVault('edit_vault', true, vault)}
                           >
-                            <SettingsIcon />
+                            <LuSettings2 />
                           </IconButton>
                         </Tooltip>}
                       {(address == vault.emergencyManager || address == vault.manager) &&
@@ -223,7 +223,7 @@ export const AllVaults = ({
                             size='sm'
                             onClick={() => handleOpenDeposit(VaultMethod.EMERGENCY_WITHDRAW, vault)}
                           >
-                            <WarningTwoIcon />
+                            <IoIosWarning />
                           </IconButton>
                         </Tooltip>}
                     </Table.Cell>
@@ -249,7 +249,7 @@ export const AllVaults = ({
                       size='sm'
                       onClick={() => handleOpenDeposit(VaultMethod.DEPOSIT, vault)}
                     >
-                      <ArrowLeftIcon __css={{ transform: 'rotate(90deg)' }} />
+                      <PiHandDepositLight />
                     </IconButton>
                   </Tooltip>
                   <Tooltip content={'Withdraw'}>
@@ -259,7 +259,7 @@ export const AllVaults = ({
                       size='sm'
                       onClick={() => handleOpenDeposit(VaultMethod.WITHDRAW, vault)}
                     >
-                      <ArrowLeftIcon __css={{ transform: 'rotate(-90deg)' }} />
+                      <PiHandWithdrawLight />
                     </IconButton>
                   </Tooltip>
                   {(address == vault.manager) &&
@@ -270,7 +270,7 @@ export const AllVaults = ({
                         size='sm'
                         onClick={() => handleOpenDeployVault('edit_vault', true, vault)}
                       >
-                        <SettingsIcon />
+                        <LuSettings2 />
                       </IconButton>
                     </Tooltip>}
                   {(address == vault.emergencyManager || address == vault.manager) &&
@@ -281,7 +281,7 @@ export const AllVaults = ({
                         size='sm'
                         onClick={() => handleOpenDeposit(VaultMethod.EMERGENCY_WITHDRAW, vault)}
                       >
-                        <WarningTwoIcon color={'white'} />
+                        <IoIosWarning />
                       </IconButton>
                     </Tooltip>}
                 </Stack>

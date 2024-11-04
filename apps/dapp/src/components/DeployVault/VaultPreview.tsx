@@ -11,12 +11,12 @@ import {
   Stack,
 } from '@chakra-ui/react'
 import { shortenAddress } from '@/helpers/shortenAddress'
-import { PieChart } from '@mui/x-charts'
+
 import { ChartData } from './ConfirmDelpoyModal'
 import { setEmergencyManager, setFeeReceiver, setManager } from '@/store/lib/features/vaultStore'
 import { useAppDispatch } from '@/store/lib/storeHooks'
 import { StrKey } from '@stellar/stellar-sdk'
-import { LinkIcon } from '@chakra-ui/icons'
+import { FaRegPaste } from "react-icons/fa6";
 import { useSorobanReact } from '@soroban-react/core'
 import { InputGroup } from '../ui/input-group'
 import { Tooltip } from '../ui/tooltip'
@@ -138,7 +138,7 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
   return (
     <>
       <Box display='flex' my={4}>
-        <PieChart
+        {/* <PieChart
           series={[
             {
               data: data,
@@ -146,7 +146,7 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
           ]}
           width={500}
           height={200}
-        />
+        /> */}
       </Box>
       <Text fontSize='lg' fontWeight='bold' mb={2}>
         Strategies
@@ -194,7 +194,7 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
                     size={'sm'}
                     onClick={() => handleManagerChange(address!)}
                 >
-                  <LinkIcon />
+                    <FaRegPaste />
                 </IconButton>
                 </Tooltip>
               }>
@@ -222,7 +222,7 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
                     size={'sm'}
                     onClick={() => handleEmergencyManagerChange(address!)}
                   >
-                    <LinkIcon />
+                    <FaRegPaste />
                   </IconButton>
                 </Tooltip>
               }>
@@ -250,7 +250,7 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
                     size={'sm'}
                     onClick={() => handleFeeReceiverChange(address!)}
                   >
-                    <LinkIcon />
+                    <FaRegPaste />
                   </IconButton>
                 </Tooltip>
               }>
