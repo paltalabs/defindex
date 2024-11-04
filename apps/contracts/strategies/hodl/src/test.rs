@@ -1,5 +1,4 @@
 #![cfg(test)]
-extern crate std;
 use crate::{HodlStrategy, HodlStrategyClient, StrategyError};
 
 use soroban_sdk::token::{TokenClient, StellarAssetClient};
@@ -9,7 +8,6 @@ use soroban_sdk::{
     Address, 
     testutils::Address as _,
 };
-use std::vec;
 
 // Base Strategy Contract
 fn create_hodl_strategy<'a>(e: &Env) -> HodlStrategyClient<'a> {
@@ -50,13 +48,13 @@ impl<'a> HodlStrategyTest<'a> {
         }
     }
     
-    pub(crate) fn generate_random_users(e: &Env, users_count: u32) -> vec::Vec<Address> {
-        let mut users = vec![];
-        for _c in 0..users_count {
-            users.push(Address::generate(e));
-        }
-        users
-    }
+    // pub(crate) fn generate_random_users(e: &Env, users_count: u32) -> vec::Vec<Address> {
+    //     let mut users = vec![];
+    //     for _c in 0..users_count {
+    //         users.push(Address::generate(e));
+    //     }
+    //     users
+    // }
 }
 
 mod initialize;

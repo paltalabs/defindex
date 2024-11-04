@@ -1,18 +1,31 @@
 #![no_std]
 use soroban_sdk::{
-    contract, contractimpl, Address, Env, String, Val, Vec};
-use soroban_sdk::token::Client as TokenClient;
+    contract, 
+    contractimpl, 
+    Address, 
+    Env, 
+    String,
+    token::Client as TokenClient, 
+    Val, 
+    Vec};
 
 mod balance;
 mod storage;
 
-use balance::{read_balance, receive_balance, spend_balance};
-
+use balance::{
+    read_balance, 
+    receive_balance, 
+    spend_balance};
 
 use storage::{
-    extend_instance_ttl, get_underlying_asset, is_initialized, set_initialized, set_underlying_asset
+    extend_instance_ttl, 
+    get_underlying_asset, 
+    is_initialized, 
+    set_initialized, 
+    set_underlying_asset
 };
-use defindex_strategy_core::{DeFindexStrategyTrait, StrategyError, event};
+
+pub use defindex_strategy_core::{DeFindexStrategyTrait, StrategyError, event};
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
     if amount < 0 {
@@ -100,7 +113,7 @@ impl DeFindexStrategyTrait for HodlStrategy {
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
 
-        spend_balance(&e, from.clone(), amount);
+        spend_balance(&e, from.clone(), amount)?;
         
         let contract_address = e.current_contract_address();
         let underlying_asset = get_underlying_asset(&e);

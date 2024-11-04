@@ -11,6 +11,7 @@ pub enum StrategyError {
     // Validation Errors
     NegativeNotAllowed = 410,
     InvalidArgument = 411,
+    InsufficientBalance = 412,
 
     // Protocol Errors
     ProtocolAddressNotFound = 420,
