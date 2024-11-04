@@ -1,6 +1,6 @@
 use soroban_sdk::{Address, Env, Map, Vec};
 
-use crate::{models::Investment, strategies::{get_strategy_asset, get_strategy_client, invest_in_strategy}, utils::check_nonnegative_amount, ContractError};
+use crate::{models::Investment, strategies::{get_strategy_asset, invest_in_strategy}, utils::check_nonnegative_amount, ContractError};
 
 pub fn prepare_investment(e: &Env, investments: Vec<Investment>, idle_funds: Map<Address, i128>) -> Result<Map<Address, i128>, ContractError> {
   let mut total_investment_per_asset: Map<Address, i128> = Map::new(e);

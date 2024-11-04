@@ -1,5 +1,5 @@
 use soroban_sdk::{
-    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke}, vec as sorobanvec, Address, IntoVal, String, Symbol, Vec
+    testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke}, vec as sorobanvec, IntoVal, String, Symbol, Vec
 };
 
 use crate::test::{create_strategy_params, defindex_vault::AssetAllocation, DeFindexVaultTest};
