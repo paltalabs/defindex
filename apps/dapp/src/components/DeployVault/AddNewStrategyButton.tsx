@@ -47,11 +47,12 @@ function AddNewStrategyButton() {
     setNewAddress('')
     setNewName('')
     setSelectValue([''])
+    setOpen(false)
   }
 
   const handleInputSelect = async (e: any) => {
     const value = e.target.value
-    setSelectValue(value)
+    await setSelectValue(value)
     const isDefaultStrategy = await defaultStrategies.find(strategy => strategy.address === value)
     if (!!isDefaultStrategy) {
       setNewStrategy(isDefaultStrategy)
@@ -74,44 +75,44 @@ function AddNewStrategyButton() {
     resetForm()
   }
   return (
-    <>
-      <DialogRoot open={open} onOpenChange={(e) => { setOpen(e.open) }} placement={'center'}>
-        <DialogBackdrop backdropFilter='blur(1px)' />
-        <DialogTrigger asChild>
-          <Button
-            size="md"
-            textAlign={'end'}
-            disabled={defaultStrategies.length === 0}>
-            Add new strategy
+    <DialogRoot open={open} onOpenChange={(e) => { setOpen(e.open) }} placement={'center'}>
+      <DialogBackdrop backdropFilter='blur(1px)' />
+      <DialogTrigger asChild>
+        <Button
+          size="md"
+          textAlign={'end'}
+          disabled={defaultStrategies.length === 0}>
+          Add new strategy
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogBody>
+          <NativeSelectRoot>
+            <NativeSelectField
+              placeholder='Select a strategy'
+              onChange={(e) => { handleInputSelect(e) }}>
+              {defaultStrategies.map((strategy) => {
+                return (
+                  <option key={strategy.address} value={strategy.address}>{strategy.name}</option>
+                )
+              })}
+            </NativeSelectField>
+          </NativeSelectRoot>
+        </DialogBody>
+        <DialogFooter>
+          <Button variant='ghost' mr={3} onClick={() => setOpen(false)}>
+            Close
           </Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogBody>
-            <NativeSelectRoot>
-              <NativeSelectField onChange={(e) => { handleInputSelect(e) }}>
-                {defaultStrategies.map((strategy) => {
-                  return (
-                    <option key={strategy.address} value={strategy.address}>{strategy.name}</option>
-                  )
-                })}
-              </NativeSelectField>
-            </NativeSelectRoot>
-          </DialogBody>
-          <DialogFooter>
-            <Button variant='ghost' mr={3} onClick={() => setOpen(false)}>
-              Close
-            </Button>
-            <IconButton
-              aria-label='add_strategy'
-              colorScheme='green'
-              onClick={addStrategy}
-            >
-              <AddIcon />
-            </IconButton>
-          </DialogFooter>
-        </DialogContent>
-      </DialogRoot>
-    </>
+          <IconButton
+            aria-label='add_strategy'
+            colorScheme='green'
+            onClick={addStrategy}
+          >
+            <AddIcon />
+          </IconButton>
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
   )
 }
 
