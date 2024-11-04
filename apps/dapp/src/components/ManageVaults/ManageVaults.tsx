@@ -12,11 +12,11 @@ import { SearchIcon } from "@chakra-ui/icons"
 import AllVaults from "./AllVaults"
 import { useState } from "react"
 import { DeployVault } from "../DeployVault/DeployVault"
-import { useAppDispatch } from "@/store/lib/storeHooks"
+import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
 import { pushStrategy, resetStrategies } from "@/store/lib/features/vaultStore"
 import { shortenAddress } from "@/helpers/shortenAddress"
 import { InteractWithVault } from "../InteractWithVault/InteractWithVault"
-import { setSelectedVault } from "@/store/lib/features/walletStore"
+import { setSelectedVault, Strategy } from "@/store/lib/features/walletStore"
 import ConnectButton from "../Wallet/ConnectButton"
 import { useSorobanReact } from "@soroban-react/core"
 import { VaultMethod } from "@/hooks/useVault"
@@ -41,6 +41,7 @@ export const ManageVaults = () => {
     }
   })
   const dispatch = useAppDispatch()
+  const vaults = useAppSelector(state => state.wallet.vaults.createdVaults)
   const handleOpenDeployVault = async (method: string, value: boolean, args?: any) => {
     switch (method) {
       case 'create_vault':
@@ -49,13 +50,11 @@ export const ManageVaults = () => {
         break
       case 'edit_vault':
         await dispatch(resetStrategies())
-        for (const item of args.strategies) {
-          const newStrategy = {
-            address: item.address,
-            share: item.share,
-            name: item.name ? item.name : shortenAddress(item.address),
-            index: item.index
-          }
+        const selectedVault = vaults.find(vault => vault.address === args.address)
+        if (!selectedVault) return;
+        for (const item of selectedVault.strategies) {
+          console.log(item)
+          const newStrategy: Strategy = { ...item, share: selectedVault.strategies.length > 1 ? 100 / selectedVault.strategies.length : 100 };
           await dispatch(pushStrategy(newStrategy))
         }
         setModalStatus({ ...modalStatus, deployVault: { isOpen: value } })
@@ -125,25 +124,21 @@ export const ManageVaults = () => {
         >
           <ConnectButton />
 
-          <DialogRoot
+          {!!address && <DialogRoot
             open={modalStatus.deployVault.isOpen}
             onOpenChange={(e) => { handleOpenDeployVault('create_vault', e.open) }}
             size={'lg'}
             placement={'center'}>
-              <DialogBackdrop backdropFilter='blur(1px)' />
-              <DialogTrigger asChild>
-                <Container>
-                  <Button
-                    rounded={18}
-                    aria-label="add-Vault"
-                    colorScheme="green"
-                  >
-                    Add Vault
-                  </Button>
-                </Container>
-              </DialogTrigger>
-              <DeployVault />
-          </DialogRoot>
+            <DialogBackdrop backdropFilter='blur(1px)' />
+            <DialogTrigger asChild>
+              <Button
+                rounded={18}
+              >
+                Add Vault
+              </Button>
+            </DialogTrigger>
+            <DeployVault />
+          </DialogRoot>}
         </GridItem>
         <GridItem colSpan={12} colStart={1} colEnd={13} zIndex={'base'}>
           <DialogRoot
