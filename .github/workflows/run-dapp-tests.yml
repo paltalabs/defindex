@@ -1,8 +1,7 @@
 name: Run dapp tests
 
 on:
-  #pull_request:
-  push:
+  pull_request:
   workflow_dispatch:
 permissions:
   contents: write
