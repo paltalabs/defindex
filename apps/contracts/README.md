@@ -26,9 +26,29 @@ to deploy the factory you can use
 yarn deploy-factory <network>
 ```
 
+Make sure you have the hodl strategy deployed, if not, you can run:
+    
+```bash
+yarn deploy-hodl <network>
+```
+
 to test the factory to deploy a DeFindex Vault
 
 ```bash
 yarn test <network>
 ```
+If you only want to test a specific vault you should modify the contract address in the test file `apps/contracts/src/tests/testOnlyVault.ts` and run the following command:
 
+```bash
+yarn test-vault <network>
+```
+
+### Generate Docs
+```bash 
+cargo doc --package defindex-strategy-core --package defindex-factory --package defindex-vault --no-deps
+```
+
+to publish them, run this to copy all files into /rust_docs
+```bash
+cp -rf /workspace/apps/contracts/target/doc/* /workspace/apps/rust_docs/
+```

@@ -35,6 +35,7 @@ export async function deployContracts(addressBook: AddressBook) {
   const factoryInitParams: xdr.ScVal[] = [
     new Address(loadedConfig.admin.publicKey()).toScVal(),
     new Address(defindexReceiver.publicKey()).toScVal(),
+    nativeToScVal(100, {type: "u32"}),
     nativeToScVal(Buffer.from(addressBook.getWasmHash("defindex_vault"), "hex")),
   ];
 

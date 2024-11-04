@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["defindex_factory","defindex_strategy_core","defindex_vault"];

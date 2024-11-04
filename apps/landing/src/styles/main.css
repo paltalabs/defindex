@@ -1,0 +1,87 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+* {
+  @apply box-border;
+}
+
+html {
+  @apply scroll-smooth;
+}
+
+body {
+  @apply p-0 m-0 font-inter-tight;
+}
+
+@layer components {
+  input,
+  select,
+  textarea,
+  button {
+    @apply focus:outline-0 bg-transparent;
+  }
+
+
+  .text-linear {
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  [role="button"],
+  button {
+    @apply select-none;
+  }
+
+  .outlined-button {
+    @apply hover:bg-lime-200/10 focus:ring-4 ring-lime-200/40
+  }
+  .contained-button {
+    @apply focus:ring-4 ring-lime-200/40
+  }
+}
+
+/**
+  * React plugin customization
+  *
+*/
+
+.wallets-tabs .react-tabs__tab--selected{
+  @apply text-white bg-cyan-950 hover:bg-cyan-950
+}
+
+
+/* React slick customization */
+.slick-track {
+  display: flex !important;
+  align-items: center;
+}
+.slick-slide .item-wrapper {
+  @apply duration-100
+}
+.slick-slide,
+.slick-slide  * {
+  outline-width: 0 !important;
+}
+.slick-slide.slick-active.slick-center.slick-current .item-wrapper {
+  @apply h-[300px] md:h-[400px] xl:h-[522px]
+}
+
+/* React scroll */
+.nav-activated span {
+  @apply font-bold text-lime-200
+}
+
+
+/* 
+ Mobile Responsiveness
+*/
+@media screen and (max-width: 1040px) {
+}
+@media screen and (max-width: 600px) {
+}
+
+
+
+

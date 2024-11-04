@@ -2,13 +2,17 @@
   {
     "network": "testnet",
     "factory": "CCU3FB55SFRFMQORBBERXW2XVFFXTHW3YUIB5UZ267FDCIFXJPQ2WQBF",
-    "indexes": [
+    "vaults": [
       {
-        "address": "CDTSI3ORR5TDTKV7B3JQM5YZ4UAM24C2ZG2OOQOXPFJ5XS7JBOKUNJZC",
-        "balance": 100651,
-        "name": "Soroswap USDC/XLM",
-        "shares": [
+        "address": "CD5NL55J4JYMALHCPIF3YADCWDRJNLM3XOFMZ6IOH5K4AOGINB4VB3BP",
+        "totalValues": 100651,
+        "name": "Hodl Vault",
+        "emergencyManager": "",
+        "manager": "",
+        "feeReceiver": "",
+        "strategies": [
           {
+            "name": "Hodl",
             "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
             "index": 0,
             "share": 81
@@ -16,26 +20,98 @@
         ]
       },
       {
-        "address": "CCA5VJAAVA6KQ5JV453CMQMGGE6KNPI7PNZ7SGPSC3RDTRTQUJ4CALDZ",
-        "balance": 2500,
-        "name": "Blend USDC - Soroswap USDC/NGNC",
-        "shares": [
+        "address": "CASEPWQK2VX7MGW2C3GHAO46TIP2EDVAOS6AQPTAIJOJSAOAXHRRDTK5",
+        "totalValues": 2500,
+        "name": "Matias Neo Vault",
+        "emergencyManager": "",
+        "manager": "",
+        "feeReceiver": "",
+        "strategies": [
           {
-            "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
+            "name": "Hodl",
+            "address": "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W",
             "index": 0,
-            "share": 76
+            "share": 100
           }
         ]
       },
       {
-        "address": "CBEGAWUQMBJGHOWLVOGUMQO3HTIN66BW2NLDF6AZI56GKYZMR475E24Q",
-        "balance": 84732,
-        "name": "XYCLoans - Blend",
-        "shares": [
+        "address": "CABOWBZI7BHUJKF2EF5VLX7D22GWUFEZFQ24GDEMLPKQEDT7I2D3LC64",
+        "totalValues": 84732,
+        "name": "Francisco Vault",
+        "emergencyManager": "",
+        "manager": "",
+        "feeReceiver": "",
+        "strategies": [
           {
-            "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
+            "name": "Hodl",
+            "address": "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W",
             "index": 0,
-            "share": 83
+            "share": 100
+          }
+        ]
+      },
+      {
+        "address": "CC6OSKOWWKFTSA36KTCHEDSQJVN27YBR4JVJL7TBOILQGKF2WXJXHDSU",
+        "totalValues": 84732,
+        "name": "DevMonster Vault",
+        "emergencyManager": "",
+        "manager": "",
+        "feeReceiver": "",
+        "strategies": [
+          {
+            "name": "Hodl",
+            "address": "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W",
+            "index": 0,
+            "share": 100
+          }
+        ]
+      },
+      {
+        "address": "CCYNBPGWJH6W5AIUWQP3I2OF3YJKU3OPVQWXSORT25UPOJD6WH37BXFN",
+        "totalValues": 84732,
+        "name": "Joaquin Vault",
+        "emergencyManager": "",
+        "manager": "",
+        "feeReceiver": "",
+        "strategies": [
+          {
+            "name": "Hodl",
+            "address": "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W",
+            "index": 0,
+            "share": 100
+          }
+        ]
+      },
+      {
+        "address": "CCCSKQI6GKFZXUF7H53MSDZD52MRCOZDTUB3KR4CZM6X6JOXI7D7BR4J",
+        "totalValues": 84732,
+        "name": "Jenny Vault",
+        "emergencyManager": "",
+        "manager": "",
+        "feeReceiver": "",
+        "strategies": [
+          {
+            "name": "Hodl",
+            "address": "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W",
+            "index": 0,
+            "share": 100
+          }
+        ]
+      },
+      {
+        "address": "CC5ONMEC4CIPE2IKM5DAKX7F3EH6MKLWICVSQD5GIUUTMD6ZPBI7EMKM",
+        "totalValues": 84732,
+        "name": "Esteban Vault",
+        "emergencyManager": "",
+        "manager": "",
+        "feeReceiver": "",
+        "strategies": [
+          {
+            "name": "Hodl",
+            "address": "CDIBYFBYBV3D3DQNSUDMVQNWYCQPYKSOLKSEOF3WEQOIXB56K54Q4G6W",
+            "index": 0,
+            "share": 100
           }
         ]
       }
@@ -44,36 +120,6 @@
   {
     "network": "public",
     "factory": "",
-    "indexes": [
-      {
-        "address": "CDTSI3ORR5TDTKV7B3JQM5YZ4UAM24C2ZG2OOQOXPFJ5XS7JBOKUNJZC",
-        "balance": 100651,
-        "name": "Soroswap USDC/XLM",
-        "shares": [
-          {
-            "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
-            "index": 0,
-            "share": 100
-          }
-        ]
-      },
-      {
-        "address": "CBEGAWUQMBJGHOWLVOGUMQO3HTIN66BW2NLDF6AZI56GKYZMR475E24Q",
-        "balance": 84732,
-        "name": "XYCLoans - Blend",
-        "shares": [
-          {
-            "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
-            "index": 0,
-            "share": 83
-          },
-          {
-            "address": "CDYZTM26XJ7FHPFIQPS2CDAPXHIWZKW36QFPXKAZQ7TSKXS6TUBLUXEM",
-            "index": 0,
-            "share": 17
-          }
-        ]
-      }
-    ]
+    "vaults": []
   }
 ]

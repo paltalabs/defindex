@@ -1,7 +1,7 @@
 [workspace]
 members = ["strategies/*", "defindex", "factory"]
 exclude = [
-    "strategies/external_wasms"
+    "strategies/external_wasms",
 ]
 resolver = "2"
 
@@ -12,7 +12,7 @@ license = "GPL-3.0"
 repository = "https://github.com/paltalabs/defindex"
 
 [workspace.dependencies]
-soroban-sdk = "21.0.1-preview.3"
+soroban-sdk = "21.7.6"
 soroban-token-sdk = { version = "21.0.1-preview.3" }
 # soroswap-library = "0.3.0"
 defindex-strategy-core={ path="./strategies/core", package="defindex-strategy-core" }

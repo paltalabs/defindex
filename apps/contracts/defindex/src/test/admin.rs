@@ -1,10 +1,8 @@
 use soroban_sdk::{
-    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
-    vec as sorobanvec, Address, IntoVal, Symbol, Vec,
+    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke}, vec as sorobanvec, Address, IntoVal, String, Symbol, Vec
 };
 
-use crate::models::Asset;
-use crate::test::{create_strategy_params, DeFindexVaultTest};
+use crate::test::{create_strategy_params, defindex_vault::AssetAllocation, DeFindexVaultTest};
 
 extern crate alloc;
 use alloc::vec;
@@ -14,26 +12,28 @@ fn test_set_new_fee_receiver_by_fee_receiver() {
     let test = DeFindexVaultTest::setup();
     let strategy_params = create_strategy_params(&test);
 
-    let assets: Vec<Asset> = sorobanvec![
+    let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
-        Asset {
+        AssetAllocation {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
-        Asset {
+        AssetAllocation {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
 
     test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
-        &test.manager,
+        &2000u32,
         &test.defindex_receiver,
-        &assets
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
     );
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
@@ -75,26 +75,28 @@ fn test_set_new_fee_receiver_by_manager() {
     // let tokens: Vec<Address> = sorobanvec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
     // let ratios: Vec<u32> = sorobanvec![&test.env, 1, 1];
 
-    let assets: Vec<Asset> = sorobanvec![
+    let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
-        Asset {
+        AssetAllocation {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
-        Asset {
+        AssetAllocation {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
 
     test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
-        &test.manager,
+        &2000u32,
         &test.defindex_receiver,
-        &assets
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
     );
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
@@ -137,26 +139,28 @@ fn test_set_new_fee_receiver_by_emergency_manager() {
     // let tokens: Vec<Address> = sorobanvec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
     // let ratios: Vec<u32> = sorobanvec![&test.env, 1, 1];
 
-    let assets: Vec<Asset> = sorobanvec![
+    let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
-        Asset {
+        AssetAllocation {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
-        Asset {
+        AssetAllocation {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
 
     test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
-        &test.manager,
+        &2000u32,
         &test.defindex_receiver,
-        &assets
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
     );
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
@@ -174,26 +178,28 @@ fn test_set_new_fee_receiver_invalid_sender() {
     let test = DeFindexVaultTest::setup();
     let strategy_params = create_strategy_params(&test);
 
-    let assets: Vec<Asset> = sorobanvec![
+    let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
-        Asset {
+        AssetAllocation {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
-        Asset {
+        AssetAllocation {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
 
     test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
-        &test.manager,
+        &2000u32,
         &test.defindex_receiver,
-        &assets
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
     );
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
@@ -209,26 +215,28 @@ fn test_set_new_fee_receiver_invalid_sender() {
 fn test_set_new_manager_by_manager() {
     let test = DeFindexVaultTest::setup();
     let strategy_params = create_strategy_params(&test);
-    let assets: Vec<Asset> = sorobanvec![
+    let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
-        Asset {
+        AssetAllocation {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
-        Asset {
+        AssetAllocation {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
 
     test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
         &test.emergency_manager,
         &test.fee_receiver,
-        &test.manager,
+        &2000u32,
         &test.defindex_receiver,
-        &assets
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
     );
 
     let manager_role = test.defindex_contract.get_manager();

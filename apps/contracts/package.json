@@ -7,7 +7,8 @@
     "deploy-factory": "tsc && node dist/deploy_factory.js",
     "deploy-hodl": "tsc && node dist/deploy_hodl.js",
     "publish-addresses": "tsc && node dist/publish_addresses.js",
-    "test": "tsc && node dist/test.js"
+    "test": "tsc && node dist/test.js",
+    "test-vault": "tsc && node dist/tests/testOnlyVault.js"
   },
   "type": "module",
   "devDependencies": {

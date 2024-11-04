@@ -2,65 +2,69 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '../store'
 import { ChainMetadata } from '@soroban-react/types'
-import indexes from '@/constants/constants.json'
+import vaults from '@/constants/constants.json'
 import { Networks } from '@stellar/stellar-sdk'
+import { VaultMethod } from '@/hooks/useVault'
 // Define a type for the slice state
-export interface Index {
+export interface Strategy {
   address: string;
   index: string;
   share: number;
-}
-export interface IndexData {
-  address: string;
-  balance: number;
   name: string;
-  shares: Index[]
+}
+export interface VaultData {
+  address: string;
+  totalValues: number;
+  emergencyManager?: string;
+  feeReceiver?: string;
+  manager?: string;
+  name: string;
+  strategies: Strategy[];
 }
 
-interface SelectedIndex extends IndexData {
-  method: string;
+interface SelectedVault extends VaultData {
+  method: VaultMethod;
 }
 export interface WalletState {
   address: string;
   selectedChain: ChainMetadata;
-  indexes: {
+  vaults: {
     isLoading: boolean;
-    createdIndexes: IndexData[];
+    createdVaults: VaultData[];
     hasError: boolean;
-    selectedIndex: SelectedIndex | undefined;
+    selectedVault: SelectedVault | undefined;
   }
 }
 
 
-const getDefaultIndexes = async (network: string) => {
-  const filteredIndexes = indexes.filter(index => {
+const getDefaultVaults = async (network: string) => {
+  const filteredVaults = vaults.filter(vault => {
     switch (network) {
       case Networks.TESTNET:
         console.log('fetching testnet indexes')
-        return index.network === 'testnet'
+        return vault.network === 'testnet'
       case Networks.PUBLIC:
         console.log('fetching public indexes')
-        return index.network === 'public'
+        return vault.network === 'public'
       default:
         console.log('fetching testnet indexes')
-        return index.network === 'testnet'
+        return vault.network === 'testnet'
     }
   })
-  if (filteredIndexes.length === 0) {
-    return [indexes[0]?.indexes]
+  if (filteredVaults.length === 0) {
+    return [vaults[0]?.vaults]
   }
-  if (!filteredIndexes[0]?.indexes) return
+  if (!filteredVaults[0]?.vaults) return
 
   await new Promise(resolve => setTimeout(resolve, 1500))
-  return filteredIndexes[0]?.indexes
+  return filteredVaults[0]?.vaults
 }
 
 export const fetchDefaultAddresses = createAsyncThunk(
-  'wallet/fetchDefaultIndexes',
+  'wallet/fetchDefaultVaults',
   async (network: string) => {
-    console.log('fetching default indexes from', network)
-    const defaultIndexes = await getDefaultIndexes(network)
-    const defaultAdresses = defaultIndexes?.map((index: any) => {
+    const defaultVaults = await getDefaultVaults(network)
+    const defaultAdresses = defaultVaults?.map((index: any) => {
       return index
     })
     return defaultAdresses
@@ -75,11 +79,11 @@ const initialState: WalletState = {
     network: '',
     networkUrl: '',
   },
-  indexes: {
+  vaults: {
     isLoading: true,
-    createdIndexes: [],
+    createdVaults: [],
     hasError: false,
-    selectedIndex: undefined
+    selectedVault: undefined
   }
 }
 
@@ -103,32 +107,43 @@ export const walletSlice = createSlice({
         networkUrl: '',
       }
     },
-    pushIndex: (state, action: PayloadAction<IndexData>) => {
-      state.indexes.createdIndexes.push(action.payload)
+    pushVault: (state, action: PayloadAction<VaultData>) => {
+      state.vaults.createdVaults.push(action.payload)
     },
-    setIsIndexesLoading: (state, action: PayloadAction<boolean>) => {
-      state.indexes.isLoading = action.payload
+    setIsVaultsLoading: (state, action: PayloadAction<boolean>) => {
+      state.vaults.isLoading = action.payload
     },
-    setSelectedIndex: (state, action: PayloadAction<SelectedIndex>) => {
-      state.indexes.selectedIndex = action.payload
-    }
+    setSelectedVault: (state, action: PayloadAction<SelectedVault>) => {
+      state.vaults.selectedVault = action.payload
+    },
+    setVaults: (state, action: PayloadAction<VaultData[]>) => {
+      state.vaults.createdVaults = action.payload
+    },
   },
   extraReducers(builder) {
     builder.addCase(fetchDefaultAddresses.pending, (state) => {
-      state.indexes.isLoading = true
+      state.vaults.isLoading = true
     })
     builder.addCase(fetchDefaultAddresses.fulfilled, (state, action) => {
-      state.indexes.isLoading = false
-      state.indexes.createdIndexes = action.payload!
+      state.vaults.isLoading = false
+      state.vaults.createdVaults = action.payload!
     })
     builder.addCase(fetchDefaultAddresses.rejected, (state) => {
-      state.indexes.isLoading = false
-      state.indexes.hasError = true
+      state.vaults.isLoading = false
+      state.vaults.hasError = true
     })
   },
 })
 
-export const { setAddress, setChain, resetWallet, pushIndex, setIsIndexesLoading, setSelectedIndex } = walletSlice.actions
+export const { 
+  setAddress, 
+  setChain, 
+  resetWallet, 
+  pushVault, 
+  setIsVaultsLoading, 
+  setSelectedVault, 
+  setVaults,
+} = walletSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectAddress = (state: RootState) => state.wallet.address

@@ -7,6 +7,7 @@ import { fetchFactoryAddress } from "@/utils/factory";
 
 export enum FactoryMethod {
   CREATE_DEFINDEX_VAULT = "create_defindex_vault",
+  DEPLOYED_DEFINDEXES = "deployed_defindexes",
 }
 
 const isObject = (val: unknown) => typeof val === 'object' && val !== null && !Array.isArray(val);
@@ -19,7 +20,7 @@ export const useFactory = () => {
   useEffect(() => {
     if (!sorobanContext) return;
 
-    if (activeChain?.id !== 'mainnet' && activeChain?.id !== 'testnet') {
+    if (activeChain?.name?.toLowerCase() !== 'public' && activeChain?.name?.toLowerCase() !== 'testnet') {
       throw new Error(`Invalid network when fetching factory address: ${activeChain?.id}. It should be mainnet or testnet`);
     }
 
@@ -42,8 +43,7 @@ export function useFactoryCallback() {
 
   return useCallback(
     async (method: FactoryMethod, args?: StellarSdk.xdr.ScVal[], signAndSend?: boolean) => {
-      console.log("Factory Callback called")
-      try {
+      if(factoryAddress) try {
         const result = (await contractInvoke({
           contractAddress: factoryAddress as string,
           method: method,

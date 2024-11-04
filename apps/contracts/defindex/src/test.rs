@@ -1,7 +1,5 @@
 #![cfg(test)]
 extern crate std;
-use crate::models::Strategy;
-use crate::{DeFindexVault, DeFindexVaultClient};
 use soroban_sdk::token::{
     StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient,
 };
@@ -23,9 +21,34 @@ fn create_hodl_strategy<'a>(e: & Env, asset: & Address) -> HodlStrategyClient<'a
 }
 
 // DeFindex Vault Contract
-fn create_defindex_vault<'a>(e: &Env) -> DeFindexVaultClient<'a> {
-    DeFindexVaultClient::new(e, &e.register_contract(None, DeFindexVault {}))
+pub mod defindex_vault {
+    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/defindex_vault.optimized.wasm");
+    pub type DeFindexVaultClient<'a> = Client<'a>;
 }
+use defindex_vault::{DeFindexVaultClient, Strategy};
+
+fn create_defindex_vault<'a>(
+    e: & Env
+) -> DeFindexVaultClient<'a> {
+    let address = &e.register_contract_wasm(None, defindex_vault::WASM);
+    let client = DeFindexVaultClient::new(e, address);
+    client
+}
+
+// DeFindex Factory Contract
+// pub mod defindex_factory {
+//     soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/defindex_factory.optimized.wasm");
+//     pub type DeFindexFactoryClient<'a> = Client<'a>;
+// }
+// use defindex_factory::DeFindexFactoryClient;
+
+// fn create_defindex_factory<'a>(
+//     e: & Env
+// ) -> DeFindexFactoryClient<'a> {
+//     let address = &e.register_contract_wasm(None, defindex_factory::WASM);
+//     let client = DeFindexFactoryClient::new(e, address);
+//     client
+// }
 
 // Create Test Token
 pub(crate) fn create_token_contract<'a>(e: &Env, admin: &Address) -> SorobanTokenClient<'a> {
@@ -45,13 +68,14 @@ pub(crate) fn create_strategy_params(test: &DeFindexVaultTest) -> Vec<Strategy> 
         Strategy {
             name: String::from_str(&test.env, "Strategy 1"),
             address: test.strategy_client.address.clone(),
-            paused: false
+            paused: false,
         }
     ]
 }
 
 pub struct DeFindexVaultTest<'a> {
     env: Env,
+    defindex_factory: Address,
     defindex_contract: DeFindexVaultClient<'a>,
     token0_admin_client: SorobanTokenAdminClient<'a>,
     token0: SorobanTokenClient<'a>,
@@ -68,6 +92,10 @@ impl<'a> DeFindexVaultTest<'a> {
     fn setup() -> Self {
         let env = Env::default();
         // env.mock_all_auths();
+
+        // Mockup, should be the factory contract
+        let defindex_factory = Address::generate(&env);
+
         let defindex_contract = create_defindex_vault(&env);
 
         let emergency_manager = Address::generate(&env);
@@ -90,6 +118,7 @@ impl<'a> DeFindexVaultTest<'a> {
 
         DeFindexVaultTest {
             env,
+            defindex_factory,
             defindex_contract,
             token0_admin_client,
             token0,
@@ -115,3 +144,6 @@ impl<'a> DeFindexVaultTest<'a> {
 mod admin;
 mod initialize;
 mod withdraw;
+mod deposit;
+mod emergency_withdraw;
+mod rebalance;
