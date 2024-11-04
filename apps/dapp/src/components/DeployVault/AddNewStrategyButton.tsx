@@ -1,36 +1,36 @@
+'use client'
 import React from 'react'
 import { useEffect, useState } from 'react'
 import {
   Button,
-  createListCollection,
-  DialogBackdrop,
-  DialogBody,
-  DialogCloseTrigger,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogRoot,
   IconButton,
-  SelectContent,
-  SelectItem,
-  SelectRoot,
-  SelectValueText,
+  NativeSelectField,
 } from '@chakra-ui/react'
 import { AddIcon } from '@chakra-ui/icons'
+import {  
+  DialogBackdrop,
+  DialogBody,
+  DialogContent,
+  DialogFooter,
+  DialogRoot,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { pushStrategy, getDefaultStrategies } from '@/store/lib/features/vaultStore'
 import { useSorobanReact } from '@soroban-react/core'
 import { Strategy } from '@/store/lib/features/walletStore'
+import { NativeSelectRoot } from '../ui/native-select'
 
 function AddNewStrategyButton() {
+  const [open, setOpen] = useState<boolean>(false)
   const strategies = useAppSelector(state => state.newVault.strategies)
   const dispatch = useAppDispatch();
   const { activeChain } = useSorobanReact()
   const [defaultStrategies, setDefaultStrategies] = useState<Strategy[]>([])
-  const [newStrategy, setNewStrategy] = useState<Strategy>()
+  const [newStrategy, setNewStrategy] = useState<Strategy>({ address: '', name: '', share: 0, index: '0' })
   const [newAddress, setNewAddress] = useState<string>()
   const [newName, setNewName] = useState<string>()
-  const [selectValue, setSelectValue] = useState<string>('')
+  const [selectValue, setSelectValue] = useState<string[]>([''])
 
 
   useEffect(() => {
@@ -46,7 +46,7 @@ function AddNewStrategyButton() {
     setNewStrategy({ address: '', name: '', share: 0, index: '0' })
     setNewAddress('')
     setNewName('')
-    setSelectValue('')
+    setSelectValue([''])
   }
 
   const handleInputSelect = async (e: any) => {
@@ -60,7 +60,7 @@ function AddNewStrategyButton() {
 
   const addStrategy = async () => {
     const isDefaultStrategy = await defaultStrategies.find(strategy => strategy.address === newStrategy?.address)
-    const hasEmptyFields = newStrategy?.address === '' || newStrategy?.name === '' || newName === '' || newAddress === ''
+    const hasEmptyFields = newStrategy?.address === '' || newStrategy?.name === ''
     const strategyExists = strategies.find((strategy: Strategy) => strategy.address === newStrategy?.address)
     if (strategyExists) {
       console.error('Strategy already exists')
@@ -73,37 +73,32 @@ function AddNewStrategyButton() {
     await dispatch(pushStrategy(newStrategy!))
     resetForm()
   }
-
-  const tempCollection = createListCollection({
-    items: defaultStrategies.map((strategy) => ({
-      key: strategy.address,
-      value: strategy.name,
-    })),
-  })
   return (
     <>
-      <Button colorScheme="green" size="md" onClick={() => { console.log('open add strategy modal...') }} textAlign={'end'} disabled={defaultStrategies.length === 0}>
-        Add new strategy
-      </Button>
-      <DialogRoot open={true}>
-        <DialogBackdrop backdropFilter='blur(5px)' />
-        <DialogContent >
-          <DialogHeader>Add new strategy</DialogHeader>
-          <DialogCloseTrigger />
+      <DialogRoot open={open} onOpenChange={(e) => { setOpen(e.open) }} placement={'center'}>
+        <DialogBackdrop backdropFilter='blur(1px)' />
+        <DialogTrigger asChild>
+          <Button
+            size="md"
+            textAlign={'end'}
+            disabled={defaultStrategies.length === 0}>
+            Add new strategy
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
           <DialogBody>
-            <SelectRoot key={''} collection={tempCollection}>
-
-              <SelectContent onChange={handleInputSelect}>
-                <SelectValueText>{'Select strategy'}</SelectValueText>
-              {defaultStrategies.map((strategy, index) => (
-                <SelectItem key={strategy.name} item={strategy.address}>{(strategy.name != '') ? strategy.name : strategy.address}</SelectItem>
-              ))}
-              </SelectContent>
-            </SelectRoot>
+            <NativeSelectRoot>
+              <NativeSelectField onChange={(e) => { handleInputSelect(e) }}>
+                {defaultStrategies.map((strategy) => {
+                  return (
+                    <option key={strategy.address} value={strategy.address}>{strategy.name}</option>
+                  )
+                })}
+              </NativeSelectField>
+            </NativeSelectRoot>
           </DialogBody>
-
           <DialogFooter>
-            <Button variant='ghost' mr={3}>
+            <Button variant='ghost' mr={3} onClick={() => setOpen(false)}>
               Close
             </Button>
             <IconButton

@@ -1,12 +1,7 @@
 import React from "react"
 import {
-  Box,
   Button,
   Container,
-  DialogBackdrop,
-  DialogContent,
-  DialogRoot,
-  DialogTrigger,
   Grid,
   GridItem,
   IconButton,
@@ -26,6 +21,7 @@ import ConnectButton from "../Wallet/ConnectButton"
 import { useSorobanReact } from "@soroban-react/core"
 import { VaultMethod } from "@/hooks/useVault"
 import { InputGroup } from "../ui/input-group"
+import { DialogBackdrop, DialogRoot, DialogTrigger } from "../ui/dialog"
 
 export const ManageVaults = () => {
   const { address } = useSorobanReact()
@@ -67,20 +63,20 @@ export const ManageVaults = () => {
     }
   }
 
-  const handleOpenDeposit = async (method: string, value: boolean, args?: any) => {
+  const handleOpenDeposit = async (method: string, args?: any) => {
     switch (method) {
       case VaultMethod.DEPOSIT:
-        setModalStatus({ ...modalStatus, deposit: { isOpen: value } })
+        await setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
         await dispatch(setSelectedVault({ ...args, method: VaultMethod.DEPOSIT }))
         console.log(args)
         break
       case VaultMethod.WITHDRAW:
-        setModalStatus({ ...modalStatus, deposit: { isOpen: value } })
+        await setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
         await dispatch(setSelectedVault({ ...args, method: VaultMethod.WITHDRAW }))
         console.log(args)
         break
       case VaultMethod.EMERGENCY_WITHDRAW:
-        setModalStatus({ ...modalStatus, deposit: { isOpen: value } })
+        await setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
         await dispatch(setSelectedVault({ ...args, method: VaultMethod.EMERGENCY_WITHDRAW }))
         console.log(args)
         break
@@ -128,8 +124,12 @@ export const ManageVaults = () => {
           display={'flex'}
         >
           <ConnectButton />
-          {!!address &&
-            <DialogRoot open={modalStatus.deployVault.isOpen} onOpenChange={(e) => { handleOpenDeployVault('create_vault', e.open) }} size={'lg'} placement={'center'}>
+
+          <DialogRoot
+            open={modalStatus.deployVault.isOpen}
+            onOpenChange={(e) => { handleOpenDeployVault('create_vault', e.open) }}
+            size={'lg'}
+            placement={'center'}>
               <DialogBackdrop backdropFilter='blur(1px)' />
               <DialogTrigger asChild>
                 <Container>
@@ -143,21 +143,21 @@ export const ManageVaults = () => {
                 </Container>
               </DialogTrigger>
               <DeployVault />
-            </DialogRoot>}
+          </DialogRoot>
         </GridItem>
-        <GridItem colSpan={12} colStart={1} colEnd={13}>
+        <GridItem colSpan={12} colStart={1} colEnd={13} zIndex={'base'}>
+          <DialogRoot
+            open={modalStatus.deposit.isOpen}
+            onOpenChange={(e) => { setModalStatus({ ...modalStatus, deposit: { isOpen: e.open } }) }}
+            size={'lg'}
+            placement={'center'}
+          >
+            <DialogBackdrop backdropFilter='blur(1px)' />
+            <InteractWithVault />
+          </DialogRoot>
           <AllVaults handleOpenDeployVault={handleOpenDeployVault} handleOpenDeposit={handleOpenDeposit} />
         </GridItem>
       </Grid>
-
-      <DialogRoot
-        open={modalStatus.deposit.isOpen}
-      >
-        <DialogBackdrop />
-        <DialogContent>
-          <InteractWithVault />
-        </DialogContent>
-      </DialogRoot>
     </>
   )
 }

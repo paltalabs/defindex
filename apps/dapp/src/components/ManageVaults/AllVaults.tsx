@@ -6,7 +6,6 @@ import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { ArrowLeftIcon, SettingsIcon, WarningTwoIcon } from '@chakra-ui/icons'
 import {
   Box,
-  HStack,
   IconButton,
   Skeleton,
   Stack,
@@ -19,7 +18,7 @@ import { useSorobanReact } from '@soroban-react/core'
 import { scValToNative } from '@stellar/stellar-sdk'
 import { useEffect, useState } from 'react'
 import { Tooltip } from '../ui/tooltip'
-import { StatRoot, StatUpTrend, StatValueText } from '../ui/stat'
+import { StatRoot, StatUpTrend } from '../ui/stat'
 
 const SkeletonRow = () => {
   const { address } = useSorobanReact()
@@ -64,10 +63,9 @@ export const AllVaults = ({
   const factory = useFactoryCallback()
   const isMobile = useBreakpointValue({ base: true, md: false });
 
-  const [defaultAddresses, setDefaultAddresses] = useState()
-
   const getVaultInfo = async (selectedVault: string) => {
     try {
+      //dispatch(setIsVaultsLoading(true))
       const [manager, emergencyManager, feeReceiver, name, strategies, totalValues] = await Promise.all([
         vault(VaultMethod.GETMANAGER, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
         vault(VaultMethod.GETEMERGENCYMANAGER, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
@@ -101,6 +99,8 @@ export const AllVaults = ({
         strategies: [],
         totalValues: 0,
       }
+    } finally {
+      dispatch(setIsVaultsLoading(false))
     }
   }
 
@@ -116,6 +116,7 @@ export const AllVaults = ({
   const getDefindexVaults = async () => {
     try {
       const defindexVaults: any = await factory(FactoryMethod.DEPLOYED_DEFINDEXES)
+      if (!defindexVaults) throw new Error('No defindex vaults found');
       const parsedDefindexVaults = scValToNative(defindexVaults)
       const defindexVaultsArray = []
       dispatch(setIsVaultsLoading(true))
@@ -126,7 +127,6 @@ export const AllVaults = ({
       }
       dispatch(setVaults(defindexVaultsArray))
       dispatch(setIsVaultsLoading(false))
-      console.log(defindexVaultsArray, '🟡 defindexVaultsArray')
     } catch (e: any) {
       dispatch(setIsVaultsLoading(false))
       console.error(e)
