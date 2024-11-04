@@ -2,25 +2,15 @@
 import React, { ReactNode } from 'react'
 import { StoreProvider } from './store-provider'
 import MySorobanReactProvider from './soroban-react-provider'
-import { ThemeProvider } from './chakra-provider'
-import { createTheme, ThemeProvider as MuiProvider } from '@mui/material/styles';
+import { Provider } from '@/components/ui/provider'
 
 export const Providers = ({ children }: { children: ReactNode }) => {
-  const theme = createTheme(
-    {
-      palette: {
-        primary: { main: '#1976d2' },
-      },
-    },
-  );
   return (
     <StoreProvider>
       <MySorobanReactProvider>
-        <MuiProvider theme={theme}>
-          <ThemeProvider>
+          <Provider>
             {children}
-          </ThemeProvider>
-        </MuiProvider>
+        </Provider>
       </MySorobanReactProvider>
     </StoreProvider>
   )

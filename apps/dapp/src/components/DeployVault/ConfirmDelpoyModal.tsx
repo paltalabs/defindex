@@ -3,17 +3,9 @@ import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
 import {
   Box,
   Button,
-  CircularProgress,
   Link,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
+  ProgressCircleRoot,
   Text,
-  useSteps,
 } from "@chakra-ui/react"
 import {
   Address,
@@ -26,12 +18,16 @@ import { useFactoryCallback, FactoryMethod } from '@/hooks/useFactory'
 import { VaultPreview } from "./VaultPreview";
 import { DeploySteps } from "./DeploySteps";
 import { useEffect, useState } from "react";
-import { WarningIcon, CheckCircleIcon, ExternalLinkIcon } from '@chakra-ui/icons'
+import { PiWarningCircleFill } from "react-icons/pi";
+import { FaCheckCircle } from "react-icons/fa";
 import { NewVaultState } from "@/store/lib/features/vaultStore";
 import { useSorobanReact } from "@soroban-react/core";
 
 import { randomBytes } from "crypto";
 import { StrategyMethod, useStrategyCallback } from "@/hooks/useStrategy";
+import { LuExternalLink } from "react-icons/lu";
+import { ProgressCircleRing } from "../ui/progress-circle";
+import { DialogBody, DialogCloseTrigger, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 
 interface Status {
   isSuccess: boolean,
@@ -50,9 +46,6 @@ export interface ChartData {
 }
 
 export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
-  const { goToNext, setActiveStep, activeStep } = useSteps({
-    index: 0
-  });
   const sorobanContext = useSorobanReact();
   const { activeChain } = sorobanContext;
   const factory = useFactoryCallback();
@@ -172,7 +165,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     ];
 
 
-    goToNext();
+    //goToNext();
     let result: any;
     try {
       result = await factory(
@@ -183,7 +176,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     }
     catch (e: any) {
       console.error(e)
-      setActiveStep(3)
+      //setActiveStep(3)
       setStatus({
         ...status,
         hasError: true,
@@ -199,7 +192,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       address: parsedResult
     }
     dispatch(pushVault(tempVault));
-    setActiveStep(3);
+    //setActiveStep(3);
     setStatus({
       ...status,
       isSuccess: true,
@@ -218,7 +211,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       message: undefined,
       txHash: undefined
     });
-    setActiveStep(0);
+    //setActiveStep(0);
     //await dispatch(resetStrategies())
     onClose();
   }
@@ -259,15 +252,19 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       autoCloseModal();
     }
   }, [status.isSuccess, status.hasError])
+  const activeStep: number = 0;
 
+  //to-do Use chakra-ui stepper component
   return (
+
     <>
-      <Modal isOpen={isOpen} onClose={handleCloseModal} isCentered>
-        <ModalOverlay />
-        <ModalContent minW={'40vw'}>
-          <ModalHeader>Deploying {indexName === "" ? 'new index' : indexName}</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
+      <DialogHeader>
+        <DialogTitle>
+          Deploying {indexName === "" ? 'new index' : indexName}
+        </DialogTitle>
+      </DialogHeader>
+          <DialogCloseTrigger />
+          <DialogBody>
             <DeploySteps activeStep={activeStep} hasError={status.hasError} />
             {activeStep == 0 && (
               <VaultPreview data={chartData} />
@@ -275,43 +272,44 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
             {activeStep == 1 && (
               <Box textAlign={'center'}>
                 <Text mt={8}>Please, sign the transaction in your wallet.</Text>
-                <CircularProgress mt={8} isIndeterminate color='green.500' />
+                <ProgressCircleRoot>
+                  <ProgressCircleRing />
+                </ProgressCircleRoot>
               </Box>
             )}
             {(activeStep == 3 && status.hasError) && (
               <Box mt={8} textAlign={'center'}>
-                <WarningIcon boxSize={'4em'} color={'red'} />
+            <PiWarningCircleFill />
                 <Text mt={4}>{`${status.message}`}</Text>
               </Box>
             )}
             {(activeStep == 3 && status.isSuccess === true && status.txHash != undefined) && (
               <>
                 <Box mt={8} textAlign={'center'}>
-                  <CheckCircleIcon boxSize={'4em'} color={'green'} />
+              <FaCheckCircle />
                   <Text mt={4}>{`${status.message}`}</Text>
                 </Box>
                 <Box mt={8} textAlign={'center'}>
-                  <Link mt={4} href={`https://stellar.expert/explorer/${activeChain?.name?.toLowerCase()}/tx/${status.txHash}`} isExternal>
-                    View on explorer <ExternalLinkIcon mx='2px' />
+                  <Link mt={4} href={`https://stellar.expert/explorer/${activeChain?.name?.toLowerCase()}/tx/${status.txHash}`}>
+                    View on explorer <LuExternalLink />
                   </Link>
                 </Box>
               </>
             )}
-          </ModalBody>
+          </DialogBody>
 
-          <ModalFooter>
+          <DialogFooter>
             {(activeStep == 0 && !status.hasError) && (
               <Button
-                isDisabled={deployDisabled}
+                disabled={deployDisabled}
                 aria-label='add_strategy'
                 colorScheme='green'
                 onClick={deployDefindex}>
                 Deploy
               </Button>
             )}
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      </DialogFooter>
     </>
+
   )
 }
