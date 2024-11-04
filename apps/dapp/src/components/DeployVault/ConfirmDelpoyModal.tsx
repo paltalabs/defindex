@@ -33,6 +33,7 @@ import { randomBytes } from "crypto";
 import { StrategyMethod, useStrategyCallback } from "@/hooks/useStrategy";
 import { LuExternalLink } from "react-icons/lu";
 import { ProgressCircleRing } from "../ui/progress-circle";
+import { DialogTitle } from "../ui/dialog";
 
 interface Status {
   isSuccess: boolean,
@@ -261,11 +262,13 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
 
   //to-do Use chakra-ui stepper component
   return (
+
     <>
-      <DialogRoot open={isOpen}>
-        <DialogBackdrop />
-        <DialogContent minW={'40vw'}>
-          <DialogHeader>Deploying {indexName === "" ? 'new index' : indexName}</DialogHeader>
+      <DialogHeader>
+        <DialogTitle>
+          Deploying {indexName === "" ? 'new index' : indexName}
+        </DialogTitle>
+      </DialogHeader>
           <DialogCloseTrigger />
           <DialogBody>
             <DeploySteps activeStep={activeStep} hasError={status.hasError} />
@@ -311,9 +314,8 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
                 Deploy
               </Button>
             )}
-          </DialogFooter>
-        </DialogContent>
-      </DialogRoot>
+      </DialogFooter>
     </>
+
   )
 }
