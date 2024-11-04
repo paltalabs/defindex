@@ -2,23 +2,23 @@ import { VaultMethod, useVaultCallback } from '@/hooks/useVault'
 import { useAppSelector } from '@/store/lib/storeHooks'
 import {
   Button,
-  Card,
   Input,
   Textarea,
   Text,
   Grid,
   GridItem,
-  InputGroup,
-  InputRightAddon,
-  Select
+  Stack,
+  InputAddon,
+  NativeSelectField,
 } from '@chakra-ui/react'
 import { useSorobanReact } from '@soroban-react/core'
 import { Address, nativeToScVal, scValToNative, xdr } from '@stellar/stellar-sdk'
 import React, { useEffect, useState } from 'react'
+import { DialogBody, DialogContent, DialogHeader } from '../ui/dialog'
+import { NativeSelectRoot } from '../ui/native-select'
 
 export const InteractWithVault = () => {
   const [amount, set_amount] = useState<number>(0)
-  const [isLoading, setIsLoading] = useState<boolean>(false)
   const selectedVault = useAppSelector(state => state.wallet.vaults.selectedVault)
   const vaultMethod = selectedVault?.method
 
@@ -63,54 +63,68 @@ export const InteractWithVault = () => {
 
   return (
     <>
-      <Card variant="outline" px={16} py={16} bgColor="whiteAlpha.100">
-        <Grid templateColumns="repeat(12, 1fr)" gap={6}>
-          <GridItem colSpan={12}>
-            <Text fontSize='xl'>{selectedVault?.method === 'deposit' ? 'Deposit to' : 'Withdraw from'}:</Text>
-          </GridItem>
-          <GridItem colSpan={12}>
-            <Textarea
-              defaultValue={selectedVault?.address}
-              rows={1}
-              textAlign={'center'}
-              readOnly
-              resize={'none'} />
-          </GridItem>
-          <GridItem colSpan={6} colEnd={13} textAlign={'end'}>
-            <h2>Current index balance: {selectedVault?.totalValues}</h2>
-          </GridItem>
-          {vaultMethod != VaultMethod.EMERGENCY_WITHDRAW &&
-            <>
-              <GridItem colSpan={6} textAlign={'end'} alignContent={'center'}>
-                <Text fontSize='lg'>Amount to {vaultMethod}:</Text>
-              </GridItem>
+      <DialogContent zIndex={'docked'}>
+        <DialogHeader>
+          <Text fontSize='xl'>{selectedVault?.method === 'deposit' ? 'Deposit to' : 'Withdraw from'} {selectedVault?.name}</Text>
+        </DialogHeader>
+        <DialogBody zIndex={'docked'}>
+          <Grid templateColumns="repeat(12, 1fr)" gap={6}>
+            <GridItem colSpan={12}>
+              <Textarea
+                defaultValue={selectedVault?.address}
+                rows={1}
+                textAlign={'center'}
+                readOnly
+                resize={'none'} />
+            </GridItem>
+            <GridItem colSpan={6} colEnd={13} textAlign={'end'}>
+              <h2>Current index balance: {selectedVault?.totalValues}</h2>
+            </GridItem>
+            {vaultMethod != VaultMethod.EMERGENCY_WITHDRAW &&
+              <>
+                <GridItem colSpan={6} textAlign={'end'} alignContent={'center'}>
+                  <Text fontSize='lg'>Amount to {vaultMethod}:</Text>
+                </GridItem>
 
-              <GridItem colSpan={6} colEnd={13} textAlign={'end'} >
-                <InputGroup alignContent={'center'} alignItems={'center'}>
-                  <Input my={4} type="text" onChange={(e) => setAmount(Number(e.target.value))} placeholder='Amount' value={amount} />
-                  <InputRightAddon>$ USDC</InputRightAddon>
-                </InputGroup>
-              </GridItem>
-            </>
-          }
-          {
-            vaultMethod === VaultMethod.EMERGENCY_WITHDRAW &&
-            <>
-              <GridItem colSpan={6} textAlign={'end'} alignContent={'center'}>
-                <Text fontSize='lg'>Withdraw from strategy:</Text>
-              </GridItem>
-              <GridItem colSpan={6} colEnd={13} textAlign={'end'} >
-                <Select placeholder='Select strategy'>
-                  {selectedVault?.strategies.map((strategy, index) => (
-                    <option value={strategy.address}>{strategy.name}</option>
-                  ))}
-                </Select>
-              </GridItem>
-            </>
-          }
-        </Grid>
-        <Button isDisabled={vaultMethod != VaultMethod.EMERGENCY_WITHDRAW && amount < 0.0000001} my={4} colorScheme='green' onClick={() => vaultOperation()}>{selectedVault?.method.includes('withdraw') ? 'Withdraw' : 'Deposit'}</Button>
-      </Card>
+                <GridItem colSpan={6} colEnd={13} textAlign={'end'} >
+                  <Stack alignContent={'center'} alignItems={'center'}>
+                    <Input my={4} type="text" onChange={(e) => setAmount(Number(e.target.value))} placeholder='Amount' value={amount} />
+                    <InputAddon>$ USDC</InputAddon>
+                  </Stack>
+                </GridItem>
+              </>
+            }
+            {
+              vaultMethod === VaultMethod.EMERGENCY_WITHDRAW &&
+              <>
+                <GridItem colSpan={6} textAlign={'end'} alignContent={'center'}>
+                  <Text fontSize='lg'>Emergency withdraw from {selectedVault?.name}:</Text>
+                </GridItem>
+                <GridItem colSpan={6} colEnd={13} textAlign={'end'} >
+                  <NativeSelectRoot>
+                    <NativeSelectField>
+                      {selectedVault?.strategies.map((strategy) => {
+                        return (
+                          <option key={strategy.address} value={strategy.address}>{strategy.name}</option>
+                        )
+                      })}
+                    </NativeSelectField>
+                  </NativeSelectRoot>
+                </GridItem>
+              </>
+            }
+          </Grid>
+          <Button
+            disabled={vaultMethod != VaultMethod.EMERGENCY_WITHDRAW && amount < 0.0000001}
+            my={4}
+            colorScheme='green'
+            onClick={() => vaultOperation()}>
+            {selectedVault?.method === VaultMethod.DEPOSIT && 'Deposit' ||
+              selectedVault?.method === VaultMethod.WITHDRAW && 'Withdraw' ||
+              selectedVault?.method === VaultMethod.EMERGENCY_WITHDRAW && 'Emergency Withdraw'}
+          </Button>
+        </DialogBody>
+      </DialogContent>
     </>
   )
 }
