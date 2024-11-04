@@ -147,7 +147,6 @@ export const AllVaults = ({
               <Table.Cell>Name</Table.Cell>
               <Table.Cell textAlign={'center'}>Address</Table.Cell>
               <Table.Cell textAlign={'center'}>Balance</Table.Cell>
-              <Table.Cell textAlign={'center'}>Status</Table.Cell>
               <Table.Cell textAlign={'center'}>% APR</Table.Cell>
                 {address && (
                 <Table.Cell textAlign={'center'}>Options</Table.Cell>
@@ -173,7 +172,6 @@ export const AllVaults = ({
                     </Tooltip>
                   </Table.Cell>
                   <Table.Cell textAlign={'center'}>${vault.totalValues}</Table.Cell>
-                  <Table.Cell textAlign={'center'}>{vault.name?.includes('Blend USDC') ? '200' : '400'}</Table.Cell>
                   <Table.Cell textAlign={'center'}>
                     <StatRoot>
                       <StatUpTrend justifyContent={'center'}>
@@ -191,7 +189,7 @@ export const AllVaults = ({
                           size='sm'
                           onClick={() => handleOpenDeposit(VaultMethod.DEPOSIT, vault)}
                         >
-                          <ArrowLeftIcon __css={{ transform: 'rotate(90deg)' }} />
+                          <ArrowLeftIcon css={{ transform: 'rotate(90deg)' }} />
                         </IconButton>
                       </Tooltip>
                       <Tooltip content={'Withdraw'}>
@@ -203,7 +201,7 @@ export const AllVaults = ({
 
                           onClick={() => handleOpenDeposit(VaultMethod.WITHDRAW, vault)}
                         >
-                          <ArrowLeftIcon __css={{ transform: 'rotate(-90deg)' }} />
+                          <ArrowLeftIcon css={{ transform: 'rotate(-90deg)' }} />
                         </IconButton>
                       </Tooltip>
                       {(address == vault.manager) &&
@@ -222,12 +220,11 @@ export const AllVaults = ({
                         <Tooltip content={'Emergency withdraw'}>
                           <IconButton
                             mx={1}
-                            colorScheme='yellow'
                             aria-label='emergency-withdraw'
                             size='sm'
                             onClick={() => handleOpenDeposit(VaultMethod.EMERGENCY_WITHDRAW, vault)}
                           >
-                            <WarningTwoIcon color={'white'} />
+                            <WarningTwoIcon />
                           </IconButton>
                         </Tooltip>}
                     </Table.Cell>
