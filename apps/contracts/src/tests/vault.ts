@@ -23,7 +23,7 @@ import { config } from "../utils/env_config.js";
 
 const network = process.argv[2];
 
-export async function depositToVault(deployedVault: string, user?: Keypair) {
+export async function depositToVault(deployedVault: string, amount: number, user?: Keypair, ) {
     // Create and fund a new user account if not provided
     const newUser = user ? user : Keypair.random();
     console.log('🚀 ~ depositToVault ~ newUser.publicKey():', newUser.publicKey());
@@ -37,7 +37,7 @@ export async function depositToVault(deployedVault: string, user?: Keypair) {
     let result: any;
 
     // Define deposit parameters
-    const depositAmount = BigInt(10000000); // 1 XLM in stroops (1 XLM = 10^7 stroops)
+    const depositAmount = BigInt(amount); // 1 XLM in stroops (1 XLM = 10^7 stroops)
     const amountsDesired = [depositAmount];
     const amountsMin = [BigInt(0)]; // Minimum amount for transaction to succeed
 
@@ -126,7 +126,7 @@ export async function getDfTokenBalance(deployedVault: string, userPublicKey: st
  * const { balanceBefore, result, balanceAfter } = await withdrawFromVault("CCE7MLKC7R6TIQA37A7EHWEUC3AIXIH5DSOQUSVAARCWDD7257HS4RUG", 10000000, user);
  */
 
-export async function withdrawFromVault(deployedVault: string, withdrawAmount: BigInt | number, user: Keypair) {
+export async function withdrawFromVault(deployedVault: string, withdrawAmount: number, user: Keypair) {
     console.log('🚀 ~ withdrawFromVault ~ User publicKey:', user.publicKey());
 
     let balanceBefore: number;
@@ -143,9 +143,14 @@ export async function withdrawFromVault(deployedVault: string, withdrawAmount: B
     }
 
     // Define withdraw parameters
-    const amountsToWithdraw = [withdrawAmount];
+    // const amountsToWithdraw = [BigInt(withdrawAmount)];
+    // const withdrawParams: xdr.ScVal[] = [
+    //     xdr.ScVal.scvVec(amountsToWithdraw.map((amount) => nativeToScVal(amount, { type: "i128" }))),
+    //     (new Address(user.publicKey())).toScVal()
+    // ];
+
     const withdrawParams: xdr.ScVal[] = [
-        xdr.ScVal.scvVec(amountsToWithdraw.map((amount) => nativeToScVal(amount, { type: "i128" }))),
+        nativeToScVal(BigInt(withdrawAmount), { type: "i128" }),
         (new Address(user.publicKey())).toScVal()
     ];
 
