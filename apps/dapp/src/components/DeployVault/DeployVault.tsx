@@ -34,10 +34,6 @@ export const DeployVault = () => {
   return (
     <>
       <DialogContent>
-        <DialogHeader>
-          <DialogCloseTrigger />
-          <DialogTitle>Deploy Defindex</DialogTitle>
-        </DialogHeader>
         <DialogBody>
           <Grid
           templateColumns={['1fr', null, 'repeat(12, 2fr)']}
