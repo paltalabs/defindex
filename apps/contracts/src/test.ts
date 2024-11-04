@@ -27,6 +27,7 @@ export async function test_factory(addressBook: AddressBook) {
   console.log("Testing Create DeFindex on Factory");
   console.log("-------------------------------------------------------");
 
+  console.log("Setting Emergengy Manager, Fee Receiver and Manager accounts");
   const emergencyManager = loadedConfig.getUser("DEFINDEX_EMERGENCY_MANAGER_SECRET_KEY");
   if (network !== "mainnet") await airdropAccount(emergencyManager);
 
@@ -109,15 +110,33 @@ const passphrase = network === "mainnet" ? Networks.PUBLIC : network === "testne
 
 const loadedConfig = config(network);
 
+// Step 0: Deploy the vault
 const deployedVault = await test_factory(addressBook);
+console.log(" -- ")
+console.log(" -- ")
+console.log("Step 0: Deployed Vault:", deployedVault);
+console.log(" -- ")
+console.log(" -- ")
+
+
 // Step 1: Deposit to vault and capture initial balances
 const { user, balanceBefore: depositBalanceBefore, result: depositResult, balanceAfter: depositBalanceAfter } = await depositToVault(deployedVault);
+console.log(" -- ")
+console.log(" -- ")
+console.log("Step 1: Deposited to Vault using user:", user.publicKey(), "with balance before:", depositBalanceBefore, "and balance after:", depositBalanceAfter);
+console.log(" -- ")
+console.log(" -- ")
 
 // Step 2: Check strategy balance after deposit
 const strategyBalanceAfterDeposit = await checkUserBalance(addressBook.getContractId("hodl_strategy"), user.publicKey(), user);
+console.log(" -- ")
+console.log(" -- ")
+console.log("Step 2: Strategy balance after deposit:", strategyBalanceAfterDeposit);
+console.log(" -- ")
+console.log(" -- ")
 
 // Step 3: Withdraw from the vault
-const { balanceBefore: withdrawBalanceBefore, result: withdrawResult, balanceAfter: withdrawBalanceAfter } = await withdrawFromVault(deployedVault, BigInt(5000000), user);
+const { balanceBefore: withdrawBalanceBefore, result: withdrawResult, balanceAfter: withdrawBalanceAfter } = await withdrawFromVault(deployedVault, BigInt(0), user);
 
 // Step 4: Check strategy balance after withdrawal
 const strategyBalanceAfterWithdraw = await checkUserBalance(addressBook.getContractId("hodl_strategy"), user.publicKey(), user);
