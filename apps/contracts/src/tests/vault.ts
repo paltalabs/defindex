@@ -118,7 +118,7 @@ export async function getDfTokenBalance(deployedVault: string, userPublicKey: st
  * Description: Withdraws a specified amount from the vault for the user and returns the pre- and post-withdrawal balances.
  *
  * @param {string} deployedVault - The address of the deployed vault contract.
- * @param {BigInt} withdrawAmount - The amount in stroops to withdraw (1 XLM = 10^7 stroops).
+ * @param {BigInt | number} withdrawAmount - The amount in stroops to withdraw (1 XLM = 10^7 stroops).
  * @param {Keypair} user - The user Keypair requesting the withdrawal.
  * @returns {Promise<{ balanceBefore: number, result: any, balanceAfter: number }>} Returns an object with balance before, the withdrawal result, and balance after.
  * @throws Will throw an error if the withdrawal fails or any step encounters an issue.
@@ -126,7 +126,7 @@ export async function getDfTokenBalance(deployedVault: string, userPublicKey: st
  * const { balanceBefore, result, balanceAfter } = await withdrawFromVault("CCE7MLKC7R6TIQA37A7EHWEUC3AIXIH5DSOQUSVAARCWDD7257HS4RUG", 10000000, user);
  */
 
-export async function withdrawFromVault(deployedVault: string, withdrawAmount: BigInt, user: Keypair) {
+export async function withdrawFromVault(deployedVault: string, withdrawAmount: BigInt | number, user: Keypair) {
     console.log('🚀 ~ withdrawFromVault ~ User publicKey:', user.publicKey());
 
     let balanceBefore: number;
@@ -172,4 +172,20 @@ export async function withdrawFromVault(deployedVault: string, withdrawAmount: B
     }
 
     return { balanceBefore, result, balanceAfter };
+}
+
+/**
+ * Retrieves the current idle funds of the vault.
+ * 
+ * @param {string} deployedVault - The address of the deployed vault contract.
+ * @returns {Promise<Map<Address, bigint>>} A promise that resolves with a map of asset addresses to idle amounts.
+ */
+export async function fetchCurrentIdleFunds(deployedVault: string, user: Keypair): Promise<Map<Address, bigint>> {
+    try {
+        const result = await invokeCustomContract(deployedVault, "fetch_current_idle_funds", [], user);
+        return result.map(scValToNative); // Convert result to native format if needed
+    } catch (error) {
+        console.error("❌ Failed to fetch current idle funds:", error);
+        throw error;
+    }
 }
