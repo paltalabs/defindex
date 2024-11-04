@@ -1,6 +1,5 @@
 use soroban_sdk::{
-    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
-    vec as sorobanvec, Address, IntoVal, Symbol, Vec,
+    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke}, vec as sorobanvec, Address, IntoVal, String, Symbol, Vec
 };
 
 use crate::test::{create_strategy_params, defindex_vault::AssetAllocation, DeFindexVaultTest};
@@ -17,12 +16,10 @@ fn test_set_new_fee_receiver_by_fee_receiver() {
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
@@ -35,6 +32,8 @@ fn test_set_new_fee_receiver_by_fee_receiver() {
         &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
     );
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
@@ -80,12 +79,10 @@ fn test_set_new_fee_receiver_by_manager() {
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
@@ -98,6 +95,8 @@ fn test_set_new_fee_receiver_by_manager() {
         &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
     );
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
@@ -144,12 +143,10 @@ fn test_set_new_fee_receiver_by_emergency_manager() {
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
@@ -162,6 +159,8 @@ fn test_set_new_fee_receiver_by_emergency_manager() {
         &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
     );
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
@@ -183,12 +182,10 @@ fn test_set_new_fee_receiver_invalid_sender() {
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
@@ -201,6 +198,8 @@ fn test_set_new_fee_receiver_invalid_sender() {
         &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
     );
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
@@ -220,12 +219,10 @@ fn test_set_new_manager_by_manager() {
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
@@ -238,6 +235,8 @@ fn test_set_new_manager_by_manager() {
         &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
     );
 
     let manager_role = test.defindex_contract.get_manager();

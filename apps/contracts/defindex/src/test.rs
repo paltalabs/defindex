@@ -69,7 +69,6 @@ pub(crate) fn create_strategy_params(test: &DeFindexVaultTest) -> Vec<Strategy> 
             name: String::from_str(&test.env, "Strategy 1"),
             address: test.strategy_client.address.clone(),
             paused: false,
-            ratio: 1
         }
     ]
 }
@@ -147,3 +146,4 @@ mod initialize;
 mod withdraw;
 mod deposit;
 mod emergency_withdraw;
+mod rebalance;

@@ -6,7 +6,7 @@ mod storage;
 mod error;
 
 use soroban_sdk::{
-    contract, contractimpl, Address, BytesN, Env, Map, Vec
+    contract, contractimpl, Address, BytesN, Env, Map, String, Vec
 };
 use error::FactoryError;
 use defindex::{create_contract, AssetAllocation};
@@ -46,6 +46,8 @@ pub trait FactoryTrait {
     /// * `emergency_manager` - The address assigned emergency control over the vault.
     /// * `fee_receiver` - The address designated to receive fees from the vault.
     /// * `vault_share` - The percentage share of fees allocated to the vault's fee receiver.
+    /// * `vault_name` - The name of the vault.
+    /// * `vault_symbol` - The symbol of the vault.
     /// * `manager` - The address assigned as the vault manager.
     /// * `assets` - A vector of `AssetAllocation` structs that define the assets managed by the vault.
     /// * `salt` - A salt used for ensuring unique addresses for each deployed vault.
@@ -57,8 +59,40 @@ pub trait FactoryTrait {
         emergency_manager: Address, 
         fee_receiver: Address, 
         vault_share: u32,
+        vault_name: String,
+        vault_symbol: String,
         manager: Address,
         assets: Vec<AssetAllocation>,
+        salt: BytesN<32>
+    ) -> Result<Address, FactoryError>;
+
+    /// Creates a new DeFindex Vault with specified parameters and makes the first deposit to set ratios.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `emergency_manager` - The address assigned emergency control over the vault.
+    /// * `fee_receiver` - The address designated to receive fees from the vault.
+    /// * `vault_share` - The percentage share of fees allocated to the vault's fee receiver.
+    /// * `vault_name` - The name of the vault.
+    /// * `vault_symbol` - The symbol of the vault.
+    /// * `manager` - The address assigned as the vault manager.
+    /// * `assets` - A vector of `AssetAllocation` structs that define the assets managed by the vault.
+    /// * `amounts` - A vector of `AssetAmounts` structs that define the initial deposit amounts.
+    /// * `salt` - A salt used for ensuring unique addresses for each deployed vault.
+    ///
+    /// # Returns
+    /// * `Result<Address, FactoryError>` - Returns the address of the new vault, or an error if unsuccessful.
+    fn create_defindex_vault_deposit(
+        e: Env, 
+        caller: Address,
+        emergency_manager: Address, 
+        fee_receiver: Address, 
+        vault_share: u32,
+        vault_name: String,
+        vault_symbol: String,
+        manager: Address,
+        assets: Vec<AssetAllocation>,
+        amounts: Vec<i128>,
         salt: BytesN<32>
     ) -> Result<Address, FactoryError>;
 
@@ -189,6 +223,8 @@ impl FactoryTrait for DeFindexFactory {
         emergency_manager: Address, 
         fee_receiver: Address, 
         vault_share: u32,
+        vault_name: String,
+        vault_symbol: String,
         manager: Address,
         assets: Vec<AssetAllocation>,
         salt: BytesN<32>
@@ -210,6 +246,81 @@ impl FactoryTrait for DeFindexFactory {
             &vault_share,
             &defindex_receiver,
             &current_contract,
+            &vault_name,
+            &vault_symbol,
+        );
+
+        add_new_defindex(&e, defindex_address.clone());
+        events::emit_create_defindex_vault(&e, emergency_manager, fee_receiver, manager, vault_share, assets);
+        Ok(defindex_address)
+    }
+
+    /// Creates a new DeFindex Vault with specified parameters and makes the first deposit to set ratios.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `emergency_manager` - The address assigned emergency control over the vault.
+    /// * `fee_receiver` - The address designated to receive fees from the vault.
+    /// * `vault_share` - The percentage share of fees allocated to the vault's fee receiver.
+    /// * `vault_name` - The name of the vault.
+    /// * `vault_symbol` - The symbol of the vault.
+    /// * `manager` - The address assigned as the vault manager.
+    /// * `assets` - A vector of `AssetAllocation` structs that define the assets managed by the vault.
+    /// * `amounts` - A vector of `AssetAmounts` structs that define the initial deposit amounts.
+    /// * `salt` - A salt used for ensuring unique addresses for each deployed vault.
+    ///
+    /// # Returns
+    /// * `Result<Address, FactoryError>` - Returns the address of the new vault, or an error if unsuccessful.
+    fn create_defindex_vault_deposit(
+        e: Env, 
+        caller: Address,
+        emergency_manager: Address, 
+        fee_receiver: Address, 
+        vault_share: u32,
+        vault_name: String,
+        vault_symbol: String,
+        manager: Address,
+        assets: Vec<AssetAllocation>,
+        amounts: Vec<i128>,
+        salt: BytesN<32>
+    ) -> Result<Address, FactoryError> {
+        extend_instance_ttl(&e);
+        caller.require_auth();
+
+        if assets.len() != amounts.len() {
+            return Err(FactoryError::AssetLengthMismatch);
+        }
+
+        let current_contract = e.current_contract_address();
+
+        let defi_wasm_hash = get_defi_wasm_hash(&e)?;
+        let defindex_address = create_contract(&e, defi_wasm_hash, salt);
+
+        let defindex_receiver = get_defindex_receiver(&e);
+
+        let defindex_client = defindex::Client::new(&e, &defindex_address);
+
+        defindex_client.initialize(
+            &assets,
+            &manager,
+            &emergency_manager,
+            &fee_receiver,
+            &vault_share,
+            &defindex_receiver,
+            &current_contract,
+            &vault_name,
+            &vault_symbol,
+        );
+
+        let mut amounts_min = Vec::new(&e);
+        for _ in 0..amounts.len() {
+            amounts_min.push_back(0i128);
+        }
+
+        defindex_client.deposit(
+            &amounts,
+            &amounts_min,
+            &caller
         );
 
         add_new_defindex(&e, defindex_address.clone());

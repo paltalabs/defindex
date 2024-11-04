@@ -1,4 +1,4 @@
-use soroban_sdk::{vec as sorobanvec, Address, Vec};
+use soroban_sdk::{vec as sorobanvec, Address, String, Vec};
 
 use crate::test::{create_strategy_params, defindex_vault::{AssetAllocation, ContractError}, DeFindexVaultTest};
 
@@ -10,12 +10,10 @@ fn test_initialize_and_get_roles() {
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
@@ -28,6 +26,8 @@ fn test_initialize_and_get_roles() {
         &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
     );
 
     let manager_role = test.defindex_contract.get_manager();
@@ -60,12 +60,10 @@ fn test_initialize_twice() {
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            ratio: 1,
             strategies: strategy_params.clone()
         }
     ];
@@ -78,6 +76,8 @@ fn test_initialize_twice() {
         &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
     );
 
     let result_second_init = test.defindex_contract.try_initialize(
@@ -88,6 +88,8 @@ fn test_initialize_twice() {
         &2000u32,
         &test.defindex_receiver,
         &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
     );
 
     assert_eq!(
