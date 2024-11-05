@@ -51,8 +51,7 @@ jobs:
         with:
           node-version: '20.18.0'
 
-      - name: navigate to the dapp directory
-        run: cd apps/dapp
-
-      - name: Run jest tests
-        run: yarn exec jest
+      - name: Run jest tests in dapp directory
+        run: |
+          cd apps/dapp
+          yarn test
