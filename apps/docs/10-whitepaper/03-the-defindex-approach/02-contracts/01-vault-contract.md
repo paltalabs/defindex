@@ -145,12 +145,12 @@ The total value $V_1$ remains $V_0$, assuming no deposits or withdrawals during 
 
 We establish the following condition to ensure the minted shares represent the accrued fee:
 
-$\frac{V_0}{s_1} \times s_f = V_0 \times f_{\text{total}} \times \frac{\Delta t}{\text{SECONDS\_PER\_YEAR}}$
+$\frac{V_0}{s_1} \times s_f = V_0 \times f_{\text{total}} \times \frac{\Delta t}{\text{SECONDS PER YEAR}}$
 
 Rearranging terms, we get:
 
 $$
-s_f = \frac{f_{\text{total}} \times s_0 \times \Delta t}{\text{SECONDS\_PER\_YEAR} - f_{\text{total}} \times \Delta t}
+s_f = \frac{f_{\text{total}} \times s_0 \times \Delta t}{\text{SECONDS PER YEAR} - f_{\text{total}} \times \Delta t}
 $$
 
 This equation gives the precise share quantity $s_f$ to mint as dfTokens for the management fee over the period $\Delta t$.
