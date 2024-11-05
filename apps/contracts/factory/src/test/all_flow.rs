@@ -268,6 +268,7 @@ fn test_consecutive_deposits_and_partial_withdrawal() {
   assert_eq!(defindex_contract.balance(&users[1]), 6597i128);
   // User 2 should have deposited all their tokens into the vault
   assert_eq!(test.token0.balance(&users[1]), 0);
+  // TODO: There is an error with the deposit, since depositing only 500 of the token1 when the user is trying to deposit 6000 
   assert_eq!(test.token1.balance(&users[1]), 0);
   
   assert_eq!(test.token0.balance(&defindex_contract.address), amount_token0_user1 + amount_token0_user2);
