@@ -107,7 +107,7 @@ Every DeFindex has a manager, who is responsible for managing the DeFindex. The 
 
 ### Fee Structure, Collection, and Distribution
 
-1. Fee Receivers
+#### Fee Receivers
 
 The DeFindex protocol defines two distinct fee receivers to reward both the creators of the DeFindex Protocol and the deployers of individual vaults:
 
@@ -121,19 +121,22 @@ $f_{\text{total}} = f_{\text{DeFindex}} + f_{\text{Vault}}$
 
 where $f_{\text{DeFindex}} = 0.5\%$ (fixed) and $f_{\text{Vault}}$  is a variable APR, typically between 0.5% and 2%.
 
-2. Fee Collection Methodology
+#### Fee Collection Methodology
 
 The fee collection process mints new shares, or dfTokens, representing the management fees. These shares are calculated based on the elapsed time since the last fee assessment, ensuring fees are accrued in alignment with the actual period of asset management. The fee collection is triggered whenever there is a vault interaction, such as a deposit or withdrawal with calculations based on the time elapsed since the last fee assessment.
+
+#### Mathematical Derivation of New Fees
 
 Let:
 
 - $V_0$  be the Total Value Locked (TVL) at the last assessment,
+- $V_1$ be the Total Value Locked (TVL) at the current assessment, just before any deposits or withdrawals,
 - $s_0$  be the Total Shares (dfTokens) at the last assessment,
+- $s_f$ be the Total Shares (dfTokens) minted for fee distribution,
 - $f_{\text{total}}$  be the Total Management Fee (APR).
+- $Pps_1$ be the Price per Share (dfToken) at the current assessment,
 
 Over a time period  $\Delta t$ , the fees due for collection are derived by the value equivalent in shares.
-
-3. Mathematical Derivation of New Fees
 
 To mint new shares for fee distribution, we calculate the required number of new shares, $s_f$, that correspond to the management fee over the elapsed period.
 
@@ -141,11 +144,14 @@ After a period  $\Delta t$ (expressed in seconds), the total shares $s_1$ should
 
 $s_1 = s_0 + s_f$
 
-The total value $V_1$ remains $V_0$, assuming no deposits or withdrawals during this period.
-
 We establish the following condition to ensure the minted shares represent the accrued fee:
 
-$\frac{V_0}{s_1} \times s_f = V_0 \times f_{\text{total}} \times \frac{\Delta t}{\text{SECONDS PER YEAR}}$
+$$
+Pps_1 \times s_f = V_1 \times f_{\text{total}} \times \frac{\Delta t}{\text{SECONDS PER YEAR}}
+$$
+$$
+\frac{V_1}{s_1} \times s_f = V_1 \times f_{\text{total}} \times \frac{\Delta t}{\text{SECONDS PER YEAR}}
+$$
 
 Rearranging terms, we get:
 
@@ -155,7 +161,7 @@ $$
 
 This equation gives the precise share quantity $s_f$ to mint as dfTokens for the management fee over the period $\Delta t$.
 
-4. Distribution of Fees
+#### Distribution of Fees
 
 Once the total fees,  $s_f$ , are calculated, the shares are split proportionally between the DeFindex Protocol Fee Receiver and the Vault Fee Receiver. This is done by calculating the ratio of each fee receiver’s APR to the total APR:
 
@@ -166,7 +172,7 @@ $s_{\text{Vault}} = s_f - s_{\text{DeFindex}}$
 
 This ensures that each fee receiver is allocated their respective share of dfTokens based on their fee contribution to $f_{\text{total}}$. The dfTokens are then minted to each receiver’s address as a direct representation of the fees collected.
 
-5. Fee Calculation Efficiency
+#### Fee Calculation Efficiency
 
 This calculation is performed only upon each vault interaction and considers only the time elapsed since the last assessment. This approach minimizes computational overhead and gas costs, ensuring that fee collection remains efficient.
 
