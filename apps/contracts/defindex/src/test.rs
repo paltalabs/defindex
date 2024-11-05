@@ -7,11 +7,11 @@ use soroban_sdk::{testutils::Address as _, vec as sorobanvec, Address, Env, Stri
 use std::vec;
 
 // DeFindex Hodl Strategy Contract
-mod hodl_strategy {
+pub mod hodl_strategy {
     soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/hodl_strategy.optimized.wasm");
     pub type HodlStrategyClient<'a> = Client<'a>;
 }
-use hodl_strategy::HodlStrategyClient;
+use hodl_strategy::{HodlStrategyClient};
 
 fn create_hodl_strategy<'a>(e: & Env, asset: & Address) -> HodlStrategyClient<'a> {
     let contract_address = &e.register_contract_wasm(None, hodl_strategy::WASM);
@@ -20,7 +20,7 @@ fn create_hodl_strategy<'a>(e: & Env, asset: & Address) -> HodlStrategyClient<'a
     hodl_strategy
 }
 
-// DeFindex Vault Contract
+// DeFindex Vault Contract 
 pub mod defindex_vault {
     soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/defindex_vault.optimized.wasm");
     pub type DeFindexVaultClient<'a> = Client<'a>;
@@ -52,7 +52,7 @@ fn create_defindex_vault<'a>(
 
 // Create Test Token
 pub(crate) fn create_token_contract<'a>(e: &Env, admin: &Address) -> SorobanTokenClient<'a> {
-    SorobanTokenClient::new(e, &e.register_stellar_asset_contract(admin.clone()))
+    SorobanTokenClient::new(e, &e.register_stellar_asset_contract_v2(admin.clone()).address())
 }
 
 pub(crate) fn get_token_admin_client<'a>(

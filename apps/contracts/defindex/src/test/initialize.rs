@@ -1,4 +1,4 @@
-use soroban_sdk::{vec as sorobanvec, Address, String, Vec};
+use soroban_sdk::{vec as sorobanvec, String, Vec};
 
 use crate::test::{create_strategy_params, defindex_vault::{AssetAllocation, ContractError}, DeFindexVaultTest};
 

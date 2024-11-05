@@ -1,7 +1,7 @@
 use soroban_sdk::{Address, Env, Map, String, Vec};
 
 use crate::{
-    models::{AssetAllocation, DexDistribution, Instruction, Investment},
+    models::{AssetAllocation, Instruction, Investment},
     ContractError,
 };
 
