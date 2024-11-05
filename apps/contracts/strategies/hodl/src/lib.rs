@@ -25,7 +25,10 @@ use storage::{
     set_underlying_asset
 };
 
-pub use defindex_strategy_core::{DeFindexStrategyTrait, StrategyError, event};
+pub use defindex_strategy_core::{
+    DeFindexStrategyTrait, 
+    StrategyError, 
+    event};
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
     if amount < 0 {

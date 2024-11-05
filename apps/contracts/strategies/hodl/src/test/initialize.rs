@@ -13,5 +13,9 @@ fn cannot_initialize_twice() {
     test.strategy.initialize(&test.token.address, &init_fn_args);
     let result = test.strategy.try_initialize(&test.token.address , &init_fn_args);
     assert_eq!(result, Err(Ok(StrategyError::AlreadyInitialized)));
-    
+
+    // get asset should return underlying asset
+
+    let underlying_asset = test.strategy.asset();
+    assert_eq!(underlying_asset, test.token.address);
 }

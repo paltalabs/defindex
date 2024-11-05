@@ -2,9 +2,27 @@ use crate::test::HodlStrategyTest;
 use crate::test::StrategyError;
 use soroban_sdk::{IntoVal, Vec, Val};
 
+// test deposit with negative amount
+#[test]
+fn deposit_with_negative_amount() {
+    let test = HodlStrategyTest::setup();
+    let init_fn_args: Vec<Val> = (0,).into_val(&test.env);
+    test.strategy.initialize(&test.token.address, &init_fn_args);
+
+    let amount = -123456;
+
+    let result = test.strategy.try_deposit(&amount, &test.user);
+    assert_eq!(result, Err(Ok(StrategyError::NegativeNotAllowed)));
+}
+
+// check auth
+#[test]
+fn deposit_mock_auths() {
+    todo!()
+}
 
 #[test]
-fn test_deposit_and_withdrawal_flow() {
+fn deposit_and_withdrawal_flow() {
     let test = HodlStrategyTest::setup();
     // let users = HodlStrategyTest::generate_random_users(&test.env, 1);
 
