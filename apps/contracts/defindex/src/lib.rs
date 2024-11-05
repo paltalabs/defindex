@@ -28,7 +28,7 @@ use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_
 use interface::{AdminInterfaceTrait, VaultTrait, VaultManagementTrait};
 use models::{ActionType, AssetAllocation, Instruction, Investment, OptionalSwapDetailsExactIn, OptionalSwapDetailsExactOut};
 use storage::{
-    get_assets, set_asset, set_defindex_receiver, set_factory, set_last_fee_assesment, set_total_assets, set_vault_share
+    get_assets, set_asset, set_defindex_receiver, set_factory, set_last_fee_assesment, set_total_assets, set_vault_fee
 };
 use strategies::{get_asset_allocation_from_address, get_strategy_asset, get_strategy_client, get_strategy_struct, invest_in_strategy, pause_strategy, unpause_strategy, withdraw_from_strategy};
 use token::{internal_mint, internal_burn, write_metadata, VaultToken};
@@ -54,7 +54,7 @@ impl VaultTrait for DeFindexVault {
     /// * `manager` - The address responsible for managing the vault.
     /// * `emergency_manager` - The address with emergency control over the vault.
     /// * `fee_receiver` - The address that will receive fees from the vault.
-    /// * `vault_share` - The percentage of the vault's fees that will be sent to the DeFindex receiver. in BPS.
+    /// * `vault_fee` - The percentage of the vault's fees that will be sent to the DeFindex receiver. in BPS.
     /// * `defindex_receiver` - The address that will receive fees for DeFindex from the vault.
     /// * `factory` - The address of the factory that deployed the vault.
     ///
@@ -66,7 +66,7 @@ impl VaultTrait for DeFindexVault {
         manager: Address,
         emergency_manager: Address,
         fee_receiver: Address,
-        vault_share: u32,
+        vault_fee: u32,
         defindex_receiver: Address,
         factory: Address,
         vault_name: String,
@@ -82,7 +82,7 @@ impl VaultTrait for DeFindexVault {
         access_control.set_role(&RolesDataKey::Manager, &manager);
 
         // Set Vault Share (in basis points)
-        set_vault_share(&e, &vault_share);
+        set_vault_fee(&e, &vault_fee);
 
         // Set Paltalabs Fee Receiver
         set_defindex_receiver(&e, &defindex_receiver);
@@ -152,6 +152,9 @@ impl VaultTrait for DeFindexVault {
             set_last_fee_assesment(&e, &e.ledger().timestamp());
         }
 
+        // fees assesment
+        collect_fees(&e)?;
+
         // get assets
         let assets = get_assets(&e);
         // assets lenght should be equal to amounts_desired and amounts_min length
@@ -204,8 +207,6 @@ impl VaultTrait for DeFindexVault {
 
         events::emit_deposit_event(&e, from, amounts, shares_to_mint);
 
-        // fees assesment
-        collect_fees(&e)?;
         // TODO return amounts and shares to mint
         Ok(())
     }
@@ -227,6 +228,9 @@ impl VaultTrait for DeFindexVault {
         check_initialized(&e)?;
         check_nonnegative_amount(df_amount)?;
         from.require_auth();
+
+        // fees assesment
+        collect_fees(&e)?;
     
         // Check if the user has enough dfTokens
         let df_user_balance = VaultToken::balance(e.clone(), from.clone());
@@ -292,9 +296,6 @@ impl VaultTrait for DeFindexVault {
         }
 
         events::emit_withdraw_event(&e, from, df_amount, amounts_withdrawn.clone());
-
-        // fees assesment
-        collect_fees(&e)?;
     
         Ok(amounts_withdrawn)
     }

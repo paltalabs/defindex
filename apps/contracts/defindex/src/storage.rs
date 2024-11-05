@@ -82,13 +82,13 @@ pub fn get_last_fee_assesment(e: &Env) -> u64 {
 }
 
 // Vault Share
-pub fn set_vault_share(e: &Env, vault_share: &u32) {
+pub fn set_vault_fee(e: &Env, vault_fee: &u32) {
     e.storage()
         .instance()
-        .set(&DataKey::VaultShare, vault_share);
+        .set(&DataKey::VaultShare, vault_fee);
 }
 
-pub fn get_vault_share(e: &Env) -> u32 {
+pub fn get_vault_fee(e: &Env) -> u32 {
     e.storage()
         .instance()
         .get(&DataKey::VaultShare)

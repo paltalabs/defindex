@@ -1,19 +1,20 @@
 use soroban_sdk::{Address, Env, Map, Symbol, Vec};
 
-use crate::{access::AccessControl, constants::{MAX_BPS, SECONDS_PER_YEAR}, events, funds::fetch_total_managed_funds, storage::{get_defindex_receiver, get_factory, get_last_fee_assesment, get_vault_share, set_last_fee_assesment}, token::internal_mint, utils::calculate_dftokens_from_asset_amounts, ContractError};
+use crate::{access::AccessControl, constants::{MAX_BPS, SECONDS_PER_YEAR}, events, funds::fetch_total_managed_funds, storage::{get_defindex_receiver, get_factory, get_last_fee_assesment, get_vault_fee, set_last_fee_assesment}, token::internal_mint, utils::calculate_dftokens_from_asset_amounts, ContractError};
 
 /// Fetches the current fee rate from the factory contract.
 /// The fee rate is expressed in basis points (BPS).
-fn fetch_fee_rate(e: &Env) -> u32 {
+fn fetch_defindex_fee(e: &Env) -> u32 {
   let factory_address = get_factory(e);
   // Interacts with the factory contract to get the fee rate.
   e.invoke_contract(
     &factory_address,
-    &Symbol::new(&e, "fee_rate"), 
+    &Symbol::new(&e, "defindex_fee"), 
     Vec::new(&e)
   )
 }
 
+/// Calculates the required fees in dfTokens based on the current APR fee rate.
 fn calculate_fees(e: &Env, time_elapsed: u64, fee_rate: u32) -> Result<i128, ContractError> {
 
     let total_managed_funds = fetch_total_managed_funds(e); // Get total managed funds per asset
@@ -34,27 +35,33 @@ fn calculate_fees(e: &Env, time_elapsed: u64, fee_rate: u32) -> Result<i128, Con
 
     }
 
-    let total_fees_in_dftokens = calculate_dftokens_from_asset_amounts(e, total_fees_per_asset)?;
+    let total_fees_in_dftokens = calculate_dftokens_from_asset_amounts(e, total_fees_per_asset, total_managed_funds)?;
 
     Ok(total_fees_in_dftokens)
 }
 
+/// Collects and mints fees in dfTokens, distributing them to the appropriate fee receivers.
 pub fn collect_fees(e: &Env) -> Result<(), ContractError> {
     let current_timestamp = e.ledger().timestamp();
-    let last_fee_assessment = get_last_fee_assesment(e); 
+    let last_fee_assessment = get_last_fee_assesment(e);
 
     let time_elapsed = current_timestamp.checked_sub(last_fee_assessment).unwrap();
 
+    // If no time has passed since the last fee assessment, no fees are collected
     if time_elapsed == 0 {
         return Ok(());
     }
 
-    let fee_rate = fetch_fee_rate(e);
+    // Fetch the individual fees for DeFindex and Vault, then calculate the total rate
+    let defindex_fee = fetch_defindex_fee(e);
+    let vault_fee = get_vault_fee(e);
+    let total_fee_rate = defindex_fee.checked_add(vault_fee).unwrap();
 
-    let total_fees = calculate_fees(e, time_elapsed, fee_rate)?;
+    // Calculate the total fees in dfTokens based on the combined fee rate
+    let total_fees = calculate_fees(e, time_elapsed, total_fee_rate)?;
 
-    // Mint the total fees as dfTokens
-    mint_fees(e, total_fees)?;
+    // Mint and distribute the fees proportionally
+    mint_fees(e, total_fees, defindex_fee, vault_fee)?;
 
     // Update the last fee assessment timestamp
     set_last_fee_assesment(e, &current_timestamp);
@@ -62,18 +69,19 @@ pub fn collect_fees(e: &Env) -> Result<(), ContractError> {
     Ok(())
 }
 
-fn mint_fees(e: &Env, total_fees: i128) -> Result<(), ContractError> {
+/// Mints dfTokens for fees and distributes them to the vault fee receiver and DeFindex receiver.
+fn mint_fees(e: &Env, total_fees: i128, defindex_fee: u32, vault_fee: u32) -> Result<(), ContractError> {
     let access_control = AccessControl::new(&e);
-    
+
     let vault_fee_receiver = access_control.get_fee_receiver()?;
     let defindex_receiver = get_defindex_receiver(e);
 
-    let vault_share_bps = get_vault_share(e);
+    // Calculate shares for each receiver based on their fee proportion
+    let total_fee_bps = defindex_fee as i128 + vault_fee as i128;
+    let defindex_shares = (total_fees * defindex_fee as i128) / total_fee_bps;
+    let vault_shares = total_fees - defindex_shares;
 
-    let vault_shares = (total_fees * vault_share_bps as i128) / MAX_BPS;
-    
-    let defindex_shares = total_fees - vault_shares;
-
+    // Mint shares for both receivers
     internal_mint(e.clone(), vault_fee_receiver.clone(), vault_shares);
     internal_mint(e.clone(), defindex_receiver.clone(), defindex_shares);
 

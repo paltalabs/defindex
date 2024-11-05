@@ -79,9 +79,9 @@ pub fn calculate_asset_amounts_for_dftokens(
 pub fn calculate_dftokens_from_asset_amounts(
     env: &Env,
     asset_amounts: Map<Address, i128>, // The input asset amounts
+    total_managed_funds: Map<Address, i128>, // The total managed funds for each asset
 ) -> Result<i128, ContractError> {
     let total_supply = VaultToken::total_supply(env.clone()); // Total dfToken supply
-    let total_managed_funds = fetch_total_managed_funds(&env); // Fetch all managed assets
 
     // Initialize the minimum dfTokens corresponding to each asset
     let mut min_df_tokens: Option<i128> = None;
