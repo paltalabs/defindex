@@ -1,6 +1,13 @@
 use soroban_sdk::{vec as sorobanvec, String, Vec};
 
-use crate::test::{create_strategy_params, defindex_vault::{ActionType, AssetAllocation, Instruction, Investment, OptionalSwapDetailsExactIn, OptionalSwapDetailsExactOut}, DeFindexVaultTest};
+use crate::test::{
+    create_strategy_params,
+    defindex_vault::{
+        ActionType, AssetAllocation, Instruction, Investment, OptionalSwapDetailsExactIn,
+        OptionalSwapDetailsExactOut,
+    },
+    DeFindexVaultTest,
+};
 
 #[test]
 fn rebalance() {
@@ -27,9 +34,9 @@ fn rebalance() {
         &String::from_str(&test.env, "DFT"),
     );
     let amount = 1000i128;
-    
+
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
-    
+
     test.token0_admin_client.mint(&users[0], &amount);
     let user_balance = test.token0.balance(&users[0]);
     assert_eq!(user_balance, amount);
@@ -37,19 +44,23 @@ fn rebalance() {
     let df_balance = test.defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
-    test.defindex_contract.deposit(&sorobanvec![&test.env, amount], &sorobanvec![&test.env, amount], &users[0]);
+    test.defindex_contract.deposit(
+        &sorobanvec![&test.env, amount],
+        &sorobanvec![&test.env, amount],
+        &users[0],
+    );
 
     let df_balance = test.defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount);
 
     let investments = sorobanvec![
-        &test.env, 
+        &test.env,
         Investment {
-          amount: amount, 
-          strategy: test.strategy_client.address.clone()
+            amount: amount,
+            strategy: test.strategy_client.address.clone()
         }
     ];
-    
+
     test.defindex_contract.invest(&investments);
 
     let vault_balance = test.token0.balance(&test.defindex_contract.address);
@@ -60,9 +71,8 @@ fn rebalance() {
     let instruction_amount_0 = 200i128;
     let instruction_amount_1 = 100i128;
 
-    
     let instructions = sorobanvec![
-        &test.env, 
+        &test.env,
         Instruction {
             action: ActionType::Withdraw,
             strategy: Some(test.strategy_client.address.clone()),
@@ -83,5 +93,4 @@ fn rebalance() {
 
     let vault_balance = test.token0.balance(&test.defindex_contract.address);
     assert_eq!(vault_balance, instruction_amount_1);
-
 }

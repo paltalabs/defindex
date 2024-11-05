@@ -1,8 +1,14 @@
 use soroban_sdk::{panic_with_error, Address, Env, Map, Vec};
 
 use crate::{
-    access::{AccessControl, AccessControlTrait, RolesDataKey}, funds::{fetch_invested_funds_for_asset, fetch_invested_funds_for_strategy, fetch_total_managed_funds}, models::AssetAllocation, token::VaultToken, ContractError
-
+    access::{AccessControl, AccessControlTrait, RolesDataKey},
+    funds::{
+        fetch_invested_funds_for_asset, fetch_invested_funds_for_strategy,
+        fetch_total_managed_funds,
+    },
+    models::AssetAllocation,
+    token::VaultToken,
+    ContractError,
 };
 
 pub const DAY_IN_LEDGERS: u32 = 17280;
@@ -51,7 +57,8 @@ pub fn calculate_withdrawal_amounts(
 
         let strategy_invested_funds = fetch_invested_funds_for_strategy(e, &strategy.address);
 
-        let strategy_share_of_withdrawal = (amount * strategy_invested_funds) / total_invested_in_strategies;
+        let strategy_share_of_withdrawal =
+            (amount * strategy_invested_funds) / total_invested_in_strategies;
 
         withdrawal_amounts.set(strategy.address.clone(), strategy_share_of_withdrawal);
     }
@@ -131,7 +138,7 @@ pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
                                                                         // this might be the first deposit... in this case, the ratio will be enforced by the first depositor
                                                                         // TODO: might happen that the reserve_target is zero because everything is in one asset!?
                                                                         // in this case we ned to check the ratio
-        // TODO VERY DANGEROUS.
+                                                                        // TODO VERY DANGEROUS.
     }
     let amount_desired_target = amounts_desired.get(*i).unwrap(); // i128
 
@@ -148,22 +155,23 @@ pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
         }
     }
     //TODO: calculate the shares to mint = total_supply * amount_desired_target  / reserve_target
-    let shares_to_mint = VaultToken::total_supply(e.clone()) * amount_desired_target / reserve_target;
+    let shares_to_mint =
+        VaultToken::total_supply(e.clone()) * amount_desired_target / reserve_target;
     (optimal_amounts, shares_to_mint)
 }
 /// Calculates the optimal amounts to deposit for a set of assets, along with the shares to mint.
 /// This function iterates over a list of assets and checks if the desired deposit amounts
 /// match the optimal deposit strategy, based on current managed funds and asset ratios.
-/// 
+///
 /// If the desired amount for a given asset cannot be achieved due to constraints (e.g., it's below the minimum amount),
 /// the function attempts to find an optimal solution by adjusting the amounts of subsequent assets.
-/// 
+///
 /// # Arguments
 /// * `e` - The current environment.
 /// * `assets` - A vector of assets for which deposits are being calculated.
 /// * `amounts_desired` - A vector of desired amounts for each asset.
 /// * `amounts_min` - A vector of minimum amounts for each asset, below which deposits are not allowed.
-/// 
+///
 /// # Returns
 /// A tuple containing:
 /// * A vector of optimal amounts to deposit for each asset.
@@ -183,7 +191,7 @@ pub fn calculate_deposit_amounts_and_shares_to_mint(
     amounts_min: &Vec<i128>,
 ) -> (Vec<i128>, i128) {
     // Retrieve the total managed funds for each asset as a Map<Address, i128>.
-    let total_managed_funds = fetch_total_managed_funds(e); 
+    let total_managed_funds = fetch_total_managed_funds(e);
 
     // Iterate over each asset in the assets vector.
     for i in 0..assets.len() {

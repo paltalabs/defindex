@@ -8,28 +8,30 @@ use std::vec;
 
 // DeFindex Hodl Strategy Contract
 pub mod hodl_strategy {
-    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/hodl_strategy.optimized.wasm");
+    soroban_sdk::contractimport!(
+        file = "../target/wasm32-unknown-unknown/release/hodl_strategy.optimized.wasm"
+    );
     pub type HodlStrategyClient<'a> = Client<'a>;
 }
-use hodl_strategy::{HodlStrategyClient};
+use hodl_strategy::HodlStrategyClient;
 
-fn create_hodl_strategy<'a>(e: & Env, asset: & Address) -> HodlStrategyClient<'a> {
+fn create_hodl_strategy<'a>(e: &Env, asset: &Address) -> HodlStrategyClient<'a> {
     let contract_address = &e.register_contract_wasm(None, hodl_strategy::WASM);
-    let hodl_strategy = HodlStrategyClient::new(e, contract_address); 
+    let hodl_strategy = HodlStrategyClient::new(e, contract_address);
     hodl_strategy.initialize(&asset, &sorobanvec![&e]);
     hodl_strategy
 }
 
-// DeFindex Vault Contract 
+// DeFindex Vault Contract
 pub mod defindex_vault {
-    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/defindex_vault.optimized.wasm");
+    soroban_sdk::contractimport!(
+        file = "../target/wasm32-unknown-unknown/release/defindex_vault.optimized.wasm"
+    );
     pub type DeFindexVaultClient<'a> = Client<'a>;
 }
 use defindex_vault::{DeFindexVaultClient, Strategy};
 
-fn create_defindex_vault<'a>(
-    e: & Env
-) -> DeFindexVaultClient<'a> {
+fn create_defindex_vault<'a>(e: &Env) -> DeFindexVaultClient<'a> {
     let address = &e.register_contract_wasm(None, defindex_vault::WASM);
     let client = DeFindexVaultClient::new(e, address);
     client
@@ -52,7 +54,11 @@ fn create_defindex_vault<'a>(
 
 // Create Test Token
 pub(crate) fn create_token_contract<'a>(e: &Env, admin: &Address) -> SorobanTokenClient<'a> {
-    SorobanTokenClient::new(e, &e.register_stellar_asset_contract_v2(admin.clone()).address())
+    SorobanTokenClient::new(
+        e,
+        &e.register_stellar_asset_contract_v2(admin.clone())
+            .address(),
+    )
 }
 
 pub(crate) fn get_token_admin_client<'a>(
@@ -142,8 +148,8 @@ impl<'a> DeFindexVaultTest<'a> {
 }
 
 mod admin;
-mod initialize;
-mod withdraw;
 mod deposit;
 mod emergency_withdraw;
+mod initialize;
 mod rebalance;
+mod withdraw;

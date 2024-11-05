@@ -5,8 +5,8 @@ use crate::models::AssetAllocation;
 #[derive(Clone)]
 #[contracttype]
 enum DataKey {
-    AssetAllocation(u32),      // AssetAllocation Addresse by index
-    TotalAssets,     // Total number of tokens
+    AssetAllocation(u32), // AssetAllocation Addresse by index
+    TotalAssets,          // Total number of tokens
     DeFindexReceiver,
     Factory,
     LastFeeAssessment,
@@ -15,11 +15,16 @@ enum DataKey {
 
 // Assets Management
 pub fn set_asset(e: &Env, index: u32, asset: &AssetAllocation) {
-    e.storage().instance().set(&DataKey::AssetAllocation(index), asset);
+    e.storage()
+        .instance()
+        .set(&DataKey::AssetAllocation(index), asset);
 }
 
 pub fn get_asset(e: &Env, index: u32) -> AssetAllocation {
-    e.storage().instance().get(&DataKey::AssetAllocation(index)).unwrap()
+    e.storage()
+        .instance()
+        .get(&DataKey::AssetAllocation(index))
+        .unwrap()
 }
 
 pub fn set_total_assets(e: &Env, n: u32) {
@@ -55,16 +60,11 @@ pub fn get_defindex_receiver(e: &Env) -> Address {
 
 // DeFindex Factory
 pub fn set_factory(e: &Env, address: &Address) {
-    e.storage()
-        .instance()
-        .set(&DataKey::Factory, address);
+    e.storage().instance().set(&DataKey::Factory, address);
 }
 
 pub fn get_factory(e: &Env) -> Address {
-    e.storage()
-        .instance()
-        .get(&DataKey::Factory)
-        .unwrap()
+    e.storage().instance().get(&DataKey::Factory).unwrap()
 }
 
 // Last Fee Assesment
@@ -89,8 +89,5 @@ pub fn set_vault_share(e: &Env, vault_share: &u32) {
 }
 
 pub fn get_vault_share(e: &Env) -> u32 {
-    e.storage()
-        .instance()
-        .get(&DataKey::VaultShare)
-        .unwrap()
+    e.storage().instance().get(&DataKey::VaultShare).unwrap()
 }

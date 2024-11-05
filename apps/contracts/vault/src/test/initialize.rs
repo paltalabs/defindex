@@ -1,6 +1,10 @@
 use soroban_sdk::{vec as sorobanvec, String, Vec};
 
-use crate::test::{create_strategy_params, defindex_vault::{AssetAllocation, ContractError}, DeFindexVaultTest};
+use crate::test::{
+    create_strategy_params,
+    defindex_vault::{AssetAllocation, ContractError},
+    DeFindexVaultTest,
+};
 
 #[test]
 fn test_initialize_and_get_roles() {

@@ -1,6 +1,6 @@
 //! Definition of the Events used in the DeFindex Vault contract
-use soroban_sdk::{contracttype, symbol_short, Address, Env, Vec};
 use crate::models::AssetAllocation;
+use soroban_sdk::{contracttype, symbol_short, Address, Env, Vec};
 
 // INITIALIZED VAULT EVENT
 #[contracttype]
@@ -178,9 +178,7 @@ pub struct ManagerChangedEvent {
 
 /// Publishes a `ManagerChangedEvent` to the event stream.
 pub(crate) fn emit_manager_changed_event(e: &Env, new_manager: Address) {
-    let event = ManagerChangedEvent {
-        new_manager,
-    };
+    let event = ManagerChangedEvent { new_manager };
 
     e.events()
         .publish(("DeFindexVault", symbol_short!("nmanager")), event);
@@ -194,10 +192,7 @@ pub struct EmergencyManagerChangedEvent {
 }
 
 /// Publishes an `EmergencyManagerChangedEvent` to the event stream.
-pub(crate) fn emit_emergency_manager_changed_event(
-    e: &Env,
-    new_emergency_manager: Address,
-) {
+pub(crate) fn emit_emergency_manager_changed_event(e: &Env, new_emergency_manager: Address) {
     let event = EmergencyManagerChangedEvent {
         new_emergency_manager,
     };
