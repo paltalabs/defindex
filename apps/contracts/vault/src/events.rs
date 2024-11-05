@@ -7,9 +7,9 @@ use soroban_sdk::{contracttype, symbol_short, Address, Env, Vec};
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct InitializedVaultEvent {
     pub emergency_manager: Address,
-    pub fee_receiver: Address,
+    pub vault_fee_receiver: Address,
     pub manager: Address,
-    pub defindex_receiver: Address,
+    pub defindex_protocol_receiver: Address,
     pub assets: Vec<AssetAllocation>,
 }
 
@@ -17,16 +17,16 @@ pub struct InitializedVaultEvent {
 pub(crate) fn emit_initialized_vault(
     e: &Env,
     emergency_manager: Address,
-    fee_receiver: Address,
+    vault_fee_receiver: Address,
     manager: Address,
-    defindex_receiver: Address,
+    defindex_protocol_receiver: Address,
     assets: Vec<AssetAllocation>,
 ) {
     let event = InitializedVaultEvent {
         emergency_manager,
-        fee_receiver,
+        vault_fee_receiver,
         manager,
-        defindex_receiver,
+        defindex_protocol_receiver,
         assets,
     };
 
@@ -205,7 +205,7 @@ pub(crate) fn emit_emergency_manager_changed_event(e: &Env, new_emergency_manage
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FeesMintedEvent {
-    pub defindex_receiver: Address,
+    pub defindex_protocol_receiver: Address,
     pub defindex_shares: i128,
     pub vault_receiver: Address,
     pub vault_shares: i128,
@@ -214,13 +214,13 @@ pub struct FeesMintedEvent {
 /// Publishes an `EmergencyManagerChangedEvent` to the event stream.
 pub(crate) fn emit_fees_minted_event(
     e: &Env,
-    defindex_receiver: Address,
+    defindex_protocol_receiver: Address,
     defindex_shares: i128,
     vault_receiver: Address,
     vault_shares: i128,
 ) {
     let event = FeesMintedEvent {
-        defindex_receiver,
+        defindex_protocol_receiver,
         defindex_shares,
         vault_receiver,
         vault_shares,

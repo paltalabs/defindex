@@ -7,7 +7,7 @@ use crate::models::AssetAllocation;
 enum DataKey {
     AssetAllocation(u32), // AssetAllocation Addresse by index
     TotalAssets,          // Total number of tokens
-    DeFindexReceiver,
+    DeFindexProtocolFeeReceiver,
     Factory,
     LastFeeAssessment,
     VaultShare,
@@ -45,16 +45,16 @@ pub fn get_assets(e: &Env) -> Vec<AssetAllocation> {
 }
 
 // DeFindex Fee Receiver
-pub fn set_defindex_receiver(e: &Env, address: &Address) {
+pub fn set_defindex_protocol_fee_receiver(e: &Env, address: &Address) {
     e.storage()
         .instance()
-        .set(&DataKey::DeFindexReceiver, address);
+        .set(&DataKey::DeFindexProtocolFeeReceiver, address);
 }
 
-pub fn get_defindex_receiver(e: &Env) -> Address {
+pub fn get_defindex_protocol_fee_receiver(e: &Env) -> Address {
     e.storage()
         .instance()
-        .get(&DataKey::DeFindexReceiver)
+        .get(&DataKey::DeFindexProtocolFeeReceiver)
         .unwrap()
 }
 
@@ -82,10 +82,10 @@ pub fn get_last_fee_assesment(e: &Env) -> u64 {
 }
 
 // Vault Share
-pub fn set_vault_share(e: &Env, vault_share: &u32) {
+pub fn set_vault_share(e: &Env, vault_fee: &u32) {
     e.storage()
         .instance()
-        .set(&DataKey::VaultShare, vault_share);
+        .set(&DataKey::VaultShare, vault_fee);
 }
 
 pub fn get_vault_share(e: &Env) -> u32 {

@@ -33,7 +33,7 @@ use models::{
     OptionalSwapDetailsExactOut,
 };
 use storage::{
-    get_assets, set_asset, set_defindex_receiver, set_factory, set_last_fee_assesment,
+    get_assets, set_asset, set_defindex_protocol_fee_receiver, set_factory, set_last_fee_assesment,
     set_total_assets, set_vault_share,
 };
 use strategies::{
@@ -53,32 +53,39 @@ pub use error::ContractError;
 pub struct DeFindexVault;
 
 #[contractimpl]
-impl VaultTrait for DeFindexVault {
+impl VaultTrait for DeFindexVault { 
     /// Initializes the DeFindex Vault contract with the required parameters.
     ///
-    /// This function sets the roles for emergency manager, fee receiver, and manager.
+    /// This function sets the roles for manager, emergency manager, vault fee receiver, and manager.
     /// It also stores the list of assets to be managed by the vault, including strategies for each asset.
     ///
-    /// # Arguments:
-    /// * `e` - The environment.
-    /// * `assets` - A vector of `AssetAllocation` structs representing the assets and their associated strategies.
-    /// * `manager` - The address responsible for managing the vault.
-    /// * `emergency_manager` - The address with emergency control over the vault.
-    /// * `fee_receiver` - The address that will receive fees from the vault.
-    /// * `vault_share` - The percentage of the vault's fees that will be sent to the DeFindex receiver. in BPS.
-    /// * `defindex_receiver` - The address that will receive fees for DeFindex from the vault.
-    /// * `factory` - The address of the factory that deployed the vault.
+    /// # Arguments
+    /// - `assets`: List of asset allocations for the vault, including strategies associated with each asset.
+    /// - `manager`: Primary vault manager with permissions for vault control.
+    /// - `emergency_manager`: Address with emergency access for emergency control over the vault.
+    /// - `vault_fee_receiver`: Address designated to receive the vault fee receiver's portion of management fees.
+    /// - `vault_fee`: Vault-specific fee percentage in basis points (typically set at 0-2% APR).
+    /// - `defindex_protocol_receiver`: Address receiving DeFindex’s protocol-wide fee in basis points (0.5% APR).
+    /// - `factory`: Factory contract address for deployment linkage.
+    /// - `vault_name`: Name of the vault token to be displayed in metadata.
+    /// - `vault_symbol`: Symbol representing the vault’s token.
     ///
-    /// # Returns:
-    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
+    /// # Returns
+    /// - `Result<(), ContractError>`: Returns `Ok(())` if initialization succeeds, or a `ContractError` if 
+    ///   any setup fails (e.g., strategy mismatch with asset).
+    ///
+    /// # Errors
+    /// - `ContractError::AlreadyInitialized`: If the vault has already been initialized.
+    /// - `ContractError::StrategyDoesNotSupportAsset`: If a strategy within an asset does not support the asset’s contract.
+    ///
     fn initialize(
         e: Env,
         assets: Vec<AssetAllocation>,
         manager: Address,
         emergency_manager: Address,
-        fee_receiver: Address,
-        vault_share: u32,
-        defindex_receiver: Address,
+        vault_fee_receiver: Address,
+        vault_fee: u32,
+        defindex_protocol_receiver: Address,
         factory: Address,
         vault_name: String,
         vault_symbol: String,
@@ -89,14 +96,14 @@ impl VaultTrait for DeFindexVault {
         }
 
         access_control.set_role(&RolesDataKey::EmergencyManager, &emergency_manager);
-        access_control.set_role(&RolesDataKey::FeeReceiver, &fee_receiver);
+        access_control.set_role(&RolesDataKey::VaultFeeReceiver, &vault_fee_receiver);
         access_control.set_role(&RolesDataKey::Manager, &manager);
 
         // Set Vault Share (in basis points)
-        set_vault_share(&e, &vault_share);
+        set_vault_share(&e, &vault_fee);
 
         // Set Paltalabs Fee Receiver
-        set_defindex_receiver(&e, &defindex_receiver);
+        set_defindex_protocol_fee_receiver(&e, &defindex_protocol_receiver);
 
         // Set the factory address
         set_factory(&e, &factory);
@@ -134,9 +141,9 @@ impl VaultTrait for DeFindexVault {
         events::emit_initialized_vault(
             &e,
             emergency_manager,
-            fee_receiver,
+            vault_fee_receiver,
             manager,
-            defindex_receiver,
+            defindex_protocol_receiver,
             assets,
         );
 
@@ -173,9 +180,6 @@ impl VaultTrait for DeFindexVault {
 
         // get assets
         let assets = get_assets(&e);
-        // lenght should be equal tolength
-        let assets_length = assets.len();
-        let asset = t_assets(&e);
         let assets_length = assets.len();
 
         // assets lenght should be equal to amounts_desired and amounts_min length
@@ -201,7 +205,7 @@ impl VaultTrait for DeFindexVault {
                 let total_managed_funds = fetch_total_managed_funds(&e);
                 VaultToken::total_supply(e.clone()) * amounts_desired.get(0).unwrap()
                     /   
-                        .get(assets.get(0).unwrap().address.clone())
+                    total_managed_funds.get(assets.get(0).unwrap().address.clone())
                         .unwrap()
             };
             (amounts_desired, shares)
@@ -505,7 +509,7 @@ impl AdminInterfaceTrait for DeFindexVault {
     /// # Arguments:
     /// * `e` - The environment.
     /// * `caller` - The address initiating the change (must be the manager or emergency manager).
-    /// * `fee_receiver` - The new fee receiver address.
+    /// * `vault_fee_receiver` - The new fee receiver address.
     ///
     /// # Returns:
     /// * `()` - No return value.

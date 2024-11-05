@@ -118,7 +118,7 @@ $$
 f_{\text{total}} = f_{\text{DeFindex}} + f_{\text{Vault}}
 $$
 
-where $f_{\text{DeFindex}} = 0.5\%$ is a fixed fee that goes to the DeFindex Protocol Fee Receiver address, and $f_{\text{Vault}}$ is a variable APR, typically between 0.5% and 2%, that goes to the Vault Fee Receiver address.
+where $f_{\text{DeFindex}} = 0.5\%$ is a fixed `defindex_fee` that goes to the DeFindex Protocol Fee Receiver address, and $f_{\text{Vault}}$ is a variable APR `vault_fee`, typically between 0.5% and 2%, that goes to the Vault Fee Receiver address.
 
 ### Fee Collection Methodology
 

@@ -26,9 +26,9 @@ fn test_initialize_and_get_roles() {
         &assets,
         &test.manager,
         &test.emergency_manager,
-        &test.fee_receiver,
+        &test.vault_fee_receiver,
         &2000u32,
-        &test.defindex_receiver,
+        &test.defindex_protocol_receiver,
         &test.defindex_factory,
         &String::from_str(&test.env, "dfToken"),
         &String::from_str(&test.env, "DFT"),
@@ -39,7 +39,7 @@ fn test_initialize_and_get_roles() {
     let emergency_manager_role = test.defindex_contract.get_emergency_manager();
 
     assert_eq!(manager_role, test.manager);
-    assert_eq!(fee_receiver_role, test.fee_receiver);
+    assert_eq!(fee_receiver_role, test.vault_fee_receiver);
     assert_eq!(emergency_manager_role, test.emergency_manager);
 }
 
@@ -76,9 +76,9 @@ fn test_initialize_twice() {
         &assets,
         &test.manager,
         &test.emergency_manager,
-        &test.fee_receiver,
+        &test.vault_fee_receiver,
         &2000u32,
-        &test.defindex_receiver,
+        &test.defindex_protocol_receiver,
         &test.defindex_factory,
         &String::from_str(&test.env, "dfToken"),
         &String::from_str(&test.env, "DFT"),
@@ -88,9 +88,9 @@ fn test_initialize_twice() {
         &assets,
         &test.manager,
         &test.emergency_manager,
-        &test.fee_receiver,
+        &test.vault_fee_receiver,
         &2000u32,
-        &test.defindex_receiver,
+        &test.defindex_protocol_receiver,
         &test.defindex_factory,
         &String::from_str(&test.env, "dfToken"),
         &String::from_str(&test.env, "DFT"),

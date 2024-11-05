@@ -26,9 +26,9 @@ fn deposit_amounts_desired_wrong_length() {
         &assets,
         &test.manager,
         &test.emergency_manager,
-        &test.fee_receiver,
+        &test.vault_fee_receiver,
         &2000u32,
-        &test.defindex_receiver,
+        &test.defindex_protocol_receiver,
         &test.defindex_factory,
         &String::from_str(&test.env, "dfToken"),
         &String::from_str(&test.env, "DFT"),
@@ -43,7 +43,7 @@ fn deposit_amounts_desired_wrong_length() {
         &users[0],
     );
 
-    assert_eq!(response, Err(Ok(ContractError::WrongAmuntsLength)));
+    assert_eq!(response, Err(Ok(ContractError::WrongAmountsLength)));
 }
 
 #[test]
@@ -88,8 +88,8 @@ fn deposit_several_assets() {
 //         &assets,
 //         &test.manager,
 //         &test.emergency_manager,
-//         &test.fee_receiver,
-//         &test.defindex_receiver,
+//         &test.vault_fee_receiver,
+//         &test.defindex_protocol_receiver,
 //     );
 //     let amount = 1000i128;
 

@@ -16,9 +16,9 @@ pub trait VaultTrait {
     /// * `assets` - A vector of `AssetAllocation` structs representing the assets and their associated strategies.
     /// * `manager` - The address responsible for managing the vault.
     /// * `emergency_manager` - The address with emergency control over the vault.
-    /// * `fee_receiver` - The address that will receive fees from the vault.
-    /// * `vault_share` - The percentage of the vault's fees that will be sent to the DeFindex receiver. in BPS.
-    /// * `defindex_receiver` - The address that will receive fees for DeFindex from the vault.
+    /// * `vault_fee_receiver` - The address that will receive fees from the vault.
+    /// * `vault_fee` - The percentage of the vault's fees that will be sent to the DeFindex receiver. in BPS.
+    /// * `defindex_protocol_receiver` - The address that will receive fees for DeFindex from the vault.
     /// * `factory` - The address of the factory that deployed the vault.
     ///
     /// # Returns:
@@ -28,9 +28,9 @@ pub trait VaultTrait {
         assets: Vec<AssetAllocation>,
         manager: Address,
         emergency_manager: Address,
-        fee_receiver: Address,
-        vault_share: u32,
-        defindex_receiver: Address,
+        vault_fee_receiver: Address,
+        vault_fee: u32,
+        defindex_protocol_receiver: Address,
         factory: Address,
         vault_name: String,
         vault_symbol: String,
@@ -185,7 +185,7 @@ pub trait AdminInterfaceTrait {
     /// # Arguments:
     /// * `e` - The environment.
     /// * `caller` - The address initiating the change (must be the manager or emergency manager).
-    /// * `fee_receiver` - The new fee receiver address.
+    /// * `vault_fee_receiver` - The new fee receiver address.
     ///
     /// # Returns:
     /// * `()` - No return value.

@@ -88,8 +88,8 @@ pub struct DeFindexVaultTest<'a> {
     token1_admin_client: SorobanTokenAdminClient<'a>,
     token1: SorobanTokenClient<'a>,
     emergency_manager: Address,
-    fee_receiver: Address,
-    defindex_receiver: Address,
+    vault_fee_receiver: Address,
+    defindex_protocol_receiver: Address,
     manager: Address,
     strategy_client: HodlStrategyClient<'a>,
 }
@@ -105,8 +105,8 @@ impl<'a> DeFindexVaultTest<'a> {
         let defindex_contract = create_defindex_vault(&env);
 
         let emergency_manager = Address::generate(&env);
-        let fee_receiver = Address::generate(&env);
-        let defindex_receiver = Address::generate(&env);
+        let vault_fee_receiver = Address::generate(&env);
+        let defindex_protocol_receiver = Address::generate(&env);
         let manager = Address::generate(&env);
 
         let token0_admin = Address::generate(&env);
@@ -131,8 +131,8 @@ impl<'a> DeFindexVaultTest<'a> {
             token1_admin_client,
             token1,
             emergency_manager,
-            fee_receiver,
-            defindex_receiver,
+            vault_fee_receiver,
+            defindex_protocol_receiver,
             manager,
             strategy_client,
         }

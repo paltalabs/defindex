@@ -6,7 +6,7 @@ use crate::{
     events,
     funds::fetch_total_managed_funds,
     storage::{
-        get_defindex_receiver, get_factory, get_last_fee_assesment, get_vault_share,
+        get_defindex_protocol_fee_receiver, get_factory, get_last_fee_assesment, get_vault_share,
         set_last_fee_assesment,
     },
     token::internal_mint,
@@ -73,7 +73,7 @@ fn mint_fees(e: &Env, total_fees: i128) -> Result<(), ContractError> {
     let access_control = AccessControl::new(&e);
 
     let vault_fee_receiver = access_control.get_fee_receiver()?;
-    let defindex_receiver = get_defindex_receiver(e);
+    let defindex_protocol_receiver = get_defindex_protocol_fee_receiver(e);
 
     let vault_share_bps = get_vault_share(e);
 
@@ -82,11 +82,11 @@ fn mint_fees(e: &Env, total_fees: i128) -> Result<(), ContractError> {
     let defindex_shares = total_fees - vault_shares;
 
     internal_mint(e.clone(), vault_fee_receiver.clone(), vault_shares);
-    internal_mint(e.clone(), defindex_receiver.clone(), defindex_shares);
+    internal_mint(e.clone(), defindex_protocol_receiver.clone(), defindex_shares);
 
     events::emit_fees_minted_event(
         e,
-        defindex_receiver,
+        defindex_protocol_receiver,
         defindex_shares,
         vault_fee_receiver,
         vault_shares,
