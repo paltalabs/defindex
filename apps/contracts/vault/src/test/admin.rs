@@ -1,8 +1,12 @@
 use soroban_sdk::{
-    testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke}, vec as sorobanvec, IntoVal, String, Symbol, Vec
+    testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
+    vec as sorobanvec, IntoVal, String, Symbol, Vec,
 };
 
-use crate::test::{create_strategy_params, defindex_vault::AssetAllocation, DeFindexVaultTest};
+use crate::test::{
+    create_strategy_params_token0, create_strategy_params_token1, defindex_vault::AssetAllocation,
+    DeFindexVaultTest,
+};
 
 extern crate alloc;
 use alloc::vec;
@@ -10,17 +14,18 @@ use alloc::vec;
 #[test]
 fn test_set_new_fee_receiver_by_fee_receiver() {
     let test = DeFindexVaultTest::setup();
-    let strategy_params = create_strategy_params(&test);
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
 
     let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token0.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token1.clone()
         }
     ];
 
@@ -28,41 +33,44 @@ fn test_set_new_fee_receiver_by_fee_receiver() {
         &assets,
         &test.manager,
         &test.emergency_manager,
-        &test.fee_receiver,
+        &test.vault_fee_receiver,
         &2000u32,
-        &test.defindex_receiver,
+        &test.defindex_protocol_receiver,
         &test.defindex_factory,
         &String::from_str(&test.env, "dfToken"),
         &String::from_str(&test.env, "DFT"),
     );
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
-    assert_eq!(fee_receiver_role, test.fee_receiver);
+    assert_eq!(fee_receiver_role, test.vault_fee_receiver);
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
     // Fee Receiver is setting the new fee receiver
     test.defindex_contract
         .mock_auths(&[MockAuth {
-            address: &test.fee_receiver,
+            address: &test.vault_fee_receiver,
             invoke: &MockAuthInvoke {
                 contract: &test.defindex_contract.address.clone(),
                 fn_name: "set_fee_receiver",
-                args: (&test.fee_receiver, &users[0]).into_val(&test.env),
+                args: (&test.vault_fee_receiver, &users[0]).into_val(&test.env),
                 sub_invokes: &[],
             },
         }])
-        .set_fee_receiver(&test.fee_receiver, &users[0]);
+        .set_fee_receiver(&test.vault_fee_receiver, &users[0]);
 
     let expected_auth = AuthorizedInvocation {
         // Top-level authorized function is `deploy` with all the arguments.
         function: AuthorizedFunction::Contract((
             test.defindex_contract.address.clone(),
             Symbol::new(&test.env, "set_fee_receiver"),
-            (&test.fee_receiver, users[0].clone()).into_val(&test.env),
+            (&test.vault_fee_receiver, users[0].clone()).into_val(&test.env),
         )),
         sub_invocations: vec![],
     };
-    assert_eq!(test.env.auths(), vec![(test.fee_receiver, expected_auth)]);
+    assert_eq!(
+        test.env.auths(),
+        vec![(test.vault_fee_receiver, expected_auth)]
+    );
 
     let new_fee_receiver_role = test.defindex_contract.get_fee_receiver();
     assert_eq!(new_fee_receiver_role, users[0]);
@@ -71,7 +79,8 @@ fn test_set_new_fee_receiver_by_fee_receiver() {
 #[test]
 fn test_set_new_fee_receiver_by_manager() {
     let test = DeFindexVaultTest::setup();
-    let strategy_params = create_strategy_params(&test);
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
     // let tokens: Vec<Address> = sorobanvec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
     // let ratios: Vec<u32> = sorobanvec![&test.env, 1, 1];
 
@@ -79,11 +88,11 @@ fn test_set_new_fee_receiver_by_manager() {
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token0.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token1.clone()
         }
     ];
 
@@ -91,16 +100,16 @@ fn test_set_new_fee_receiver_by_manager() {
         &assets,
         &test.manager,
         &test.emergency_manager,
-        &test.fee_receiver,
+        &test.vault_fee_receiver,
         &2000u32,
-        &test.defindex_receiver,
+        &test.defindex_protocol_receiver,
         &test.defindex_factory,
         &String::from_str(&test.env, "dfToken"),
         &String::from_str(&test.env, "DFT"),
     );
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
-    assert_eq!(fee_receiver_role, test.fee_receiver);
+    assert_eq!(fee_receiver_role, test.vault_fee_receiver);
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
     // Now Manager is setting the new fee receiver
@@ -135,7 +144,8 @@ fn test_set_new_fee_receiver_by_manager() {
 #[should_panic(expected = "HostError: Error(Contract, #130)")] // Unauthorized
 fn test_set_new_fee_receiver_by_emergency_manager() {
     let test = DeFindexVaultTest::setup();
-    let strategy_params = create_strategy_params(&test);
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
     // let tokens: Vec<Address> = sorobanvec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
     // let ratios: Vec<u32> = sorobanvec![&test.env, 1, 1];
 
@@ -143,11 +153,11 @@ fn test_set_new_fee_receiver_by_emergency_manager() {
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token0.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token1.clone()
         }
     ];
 
@@ -155,16 +165,16 @@ fn test_set_new_fee_receiver_by_emergency_manager() {
         &assets,
         &test.manager,
         &test.emergency_manager,
-        &test.fee_receiver,
+        &test.vault_fee_receiver,
         &2000u32,
-        &test.defindex_receiver,
+        &test.defindex_protocol_receiver,
         &test.defindex_factory,
         &String::from_str(&test.env, "dfToken"),
         &String::from_str(&test.env, "DFT"),
     );
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
-    assert_eq!(fee_receiver_role, test.fee_receiver);
+    assert_eq!(fee_receiver_role, test.vault_fee_receiver);
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
     // Now Emergency Manager is setting the new fee receiver
@@ -176,17 +186,18 @@ fn test_set_new_fee_receiver_by_emergency_manager() {
 #[should_panic(expected = "HostError: Error(Contract, #130)")] // Unauthorized
 fn test_set_new_fee_receiver_invalid_sender() {
     let test = DeFindexVaultTest::setup();
-    let strategy_params = create_strategy_params(&test);
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
 
     let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token0.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token1.clone()
         }
     ];
 
@@ -194,16 +205,16 @@ fn test_set_new_fee_receiver_invalid_sender() {
         &assets,
         &test.manager,
         &test.emergency_manager,
-        &test.fee_receiver,
+        &test.vault_fee_receiver,
         &2000u32,
-        &test.defindex_receiver,
+        &test.defindex_protocol_receiver,
         &test.defindex_factory,
         &String::from_str(&test.env, "dfToken"),
         &String::from_str(&test.env, "DFT"),
     );
 
     let fee_receiver_role = test.defindex_contract.get_fee_receiver();
-    assert_eq!(fee_receiver_role, test.fee_receiver);
+    assert_eq!(fee_receiver_role, test.vault_fee_receiver);
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
     // Trying to set the new fee receiver with an invalid sender
@@ -214,16 +225,17 @@ fn test_set_new_fee_receiver_invalid_sender() {
 #[test]
 fn test_set_new_manager_by_manager() {
     let test = DeFindexVaultTest::setup();
-    let strategy_params = create_strategy_params(&test);
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
     let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token0.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token1.clone()
         }
     ];
 
@@ -231,9 +243,9 @@ fn test_set_new_manager_by_manager() {
         &assets,
         &test.manager,
         &test.emergency_manager,
-        &test.fee_receiver,
+        &test.vault_fee_receiver,
         &2000u32,
-        &test.defindex_receiver,
+        &test.defindex_protocol_receiver,
         &test.defindex_factory,
         &String::from_str(&test.env, "dfToken"),
         &String::from_str(&test.env, "DFT"),

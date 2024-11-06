@@ -19,7 +19,7 @@
   Contract will be available on [GitHub](https://github.com/paltalabs). Code is reviewed, tested, and successfully passes security audits.
 
 - **Result:**
-    - ✅ Code available on [GitHub](https://github.com/paltalabs/defindex/tree/main/apps/contracts/defindex)
+    - ✅ Code available on [GitHub](https://github.com/paltalabs/defindex/tree/main/apps/contracts/vault)
     - 🛠️ Security Audits
 
 ---

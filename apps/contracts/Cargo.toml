@@ -1,5 +1,5 @@
 [workspace]
-members = ["strategies/*", "defindex", "factory"]
+members = ["strategies/*", "vault", "factory"]
 exclude = [
     "strategies/external_wasms",
 ]

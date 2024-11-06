@@ -6,14 +6,14 @@ While anyone can invest in a DeFindex, only the Manager and Emergency Manager ha
 
 The contract also holds funds not currently invested in any strategy, known as **IDLE funds**. These funds act as a safety buffer, allowing the Emergency Manager to withdraw assets from underperforming or unhealthy strategies and store them as IDLE funds. (also to enable fast small withdrawals)
 
-### Underlying Assets
+## Underlying Assets
 Each DeFindex Vault will use a defined set of underlying assets to be invested in one or more strategies. 
 
 Because Strategies are the only one that know exactly the current balance of the asset, the Vault relies on the strategies in order to know the exact total balance for each underlying asset.??
 
 Or if the Vault executes Strategies at its own name (auth), it should execute a speficic `get_assets_balance` function in the strategy contract to know exactely how many assets it has at a specific moment.
 
-### Initialization
+## Initialization
 The DeFindex Vault contract is structured with specific roles and strategies for managing assets effectively. The key roles include the **Fee Receiver**, **Manager**, and **Emergency Manager**, each responsible for different tasks in managing the Vault. Additionally, a predefined set of strategies determines how assets will be allocated within the Vault. A management fee is also established at the time of initialization, which can later be adjusted by the Fee Receiver. Further details on fee handling are explained later in the document.
 
 The allocation ratios for these strategies are not set during the deployment but are defined during the first deposit made into the Vault. For example, imagine a scenario where the Vault is set up to allocate 20% of its assets to a USDC lending pool (like Blend), 30% to another USDC lending pool (such as YieldBlox), and 50% to a USDC-XLM liquidity pool on an Automated Market Maker (AMM) platform (like Soroswap). 
@@ -32,7 +32,7 @@ In summary:
 
 
 
-### Investing: Deposit
+## Investing: Deposit
 When a user deposits assets into the DeFindex, they receive dfTokens that represent their proportional share of the DeFindex's assets. These dfTokens can later be burned to withdraw the corresponding assets.
 
 Upon calling the `deposit()` function, **the assets are transferred to the DeFindex in accordance with the current asset ratio**. For example, if the current ratio is 1 token A, 2 tokens B, and 3 tokens C for each dfToken, this ratio is maintained when assets are deposited. In return, the user receives dfTokens that represent their participation in the DeFindex Vault. 
@@ -43,7 +43,7 @@ Thus, the price per dfToken reflects a multi-asset price. For instance, using th
 
 
 
-### Withdrawals
+## Withdrawals
 When a user wishes to withdraw funds, they must burn a corresponding amount of dfTokens (shares) to receive their **assets at the ratio of the time of withdrawal**.
 
 If there are sufficient **IDLE funds** available, the withdrawal is fulfilled directly from these IDLE funds. If additional assets are needed beyond what is available in the IDLE funds, a liquidation process is triggered to release the required assets.
@@ -81,14 +81,14 @@ Where:
 - $a_{i, \text{IDLE}}$: Amount of asset $i$ to get from the IDLE funds
 - $a_{i, \text{Strategy}}$: Amount of asset $i$ to get from the strategies
 
-### Rebalancing
+## Rebalancing
 Rebalancing is overseen by the **Manager**, who adjusts the allocation of funds between different strategies to maintain or change the ratio of underlying assets. For example, a DeFindex might start with a ratio of 2 USDC to 1 XLM, as initially set by the Deployer. However, this ratio can be modified by the Manager based on strategy performance or market conditions.
 
 Upon deployment, the Deployer establishes the initial strategies and asset ratios for the DeFindex. The Manager has the authority to adjust these ratios as needed to respond to evolving conditions or to optimize performance.
 
 To ensure accurate representation of asset proportions, strategies are required to **report** the amount of each underlying asset they hold. This reporting ensures that when dfTokens are minted or redeemed, the DeFindex maintains the correct asset ratios in line with the current balance and strategy allocations.
 
-#### Functions
+### Functions
 - `assets()`: Returns the assets addresses and amount of each  of them in the DeFindex (and hence its current ratio).
 `[[adress0, amount0], [address1, amount1]]`. TODO: Separate in 2 functions.
 - `withdraw_from_strategies`: Allows the Manager to withdraw assets from one or more strategies, letting them as IDLE funds.
@@ -99,22 +99,143 @@ To ensure accurate representation of asset proportions, strategies are required 
 Then, a rebalance execution will withdraw assets from the strategies, swap them, and invest them back in the strategies.
 - `emergency_withdraw`: Allows the Emergency Manager to withdraw all assets from a specific Strategy. As arguments, it receives the the address of a Strategy. It also turns off the strategy.
 
-### Emergency Management
+## Emergency Management
 The Emergency Manager has the authority to withdraw assets from the DeFindex in case of an emergency. This role is designed to protect users' assets in the event of a critical situation, such as a hack of a underlying protocol or a if a strategy gets unhealthy. The Emergency Manager can withdraw assets from the Strategy and store them as IDLE funds inside the Vault until the situation is resolved. 
 
-### Management
+## Management
 Every DeFindex has a manager, who is responsible for managing the DeFindex. The Manager can ebalance the Vault, and invest IDLE funds in strategies. 
+## Fees
 
-### Fee Collection
-The revenues generated by the strategies are collected as shares of the DeFindex. These shares, or dfTokens, are minted whenever a deposit or withdrawal takes place.
+### Fee Receivers
+The DeFindex protocol defines two distinct fee receivers to reward both the creators of the DeFindex Protocol and the deployers of individual Vaults:
 
-The deployer can set a management fee, which can later be adjusted by the Fee Receiver. Additionally, **palta**labs charges a 0.5% APR on the vault shares.
+1. **DeFindex Protocol Fee Receiver**: Receives a fixed protocol fee of 0.5% APR.
+2. **Vault Fee Receiver**: Receives a fee set by the vault deployer, typically recommended between 0.5% and 2% APR.
 
-The recommended initial setup suggests a fee of **0.5%-2% APR on these shares**. For example, if a DeFindex has 100 shares and the fee is set at 0.5% APR, the fees collected annually would be 1 share, split as 0.5 for the Fee Receiver and 0.5 for **palta**labs. The **palta**labs fee is defined in the Factory contract.
+The Total Management Fee consists of both the protocol fee and the vault fee. Thus, each Vault has a total APR fee rate $f_{\text{total}}$ such that:
 
-These allocations are recalculated and minted whenever a user deposits, withdraws from the DeFindex, or when rebalancing occurs.
+$$
+f_{\text{total}} = f_{\text{DeFindex}} + f_{\text{Vault}}
+$$
 
-For instance, let's say a DeFindex starts with an initial value of 1 USDC per share and 100 shares (dfTokens). These 100 USDC are invested in a lending protocol offering an 8% APY. The DeFindex also has a 0.5% APR fee. After one year, the investment grows to 108 USDC. Additionally, 1 dfToken is minted as a fee. This means the DeFindex now holds 101 dfTokens backed by 108 USDC, making the price per share approximately 1.07 USDC. As a result, a user holding 100 dfTokens will have a value equivalent to around 107 USDC, while the collected fee will be backed by about 1.07 USDC.
+where $f_{\text{DeFindex}} = 0.5\%$ is a fixed `defindex_fee` that goes to the DeFindex Protocol Fee Receiver address, and $f_{\text{Vault}}$ is a variable APR `vault_fee`, typically between 0.5% and 2%, that goes to the Vault Fee Receiver address.
+
+### Fee Collection Methodology
+
+The fee collection process mints new shares, or dfTokens, to cover the accrued management fees. These shares are calculated based on the elapsed time since the last fee assessment, ensuring fees are accrued based on the actual period of asset management. The fee collection is triggered whenever there is a vault interaction, such as a `deposit`, `withdrawal`, or even an explicit `fee_collection` call, with calculations based on the time elapsed since the last fee assessment.
+
+### Mathematical Derivation of New Fees
+
+Let:
+
+- $V_0$  be the Total Value Locked (TVL) at the last assessment,
+- $s_0$  be the Total Shares (dfTokens) at the last assessment,
+- $f_{\text{total}}$  be the Total Management Fee (APR).
+
+Over a time period $\Delta t$, the fees due for collection are derived as a value represented by newly minted shares.
+
+To mint new shares for fee distribution, we calculate the required number of new shares, $s_f$, that correspond to the total management fee over the elapsed period.
+
+After a period $\Delta t$ (expressed in seconds), and after the fee collection process the new total shares $s_1$ should be:
+
+$$
+s_1 = s_0 + s_f
+$$
+
+Since `fee_collection` is always called before any `deposit` or `withdrawal`, we assume that the Total Value $V_1$ remains equal to $V_0$.
+
+We establish the following condition to ensure the number of minted shares accurately reflects the management fee accrued over $\Delta t$. The value of the new minted shares $s_f$ should equal the prorated APR fee share of the total value of the vault. In mathematical terms:
+
+$$
+\frac{V_0}{s_1} \times s_f = V_0 \times f_{\text{total}} \times \frac{\Delta t}{\text{SECONDS PER YEAR}}
+$$
+
+Rearranging terms, we get:
+
+$$
+s_f = \frac{f_{\text{total}} \times s_0 \times \Delta t}{\text{SECONDS PER YEAR} - f_{\text{total}} \times \Delta t}
+$$
+
+This equation gives the precise quantity of new shares $s_f$ to mint as dfTokens for the management fee over the period $\Delta t$.
+
+### Distribution of Fees
+
+Once the total fees, $s_f$, are calculated, the shares are split proportionally between the DeFindex Protocol Fee Receiver and the Vault Fee Receiver. This is done by calculating the ratio of each fee receiver’s APR to the total APR:
+
+$$
+s_{\text{DeFindex}} = \frac{s_f \times f_{\text{DeFindex}}}{f_{\text{total}}}
+$$
+
+$$
+s_{\text{Vault}} = s_f - s_{\text{DeFindex}}
+$$
+
+This ensures that each fee receiver is allocated their respective share of dfTokens based on their fee contribution to $f_{\text{total}}$. The dfTokens are then minted to each receiver’s address as a direct representation of the fees collected.
+
+
+### Example
+
+Suppose a DeFindex vault begins with an initial value of 1 USDC per share and a total of 100 shares (dfTokens), representing an investment of 100 USDC. This investment is placed in a lending protocol with an 8% APY. The DeFindex protocol has a total management fee of 1% APR, split between a 0.5% protocol fee and a 0.5% vault fee.
+
+After one year, the investment grows to 108 USDC due to the 8% APY.
+
+#### Step 1: Calculate the Shares to Mint for Fees
+
+Using the formula:
+
+$
+s_f = \frac{f_{\text{total}} \times s_0 \times \Delta t}{\text{SECONDS PER YEAR} - f_{\text{total}} \times \Delta t}
+$
+
+where:
+- \( f_{\text{total}} = 0.01 \) (1% APR management fee),
+- \( s_0 = 100 \) (initial shares),
+- \( \Delta t = \text{SECONDS PER YEAR} \) (since this example spans a full year),
+
+we calculate \( s_f \), the number of shares to mint for the fee collection.
+
+Substituting values:
+
+$
+s_f = \frac{0.01 \times 100 \times \text{SECONDS PER YEAR}}{\text{SECONDS PER YEAR} - (0.01 \times \text{SECONDS PER YEAR})}
+$
+
+Simplifying:
+
+$
+s_f = \frac{1 \times \text{SECONDS PER YEAR}}{0.99 \times \text{SECONDS PER YEAR}} \approx 1.0101
+$
+
+Thus, approximately 1.01 dfTokens are minted as fees.
+
+#### Step 2: Update Total Shares and Calculate Price per Share
+
+With the fee tokens minted, the total dfTokens increase from 100 to 101.01.
+
+The vault now holds 108 USDC backing 101.01 dfTokens, so the new price per share is:
+
+$
+\text{Price per Share} = \frac{108}{101.01} \approx 1.069 \, \text{USDC}
+$
+
+#### Step 3: Determine the Value for a User Holding 100 dfTokens
+
+For a user holding 100 dfTokens, the value of their holdings after one year is approximately:
+
+$
+100 \, \text{dfTokens} \times 1.069 \, \text{USDC per share} = 106.9 \, \text{USDC}
+$
+
+The remaining 1.01 dfTokens represent the collected fee, backed by around:
+
+$
+1.01 \, \text{dfTokens} \times 1.069 \, \text{USDC per share} \approx 1.08 \, \text{USDC}
+\]
+
+---
+
+This breakdown clarifies how the investment grows and the management fee is deducted by minting new dfTokens, resulting in a proportional share value for both users and fee recipients.
+
 
 It is expected that the Fee Receiver is associated with the manager, allowing the entity managing the Vault to be compensated through the Fee Receiver. In other words, the Fee Receiver could be the manager using the same address, or it could be a different entity such as a streaming contract, a DAO, or another party.
 
