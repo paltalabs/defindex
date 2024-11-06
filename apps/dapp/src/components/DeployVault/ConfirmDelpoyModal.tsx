@@ -182,12 +182,12 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       emergencyManager.toScVal(),
       feeReceiver.toScVal(),
       vaultShare,
-      strategyParamsScValVec,
       vaultName,
       vaultSymbol,
-      xdr.ScVal.scvVec(ratios.map((ratio) => nativeToScVal(ratio, { type: "u32" }))),
       manager.toScVal(),
       xdr.ScVal.scvVec(assets.map((token) => new Address(token).toScVal())),
+      //strategyParamsScValVec,
+      xdr.ScVal.scvVec(ratios.map((ratio) => nativeToScVal(ratio, { type: "u32" }))),
       nativeToScVal(salt),
     ];
 
