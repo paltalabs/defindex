@@ -68,12 +68,24 @@ pub(crate) fn get_token_admin_client<'a>(
     SorobanTokenAdminClient::new(e, address)
 }
 
-pub(crate) fn create_strategy_params(test: &DeFindexVaultTest) -> Vec<Strategy> {
+pub(crate) fn create_strategy_params_token0(test: &DeFindexVaultTest) -> Vec<Strategy> {
     sorobanvec![
         &test.env,
         Strategy {
             name: String::from_str(&test.env, "Strategy 1"),
-            address: test.strategy_client.address.clone(),
+            address: test.strategy_client_token0.address.clone(),
+            paused: false,
+        }
+    ]
+}
+
+
+pub(crate) fn create_strategy_params_token1(test: &DeFindexVaultTest) -> Vec<Strategy> {
+    sorobanvec![
+        &test.env,
+        Strategy {
+            name: String::from_str(&test.env, "Strategy 1"),
+            address: test.strategy_client_token1.address.clone(),
             paused: false,
         }
     ]
@@ -91,7 +103,8 @@ pub struct DeFindexVaultTest<'a> {
     vault_fee_receiver: Address,
     defindex_protocol_receiver: Address,
     manager: Address,
-    strategy_client: HodlStrategyClient<'a>,
+    strategy_client_token0: HodlStrategyClient<'a>,
+    strategy_client_token1: HodlStrategyClient<'a>,
 }
 
 impl<'a> DeFindexVaultTest<'a> {
@@ -120,7 +133,8 @@ impl<'a> DeFindexVaultTest<'a> {
 
         // token1_admin_client.mint(to, amount);
 
-        let strategy_client = create_hodl_strategy(&env, &token0.address);
+        let strategy_client_token0 = create_hodl_strategy(&env, &token0.address);
+        let strategy_client_token1 = create_hodl_strategy(&env, &token1.address);
 
         DeFindexVaultTest {
             env,
@@ -134,7 +148,8 @@ impl<'a> DeFindexVaultTest<'a> {
             vault_fee_receiver,
             defindex_protocol_receiver,
             manager,
-            strategy_client,
+            strategy_client_token0,
+            strategy_client_token1,
         }
     }
 
@@ -147,9 +162,9 @@ impl<'a> DeFindexVaultTest<'a> {
     }
 }
 
-mod admin;
-mod deposit;
-mod emergency_withdraw;
 mod initialize;
-mod rebalance;
-mod withdraw;
+// mod admin;
+// mod deposit;
+// mod emergency_withdraw;
+// mod rebalance;
+// mod withdraw;

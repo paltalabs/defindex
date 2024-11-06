@@ -1,7 +1,8 @@
 use soroban_sdk::{vec as sorobanvec, String, Vec};
 
 use crate::test::{
-    create_strategy_params,
+    create_strategy_params_token0,
+    create_strategy_params_token1,
     defindex_vault::{AssetAllocation, ContractError},
     DeFindexVaultTest,
 };
@@ -9,16 +10,17 @@ use crate::test::{
 #[test]
 fn test_initialize_and_get_roles() {
     let test = DeFindexVaultTest::setup();
-    let strategy_params = create_strategy_params(&test);
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
     let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token0.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token1.clone()
         }
     ];
 
@@ -58,17 +60,18 @@ fn test_get_roles_not_yet_initialized() {
 #[test]
 fn test_initialize_twice() {
     let test = DeFindexVaultTest::setup();
-    let strategy_params = create_strategy_params(&test);
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
 
     let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token0.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token1.clone()
         }
     ];
 
@@ -127,10 +130,11 @@ fn test_emergency_withdraw_not_yet_initialized() {
     let test = DeFindexVaultTest::setup();
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
-    let strategy_params = create_strategy_params(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
 
     let result = test
         .defindex_contract
-        .try_emergency_withdraw(&strategy_params.first().unwrap().address, &users[0]);
+        .try_emergency_withdraw(&strategy_params_token1.first().unwrap().address, &users[0]);
     assert_eq!(result, Err(Ok(ContractError::NotInitialized)));
 }

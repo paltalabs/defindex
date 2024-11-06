@@ -34,7 +34,7 @@ use models::{
 };
 use storage::{
     get_assets, set_asset, set_defindex_protocol_fee_receiver, set_factory, set_last_fee_assesment,
-    set_total_assets, set_vault_share,
+    set_total_assets, set_vault_fee,
 };
 use strategies::{
     get_asset_allocation_from_address, get_strategy_asset, get_strategy_client,
@@ -46,6 +46,8 @@ use utils::{
     calculate_asset_amounts_for_dftokens, calculate_deposit_amounts_and_shares_to_mint,
     calculate_withdrawal_amounts, check_initialized, check_nonnegative_amount,
 };
+
+use defindex_strategy_core::DeFindexStrategyClient;
 
 pub use error::ContractError;
 
@@ -99,8 +101,8 @@ impl VaultTrait for DeFindexVault {
         access_control.set_role(&RolesDataKey::VaultFeeReceiver, &vault_fee_receiver);
         access_control.set_role(&RolesDataKey::Manager, &manager);
 
-        // Set Vault Share (in basis points)
-        set_vault_share(&e, &vault_fee);
+        // Set Vault Fee (in basis points)
+        set_vault_fee(&e, &vault_fee);
 
         // Set Paltalabs Fee Receiver
         set_defindex_protocol_fee_receiver(&e, &defindex_protocol_receiver);
@@ -116,12 +118,12 @@ impl VaultTrait for DeFindexVault {
             // for every asset, we need to check that the list of strategyes indeed support this asset
 
             // TODO Fix, currently failing
-            // for strategy in asset.strategies.iter() {
-            //     let strategy_client = DeFindexStrategyClient::new(&e, &strategy.address);
-            //     if strategy_client.asset() != asset.address {
-            //         panic_with_error!(&e, ContractError::StrategyDoesNotSupportAsset);
-            //     }
-            // }
+            for strategy in asset.strategies.iter() {
+                let strategy_client = DeFindexStrategyClient::new(&e, &strategy.address);
+                if      strategy_client.asset() != asset.address {
+                    panic_with_error!(&e, ContractError::StrategyDoesNotSupportAsset);
+                }
+            }
             set_asset(&e, i as u32, &asset);
         }
 
