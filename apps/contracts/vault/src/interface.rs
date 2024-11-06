@@ -1,25 +1,24 @@
 use soroban_sdk::{Address, Env, Map, String, Vec};
 
 use crate::{
-    models::{AssetAllocation, DexDistribution, Instruction, Investment},
+    models::{AssetAllocation, Instruction, Investment},
     ContractError,
 };
 
 pub trait VaultTrait {
-
     /// Initializes the DeFindex Vault contract with the required parameters.
     ///
     /// This function sets the roles for emergency manager, fee receiver, and manager.
     /// It also stores the list of assets to be managed by the vault, including strategies for each asset.
-    /// 
+    ///
     /// # Arguments:
     /// * `e` - The environment.
     /// * `assets` - A vector of `AssetAllocation` structs representing the assets and their associated strategies.
     /// * `manager` - The address responsible for managing the vault.
     /// * `emergency_manager` - The address with emergency control over the vault.
-    /// * `fee_receiver` - The address that will receive fees from the vault.
-    /// * `vault_share` - The percentage of the vault's fees that will be sent to the DeFindex receiver. in BPS.
-    /// * `defindex_receiver` - The address that will receive fees for DeFindex from the vault.
+    /// * `vault_fee_receiver` - The address that will receive fees from the vault.
+    /// * `vault_fee` - The percentage of the vault's fees that will be sent to the DeFindex receiver. in BPS.
+    /// * `defindex_protocol_receiver` - The address that will receive fees for DeFindex from the vault.
     /// * `factory` - The address of the factory that deployed the vault.
     ///
     /// # Returns:
@@ -29,9 +28,9 @@ pub trait VaultTrait {
         assets: Vec<AssetAllocation>,
         manager: Address,
         emergency_manager: Address,
-        fee_receiver: Address,
-        vault_share: u32,
-        defindex_receiver: Address,
+        vault_fee_receiver: Address,
+        vault_fee: u32,
+        defindex_protocol_receiver: Address,
         factory: Address,
         vault_name: String,
         vault_symbol: String,
@@ -86,7 +85,11 @@ pub trait VaultTrait {
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn emergency_withdraw(e: Env, strategy_address: Address, caller: Address) -> Result<(), ContractError>;
+    fn emergency_withdraw(
+        e: Env,
+        strategy_address: Address,
+        caller: Address,
+    ) -> Result<(), ContractError>;
 
     /// Pauses a strategy to prevent it from being used in the vault.
     ///
@@ -100,7 +103,11 @@ pub trait VaultTrait {
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn pause_strategy(e: Env, strategy_address: Address, caller: Address) -> Result<(), ContractError>;
+    fn pause_strategy(
+        e: Env,
+        strategy_address: Address,
+        caller: Address,
+    ) -> Result<(), ContractError>;
 
     /// Unpauses a previously paused strategy.
     ///
@@ -114,7 +121,11 @@ pub trait VaultTrait {
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn unpause_strategy(e: Env, strategy_address: Address, caller: Address) -> Result<(), ContractError>;
+    fn unpause_strategy(
+        e: Env,
+        strategy_address: Address,
+        caller: Address,
+    ) -> Result<(), ContractError>;
 
     /// Retrieves the list of assets managed by the DeFindex Vault.
     ///
@@ -136,7 +147,7 @@ pub trait VaultTrait {
     /// # Returns:
     /// * `Map<Address, i128>` - A map of asset addresses to their total managed amounts.
     fn fetch_total_managed_funds(e: &Env) -> Map<Address, i128>;
-    
+
     /// Returns the current invested funds, representing the total assets allocated to strategies.
     ///
     /// This function provides a map where the key is the asset address and the value is the total amount
@@ -164,7 +175,6 @@ pub trait VaultTrait {
     // TODO: DELETE THIS, USED FOR TESTING
     /// Temporary method for testing purposes.
     fn get_asset_amounts_for_dftokens(e: Env, df_token: i128) -> Map<Address, i128>;
-
 }
 
 pub trait AdminInterfaceTrait {
@@ -175,7 +185,7 @@ pub trait AdminInterfaceTrait {
     /// # Arguments:
     /// * `e` - The environment.
     /// * `caller` - The address initiating the change (must be the manager or emergency manager).
-    /// * `fee_receiver` - The new fee receiver address.
+    /// * `vault_fee_receiver` - The new fee receiver address.
     ///
     /// # Returns:
     /// * `()` - No return value.
@@ -234,24 +244,23 @@ pub trait AdminInterfaceTrait {
 }
 
 pub trait VaultManagementTrait {
-
     /// Invests the vault's idle funds into the specified strategies.
-    /// 
+    ///
     /// # Arguments:
     /// * `e` - The environment.
     /// * `investment` - A vector of `Investment` structs representing the amount to invest in each strategy.
     /// * `caller` - The address of the caller.
-    /// 
+    ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn invest(e: Env, investment: Vec<Investment>) -> Result<(), ContractError>;
 
     /// Rebalances the vault by executing a series of instructions.
-    /// 
+    ///
     /// # Arguments:
     /// * `e` - The environment.
     /// * `instructions` - A vector of `Instruction` structs representing actions (withdraw, invest, swap, zapper) to be taken.
-    /// 
+    ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn rebalance(e: Env, instructions: Vec<Instruction>) -> Result<(), ContractError>;

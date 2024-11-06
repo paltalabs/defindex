@@ -6,7 +6,7 @@ use soroban_sdk::{contracttype, panic_with_error, Address, Env};
 #[contracttype]
 pub enum RolesDataKey {
     EmergencyManager, // Role: Emergency Manager
-    FeeReceiver,      // Role: Fee Receiver
+    VaultFeeReceiver, // Role: Fee Receiver
     Manager,          // Role: Manager
 }
 
@@ -82,13 +82,16 @@ impl AccessControlTrait for AccessControl {
 
 // Role-specific setters and getters
 impl AccessControl {
-    pub fn set_fee_receiver(&self, caller: &Address, fee_receiver: &Address) {
-        self.require_any_role(&[RolesDataKey::Manager, RolesDataKey::FeeReceiver], caller);
-        self.set_role(&RolesDataKey::FeeReceiver, fee_receiver);
+    pub fn set_fee_receiver(&self, caller: &Address, vault_fee_receiver: &Address) {
+        self.require_any_role(
+            &[RolesDataKey::Manager, RolesDataKey::VaultFeeReceiver],
+            caller,
+        );
+        self.set_role(&RolesDataKey::VaultFeeReceiver, vault_fee_receiver);
     }
 
     pub fn get_fee_receiver(&self) -> Result<Address, ContractError> {
-        self.check_role(&RolesDataKey::FeeReceiver)
+        self.check_role(&RolesDataKey::VaultFeeReceiver)
     }
 
     pub fn set_manager(&self, manager: &Address) {

@@ -47,7 +47,7 @@ export async function deployContracts(addressBook: AddressBook) {
 
   const emptyVecScVal = xdr.ScVal.scvVec([]);
 
-  console.log("Initializing Soroswap Adapter");
+  console.log("Initializing DeFindex HODL Strategy");
   await invokeContract(
     "hodl_strategy",
     addressBook,
