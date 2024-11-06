@@ -414,7 +414,7 @@ fn deposit_one_asset_min_more_than_desired() {
         &users[0],
     );
     // this should fail
-    assert_eq!(result, Err(Ok(ContractError::AmountLessThanMinimum)));
+    assert_eq!(result, Err(Ok(ContractError::InsufficientAmount)));
     
 }
 
@@ -467,11 +467,14 @@ fn deposit_several_assets_success() {
     assert_eq!(df_balance, 0i128);
 
     // deposit
-    test.defindex_contract.deposit(
+    let deposit_result=test.defindex_contract.deposit(
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0, amount1],
         &users[0],
     );
+
+    // check deposit result
+    assert_eq!(deposit_result, (sorobanvec![&test.env, amount0, amount1], amount0 + amount1));
 
     // check balances after deposit
     let df_balance = test.defindex_contract.balance(&users[0]);
@@ -529,18 +532,25 @@ fn deposit_several_assets_success() {
 
 
     // user 1 deposits
-    test.defindex_contract.deposit(
+    let deposit_result=test.defindex_contract.deposit(
         &sorobanvec![&test.env, amount0_new, amount1_new],
         &sorobanvec![&test.env, 0i128, 0i128],
         &users[1],
     );
 
-    // // check balances after deposit
-    // let df_balance = test.defindex_contract.balance(&users[1]);
-    // assert_eq!(df_balance, 2*(amount0 + amount1));
+    // check deposit result. Ok((amounts, shares_to_mint))
+    // Vec<i128>, i128
 
-    // let user_balance0 = test.token0.balance(&users[1]);
-    // assert_eq!(user_balance0, amount0_new - 2*amount0);
+    assert_eq!(deposit_result, (sorobanvec![&test.env, amount0*2, amount1*2], amount0*2 + amount1*2));
+
+
+    // check balances after deposit
+    let df_balance = test.defindex_contract.balance(&users[1]);
+    assert_eq!(df_balance, 2*(amount0 + amount1));
+
+    let user_balance0 = test.token0.balance(&users[1]);
+    assert_eq!(user_balance0, amount0_new - 2*amount0);
+
     let user_balance1 = test.token1.balance(&users[1]);
     assert_eq!(user_balance1, amount1_new - 2*amount1);
 
@@ -572,7 +582,5 @@ fn deposit_several_assets_success() {
     // check that current invested funds is now 0, funds still in idle funds
     let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
     assert_eq!(current_invested_funds, expected_map);
-
-
 
 }

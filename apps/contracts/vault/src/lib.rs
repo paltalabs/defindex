@@ -217,8 +217,9 @@ impl VaultTrait for DeFindexVault {
         }
         // for amount min is not necesary to check if it is negative
 
+        let total_supply = VaultToken::total_supply(e.clone());
         let (amounts, shares_to_mint) = if assets_length == 1 {
-            let shares = if VaultToken::total_supply(e.clone()) == 0 {
+            let shares = if total_supply == 0 {
                 // If we have only one asset, and this is the first deposit, we will mint a share proportional to the amount desired
                 // TODO In this case we might also want to mint a MINIMUM LIQUIDITY to be locked forever in the contract
                 // this might be for security and practical reasons as well
@@ -238,20 +239,27 @@ impl VaultTrait for DeFindexVault {
             // TODO check that min amount is ok
             (amounts_desired, shares)
         } else {
-            // If Total Assets > 1
-            calculate_deposit_amounts_and_shares_to_mint(
-                &e,
-                &assets,
-                &amounts_desired,
-                &amounts_min,
-            )
+            if total_supply == 0 {
+                // for ths first supply, we will consider the amounts desired, and the shares to mint will just be the sum
+                // of the amounts desired
+                (amounts_desired.clone(), amounts_desired.iter().sum())
+            }
+            else {
+                // If Total Assets > 1
+                calculate_deposit_amounts_and_shares_to_mint(
+                    &e,
+                    &assets,
+                    &amounts_desired,
+                    &amounts_min,
+                )?
+            }
         };
 
         // for every asset
         for (i, amount) in amounts.iter().enumerate() {
-            // if amount is less than minimum, return error AmountLessThanMinimum
+            // if amount is less than minimum, return error InsufficientAmount
             if amount < amounts_min.get(i as u32).unwrap() {
-                panic_with_error!(&e, ContractError::AmountLessThanMinimum);
+                panic_with_error!(&e, ContractError::InsufficientAmount);
             }
             // its possible that some amounts are 0.
             if amount > 0 {
@@ -263,7 +271,9 @@ impl VaultTrait for DeFindexVault {
         }
 
         // now we mint the corresponding dfToken
+        // TODO. If total_sypply==0, mint minimum liquidity to be locked forever in the contract
         internal_mint(e.clone(), from.clone(), shares_to_mint);
+
 
         events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone());
 
