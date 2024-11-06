@@ -158,20 +158,36 @@ impl VaultTrait for DeFindexVault {
         Ok(())
     }
 
-    /// Handles deposits into the DeFindex Vault.
+    /// Handles user deposits into the DeFindex Vault.
     ///
-    /// This function transfers the desired amounts of each supported asset into the vault, distributes the assets
-    /// across the strategies according to the vault's ratios, and mints dfTokens representing the user's
-    /// share in the vault. The vector of amounts desired should be in the same order as the assets in the vault.
+    /// This function processes a deposit by transferring each specified asset amount from the user's address to
+    /// the vault, allocating assets according to the vault's defined strategy ratios, and minting dfTokens that 
+    /// represent the user's proportional share in the vault. The `amounts_desired` and `amounts_min` vectors should 
+    /// align with the vault's asset order to ensure correct allocation.
     ///
-    /// # Arguments:
-    /// * `e` - The environment.
-    /// * `amounts_desired` - A vector of the amounts the user wishes to deposit for each asset.
-    /// * `amounts_min` - A vector of minimum amounts required for the deposit to proceed.
+    /// # Parameters
+    /// * `e` - The current environment reference (`Env`), for access to the contract state and utilities.
+    /// * `amounts_desired` - A vector specifying the user's intended deposit amounts for each asset.
+    /// * `amounts_min` - A vector of minimum deposit amounts required for the transaction to proceed.
     /// * `from` - The address of the user making the deposit.
     ///
-    /// # Returns:
-    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
+    /// # Returns
+    /// * `Result<(Vec<i128>, i128), ContractError>` - Returns the actual deposited `amounts` and `shares_to_mint` if successful,
+    ///   otherwise a `ContractError`.
+    ///
+    /// # Function Flow
+    /// 1. **Fee Collection**: Collects accrued fees before processing the deposit.
+    /// 2. **Validation**: Checks that the lengths of `amounts_desired` and `amounts_min` match the vault's assets.
+    /// 3. **Share Calculation**: Calculates `shares_to_mint` based on the vault's total managed funds and the deposit amount.
+    /// 4. **Asset Transfer**: Transfers each specified amount from the user’s address to the vault as idle funds.
+    /// 5. **dfToken Minting**: Mints new dfTokens for the user to represent their ownership in the vault.
+    ///
+    /// # Notes
+    /// - For the first deposit, if the vault has only one asset, shares are calculated directly based on the deposit amount.
+    /// - For multiple assets, the function delegates to `calculate_deposit_amounts_and_shares_to_mint`
+    ///   for precise share computation.
+    /// - An event is emitted to log the deposit, including the actual deposited amounts and minted shares.
+    ///
     fn deposit(
         e: Env,
         amounts_desired: Vec<i128>,
