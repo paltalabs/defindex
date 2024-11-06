@@ -583,4 +583,119 @@ fn deposit_several_assets_success() {
     let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
     assert_eq!(current_invested_funds, expected_map);
 
+    // we will repeat one more time, now enforcing the first asset
+    let amount0_new =  amount0*2;
+    let amount1_new = amount1*2+100;
+
+    // mint this to user 1
+    test.token0_admin_client.mint(&users[1], &amount0_new);
+    test.token1_admin_client.mint(&users[1], &amount1_new);
+    
+    // check user balances
+    let user_balance0 = test.token0.balance(&users[1]);
+    assert_eq!(user_balance0, 100 + amount0_new); // we still have 100 from before
+    let user_balance1 = test.token1.balance(&users[1]);
+    assert_eq!(user_balance1, amount1_new);
+
+    // user 1 deposits
+    let deposit_result=test.defindex_contract.deposit(
+        &sorobanvec![&test.env, amount0_new, amount1_new],
+        &sorobanvec![&test.env, 0i128, 0i128],
+        &users[1],
+    );
+
+    // check deposit result. Ok((amounts, shares_to_mint))
+    // Vec<i128>, i128
+    assert_eq!(deposit_result, (sorobanvec![&test.env, amount0*2, amount1*2], amount0*2 + amount1*2));
+
+}
+
+// test deposit of several asset, imposing a minimum amount greater than optimal for asset 0
+#[test]
+fn deposit_several_assets_min_greater_than_optimal() {
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
+
+    // initialize with 2 assets
+    let assets: Vec<AssetAllocation> = sorobanvec![
+        &test.env,
+        AssetAllocation {
+            address: test.token0.address.clone(),
+            strategies: strategy_params_token0.clone()
+        },
+        AssetAllocation {
+            address: test.token1.address.clone(),
+            strategies: strategy_params_token1.clone()
+        }
+    ];
+
+    test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
+        &test.emergency_manager,
+        &test.vault_fee_receiver,
+        &2000u32,
+        &test.defindex_protocol_receiver,
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
+    );
+    let amount0 = 123456789i128;
+    let amount1 = 987654321i128;
+
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
+
+    // Balances before deposit
+    test.token0_admin_client.mint(&users[0], &amount0);
+    test.token1_admin_client.mint(&users[0], &amount1);
+    let user_balance0 = test.token0.balance(&users[0]);
+    assert_eq!(user_balance0, amount0);
+    let user_balance1 = test.token1.balance(&users[0]);
+    assert_eq!(user_balance1, amount1);
+
+    let df_balance = test.defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, 0i128);
+
+    // deposit
+    let deposit_result=test.defindex_contract.try_deposit(
+        &sorobanvec![&test.env, amount0, amount1],
+        &sorobanvec![&test.env, amount0 + 1, amount1],
+        &users[0],
+    );
+
+    // this should fail
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+    
+    // now we manage to deposit
+    let deposit_result=test.defindex_contract.deposit(
+        &sorobanvec![&test.env, amount0, amount1],
+        &sorobanvec![&test.env, amount0, amount1],
+        &users[0],
+    );
+
+    // check deposit result
+    
+    // and now will try again with minimum more than optimal
+
+    // new user wants to do a deposit with more assets 0 than the proportion, but with minium amount 0
+    // multiply amount0 by 2
+    let amount0_new =  amount0*2 +100 ;
+    let amount1_new = amount1*2;
+
+    // mint this to user 
+    test.token0_admin_client.mint(&users[0], &amount0_new);
+    test.token1_admin_client.mint(&users[0], &amount1_new);
+
+    let deposit_result=test.defindex_contract.try_deposit(
+        &sorobanvec![&test.env, amount0_new, amount1_new],
+        &sorobanvec![&test.env, amount0*2+1, amount1*2],
+        &users[0],
+    );
+
+    // this should fail
+
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+
 }
