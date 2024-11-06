@@ -81,10 +81,11 @@ class EnvConfig {
       horizon_rpc_url === undefined ||
       (network != "mainnet" && friendbot_url === undefined) ||
       passphrase === undefined ||
-      admin === undefined
+      admin === undefined ||
+      admin === ""
     ) {
       throw new Error(
-        "Error: Configuration is missing required fields, include <network>"
+        "Error: Configuration is missing required fields. Please check your .env file."
       );
     }
 

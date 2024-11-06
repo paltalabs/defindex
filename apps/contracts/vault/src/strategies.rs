@@ -1,18 +1,29 @@
 use defindex_strategy_core::DeFindexStrategyClient;
-use soroban_sdk::{Env, Address};
+use soroban_sdk::{Address, Env};
 
-use crate::{models::{AssetAllocation, Strategy}, storage::{get_asset, get_assets, get_total_assets, set_asset}, ContractError};
+use crate::{
+    models::{AssetAllocation, Strategy},
+    storage::{get_asset, get_assets, get_total_assets, set_asset},
+    ContractError,
+};
 
 pub fn get_strategy_client(e: &Env, address: Address) -> DeFindexStrategyClient {
     DeFindexStrategyClient::new(&e, &address)
 }
 
 /// Finds the asset corresponding to the given strategy address.
-pub fn get_strategy_asset(e: &Env, strategy_address: &Address) -> Result<AssetAllocation, ContractError> {
+pub fn get_strategy_asset(
+    e: &Env,
+    strategy_address: &Address,
+) -> Result<AssetAllocation, ContractError> {
     let assets = get_assets(e);
 
     for asset in assets.iter() {
-        if asset.strategies.iter().any(|strategy| &strategy.address == strategy_address) {
+        if asset
+            .strategies
+            .iter()
+            .any(|strategy| &strategy.address == strategy_address)
+        {
             return Ok(asset);
         }
     }
@@ -21,7 +32,10 @@ pub fn get_strategy_asset(e: &Env, strategy_address: &Address) -> Result<AssetAl
 }
 
 /// Finds the AssetAllocation corresponding to the given asset address.
-pub fn get_asset_allocation_from_address(e: &Env, asset_address: Address) -> Result<AssetAllocation, ContractError> {
+pub fn get_asset_allocation_from_address(
+    e: &Env,
+    asset_address: Address,
+) -> Result<AssetAllocation, ContractError> {
     let assets = get_assets(e);
 
     for asset in assets.iter() {
@@ -34,7 +48,10 @@ pub fn get_asset_allocation_from_address(e: &Env, asset_address: Address) -> Res
 }
 
 /// Finds the strategy struct corresponding to the given strategy address within the given asset.
-pub fn get_strategy_struct(strategy_address: &Address, asset: &AssetAllocation) -> Result<Strategy, ContractError> {
+pub fn get_strategy_struct(
+    strategy_address: &Address,
+    asset: &AssetAllocation,
+) -> Result<Strategy, ContractError> {
     asset
         .strategies
         .iter()
@@ -104,18 +121,26 @@ pub fn unpause_strategy(e: &Env, strategy_address: Address) -> Result<(), Contra
     Err(ContractError::StrategyNotFound)
 }
 
-pub fn withdraw_from_strategy(e: &Env, strategy_address: &Address, amount: &i128) -> Result<(), ContractError> {
+pub fn withdraw_from_strategy(
+    e: &Env,
+    strategy_address: &Address,
+    amount: &i128,
+) -> Result<(), ContractError> {
     let strategy_client = get_strategy_client(e, strategy_address.clone());
-    
+
     match strategy_client.try_withdraw(amount, &e.current_contract_address()) {
         Ok(Ok(_)) => Ok(()),
         Ok(Err(_)) | Err(_) => Err(ContractError::StrategyWithdrawError),
     }
 }
 
-pub fn invest_in_strategy(e: &Env, strategy_address: &Address, amount: &i128) -> Result<(), ContractError> {
+pub fn invest_in_strategy(
+    e: &Env,
+    strategy_address: &Address,
+    amount: &i128,
+) -> Result<(), ContractError> {
     let strategy_client = get_strategy_client(&e, strategy_address.clone());
-    
+
     match strategy_client.try_deposit(amount, &e.current_contract_address()) {
         Ok(Ok(_)) => Ok(()),
         Ok(Err(_)) | Err(_) => Err(ContractError::StrategyInvestError),
