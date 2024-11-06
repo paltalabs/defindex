@@ -1,24 +1,35 @@
 use soroban_sdk::{Address, Env, Map, Symbol, Vec};
 
-use crate::{access::AccessControl, constants::{MAX_BPS, SECONDS_PER_YEAR}, events, funds::fetch_total_managed_funds, storage::{get_defindex_receiver, get_factory, get_last_fee_assesment, get_vault_fee, set_last_fee_assesment}, token::internal_mint, utils::calculate_dftokens_from_asset_amounts, ContractError};
+use crate::{
+    access::AccessControl,
+    constants::{MAX_BPS, SECONDS_PER_YEAR},
+    events,
+    funds::fetch_total_managed_funds,
+    storage::{
+        get_defindex_protocol_fee_receiver, get_factory, get_last_fee_assesment, get_vault_fee,
+        set_last_fee_assesment,
+    },
+    token::internal_mint,
+    utils::calculate_dftokens_from_asset_amounts,
+    ContractError,
+};
 
 /// Fetches the current fee rate from the factory contract.
 /// The fee rate is expressed in basis points (BPS).
 fn fetch_defindex_fee(e: &Env) -> u32 {
-  let factory_address = get_factory(e);
-  // Interacts with the factory contract to get the fee rate.
-  e.invoke_contract(
-    &factory_address,
-    &Symbol::new(&e, "defindex_fee"), 
-    Vec::new(&e)
-  )
+    let factory_address = get_factory(e);
+    // Interacts with the factory contract to get the fee rate.
+    e.invoke_contract(
+      &factory_address,
+      &Symbol::new(&e, "defindex_fee"), 
+      Vec::new(&e)
+    )
 }
 
 /// Calculates the required fees in dfTokens based on the current APR fee rate.
 fn calculate_fees(e: &Env, time_elapsed: u64, fee_rate: u32) -> Result<i128, ContractError> {
-
     let total_managed_funds = fetch_total_managed_funds(e); // Get total managed funds per asset
-    
+
     let seconds_per_year = SECONDS_PER_YEAR; // 365 days in seconds
 
     let mut total_fees_per_asset: Map<Address, i128> = Map::new(&e);
@@ -29,10 +40,10 @@ fn calculate_fees(e: &Env, time_elapsed: u64, fee_rate: u32) -> Result<i128, Con
         let current_asset_value = amount;
 
         // Calculate the fee for this asset based on the fee rate and time elapsed
-        let asset_fee = (current_asset_value * fee_rate as i128 * time_elapsed as i128) / (seconds_per_year * MAX_BPS);
+        let asset_fee = (current_asset_value * fee_rate as i128 * time_elapsed as i128)
+            / (seconds_per_year * MAX_BPS);
 
         total_fees_per_asset.set(asset_address.clone(), asset_fee);
-
     }
 
     let total_fees_in_dftokens = calculate_dftokens_from_asset_amounts(e, total_fees_per_asset, total_managed_funds)?;
@@ -74,7 +85,7 @@ fn mint_fees(e: &Env, total_fees: i128, defindex_fee: u32, vault_fee: u32) -> Re
     let access_control = AccessControl::new(&e);
 
     let vault_fee_receiver = access_control.get_fee_receiver()?;
-    let defindex_receiver = get_defindex_receiver(e);
+    let defindex_protocol_receiver = get_defindex_protocol_fee_receiver(e);
 
     // Calculate shares for each receiver based on their fee proportion
     let total_fee_bps = defindex_fee as i128 + vault_fee as i128;
@@ -83,8 +94,18 @@ fn mint_fees(e: &Env, total_fees: i128, defindex_fee: u32, vault_fee: u32) -> Re
 
     // Mint shares for both receivers
     internal_mint(e.clone(), vault_fee_receiver.clone(), vault_shares);
-    internal_mint(e.clone(), defindex_receiver.clone(), defindex_shares);
+    internal_mint(
+        e.clone(),
+        defindex_protocol_receiver.clone(),
+        defindex_shares,
+    );
 
-    events::emit_fees_minted_event(e, defindex_receiver, defindex_shares, vault_fee_receiver, vault_shares);
+    events::emit_fees_minted_event(
+        e,
+        defindex_protocol_receiver,
+        defindex_shares,
+        vault_fee_receiver,
+        vault_shares,
+    );
     Ok(())
 }

@@ -1,16 +1,34 @@
 #![no_std]
-use balance::{read_balance, receive_balance, spend_balance};
 use soroban_sdk::{
-    contract, contractimpl, Address, Env, String, Val, Vec};
-use soroban_sdk::token::Client as TokenClient;
+    contract, 
+    contractimpl, 
+    Address, 
+    Env, 
+    String,
+    token::Client as TokenClient, 
+    Val, 
+    Vec};
 
 mod balance;
 mod storage;
 
+use balance::{
+    read_balance, 
+    receive_balance, 
+    spend_balance};
+
 use storage::{
-    extend_instance_ttl, get_underlying_asset, is_initialized, set_initialized, set_underlying_asset
+    extend_instance_ttl, 
+    get_underlying_asset, 
+    is_initialized, 
+    set_initialized, 
+    set_underlying_asset
 };
-use defindex_strategy_core::{DeFindexStrategyTrait, StrategyError, event};
+
+pub use defindex_strategy_core::{
+    DeFindexStrategyTrait, 
+    StrategyError, 
+    event};
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
     if amount < 0 {
@@ -98,13 +116,11 @@ impl DeFindexStrategyTrait for HodlStrategy {
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
 
+        spend_balance(&e, from.clone(), amount)?;
+        
         let contract_address = e.current_contract_address();
-
         let underlying_asset = get_underlying_asset(&e);
         TokenClient::new(&e, &underlying_asset).transfer(&contract_address, &from, &amount);
-
-        spend_balance(&e, from.clone(), amount);
-
         event::emit_withdraw(&e, String::from_str(&e, STARETEGY_NAME), amount, from);
 
         Ok(amount)
@@ -114,7 +130,6 @@ impl DeFindexStrategyTrait for HodlStrategy {
         e: Env,
         from: Address,
     ) -> Result<i128, StrategyError> {
-        from.require_auth();
         check_initialized(&e)?;
         extend_instance_ttl(&e);
 
