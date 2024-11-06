@@ -13,15 +13,25 @@ import {
 import { shortenAddress } from '@/helpers/shortenAddress'
 
 import { ChartData } from './ConfirmDelpoyModal'
-import { setEmergencyManager, setFeeReceiver, setManager } from '@/store/lib/features/vaultStore'
-import { useAppDispatch } from '@/store/lib/storeHooks'
+import { setEmergencyManager, setFeeReceiver, setManager, setVaultShare } from '@/store/lib/features/vaultStore'
+import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { StrKey } from '@stellar/stellar-sdk'
 import { FaRegPaste } from "react-icons/fa6";
 import { useSorobanReact } from '@soroban-react/core'
 import { InputGroup } from '../ui/input-group'
 import { Tooltip } from '../ui/tooltip'
+import {
+  AccordionItem,
+  AccordionItemContent,
+  AccordionItemTrigger,
+  AccordionRoot,
+} from "@chakra-ui/react"
 
-
+enum AccordionItems {
+  STRATEGY_DETAILS = 'strategy-details',
+  MANAGER_CONFIGS = 'manager-configs',
+  FEES_CONFIGS = 'fees-configs',
+}
 interface FormControlInterface {
   manager: {
     isValid: boolean | undefined;
@@ -35,11 +45,14 @@ interface FormControlInterface {
     isValid: boolean | undefined;
     value: string | undefined;
   },
+  vaultShare: number
 }
 export const VaultPreview = ({ data }: { data: ChartData[] }) => {
 
   const dispatch = useAppDispatch()
   const { address } = useSorobanReact()
+  const vaultShare = useAppSelector(state => state.newVault.vaultShare)
+  const [accordionValue, setAccordionValue] = useState<AccordionItems[]>([AccordionItems.STRATEGY_DETAILS])
   const [formControl, setFormControl] = useState<FormControlInterface>({
     manager: {
       isValid: undefined,
@@ -53,6 +66,7 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
       isValid: undefined,
       value: undefined
     },
+    vaultShare: 0
   })
   const isValidAddress = (address: string) => {
     if (StrKey.isValidEd25519PublicKey(address) || StrKey.isValidMed25519PublicKey(address) || StrKey.isValidContract(address)) {
@@ -134,6 +148,19 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
     })
     dispatch(setFeeReceiver(input))
   };
+  const handleVaultShareChange = (input: any) => {
+    console.log(input)
+    if (isNaN(input)) return
+    if (input < 0 || input > 100) return
+    const decimalRegex = /^(\d+)?(\.\d{0,2})?$/
+    if (!decimalRegex.test(input)) return
+    console.log(input * 100)
+    setFormControl({
+      ...formControl,
+      vaultShare: input
+    })
+    dispatch(setVaultShare(input * 100))
+  }
 
   return (
     <>
@@ -148,54 +175,59 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
           height={200}
         /> */}
       </Box>
-      <Text fontSize='lg' fontWeight='bold' mb={2}>
-        Strategies
-      </Text>
-      <Table.Root>
-        <Table.Header>
-          <Table.Row>
-            <Table.Cell>Name</Table.Cell>
-            <Table.Cell textAlign={'center'}>Address</Table.Cell>
-            <Table.Cell textAlign={'end'}>Percentage</Table.Cell>
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
-            {data.map((strategy: ChartData, index: number) => (
-              <Table.Row key={index}>
-                <Table.Cell>{strategy.label}</Table.Cell>
-                <Tooltip content={strategy.address}>
-                  <Table.Cell textAlign={'center'}>
-                  {strategy.address ? shortenAddress(strategy.address) : '-'}
-                  </Table.Cell>
-                </Tooltip>
-                <Table.Cell textAlign={'end'}>{strategy.value}%</Table.Cell>
-              </Table.Row>
-            ))}
-        </Table.Body>
-      </Table.Root>
-      <Box height="20px" />
-      <Grid
-        w={'100%'}
-        templateColumns={'repeat(4, 1fr)'}
-        templateRows={'repeat(3, 1fr)'}
-        alignSelf={'end'}
-        gap={6}
-      >
-        <GridItem colSpan={4} colStart={1} rowStart={1}>
+      <AccordionRoot value={accordionValue} onValueChange={(e: any) => setAccordionValue(e.value)}>
+        <AccordionItem value={AccordionItems.STRATEGY_DETAILS}>
+          <AccordionItemTrigger>
+            <Text fontSize='lg' fontWeight='bold' mb={2}>
+              Strategies
+            </Text>
+          </AccordionItemTrigger>
+          <AccordionItemContent>
+            <Table.Root>
+              <Table.Header>
+                <Table.Row>
+                  <Table.Cell>Name</Table.Cell>
+                  <Table.Cell>Address</Table.Cell>
+                  <Table.Cell >Percentage</Table.Cell>
+                </Table.Row>
+              </Table.Header>
+              <Table.Body>
+                {data.map((strategy: ChartData, index: number) => (
+                  <Table.Row key={index}>
+                    <Table.Cell>{strategy.label}</Table.Cell>
+                    <Tooltip content={strategy.address}>
+                      <Table.Cell w={1}>
+                        {strategy.address ? shortenAddress(strategy.address) : '-'}
+                      </Table.Cell>
+                    </Tooltip>
+                    <Table.Cell>{strategy.value}%</Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table.Root>
+          </AccordionItemContent>
+        </AccordionItem>
+        <AccordionItem value={AccordionItems.MANAGER_CONFIGS}>
+          <AccordionItemTrigger>
+            <Text fontSize='lg' fontWeight='bold' mb={2}>
+              Manager settings
+            </Text>
+          </AccordionItemTrigger>
+          <AccordionItemContent>
           <Fieldset.Root
             invalid={formControl.manager.isValid === false}
           >
             <Fieldset.Legend>Manager</Fieldset.Legend>
-            <Stack>
+              <Stack mb={6}>
               <InputGroup endElement={
-                <Tooltip content='Use connected wallet'> 
+                  <Tooltip content='Use connected wallet'>
                   <IconButton
                     aria-label='Connected address'
                     size={'sm'}
                     onClick={() => handleManagerChange(address!)}
-                >
+                    >
                     <FaRegPaste />
-                </IconButton>
+                    </IconButton>
                 </Tooltip>
               }>
                 <Input
@@ -206,15 +238,12 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
               </InputGroup>
             </Stack>
             <Fieldset.ErrorText>A valid Stellar / Soroban address is required.</Fieldset.ErrorText>
-          </Fieldset.Root>
-        </GridItem>
-
-        <GridItem colSpan={4} colStart={1} rowStart={2}>
+            </Fieldset.Root>
           <Fieldset.Root
             invalid={formControl.emergencyManager.isValid === false}
           >
             <Fieldset.Legend>Emergency manager</Fieldset.Legend>
-            <Stack>
+              <Stack mb={6}>
               <InputGroup endElement={
                 <Tooltip content='Use connected wallet'>
                   <IconButton
@@ -235,9 +264,15 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
             </Stack>
             <Fieldset.ErrorText>A valid Stellar / Soroban address is required.</Fieldset.ErrorText>
           </Fieldset.Root>
-        </GridItem>
-
-        <GridItem colSpan={4} colStart={1} rowStart={3}>
+          </AccordionItemContent>
+        </AccordionItem>
+        <AccordionItem value={AccordionItems.FEES_CONFIGS}>
+          <AccordionItemTrigger>
+            <Text fontSize='lg' fontWeight='bold' mb={2}>
+              Fees settings
+            </Text>
+          </AccordionItemTrigger>
+          <AccordionItemContent>
           <Fieldset.Root
             invalid={formControl.feeReceiver.isValid === false}
           >
@@ -263,11 +298,17 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
             </Stack>
             <Fieldset.ErrorText>A valid Stellar / Soroban address is required.</Fieldset.ErrorText>
           </Fieldset.Root>
-        </GridItem>
-
-
-
-      </Grid>
+            <InputGroup
+              endElement={'%'}
+            >
+              <Input
+                value={formControl.vaultShare}
+                onChange={(e) => { handleVaultShareChange(e.target.value) }}
+              />
+            </InputGroup>
+          </AccordionItemContent>
+        </AccordionItem>
+      </AccordionRoot >
     </>
   )
 }
