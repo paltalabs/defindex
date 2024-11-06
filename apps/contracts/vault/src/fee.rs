@@ -82,7 +82,11 @@ fn mint_fees(e: &Env, total_fees: i128) -> Result<(), ContractError> {
     let defindex_shares = total_fees - vault_shares;
 
     internal_mint(e.clone(), vault_fee_receiver.clone(), vault_shares);
-    internal_mint(e.clone(), defindex_protocol_receiver.clone(), defindex_shares);
+    internal_mint(
+        e.clone(),
+        defindex_protocol_receiver.clone(),
+        defindex_shares,
+    );
 
     events::emit_fees_minted_event(
         e,

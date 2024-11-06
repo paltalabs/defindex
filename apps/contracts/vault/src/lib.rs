@@ -55,7 +55,7 @@ pub use error::ContractError;
 pub struct DeFindexVault;
 
 #[contractimpl]
-impl VaultTrait for DeFindexVault { 
+impl VaultTrait for DeFindexVault {
     /// Initializes the DeFindex Vault contract with the required parameters.
     ///
     /// This function sets the roles for manager, emergency manager, vault fee receiver, and manager.
@@ -73,7 +73,7 @@ impl VaultTrait for DeFindexVault {
     /// - `vault_symbol`: Symbol representing the vault’s token.
     ///
     /// # Returns
-    /// - `Result<(), ContractError>`: Returns `Ok(())` if initialization succeeds, or a `ContractError` if 
+    /// - `Result<(), ContractError>`: Returns `Ok(())` if initialization succeeds, or a `ContractError` if
     ///   any setup fails (e.g., strategy mismatch with asset).
     ///
     /// # Errors
@@ -120,7 +120,7 @@ impl VaultTrait for DeFindexVault {
             // TODO Fix, currently failing
             for strategy in asset.strategies.iter() {
                 let strategy_client = DeFindexStrategyClient::new(&e, &strategy.address);
-                if      strategy_client.asset() != asset.address {
+                if strategy_client.asset() != asset.address {
                     panic_with_error!(&e, ContractError::StrategyDoesNotSupportAsset);
                 }
             }
@@ -206,8 +206,8 @@ impl VaultTrait for DeFindexVault {
                 // in this case we will mint a share proportional to the total managed funds
                 let total_managed_funds = fetch_total_managed_funds(&e);
                 VaultToken::total_supply(e.clone()) * amounts_desired.get(0).unwrap()
-                    /   
-                    total_managed_funds.get(assets.get(0).unwrap().address.clone())
+                    / total_managed_funds
+                        .get(assets.get(0).unwrap().address.clone())
                         .unwrap()
             };
             (amounts_desired, shares)

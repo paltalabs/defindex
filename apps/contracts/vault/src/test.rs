@@ -79,7 +79,6 @@ pub(crate) fn create_strategy_params_token0(test: &DeFindexVaultTest) -> Vec<Str
     ]
 }
 
-
 pub(crate) fn create_strategy_params_token1(test: &DeFindexVaultTest) -> Vec<Strategy> {
     sorobanvec![
         &test.env,
@@ -162,9 +161,9 @@ impl<'a> DeFindexVaultTest<'a> {
     }
 }
 
+mod admin;
+mod deposit;
+mod emergency_withdraw;
 mod initialize;
-// mod admin;
-// mod deposit;
-// mod emergency_withdraw;
-// mod rebalance;
-// mod withdraw;
+mod rebalance;
+mod withdraw;

@@ -1,8 +1,7 @@
 use soroban_sdk::{vec as sorobanvec, String, Vec};
 
 use crate::test::{
-    create_strategy_params_token0,
-    create_strategy_params_token1,
+    create_strategy_params_token0, create_strategy_params_token1,
     defindex_vault::{AssetAllocation, ContractError},
     DeFindexVaultTest,
 };

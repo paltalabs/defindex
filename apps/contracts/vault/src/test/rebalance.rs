@@ -1,7 +1,7 @@
 use soroban_sdk::{vec as sorobanvec, String, Vec};
 
 use crate::test::{
-    create_strategy_params,
+    create_strategy_params_token0,
     defindex_vault::{
         ActionType, AssetAllocation, Instruction, Investment, OptionalSwapDetailsExactIn,
         OptionalSwapDetailsExactOut,
@@ -13,12 +13,12 @@ use crate::test::{
 fn rebalance() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
-    let strategy_params = create_strategy_params(&test);
+    let strategy_params_token0 = create_strategy_params_token0(&test);
     let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token0.clone()
         }
     ];
 
@@ -57,7 +57,7 @@ fn rebalance() {
         &test.env,
         Investment {
             amount: amount,
-            strategy: test.strategy_client.address.clone()
+            strategy: test.strategy_client_token0.address.clone()
         }
     ];
 
@@ -75,14 +75,14 @@ fn rebalance() {
         &test.env,
         Instruction {
             action: ActionType::Withdraw,
-            strategy: Some(test.strategy_client.address.clone()),
+            strategy: Some(test.strategy_client_token0.address.clone()),
             amount: Some(instruction_amount_0),
             swap_details_exact_in: OptionalSwapDetailsExactIn::None,
             swap_details_exact_out: OptionalSwapDetailsExactOut::None,
         },
         Instruction {
             action: ActionType::Invest,
-            strategy: Some(test.strategy_client.address.clone()),
+            strategy: Some(test.strategy_client_token0.address.clone()),
             amount: Some(instruction_amount_1),
             swap_details_exact_in: OptionalSwapDetailsExactIn::None,
             swap_details_exact_out: OptionalSwapDetailsExactOut::None,

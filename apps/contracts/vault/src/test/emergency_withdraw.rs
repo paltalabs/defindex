@@ -1,7 +1,7 @@
 use soroban_sdk::{vec as sorobanvec, String, Vec};
 
 use crate::test::{
-    create_strategy_params,
+    create_strategy_params_token0,
     defindex_vault::{AssetAllocation, Investment},
     DeFindexVaultTest,
 };
@@ -10,12 +10,12 @@ use crate::test::{
 fn test_emergency_withdraw_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
-    let strategy_params = create_strategy_params(&test);
+    let strategy_params_token0 = create_strategy_params_token0(&test);
     let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token0.clone()
         }
     ];
 
@@ -60,7 +60,7 @@ fn test_emergency_withdraw_success() {
         &test.env,
         Investment {
             amount: amount.clone(),
-            strategy: strategy_params.first().unwrap().address.clone()
+            strategy: strategy_params_token0.first().unwrap().address.clone()
         }
     ];
     test.defindex_contract.invest(&investments);
@@ -71,18 +71,18 @@ fn test_emergency_withdraw_success() {
 
     // Balance of the strategy should be `amount`
     let strategy_balance = test
-        .strategy_client
+        .strategy_client_token0
         .balance(&test.defindex_contract.address);
     assert_eq!(strategy_balance, amount);
 
     test.defindex_contract.emergency_withdraw(
-        &strategy_params.first().unwrap().address,
+        &strategy_params_token0.first().unwrap().address,
         &test.emergency_manager,
     );
 
     // Balance of the strategy should be 0
     let strategy_balance = test
-        .strategy_client
+        .strategy_client_token0
         .balance(&test.defindex_contract.address);
     assert_eq!(strategy_balance, 0);
 

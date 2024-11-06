@@ -1,24 +1,27 @@
 use soroban_sdk::{vec as sorobanvec, String, Vec};
 
 use crate::test::defindex_vault::{AssetAllocation, ContractError};
-use crate::test::{create_strategy_params, DeFindexVaultTest};
+use crate::test::{
+    create_strategy_params_token0, create_strategy_params_token1, DeFindexVaultTest,
+};
 
 #[test]
 fn deposit_amounts_desired_wrong_length() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
-    let strategy_params = create_strategy_params(&test);
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
 
     // initialize with 2 assets
     let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token0.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token1.clone()
         }
     ];
 
@@ -74,7 +77,8 @@ fn deposit_several_assets() {
 // fn test_withdraw_success() {
 //     let test = DeFindexVaultTest::setup();
 //     test.env.mock_all_auths();
-//     let strategy_params = create_strategy_params(&test);
+//     let strategy_params_token0 = create_strategy_params_token0(&test);
+//     let strategy_params_token1 = create_strategy_params_token1(&test);
 //     let assets: Vec<AssetAllocation> = sorobanvec![
 //         &test.env,
 //         AssetAllocation {

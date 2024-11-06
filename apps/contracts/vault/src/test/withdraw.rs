@@ -2,7 +2,7 @@ use soroban_sdk::{vec as sorobanvec, String, Vec};
 
 use super::hodl_strategy::StrategyError;
 use crate::test::{
-    create_strategy_params,
+    create_strategy_params_token0,
     defindex_vault::{AssetAllocation, Investment},
     DeFindexVaultTest,
 };
@@ -11,12 +11,12 @@ use crate::test::{
 fn test_withdraw_from_idle_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
-    let strategy_params = create_strategy_params(&test);
+    let strategy_params_token0 = create_strategy_params_token0(&test);
     let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token0.clone()
         }
     ];
 
@@ -64,7 +64,7 @@ fn test_withdraw_from_idle_success() {
     assert_eq!(vault_balance, amount_to_deposit);
 
     // Token balance of hodl strategy should be 0 (all in idle)
-    let strategy_balance = test.token0.balance(&test.strategy_client.address);
+    let strategy_balance = test.token0.balance(&test.strategy_client_token0.address);
     assert_eq!(strategy_balance, 0);
 
     // Df balance of user should be equal to deposited amount
@@ -90,7 +90,7 @@ fn test_withdraw_from_idle_success() {
     assert_eq!(vault_balance, amount_to_deposit - amount_to_withdraw);
 
     // Token balance of hodl strategy should be 0 (all in idle)
-    let strategy_balance = test.token0.balance(&test.strategy_client.address);
+    let strategy_balance = test.token0.balance(&test.strategy_client_token0.address);
     assert_eq!(strategy_balance, 0);
 
     // Df balance of user should be equal to deposited amount - amount_to_withdraw
@@ -128,12 +128,12 @@ fn test_withdraw_from_idle_success() {
 fn test_withdraw_from_strategy_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
-    let strategy_params = create_strategy_params(&test);
+    let strategy_params_token0 = create_strategy_params_token0(&test);
     let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token0.clone()
         }
     ];
 
@@ -173,7 +173,7 @@ fn test_withdraw_from_strategy_success() {
         &test.env,
         Investment {
             amount: amount,
-            strategy: test.strategy_client.address.clone()
+            strategy: test.strategy_client_token0.address.clone()
         }
     ];
 

@@ -3,7 +3,10 @@ use soroban_sdk::{
     vec as sorobanvec, IntoVal, String, Symbol, Vec,
 };
 
-use crate::test::{create_strategy_params, defindex_vault::AssetAllocation, DeFindexVaultTest};
+use crate::test::{
+    create_strategy_params_token0, create_strategy_params_token1, defindex_vault::AssetAllocation,
+    DeFindexVaultTest,
+};
 
 extern crate alloc;
 use alloc::vec;
@@ -11,17 +14,18 @@ use alloc::vec;
 #[test]
 fn test_set_new_fee_receiver_by_fee_receiver() {
     let test = DeFindexVaultTest::setup();
-    let strategy_params = create_strategy_params(&test);
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
 
     let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token0.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token1.clone()
         }
     ];
 
@@ -63,7 +67,10 @@ fn test_set_new_fee_receiver_by_fee_receiver() {
         )),
         sub_invocations: vec![],
     };
-    assert_eq!(test.env.auths(), vec![(test.vault_fee_receiver, expected_auth)]);
+    assert_eq!(
+        test.env.auths(),
+        vec![(test.vault_fee_receiver, expected_auth)]
+    );
 
     let new_fee_receiver_role = test.defindex_contract.get_fee_receiver();
     assert_eq!(new_fee_receiver_role, users[0]);
@@ -72,7 +79,8 @@ fn test_set_new_fee_receiver_by_fee_receiver() {
 #[test]
 fn test_set_new_fee_receiver_by_manager() {
     let test = DeFindexVaultTest::setup();
-    let strategy_params = create_strategy_params(&test);
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
     // let tokens: Vec<Address> = sorobanvec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
     // let ratios: Vec<u32> = sorobanvec![&test.env, 1, 1];
 
@@ -80,11 +88,11 @@ fn test_set_new_fee_receiver_by_manager() {
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token0.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token1.clone()
         }
     ];
 
@@ -136,7 +144,8 @@ fn test_set_new_fee_receiver_by_manager() {
 #[should_panic(expected = "HostError: Error(Contract, #130)")] // Unauthorized
 fn test_set_new_fee_receiver_by_emergency_manager() {
     let test = DeFindexVaultTest::setup();
-    let strategy_params = create_strategy_params(&test);
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
     // let tokens: Vec<Address> = sorobanvec![&test.env, test.token0.address.clone(), test.token1.address.clone()];
     // let ratios: Vec<u32> = sorobanvec![&test.env, 1, 1];
 
@@ -144,11 +153,11 @@ fn test_set_new_fee_receiver_by_emergency_manager() {
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token0.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token1.clone()
         }
     ];
 
@@ -177,17 +186,18 @@ fn test_set_new_fee_receiver_by_emergency_manager() {
 #[should_panic(expected = "HostError: Error(Contract, #130)")] // Unauthorized
 fn test_set_new_fee_receiver_invalid_sender() {
     let test = DeFindexVaultTest::setup();
-    let strategy_params = create_strategy_params(&test);
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
 
     let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token0.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token1.clone()
         }
     ];
 
@@ -215,16 +225,17 @@ fn test_set_new_fee_receiver_invalid_sender() {
 #[test]
 fn test_set_new_manager_by_manager() {
     let test = DeFindexVaultTest::setup();
-    let strategy_params = create_strategy_params(&test);
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
     let assets: Vec<AssetAllocation> = sorobanvec![
         &test.env,
         AssetAllocation {
             address: test.token0.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token0.clone()
         },
         AssetAllocation {
             address: test.token1.address.clone(),
-            strategies: strategy_params.clone()
+            strategies: strategy_params_token1.clone()
         }
     ];
 
