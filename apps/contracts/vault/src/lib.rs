@@ -199,7 +199,7 @@ impl VaultTrait for DeFindexVault {
         from.require_auth();
 
         // Collect Fees
-        // If this was not done before, last fee assesment will set to be current timestamp and this will return without action
+        // If this was not done before, last_fee_assesment will set to be current timestamp and this will return without action
         collect_fees(&e)?; 
 
         // get assets
@@ -218,19 +218,21 @@ impl VaultTrait for DeFindexVault {
         // for amount min is not necesary to check if it is negative
 
         let (amounts, shares_to_mint) = if assets_length == 1 {
-            // If Total Assets == 1
             let shares = if VaultToken::total_supply(e.clone()) == 0 {
+                // If we have only one asset, and this is the first deposit, we will mint a share proportional to the amount desired
                 // TODO In this case we might also want to mint a MINIMUM LIQUIDITY to be locked forever in the contract
                 // this might be for security and practical reasons as well
                 // shares will be equal to the amount desired to deposit, just for simplicity
                 amounts_desired.get(0).unwrap() // here we have already check same lenght
             } else {
-                // in this case we will mint a share proportional to the total managed funds
+                // If we have only one asset, but we already have some shares minted
+                // we will mint a share proportional to the total managed funds 
                 let total_managed_funds = fetch_total_managed_funds(&e);
-                VaultToken::total_supply(e.clone()) * amounts_desired.get(0).unwrap()
-                    / total_managed_funds
-                        .get(assets.get(0).unwrap().address.clone())
-                        .unwrap()
+                // if checked mul gives error, return ArithmeticError
+                VaultToken::total_supply(e.clone()).checked_mul(amounts_desired.get(0)
+                .unwrap()).unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError))
+                .checked_div(total_managed_funds.get(assets.get(0).unwrap().address.clone())
+                .unwrap()).unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError))
             };
             (amounts_desired, shares)
         } else {
