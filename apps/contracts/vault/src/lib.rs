@@ -227,6 +227,7 @@ impl VaultTrait for DeFindexVault {
             } else {
                 // If we have only one asset, but we already have some shares minted
                 // we will mint a share proportional to the total managed funds 
+                // read whitepaper!
                 let total_managed_funds = fetch_total_managed_funds(&e);
                 // if checked mul gives error, return ArithmeticError
                 VaultToken::total_supply(e.clone()).checked_mul(amounts_desired.get(0)
@@ -234,6 +235,7 @@ impl VaultTrait for DeFindexVault {
                 .checked_div(total_managed_funds.get(assets.get(0).unwrap().address.clone())
                 .unwrap()).unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError))
             };
+            // TODO check that min amount is ok
             (amounts_desired, shares)
         } else {
             // If Total Assets > 1
@@ -261,7 +263,6 @@ impl VaultTrait for DeFindexVault {
 
         events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone());
 
-        // TODO return amounts and shares to mint
         Ok((amounts, shares_to_mint))
     }
 
