@@ -101,3 +101,24 @@ To build all apps and packages, run the following command:
 cd my-turborepo
 yarn build
 ```
+
+## Dart Package development
+
+First, get the specific dart container up by running:
+```sh
+docker compose up -d dart
+```
+The genereal docker compose won't launch the dart service.
+
+then, once the container is up, run:
+```sh
+docker exec -it dart-defindex bash
+```
+Then you can launch the example app by running:
+```sh
+cd example
+flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0
+```
+This will launch the example app on the port 8080 of your localhost. so you can go to
+`http://localhost:8080` to see the app.
+

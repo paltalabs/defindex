@@ -32,6 +32,7 @@ dependencies:
     sdk: flutter
   defindex:
     path: ../
+  stellar_flutter_sdk: ^1.8.9
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

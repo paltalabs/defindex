@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:defindex/defindex.dart';
+import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 
 void main() {
   runApp(const MyApp());
@@ -50,7 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
       String? transactionHash = await defiIndex.deposit(
         'GCW36WQUHJASZVNFIIL7VZQWL6Q72XT6TAU6N3XMFGTLSNE2L7LMJNWT',
         100.0,
-        (transaction) async => 'your_signed_transaction',
+        (transaction) async => signerFunction(transaction),
       );
 
       print('Transaction hash: $transactionHash');
@@ -98,4 +99,32 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+}
+
+// Future<String> signerFunction(String transactionString) async {
+//   // Decode the transaction from the base64 string
+//   final transaction = Transaction.fromEnvelopeXdrBase64(transactionString);
+
+//   // Create KeyPair from the user's secret seed
+//   KeyPair keyPair = KeyPair.fromSecretSeed('your_secret_key');
+
+//   // Sign the transaction with the KeyPair
+//   transaction.sign(keyPair, Network.TESTNET);
+
+//   // Return the signed transaction as a base64 string
+//   return transaction.toEnvelopeXdrBase64();
+// }
+
+String signerFunction(String transactionXdr) {
+  // Create transaction from XDR
+  AbstractTransaction transaction = AbstractTransaction.fromEnvelopeXdrString(
+    transactionXdr,
+  );
+  
+  // Create keypair and sign
+  KeyPair keyPair = KeyPair.fromSecretSeed("SC352W6PEHWSHYKP5IYO3HWAEVGLTVLZW5WE3UXPWSGKBST5K6DKRT7F");
+  transaction.sign(keyPair, Network.TESTNET);
+  
+  // Return signed XDR
+  return transaction.toEnvelopeXdrBase64();
 }

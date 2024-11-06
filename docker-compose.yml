@@ -27,6 +27,8 @@ services:
   dart:
     image: ghcr.io/cirruslabs/flutter:3.24.4
     container_name: dart-defindex
+    profiles:
+      - on-demand
     networks:
       - defindex-network
     volumes:
