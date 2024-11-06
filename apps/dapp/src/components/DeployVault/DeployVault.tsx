@@ -70,17 +70,16 @@ export const DeployVault = () => {
       </DialogBody>
       <DialogFooter>
         <DialogRoot open={openConfirm} onOpenChange={(e) => setOpenConfirm(e.open)}>
-          <DialogTrigger>
-            <Button
-              disabled={totalValues! > 100 || strategies.length == 0 || totalValues == 0 || vaultName == '' || vaultName.length < 4}
-              colorScheme="green"
-              size="lg"
-              mt={4}
-              w={['100%', null, 'auto']}
+          <Button
+            onClick={() => setOpenConfirm(true)}
+            disabled={totalValues! > 100 || strategies.length == 0 || totalValues == 0 || vaultName == '' || vaultName.length < 4}
+            colorScheme="green"
+            size="lg"
+            mt={4}
+            w={['100%', null, 'auto']}
             >
               Deploy Defindex
-            </Button>
-          </DialogTrigger>
+          </Button>
           <DialogContent>
             <DialogHeader>
               <DialogCloseTrigger />
