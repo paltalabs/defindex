@@ -249,6 +249,10 @@ impl VaultTrait for DeFindexVault {
 
         // for every asset
         for (i, amount) in amounts.iter().enumerate() {
+            // if amount is less than minimum, return error AmountLessThanMinimum
+            if amount < amounts_min.get(i as u32).unwrap() {
+                panic_with_error!(&e, ContractError::AmountLessThanMinimum);
+            }
             // its possible that some amounts are 0.
             if amount > 0 {
                 let asset = assets.get(i as u32).unwrap();

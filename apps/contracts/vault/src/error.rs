@@ -19,6 +19,7 @@ pub enum ContractError {
     InsufficientManagedFunds = 114,
     MissingInstructionData = 115,
     UnsupportedAsset = 116,
+    AmountLessThanMinimum = 117,
 
     // Arithmetic Errors (12x)
     ArithmeticError = 120,
