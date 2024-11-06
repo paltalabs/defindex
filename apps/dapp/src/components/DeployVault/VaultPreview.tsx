@@ -149,12 +149,10 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
     dispatch(setFeeReceiver(input))
   };
   const handleVaultShareChange = (input: any) => {
-    console.log(input)
     if (isNaN(input)) return
     if (input < 0 || input > 100) return
     const decimalRegex = /^(\d+)?(\.\d{0,2})?$/
     if (!decimalRegex.test(input)) return
-    console.log(input * 100)
     setFormControl({
       ...formControl,
       vaultShare: input

@@ -82,6 +82,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       && emergencyManagerString !== ""
       && feeReceiverString !== ""
       && assets.length > 0
+      && !indexShare 
       && loadingAssets === false
     ) {
       setDeployDisabled(false);
@@ -151,7 +152,17 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     const salt = randomBytes(32)
 
     const ratios = [1];
-
+    /*
+        pub struct AssetAllocation {
+          pub address: Address,
+          pub strategies: Vec<Strategy>,
+        } 
+        pub struct Strategy {
+          pub address: Address,
+          pub name: String,
+          pub paused: bool,
+        }
+    */
     const strategyParamsScVal = strategies.map((param) => {
       return xdr.ScVal.scvMap([
         new xdr.ScMapEntry({
@@ -162,22 +173,39 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
           key: xdr.ScVal.scvSymbol('name'),
           val: nativeToScVal(param.name, { type: "string" }),
         }),
+        new xdr.ScMapEntry({
+          key: xdr.ScVal.scvSymbol('paused'),
+          val: nativeToScVal(false, { type: "bool" }),
+        }),
       ]);
     });
 
     const strategyParamsScValVec = xdr.ScVal.scvVec(strategyParamsScVal);
 
-    /* fn create_defindex_vault(
-        e: Env, 
-        emergency_manager: Address, 
-        fee_receiver: Address, 
-        vault_share: u32,
-        vault_name: String,
-        vault_symbol: String,
-        manager: Address,
-        assets: Vec<AssetAllocation>,
-        salt: BytesN<32>
-    ) -> Result<Address, FactoryError> */
+    const assetParamsScVal = assets.map((asset) => {
+      return xdr.ScVal.scvMap([
+        new xdr.ScMapEntry({
+          key: xdr.ScVal.scvSymbol('address'),
+          val: new Address(asset).toScVal(),
+        }),
+        new xdr.ScMapEntry({
+          key: xdr.ScVal.scvSymbol('strategies'),
+          val: strategyParamsScValVec,
+        }),
+      ]);
+    });
+
+
+     /*  fn create_defindex_vault(
+      emergency_manager: address, 
+      fee_receiver: address, 
+      vault_share: u32, 
+      vault_name: string, 
+      vault_symbol: string, 
+      manager: address, 
+      assets: vec<AssetAllocation>, 
+      salt: bytesn<32>) -> result<address,FactoryError>
+ */
     const createDefindexParams: xdr.ScVal[] = [
       emergencyManager.toScVal(),
       feeReceiver.toScVal(),
@@ -185,9 +213,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       vaultName,
       vaultSymbol,
       manager.toScVal(),
-      xdr.ScVal.scvVec(assets.map((token) => new Address(token).toScVal())),
-      //strategyParamsScValVec,
-      xdr.ScVal.scvVec(ratios.map((ratio) => nativeToScVal(ratio, { type: "u32" }))),
+      xdr.ScVal.scvVec(assetParamsScVal),
       nativeToScVal(salt),
     ];
 
