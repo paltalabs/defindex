@@ -34,7 +34,7 @@ use models::{
 };
 use storage::{
     get_assets, set_asset, set_defindex_protocol_fee_receiver, set_factory, set_last_fee_assesment,
-    set_total_assets, set_vault_fee,
+    set_total_assets, set_vault_fee, extend_instance_ttl
 };
 use strategies::{
     get_asset_allocation_from_address, get_strategy_asset, get_strategy_client,
@@ -92,6 +92,8 @@ impl VaultTrait for DeFindexVault {
         vault_name: String,
         vault_symbol: String,
     ) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
+
         let access_control = AccessControl::new(&e);
         if access_control.has_role(&RolesDataKey::Manager) {
             panic_with_error!(&e, ContractError::AlreadyInitialized);
@@ -158,9 +160,9 @@ impl VaultTrait for DeFindexVault {
 
     /// Handles deposits into the DeFindex Vault.
     ///
-    /// This function transfers the desired amounts of each asset into the vault, distributes the assets
+    /// This function transfers the desired amounts of each supported asset into the vault, distributes the assets
     /// across the strategies according to the vault's ratios, and mints dfTokens representing the user's
-    /// share in the vault.
+    /// share in the vault. The vector of amounts desired should be in the same order as the assets in the vault.
     ///
     /// # Arguments:
     /// * `e` - The environment.
@@ -176,6 +178,7 @@ impl VaultTrait for DeFindexVault {
         amounts_min: Vec<i128>,
         from: Address,
     ) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
         check_initialized(&e)?;
         from.require_auth();
 
@@ -260,6 +263,7 @@ impl VaultTrait for DeFindexVault {
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn withdraw(e: Env, df_amount: i128, from: Address) -> Result<Vec<i128>, ContractError> {
+        extend_instance_ttl(&e);
         check_initialized(&e)?;
         check_nonnegative_amount(df_amount)?;
         from.require_auth();
@@ -356,6 +360,7 @@ impl VaultTrait for DeFindexVault {
         strategy_address: Address,
         caller: Address,
     ) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
         check_initialized(&e)?;
 
         // Ensure the caller is the Manager or Emergency Manager
@@ -404,6 +409,7 @@ impl VaultTrait for DeFindexVault {
         strategy_address: Address,
         caller: Address,
     ) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
         // Ensure the caller is the Manager or Emergency Manager
         // TODO: Should check if the strategy has any amount invested on it, and return an error if it has, should we let the manager to pause a strategy with funds invested?
         let access_control = AccessControl::new(&e);
@@ -434,6 +440,7 @@ impl VaultTrait for DeFindexVault {
         strategy_address: Address,
         caller: Address,
     ) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
         // Ensure the caller is the Manager or Emergency Manager
         let access_control = AccessControl::new(&e);
         access_control.require_any_role(
@@ -454,6 +461,7 @@ impl VaultTrait for DeFindexVault {
     /// # Returns:
     /// * `Vec<AssetAllocation>` - A vector of `AssetAllocation` structs representing the assets managed by the vault.
     fn get_assets(e: Env) -> Vec<AssetAllocation> {
+        extend_instance_ttl(&e);
         get_assets(&e)
     }
 
@@ -468,6 +476,7 @@ impl VaultTrait for DeFindexVault {
     /// # Returns:
     /// * `Map<Address, i128>` - A map of asset addresses to their total managed amounts.
     fn fetch_total_managed_funds(e: &Env) -> Map<Address, i128> {
+        extend_instance_ttl(&e);
         fetch_total_managed_funds(e)
     }
 
@@ -482,6 +491,7 @@ impl VaultTrait for DeFindexVault {
     /// # Returns:
     /// * `Map<Address, i128>` - A map of asset addresses to their total invested amounts.
     fn fetch_current_invested_funds(e: &Env) -> Map<Address, i128> {
+        extend_instance_ttl(&e);
         fetch_current_invested_funds(e)
     }
 
@@ -496,12 +506,14 @@ impl VaultTrait for DeFindexVault {
     /// # Returns:
     /// * `Map<Address, i128>` - A map of asset addresses to their total idle amounts.
     fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128> {
+        extend_instance_ttl(&e);
         fetch_current_idle_funds(e)
     }
 
     // TODO: DELETE THIS, USED FOR TESTING
     /// Temporary method for testing purposes.
     fn get_asset_amounts_for_dftokens(e: Env, df_tokens: i128) -> Map<Address, i128> {
+        extend_instance_ttl(&e);
         calculate_asset_amounts_for_dftokens(&e, df_tokens)
     }
 }
@@ -520,6 +532,7 @@ impl AdminInterfaceTrait for DeFindexVault {
     /// # Returns:
     /// * `()` - No return value.
     fn set_fee_receiver(e: Env, caller: Address, new_fee_receiver: Address) {
+        extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         access_control.set_fee_receiver(&caller, &new_fee_receiver);
 
@@ -534,6 +547,7 @@ impl AdminInterfaceTrait for DeFindexVault {
     /// # Returns:
     /// * `Result<Address, ContractError>` - The fee receiver address if successful, otherwise returns a ContractError.
     fn get_fee_receiver(e: Env) -> Result<Address, ContractError> {
+        extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         access_control.get_fee_receiver()
     }
@@ -549,6 +563,7 @@ impl AdminInterfaceTrait for DeFindexVault {
     /// # Returns:
     /// * `()` - No return value.
     fn set_manager(e: Env, manager: Address) {
+        extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         access_control.set_manager(&manager);
 
@@ -563,6 +578,7 @@ impl AdminInterfaceTrait for DeFindexVault {
     /// # Returns:
     /// * `Result<Address, ContractError>` - The manager address if successful, otherwise returns a ContractError.
     fn get_manager(e: Env) -> Result<Address, ContractError> {
+        extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         access_control.get_manager()
     }
@@ -578,6 +594,7 @@ impl AdminInterfaceTrait for DeFindexVault {
     /// # Returns:
     /// * `()` - No return value.
     fn set_emergency_manager(e: Env, emergency_manager: Address) {
+        extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         access_control.set_emergency_manager(&emergency_manager);
 
@@ -609,6 +626,7 @@ impl VaultManagementTrait for DeFindexVault {
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn invest(e: Env, investments: Vec<Investment>) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
         check_initialized(&e)?;
 
         let access_control = AccessControl::new(&e);
@@ -646,6 +664,7 @@ impl VaultManagementTrait for DeFindexVault {
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn rebalance(e: Env, instructions: Vec<Instruction>) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
         check_initialized(&e)?;
 
         let access_control = AccessControl::new(&e);

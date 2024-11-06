@@ -2,6 +2,17 @@ use soroban_sdk::{contracttype, Address, Env, Vec};
 
 use crate::models::AssetAllocation;
 
+const DAY_IN_LEDGERS: u32 = 17280;
+const INSTANCE_BUMP_AMOUNT: u32 = 30 * DAY_IN_LEDGERS;
+const INSTANCE_LIFETIME_THRESHOLD: u32 = INSTANCE_BUMP_AMOUNT - DAY_IN_LEDGERS;
+
+pub fn extend_instance_ttl(e: &Env) {
+    e.storage()
+        .instance()
+        .extend_ttl(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
+}
+
+
 #[derive(Clone)]
 #[contracttype]
 enum DataKey {
@@ -12,6 +23,8 @@ enum DataKey {
     LastFeeAssessment,
     VaultShare,
 }
+
+
 
 // Assets Management
 pub fn set_asset(e: &Env, index: u32, asset: &AssetAllocation) {
