@@ -418,8 +418,161 @@ fn deposit_one_asset_min_more_than_desired() {
     
 }
 
-
+// test deposit of several asset, considering different proportion of assets
 #[test]
 fn deposit_several_assets_success() {
-    todo!();
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
+
+    // initialize with 2 assets
+    let assets: Vec<AssetAllocation> = sorobanvec![
+        &test.env,
+        AssetAllocation {
+            address: test.token0.address.clone(),
+            strategies: strategy_params_token0.clone()
+        },
+        AssetAllocation {
+            address: test.token1.address.clone(),
+            strategies: strategy_params_token1.clone()
+        }
+    ];
+
+    test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
+        &test.emergency_manager,
+        &test.vault_fee_receiver,
+        &2000u32,
+        &test.defindex_protocol_receiver,
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
+    );
+    let amount0 = 123456789i128;
+    let amount1 = 987654321i128;
+
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
+
+    // Balances before deposit
+    test.token0_admin_client.mint(&users[0], &amount0);
+    test.token1_admin_client.mint(&users[0], &amount1);
+    let user_balance0 = test.token0.balance(&users[0]);
+    assert_eq!(user_balance0, amount0);
+    let user_balance1 = test.token1.balance(&users[0]);
+    assert_eq!(user_balance1, amount1);
+
+    let df_balance = test.defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, 0i128);
+
+    // deposit
+    test.defindex_contract.deposit(
+        &sorobanvec![&test.env, amount0, amount1],
+        &sorobanvec![&test.env, amount0, amount1],
+        &users[0],
+    );
+
+    // check balances after deposit
+    let df_balance = test.defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, amount0 + amount1);
+    
+    let user_balance0 = test.token0.balance(&users[0]);
+    assert_eq!(user_balance0,0i128);
+    let user_balance1 = test.token1.balance(&users[0]);
+    assert_eq!(user_balance1,0i128);
+
+    // check vault balance of asset 0
+    let vault_balance0 = test.token0.balance(&test.defindex_contract.address);
+    assert_eq!(vault_balance0, amount0);
+    // check vault balance of asset 1
+    let vault_balance1 = test.token1.balance(&test.defindex_contract.address);
+    assert_eq!(vault_balance1, amount1);
+
+    //map shuould be map
+    let mut expected_map = Map::new(&test.env);
+    expected_map.set(test.token0.address.clone(), amount0);
+    expected_map.set(test.token1.address.clone(), amount1);
+
+    // check that fetch_total_managed_funds returns correct amount
+    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
+    assert_eq!(total_managed_funds, expected_map);
+
+    // check current idle funds
+    let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
+    assert_eq!(current_idle_funds, expected_map);
+    
+    //map shuould be map
+    let mut expected_map = Map::new(&test.env);
+    expected_map.set(test.token0.address.clone(), 0i128);
+    expected_map.set(test.token1.address.clone(), 0i128);
+
+    // check that current invested funds is now 0, funds still in idle funds
+    let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
+    assert_eq!(current_invested_funds, expected_map);
+
+
+    // new user wants to do a deposit with more assets 0 than the proportion, but with minium amount 0
+    // multiply amount0 by 2
+    let amount0_new =  amount0*2 +100 ;
+    let amount1_new = amount1*2;
+
+    // mint this to user 1
+    test.token0_admin_client.mint(&users[1], &amount0_new);
+    test.token1_admin_client.mint(&users[1], &amount1_new);
+
+    // check user balances
+    let user_balance0 = test.token0.balance(&users[1]);
+    assert_eq!(user_balance0, amount0_new);
+    let user_balance1 = test.token1.balance(&users[1]);
+    assert_eq!(user_balance1, amount1_new);
+
+
+    // user 1 deposits
+    test.defindex_contract.deposit(
+        &sorobanvec![&test.env, amount0_new, amount1_new],
+        &sorobanvec![&test.env, 0i128, 0i128],
+        &users[1],
+    );
+
+    // // check balances after deposit
+    // let df_balance = test.defindex_contract.balance(&users[1]);
+    // assert_eq!(df_balance, 2*(amount0 + amount1));
+
+    // let user_balance0 = test.token0.balance(&users[1]);
+    // assert_eq!(user_balance0, amount0_new - 2*amount0);
+    let user_balance1 = test.token1.balance(&users[1]);
+    assert_eq!(user_balance1, amount1_new - 2*amount1);
+
+    // check vault balance of asset 0
+    let vault_balance0 = test.token0.balance(&test.defindex_contract.address);
+    assert_eq!(vault_balance0, 3*amount0);
+    // check vault balance of asset 1
+    let vault_balance1 = test.token1.balance(&test.defindex_contract.address);
+    assert_eq!(vault_balance1, 3*amount1);
+
+    //map shuould be map
+    let mut expected_map = Map::new(&test.env);
+    expected_map.set(test.token0.address.clone(), 3*amount0);
+    expected_map.set(test.token1.address.clone(), 3*amount1);
+
+    // check that fetch_total_managed_funds returns correct amount
+    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
+    assert_eq!(total_managed_funds, expected_map);
+
+    // check current idle funds
+    let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
+    assert_eq!(current_idle_funds, expected_map);
+
+    //map shuould be map
+    let mut expected_map = Map::new(&test.env);
+    expected_map.set(test.token0.address.clone(), 0i128);
+    expected_map.set(test.token1.address.clone(), 0i128);
+
+    // check that current invested funds is now 0, funds still in idle funds
+    let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
+    assert_eq!(current_invested_funds, expected_map);
+
+
+
 }
