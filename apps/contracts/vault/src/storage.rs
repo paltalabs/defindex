@@ -91,7 +91,13 @@ pub fn get_last_fee_assesment(e: &Env) -> u64 {
     e.storage()
         .instance()
         .get(&DataKey::LastFeeAssessment)
-        .unwrap()
+        .unwrap_or_else(|| {
+            let timestamp = &e.ledger().timestamp();
+            e.storage()
+                .instance()
+                .set(&DataKey::LastFeeAssessment, timestamp);
+            timestamp.clone()
+        })
 }
 
 // Vault Share

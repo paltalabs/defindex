@@ -8,21 +8,28 @@ use crate::{
 pub trait VaultTrait {
     /// Initializes the DeFindex Vault contract with the required parameters.
     ///
-    /// This function sets the roles for emergency manager, fee receiver, and manager.
+    /// This function sets the roles for manager, emergency manager, vault fee receiver, and manager.
     /// It also stores the list of assets to be managed by the vault, including strategies for each asset.
     ///
-    /// # Arguments:
-    /// * `e` - The environment.
-    /// * `assets` - A vector of `AssetAllocation` structs representing the assets and their associated strategies.
-    /// * `manager` - The address responsible for managing the vault.
-    /// * `emergency_manager` - The address with emergency control over the vault.
-    /// * `vault_fee_receiver` - The address that will receive fees from the vault.
-    /// * `vault_fee` - The percentage of the vault's fees that will be sent to the DeFindex receiver. in BPS.
-    /// * `defindex_protocol_receiver` - The address that will receive fees for DeFindex from the vault.
-    /// * `factory` - The address of the factory that deployed the vault.
+    /// # Arguments
+    /// - `assets`: List of asset allocations for the vault, including strategies associated with each asset.
+    /// - `manager`: Primary vault manager with permissions for vault control.
+    /// - `emergency_manager`: Address with emergency access for emergency control over the vault.
+    /// - `vault_fee_receiver`: Address designated to receive the vault fee receiver's portion of management fees.
+    /// - `vault_fee`: Vault-specific fee percentage in basis points (typically set at 0-2% APR).
+    /// - `defindex_protocol_receiver`: Address receiving DeFindex’s protocol-wide fee in basis points (0.5% APR).
+    /// - `factory`: Factory contract address for deployment linkage.
+    /// - `vault_name`: Name of the vault token to be displayed in metadata.
+    /// - `vault_symbol`: Symbol representing the vault’s token.
     ///
-    /// # Returns:
-    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
+    /// # Returns
+    /// - `Result<(), ContractError>`: Returns `Ok(())` if initialization succeeds, or a `ContractError` if
+    ///   any setup fails (e.g., strategy mismatch with asset).
+    ///
+    /// # Errors
+    /// - `ContractError::AlreadyInitialized`: If the vault has already been initialized.
+    /// - `ContractError::StrategyDoesNotSupportAsset`: If a strategy within an asset does not support the asset’s contract.
+    ///
     fn initialize(
         e: Env,
         assets: Vec<AssetAllocation>,
@@ -36,26 +43,42 @@ pub trait VaultTrait {
         vault_symbol: String,
     ) -> Result<(), ContractError>;
 
-    /// Handles deposits into the DeFindex Vault.
+    /// Handles user deposits into the DeFindex Vault.
     ///
-    /// This function transfers the desired amounts of each asset into the vault, distributes the assets
-    /// across the strategies according to the vault's ratios, and mints dfTokens representing the user's
-    /// share in the vault.
+    /// This function processes a deposit by transferring each specified asset amount from the user's address to
+    /// the vault, allocating assets according to the vault's defined strategy ratios, and minting dfTokens that 
+    /// represent the user's proportional share in the vault. The `amounts_desired` and `amounts_min` vectors should 
+    /// align with the vault's asset order to ensure correct allocation.
     ///
-    /// # Arguments:
-    /// * `e` - The environment.
-    /// * `amounts_desired` - A vector of the amounts the user wishes to deposit for each asset.
-    /// * `amounts_min` - A vector of minimum amounts required for the deposit to proceed.
+    /// # Parameters
+    /// * `e` - The current environment reference (`Env`), for access to the contract state and utilities.
+    /// * `amounts_desired` - A vector specifying the user's intended deposit amounts for each asset.
+    /// * `amounts_min` - A vector of minimum deposit amounts required for the transaction to proceed.
     /// * `from` - The address of the user making the deposit.
     ///
-    /// # Returns:
-    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
+    /// # Returns
+    /// * `Result<(Vec<i128>, i128), ContractError>` - Returns the actual deposited `amounts` and `shares_to_mint` if successful,
+    ///   otherwise a `ContractError`.
+    ///
+    /// # Function Flow
+    /// 1. **Fee Collection**: Collects accrued fees before processing the deposit.
+    /// 2. **Validation**: Checks that the lengths of `amounts_desired` and `amounts_min` match the vault's assets.
+    /// 3. **Share Calculation**: Calculates `shares_to_mint` based on the vault's total managed funds and the deposit amount.
+    /// 4. **Asset Transfer**: Transfers each specified amount from the user’s address to the vault as idle funds.
+    /// 5. **dfToken Minting**: Mints new dfTokens for the user to represent their ownership in the vault.
+    ///
+    /// # Notes
+    /// - For the first deposit, if the vault has only one asset, shares are calculated directly based on the deposit amount.
+    /// - For multiple assets, the function delegates to `calculate_deposit_amounts_and_shares_to_mint`
+    ///   for precise share computation.
+    /// - An event is emitted to log the deposit, including the actual deposited amounts and minted shares.
+    ///
     fn deposit(
         e: Env,
         amounts_desired: Vec<i128>,
         amounts_min: Vec<i128>,
         from: Address,
-    ) -> Result<(), ContractError>;
+    ) -> Result<(Vec<i128>, i128), ContractError>;
 
     /// Withdraws assets from the DeFindex Vault by burning dfTokens.
     ///

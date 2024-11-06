@@ -177,15 +177,14 @@ impl VaultTrait for DeFindexVault {
         amounts_desired: Vec<i128>,
         amounts_min: Vec<i128>,
         from: Address,
-    ) -> Result<(), ContractError> {
+    ) -> Result<(Vec<i128>, i128), ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
         from.require_auth();
 
-        // Set LastFeeAssessment if it is the first deposit
-        if VaultToken::total_supply(e.clone()) == 0 {
-            set_last_fee_assesment(&e, &e.ledger().timestamp());
-        }
+        // Collect Fees
+        // If this was not done before, last fee assesment will set to be current timestamp and this will return without action
+        collect_fees(&e)?; 
 
         // get assets
         let assets = get_assets(&e);
@@ -230,23 +229,22 @@ impl VaultTrait for DeFindexVault {
 
         // for every asset
         for (i, amount) in amounts.iter().enumerate() {
+            // its possible that some amounts are 0.
             if amount > 0 {
                 let asset = assets.get(i as u32).unwrap();
                 let asset_client = TokenClient::new(&e, &asset.address);
-                // send the current amount to this contract
+                // send the current amount to this contract. This will be held as idle funds.
                 asset_client.transfer(&from, &e.current_contract_address(), &amount);
             }
         }
 
-        // now we mint the corresponding dfTOkenb
+        // now we mint the corresponding dfToken
         internal_mint(e.clone(), from.clone(), shares_to_mint);
 
-        events::emit_deposit_event(&e, from, amounts, shares_to_mint);
+        events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone());
 
-        // fees assesment
-        collect_fees(&e)?;
         // TODO return amounts and shares to mint
-        Ok(())
+        Ok((amounts, shares_to_mint))
     }
 
     /// Withdraws assets from the DeFindex Vault by burning dfTokens.
