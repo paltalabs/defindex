@@ -82,6 +82,29 @@ fn test_initialize_with_unsupported_strategy() {
     );
 }
 
+// test that if we try to initialize with an empty asset allocation fails
+#[test]
+fn test_initialize_with_empty_asset_allocation() {
+    let test = DeFindexVaultTest::setup();
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+
+    let assets: Vec<AssetAllocation> = sorobanvec![&test.env];
+
+    let result = test.defindex_contract.try_initialize(
+        &assets,
+        &test.manager,
+        &test.emergency_manager,
+        &test.vault_fee_receiver,
+        &2000u32,
+        &test.defindex_protocol_receiver,
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
+    );
+
+    assert_eq!(result, Err(Ok(ContractError::NoAssetAllocation)));
+}
+
 #[test]
 fn test_get_roles_not_yet_initialized() {
     let test = DeFindexVaultTest::setup();

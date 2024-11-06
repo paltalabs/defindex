@@ -112,12 +112,16 @@ impl VaultTrait for DeFindexVault {
 
         // Store Assets Objects
         let total_assets = assets.len();
-        // TODO Require minimum 1 asset
+
+        // fails if the total assets is 0
+        if total_assets == 0 {
+            panic_with_error!(&e, ContractError::NoAssetAllocation);
+        }
+        
         set_total_assets(&e, total_assets as u32);
         for (i, asset) in assets.iter().enumerate() {
-            // for every asset, we need to check that the list of strategyes indeed support this asset
+            // for every asset, we need to check that the list of strategies indeed support this asset
 
-            // TODO Fix, currently failing
             for strategy in asset.strategies.iter() {
                 let strategy_client = DeFindexStrategyClient::new(&e, &strategy.address);
                 if strategy_client.asset() != asset.address {

@@ -9,6 +9,7 @@ pub enum ContractError {
     AlreadyInitialized = 101,
     InvalidRatio = 102,
     StrategyDoesNotSupportAsset = 103,
+    NoAssetAllocation = 104,
 
     // Validation Errors (11x)
     NegativeNotAllowed = 110,
