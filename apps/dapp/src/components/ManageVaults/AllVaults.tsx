@@ -166,7 +166,7 @@ export const AllVaults = ({
           </Table.Body>}
           {(!isLoading && createdVaults?.length != undefined) && <Table.Body>
               {createdVaults.map((vault: VaultData, i: number) => (
-                <Table.Row key={i} onClick={() => { handleOpenInspect(vault) }}>
+                <Table.Row key={i} onClick={() => { handleOpenInspect(vault) }} css={{ cursor: 'pointer' }}>
                   <Table.Cell>{vault.name ? vault.name : vault.address}</Table.Cell>
                   <Table.Cell textAlign={'center'}>
                     <Tooltip content={vault.address}>
