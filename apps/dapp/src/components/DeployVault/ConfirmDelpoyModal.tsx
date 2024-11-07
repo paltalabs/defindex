@@ -52,6 +52,8 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   const newVault: NewVaultState = useAppSelector(state => state.newVault);
   const strategies: Strategy[] = newVault.strategies;
   const indexName = useAppSelector(state => state.newVault.name)
+  const indexSymbol = useAppSelector(state => state.newVault.symbol)
+  const indexShare = useAppSelector(state => state.newVault.vaultShare)
   const managerString = useAppSelector(state => state.newVault.manager)
   const emergencyManagerString = useAppSelector(state => state.newVault.emergencyManager)
   const feeReceiverString = useAppSelector(state => state.newVault.feeReceiver)
@@ -80,6 +82,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       && emergencyManagerString !== ""
       && feeReceiverString !== ""
       && assets.length > 0
+      && !indexShare 
       && loadingAssets === false
     ) {
       setDeployDisabled(false);
@@ -105,6 +108,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
           })
         );
         const assetsArray = await Promise.all(assetsPromises);
+        console.log(assetsArray)
         setAssets(assetsArray);
         setLoadingAssets(false);
       } catch (error) {
@@ -119,6 +123,14 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
 
   const deployDefindex = async () => {
 
+    if (indexName === "" || indexName === undefined) {
+      console.log("Set index name please")
+      return
+    }
+    if (indexSymbol === "" || indexSymbol === undefined) {
+      console.log("Set index symbol please")
+      return
+    }
     if (managerString === "" || managerString === undefined) {
       console.log("Set manager please")
       return
@@ -131,14 +143,26 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       console.log("Set fee receiver please")
       return
     }
-
+    const vaultName = nativeToScVal(indexName, { type: "string" })
+    const vaultSymbol = nativeToScVal(indexSymbol, { type: "string" })
+    const vaultShare = nativeToScVal(indexShare, { type: "u32" })
     const emergencyManager = new Address(emergencyManagerString)
     const feeReceiver = new Address(feeReceiverString)
     const manager = new Address(managerString)
     const salt = randomBytes(32)
 
     const ratios = [1];
-
+    /*
+        pub struct AssetAllocation {
+          pub address: Address,
+          pub strategies: Vec<Strategy>,
+        } 
+        pub struct Strategy {
+          pub address: Address,
+          pub name: String,
+          pub paused: bool,
+        }
+    */
     const strategyParamsScVal = strategies.map((param) => {
       return xdr.ScVal.scvMap([
         new xdr.ScMapEntry({
@@ -149,18 +173,47 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
           key: xdr.ScVal.scvSymbol('name'),
           val: nativeToScVal(param.name, { type: "string" }),
         }),
+        new xdr.ScMapEntry({
+          key: xdr.ScVal.scvSymbol('paused'),
+          val: nativeToScVal(false, { type: "bool" }),
+        }),
       ]);
     });
 
     const strategyParamsScValVec = xdr.ScVal.scvVec(strategyParamsScVal);
 
+    const assetParamsScVal = assets.map((asset) => {
+      return xdr.ScVal.scvMap([
+        new xdr.ScMapEntry({
+          key: xdr.ScVal.scvSymbol('address'),
+          val: new Address(asset).toScVal(),
+        }),
+        new xdr.ScMapEntry({
+          key: xdr.ScVal.scvSymbol('strategies'),
+          val: strategyParamsScValVec,
+        }),
+      ]);
+    });
+
+
+     /*  fn create_defindex_vault(
+      emergency_manager: address, 
+      fee_receiver: address, 
+      vault_share: u32, 
+      vault_name: string, 
+      vault_symbol: string, 
+      manager: address, 
+      assets: vec<AssetAllocation>, 
+      salt: bytesn<32>) -> result<address,FactoryError>
+ */
     const createDefindexParams: xdr.ScVal[] = [
       emergencyManager.toScVal(),
       feeReceiver.toScVal(),
+      vaultShare,
+      vaultName,
+      vaultSymbol,
       manager.toScVal(),
-      xdr.ScVal.scvVec(assets.map((token) => new Address(token).toScVal())),
-      xdr.ScVal.scvVec(ratios.map((ratio) => nativeToScVal(ratio, { type: "u32" }))),
-      strategyParamsScValVec,
+      xdr.ScVal.scvVec(assetParamsScVal),
       nativeToScVal(salt),
     ];
 

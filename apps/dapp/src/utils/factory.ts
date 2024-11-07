@@ -12,6 +12,7 @@ export async function fetchFactoryAddress(network: string): Promise<string> {
     if (network !== "testnet" && network !== "mainnet") {
         throw new Error(`Invalid network: ${network}. It should be testnet or mainnet`);
     }
+  
     const url = `https://raw.githubusercontent.com/paltalabs/defindex/refs/heads/main/public/${network}.contracts.json`;
     try {
         const response = await fetch(url);
