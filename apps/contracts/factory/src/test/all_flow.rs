@@ -2,12 +2,16 @@ use soroban_sdk::{testutils::Ledger, vec, BytesN, Map, String, Vec};
 
 use crate::test::{create_asset_params, defindex_vault_contract::{self, Investment}, DeFindexFactoryTest};
 
+pub(crate) const DEFINDEX_FEE: u32 = 50u32;
+pub(crate) const VAULT_FEE: u32 = 100u32;
+pub(crate) const MAX_BPS: u32 = 10_000u32;
+
 #[test]
 fn test_deposit_success() {
   let test = DeFindexFactoryTest::setup();
   test.env.mock_all_auths();
 
-  test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &50u32, &test.defindex_wasm_hash);
+  test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &DEFINDEX_FEE, &test.defindex_wasm_hash);
 
   let asset_params = create_asset_params(&test);
 
@@ -16,7 +20,7 @@ fn test_deposit_success() {
   test.factory_contract.create_defindex_vault(
     &test.emergency_manager, 
     &test.fee_receiver,
-    &100u32,
+    &VAULT_FEE,
     &String::from_str(&test.env, "dfToken"),
     &String::from_str(&test.env, "DFT"),
     &test.manager,
@@ -66,7 +70,7 @@ fn test_withdraw_success() {
   let test = DeFindexFactoryTest::setup();
   test.env.mock_all_auths();
 
-  test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &50u32, &test.defindex_wasm_hash);
+  test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &DEFINDEX_FEE, &test.defindex_wasm_hash);
 
   let asset_params = create_asset_params(&test);
 
@@ -76,7 +80,7 @@ fn test_withdraw_success() {
   test.factory_contract.create_defindex_vault(
     &test.emergency_manager, 
     &test.fee_receiver,
-    &100u32,
+    &VAULT_FEE,
     &String::from_str(&test.env, "dfToken"),
     &String::from_str(&test.env, "DFT"),
     &test.manager,
@@ -201,7 +205,7 @@ fn test_consecutive_deposits_and_partial_withdrawal() {
   test.factory_contract.create_defindex_vault(
     &test.emergency_manager, 
     &test.fee_receiver,
-    &100u32,
+    &VAULT_FEE,
     &String::from_str(&test.env, "dfToken"),
     &String::from_str(&test.env, "DFT"),
     &test.manager,
@@ -261,11 +265,15 @@ fn test_consecutive_deposits_and_partial_withdrawal() {
   test.env.ledger().set(ledger_info);
 
   // User 2 deposits Token 0 and Token 1 into the vault
+  // total_fees = (fee_rate as i128 * total_supply * time_elapsed) / ((SECONDS_PER_YEAR * MAX_BPS) - (fee_rate as i128 * time_elapsed));
+  let fee_rate = DEFINDEX_FEE + VAULT_FEE;
+  let expected_minted_fee: i128 = (fee_rate as i128).checked_mul(total_supply).unwrap().checked_mul(31_536_000i128).unwrap().checked_div(31_536_000i128.checked_mul(MAX_BPS as i128).unwrap().checked_sub((fee_rate as i128).checked_mul(31_536_000i128).unwrap()).unwrap()).unwrap();
+  
   defindex_contract.deposit(&vec![&test.env, amount_token0_user2, amount_token1_user2], &vec![&test.env, 0, 0], &users[1]);
-  // tvl = 13000 = 13195 dfTokens
-  // new_tvl = 13000 + 6500 = 19792 dfTokens
+  // tvl = 13000 = 13197 dfTokens
+  // new_tvl = 13000 + 6500 = 19500 dfTokens
 
-  assert_eq!(defindex_contract.balance(&users[1]), 6597i128);
+  assert_eq!(defindex_contract.balance(&users[1]), 6598i128);
   // User 2 should have deposited all their tokens into the vault
   assert_eq!(test.token0.balance(&users[1]), 0);
   // TODO: There is an error with the deposit, since depositing only 500 of the token1 when the user is trying to deposit 6000 
