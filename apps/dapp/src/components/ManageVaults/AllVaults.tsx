@@ -73,17 +73,20 @@ export const AllVaults = ({
         vault(VaultMethod.GETEMERGENCYMANAGER, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
         vault(VaultMethod.GETFEERECEIVER, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
         vault(VaultMethod.GETNAME, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
-        vault(VaultMethod.GETSTRATEGIES, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
+        vault(VaultMethod.GETASSETS, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
         vault(VaultMethod.GETTOTALVALUES, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
       ]);
+      const TVValues = Object.values(totalValues)
+      const totalValuesArray = TVValues.map((value: any) => Number(value))
+      const accTotalValues = totalValuesArray.reduce((a: number, b: number) => a + b, 0)
       const newData: VaultData = {
         name: name || '',
         address: selectedVault,
         manager: manager,
         emergencyManager: emergencyManager,
         feeReceiver: feeReceiver,
-        strategies: strategies || [],
-        totalValues: totalValues || 0,
+        strategies: strategies[0].strategies || [],
+        totalValues: accTotalValues || 0,
       }
       return newData
     } catch (e: any) {
@@ -185,7 +188,6 @@ export const AllVaults = ({
                       <Tooltip content={'Deposit'}>
                         <IconButton
                           mx={1}
-                          colorScheme='blue'
                           aria-label='deposit'
                           size='sm'
                           onClick={() => handleOpenDeposit(VaultMethod.DEPOSIT, vault)}
@@ -196,10 +198,8 @@ export const AllVaults = ({
                       <Tooltip content={'Withdraw'}>
                         <IconButton
                           mx={1}
-                          colorScheme='orange'
                           aria-label='withdraw'
                           size='sm'
-
                           onClick={() => handleOpenDeposit(VaultMethod.WITHDRAW, vault)}
                         >
                           <PiHandWithdrawLight />
@@ -246,7 +246,6 @@ export const AllVaults = ({
                 <Stack direction="row" mt={2}>
                   <Tooltip content={'Deposit'}>
                     <IconButton
-                      colorScheme='blue'
                       aria-label={VaultMethod.DEPOSIT}
                       size='sm'
                       onClick={() => handleOpenDeposit(VaultMethod.DEPOSIT, vault)}
@@ -256,7 +255,6 @@ export const AllVaults = ({
                   </Tooltip>
                   <Tooltip content={'Withdraw'}>
                     <IconButton
-                      colorScheme='orange'
                       aria-label={VaultMethod.WITHDRAW}
                       size='sm'
                       onClick={() => handleOpenDeposit(VaultMethod.WITHDRAW, vault)}
@@ -267,7 +265,6 @@ export const AllVaults = ({
                   {(address == vault.manager) &&
                     <Tooltip content={'Rebalance'}>
                       <IconButton
-                        colorScheme='teal'
                         aria-label='rebalance'
                         size='sm'
                         onClick={() => handleOpenDeployVault('edit_vault', true, vault)}
@@ -278,7 +275,6 @@ export const AllVaults = ({
                   {(address == vault.emergencyManager || address == vault.manager) &&
                     <Tooltip content={'Emergency withdraw'}>
                       <IconButton
-                        colorScheme='yellow'
                         aria-label={VaultMethod.EMERGENCY_WITHDRAW}
                         size='sm'
                         onClick={() => handleOpenDeposit(VaultMethod.EMERGENCY_WITHDRAW, vault)}

@@ -13,8 +13,8 @@ export enum VaultMethod {
     GETFEERECEIVER = "get_fee_receiver",
     EMERGENCY_WITHDRAW = "emergency_withdraw",
     GETNAME= "name",
-    GETTOTALVALUES = "current_invested_funds",
-    GETSTRATEGIES = "get_strategies",
+    GETTOTALVALUES = "fetch_current_invested_funds",
+    GETASSETS = "get_assets",
 }   
 
 const isObject = (val: unknown) => typeof val === 'object' && val !== null && !Array.isArray(val);

@@ -63,7 +63,6 @@ export const ManageVaults = () => {
         const selectedVault = vaults.find(vault => vault.address === args.address)
         if (!selectedVault) return;
         for (const item of selectedVault.strategies) {
-          console.log(item)
           const newStrategy: Strategy = { ...item, share: selectedVault.strategies.length > 1 ? 100 / selectedVault.strategies.length : 100 };
           await dispatch(pushStrategy(newStrategy))
         }

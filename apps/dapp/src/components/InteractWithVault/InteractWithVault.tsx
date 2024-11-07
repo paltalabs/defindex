@@ -27,33 +27,24 @@ export const InteractWithVault = () => {
 
   const vaultOperation = async () => {
     if (!address || !vaultMethod) return;
-    if (vaultMethod != VaultMethod.EMERGENCY_WITHDRAW) return;
+    if (!amount) throw new Error('Amount is required');
+    if (vaultMethod != VaultMethod.DEPOSIT) return;
+    const depositParams: xdr.ScVal[] = [
+      xdr.ScVal.scvVec([nativeToScVal((amount * Math.pow(10, 7)), { type: "i128" })]),
+      xdr.ScVal.scvVec([nativeToScVal(((amount * 0.9) * Math.pow(10, 7)), { type: "i128" })]),
+      new Address(address).toScVal(),
+    ]
     console.log('Vault method:', vaultMethod)
-    const args: xdr.ScVal[] = [
-      new Address(selectedVault.address).toScVal()
-    ];
-    if (vaultMethod === VaultMethod.EMERGENCY_WITHDRAW) {
-      if (!selectedVault?.totalValues) throw new Error('Total values is required');
-      args.unshift(nativeToScVal((0), { type: "i128" }),)
+    try {
       const result = await vault(
-        VaultMethod.EMERGENCY_WITHDRAW,
+        vaultMethod!,
         selectedVault?.address!,
-        [
-          new Address(selectedVault.address).toScVal()
-        ],
+        depositParams,
         true,
       )
-      return result
-    } else {
-      if (!amount) throw new Error('Amount is required');
-      args.unshift(nativeToScVal((amount * Math.pow(10, 7)), { type: "i128" }),)
+    } catch (error) {
+      console.error('Error:', error)
     }
-    const result = await vault(
-      vaultMethod!,
-      selectedVault?.address!,
-      args,
-      true,
-    )
   }
 
   const setAmount = (e: any) => {
