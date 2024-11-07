@@ -1,16 +1,17 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '../store'
-import axios from 'axios'
 import { getRemoteConfig } from '@/helpers/getRemoteConfig';
 import { Strategy } from './walletStore';
 
 
 export interface NewVaultState {
   address: string;
-  emergencyManager?: string;
-  feeReceiver?: string;
-  manager?: string;
+  emergencyManager: string;
+  feeReceiver: string;
+  manager: string;
+  vaultShare: number;
   name: string;
+  symbol: string;
   strategies: Strategy[];
   totalValues?: number;
 }
@@ -22,6 +23,8 @@ const initialState: NewVaultState = {
   feeReceiver: "",
   manager: "",
   name: "",
+  symbol: "",
+  vaultShare: 0,
   strategies: [
     {
       address: "",
@@ -103,6 +106,9 @@ export const newVaultSlice = createSlice({
     setName: ((state, action: PayloadAction<string>) => {
       state.name = action.payload;
     }),
+    setSymbol: ((state, action: PayloadAction<string>) => {
+      state.symbol = action.payload;
+    }),
     setManager: ((state, action: PayloadAction<string>) => {
       state.manager = action.payload;
     }),
@@ -111,6 +117,9 @@ export const newVaultSlice = createSlice({
     }),
     setFeeReceiver: ((state, action: PayloadAction<string>) => {
       state.feeReceiver = action.payload;
+    }),
+    setVaultShare: ((state, action: PayloadAction<number>) => {
+      state.vaultShare = action.payload;
     }),
   }
 })
@@ -122,9 +131,11 @@ export const {
   setStrategyValue,
   resetStrategyValue,
   setName,
+  setSymbol,
   setManager,
   setEmergencyManager,
-  setFeeReceiver
+  setFeeReceiver,
+  setVaultShare
 } = newVaultSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
