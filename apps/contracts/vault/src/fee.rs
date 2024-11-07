@@ -1,16 +1,14 @@
-use soroban_sdk::{Address, Env, Map, Symbol, Vec};
+use soroban_sdk::{Env, Symbol, Vec};
 
 use crate::{
     access::AccessControl,
     constants::{MAX_BPS, SECONDS_PER_YEAR},
     events,
-    funds::fetch_total_managed_funds,
     storage::{
         get_defindex_protocol_fee_receiver, get_factory, get_last_fee_assesment, get_vault_fee,
         set_last_fee_assesment,
     },
     token::{internal_mint, VaultToken},
-    utils::calculate_dftokens_from_asset_amounts,
     ContractError,
 };
 
@@ -30,31 +28,20 @@ fn fetch_defindex_fee(e: &Env) -> u32 {
 fn calculate_fees(e: &Env, time_elapsed: u64, fee_rate: u32) -> Result<i128, ContractError> {
     let total_supply = VaultToken::total_supply(e.clone());
 
-    // (fee_rate as i128 * total_supply * time_elapsed) / ((SECONDS_PER_YEAR * MAX_BPS) - (fee_rate as i128 * time_elapsed));
-    let fees = (fee_rate as i128).checked_mul(total_supply).unwrap().checked_mul(time_elapsed as i128).unwrap().checked_div((SECONDS_PER_YEAR.checked_mul(MAX_BPS).unwrap().checked_sub((fee_rate as i128).checked_mul(time_elapsed as i128).unwrap()).unwrap())).unwrap();
+    // fee_rate as i128 * total_supply * time_elapsed / SECONDS_PER_YEAR * MAX_BPS - fee_rate as i128 * time_elapsed;
+    let numerator = (fee_rate as i128)
+        .checked_mul(total_supply)
+        .unwrap()
+        .checked_mul(time_elapsed as i128)
+        .unwrap();
+    let denominator = SECONDS_PER_YEAR
+        .checked_mul(MAX_BPS)
+        .unwrap()
+        .checked_sub((fee_rate as i128).checked_mul(time_elapsed as i128).unwrap())
+        .unwrap();
+    let fees = numerator.checked_div(denominator).unwrap();
     
     Ok(fees)
-    // let total_managed_funds = fetch_total_managed_funds(e); // Get total managed funds per asset
-
-    // let seconds_per_year = SECONDS_PER_YEAR; // 365 days in seconds
-
-    // let mut total_fees_per_asset: Map<Address, i128> = Map::new(&e);
-
-    // // Iterate over each asset in the vault
-    // for (asset_address, amount) in total_managed_funds.iter() {
-    //     // Fetch current managed funds for each asset
-    //     let current_asset_value = amount;
-
-    //     // Calculate the fee for this asset based on the fee rate and time elapsed
-    //     let asset_fee = (current_asset_value * fee_rate as i128 * time_elapsed as i128)
-    //         / (seconds_per_year * MAX_BPS);
-
-    //     total_fees_per_asset.set(asset_address.clone(), asset_fee);
-    // }
-
-    // let total_fees_in_dftokens = calculate_dftokens_from_asset_amounts(e, total_fees_per_asset, total_managed_funds)?;
-
-    // Ok(total_fees_in_dftokens)
 }
 
 /// Collects and mints fees in dfTokens, distributing them to the appropriate fee receivers.
