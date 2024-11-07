@@ -9,6 +9,7 @@ import {
   IconButton,
   Fieldset,
   Stack,
+  Icon,
 } from '@chakra-ui/react'
 import { shortenAddress } from '@/helpers/shortenAddress'
 
@@ -26,6 +27,7 @@ import {
   AccordionItemTrigger,
   AccordionRoot,
 } from "@chakra-ui/react"
+import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io'
 
 enum AccordionItems {
   STRATEGY_DETAILS = 'strategy-details',
@@ -46,6 +48,80 @@ interface FormControlInterface {
     value: string | undefined;
   },
   vaultShare: number
+}
+const CustomAccordionTrigger = ({ title, type, accordionValue, setAccordionValue }: { title: string, type: AccordionItems, accordionValue: AccordionItems[], setAccordionValue: React.Dispatch<React.SetStateAction<AccordionItems[]>> }) => {
+  return (
+    <AccordionItemTrigger onClick={() => {
+      if (accordionValue[0] === type) {
+        setAccordionValue([])
+      }
+    }}>
+      <Grid templateColumns={'repeat(12, 1fr)'} width={'100%'}>
+        <GridItem colSpan={6} colStart={1}>
+          <Text fontSize='lg' textAlign={'left'} fontWeight='bold' mb={2}>
+            {title} settings
+          </Text>
+        </GridItem>
+        <GridItem colSpan={1} colStart={12}>
+          <Text fontSize='lg' fontWeight='bold' mb={2}>
+            {accordionValue[0] === type ?
+              <Icon>
+                <IoIosArrowUp />
+              </Icon>
+              :
+              <Icon>
+                <IoIosArrowDown />
+              </Icon>
+            }
+          </Text>
+        </GridItem>
+      </Grid>
+    </AccordionItemTrigger>
+  )
+}
+
+const CustomInputField = ({
+  label,
+  value,
+  onChange,
+  handleClick,
+  placeholder,
+  invalid
+}: {
+  label: string,
+  value: string,
+  onChange: (e: any) => void,
+  handleClick: (address: string) => void,
+  placeholder: string,
+  invalid: boolean
+}) => {
+  const { address } = useSorobanReact()
+  if (!address) return null
+  return (
+    <Fieldset.Root invalid={invalid}>
+      <Fieldset.Legend>{label}</Fieldset.Legend>
+      <Stack>
+        <InputGroup endElement={
+          <Tooltip content='Use connected wallet'>
+            <IconButton
+              aria-label='Connected address'
+              size={'sm'}
+              onClick={() => handleClick(address)}
+            >
+              <FaRegPaste />
+            </IconButton>
+          </Tooltip>
+        }>
+          <Input
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+          />
+        </InputGroup>
+      </Stack>
+      <Fieldset.ErrorText>A valid Stellar / Soroban address is required.</Fieldset.ErrorText>
+    </Fieldset.Root>
+  )
 }
 export const VaultPreview = ({ data }: { data: ChartData[] }) => {
 
@@ -175,30 +251,28 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
       </Box>
       <AccordionRoot value={accordionValue} onValueChange={(e: any) => setAccordionValue(e.value)}>
         <AccordionItem value={AccordionItems.STRATEGY_DETAILS}>
-          <AccordionItemTrigger>
-            <Text fontSize='lg' fontWeight='bold' mb={2}>
-              Strategies
-            </Text>
-          </AccordionItemTrigger>
+          <CustomAccordionTrigger
+            setAccordionValue={setAccordionValue}
+            title='Strategies'
+            type={AccordionItems.STRATEGY_DETAILS}
+            accordionValue={accordionValue} />
           <AccordionItemContent>
-            <Table.Root>
+            <Table.Root size={'lg'} w={'full'}>
               <Table.Header>
-                <Table.Row>
+                <Table.Row >
                   <Table.Cell>Name</Table.Cell>
-                  <Table.Cell>Address</Table.Cell>
-                  <Table.Cell >Percentage</Table.Cell>
+                  <Table.Cell textAlign={'center'}>Address</Table.Cell>
+                  <Table.Cell textAlign={'center'} >Percentage</Table.Cell>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
                 {data.map((strategy: ChartData, index: number) => (
                   <Table.Row key={index}>
                     <Table.Cell>{strategy.label}</Table.Cell>
-                    <Tooltip content={strategy.address}>
-                      <Table.Cell w={1}>
-                        {strategy.address ? shortenAddress(strategy.address) : '-'}
-                      </Table.Cell>
-                    </Tooltip>
-                    <Table.Cell>{strategy.value}%</Table.Cell>
+                    <Table.Cell textAlign={'center'}>
+                      {strategy.address ? shortenAddress(strategy.address) : '-'}
+                    </Table.Cell>
+                    <Table.Cell textAlign={'center'}>{strategy.value}%</Table.Cell>
                   </Table.Row>
                 ))}
               </Table.Body>
@@ -206,96 +280,46 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
           </AccordionItemContent>
         </AccordionItem>
         <AccordionItem value={AccordionItems.MANAGER_CONFIGS}>
-          <AccordionItemTrigger>
-            <Text fontSize='lg' fontWeight='bold' mb={2}>
-              Manager settings
-            </Text>
-          </AccordionItemTrigger>
+          <CustomAccordionTrigger
+            setAccordionValue={setAccordionValue}
+            title='Manager'
+            type={AccordionItems.MANAGER_CONFIGS}
+            accordionValue={accordionValue}
+          />
           <AccordionItemContent>
-          <Fieldset.Root
-            invalid={formControl.manager.isValid === false}
-          >
-            <Fieldset.Legend>Manager</Fieldset.Legend>
-              <Stack mb={6}>
-              <InputGroup endElement={
-                  <Tooltip content='Use connected wallet'>
-                  <IconButton
-                    aria-label='Connected address'
-                    size={'sm'}
-                    onClick={() => handleManagerChange(address!)}
-                    >
-                    <FaRegPaste />
-                    </IconButton>
-                </Tooltip>
-              }>
-                <Input
-                  onChange={(event) => handleManagerChange(event?.target.value)}
-                  value={formControl.manager.value}
-                  placeholder='GAFS3TLVM...'
-                />
-              </InputGroup>
-            </Stack>
-            <Fieldset.ErrorText>A valid Stellar / Soroban address is required.</Fieldset.ErrorText>
-            </Fieldset.Root>
-          <Fieldset.Root
-            invalid={formControl.emergencyManager.isValid === false}
-          >
-            <Fieldset.Legend>Emergency manager</Fieldset.Legend>
-              <Stack mb={6}>
-              <InputGroup endElement={
-                <Tooltip content='Use connected wallet'>
-                  <IconButton
-                    aria-label='Connected address'
-                    size={'sm'}
-                    onClick={() => handleEmergencyManagerChange(address!)}
-                  >
-                    <FaRegPaste />
-                  </IconButton>
-                </Tooltip>
-              }>
-                <Input
-                  onChange={(event) => handleEmergencyManagerChange(event?.target.value)}
-                  value={formControl.emergencyManager.value}
-                  placeholder='GAFS3TLVM...'
-                />
-              </InputGroup>
-            </Stack>
-            <Fieldset.ErrorText>A valid Stellar / Soroban address is required.</Fieldset.ErrorText>
-          </Fieldset.Root>
+            <CustomInputField
+              label='Manager'
+              value={formControl.manager.value || ''}
+              onChange={(e) => handleManagerChange(e.target.value)}
+              handleClick={(address: string) => handleManagerChange(address)}
+              placeholder='GAFS3TLVM...'
+              invalid={formControl.manager.isValid === false}
+            />
+            <CustomInputField
+              label='Emergency manager'
+              value={formControl.emergencyManager.value || ''}
+              onChange={(e) => handleEmergencyManagerChange(e.target.value)}
+              handleClick={(address: string) => handleEmergencyManagerChange(address)}
+              placeholder='GAFS3TLVM...'
+              invalid={formControl.emergencyManager.isValid === false}
+            />
           </AccordionItemContent>
         </AccordionItem>
         <AccordionItem value={AccordionItems.FEES_CONFIGS}>
-          <AccordionItemTrigger>
-            <Text fontSize='lg' fontWeight='bold' mb={2}>
-              Fees settings
-            </Text>
-          </AccordionItemTrigger>
+          <CustomAccordionTrigger
+            setAccordionValue={setAccordionValue}
+            title='Fees'
+            type={AccordionItems.FEES_CONFIGS}
+            accordionValue={accordionValue} />
           <AccordionItemContent>
-          <Fieldset.Root
-            invalid={formControl.feeReceiver.isValid === false}
-          >
-            <Fieldset.Legend>Fee reciever</Fieldset.Legend>
-            <Stack>
-              <InputGroup endElement={
-                <Tooltip content='Use connected wallet'>
-                  <IconButton
-                    aria-label='Connected address'
-                    size={'sm'}
-                    onClick={() => handleFeeReceiverChange(address!)}
-                  >
-                    <FaRegPaste />
-                  </IconButton>
-                </Tooltip>
-              }>
-                <Input
-                  onChange={(event) => handleFeeReceiverChange(event?.target.value)}
-                  value={formControl.feeReceiver.value}
-                  placeholder='GAFS3TLVM...'
-                />
-              </InputGroup>
-            </Stack>
-            <Fieldset.ErrorText>A valid Stellar / Soroban address is required.</Fieldset.ErrorText>
-          </Fieldset.Root>
+            <CustomInputField
+              label='Fee receiver'
+              value={formControl.feeReceiver.value || ''}
+              onChange={(e) => handleFeeReceiverChange(e.target.value)}
+              handleClick={(address: string) => handleFeeReceiverChange(address)}
+              placeholder='GAFS3TLVM...'
+              invalid={formControl.feeReceiver.isValid === false}
+            />
             <InputGroup
               endElement={'%'}
             >
