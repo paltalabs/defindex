@@ -49,10 +49,12 @@ const SkeletonRow = () => {
 }
 export const AllVaults = ({
   handleOpenDeployVault,
-  handleOpenDeposit
+  handleOpenDeposit,
+  handleOpenInspect
 }: {
     handleOpenDeployVault: (method: string, value: boolean, args?: any) => any,
-  handleOpenDeposit: (method: string, args?: any) => any
+    handleOpenDeposit: (method: string, args?: any) => any,
+    handleOpenInspect: (args?: any) => any
 }) => {
   const vault = useVaultCallback()
   const { activeChain, address } = useSorobanReact()
@@ -141,7 +143,7 @@ export const AllVaults = ({
   return (
     <Box mx={'auto'} minW={'100%'} p={4}>
       {!isMobile ? (
-        <Table.Root >
+        <Table.Root interactive>
           <Table.Header>
             <Table.Row>
               <Table.Cell>Name</Table.Cell>
@@ -161,7 +163,7 @@ export const AllVaults = ({
           </Table.Body>}
           {(!isLoading && createdVaults?.length != undefined) && <Table.Body>
               {createdVaults.map((vault: VaultData, i: number) => (
-                <Table.Row key={i}>
+                <Table.Row key={i} onClick={() => { handleOpenInspect(vault) }}>
                   <Table.Cell>{vault.name ? vault.name : vault.address}</Table.Cell>
                   <Table.Cell textAlign={'center'}>
                     <Tooltip content={vault.address}>

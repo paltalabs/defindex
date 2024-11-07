@@ -20,6 +20,7 @@ import { VaultMethod } from "@/hooks/useVault"
 import { InputGroup } from "../ui/input-group"
 import { DialogBackdrop, DialogRoot, DialogTrigger } from "../ui/dialog"
 import { CiSearch } from "react-icons/ci";
+import { InspectVault } from "./InspectVault"
 
 export const ManageVaults = () => {
   const { address } = useSorobanReact()
@@ -29,6 +30,9 @@ export const ManageVaults = () => {
     },
     deposit: {
       isOpen: boolean
+    },
+    inspect: {
+      isOpen: boolean
     }
   }>({
     deployVault: {
@@ -36,10 +40,18 @@ export const ManageVaults = () => {
     },
     deposit: {
       isOpen: false
+    },
+    inspect: {
+      isOpen: false
     }
   })
   const dispatch = useAppDispatch()
   const vaults = useAppSelector(state => state.wallet.vaults.createdVaults)
+  const handleInspectVault = async (args?: any) => {
+    console.log(args)
+    await dispatch(setSelectedVault({ ...args }))
+    setModalStatus({ ...modalStatus, inspect: { isOpen: true } })
+  }
   const handleOpenDeployVault = async (method: string, value: boolean, args?: any) => {
     switch (method) {
       case 'create_vault':
@@ -148,8 +160,21 @@ export const ManageVaults = () => {
             <DialogBackdrop backdropFilter='blur(1px)' />
             <InteractWithVault />
           </DialogRoot>
-          <AllVaults handleOpenDeployVault={handleOpenDeployVault} handleOpenDeposit={handleOpenDeposit} />
+          <AllVaults
+            handleOpenDeployVault={handleOpenDeployVault}
+            handleOpenDeposit={handleOpenDeposit}
+            handleOpenInspect={handleInspectVault}
+          />
         </GridItem>
+        <DialogRoot
+          open={modalStatus.inspect.isOpen}
+          onOpenChange={(e) => { setModalStatus({ ...modalStatus, inspect: { isOpen: e.open } }) }}
+          size={'lg'}
+          placement={'center'}
+        >
+          <DialogBackdrop backdropFilter='blur(1px)' />
+          <InspectVault />
+        </DialogRoot>
       </Grid>
     </>
   )
