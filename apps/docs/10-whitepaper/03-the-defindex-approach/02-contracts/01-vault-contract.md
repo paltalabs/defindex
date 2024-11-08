@@ -260,7 +260,7 @@ The remaining 1.01 dfTokens represent the collected fee, backed by around:
 
 $
 1.01 \, \text{dfTokens} \times 1.069 \, \text{USDC per share} \approx 1.08 \, \text{USDC}
-\]
+$
 
 ---
 

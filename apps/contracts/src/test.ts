@@ -84,7 +84,7 @@ export async function test_factory(addressBook: AddressBook) {
   const createDeFindexParams: xdr.ScVal[] = [
     new Address(emergencyManager.publicKey()).toScVal(),
     new Address(feeReceiver.publicKey()).toScVal(),
-    nativeToScVal(100, { type: "u32" }),  // Setting vault_share as 100 bps for demonstration
+    nativeToScVal(100, { type: "u32" }),  // Setting vault_fee as 100 bps for demonstration
     nativeToScVal("Test Vault", { type: "string" }),
     nativeToScVal("DFT-Test-Vault", { type: "string" }),
     new Address(manager.publicKey()).toScVal(),

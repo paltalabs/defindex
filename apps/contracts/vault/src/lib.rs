@@ -202,6 +202,9 @@ impl VaultTrait for DeFindexVault {
         // If this was not done before, last_fee_assesment will set to be current timestamp and this will return without action
         collect_fees(&e)?; 
 
+        // fees assesment
+        collect_fees(&e)?;
+
         // get assets
         let assets = get_assets(&e);
         let assets_length = assets.len();
@@ -298,6 +301,9 @@ impl VaultTrait for DeFindexVault {
         check_nonnegative_amount(df_amount)?;
         from.require_auth();
 
+        // fees assesment
+        collect_fees(&e)?;
+    
         // Check if the user has enough dfTokens
         let df_user_balance = VaultToken::balance(e.clone(), from.clone());
         if df_user_balance < df_amount {
@@ -365,10 +371,7 @@ impl VaultTrait for DeFindexVault {
         }
 
         events::emit_withdraw_event(&e, from, df_amount, amounts_withdrawn.clone());
-
-        // fees assesment
-        collect_fees(&e)?;
-
+    
         Ok(amounts_withdrawn)
     }
 
