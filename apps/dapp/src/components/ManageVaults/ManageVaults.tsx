@@ -28,7 +28,7 @@ export const ManageVaults = () => {
     deployVault: {
       isOpen: boolean
     },
-    deposit: {
+    interact: {
       isOpen: boolean
     },
     inspect: {
@@ -38,7 +38,7 @@ export const ManageVaults = () => {
     deployVault: {
       isOpen: false
     },
-    deposit: {
+    interact: {
       isOpen: false
     },
     inspect: {
@@ -70,20 +70,20 @@ export const ManageVaults = () => {
     }
   }
 
-  const handleOpenDeposit = async (method: string, args?: any) => {
+  const handleOpenInteract = async (method: string, args?: any) => {
     switch (method) {
       case VaultMethod.DEPOSIT:
-        await setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
+        await setModalStatus({ ...modalStatus, interact: { isOpen: true } })
         await dispatch(setSelectedVault({ ...args, method: VaultMethod.DEPOSIT }))
         console.log(args)
         break
       case VaultMethod.WITHDRAW:
-        await setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
+        await setModalStatus({ ...modalStatus, interact: { isOpen: true } })
         await dispatch(setSelectedVault({ ...args, method: VaultMethod.WITHDRAW }))
         console.log(args)
         break
       case VaultMethod.EMERGENCY_WITHDRAW:
-        await setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
+        await setModalStatus({ ...modalStatus, interact: { isOpen: true } })
         await dispatch(setSelectedVault({ ...args, method: VaultMethod.EMERGENCY_WITHDRAW }))
         console.log(args)
         break
@@ -150,8 +150,8 @@ export const ManageVaults = () => {
         </GridItem>
         <GridItem colSpan={12} colStart={1} colEnd={13} zIndex={'base'}>
           <DialogRoot
-            open={modalStatus.deposit.isOpen}
-            onOpenChange={(e) => { setModalStatus({ ...modalStatus, deposit: { isOpen: e.open } }) }}
+            open={modalStatus.interact.isOpen}
+            onOpenChange={(e) => { setModalStatus({ ...modalStatus, interact: { isOpen: e.open } }) }}
             size={'lg'}
             placement={'center'}
           >
@@ -169,7 +169,7 @@ export const ManageVaults = () => {
           <DialogBackdrop backdropFilter='blur(1px)' />
           <InspectVault
             handleOpenDeployVault={handleOpenDeployVault}
-            handleOpenDeposit={handleOpenDeposit}
+            handleOpenInteract={handleOpenInteract}
             onClose={() => { setModalStatus({ ...modalStatus, inspect: { isOpen: false } }) }}
           />
         </DialogRoot>

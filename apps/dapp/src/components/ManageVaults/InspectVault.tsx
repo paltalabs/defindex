@@ -9,12 +9,12 @@ import { Doughnut } from 'react-chartjs-2';
 
 export const InspectVault = ({
   handleOpenDeployVault,
-  handleOpenDeposit,
+  handleOpenInteract,
   onClose
 }: {
-  handleOpenDeployVault: (method: string, value: boolean, args?: any) => any,
-  handleOpenDeposit: (method: string, args?: any) => any,
-  onClose: () => void,
+    handleOpenDeployVault: (method: string, value: boolean, args?: any) => any,
+    handleOpenInteract: (method: string, args?: any) => any,
+    onClose: () => void,
 }) => {
   const selectedVault = useAppSelector(state => state.wallet.vaults.selectedVault)
   if (!selectedVault?.address) return null
@@ -85,13 +85,13 @@ export const InspectVault = ({
           <GridItem colSpan={3}>
             <ul>APY:</ul>
             <li>
-              24.00%
+              -
             </li>
           </GridItem>
           <GridItem colSpan={3}>
             <ul>Investors:</ul>
             <li>
-              42
+              -
             </li>
           </GridItem>
         </Grid>
@@ -99,13 +99,13 @@ export const InspectVault = ({
       <DialogFooter>
         <Grid templateColumns={'repeat(9, 1fr)'} gap={4} justifyItems={'center'} w={'full'}>
           <GridItem colSpan={3}>
-            <Button onClick={() => { handleOpenDeposit(VaultMethod.DEPOSIT, selectedVault) }}>Deposit</Button>
+            <Button onClick={() => { handleOpenInteract(VaultMethod.DEPOSIT, selectedVault) }}>Deposit</Button>
           </GridItem>
           <GridItem colSpan={3}>
-            <Button onClick={() => { handleOpenDeposit(VaultMethod.EMERGENCY_WITHDRAW, selectedVault) }}>Emergency Withdraw</Button>
+            <Button onClick={() => { handleOpenInteract(VaultMethod.EMERGENCY_WITHDRAW, selectedVault) }}>Emergency Withdraw</Button>
           </GridItem>
           <GridItem colSpan={3} >
-            <Button onClick={() => { handleOpenDeposit(VaultMethod.WITHDRAW, selectedVault) }}>Withdraw</Button>
+            <Button onClick={() => { handleOpenInteract(VaultMethod.WITHDRAW, selectedVault) }}>Withdraw</Button>
           </GridItem>
         </Grid>
       </DialogFooter>
