@@ -180,7 +180,7 @@ impl VaultTrait for DeFindexVault {
     /// 2. **Validation**: Checks that the lengths of `amounts_desired` and `amounts_min` match the vault's assets.
     /// 3. **Share Calculation**: Calculates `shares_to_mint` based on the vault's total managed funds and the deposit amount.
     /// 4. **Asset Transfer**: Transfers each specified amount from the user’s address to the vault as idle funds.
-    /// 5. **dfToken Minting**: Mints new dfTokens for the user to represent their ownership in the vault.
+    /// 5. **Vault shares Minting**: Mints vault shares for the user to represent their ownership in the vault.
     ///
     /// # Notes
     /// - For the first deposit, if the vault has only one asset, shares are calculated directly based on the deposit amount.
@@ -273,7 +273,6 @@ impl VaultTrait for DeFindexVault {
         // now we mint the corresponding dfToken
         // TODO. If total_sypply==0, mint minimum liquidity to be locked forever in the contract
         internal_mint(e.clone(), from.clone(), shares_to_mint);
-
 
         events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone());
 
