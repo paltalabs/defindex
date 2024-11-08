@@ -1,11 +1,11 @@
 use soroban_sdk::token::TokenClient;
 use soroban_sdk::{Address, Env, Map};
 
-use crate::models::AssetAllocation;
+use crate::models::AssetStrategySet;
 use crate::storage::get_assets;
 use crate::strategies::get_strategy_client;
 
-// Funds for AssetAllocation
+// Funds for AssetStrategySet
 
 /// Fetches the idle funds for a given asset. Idle funds refer to the balance of the asset
 /// that is currently not invested in any strategies.
@@ -16,7 +16,7 @@ use crate::strategies::get_strategy_client;
 ///
 /// # Returns
 /// * The idle balance (i128) of the asset in the current contract address.
-fn fetch_idle_funds_for_asset(e: &Env, asset: &AssetAllocation) -> i128 {
+fn fetch_idle_funds_for_asset(e: &Env, asset: &AssetStrategySet) -> i128 {
     TokenClient::new(e, &asset.address).balance(&e.current_contract_address())
 }
 
@@ -43,7 +43,7 @@ pub fn fetch_invested_funds_for_strategy(e: &Env, strategy_address: &Address) ->
 ///
 /// # Returns
 /// * The total invested balance (i128) of the asset across all strategies.
-pub fn fetch_invested_funds_for_asset(e: &Env, asset: &AssetAllocation) -> i128 {
+pub fn fetch_invested_funds_for_asset(e: &Env, asset: &AssetStrategySet) -> i128 {
     let mut invested_funds = 0;
     for strategy in asset.strategies.iter() {
         invested_funds += fetch_invested_funds_for_strategy(e, &strategy.address);

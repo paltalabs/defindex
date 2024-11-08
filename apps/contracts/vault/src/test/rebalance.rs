@@ -3,7 +3,7 @@ use soroban_sdk::{vec as sorobanvec, String, Vec};
 use crate::test::{
     create_strategy_params_token0,
     defindex_vault::{
-        ActionType, AssetAllocation, Instruction, Investment, OptionalSwapDetailsExactIn,
+        ActionType, AssetStrategySet, Instruction, Investment, OptionalSwapDetailsExactIn,
         OptionalSwapDetailsExactOut,
     },
     DeFindexVaultTest,
@@ -14,9 +14,9 @@ fn rebalance() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         }

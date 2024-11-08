@@ -2,7 +2,7 @@ use defindex_strategy_core::DeFindexStrategyClient;
 use soroban_sdk::{Address, Env};
 
 use crate::{
-    models::{AssetAllocation, Strategy},
+    models::{AssetStrategySet, Strategy},
     storage::{get_asset, get_assets, get_total_assets, set_asset},
     ContractError,
 };
@@ -15,7 +15,7 @@ pub fn get_strategy_client(e: &Env, address: Address) -> DeFindexStrategyClient 
 pub fn get_strategy_asset(
     e: &Env,
     strategy_address: &Address,
-) -> Result<AssetAllocation, ContractError> {
+) -> Result<AssetStrategySet, ContractError> {
     let assets = get_assets(e);
 
     for asset in assets.iter() {
@@ -31,11 +31,11 @@ pub fn get_strategy_asset(
     Err(ContractError::StrategyNotFound)
 }
 
-/// Finds the AssetAllocation corresponding to the given asset address.
+/// Finds the AssetStrategySet corresponding to the given asset address.
 pub fn get_asset_allocation_from_address(
     e: &Env,
     asset_address: Address,
-) -> Result<AssetAllocation, ContractError> {
+) -> Result<AssetStrategySet, ContractError> {
     let assets = get_assets(e);
 
     for asset in assets.iter() {
@@ -50,7 +50,7 @@ pub fn get_asset_allocation_from_address(
 /// Finds the strategy struct corresponding to the given strategy address within the given asset.
 pub fn get_strategy_struct(
     strategy_address: &Address,
-    asset: &AssetAllocation,
+    asset: &AssetStrategySet,
 ) -> Result<Strategy, ContractError> {
     asset
         .strategies

@@ -6,7 +6,7 @@ use crate::{
         fetch_invested_funds_for_asset, fetch_invested_funds_for_strategy,
         fetch_total_managed_funds,
     },
-    models::AssetAllocation,
+    models::AssetStrategySet,
     token::VaultToken,
     ContractError,
 };
@@ -43,7 +43,7 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
 pub fn calculate_withdrawal_amounts(
     e: &Env,
     amount: i128,
-    asset: AssetAllocation,
+    asset: AssetStrategySet,
 ) -> Map<Address, i128> {
     let mut withdrawal_amounts = Map::<Address, i128>::new(e);
 
@@ -121,7 +121,7 @@ pub fn calculate_dftokens_from_asset_amounts(
 pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
     e: &Env,
     total_managed_funds: &Map<Address, i128>,
-    assets: &Vec<AssetAllocation>,
+    assets: &Vec<AssetStrategySet>,
     amounts_desired: &Vec<i128>,
     i: &u32,
 ) -> (Vec<i128>, i128) {
@@ -191,7 +191,7 @@ pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
 /// be replaced with proper error handling.
 pub fn calculate_deposit_amounts_and_shares_to_mint(
     e: &Env,
-    assets: &Vec<AssetAllocation>,
+    assets: &Vec<AssetStrategySet>,
     amounts_desired: &Vec<i128>,
     amounts_min: &Vec<i128>,
 ) -> Result<(Vec<i128>, i128), ContractError> {

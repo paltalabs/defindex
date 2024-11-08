@@ -29,7 +29,7 @@ use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::{execute_investment, prepare_investment};
 use models::{
-    ActionType, AssetAllocation, Instruction, Investment, OptionalSwapDetailsExactIn,
+    ActionType, AssetStrategySet, Instruction, Investment, OptionalSwapDetailsExactIn,
     OptionalSwapDetailsExactOut,
 };
 use storage::{
@@ -84,7 +84,7 @@ impl VaultTrait for DeFindexVault {
     ///
     fn initialize(
         e: Env,
-        assets: Vec<AssetAllocation>,
+        assets: Vec<AssetStrategySet>,
         manager: Address,
         emergency_manager: Address,
         vault_fee_receiver: Address,
@@ -503,8 +503,8 @@ impl VaultTrait for DeFindexVault {
     /// * `e` - The environment.
     ///
     /// # Returns:
-    /// * `Vec<AssetAllocation>` - A vector of `AssetAllocation` structs representing the assets managed by the vault.
-    fn get_assets(e: Env) -> Vec<AssetAllocation> {
+    /// * `Vec<AssetStrategySet>` - A vector of `AssetStrategySet` structs representing the assets managed by the vault.
+    fn get_assets(e: Env) -> Vec<AssetStrategySet> {
         extend_instance_ttl(&e);
         get_assets(&e)
     }

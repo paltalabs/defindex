@@ -3,7 +3,7 @@ use soroban_sdk::{vec as sorobanvec, String, Vec};
 // use super::hodl_strategy::StrategyError;
 use crate::test::{
     create_strategy_params_token0,
-    defindex_vault::{AssetAllocation, Investment},
+    defindex_vault::{AssetStrategySet, Investment},
     DeFindexVaultTest,
 };
 
@@ -12,9 +12,9 @@ fn test_withdraw_from_idle_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         }
@@ -129,9 +129,9 @@ fn test_withdraw_from_strategy_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         }

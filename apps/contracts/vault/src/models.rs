@@ -10,7 +10,7 @@ pub struct Strategy {
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct AssetAllocation {
+pub struct AssetStrategySet {
     pub address: Address,
     pub strategies: Vec<Strategy>,
 }

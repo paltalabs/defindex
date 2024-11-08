@@ -1,6 +1,6 @@
 use soroban_sdk::{vec as sorobanvec, String, Vec, Map};
 
-use crate::test::defindex_vault::{AssetAllocation, ContractError};
+use crate::test::defindex_vault::{AssetStrategySet, ContractError};
 use crate::test::{
     create_strategy_params_token0, create_strategy_params_token1, DeFindexVaultTest,
 };
@@ -29,13 +29,13 @@ fn deposit_amounts_desired_less_length() {
     let strategy_params_token1 = create_strategy_params_token1(&test);
 
     // initialize with 2 assets
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         },
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token1.address.clone(),
             strategies: strategy_params_token1.clone()
         }
@@ -74,9 +74,9 @@ fn deposit_amounts_desired_more_length() {
     let strategy_params_token1 = create_strategy_params_token1(&test);
 
     // initialize with 2 assets
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         }
@@ -115,13 +115,13 @@ fn deposit_amounts_min_less_length() {
     let strategy_params_token1 = create_strategy_params_token1(&test);
 
     // initialize with 2 assets
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         },
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token1.address.clone(),
             strategies: strategy_params_token1.clone()
         }
@@ -161,13 +161,13 @@ fn deposit_amounts_min_more_length() {
     let strategy_params_token1 = create_strategy_params_token1(&test);
 
     // initialize with 2 assets
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         },
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token1.address.clone(),
             strategies: strategy_params_token1.clone()
         }
@@ -206,13 +206,13 @@ fn deposit_amounts_desired_negative() {
     let strategy_params_token1 = create_strategy_params_token1(&test);
 
     // initialize with 2 assets
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         },
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token1.address.clone(),
             strategies: strategy_params_token1.clone()
         }
@@ -250,9 +250,9 @@ fn deposit_one_asset_success() {
     let strategy_params_token0 = create_strategy_params_token0(&test);
 
     // initialize with 1 assets
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         }
@@ -376,9 +376,9 @@ fn deposit_one_asset_min_more_than_desired() {
     let strategy_params_token0 = create_strategy_params_token0(&test);
 
     // initialize with 1 assets
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         }
@@ -427,13 +427,13 @@ fn deposit_several_assets_success() {
     let strategy_params_token1 = create_strategy_params_token1(&test);
 
     // initialize with 2 assets
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         },
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token1.address.clone(),
             strategies: strategy_params_token1.clone()
         }
@@ -624,13 +624,13 @@ fn deposit_several_assets_min_greater_than_optimal() {
     let strategy_params_token1 = create_strategy_params_token1(&test);
 
     // initialize with 2 assets
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         },
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token1.address.clone(),
             strategies: strategy_params_token1.clone()
         }
