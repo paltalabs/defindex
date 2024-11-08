@@ -29,7 +29,7 @@ use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::{execute_investment, prepare_investment};
 use models::{
-    ActionType, AssetStrategySet, Instruction, Investment, OptionalSwapDetailsExactIn,
+    ActionType, AssetStrategySet, Instruction, AssetInvestmentAllocation, OptionalSwapDetailsExactIn,
     OptionalSwapDetailsExactOut,
 };
 use storage::{
@@ -661,15 +661,10 @@ impl AdminInterfaceTrait for DeFindexVault {
 #[contractimpl]
 impl VaultManagementTrait for DeFindexVault {
     /// Invests the vault's idle funds into the specified strategies.
-    ///
-    /// # Arguments:
-    /// * `e` - The environment.
-    /// * `investment` - A vector of `Investment` structs representing the amount to invest in each strategy.
-    /// * `caller` - The address of the caller.
-    ///
-    /// # Returns:
-    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn invest(e: Env, investments: Vec<Investment>) -> Result<(), ContractError> {
+    fn invest(
+        e: Env, 
+        asset_investments: Vec<Option<AssetInvestmentAllocation>>
+    -> Result<(), ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
 
@@ -677,25 +672,68 @@ impl VaultManagementTrait for DeFindexVault {
         access_control.require_role(&RolesDataKey::Manager);
         e.current_contract_address().require_auth();
 
-        // Get the current idle funds for all assets
+        
         let idle_funds = fetch_current_idle_funds(&e);
+        let assets = get_assets(&e);
+        
+        
+        // First we check that the total AssetInvestmentAllocation length is equal to the total assets length
+        // check that asset_investments.len == total_assets
+        if asset_investments.len() != assets.len(); {
+            panic_with_error!(&e, ContractError::WrongInvestmentLength);
+        }
 
-        // Prepare investments based on current idle funds
-        // This checks if the total investment exceeds the idle funds
-        prepare_investment(&e, investments.clone(), idle_funds)?;
+        // for each AssetInvestmentAllocation that is defined
+        for (i, asset_investment) in asset_investments.iter().enumerate() {
+            if let Some(asset_investment) = asset_investment { // if asset_investment is defined
 
-        // Now proceed with the actual investments if all checks passed
-        execute_investment(&e, investments)?;
+                // check that asset address is correct
+                let asset = assets.get(i as u32).unwrap();
+                // we can maybe dont check this
+                if asset.address != asset_investment.address {
+                    panic_with_error!(&e, ContractError::WrongAssetAddress);
+                }
 
-        // auto invest mockup
-        // if auto_invest {
-        //     let idle_funds = fetch_current_idle_funds(&e);
+                // and strategies length is also correct.
+                if asset.strategies.len() != asset_investment.strategy_investments.len() {
+                    panic_with_error!(&e, ContractError::WrongStrategiesLength);
+                }
 
-        //     // Prepare investments based on current ratios of invested funds
-        //     let investments = calculate_investments_based_on_ratios(&e);
-        //     prepare_investment(&e, investments.clone(), idle_funds)?;
-        //     execute_investment(&e, investments)?;
-        // }
+
+                // now I wanna sum all the amounts of strategies that are defined
+                // and check that is not more than idle funds
+                let total_asset_investment: i128 = asset_investment.strategy_investments.iter().filter_map(|strategy| {
+                    strategy.as_ref().map(|strategy| strategy.amount.unwrap_or(0))
+                }).sum();
+
+                // check that the stotal asset_investment is not more than idle funds
+                if total_asset_investment > idle_funds.get(asset_investment.address.clone()).unwrap_or(0) {
+                    panic_with_error!(&e, ContractError::InsufficientIdleFunds);
+                }
+
+                // and for every amount that is defined, check non negative and strategy is not paused
+                for strategy_investment in asset_investment.strategy_investments.iter() {
+                    if let Some(strategy_investment) = strategy_investment { // if the asset_investment strategy_investment is defined
+                        check_nonnegative_amount(strategy_investment.amount.unwrap_or(0))?;
+                        // we can know if straegy is paused because from  assets.strategies we get a vec os Strategy that have paused bool
+                        // we consider that the vec is ordered, so we just need to get
+                        // the strategy from the vec and check if it is paused
+                        let strategy = asset.strategies.get(i as u32).unwrap();
+                
+                        if strategy_investment.amount.unwrap_or(0) > 0 {
+                            if strategy.paused {
+                                panic_with_error!(&e, ContractError::StrategyPaused);
+                            }
+                            // No that we are ok we invest
+                            invest_in_strategy(&e, &strategy.address, &strategy_investment.amount.unwrap_or(0))?;
+                        }
+                    }
+                }
+
+
+
+            }
+        }
         Ok(())
     }
 

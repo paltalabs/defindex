@@ -15,11 +15,19 @@ pub struct AssetStrategySet {
     pub strategies: Vec<Strategy>,
 }
 
+// Investment Allocation in Strategies
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Investment {
+pub struct StrategyInvestment {
     pub strategy: Address,
     pub amount: i128,
+}
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct AssetInvestmentAllocation {
+    pub asset: Address,
+    pub strategy_investments: Vec<Option<StrategyInvestment>>,
 }
 
 #[contracttype]

@@ -1,7 +1,7 @@
 use soroban_sdk::{Address, Env, Map, String, Vec};
 
 use crate::{
-    models::{AssetStrategySet, Instruction, Investment},
+    models::{AssetStrategySet, Instruction, AssetInvestmentAllocation},
     ContractError,
 };
 
@@ -271,12 +271,12 @@ pub trait VaultManagementTrait {
     ///
     /// # Arguments:
     /// * `e` - The environment.
-    /// * `investment` - A vector of `Investment` structs representing the amount to invest in each strategy.
+    /// * `investment` - A vector of `AssetInvestmentAllocation` structs representing the amount to invest in each strategy.
     /// * `caller` - The address of the caller.
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn invest(e: Env, investment: Vec<Investment>) -> Result<(), ContractError>;
+    fn invest(e: Env, investment: Vec<AssetInvestmentAllocation>) -> Result<(), ContractError>;
 
     /// Rebalances the vault by executing a series of instructions.
     ///
