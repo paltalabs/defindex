@@ -24,7 +24,6 @@ export const InspectVault = ({
       {
         label: 'Distribution',
         data: selectedVault.strategies.map((strategy) => {
-          console.log('strategy.share', strategy)
           return strategy.share
         }),
         borderColor: 'rgba(25, 192, 62, 1)',
