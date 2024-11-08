@@ -1,54 +1,66 @@
-use soroban_sdk::{Address, Env, Map, Vec};
+use soroban_sdk::{Address, Env, Map, Vec, panic_with_error};
 
-// use crate::{
-//     models::Investment,
-//     strategies::{get_strategy_asset, invest_in_strategy},
-//     utils::check_nonnegative_amount,
-//     ContractError,
-// };
+use crate::{
+    models::{AssetStrategySet, AssetInvestmentAllocation},
+    strategies::invest_in_strategy,
+    utils::{check_nonnegative_amount},
+    ContractError,
+};
 
-// pub fn prepare_investment(
-//     e: &Env,
-//     investments: Vec<Investment>,
-//     idle_funds: Map<Address, i128>,
-// ) -> Result<Map<Address, i128>, ContractError> {
-//     let mut total_investment_per_asset: Map<Address, i128> = Map::new(e);
+pub fn check_and_execute_investments(
+    e: Env, 
+    assets: Vec<AssetStrategySet>,
+    asset_investments: Vec<Option<AssetInvestmentAllocation>>
+) -> Result<(), ContractError> {
 
-//     for investment in investments.iter() {
-//         let strategy_address = &investment.strategy;
-//         let amount_to_invest = investment.amount;
-//         check_nonnegative_amount(amount_to_invest.clone())?;
+    // Iterate over each asset investment allocation
+    for (i, asset_investment_opt) in asset_investments.iter().enumerate() {
+        if let Some(asset_investment) = asset_investment_opt { // Proceed only if allocation is defined
+            let asset = assets.get(i as u32).unwrap();
 
-//         // Find the corresponding asset for the strategy
-//         let asset = get_strategy_asset(&e, strategy_address)?;
+            // Verify the asset address matches the specified investment allocation
+            if asset.address != asset_investment.asset {
+                panic_with_error!(&e, ContractError::WrongAssetAddress);
+            }
 
-//         // Track investment per asset
-//         let current_investment = total_investment_per_asset
-//             .get(asset.address.clone())
-//             .unwrap_or(0);
-//         let updated_investment = current_investment
-//             .checked_add(amount_to_invest)
-//             .ok_or(ContractError::Overflow)?;
+            // Ensure the number of strategies aligns between asset and investment
+            if asset.strategies.len() != asset_investment.strategy_investments.len() {
+                panic_with_error!(&e, ContractError::WrongStrategiesLength);
+            }
 
-//         total_investment_per_asset.set(asset.address.clone(), updated_investment);
+            // NOTE: We can avoid this check as it if total idle funds exceed idle funds, this will fail
+            // when trying to transfer
 
-//         // Check if total investment exceeds idle funds
-//         let idle_balance = idle_funds.get(asset.address.clone()).unwrap_or(0);
-//         if updated_investment > idle_balance {
-//             return Err(ContractError::NotEnoughIdleFunds);
-//         }
-//     }
+            // // Calculate total intended investment for this asset
+            // let total_asset_investment: i128 = asset_investment.investments.iter()
+            //     .filter_map(|strategy| strategy.as_ref().map(|s| s.amount.unwrap_or(0)))
+            //     .sum();
 
-//     Ok(total_investment_per_asset)
-// }
+            // // Verify total intended investment does not exceed idle funds for this asset
+            // if total_asset_investment > fetch_idle_funds_for_asset(&e, &asset_investment.asset) {
+            //     panic_with_error!(&e, ContractError::InsufficientIdleFunds);
+            // }
 
-// pub fn execute_investment(e: &Env, investments: Vec<Investment>) -> Result<(), ContractError> {
-//     for investment in investments.iter() {
-//         let strategy_address = &investment.strategy;
-//         let amount_to_invest = &investment.amount;
+            // Process each defined strategy investment for the current asset
+            for (j, strategy_investment_opt) in asset_investment.strategy_investments.iter().enumerate() {
+                if let Some(strategy_investment) = strategy_investment_opt {
+                    // Validate amount is non-negative
+                    check_nonnegative_amount(strategy_investment.amount)?;
 
-//         invest_in_strategy(e, strategy_address, amount_to_invest)?
-//     }
+                    // Ensure the strategy is active before proceeding
+                    let strategy = asset.strategies.get(j as u32).unwrap();
+                    if strategy_investment.amount > 0 && strategy.paused {
+                        panic_with_error!(&e, ContractError::StrategyPaused);
+                    }
 
-//     Ok(())
-// }
+                    //Reduce idle funds for this asset
+
+
+                    // Execute the investment if checks pass
+                    invest_in_strategy(&e, &strategy.address, &strategy_investment.amount)?;
+                }
+            }
+        }
+    }
+    Ok(())
+}
