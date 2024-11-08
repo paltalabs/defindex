@@ -180,6 +180,9 @@ impl VaultTrait for DeFindexVault {
             set_last_fee_assesment(&e, &e.ledger().timestamp());
         }
 
+        // fees assesment
+        collect_fees(&e)?;
+
         // get assets
         let assets = get_assets(&e);
         let assets_length = assets.len();
@@ -236,8 +239,6 @@ impl VaultTrait for DeFindexVault {
 
         events::emit_deposit_event(&e, from, amounts, shares_to_mint);
 
-        // fees assesment
-        collect_fees(&e)?;
         // TODO return amounts and shares to mint
         Ok(())
     }
@@ -260,6 +261,9 @@ impl VaultTrait for DeFindexVault {
         check_nonnegative_amount(df_amount)?;
         from.require_auth();
 
+        // fees assesment
+        collect_fees(&e)?;
+    
         // Check if the user has enough dfTokens
         let df_user_balance = VaultToken::balance(e.clone(), from.clone());
         if df_user_balance < df_amount {
@@ -327,10 +331,7 @@ impl VaultTrait for DeFindexVault {
         }
 
         events::emit_withdraw_event(&e, from, df_amount, amounts_withdrawn.clone());
-
-        // fees assesment
-        collect_fees(&e)?;
-
+    
         Ok(amounts_withdrawn)
     }
 
