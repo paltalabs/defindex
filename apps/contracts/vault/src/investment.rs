@@ -7,6 +7,35 @@ use crate::{
     ContractError,
 };
 
+/// Checks and executes the investments for each asset based on provided allocations.
+/// The function iterates through the specified assets and asset investments to ensure validity 
+/// and executes investments accordingly.
+///
+/// # Arguments
+/// * `e` - The current environment reference.
+/// * `assets` - A vector of `AssetStrategySet` that holds information about assets and their associated strategies.
+/// * `asset_investments` - A vector of optional investment allocations for each asset.
+///s
+/// # Returns
+/// * `Result<(), ContractError>` - Returns `Ok(())` if all investments are successful or an appropriate `ContractError` if any issue is encountered.
+///
+/// # Function Flow
+/// 1. **Iterate Over Asset Investments**: Loops through each asset investment allocation.
+/// 2. **Validation**:
+///    - **Asset Address Check**: Ensures that the asset's address matches the expected address in the allocation.
+///    - **Strategy Length Check**: Verifies that the number of strategies matches between the asset and the corresponding allocation.
+///    - **Note**: The total intended investment check has been removed as the subsequent operations inherently perform the same validation.
+/// 3. **Process Strategy Investments**:
+///    - For each strategy within an asset:
+///      - **Non-Negative Amount Check**: Validates that the investment amount is non-negative.
+///      - **Strategy Active Check**: Ensures that the strategy is not paused before proceeding with the investment.
+///      - **Execute Investment**: Calls the `invest_in_strategy` function if all checks pass.
+///
+/// # Errors
+/// * Returns `ContractError::WrongAssetAddress` if an asset's address does not match the expected address.
+/// * Returns `ContractError::WrongStrategiesLength` if the number of strategies in the asset and allocation do not match.
+/// * Returns `ContractError::StrategyPaused` if an investment targets a paused strategy.
+///
 pub fn check_and_execute_investments(
     e: Env, 
     assets: Vec<AssetStrategySet>,

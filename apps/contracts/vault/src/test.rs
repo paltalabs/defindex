@@ -166,6 +166,7 @@ impl<'a> DeFindexVaultTest<'a> {
 mod initialize;
 mod deposit;
 mod admin;
+mod invest;
 // mod emergency_withdraw;
 // mod rebalance;
 // mod withdraw;
