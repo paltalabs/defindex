@@ -1,12 +1,14 @@
-use soroban_sdk::{contracttype, Env, Address};
+use soroban_sdk::{contracttype, Address, Env};
 
 #[derive(Clone)]
 #[contracttype]
-
 pub enum DataKey {
     Initialized,
     UnderlyingAsset,
-    Balance(Address)
+    Balance(Address),
+    YieldBalance(Address),
+    Apr,
+    LastHarvestTime(Address),
 }
 
 const DAY_IN_LEDGERS: u32 = 17280;
@@ -34,4 +36,22 @@ pub fn set_underlying_asset(e: &Env, address: &Address) {
 
 pub fn get_underlying_asset(e: &Env) -> Address {
     e.storage().instance().get(&DataKey::UnderlyingAsset).unwrap()
+}
+
+// Apr
+pub fn set_apr(e: &Env, apr: u32) {
+    e.storage().instance().set(&DataKey::Apr, &apr);
+}
+
+pub fn get_apr(e: &Env) -> u32 {
+    e.storage().instance().get(&DataKey::Apr).unwrap()
+}
+
+// Last harvest time
+pub fn set_last_harvest_time(e: &Env, timestamp: u64, from: Address) {
+    e.storage().instance().set(&DataKey::LastHarvestTime(from), &timestamp);
+}
+
+pub fn get_last_harvest_time(e: &Env, from: Address) -> u64 {
+    e.storage().instance().get(&DataKey::LastHarvestTime(from)).unwrap_or(0)
 }

@@ -1,79 +1,103 @@
-use crate::test::HodlStrategyTest;
+use crate::test::FixAprStrategyTest;
 use crate::test::StrategyError;
+use soroban_sdk::token::StellarAssetClient;
+use soroban_sdk::vec;
 use soroban_sdk::{IntoVal, Vec, Val};
 
 // test deposit with negative amount
 #[test]
 fn deposit_with_negative_amount() {
-    let test = HodlStrategyTest::setup();
-    let init_fn_args: Vec<Val> = (0,).into_val(&test.env);
+    let test = FixAprStrategyTest::setup();
+    //MINT 100M to the strategy
+    let starting_amount = 100_000_000_000_0_000_000i128;
+    StellarAssetClient::new(&test.env, &test.token.address).mint(&test.strategy_admin, &starting_amount);
+
+    let init_fn_args: Vec<Val> = vec![&test.env,
+        1000u32.into_val(&test.env),
+        test.strategy_admin.into_val(&test.env),
+        starting_amount.into_val(&test.env),
+    ];
+
     test.strategy.initialize(&test.token.address, &init_fn_args);
+
+    let users = FixAprStrategyTest::generate_random_users(&test.env, 1);
 
     let amount = -123456;
 
-    let result = test.strategy.try_deposit(&amount, &test.user);
+    let result = test.strategy.try_deposit(&amount, &users[0]);
     assert_eq!(result, Err(Ok(StrategyError::NegativeNotAllowed)));
 }
 
-// check auth
+// test deposit with zero amount
 #[test]
-fn deposit_mock_auths() {
-    todo!()
+fn deposit_with_zero_amount() {
+    let test = FixAprStrategyTest::setup();
+    // MINT 100M to the strategy
+    let starting_amount = 100_000_000_000_0_000_000i128;
+    StellarAssetClient::new(&test.env, &test.token.address).mint(&test.strategy_admin, &starting_amount);
+
+    let init_fn_args: Vec<Val> = vec![&test.env,
+        1000u32.into_val(&test.env),
+        test.strategy_admin.into_val(&test.env),
+        starting_amount.into_val(&test.env),
+    ];
+
+    test.strategy.initialize(&test.token.address, &init_fn_args);
+
+    let users = FixAprStrategyTest::generate_random_users(&test.env, 1);
+
+    let amount = 0;
+
+    test.strategy.deposit(&amount, &users[0]);
 }
 
+// test deposit with positive amount
 #[test]
-fn deposit_and_withdrawal_flow() {
-    let test = HodlStrategyTest::setup();
-    // let users = HodlStrategyTest::generate_random_users(&test.env, 1);
+fn deposit() {
+    let test = FixAprStrategyTest::setup();
+    // MINT 100M to the strategy
+    let starting_amount = 100_000_000_000_0_000_000i128;
+    StellarAssetClient::new(&test.env, &test.token.address).mint(&test.strategy_admin, &starting_amount);
 
-    // try deposit should return NotInitialized error before being initialize
+    let init_fn_args: Vec<Val> = vec![&test.env,
+        1000u32.into_val(&test.env),
+        test.strategy_admin.into_val(&test.env),
+        starting_amount.into_val(&test.env),
+    ];
 
-    let result = test.strategy.try_deposit(&10_000_000, &test.user);
-    assert_eq!(result, Err(Ok(StrategyError::NotInitialized)));
+    test.strategy.initialize(&test.token.address, &init_fn_args);
 
-    // initialize
-    let init_fn_args: Vec<Val> = (0,).into_val(&test.env);
-    test.strategy.initialize(&test.token.address, &init_fn_args);   
+    let users = FixAprStrategyTest::generate_random_users(&test.env, 1);
 
-    // Initial user token balance
-    let balance = test.token.balance(&test.user);
+    let amount = 1_000_0_00_000;
+    StellarAssetClient::new(&test.env, &test.token.address).mint(&users[0], &amount);
 
-    let amount = 123456;
+    test.strategy.deposit(&amount, &users[0]);
+    let user_balance = test.token.balance(&users[0]);
+    assert_eq!(user_balance, 0);
+}
 
-    // Deposit amount of token from the user to the strategy
-    test.strategy.deposit(&amount, &test.user);
+// test deposit with amount exceeding balance
+#[test]
+#[should_panic(expected = "HostError: Error(Contract, #10)")] // Unauthorized
+fn deposit_with_exceeding_balance() {
+    let test = FixAprStrategyTest::setup();
+    // MINT 100M to the strategy
+    let starting_amount = 100_000_000_000_0_000_000i128;
+    StellarAssetClient::new(&test.env, &test.token.address).mint(&test.strategy_admin, &starting_amount);
 
-    let balance_after_deposit = test.token.balance(&test.user);
-    assert_eq!(balance_after_deposit, balance - amount);
+    let init_fn_args: Vec<Val> = vec![&test.env,
+        1000u32.into_val(&test.env),
+        test.strategy_admin.into_val(&test.env),
+        starting_amount.into_val(&test.env),
+    ];
 
-    // Reading strategy balance
-    let strategy_balance_after_deposit = test.token.balance(&test.strategy.address);
-    assert_eq!(strategy_balance_after_deposit, amount);
+    test.strategy.initialize(&test.token.address, &init_fn_args);
 
-    // Reading user balance on strategy contract
-    let user_balance_on_strategy = test.strategy.balance(&test.user);
-    assert_eq!(user_balance_on_strategy, amount);
+    let users = FixAprStrategyTest::generate_random_users(&test.env, 1);
 
+    let amount = 1_000_0_00_000;
+    StellarAssetClient::new(&test.env, &test.token.address).mint(&users[0], &(&amount - 100_0_000_000));
 
-    let amount_to_withdraw = 100_000;
-    // Withdrawing token from the strategy to user
-    test.strategy.withdraw(&amount_to_withdraw, &test.user);
-
-    // Reading user balance in token
-    let balance = test.token.balance(&test.user);
-    assert_eq!(balance, balance_after_deposit + amount_to_withdraw);
-
-    // Reading strategy balance in token
-    let balance = test.token.balance(&test.strategy.address);
-    assert_eq!(balance, amount - amount_to_withdraw);
-
-    // Reading user balance on strategy contract
-    let user_balance = test.strategy.balance(&test.user);
-    assert_eq!(user_balance, amount - amount_to_withdraw);
-
-    // now we will want to withdraw more of the remaining balance
-    let amount_to_withdraw = 200_000;
-    let result = test.strategy.try_withdraw(&amount_to_withdraw, &test.user);
-    assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
-
+    test.strategy.deposit(&amount, &users[0]);
 }

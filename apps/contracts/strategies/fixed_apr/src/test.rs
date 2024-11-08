@@ -1,13 +1,16 @@
 #![cfg(test)]
+extern crate std;
 use crate::{FixAprStrategy, FixAprStrategyClient, StrategyError};
 
-use soroban_sdk::token::{TokenClient, StellarAssetClient};
+use soroban_sdk::token::TokenClient;
 
 use soroban_sdk::{
     Env, 
     Address, 
     testutils::Address as _,
 };
+
+use std::vec as stdvec;
 
 // Base Strategy Contract
 fn create_fixapr_strategy<'a>(e: &Env) -> FixAprStrategyClient<'a> {
@@ -23,7 +26,7 @@ pub struct FixAprStrategyTest<'a> {
     env: Env,
     strategy: FixAprStrategyClient<'a>,
     token: TokenClient<'a>,
-    user: Address,
+    strategy_admin: Address,
 }
 
 impl<'a> FixAprStrategyTest<'a> {
@@ -35,29 +38,27 @@ impl<'a> FixAprStrategyTest<'a> {
         let strategy = create_fixapr_strategy(&env);
         let admin = Address::generate(&env);
         let token = create_token_contract(&env, &admin);
-        let user = Address::generate(&env);
 
-        // Mint 1,000,000,000 to user
-        StellarAssetClient::new(&env, &token.address).mint(&user, &1_000_000_000);
+        let strategy_admin = Address::generate(&env);
 
         FixAprStrategyTest {
             env,
             strategy,
             token,
-            user
+            strategy_admin
         }
     }
     
-    // pub(crate) fn generate_random_users(e: &Env, users_count: u32) -> vec::Vec<Address> {
-    //     let mut users = vec![];
-    //     for _c in 0..users_count {
-    //         users.push(Address::generate(e));
-    //     }
-    //     users
-    // }
+    pub(crate) fn generate_random_users(e: &Env, users_count: u32) -> stdvec::Vec<Address> {
+        let mut users = stdvec![];
+        for _c in 0..users_count {
+            users.push(Address::generate(e));
+        }
+        users
+    }
 }
 
 mod initialize;
 mod deposit;
-mod events;
+mod harvest;
 mod withdraw;
