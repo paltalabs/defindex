@@ -1,9 +1,13 @@
+import { useEffect } from 'react'
 import { shortenAddress } from '@/helpers/shortenAddress'
 import { FactoryMethod, useFactoryCallback } from '@/hooks/useFactory'
-import { VaultMethod, useVaultCallback } from '@/hooks/useVault'
-import { fetchDefaultAddresses, setIsVaultsLoading, setVaults, VaultData } from '@/store/lib/features/walletStore'
+import { useVault } from '@/hooks/useVault'
+import { useSorobanReact } from '@soroban-react/core'
+import { setIsVaultsLoading, setVaults, VaultData } from '@/store/lib/features/walletStore'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-
+import { scValToNative } from '@stellar/stellar-sdk'
+import { Tooltip } from '../ui/tooltip'
+import { StatRoot, StatUpTrend } from '../ui/stat'
 import {
   Box,
   Skeleton,
@@ -12,11 +16,6 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react'
-import { useSorobanReact } from '@soroban-react/core'
-import { scValToNative } from '@stellar/stellar-sdk'
-import { useEffect, useState } from 'react'
-import { Tooltip } from '../ui/tooltip'
-import { StatRoot, StatUpTrend } from '../ui/stat'
 
 const SkeletonRow = () => {
   const { address } = useSorobanReact()
@@ -34,11 +33,6 @@ const SkeletonRow = () => {
       <Table.Cell>
         <Skeleton height='20px' />
       </Table.Cell>
-      {address && (
-        <Table.Cell>
-          <Skeleton height='20px' />
-        </Table.Cell>
-      )}
     </Table.Row>
   )
 }
@@ -46,8 +40,7 @@ export const AllVaults = ({
   handleOpenInspect
 }: {
     handleOpenInspect: (value: boolean, args?: any) => any
-}) => {
-  const vault = useVaultCallback()
+  }) => {
   const { activeChain, address } = useSorobanReact()
   const dispatch = useAppDispatch();
   const vaults = useAppSelector(state => state.wallet.vaults)
@@ -55,72 +48,23 @@ export const AllVaults = ({
   const createdVaults = vaults.createdVaults
   const factory = useFactoryCallback()
   const isMobile = useBreakpointValue({ base: true, md: false });
-
-  const getVaultInfo = async (selectedVault: string) => {
-    try {
-      //dispatch(setIsVaultsLoading(true))
-      const [manager, emergencyManager, feeReceiver, name, strategies, totalValues] = await Promise.all([
-        vault(VaultMethod.GETMANAGER, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
-        vault(VaultMethod.GETEMERGENCYMANAGER, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
-        vault(VaultMethod.GETFEERECEIVER, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
-        vault(VaultMethod.GETNAME, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
-        vault(VaultMethod.GETASSETS, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
-        vault(VaultMethod.GETTOTALVALUES, selectedVault, undefined, false).then((res: any) => scValToNative(res)),
-      ]);
-      const TVValues = Object.values(totalValues)
-      const totalValuesArray = TVValues.map((value: any) => Number(value))
-      const accTotalValues = totalValuesArray.reduce((a: number, b: number) => a + b, 0)
-      const newData: VaultData = {
-        name: name || '',
-        address: selectedVault,
-        manager: manager,
-        emergencyManager: emergencyManager,
-        feeReceiver: feeReceiver,
-        strategies: strategies[0].strategies || [],
-        totalValues: accTotalValues || 0,
-      }
-      return newData
-    } catch (e: any) {
-      if (e.toString().includes('MissingValue')) {
-        console.warn(`The vault ${shortenAddress(selectedVault)} is missing some values, some features may not work as expected`)
-      } else {
-        console.error(e)
-      }
-      return {
-        name: '',
-        address: selectedVault,
-        manager: undefined,
-        emergencyManager: undefined,
-        feeReceiver: undefined,
-        strategies: [],
-        totalValues: 0,
-      }
-    } finally {
-      dispatch(setIsVaultsLoading(false))
-    }
-  }
-
-  const getDefaultVaults = async () => {
-    dispatch(setIsVaultsLoading(true))
-    dispatch(fetchDefaultAddresses(activeChain?.networkPassphrase!))
-  }
-  useEffect(() => {
-
-    getDefaultVaults()
-  }, [activeChain?.networkPassphrase, address])
+  const { getVaultInfo } = useVault()
 
   const getDefindexVaults = async () => {
+    dispatch(setIsVaultsLoading(true))
     try {
       const defindexVaults: any = await factory(FactoryMethod.DEPLOYED_DEFINDEXES)
       if (!defindexVaults) throw new Error('No defindex vaults found');
       const parsedDefindexVaults = scValToNative(defindexVaults)
-      const defindexVaultsArray = []
+      const defindexVaultsArray: VaultData[] = []
       dispatch(setIsVaultsLoading(true))
       for (let vault in parsedDefindexVaults) {
         vault = parsedDefindexVaults[vault]
         const newData = await getVaultInfo(vault)
+        if (!newData) continue;
         defindexVaultsArray.push(newData)
       }
+      if (defindexVaultsArray.length === 0) throw new Error('No defindex vaults found');
       dispatch(setVaults(defindexVaultsArray))
       dispatch(setIsVaultsLoading(false))
     } catch (e: any) {
