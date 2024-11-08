@@ -10,7 +10,7 @@ enum DataKey {
     DeFindexProtocolFeeReceiver,
     Factory,
     LastFeeAssessment,
-    VaultShare,
+    VaultFee,
 }
 
 // Assets Management
@@ -83,9 +83,14 @@ pub fn get_last_fee_assesment(e: &Env) -> u64 {
 
 // Vault Share
 pub fn set_vault_fee(e: &Env, vault_fee: &u32) {
-    e.storage().instance().set(&DataKey::VaultShare, vault_fee);
+    e.storage()
+        .instance()
+        .set(&DataKey::VaultFee, vault_fee);
 }
 
-pub fn get_vault_share(e: &Env) -> u32 {
-    e.storage().instance().get(&DataKey::VaultShare).unwrap()
+pub fn get_vault_fee(e: &Env) -> u32 {
+    e.storage()
+        .instance()
+        .get(&DataKey::VaultFee)
+        .unwrap()
 }
