@@ -3,14 +3,10 @@ import { FactoryMethod, useFactoryCallback } from '@/hooks/useFactory'
 import { VaultMethod, useVaultCallback } from '@/hooks/useVault'
 import { fetchDefaultAddresses, setIsVaultsLoading, setVaults, VaultData } from '@/store/lib/features/walletStore'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { PiHandDepositLight, PiHandWithdrawLight } from "react-icons/pi";
-import { IoIosWarning } from "react-icons/io";
 
 import {
   Box,
-  IconButton,
   Skeleton,
-  Stack,
   Table,
   Text,
   useBreakpointValue,
@@ -21,7 +17,6 @@ import { scValToNative } from '@stellar/stellar-sdk'
 import { useEffect, useState } from 'react'
 import { Tooltip } from '../ui/tooltip'
 import { StatRoot, StatUpTrend } from '../ui/stat'
-import { LuSettings2 } from 'react-icons/lu'
 
 const SkeletonRow = () => {
   const { address } = useSorobanReact()
@@ -48,13 +43,9 @@ const SkeletonRow = () => {
   )
 }
 export const AllVaults = ({
-  handleOpenDeployVault,
-  handleOpenDeposit,
   handleOpenInspect
 }: {
-    handleOpenDeployVault: (method: string, value: boolean, args?: any) => any,
-    handleOpenDeposit: (method: string, args?: any) => any,
-    handleOpenInspect: (args?: any) => any
+    handleOpenInspect: (value: boolean, args?: any) => any
 }) => {
   const vault = useVaultCallback()
   const { activeChain, address } = useSorobanReact()
@@ -153,9 +144,6 @@ export const AllVaults = ({
               <Table.Cell textAlign={'center'}>Address</Table.Cell>
               <Table.Cell textAlign={'center'}>Balance</Table.Cell>
               <Table.Cell textAlign={'center'}>% APR</Table.Cell>
-                {address && (
-                <Table.Cell textAlign={'center'}>Options</Table.Cell>
-                )}
             </Table.Row>
           </Table.Header>
           {isLoading && <Table.Body>
@@ -166,7 +154,7 @@ export const AllVaults = ({
           </Table.Body>}
           {(!isLoading && createdVaults?.length != undefined) && <Table.Body>
               {createdVaults.map((vault: VaultData, i: number) => (
-                <Table.Row key={i} onClick={() => { handleOpenInspect(vault) }} css={{ cursor: 'pointer' }}>
+                <Table.Row key={i} onClick={() => { handleOpenInspect(true, vault) }} css={{ cursor: 'pointer' }}>
                   <Table.Cell>{vault.name ? vault.name : vault.address}</Table.Cell>
                   <Table.Cell textAlign={'center'}>
                     <Tooltip content={vault.address}>
@@ -183,53 +171,6 @@ export const AllVaults = ({
                       </StatUpTrend>
                     </StatRoot>
                   </Table.Cell>
-                  {address && (
-                    <Table.Cell textAlign={'center'}>
-                      <Tooltip content={'Deposit'}>
-                        <IconButton
-                          mx={1}
-                          aria-label='deposit'
-                          size='sm'
-                          onClick={() => handleOpenDeposit(VaultMethod.DEPOSIT, vault)}
-                        >
-                          <PiHandDepositLight />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip content={'Withdraw'}>
-                        <IconButton
-                          mx={1}
-                          aria-label='withdraw'
-                          size='sm'
-                          onClick={() => handleOpenDeposit(VaultMethod.WITHDRAW, vault)}
-                        >
-                          <PiHandWithdrawLight />
-                        </IconButton>
-                      </Tooltip>
-                      {(address == vault.manager) &&
-                        <Tooltip content={'Rebalance'}>
-                          <IconButton
-                            mx={1}
-                            colorScheme='teal'
-                            aria-label='rebalance'
-                            size='sm'
-                            onClick={() => handleOpenDeployVault('edit_vault', true, vault)}
-                          >
-                            <LuSettings2 />
-                          </IconButton>
-                        </Tooltip>}
-                      {(address == vault.emergencyManager || address == vault.manager) &&
-                        <Tooltip content={'Emergency withdraw'}>
-                          <IconButton
-                            mx={1}
-                            aria-label='emergency-withdraw'
-                            size='sm'
-                            onClick={() => handleOpenDeposit(VaultMethod.EMERGENCY_WITHDRAW, vault)}
-                          >
-                            <IoIosWarning />
-                          </IconButton>
-                        </Tooltip>}
-                    </Table.Cell>
-                  )}
                 </Table.Row>
               ))}
           </Table.Body>}
@@ -237,53 +178,11 @@ export const AllVaults = ({
       ) : (
           <VStack>
           {createdVaults.map((vault: VaultData, i: number) => (
-            <Box key={i} p={4} shadow="md" borderWidth="1px" borderRadius="lg" w="100%">
+            <Box key={i} p={4} shadow="md" borderWidth="1px" borderRadius="lg" w="100%" onClick={() => { handleOpenInspect(true, vault) }} css={{ cursor: 'pointer' }}>
               <Text fontSize="lg" fontWeight="bold">{vault.name ? vault.name : shortenAddress(vault.address)}</Text>
               <Text >Address: {shortenAddress(vault.address)}</Text>
               <Text>Balance: ${vault.totalValues}</Text>
               <Text>APR: {vault.name?.includes('Blend USDC') ? '11.31' : '23.36'}%</Text>
-              {address && (
-                <Stack direction="row" mt={2}>
-                  <Tooltip content={'Deposit'}>
-                    <IconButton
-                      aria-label={VaultMethod.DEPOSIT}
-                      size='sm'
-                      onClick={() => handleOpenDeposit(VaultMethod.DEPOSIT, vault)}
-                    >
-                      <PiHandDepositLight />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip content={'Withdraw'}>
-                    <IconButton
-                      aria-label={VaultMethod.WITHDRAW}
-                      size='sm'
-                      onClick={() => handleOpenDeposit(VaultMethod.WITHDRAW, vault)}
-                    >
-                      <PiHandWithdrawLight />
-                    </IconButton>
-                  </Tooltip>
-                  {(address == vault.manager) &&
-                    <Tooltip content={'Rebalance'}>
-                      <IconButton
-                        aria-label='rebalance'
-                        size='sm'
-                        onClick={() => handleOpenDeployVault('edit_vault', true, vault)}
-                      >
-                        <LuSettings2 />
-                      </IconButton>
-                    </Tooltip>}
-                  {(address == vault.emergencyManager || address == vault.manager) &&
-                    <Tooltip content={'Emergency withdraw'}>
-                      <IconButton
-                        aria-label={VaultMethod.EMERGENCY_WITHDRAW}
-                        size='sm'
-                        onClick={() => handleOpenDeposit(VaultMethod.EMERGENCY_WITHDRAW, vault)}
-                      >
-                        <IoIosWarning />
-                      </IconButton>
-                    </Tooltip>}
-                </Stack>
-              )}
             </Box>
           ))}
         </VStack>

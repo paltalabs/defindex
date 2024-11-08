@@ -4,10 +4,45 @@ import { shortenAddress } from "@/helpers/shortenAddress"
 import { Button, Grid, GridItem, Icon } from "@chakra-ui/react"
 import { FaRegEdit, FaWindowClose } from "react-icons/fa"
 import { IoClose } from "react-icons/io5"
+import { VaultMethod } from "@/hooks/useVault"
+import { Doughnut } from 'react-chartjs-2';
 
-export const InspectVault = () => {
+export const InspectVault = ({
+  handleOpenDeployVault,
+  handleOpenDeposit,
+  onClose
+}: {
+  handleOpenDeployVault: (method: string, value: boolean, args?: any) => any,
+  handleOpenDeposit: (method: string, args?: any) => any,
+  onClose: () => void,
+}) => {
   const selectedVault = useAppSelector(state => state.wallet.vaults.selectedVault)
   if (!selectedVault?.address) return null
+  const data = {
+    labels: selectedVault.strategies.map((strategy) => strategy.name),
+    datasets: [
+      {
+        label: 'Distribution',
+        data: selectedVault.strategies.map((strategy) => {
+          console.log('strategy.share', strategy)
+          return strategy.share
+        }),
+        borderColor: 'rgba(25, 192, 62, 1)',
+        backgroundColor: '[rgba(25, 192, 62, 0.5)]',
+        borderWidth: 1,
+        hoverOffset: 11
+      },
+    ],
+  }
+  const options = {
+    responsive: true,
+    maintainAspectRatio: true,
+    layout: {
+      padding: 50,
+      height: 50
+    },
+  }
+
   return (
     <DialogContent>
       <DialogHeader>
@@ -16,12 +51,12 @@ export const InspectVault = () => {
             <h2>Inspect {selectedVault?.name ? selectedVault.name : shortenAddress(selectedVault?.address!)}</h2>
           </GridItem>
           <GridItem colSpan={1}>
-            <Icon onClick={() => { console.log('edit') }} css={{ cursor: "pointer" }}>
+            <Icon onClick={() => { handleOpenDeployVault('edit_vault', true, selectedVault) }} css={{ cursor: "pointer" }}>
               <FaRegEdit />
             </Icon>
           </GridItem>
           <GridItem colSpan={1}>
-            <Icon onClick={() => { console.log('close') }} css={{ cursor: "pointer" }}>
+            <Icon onClick={onClose} css={{ cursor: "pointer" }}>
               <IoClose />
             </Icon>
           </GridItem>
@@ -29,8 +64,11 @@ export const InspectVault = () => {
       </DialogHeader>
       <DialogBody>
         <Grid templateColumns="repeat(12, 1fr)" gap={4} justifyItems={'center'}>
+          <GridItem colSpan={6} colStart={4} justifyItems={'center'} alignSelf={'center'}>
+            <Doughnut data={data} options={options} />
+          </GridItem>
           <GridItem colSpan={12} justifyItems={'center'}>
-            <h3>Address</h3>
+            <h3>Vault address</h3>
             <p>{selectedVault.address}</p>
           </GridItem>
           <GridItem colSpan={3}>
@@ -62,13 +100,13 @@ export const InspectVault = () => {
       <DialogFooter>
         <Grid templateColumns={'repeat(9, 1fr)'} gap={4} justifyItems={'center'} w={'full'}>
           <GridItem colSpan={3}>
-            <Button onClick={() => { console.log('deposit') }}>Deposit</Button>
+            <Button onClick={() => { handleOpenDeposit(VaultMethod.DEPOSIT, selectedVault) }}>Deposit</Button>
           </GridItem>
           <GridItem colSpan={3}>
-            <Button onClick={() => { console.log('emergency withdraw') }}>Emergency Withdraw</Button>
+            <Button onClick={() => { handleOpenDeposit(VaultMethod.EMERGENCY_WITHDRAW, selectedVault) }}>Emergency Withdraw</Button>
           </GridItem>
           <GridItem colSpan={3} >
-            <Button onClick={() => { console.log('withdraw') }}>Withdraw</Button>
+            <Button onClick={() => { handleOpenDeposit(VaultMethod.WITHDRAW, selectedVault) }}>Withdraw</Button>
           </GridItem>
         </Grid>
       </DialogFooter>

@@ -47,10 +47,9 @@ export const ManageVaults = () => {
   })
   const dispatch = useAppDispatch()
   const vaults = useAppSelector(state => state.wallet.vaults.createdVaults)
-  const handleInspectVault = async (args?: any) => {
-    console.log(args)
+  const handleInspectVault = async (value: boolean, args?: any) => {
     await dispatch(setSelectedVault({ ...args }))
-    setModalStatus({ ...modalStatus, inspect: { isOpen: true } })
+    setModalStatus({ ...modalStatus, inspect: { isOpen: value } })
   }
   const handleOpenDeployVault = async (method: string, value: boolean, args?: any) => {
     switch (method) {
@@ -159,11 +158,7 @@ export const ManageVaults = () => {
             <DialogBackdrop backdropFilter='blur(1px)' />
             <InteractWithVault />
           </DialogRoot>
-          <AllVaults
-            handleOpenDeployVault={handleOpenDeployVault}
-            handleOpenDeposit={handleOpenDeposit}
-            handleOpenInspect={handleInspectVault}
-          />
+          <AllVaults handleOpenInspect={handleInspectVault} />
         </GridItem>
         <DialogRoot
           open={modalStatus.inspect.isOpen}
@@ -172,7 +167,11 @@ export const ManageVaults = () => {
           placement={'center'}
         >
           <DialogBackdrop backdropFilter='blur(1px)' />
-          <InspectVault />
+          <InspectVault
+            handleOpenDeployVault={handleOpenDeployVault}
+            handleOpenDeposit={handleOpenDeposit}
+            onClose={() => { setModalStatus({ ...modalStatus, inspect: { isOpen: false } }) }}
+          />
         </DialogRoot>
       </Grid>
     </>
