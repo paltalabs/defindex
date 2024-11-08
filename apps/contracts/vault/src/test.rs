@@ -135,6 +135,8 @@ impl<'a> DeFindexVaultTest<'a> {
         let strategy_client_token0 = create_hodl_strategy(&env, &token0.address);
         let strategy_client_token1 = create_hodl_strategy(&env, &token1.address);
 
+        env.budget().reset_unlimited();
+        
         DeFindexVaultTest {
             env,
             defindex_factory,

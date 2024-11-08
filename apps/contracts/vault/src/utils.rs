@@ -129,34 +129,39 @@ pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
     // we need the total amount managed by this vault in order for the deposit to be proportional
     // reserve (total manage funds) of the asset we are enforcing
     let reserve_target = total_managed_funds
-        .get(assets.get(*i).unwrap().address)
-        .unwrap(); // i128
+        .get(assets.get(*i).unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength)).address)
+        .unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength));
+
+    // If reserve target is zero, we cannot calculate the optimal amounts
     if reserve_target == 0 {
-        // return sum of amounts desired as shares
-        return (amounts_desired.clone(), amounts_desired.iter().sum()); // first shares will be equal to the first amounts_desired
-                                                                        // TODO, this amounts desired might be too little?
-                                                                        // this might be the first deposit... in this case, the ratio will be enforced by the first depositor
-                                                                        // TODO: might happen that the reserve_target is zero because everything is in one asset!?
-                                                                        // in this case we ned to check the ratio
-                                                                        // TODO VERY DANGEROUS.
+        panic_with_error!(&e, ContractError::InsufficientManagedFunds);
     }
-    let amount_desired_target = amounts_desired.get(*i).unwrap(); // i128
+
+    let amount_desired_target = amounts_desired.get(*i).unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength));
 
     let mut optimal_amounts = Vec::new(e);
-
-    for (j, (_asset_address, reserve)) in total_managed_funds.iter().enumerate() {
+    
+    for (j, asset) in assets.iter().enumerate() {
         if j == (*i as usize) {
             optimal_amounts.push_back(amount_desired_target);
         } else {
-            // amount = amount_desired_target * reserve[j] / reserve_target
-            // factor is (amount_desired_target  / reserve_target;)
-            let amount = reserve * amount_desired_target / reserve_target;
-            optimal_amounts.push_back(amount);
+            let reserve = total_managed_funds.get(asset.address).unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength));
+            let amount = reserve.checked_mul(amount_desired_target)
+                .unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError))
+                .checked_div(reserve_target)
+                .unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError));
+            optimal_amounts.push_back(amount);  
         }
     }
+
     //TODO: calculate the shares to mint = total_supply * amount_desired_target  / reserve_target
     let shares_to_mint =
-        VaultToken::total_supply(e.clone()) * amount_desired_target / reserve_target;
+        VaultToken::total_supply(e.clone())
+        .checked_mul(amount_desired_target)
+        .unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError))
+        .checked_div(reserve_target)
+        .unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError));
+        
     (optimal_amounts, shares_to_mint)
 }
 /// Calculates the optimal amounts to deposit for a set of assets, along with the shares to mint.
@@ -189,55 +194,49 @@ pub fn calculate_deposit_amounts_and_shares_to_mint(
     assets: &Vec<AssetAllocation>,
     amounts_desired: &Vec<i128>,
     amounts_min: &Vec<i128>,
-) -> (Vec<i128>, i128) {
+) -> Result<(Vec<i128>, i128), ContractError> {
     // Retrieve the total managed funds for each asset as a Map<Address, i128>.
     let total_managed_funds = fetch_total_managed_funds(e);
 
-    // Iterate over each asset in the assets vector.
     for i in 0..assets.len() {
-        // Calculate the optimal amounts and the number of shares to mint for the given asset at index `i`.
-        let (optimal_amounts, shares_to_mint) =
-            calculate_optimal_amounts_and_shares_with_enforced_asset(
-                &e,
-                &total_managed_funds,
-                &assets,
-                &amounts_desired,
-                &i,
-            );
+        // Calculate the optimal amounts and shares to mint for asset `i`.
+        let (optimal_amounts, shares_to_mint) = calculate_optimal_amounts_and_shares_with_enforced_asset(
+            &e,
+            &total_managed_funds,
+            &assets,
+            &amounts_desired,
+            &i,
+        );
 
-        // Flag to skip the current asset if necessary.
         let mut should_skip = false;
 
-        // Check if the calculated optimal amounts meet the desired or minimum requirements.
         for j in i + 1..assets.len() {
-            // If the optimal amount for asset[j] is less than the desired amount,
-            // but at least greater than the minimum amount, it is acceptable.
-            if optimal_amounts.get(j).unwrap() <= amounts_desired.get(j).unwrap() {
-                // If the optimal amount is below the minimum, we cannot proceed with this asset.
-                if optimal_amounts.get(j).unwrap() < amounts_min.get(j).unwrap() {
-                    panic!("insufficient amount"); // TODO: Replace panic with an error return.
-                }
-            } else {
-                // If the optimal amount exceeds the desired amount, we skip the current asset {i}.
-                should_skip = true;
+            // Retrieve the desired and minimum amounts, returning an error if unavailable.
+            let desired_amount = amounts_desired.get(j).ok_or(ContractError::WrongAmountsLength)?;
+            let min_amount = amounts_min.get(j).ok_or(ContractError::WrongAmountsLength)?;
+            let optimal_amount = optimal_amounts.get(j).ok_or(ContractError::WrongAmountsLength)?;
 
-                // If we've reached the last asset and still don't find a solution, throw an error.
-                if j == assets.len() - 1 {
-                    panic!("didn't find optimal amounts"); // TODO: Replace panic with an error return.
+            // Check if optimal amount meets the desired or minimum requirements.
+            if optimal_amount <= desired_amount {
+                if optimal_amount < min_amount {
+                    return Err(ContractError::InsufficientAmount); // Insufficient amount error.
+                }
+            } else { // if not, we should try the next asset as enforced asset
+                should_skip = true;
+                // If we have already analized all assets as enforced (i), return an error.
+                if i == assets.len() - 1 {
+                    return Err(ContractError::NoOptimalAmounts); // probably enforcing 0? We should never reach this point
                 }
                 break;
             }
         }
 
-        // If we should skip this asset, continue to the next one.
-        if should_skip {
-            continue;
-        } else {
-            // Return the calculated optimal amounts and shares to mint.
-            return (optimal_amounts, shares_to_mint);
+        // If valid amounts found, return the results; otherwise, skip to the next asset.
+        if !should_skip {
+            return Ok((optimal_amounts, shares_to_mint));
         }
     }
 
-    // If no solution was found after iterating through all assets, throw an error.
-    panic!("didn't find optimal amounts");
+    // Return an error if no valid deposit configuration is found.
+    Err(ContractError::NoOptimalAmounts)
 }

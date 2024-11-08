@@ -47,7 +47,12 @@ fn calculate_fees(e: &Env, time_elapsed: u64, fee_rate: u32) -> Result<i128, Con
 /// Collects and mints fees in dfTokens, distributing them to the appropriate fee receivers.
 pub fn collect_fees(e: &Env) -> Result<(), ContractError> {
     let current_timestamp = e.ledger().timestamp();
+    // If last_fee_assesment was not set yet, this will be set to the current timestamp
     let last_fee_assessment = get_last_fee_assesment(e);
+
+    // Update the last fee assessment timestamp
+    // Set it now to Avoid Reentrancy Attack
+    set_last_fee_assesment(e, &current_timestamp);
 
     let time_elapsed = current_timestamp.checked_sub(last_fee_assessment).unwrap();
 
@@ -67,8 +72,6 @@ pub fn collect_fees(e: &Env) -> Result<(), ContractError> {
     // Mint and distribute the fees proportionally
     mint_fees(e, total_fees, defindex_fee, vault_fee)?;
 
-    // Update the last fee assessment timestamp
-    set_last_fee_assesment(e, &current_timestamp);
 
     Ok(())
 }

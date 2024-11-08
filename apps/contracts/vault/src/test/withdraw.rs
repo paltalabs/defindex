@@ -1,6 +1,6 @@
 use soroban_sdk::{vec as sorobanvec, String, Vec};
 
-use super::hodl_strategy::StrategyError;
+// use super::hodl_strategy::StrategyError;
 use crate::test::{
     create_strategy_params_token0,
     defindex_vault::{AssetAllocation, Investment},
