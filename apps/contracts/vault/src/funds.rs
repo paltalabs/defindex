@@ -16,8 +16,8 @@ use crate::strategies::get_strategy_client;
 ///
 /// # Returns
 /// * The idle balance (i128) of the asset in the current contract address.
-fn fetch_idle_funds_for_asset(e: &Env, asset: &AssetStrategySet) -> i128 {
-    TokenClient::new(e, &asset.address).balance(&e.current_contract_address())
+fn fetch_idle_funds_for_asset(e: &Env, asset: &Address) -> i128 {
+    TokenClient::new(e, &asset).balance(&e.current_contract_address())
 }
 
 /// Fetches the total funds that are invested for a given asset.
@@ -65,7 +65,7 @@ pub fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128> {
     let assets = get_assets(e);
     let mut map: Map<Address, i128> = Map::new(e);
     for asset in assets {
-        map.set(asset.address.clone(), fetch_idle_funds_for_asset(e, &asset));
+        map.set(asset.address.clone(), fetch_idle_funds_for_asset(e, &asset.address));
     }
     map
 }
@@ -103,7 +103,7 @@ pub fn fetch_total_managed_funds(e: &Env) -> Map<Address, i128> {
     let assets = get_assets(e);
     let mut map: Map<Address, i128> = Map::new(e);
     for asset in assets {
-        let idle_funds = fetch_idle_funds_for_asset(e, &asset);
+        let idle_funds = fetch_idle_funds_for_asset(e, &asset.address);
         let invested_funds = fetch_invested_funds_for_asset(e, &asset);
         map.set(asset.address.clone(), idle_funds + invested_funds);
     }

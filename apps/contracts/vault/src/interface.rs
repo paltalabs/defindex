@@ -276,7 +276,7 @@ pub trait VaultManagementTrait {
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn invest(e: Env, investment: Vec<AssetInvestmentAllocation>) -> Result<(), ContractError>;
+    fn invest(e: Env, asset_investments: Vec<Option<AssetInvestmentAllocation>>) -> Result<(), ContractError>;
 
     /// Rebalances the vault by executing a series of instructions.
     ///
