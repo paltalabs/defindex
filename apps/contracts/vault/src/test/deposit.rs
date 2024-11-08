@@ -290,7 +290,7 @@ fn deposit_one_asset_success() {
 
     // check balances after deposit
     let df_balance = test.defindex_contract.balance(&users[0]);
-    assert_eq!(df_balance, amount);
+    assert_eq!(df_balance, amount - 1000);
     
     let user_balance = test.token0.balance(&users[0]);
     assert_eq!(user_balance, 0i128);
@@ -338,7 +338,7 @@ fn deposit_one_asset_success() {
 
     // check balances after deposit
     let df_balance = test.defindex_contract.balance(&users[0]);
-    assert_eq!(df_balance, amount + amount2);
+    assert_eq!(df_balance, amount + amount2 - 1000);
 
     let user_balance = test.token0.balance(&users[0]);
     assert_eq!(user_balance, 0i128);
@@ -478,7 +478,12 @@ fn deposit_several_assets_success() {
 
     // check balances after deposit
     let df_balance = test.defindex_contract.balance(&users[0]);
-    assert_eq!(df_balance, amount0 + amount1);
+    // For first deposit, a minimum amount LIQUIDITY OF 1000 is being locked in the contract
+    assert_eq!(df_balance, amount0 + amount1 - 1000);
+
+    // check that the vault holds 1000 shares
+    let vault_df_shares = test.defindex_contract.balance(&test.defindex_contract.address);
+    assert_eq!(vault_df_shares, 1000i128);
     
     let user_balance0 = test.token0.balance(&users[0]);
     assert_eq!(user_balance0,0i128);
@@ -699,3 +704,4 @@ fn deposit_several_assets_min_greater_than_optimal() {
     assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
 
 }
+

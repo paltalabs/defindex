@@ -49,6 +49,8 @@ use utils::{
 
 use defindex_strategy_core::DeFindexStrategyClient;
 
+static MINIMUM_LIQUIDITY: i128 = 1000;
+
 pub use error::ContractError;
 
 #[contract]
@@ -273,9 +275,18 @@ impl VaultTrait for DeFindexVault {
             }
         }
 
-        // now we mint the corresponding dfToken
-        // TODO. If total_sypply==0, mint minimum liquidity to be locked forever in the contract
-        internal_mint(e.clone(), from.clone(), shares_to_mint);
+        // Now we mint the corresponding dfToken shares to the user
+        // If total_sypply==0, mint minimum liquidity to be locked forever in the contract. So we will never come again to total_supply==0
+        if total_supply == 0 {
+            if shares_to_mint < MINIMUM_LIQUIDITY {
+                panic_with_error!(&e, ContractError::InsufficientAmount);
+            }
+            internal_mint(e.clone(), e.current_contract_address(), MINIMUM_LIQUIDITY);
+            internal_mint(e.clone(), from.clone(), shares_to_mint.checked_sub(MINIMUM_LIQUIDITY).unwrap());
+        }
+        else {
+            internal_mint(e.clone(), from.clone(), shares_to_mint);
+        }
 
         events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone());
 
