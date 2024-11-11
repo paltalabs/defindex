@@ -9,7 +9,7 @@ use soroban_sdk::{
     contract, contractimpl, Address, BytesN, Env, Map, String, Vec
 };
 use error::FactoryError;
-use defindex::{create_contract, AssetAllocation};
+use defindex::{create_contract, AssetStrategySet};
 use storage::{ add_new_defindex, extend_instance_ttl, get_admin, get_defi_wasm_hash, get_defindex_receiver, get_deployed_defindexes, get_fee_rate, has_admin, put_admin, put_defi_wasm_hash, put_defindex_receiver, put_defindex_fee };
 
 fn check_initialized(e: &Env) -> Result<(), FactoryError> {
@@ -49,7 +49,7 @@ pub trait FactoryTrait {
     /// * `vault_name` - The name of the vault.
     /// * `vault_symbol` - The symbol of the vault.
     /// * `manager` - The address assigned as the vault manager.
-    /// * `assets` - A vector of `AssetAllocation` structs that define the assets managed by the vault.
+    /// * `assets` - A vector of `AssetStrategySet` structs that define the assets managed by the vault.
     /// * `salt` - A salt used for ensuring unique addresses for each deployed vault.
     ///
     /// # Returns
@@ -62,7 +62,7 @@ pub trait FactoryTrait {
         vault_name: String,
         vault_symbol: String,
         manager: Address,
-        assets: Vec<AssetAllocation>,
+        assets: Vec<AssetStrategySet>,
         salt: BytesN<32>
     ) -> Result<Address, FactoryError>;
 
@@ -76,7 +76,7 @@ pub trait FactoryTrait {
     /// * `vault_name` - The name of the vault.
     /// * `vault_symbol` - The symbol of the vault.
     /// * `manager` - The address assigned as the vault manager.
-    /// * `assets` - A vector of `AssetAllocation` structs that define the assets managed by the vault.
+    /// * `assets` - A vector of `AssetStrategySet` structs that define the assets managed by the vault.
     /// * `amounts` - A vector of `AssetAmounts` structs that define the initial deposit amounts.
     /// * `salt` - A salt used for ensuring unique addresses for each deployed vault.
     ///
@@ -91,7 +91,7 @@ pub trait FactoryTrait {
         vault_name: String,
         vault_symbol: String,
         manager: Address,
-        assets: Vec<AssetAllocation>,
+        assets: Vec<AssetStrategySet>,
         amounts: Vec<i128>,
         salt: BytesN<32>
     ) -> Result<Address, FactoryError>;
@@ -213,7 +213,7 @@ impl FactoryTrait for DeFindexFactory {
     /// * `fee_receiver` - The address designated to receive fees from the vault.
     /// * `vault_fee` - The percentage share of fees allocated to the vault's fee receiver.
     /// * `manager` - The address assigned as the vault manager.
-    /// * `assets` - A vector of `AssetAllocation` structs that define the assets managed by the vault.
+    /// * `assets` - A vector of `AssetStrategySet` structs that define the assets managed by the vault.
     /// * `salt` - A salt used for ensuring unique addresses for each deployed vault.
     ///
     /// # Returns
@@ -226,7 +226,7 @@ impl FactoryTrait for DeFindexFactory {
         vault_name: String,
         vault_symbol: String,
         manager: Address,
-        assets: Vec<AssetAllocation>,
+        assets: Vec<AssetStrategySet>,
         salt: BytesN<32>
     ) -> Result<Address, FactoryError> {
         extend_instance_ttl(&e);
@@ -265,7 +265,7 @@ impl FactoryTrait for DeFindexFactory {
     /// * `vault_name` - The name of the vault.
     /// * `vault_symbol` - The symbol of the vault.
     /// * `manager` - The address assigned as the vault manager.
-    /// * `assets` - A vector of `AssetAllocation` structs that define the assets managed by the vault.
+    /// * `assets` - A vector of `AssetStrategySet` structs that define the assets managed by the vault.
     /// * `amounts` - A vector of `AssetAmounts` structs that define the initial deposit amounts.
     /// * `salt` - A salt used for ensuring unique addresses for each deployed vault.
     ///
@@ -280,7 +280,7 @@ impl FactoryTrait for DeFindexFactory {
         vault_name: String,
         vault_symbol: String,
         manager: Address,
-        assets: Vec<AssetAllocation>,
+        assets: Vec<AssetStrategySet>,
         amounts: Vec<i128>,
         salt: BytesN<32>
     ) -> Result<Address, FactoryError> {
