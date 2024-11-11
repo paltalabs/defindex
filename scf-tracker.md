@@ -73,7 +73,8 @@
   Code will be available on [GitHub](https://github.com/paltalabs). A Flutter app can call a DeFindex Smart Contract instance with less than 10 lines of code.
 
 - **Result:**
-    - 🛠️ Code available on [GitHub](https://github.com/paltalabs/defindex/tree/main/packages/defindex-dart-sdk)
+    - ✅ Code available on [GitHub](https://github.com/paltalabs/defindex/tree/main/packages/defindex-dart-sdk)
+    - ✅ Code published on [pub.dev](https://pub.dev/packages/defindex_sdk)
 
 ---
 
