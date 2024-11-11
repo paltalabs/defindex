@@ -420,93 +420,141 @@ fn test_invest_in_strategy() {
         &String::from_str(&test.env, "DFT"),
     );
 
-    todo!();
-   
-    // let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
-    // let amount_0 = 987654321i128;
-    // let amount_1 = 123456789i128;
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+    let amount_0 = 987654321i128;
+    let amount_1 = 123456789i128;
     
-    // test.env.mock_all_auths(); 
+    test.env.mock_all_auths(); 
 
-    // // mint amount to user 0
-    // test.token0_admin_client.mint(&users[0], &amount);
+    // mint
+    test.token0_admin_client.mint(&users[0], &amount_0);
+    test.token1_admin_client.mint(&users[0], &amount_1);
 
-    // // check user amount
-    // let user_amount = test.token0.balance(&users[0]);
-
-    // // // deposit
-    // test.defindex_contract.deposit(
-    //     &sorobanvec![&test.env, amount], // asset 0
-    //     &sorobanvec![&test.env, amount], // asset 1 
-    //     &users[0],
-    // );
-
-
-
-    // // now will try to invest with negative amount
-    // let asset_investments = vec![
-    //     &test.env,
-    //     Some(AssetInvestmentAllocation {
-    //     asset: test.token0.address.clone(),
-    //     strategy_investments: vec![
-    //         &test.env,
-    //         Some(StrategyInvestment {
-    //         strategy: test.strategy_client_token0.address.clone(),
-    //         amount: amount,
-    //         }),
-    //     ],
-    // }),
-    // None // for asset 1
-    // ];
-
-
-    // // check balances after deposit
-    // let df_balance = test.defindex_contract.balance(&users[0]);
-    // assert_eq!(df_balance, amount - 1000);
+    // check user amount
+    let user_amount_0 = test.token0.balance(&users[0]);
+    let user_amount_1 = test.token1.balance(&users[0]);
     
-    // let user_balance = test.token0.balance(&users[0]);
-    // assert_eq!(user_balance, 0i128);
-
-    // //map shuould be map
-    // let mut expected_map = Map::new(&test.env);
-    // expected_map.set(test.token0.address.clone(), amount);
-
-    // // check that all the assets are in the vault
-    // let vault_balance = test.token0.balance(&test.defindex_contract.address);
-    // assert_eq!(vault_balance, amount);
-
-    // // check that fetch_total_managed_funds returns correct amount
-    // let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
-    // assert_eq!(total_managed_funds, expected_map);
-
-    // // check current idle funds, 
-    // let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
-    // assert_eq!(current_idle_funds, expected_map);
-
-    // //map shuould be map
-    // let mut expected_map = Map::new(&test.env);
-    // expected_map.set(test.token0.address.clone(), 0i128);
-
-    // // check that current invested funds is now 0, funds still in idle funds
-    // let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
-    // assert_eq!(current_invested_funds, expected_map);
-
-
+    assert_eq!(user_amount_0, amount_0);
+    assert_eq!(user_amount_1, amount_1);
     
 
-    // let result = test.defindex_contract.invest(
-    //     &asset_investments,
-    // );
+    test.defindex_contract.deposit(
+        &sorobanvec![&test.env, amount_0, amount_1], // asset 0
+        &sorobanvec![&test.env, amount_0, amount_1], // asset 1 
+        &users[0],
+    );
+
+
+    // check balances after deposit
+    let df_balance = test.defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, amount_0 + amount_1 - 1000);
+
+    // check that all the assets are in the vault
+    let vault_balance_0 = test.token0.balance(&test.defindex_contract.address);
+    let vault_balance_1 = test.token1.balance(&test.defindex_contract.address);
+    assert_eq!(vault_balance_0, amount_0);
+    assert_eq!(vault_balance_1, amount_1);
+
+    // check that fetch_total_managed_funds returns correct amount
+    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
+    let mut expected_map = Map::new(&test.env);
+    expected_map.set(test.token0.address.clone(), amount_0);
+    expected_map.set(test.token1.address.clone(), amount_1);
+    assert_eq!(total_managed_funds, expected_map);
+
+    // check current idle funds,
+    let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
+    assert_eq!(current_idle_funds, expected_map);
+
+    //map shuould be map
+    let mut expected_map = Map::new(&test.env);
+    expected_map.set(test.token0.address.clone(), 0i128);
+    expected_map.set(test.token1.address.clone(), 0i128);
+
+    // check that current invested funds is now 0, funds still in idle funds
+    let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
+    assert_eq!(current_invested_funds, expected_map);
+
+
+    // Prepare investments object
+    let asset_investments = vec![
+        &test.env,
+        Some(AssetInvestmentAllocation {
+        asset: test.token0.address.clone(),
+        strategy_investments: vec![
+            &test.env,
+            Some(StrategyInvestment {
+            strategy: test.strategy_client_token0.address.clone(),
+            amount: 100,
+            }),
+        ],
+    }),
+    Some(AssetInvestmentAllocation {
+        asset: test.token1.address.clone(),
+        strategy_investments: vec![
+            &test.env,
+            Some(StrategyInvestment {
+            strategy: test.strategy_client_token1.address.clone(),
+            amount: 200,
+            }),
+        ],
+    })];
+
+    test.defindex_contract.invest(
+        &asset_investments,
+    );
+
+    // now only amunt_0 - 100 should be in the vault as idle funds
+    let vault_balance_0 = test.token0.balance(&test.defindex_contract.address);
+    let vault_balance_1 = test.token1.balance(&test.defindex_contract.address);
+    assert_eq!(vault_balance_0, amount_0 - 100);
+    assert_eq!(vault_balance_1, amount_1 - 200);
+
+    // check that fetch_total_managed_funds returns correct amount
+    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
+    let mut expected_map = Map::new(&test.env);
+    expected_map.set(test.token0.address.clone(), amount_0);
+    expected_map.set(test.token1.address.clone(), amount_1);
+    assert_eq!(total_managed_funds, expected_map);
+
+    // check current idle funds, for token0 should be amount 0 - 100
+    let mut expected_map = Map::new(&test.env);
+    expected_map.set(test.token0.address.clone(), amount_0 - 100);
+    expected_map.set(test.token1.address.clone(), amount_1 - 200);
+
+    let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
+    assert_eq!(current_idle_funds, expected_map);
+
+    // check that current invested funds is now 100 and 200
+    let mut expected_map = Map::new(&test.env);
+    expected_map.set(test.token0.address.clone(), 100i128);
+    expected_map.set(test.token1.address.clone(), 200i128);
+
+    let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
+    assert_eq!(current_invested_funds, expected_map);
+
+    // check that 100 and 200 are invested in the strategies
+    let strategy_0_balance = test.strategy_client_token0.balance(&test.defindex_contract.address);
+    let strategy_1_balance = test.strategy_client_token1.balance(&test.defindex_contract.address);
+    assert_eq!(strategy_0_balance, 100);
+    assert_eq!(strategy_1_balance, 200);
+
+    // if we ask strategy.balance(vault) they should be 100 and 200
+    let strategy_0_balance = test.strategy_client_token0.balance(&test.defindex_contract.address);
+    let strategy_1_balance = test.strategy_client_token1.balance(&test.defindex_contract.address);
+    assert_eq!(strategy_0_balance, 100);
+    assert_eq!(strategy_1_balance, 200);
+
 
     
 }
 
-// check that try to invest without idle funds return error
+// // check that try to invest without idle funds return error
 
 
-// check if initialized vault, can only be called by manaer (todo)
-#[test]
-fn test_invest_initialized_only_by_manager() {
-    todo!();
+// // check if initialized vault, can only be called by manaer (todo)
+// #[test]
+// fn test_invest_initialized_only_by_manager() {
+//     todo!();
    
-}
+// }

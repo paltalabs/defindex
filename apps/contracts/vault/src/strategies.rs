@@ -1,5 +1,7 @@
 use defindex_strategy_core::DeFindexStrategyClient;
-use soroban_sdk::{Address, Env};
+use soroban_sdk::{Address, Env, vec, IntoVal, Vec, Val, Symbol};
+use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
+
 
 use crate::{
     models::{AssetStrategySet, Strategy},
@@ -135,10 +137,52 @@ pub fn withdraw_from_strategy(
 }
 
 pub fn invest_in_strategy(
-    e: &Env,
+    e: &Env,\
+    asset_address: &Address,
     strategy_address: &Address,
     amount: &i128,
 ) -> Result<(), ContractError> {
+    
+    // e.authorize_as_current_contract(vec![
+    //     &e,
+    //     InvokerContractAuthEntry::Contract(SubContractInvocation {
+    //         context: ContractContext {
+    //             contract: token_a.clone(),
+    //             fn_name: Symbol::new(&e, "transfer"),
+    //             args: transfer_args_a.clone(),
+    //         },
+    //         sub_invocations: vec![&e],
+    //     }),
+    //     InvokerContractAuthEntry::Contract(SubContractInvocation {
+    //         context: ContractContext {
+    //             contract: token_b.clone(),
+    //             fn_name: Symbol::new(&e, "transfer"),
+    //             args: transfer_args_b.clone(),
+    //         },
+    //         sub_invocations: vec![&e],
+    //     }),
+    // ]);
+
+    // Now we will handle funds on behalf of the contract, not the caller (manager or user)
+    let mut transfer_args: Vec<Val> = vec![&e];
+        transfer_args.push_back(e.current_contract_address().into_val(&e)); //from 
+        transfer_args.push_back(strategy_address.into_val(&e)); //to 
+        transfer_args.push_back(amount.into_val(&e)); //amount
+
+
+    e.authorize_as_current_contract(vec![
+        &e,
+        InvokerContractAuthEntry::Contract(SubContractInvocation {
+            context: ContractContext {
+                contract: asset_address.clone(),
+                fn_name: Symbol::new(&e, "transfer"),
+                args: transfer_args.clone(),
+            },
+            sub_invocations: vec![&e],
+        }),
+        ]);
+
+
     let strategy_client = get_strategy_client(&e, strategy_address.clone());
 
     match strategy_client.try_deposit(amount, &e.current_contract_address()) {
