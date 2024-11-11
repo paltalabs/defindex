@@ -143,13 +143,7 @@ pub fn invest_in_strategy(
     amount: &i128,
 ) -> Result<(), ContractError> {
     
-
-    // // Now we will handle funds on behalf of the contract, not the caller (manager or user)
-    // let mut transfer_args: Vec<Val> = vec![&e];
-    // transfer_args.push_back(e.current_contract_address().into_val(&e)); //from 
-    // transfer_args.push_back(strategy_address.into_val(&e)); //to 
-    // transfer_args.push_back(amount.into_val(&e)); //amount
-
+    // Now we will handle funds on behalf of the contract, not the caller (manager or user)
 
     e.authorize_as_current_contract(vec![
         &e,
@@ -170,8 +164,7 @@ pub fn invest_in_strategy(
 
     let strategy_client = get_strategy_client(&e, strategy_address.clone());
 
-    match strategy_client.try_deposit(amount, &e.current_contract_address()) {
-        Ok(Ok(_)) => Ok(()),
-        Ok(Err(_)) | Err(_) => Err(ContractError::StrategyInvestError),
-    }
+    strategy_client.deposit(amount, &e.current_contract_address());
+
+    Ok(())
 }

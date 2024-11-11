@@ -82,9 +82,6 @@ pub fn check_and_execute_investments(
                         panic_with_error!(&e, ContractError::StrategyPaused);
                     }
 
-                    //Reduce idle funds for this asset
-
-
                     // Execute the investment if checks pass
                     invest_in_strategy(
                         &e,

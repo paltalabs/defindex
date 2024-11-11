@@ -295,7 +295,9 @@ pub trait VaultManagementTrait {
     ///
     /// # Security
     /// - Only addresses with the `Manager` role can call this function, ensuring restricted access to managing investments.
-    fn invest(e: Env, asset_investments: Vec<Option<AssetInvestmentAllocation>>) -> Result<(), ContractError>;
+    fn invest(e: Env, 
+        asset_investments: Vec<Option<AssetInvestmentAllocation>>
+    ) -> Result<(), ContractError>;
 
     /// Rebalances the vault by executing a series of instructions.
     ///
