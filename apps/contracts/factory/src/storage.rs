@@ -99,7 +99,7 @@ pub fn get_defindex_receiver(e: &Env) -> Address {
 }
 
 // Fee Rate BPS (MAX BPS = 10000)
-pub fn put_fee_rate(e: &Env, value: &u32) {
+pub fn put_defindex_fee(e: &Env, value: &u32) {
     e.storage().instance().set(&DataKey::FeeRate, value);
 }
 

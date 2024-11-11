@@ -1,4 +1,4 @@
-SUBDIRS = strategies defindex factory
+SUBDIRS = strategies vault factory
 
 default: build
 

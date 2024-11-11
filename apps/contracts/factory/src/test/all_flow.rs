@@ -1,4 +1,4 @@
-use soroban_sdk::{vec, BytesN, Map, String, Vec};
+use soroban_sdk::{vec, BytesN, String};
 
 use crate::test::{create_asset_params, defindex_vault_contract::{self, Investment}, DeFindexFactoryTest};
 

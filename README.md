@@ -72,7 +72,7 @@ To deploy the factory contract run:
 ```sh
 bash run.sh
 cd apps/contracts
-yarn deploy-factory
+yarn deploy-factory <network>
 ```
 ### Publish addresses
 Once you have deployed an instance of the factory contract. You can publish the addresses to be used by anyone on the network.
