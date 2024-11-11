@@ -83,40 +83,40 @@ pub fn calculate_asset_amounts_for_dftokens(
     asset_amounts
 }
 
-pub fn calculate_dftokens_from_asset_amounts(
-    env: &Env,
-    asset_amounts: Map<Address, i128>, // The input asset amounts
-    total_managed_funds: Map<Address, i128>, // The total managed funds for each asset
-) -> Result<i128, ContractError> {
-    let total_supply = VaultToken::total_supply(env.clone()); // Total dfToken supply
+// pub fn calculate_dftokens_from_asset_amounts(
+//     env: &Env,
+//     asset_amounts: Map<Address, i128>, // The input asset amounts
+//     total_managed_funds: Map<Address, i128>, // The total managed funds for each asset
+// ) -> Result<i128, ContractError> {
+//     let total_supply = VaultToken::total_supply(env.clone()); // Total dfToken supply
 
-    // Initialize the minimum dfTokens corresponding to each asset
-    let mut min_df_tokens: Option<i128> = None;
+//     // Initialize the minimum dfTokens corresponding to each asset
+//     let mut min_df_tokens: Option<i128> = None;
 
-    // Iterate over each asset in the input map
-    for (asset_address, input_amount) in asset_amounts.iter() {
-        // Get the total managed amount for this asset
-        let managed_amount = total_managed_funds.get(asset_address.clone()).unwrap_or(0);
+//     // Iterate over each asset in the input map
+//     for (asset_address, input_amount) in asset_amounts.iter() {
+//         // Get the total managed amount for this asset
+//         let managed_amount = total_managed_funds.get(asset_address.clone()).unwrap_or(0);
 
-        // Ensure the managed amount is not zero to prevent division by zero
-        if managed_amount == 0 {
-            return Err(ContractError::InsufficientManagedFunds);
-        }
+//         // Ensure the managed amount is not zero to prevent division by zero
+//         if managed_amount == 0 {
+//             return Err(ContractError::InsufficientManagedFunds);
+//         }
 
-        // Calculate the dfTokens corresponding to this asset's amount
-        let df_tokens_for_asset = (input_amount * total_supply) / managed_amount;
+//         // Calculate the dfTokens corresponding to this asset's amount
+//         let df_tokens_for_asset = (input_amount * total_supply) / managed_amount;
 
-        // If this is the first asset or if the calculated df_tokens_for_asset is smaller, update the minimum df_tokens
-        if let Some(current_min_df_tokens) = min_df_tokens {
-            min_df_tokens = Some(current_min_df_tokens.min(df_tokens_for_asset));
-        } else {
-            min_df_tokens = Some(df_tokens_for_asset);
-        }
-    }
+//         // If this is the first asset or if the calculated df_tokens_for_asset is smaller, update the minimum df_tokens
+//         if let Some(current_min_df_tokens) = min_df_tokens {
+//             min_df_tokens = Some(current_min_df_tokens.min(df_tokens_for_asset));
+//         } else {
+//             min_df_tokens = Some(df_tokens_for_asset);
+//         }
+//     }
 
-    // Return the minimum dfTokens across all assets
-    min_df_tokens.ok_or(ContractError::NoAssetsProvided)
-}
+//     // Return the minimum dfTokens across all assets
+//     min_df_tokens.ok_or(ContractError::NoAssetsProvided)
+// }
 
 pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
     e: &Env,
