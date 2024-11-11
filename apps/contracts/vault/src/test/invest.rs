@@ -34,13 +34,6 @@ fn test_invest_not_yet_initialized() {
     assert_eq!(result, Err(Ok(ContractError::NotInitialized)));
 }
 
-// check if initialized vault, can only be called by manaer (todo)
-#[test]
-fn test_invest_initialized_only_by_manager() {
-    todo!();
-   
-}
-
 
 // try to invest with a wrong AssetInvestmentAllocation length
 #[test]
@@ -339,12 +332,60 @@ fn test_invest_negative_amount() {
     assert_eq!(result, Err(Ok(ContractError::NegativeNotAllowed)));
 }
 
-// check that we cannot invest in paused strategy (todo)
+// check that we cannot invest in paused strategy. Will initialize with paused strategy and then try to invest
 #[test]
 fn test_invest_paused_strategy() {
-    todo!();
-}
+    let test = DeFindexVaultTest::setup();
 
+
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token0.address.clone(),
+            strategies: sorobanvec![
+                &test.env,
+                Strategy {
+                    name: String::from_str(&test.env, "Strategy 0"),
+                    address: test.strategy_client_token0.address.clone(),
+                    paused: true,
+                }            ]
+        }
+    ];
+
+    test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
+        &test.emergency_manager,
+        &test.vault_fee_receiver,
+        &2000u32,
+        &test.defindex_protocol_receiver,
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
+    );
+
+    // now will try to invest with some amount 
+    let asset_investments = vec![
+        &test.env,
+        Some(AssetInvestmentAllocation {
+        asset: test.token0.address.clone(),
+        strategy_investments: vec![
+            &test.env,
+            Some(StrategyInvestment {
+            strategy: test.strategy_client_token0.address.clone(),
+            amount: 100,
+            }),
+        ],
+    })];
+    
+    test.env.mock_all_auths(); // TODO, Mock only Manager
+
+    let result = test.defindex_contract.try_invest(
+        &asset_investments,
+    );
+
+    assert_eq!(result, Err(Ok(ContractError::StrategyPaused)));
+}
 
 
 // invest in strategy should work
@@ -461,3 +502,11 @@ fn test_invest_in_strategy() {
 }
 
 // check that try to invest without idle funds return error
+
+
+// check if initialized vault, can only be called by manaer (todo)
+#[test]
+fn test_invest_initialized_only_by_manager() {
+    todo!();
+   
+}
