@@ -1,0 +1,15 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "apps/rust_docs/**",
+            "use": "@vercel/static"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "/apps/rust_docs/$1"
+        }
+    ]
+}
