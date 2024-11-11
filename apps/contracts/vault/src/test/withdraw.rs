@@ -187,14 +187,14 @@ fn test_withdraw_from_strategy_success() {
 
     test.defindex_contract.invest(&investments);
 
-    // let vault_balance = test.token0.balance(&test.defindex_contract.address);
-    // assert_eq!(vault_balance, 0);
+    let vault_balance = test.token0.balance(&test.defindex_contract.address);
+     assert_eq!(vault_balance, 0);
 
-    // test.defindex_contract.withdraw(&df_balance, &users[0]);
+    test.defindex_contract.withdraw(&df_balance, &users[0]);
 
-    // let df_balance = test.defindex_contract.balance(&users[0]);
-    // assert_eq!(df_balance, 0i128);
+    let df_balance = test.defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, 0i128);
 
-    // let user_balance = test.token0.balance(&users[0]);
-    // assert_eq!(user_balance, amount);
+    let user_balance = test.token0.balance(&users[0]);
+    assert_eq!(user_balance, amount - 1000);
 }
