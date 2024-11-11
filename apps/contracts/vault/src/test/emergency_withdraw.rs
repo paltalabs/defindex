@@ -2,7 +2,10 @@ use soroban_sdk::{vec as sorobanvec, String, Vec};
 
 use crate::test::{
     create_strategy_params_token0,
-    defindex_vault::{AssetStrategySet, Investment},
+    defindex_vault::{AssetStrategySet,
+    AssetInvestmentAllocation,  
+    StrategyInvestment
+    },
     DeFindexVaultTest,
 };
 
@@ -30,7 +33,7 @@ fn test_emergency_withdraw_success() {
         &String::from_str(&test.env, "dfToken"),
         &String::from_str(&test.env, "DFT"),
     );
-    let amount = 1000i128;
+    let amount = 987654321i128;
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
@@ -49,27 +52,34 @@ fn test_emergency_withdraw_success() {
     );
 
     let df_balance = test.defindex_contract.balance(&users[0]);
-    assert_eq!(df_balance, amount);
+    assert_eq!(df_balance, amount - 1000);   
 
     // Balance of the token0 on the vault should be `amount` since it is deposited into the vault first
     let vault_balance_of_token = test.token0.balance(&test.defindex_contract.address);
     assert_eq!(vault_balance_of_token, amount);
-
-    // Should invest the funds
+    
     let investments = sorobanvec![
         &test.env,
-        Investment {
-            amount: amount.clone(),
-            strategy: strategy_params_token0.first().unwrap().address.clone()
-        }
+        Some(AssetInvestmentAllocation {
+            asset: test.token0.address.clone(),
+            strategy_investments: sorobanvec![
+                &test.env,
+                Some(StrategyInvestment {
+                    strategy: test.strategy_client_token0.address.clone(),
+                    amount: amount,
+                }),
+            ],
+        }),
     ];
+
+
     test.defindex_contract.invest(&investments);
 
     // Balance of the token0 on the vault should be 0
     let vault_balance_of_token = test.token0.balance(&test.defindex_contract.address);
     assert_eq!(vault_balance_of_token, 0);
 
-    // Balance of the strategy should be `amount`
+    // Balance of the vault on the strategy contract should be `amount`
     let strategy_balance = test
         .strategy_client_token0
         .balance(&test.defindex_contract.address);
@@ -80,7 +90,7 @@ fn test_emergency_withdraw_success() {
         &test.emergency_manager,
     );
 
-    // Balance of the strategy should be 0
+    // Balance of the vault on the strategy should be 0
     let strategy_balance = test
         .strategy_client_token0
         .balance(&test.defindex_contract.address);

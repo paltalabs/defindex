@@ -172,5 +172,5 @@ mod deposit;
 mod admin;
 mod invest;
 mod withdraw;
-// mod emergency_withdraw;
-// mod rebalance;
+mod emergency_withdraw;
+mod rebalance;
