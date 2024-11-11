@@ -204,9 +204,6 @@ impl VaultTrait for DeFindexVault {
         // If this was not done before, last_fee_assesment will set to be current timestamp and this will return without action
         collect_fees(&e)?; 
 
-        // fees assesment
-        collect_fees(&e)?;
-
         // get assets
         let assets = get_assets(&e);
         let assets_length = assets.len();
@@ -293,39 +290,50 @@ impl VaultTrait for DeFindexVault {
         Ok((amounts, shares_to_mint))
     }
 
-    /// Withdraws assets from the DeFindex Vault by burning dfTokens.
+    /// Withdraws assets from the DeFindex Vault by burning Vault Share tokens.
     ///
-    /// This function calculates the amount of assets to withdraw based on the number of dfTokens being burned,
+    /// This function calculates the amount of assets to withdraw based on the number of Vault Share tokens being burned,
     /// then transfers the appropriate assets back to the user, pulling from both idle funds and strategies
     /// as needed.
     ///
     /// # Arguments:
     /// * `e` - The environment.
-    /// * `df_amount` - The amount of dfTokens to burn for the withdrawal.
+    /// * `shares_amount` - The amount of Vault Share tokens to burn for the withdrawal.
     /// * `from` - The address of the user requesting the withdrawal.
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn withdraw(e: Env, df_amount: i128, from: Address) -> Result<Vec<i128>, ContractError> {
+    fn withdraw(
+        e: Env, 
+        shares_amount: i128, 
+        from: Address) -> Result<Vec<i128>, ContractError> {
+
         extend_instance_ttl(&e);
         check_initialized(&e)?;
-        check_nonnegative_amount(df_amount)?;
+        check_nonnegative_amount(shares_amount)?;
         from.require_auth();
 
         // fees assesment
         collect_fees(&e)?;
     
-        // Check if the user has enough dfTokens
+        // Check if the user has enough dfTokens. // TODO, we can move this error into the internal_burn function
         let df_user_balance = VaultToken::balance(e.clone(), from.clone());
-        if df_user_balance < df_amount {
+        if df_user_balance < shares_amount {
+            // return vec[df_user_balance, shares amount]
+            // let mut result: Vec<i128> = Vec::new(&e);
+            // result.push_back(df_user_balance);
+            // result.push_back(shares_amount);
+            // return Ok(result);
+
+            
             return Err(ContractError::InsufficientBalance);
         }
 
         // Calculate the withdrawal amounts for each asset based on the dfToken amount
-        let asset_amounts = calculate_asset_amounts_for_dftokens(&e, df_amount);
+        let asset_amounts = calculate_asset_amounts_for_dftokens(&e, shares_amount);
 
         // Burn the dfTokens after calculating the withdrawal amounts (so total supply is correct)
-        internal_burn(e.clone(), from.clone(), df_amount);
+        internal_burn(e.clone(), from.clone(), shares_amount);
 
         // Create a map to store the total amounts to transfer for each asset address
         let mut total_amounts_to_transfer: Map<Address, i128> = Map::new(&e);
@@ -381,7 +389,7 @@ impl VaultTrait for DeFindexVault {
             amounts_withdrawn.push_back(total_amount);
         }
 
-        events::emit_withdraw_event(&e, from, df_amount, amounts_withdrawn.clone());
+        events::emit_withdraw_event(&e, from, shares_amount, amounts_withdrawn.clone());
     
         Ok(amounts_withdrawn)
     }
