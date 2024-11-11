@@ -1,10 +1,10 @@
-name: defindex
+name: defindex_sdk
 description: "This package provides a Dart interface to interact with the Defindex Smart Contract on Soroban in the Stellar network. It simplifies the process of sending transactions and querying contract state, making it easier for developers to integrate Defindex into their Dart or Flutter applications."
-version: 0.0.6
-homepage: https://github.com/paltalabs/defindex-meru-sdk.git
+version: 0.1.0
+homepage: https://github.com/paltalabs/defindex.git
 
 environment:
-  sdk: '>=3.4.0 <4.0.0'
+  sdk: ">=3.4.0 <4.0.0"
   flutter: ">=1.17.0"
 
 dependencies:

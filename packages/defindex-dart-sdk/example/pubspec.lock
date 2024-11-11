@@ -73,13 +73,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.2"
-  defindex:
+  defindex_sdk:
     dependency: "direct main"
     description:
       path: ".."
       relative: true
     source: path
-    version: "0.0.6"
+    version: "0.1.0"
   dio:
     dependency: transitive
     description:

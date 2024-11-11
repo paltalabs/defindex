@@ -1,7 +1,7 @@
-library defindex;
+library defindex_sdk;
 
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
-import 'package:defindex/custom_soroban_server.dart';
+import 'package:defindex_sdk/custom_soroban_server.dart';
 
 enum SorobanNetwork {
   PUBLIC,
@@ -186,7 +186,7 @@ class DefiIndex {
     if (GetHealthResponse.HEALTHY == healthResponse.status) {
       AccountResponse account = await sdk.accounts.account(accountId);
       // Name of the function to be invoked
-      String functionName = "balance";
+      String functionName = "read_balance";
 
       XdrSCVal arg1 = XdrSCVal.forAddress(XdrSCAddress.forAccountId(accountId));
 

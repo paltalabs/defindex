@@ -122,3 +122,25 @@ flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0
 This will launch the example app on the port 8080 of your localhost. so you can go to
 `http://localhost:8080` to see the app.
 
+
+### Publish dart package
+This is published on https://pub.dev/packages/defindex_sdk
+
+Once everything is ok, you can run the following command to check the package:
+```sh
+dart pub publish --dry-run
+```
+
+once, there is no issues you can run the following command to publish the package:
+```sh
+dart pub publish
+```
+It will prompt a link to login:
+```sh
+Please login with your Google account: http://localhost:<port>/?code...
+```
+Then, you will need to open a terminal connected to the container and run the following command:
+```sh
+curl http://localhost:33791/?code...
+```
+This will log you in and you can publish the package.

@@ -1,4 +1,4 @@
-import 'package:defindex/defindex.dart';
+import 'package:defindex_sdk/defindex_sdk.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 
