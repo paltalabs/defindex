@@ -71,7 +71,7 @@ fn deposit_amounts_desired_more_length() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
-    let strategy_params_token1 = create_strategy_params_token1(&test);
+    // let strategy_params_token1 = create_strategy_params_token1(&test);
 
     // initialize with 2 assets
     let assets: Vec<AssetAllocation> = sorobanvec![
@@ -669,7 +669,7 @@ fn deposit_several_assets_min_greater_than_optimal() {
     assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
     
     // now we manage to deposit
-    let deposit_result=test.defindex_contract.deposit(
+    test.defindex_contract.deposit(
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0, amount1],
         &users[0],

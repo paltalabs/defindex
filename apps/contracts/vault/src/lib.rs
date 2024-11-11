@@ -33,7 +33,7 @@ use models::{
     OptionalSwapDetailsExactOut,
 };
 use storage::{
-    get_assets, set_asset, set_defindex_protocol_fee_receiver, set_factory, set_last_fee_assesment,
+    get_assets, set_asset, set_defindex_protocol_fee_receiver, set_factory,
     set_total_assets, set_vault_fee, extend_instance_ttl
 };
 use strategies::{

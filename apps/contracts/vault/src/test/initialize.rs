@@ -86,7 +86,7 @@ fn test_initialize_with_unsupported_strategy() {
 #[test]
 fn test_initialize_with_empty_asset_allocation() {
     let test = DeFindexVaultTest::setup();
-    let strategy_params_token0 = create_strategy_params_token0(&test);
+    // let strategy_params_token0 = create_strategy_params_token0(&test);
 
     let assets: Vec<AssetAllocation> = sorobanvec![&test.env];
 
