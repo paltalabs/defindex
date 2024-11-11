@@ -120,7 +120,7 @@ fn test_invest_wrong_strategy_length() {
     let test = DeFindexVaultTest::setup();
 
     let strategy_params_token0 = create_strategy_params_token0(&test);
-    let strategy_params_token1 = create_strategy_params_token1(&test);
+    // let strategy_params_token1 = create_strategy_params_token1(&test);
 
     let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,

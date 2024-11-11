@@ -1,10 +1,8 @@
-use soroban_sdk::{Address, Env, Map, Vec, panic_with_error};
+use soroban_sdk::{Env, Vec, panic_with_error};
 
 use crate::{
     models::{AssetStrategySet, AssetInvestmentAllocation},
     strategies::invest_in_strategy,
-
-    &asset,
     utils::{check_nonnegative_amount},
     ContractError,
 };
@@ -31,9 +29,7 @@ use crate::{
 ///    - For each strategy within an asset:
 ///      - **Non-Negative Amount Check**: Validates that the investment amount is non-negative.
 ///      - **Strategy Active Check**: Ensures that the strategy is not paused before proceeding with the investment.
-///      - **Execute Investment**: Calls the `invest_in_strategy` fu
-&asset,
-ction if all checks pass.
+///      - **Execute Investment**: Calls the `invest_in_strategy` fuction if all checks pass.
 ///
 /// # Errors
 /// * Returns `ContractError::WrongAssetAddress` if an asset's address does not match the expected address.
@@ -90,7 +86,8 @@ pub fn check_and_execute_investments(
 
 
                     // Execute the investment if checks pass
-                    invest_in_strategy(&e,
+                    invest_in_strategy(
+                        &e,
                         &asset.address,
                         &strategy.address, 
                         &strategy_investment.amount)?;
