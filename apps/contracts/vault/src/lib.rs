@@ -43,7 +43,7 @@ use strategies::{
 };
 use token::{internal_burn, internal_mint, write_metadata, VaultToken};
 use utils::{
-    calculate_asset_amounts_for_dftokens, calculate_deposit_amounts_and_shares_to_mint,
+    calculate_asset_amounts_per_vault_shares, calculate_deposit_amounts_and_shares_to_mint,
     calculate_withdrawal_amounts, check_initialized, check_nonnegative_amount,
 };
 
@@ -323,7 +323,7 @@ impl VaultTrait for DeFindexVault {
         }
 
         // Calculate the withdrawal amounts for each asset based on the dfToken amount
-        let asset_amounts = calculate_asset_amounts_for_dftokens(&e, shares_amount);
+        let asset_amounts = calculate_asset_amounts_per_vault_shares(&e, shares_amount);
 
         // Burn the dfTokens after calculating the withdrawal amounts (so total supply is correct)
         internal_burn(e.clone(), from.clone(), shares_amount);
@@ -555,12 +555,22 @@ impl VaultTrait for DeFindexVault {
         fetch_current_idle_funds(e)
     }
 
-    // TODO: DELETE THIS, USED FOR TESTING
-    /// Temporary method for testing purposes.
-    fn get_asset_amounts_for_dftokens(e: Env, df_tokens: i128) -> Map<Address, i128> {
+    // Calculates the corresponding amounts of each asset per a given number of vault shares.
+    /// This function extends the contract's time-to-live and calculates how much of each asset corresponds 
+    /// per the provided number of vault shares (`vault_shares`). It provides proportional allocations for each asset 
+    /// in the vault relative to the specified shares.
+    ///
+    /// # Arguments
+    /// * `e` - The current environment reference.
+    /// * `vault_shares` - The number of vault shares for which the corresponding asset amounts are calculated.
+    ///
+    /// # Returns
+    /// * `Map<Address, i128>` - A map containing each asset address and its corresponding proportional amount.
+    fn get_asset_amounts_per_shares(e: Env, vault_shares: i128) -> Map<Address, i128> {
         extend_instance_ttl(&e);
-        calculate_asset_amounts_for_dftokens(&e, df_tokens)
+        calculate_asset_amounts_per_vault_shares(&e, vault_shares)
     }
+
 }
 
 #[contractimpl]

@@ -66,19 +66,40 @@ pub fn calculate_withdrawal_amounts(
     withdrawal_amounts
 }
 
-pub fn calculate_asset_amounts_for_dftokens(
+/// Calculates the corresponding amounts of each asset per given number of vault shares.
+/// This function takes the number of vault shares (`shares_amount`) and computes how much of each asset in the vault
+/// corresponds to those shares, based on the total managed funds and the total supply of vault shares.
+///
+/// # Arguments
+/// * `env` - Reference to the current environment.
+/// * `shares_amount` - The number of vault shares for which the equivalent asset amounts are being calculated.
+///
+/// # Returns
+/// * `Map<Address, i128>` - A map of asset addresses to their respective amounts, proportional to the `shares_amount`.
+///
+/// # Errors
+/// * Panics with `ContractError::ArithmeticError` if there are any issues with multiplication or division,
+///   such as overflow or division by zero.
+pub fn calculate_asset_amounts_per_vault_shares(
     env: &Env,
     shares_amount: i128,
 ) -> Map<Address, i128> {
-    let mut asset_amounts: Map<Address, i128> = Map::new(&env);
-    let total_supply = VaultToken::total_supply(env.clone());
-    let total_managed_funds = fetch_total_managed_funds(&env);
+    let mut asset_amounts: Map<Address, i128> = Map::new(env);
+
+    // Fetch the total supply of vault shares and the total managed funds for each asset
+    let total_shares_supply = VaultToken::total_supply(env.clone());
+    let total_managed_funds = fetch_total_managed_funds(env);
 
     // Iterate over each asset and calculate the corresponding amount based on shares_amount
-    for (asset_address, amount) in total_managed_funds.iter() {
-        let asset_amount = amount
-            .checked_mul(shares_amount).unwrap_or_else(|| panic_with_error!(&env, ContractError::ArithmeticError))
-            .checked_div(total_supply).unwrap_or_else(|| panic_with_error!(&env, ContractError::ArithmeticError));
+    for (asset_address, total_asset_amount) in total_managed_funds.iter() {
+        // Calculate the proportional asset amount per the given number of shares
+        let asset_amount = total_asset_amount
+            .checked_mul(shares_amount)
+            .unwrap_or_else(|| panic_with_error!(env, ContractError::ArithmeticError))
+            .checked_div(total_shares_supply)
+            .unwrap_or_else(|| panic_with_error!(env, ContractError::ArithmeticError));
+
+        // Set the calculated asset amount for the given asset address
         asset_amounts.set(asset_address.clone(), asset_amount);
     }
 
