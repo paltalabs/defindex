@@ -1,8 +1,10 @@
 use defindex_strategy_core::DeFindexStrategyClient;
-use soroban_sdk::{Address, Env};
+use soroban_sdk::{Address, Env, vec, IntoVal, Symbol};
+use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
+
 
 use crate::{
-    models::{AssetAllocation, Strategy},
+    models::{AssetStrategySet, Strategy},
     storage::{get_asset, get_assets, get_total_assets, set_asset},
     ContractError,
 };
@@ -15,7 +17,7 @@ pub fn get_strategy_client(e: &Env, address: Address) -> DeFindexStrategyClient 
 pub fn get_strategy_asset(
     e: &Env,
     strategy_address: &Address,
-) -> Result<AssetAllocation, ContractError> {
+) -> Result<AssetStrategySet, ContractError> {
     let assets = get_assets(e);
 
     for asset in assets.iter() {
@@ -31,11 +33,11 @@ pub fn get_strategy_asset(
     Err(ContractError::StrategyNotFound)
 }
 
-/// Finds the AssetAllocation corresponding to the given asset address.
+/// Finds the AssetStrategySet corresponding to the given asset address.
 pub fn get_asset_allocation_from_address(
     e: &Env,
     asset_address: Address,
-) -> Result<AssetAllocation, ContractError> {
+) -> Result<AssetStrategySet, ContractError> {
     let assets = get_assets(e);
 
     for asset in assets.iter() {
@@ -50,7 +52,7 @@ pub fn get_asset_allocation_from_address(
 /// Finds the strategy struct corresponding to the given strategy address within the given asset.
 pub fn get_strategy_struct(
     strategy_address: &Address,
-    asset: &AssetAllocation,
+    asset: &AssetStrategySet,
 ) -> Result<Strategy, ContractError> {
     asset
         .strategies
@@ -136,13 +138,33 @@ pub fn withdraw_from_strategy(
 
 pub fn invest_in_strategy(
     e: &Env,
+    asset_address: &Address,
     strategy_address: &Address,
     amount: &i128,
 ) -> Result<(), ContractError> {
+    
+    // Now we will handle funds on behalf of the contract, not the caller (manager or user)
+
+    e.authorize_as_current_contract(vec![
+        &e,
+        InvokerContractAuthEntry::Contract(SubContractInvocation {
+            context: ContractContext {
+                contract: asset_address.clone(),
+                fn_name: Symbol::new(&e, "transfer"),
+                args: (
+                    e.current_contract_address(),
+                    strategy_address,
+                    amount.clone()).into_val(e),
+                    
+            },
+            sub_invocations: vec![&e],
+        }),
+    ]);
+
+
     let strategy_client = get_strategy_client(&e, strategy_address.clone());
 
-    match strategy_client.try_deposit(amount, &e.current_contract_address()) {
-        Ok(Ok(_)) => Ok(()),
-        Ok(Err(_)) | Err(_) => Err(ContractError::StrategyInvestError),
-    }
+    strategy_client.deposit(amount, &e.current_contract_address());
+
+    Ok(())
 }

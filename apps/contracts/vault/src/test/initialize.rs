@@ -2,7 +2,7 @@ use soroban_sdk::{vec as sorobanvec, String, Vec};
 
 use crate::test::{
     create_strategy_params_token0, create_strategy_params_token1,
-    defindex_vault::{AssetAllocation, ContractError},
+    defindex_vault::{AssetStrategySet, ContractError},
     DeFindexVaultTest,
 };
 
@@ -12,13 +12,13 @@ fn test_initialize_and_get_roles() {
     let test = DeFindexVaultTest::setup();
     let strategy_params_token0 = create_strategy_params_token0(&test);
     let strategy_params_token1 = create_strategy_params_token1(&test);
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         },
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token1.address.clone(),
             strategies: strategy_params_token1.clone()
         }
@@ -52,13 +52,13 @@ fn test_initialize_with_unsupported_strategy() {
     let test = DeFindexVaultTest::setup();
     let strategy_params_token0 = create_strategy_params_token0(&test);
 
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         },
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token1.address.clone(),
             strategies: strategy_params_token0.clone() // Here Strategy 0 supports token0
         }
@@ -88,7 +88,7 @@ fn test_initialize_with_empty_asset_allocation() {
     let test = DeFindexVaultTest::setup();
     // let strategy_params_token0 = create_strategy_params_token0(&test);
 
-    let assets: Vec<AssetAllocation> = sorobanvec![&test.env];
+    let assets: Vec<AssetStrategySet> = sorobanvec![&test.env];
 
     let result = test.defindex_contract.try_initialize(
         &assets,
@@ -123,13 +123,13 @@ fn test_initialize_twice() {
     let strategy_params_token0 = create_strategy_params_token0(&test);
     let strategy_params_token1 = create_strategy_params_token1(&test);
 
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         },
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token1.address.clone(),
             strategies: strategy_params_token1.clone()
         }

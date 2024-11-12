@@ -3,7 +3,12 @@ use soroban_sdk::{vec as sorobanvec, String, Vec};
 // use super::hodl_strategy::StrategyError;
 use crate::test::{
     create_strategy_params_token0,
-    defindex_vault::{AssetAllocation, Investment},
+    defindex_vault::{
+        AssetStrategySet,
+        AssetInvestmentAllocation,  
+        StrategyInvestment, 
+        ContractError
+    },
     DeFindexVaultTest,
 };
 
@@ -12,9 +17,9 @@ fn test_withdraw_from_idle_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         }
@@ -69,7 +74,7 @@ fn test_withdraw_from_idle_success() {
 
     // Df balance of user should be equal to deposited amount
     let df_balance = test.defindex_contract.balance(&users[0]);
-    assert_eq!(df_balance, amount_to_deposit);
+    assert_eq!(df_balance, amount_to_deposit - 1000 ); // 1000  gets locked in the vault forever
 
     // user decides to withdraw a portion of deposited amount
     let amount_to_withdraw = 123456i128;
@@ -93,35 +98,31 @@ fn test_withdraw_from_idle_success() {
     let strategy_balance = test.token0.balance(&test.strategy_client_token0.address);
     assert_eq!(strategy_balance, 0);
 
-    // Df balance of user should be equal to deposited amount - amount_to_withdraw
+    // Df balance of user should be equal to deposited amount - amount_to_withdraw - 1000 
     let df_balance = test.defindex_contract.balance(&users[0]);
-    assert_eq!(df_balance, amount_to_deposit - amount_to_withdraw);
+    assert_eq!(df_balance, amount_to_deposit - amount_to_withdraw - 1000);
 
     // user tries to withdraw more than deposited amount
     let amount_to_withdraw_more = amount_to_deposit + 1;
     let result = test
         .defindex_contract
         .try_withdraw(&amount_to_withdraw_more, &users[0]);
-    // just check if is error
-    assert_eq!(result.is_err(), true);
+    
+    assert_eq!(result, 
+        Err(Ok(ContractError::InsufficientBalance)));
 
-    // TODO test corresponding error
 
-    // withdraw remaining balance
-    test.defindex_contract
-        .withdraw(&(amount_to_deposit - amount_to_withdraw), &users[0]);
+    // // withdraw remaining balance
+   let result= test.defindex_contract
+        .withdraw(&(amount_to_deposit - amount_to_withdraw - 1000), &users[0]);
 
-    // // result is err
+    assert_eq!(result, sorobanvec![&test.env, amount_to_deposit - amount_to_withdraw - 1000]);
 
-    // assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
+    let df_balance = test.defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, 0i128);
 
-    // result should be error from contract
-
-    // let df_balance = test.defindex_contract.balance(&users[0]);
-    // assert_eq!(df_balance, 0i128);
-
-    // let user_balance = test.token0.balance(&users[0]);
-    // assert_eq!(user_balance, amount);
+    let user_balance = test.token0.balance(&users[0]);
+    assert_eq!(user_balance, amount - 1000);
 }
 
 #[test]
@@ -129,9 +130,9 @@ fn test_withdraw_from_strategy_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         }
@@ -167,20 +168,27 @@ fn test_withdraw_from_strategy_success() {
     );
 
     let df_balance = test.defindex_contract.balance(&users[0]);
-    assert_eq!(df_balance, amount);
+    assert_eq!(df_balance, amount - 1000);
 
     let investments = sorobanvec![
         &test.env,
-        Investment {
-            amount: amount,
-            strategy: test.strategy_client_token0.address.clone()
-        }
+        Some(AssetInvestmentAllocation {
+            asset: test.token0.address.clone(),
+            strategy_investments: sorobanvec![
+                &test.env,
+                Some(StrategyInvestment {
+                    strategy: test.strategy_client_token0.address.clone(),
+                    amount: amount,
+                }),
+            ],
+        }),
     ];
+
 
     test.defindex_contract.invest(&investments);
 
     let vault_balance = test.token0.balance(&test.defindex_contract.address);
-    assert_eq!(vault_balance, 0);
+     assert_eq!(vault_balance, 0);
 
     test.defindex_contract.withdraw(&df_balance, &users[0]);
 
@@ -188,5 +196,6 @@ fn test_withdraw_from_strategy_success() {
     assert_eq!(df_balance, 0i128);
 
     let user_balance = test.token0.balance(&users[0]);
-    assert_eq!(user_balance, amount);
+    assert_eq!(user_balance, amount - 1000);
 }
+ 

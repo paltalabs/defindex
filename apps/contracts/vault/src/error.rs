@@ -21,6 +21,10 @@ pub enum ContractError {
     UnsupportedAsset = 116,
     InsufficientAmount = 117,
     NoOptimalAmounts = 118, //this should not happen
+    WrongInvestmentLength = 119,
+    WrongAssetAddress = 122,
+    WrongStrategiesLength = 123,
+
 
     // Arithmetic Errors (12x)
     ArithmeticError = 120,
@@ -35,6 +39,7 @@ pub enum ContractError {
     StrategyPausedOrNotFound = 141,
     StrategyWithdrawError = 142,
     StrategyInvestError = 143,
+    StrategyPaused = 144,
 
     // Asset Errors (15x)
     AssetNotFound = 150,

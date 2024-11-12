@@ -25,11 +25,11 @@ mod utils;
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use aggregator::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
 use fee::collect_fees;
-use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds};
+use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds}; //, fetch_idle_funds_for_asset};
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
-use investment::{execute_investment, prepare_investment};
+use investment::{check_and_execute_investments};
 use models::{
-    ActionType, AssetAllocation, Instruction, Investment, OptionalSwapDetailsExactIn,
+    ActionType, AssetStrategySet, Instruction, AssetInvestmentAllocation, OptionalSwapDetailsExactIn,
     OptionalSwapDetailsExactOut,
 };
 use storage::{
@@ -48,6 +48,8 @@ use utils::{
 };
 
 use defindex_strategy_core::DeFindexStrategyClient;
+
+static MINIMUM_LIQUIDITY: i128 = 1000;
 
 pub use error::ContractError;
 
@@ -82,7 +84,7 @@ impl VaultTrait for DeFindexVault {
     ///
     fn initialize(
         e: Env,
-        assets: Vec<AssetAllocation>,
+        assets: Vec<AssetStrategySet>,
         manager: Address,
         emergency_manager: Address,
         vault_fee_receiver: Address,
@@ -202,9 +204,6 @@ impl VaultTrait for DeFindexVault {
         // If this was not done before, last_fee_assesment will set to be current timestamp and this will return without action
         collect_fees(&e)?; 
 
-        // fees assesment
-        collect_fees(&e)?;
-
         // get assets
         let assets = get_assets(&e);
         let assets_length = assets.len();
@@ -273,48 +272,68 @@ impl VaultTrait for DeFindexVault {
             }
         }
 
-        // now we mint the corresponding dfToken
-        // TODO. If total_sypply==0, mint minimum liquidity to be locked forever in the contract
-        internal_mint(e.clone(), from.clone(), shares_to_mint);
+        // Now we mint the corresponding dfToken shares to the user
+        // If total_sypply==0, mint minimum liquidity to be locked forever in the contract. So we will never come again to total_supply==0
+        if total_supply == 0 {
+            if shares_to_mint < MINIMUM_LIQUIDITY {
+                panic_with_error!(&e, ContractError::InsufficientAmount);
+            }
+            internal_mint(e.clone(), e.current_contract_address(), MINIMUM_LIQUIDITY);
+            internal_mint(e.clone(), from.clone(), shares_to_mint.checked_sub(MINIMUM_LIQUIDITY).unwrap());
+        }
+        else {
+            internal_mint(e.clone(), from.clone(), shares_to_mint);
+        }
 
         events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone());
 
         Ok((amounts, shares_to_mint))
     }
 
-    /// Withdraws assets from the DeFindex Vault by burning dfTokens.
+    /// Withdraws assets from the DeFindex Vault by burning Vault Share tokens.
     ///
-    /// This function calculates the amount of assets to withdraw based on the number of dfTokens being burned,
+    /// This function calculates the amount of assets to withdraw based on the number of Vault Share tokens being burned,
     /// then transfers the appropriate assets back to the user, pulling from both idle funds and strategies
     /// as needed.
     ///
     /// # Arguments:
     /// * `e` - The environment.
-    /// * `df_amount` - The amount of dfTokens to burn for the withdrawal.
+    /// * `shares_amount` - The amount of Vault Share tokens to burn for the withdrawal.
     /// * `from` - The address of the user requesting the withdrawal.
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn withdraw(e: Env, df_amount: i128, from: Address) -> Result<Vec<i128>, ContractError> {
+    fn withdraw(
+        e: Env, 
+        shares_amount: i128, 
+        from: Address) -> Result<Vec<i128>, ContractError> {
+
         extend_instance_ttl(&e);
         check_initialized(&e)?;
-        check_nonnegative_amount(df_amount)?;
+        check_nonnegative_amount(shares_amount)?;
         from.require_auth();
 
         // fees assesment
         collect_fees(&e)?;
     
-        // Check if the user has enough dfTokens
+        // Check if the user has enough dfTokens. // TODO, we can move this error into the internal_burn function
         let df_user_balance = VaultToken::balance(e.clone(), from.clone());
-        if df_user_balance < df_amount {
+        if df_user_balance < shares_amount {
+            // return vec[df_user_balance, shares amount]
+            // let mut result: Vec<i128> = Vec::new(&e);
+            // result.push_back(df_user_balance);
+            // result.push_back(shares_amount);
+            // return Ok(result);
+
+            
             return Err(ContractError::InsufficientBalance);
         }
 
         // Calculate the withdrawal amounts for each asset based on the dfToken amount
-        let asset_amounts = calculate_asset_amounts_for_dftokens(&e, df_amount);
+        let asset_amounts = calculate_asset_amounts_for_dftokens(&e, shares_amount);
 
         // Burn the dfTokens after calculating the withdrawal amounts (so total supply is correct)
-        internal_burn(e.clone(), from.clone(), df_amount);
+        internal_burn(e.clone(), from.clone(), shares_amount);
 
         // Create a map to store the total amounts to transfer for each asset address
         let mut total_amounts_to_transfer: Map<Address, i128> = Map::new(&e);
@@ -370,7 +389,7 @@ impl VaultTrait for DeFindexVault {
             amounts_withdrawn.push_back(total_amount);
         }
 
-        events::emit_withdraw_event(&e, from, df_amount, amounts_withdrawn.clone());
+        events::emit_withdraw_event(&e, from, shares_amount, amounts_withdrawn.clone());
     
         Ok(amounts_withdrawn)
     }
@@ -492,8 +511,8 @@ impl VaultTrait for DeFindexVault {
     /// * `e` - The environment.
     ///
     /// # Returns:
-    /// * `Vec<AssetAllocation>` - A vector of `AssetAllocation` structs representing the assets managed by the vault.
-    fn get_assets(e: Env) -> Vec<AssetAllocation> {
+    /// * `Vec<AssetStrategySet>` - A vector of `AssetStrategySet` structs representing the assets managed by the vault.
+    fn get_assets(e: Env) -> Vec<AssetStrategySet> {
         extend_instance_ttl(&e);
         get_assets(&e)
     }
@@ -649,44 +668,59 @@ impl AdminInterfaceTrait for DeFindexVault {
 
 #[contractimpl]
 impl VaultManagementTrait for DeFindexVault {
-    /// Invests the vault's idle funds into the specified strategies.
+    /// Executes the investment of the vault's idle funds based on the specified asset allocations.
+    /// This function allows partial investments by providing an optional allocation for each asset,
+    /// and it ensures proper authorization and validation checks before proceeding with investments.
     ///
-    /// # Arguments:
-    /// * `e` - The environment.
-    /// * `investment` - A vector of `Investment` structs representing the amount to invest in each strategy.
-    /// * `caller` - The address of the caller.
+    /// # Arguments
+    /// * `e` - The current environment reference.
+    /// * `asset_investments` - A vector of optional `AssetInvestmentAllocation` structures, where each element 
+    ///   represents an allocation for a specific asset. The vector must match the number of vault assets in length.
     ///
-    /// # Returns:
-    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn invest(e: Env, investments: Vec<Investment>) -> Result<(), ContractError> {
+    /// # Returns
+    /// * `Result<(), ContractError>` - Returns `Ok(())` if the investments are successful or a `ContractError`
+    ///   if any issue occurs during validation or execution.
+    ///
+    /// # Function Flow
+    /// 1. **Extend Instance TTL**: Extends the contract instance's time-to-live to keep the instance active.
+    /// 2. **Check Initialization**: Verifies that the vault is properly initialized before proceeding.
+    /// 3. **Access Control**: Ensures the caller has the `Manager` role required to initiate investments.
+    /// 4. **Asset Count Validation**: Verifies that the length of the `asset_investments` vector matches
+    ///    the number of assets managed by the vault. If they don't match, a `WrongInvestmentLength` error is returned.
+    /// 5. **Investment Execution**: Calls the `check_and_execute_investments` function to perform the investment
+    ///    after validating the inputs and ensuring correct execution flows for each asset allocation.
+    ///
+    /// # Errors
+    /// * Returns `ContractError::WrongInvestmentLength` if the length of `asset_investments` does not match the vault assets.
+    /// * Returns `ContractError` if access control validation fails or if investment execution encounters an issue.
+    ///
+    /// # Security
+    /// - Only addresses with the `Manager` role can call this function, ensuring restricted access to managing investments.
+    fn invest(
+        e: Env, 
+        asset_investments: Vec<Option<AssetInvestmentAllocation>>
+    ) -> Result<(), ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
 
+        // Access control: ensure caller has the required manager role
         let access_control = AccessControl::new(&e);
         access_control.require_role(&RolesDataKey::Manager);
-        e.current_contract_address().require_auth();
 
-        // Get the current idle funds for all assets
-        let idle_funds = fetch_current_idle_funds(&e);
+        let assets = get_assets(&e);
+        
+        // Ensure the length of `asset_investments` matches the number of vault assets
+        if asset_investments.len() != assets.len() {
+            panic_with_error!(&e, ContractError::WrongInvestmentLength);
+        }
 
-        // Prepare investments based on current idle funds
-        // This checks if the total investment exceeds the idle funds
-        prepare_investment(&e, investments.clone(), idle_funds)?;
-
-        // Now proceed with the actual investments if all checks passed
-        execute_investment(&e, investments)?;
-
-        // auto invest mockup
-        // if auto_invest {
-        //     let idle_funds = fetch_current_idle_funds(&e);
-
-        //     // Prepare investments based on current ratios of invested funds
-        //     let investments = calculate_investments_based_on_ratios(&e);
-        //     prepare_investment(&e, investments.clone(), idle_funds)?;
-        //     execute_investment(&e, investments)?;
-        // }
+        // Check and execute investments for each asset allocation
+        check_and_execute_investments(e, assets, asset_investments)?;
+    
         Ok(())
     }
+
+
 
     /// Rebalances the vault by executing a series of instructions.
     ///
@@ -714,7 +748,8 @@ impl VaultManagementTrait for DeFindexVault {
                 },
                 ActionType::Invest => match (&instruction.strategy, &instruction.amount) {
                     (Some(strategy_address), Some(amount)) => {
-                        invest_in_strategy(&e, strategy_address, amount)?;
+                        invest_in_strategy(
+                            &e, strategy_address, strategy_address, amount)?; // TODO THIS WILL FAIUL FOR NOW
                     }
                     _ => return Err(ContractError::MissingInstructionData),
                 },
