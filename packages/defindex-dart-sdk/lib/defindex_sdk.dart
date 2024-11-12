@@ -8,14 +8,14 @@ enum SorobanNetwork {
   TESTNET,
 }
 
-class DefiIndex {
+class Vault {
   String sorobanRPCUrl;
   late CustomSorobanServer sorobanServer;
   late final StellarSDK sdk;
   late final SorobanNetwork network;
   late String contractId;
 
-  DefiIndex({
+  Vault({
     required this.sorobanRPCUrl,
     this.network = SorobanNetwork.TESTNET,
     required this.contractId,

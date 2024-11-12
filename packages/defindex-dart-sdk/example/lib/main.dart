@@ -42,13 +42,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _executeDeposit() async {
     try {
-      var defiIndex = DefiIndex(
+      var vault = Vault(
         sorobanRPCUrl: 'https://soroban-testnet.stellar.org',
         network: SorobanNetwork.TESTNET,
         contractId: 'CD76H2IVRMRMLE4KZXLAVK3L3CO7PENUB3X4VB2FQVUAFVAJMQYQIFDE',
       );
 
-      String? transactionHash = await defiIndex.deposit(
+      String? transactionHash = await vault.deposit(
         'GCW36WQUHJASZVNFIIL7VZQWL6Q72XT6TAU6N3XMFGTLSNE2L7LMJNWT',
         100.0,
         (transaction) async => signerFunction(transaction),
