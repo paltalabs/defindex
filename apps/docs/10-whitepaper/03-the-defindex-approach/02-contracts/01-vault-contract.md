@@ -31,17 +31,47 @@ In summary:
 4. The **Manager** can adjust allocations but cannot add new strategies, ensuring security and stability.
 
 
-
 ## Investing: Deposit
-When a user deposits assets into the DeFindex, they receive dfTokens that represent their proportional share of the DeFindex's assets. These dfTokens can later be burned to withdraw the corresponding assets.
 
-Upon calling the `deposit()` function, **the assets are transferred to the DeFindex in accordance with the current asset ratio**. For example, if the current ratio is 1 token A, 2 tokens B, and 3 tokens C for each dfToken, this ratio is maintained when assets are deposited. In return, the user receives dfTokens that represent their participation in the DeFindex Vault. 
+When a user deposits assets into the DeFindex Vault, they receive dfTokens, representing their proportional share of the Vault’s total assets. These dfTokens can later be burned to redeem the user’s share of assets.
 
-When the user wishes to withdraw their assets, they call the `withdraw` function to burn their dfTokens. The **withdrawn assets will be dispensed according to the asset ratio at the time of withdrawal**.
+Upon calling the `deposit()` function, assets are transferred to the DeFindex Vault and allocated based on the current asset ratios. For example, if the Vault maintains a 1:2:3 ratio for assets A, B, and C per dfToken, this ratio will be applied to new deposits. The user receives dfTokens reflecting their share of the Vault’s total assets.
 
-Thus, the price per dfToken reflects a multi-asset price. For instance, using the earlier example, because in order to mint 1 dfToken, the user needs to deposit 1 token A, 2 tokens B, and 3 tokens C, the price per 1 dfToken will be `p(dfToken)=(1A, 2B, 3C)`.
+To withdraw assets, users call the `withdraw` function to burn their dfTokens, releasing assets according to the current asset ratio.
 
+Thus, the value per dfToken reflects a multi-asset backing. Using the above example, to mint 1 dfToken, a user would need to deposit 1 unit of asset A, 2 units of asset B, and 3 units of asset C. Therefore, the value of 1 dfToken can be represented as:
 
+$$
+p(\text{dfToken}) = (1 \text{A}, 2 \text{B}, 3 \text{C})
+$$
+
+### Depositing When Total Assets = 1    
+
+When the Vault only holds one asset, the deposit process is straightforward: the amount deposited by the user will be directly used to mint shares proportional to the total funds in the Vault.
+
+1. **First Deposit**:  
+   For the initial deposit, `shares_to_deposit` is set equal to the `amount` sent by the user, simplifying the initial setup.
+
+2. **When There Are Existing Funds**:  
+   If the Vault already holds funds, `shares_to_deposit` are calculated based on the current `total_managed_funds` and `total_supply` (i.e., the current number of shares), according to the following formula:
+
+Let’s denote the total supply at time 0 as $s_0$ and the total managed funds as $v_0$. At time 1, a user wants to deposit an additional amount $v'$, and new shares $s'$ are minted. The value of any share $val(s)$ at time $t$ is calculated as:
+
+$$
+val(s)_t = \frac{v_t}{s_t} \cdot s
+$$
+
+At time $t_1$, this must hold:
+
+$$
+val(s') = \frac{v_1}{s_1} \cdot s'
+$$
+
+Given that $v_1 = v_0 + v'$ and $s_1 = s_0 + s'$, we can rearrange terms to find the new shares:
+
+$$
+s' = \frac{v'}{v_0} \cdot s_0
+$$
 
 ## Withdrawals
 When a user wishes to withdraw funds, they must burn a corresponding amount of dfTokens (shares) to receive their **assets at the ratio of the time of withdrawal**.

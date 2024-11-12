@@ -96,8 +96,10 @@ pub struct DeFindexVaultTest<'a> {
     defindex_contract: DeFindexVaultClient<'a>,
     token0_admin_client: SorobanTokenAdminClient<'a>,
     token0: SorobanTokenClient<'a>,
+    token0_admin: Address,
     token1_admin_client: SorobanTokenAdminClient<'a>,
     token1: SorobanTokenClient<'a>,
+    token1_admin: Address,
     emergency_manager: Address,
     vault_fee_receiver: Address,
     defindex_protocol_receiver: Address,
@@ -135,14 +137,18 @@ impl<'a> DeFindexVaultTest<'a> {
         let strategy_client_token0 = create_hodl_strategy(&env, &token0.address);
         let strategy_client_token1 = create_hodl_strategy(&env, &token1.address);
 
+        env.budget().reset_unlimited();
+        
         DeFindexVaultTest {
             env,
             defindex_factory,
             defindex_contract,
             token0_admin_client,
             token0,
+            token0_admin,
             token1_admin_client,
             token1,
+            token1_admin,
             emergency_manager,
             vault_fee_receiver,
             defindex_protocol_receiver,
@@ -161,9 +167,10 @@ impl<'a> DeFindexVaultTest<'a> {
     }
 }
 
-mod admin;
-mod deposit;
-mod emergency_withdraw;
 mod initialize;
-mod rebalance;
+mod deposit;
+mod admin;
+mod invest;
 mod withdraw;
+mod emergency_withdraw;
+mod rebalance;

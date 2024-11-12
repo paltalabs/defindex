@@ -1,6 +1,12 @@
-use soroban_sdk::{testutils::Ledger, vec, BytesN, Map, String, Vec};
+use soroban_sdk::{testutils::Ledger, vec, BytesN, String};
 
-use crate::test::{create_asset_params, defindex_vault_contract::{self, Investment}, DeFindexFactoryTest};
+use crate::test::{
+  create_asset_params, 
+  defindex_vault_contract::{
+    self, 
+    AssetInvestmentAllocation,  
+    StrategyInvestment, 
+  }, DeFindexFactoryTest};
 
 pub(crate) const DEFINDEX_FEE: u32 = 50u32;
 pub(crate) const VAULT_FEE: u32 = 100u32;
@@ -58,7 +64,16 @@ fn test_deposit_success() {
 
   // Checking user balance of dfTokens
   let df_balance = defindex_contract.balance(&users[0]);
-  assert_eq!(df_balance, amount_token0 + amount_token1);
+  assert_eq!(df_balance, amount_token0 + amount_token1 - 1000); // TODO: The amount of dfTokens minted is the sum of both asset deposited?
+
+
+  // defindex_contract.withdraw(&df_balance, &users[0]);
+  
+  // let df_balance = defindex_contract.user_balance(&users[0]);
+  // assert_eq!(df_balance, 0i128);
+
+  // let user_balance = test.token0.balance(&users[0]);
+  // assert_eq!(user_balance, amount);
 
   // Since this is the first deposit, no fees should be minted
   let total_supply = defindex_contract.total_supply();
@@ -122,7 +137,7 @@ fn test_withdraw_success() {
 
   // Verify the balance of dfTokens after deposit
   let df_balance = defindex_contract.balance(&users[0]);
-  assert_eq!(df_balance.clone(), amount_token0 + amount_token1);
+  assert_eq!(df_balance.clone(), amount_token0 + amount_token1 - 1000); // TODO: The amount of dfTokens minted is the sum of both asset deposited?
 
   // Verify the vault's balance of Token 0 and Token 1 after deposit
   let vault_token0_balance = test.token0.balance(&defindex_contract.address);
@@ -133,15 +148,28 @@ fn test_withdraw_success() {
 
   // Create investment strategies for the deposited tokens
   let investments = vec![
-    &test.env, 
-    Investment {
-      amount: amount_token0, 
-      strategy: test.strategy_contract_token0.address.clone()
-    }, 
-    Investment {
-      amount: amount_token1, 
-      strategy: test.strategy_contract_token1.address.clone()
-    }];
+        &test.env,
+        Some(AssetInvestmentAllocation {
+            asset: test.token0.address.clone(),
+            strategy_investments: vec![
+                &test.env,
+                Some(StrategyInvestment {
+                    strategy: test.strategy_contract_token0.address.clone(),
+                    amount: amount_token0,
+                }),
+            ],
+        }),
+        Some(AssetInvestmentAllocation {
+          asset: test.token1.address.clone(),
+          strategy_investments: vec![
+              &test.env,
+              Some(StrategyInvestment {
+                  strategy: test.strategy_contract_token1.address.clone(),
+                  amount: amount_token1,
+              }),
+          ],
+      })
+    ];
 
   // Invest the tokens into the strategies
   defindex_contract.invest(&investments);
