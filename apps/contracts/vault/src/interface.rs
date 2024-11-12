@@ -206,7 +206,8 @@ pub trait VaultTrait {
     ///
     /// # Returns
     /// * `Map<Address, i128>` - A map containing each asset address and its corresponding proportional amount.
-    fn get_asset_amounts_per_shares(e: Env, vault_shares: i128) -> Map<Address, i128>;
+    fn get_asset_amounts_per_shares(e: Env, vault_shares: i128) -> Result<Map<Address, i128>, ContractError>;
+    
 }
 
 pub trait AdminInterfaceTrait {

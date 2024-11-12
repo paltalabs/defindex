@@ -322,10 +322,12 @@ impl VaultTrait for DeFindexVault {
             return Err(ContractError::InsufficientBalance);
         }
 
-        // Calculate the withdrawal amounts for each asset based on the dfToken amount
-        let asset_amounts = calculate_asset_amounts_per_vault_shares(&e, shares_amount);
+        // Calculate the withdrawal amounts for each asset based on the share amounts
+        // Map<Address, i128>
+        let asset_amounts = calculate_asset_amounts_per_vault_shares(&e, shares_amount)?;
 
-        // Burn the dfTokens after calculating the withdrawal amounts (so total supply is correct)
+        // Burn the shares after calculating the withdrawal amounts (so total supply is correct
+        // but before withdrawing to avoid reentrancy attacks)
         internal_burn(e.clone(), from.clone(), shares_amount);
 
         // Create a map to store the total amounts to transfer for each asset address
@@ -334,7 +336,7 @@ impl VaultTrait for DeFindexVault {
         // Get idle funds for each asset (Map<Address, i128>)
         let idle_funds = fetch_current_idle_funds(&e);
 
-        // Loop through each asset and handle the withdrawal
+        // Loop through each asset to withdraw and handle the withdrawal
         for (asset_address, required_amount) in asset_amounts.iter() {
             // Check idle funds for this asset
             let idle_balance = idle_funds.get(asset_address.clone()).unwrap_or(0);
@@ -566,9 +568,9 @@ impl VaultTrait for DeFindexVault {
     ///
     /// # Returns
     /// * `Map<Address, i128>` - A map containing each asset address and its corresponding proportional amount.
-    fn get_asset_amounts_per_shares(e: Env, vault_shares: i128) -> Map<Address, i128> {
+    fn get_asset_amounts_per_shares(e: Env, vault_shares: i128) -> Result<Map<Address, i128>, ContractError> {
         extend_instance_ttl(&e);
-        calculate_asset_amounts_per_vault_shares(&e, vault_shares)
+        Ok(calculate_asset_amounts_per_vault_shares(&e, vault_shares)?)
     }
 
 }

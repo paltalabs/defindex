@@ -704,4 +704,3 @@ fn deposit_several_assets_min_greater_than_optimal() {
     assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
 
 }
-

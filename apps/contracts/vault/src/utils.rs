@@ -83,27 +83,36 @@ pub fn calculate_withdrawal_amounts(
 pub fn calculate_asset_amounts_per_vault_shares(
     env: &Env,
     shares_amount: i128,
-) -> Map<Address, i128> {
+) -> Result<Map<Address, i128>, ContractError> {
     let mut asset_amounts: Map<Address, i128> = Map::new(env);
 
     // Fetch the total supply of vault shares and the total managed funds for each asset
     let total_shares_supply = VaultToken::total_supply(env.clone());
     let total_managed_funds = fetch_total_managed_funds(env);
 
+    // if shares amount over total supply, return error AmountOverTotalSupply
+    if shares_amount > total_shares_supply {
+        return Err(ContractError::AmountOverTotalSupply);
+    }
+
     // Iterate over each asset and calculate the corresponding amount based on shares_amount
     for (asset_address, total_asset_amount) in total_managed_funds.iter() {
         // Calculate the proportional asset amount per the given number of shares
-        let asset_amount = total_asset_amount
-            .checked_mul(shares_amount)
-            .unwrap_or_else(|| panic_with_error!(env, ContractError::ArithmeticError))
-            .checked_div(total_shares_supply)
-            .unwrap_or_else(|| panic_with_error!(env, ContractError::ArithmeticError));
+        let asset_amount = if total_shares_supply != 0 {
+            total_asset_amount
+                .checked_mul(shares_amount)
+                .ok_or(ContractError::ArithmeticError)?
+                .checked_div(total_shares_supply)
+                .ok_or(ContractError::ArithmeticError)?
+        } else {
+            return Err(ContractError::AmountOverTotalSupply);
+        };
 
         // Set the calculated asset amount for the given asset address
         asset_amounts.set(asset_address.clone(), asset_amount);
     }
 
-    asset_amounts
+    return Ok(asset_amounts);
 }
 
 // pub fn calculate_dftokens_from_asset_amounts(

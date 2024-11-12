@@ -175,3 +175,4 @@ mod withdraw;
 mod emergency_withdraw;
 mod rebalance;
 mod fees;
+mod get_asset_amounts_per_shares;

@@ -24,6 +24,7 @@ pub enum ContractError {
     WrongInvestmentLength = 119,
     WrongAssetAddress = 122,
     WrongStrategiesLength = 123,
+    AmountOverTotalSupply = 124,
 
 
     // Arithmetic Errors (12x)

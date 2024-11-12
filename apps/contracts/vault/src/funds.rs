@@ -16,7 +16,7 @@ use crate::strategies::get_strategy_client;
 ///
 /// # Returns
 /// * The idle balance (i128) of the asset in the current contract address.
-fn fetch_idle_funds_for_asset(e: &Env, asset: &Address) -> i128 {
+pub fn fetch_idle_funds_for_asset(e: &Env, asset: &Address) -> i128 {
     TokenClient::new(e, &asset).balance(&e.current_contract_address())
 }
 
