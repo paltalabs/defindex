@@ -25,7 +25,7 @@ mod utils;
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use aggregator::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
 use fee::collect_fees;
-use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds}; //, fetch_idle_funds_for_asset};
+use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds, fetch_idle_funds_for_asset}; 
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::{check_and_execute_investments};
 use models::{
@@ -323,7 +323,7 @@ impl VaultTrait for DeFindexVault {
         }
 
         // Calculate the withdrawal amounts for each asset based on the share amounts
-        // Map<Address, i128>
+        // Map<Address, i128> Maps asset address to the amount to withdraw
         let asset_amounts = calculate_asset_amounts_per_vault_shares(&e, shares_amount)?;
 
         // Burn the shares after calculating the withdrawal amounts (so total supply is correct
@@ -333,27 +333,33 @@ impl VaultTrait for DeFindexVault {
         // Create a map to store the total amounts to transfer for each asset address
         let mut total_amounts_to_transfer: Map<Address, i128> = Map::new(&e);
 
-        // Get idle funds for each asset (Map<Address, i128>)
-        let idle_funds = fetch_current_idle_funds(&e);
-
-        // Loop through each asset to withdraw and handle the withdrawal
+        // Loop through each asset in order to handle the withdrawal and if necesary to deallocate invested funds
         for (asset_address, required_amount) in asset_amounts.iter() {
             // Check idle funds for this asset
-            let idle_balance = idle_funds.get(asset_address.clone()).unwrap_or(0);
+            let idle_balance = fetch_idle_funds_for_asset(&e, &asset_address);
+            
+            // let amount_to_deallocate = if idle_balance >= required_amount {
+            //     0
+            // } else {
+            //     required_amount.checked_sub(idle_balance);
+            // }
+
+            // if amount_to_deallocate>0{
+            //     // deallocate from strategies
+            // }
+
 
             let mut remaining_amount = required_amount;
 
             // Withdraw as much as possible from idle funds first
-            if idle_balance > 0 {
-                if idle_balance >= required_amount {
-                    // Idle funds cover the full amount
-                    total_amounts_to_transfer.set(asset_address.clone(), required_amount);
-                    continue; // No need to withdraw from the strategy
-                } else {
-                    // Partial withdrawal from idle funds
-                    total_amounts_to_transfer.set(asset_address.clone(), idle_balance);
-                    remaining_amount = required_amount - idle_balance; // Update remaining amount
-                }
+            if idle_balance >= required_amount {
+                // Idle funds cover the full amount
+                total_amounts_to_transfer.set(asset_address.clone(), required_amount);
+                continue; // No need to withdraw from the strategy
+            } else {
+                // Partial withdrawal from idle funds
+                total_amounts_to_transfer.set(asset_address.clone(), idle_balance);
+                remaining_amount = required_amount - idle_balance; // Update remaining amount
             }
 
             // Find the corresponding asset address for this strategy
