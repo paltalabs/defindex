@@ -14,39 +14,8 @@ use soroban_sdk::{
 };
 use std::vec;
 
-// DeFindex Hodl Strategy Contract
-mod hodl_strategy {
-    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/hodl_strategy.optimized.wasm");
-    pub type StrategyContractClient<'a> = Client<'a>;
-}
-
-use hodl_strategy::StrategyContractClient;
-
+use crate::hodl_strategy::{create_strategy_contract, StrategyContractClient};
 use crate::token;
-
-fn create_strategy_contract<'a>(e: &Env, asset: &Address, init_args: &Vec<Val>) -> StrategyContractClient<'a> {
-    let address = &e.register_contract_wasm(None, hodl_strategy::WASM);
-    let strategy = StrategyContractClient::new(e, address); 
-    strategy.initialize(asset, init_args);
-    strategy
-}
-
-// // DeFindex Vault Contract
-// mod defindex_vault_contract {
-//     soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/defindex_vault.optimized.wasm");
-// }
-
-mod factory {
-    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/defindex_factory.optimized.wasm");
-    pub type DeFindexFactoryClient<'a> = Client<'a>;
-}
-
-// use factory::DeFindexFactoryClient;
-
-// DeFindex Vault Contract
-// fn create_defindex_factory<'a>(e: &Env) -> DeFindexFactoryClient<'a> {
-//     DeFindexFactoryClient::new(e, &e.register_contract(None, DeFindexFactory {}))
-// }
 
 // pub(crate) fn create_asset_params(test: &DeFindexFactoryTest) -> Vec<AssetStrategySet> {
 //     sorobanvec![

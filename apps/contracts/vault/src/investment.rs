@@ -1,11 +1,12 @@
 use soroban_sdk::{Env, Vec, panic_with_error};
 
 use crate::{
-    models::{AssetStrategySet, AssetInvestmentAllocation},
+    models::AssetInvestmentAllocation,
     strategies::invest_in_strategy,
     utils::{check_nonnegative_amount},
     ContractError,
 };
+use common::models::AssetStrategySet;
 
 /// Checks and executes the investments for each asset based on provided allocations.
 /// The function iterates through the specified assets and asset investments to ensure validity 

@@ -1,5 +1,5 @@
 //! Definition of the Events used in the DeFindex Vault contract
-use crate::models::AssetStrategySet;
+use common::models::AssetStrategySet;
 use soroban_sdk::{contracttype, symbol_short, Address, Env, Vec};
 
 // INITIALIZED VAULT EVENT

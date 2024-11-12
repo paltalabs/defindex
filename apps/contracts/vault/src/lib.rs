@@ -29,7 +29,7 @@ use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::{check_and_execute_investments};
 use models::{
-    ActionType, AssetStrategySet, Instruction, AssetInvestmentAllocation, OptionalSwapDetailsExactIn,
+    ActionType, Instruction, AssetInvestmentAllocation, OptionalSwapDetailsExactIn,
     OptionalSwapDetailsExactOut,
 };
 use storage::{
@@ -48,6 +48,7 @@ use utils::{
 };
 
 use defindex_strategy_core::DeFindexStrategyClient;
+use common::models::AssetStrategySet;
 
 static MINIMUM_LIQUIDITY: i128 = 1000;
 

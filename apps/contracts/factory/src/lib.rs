@@ -5,11 +5,12 @@ mod events;
 mod storage;
 mod error;
 
+use common::models::AssetStrategySet;
 use soroban_sdk::{
-    contract, contractimpl, Address, BytesN, Env, Map, String, Vec
+    contract, contractimpl, vec, Address, BytesN, Env, Map, String, Symbol, Val, Vec, IntoVal
 };
 use error::FactoryError;
-use defindex::{create_contract, AssetStrategySet};
+pub use defindex::create_contract;
 use storage::{ add_new_defindex, extend_instance_ttl, get_admin, get_defi_wasm_hash, get_defindex_receiver, get_deployed_defindexes, get_fee_rate, has_admin, put_admin, put_defi_wasm_hash, put_defindex_receiver, put_defindex_fee };
 
 fn check_initialized(e: &Env) -> Result<(), FactoryError> {
@@ -238,17 +239,18 @@ impl FactoryTrait for DeFindexFactory {
 
         let defindex_receiver = get_defindex_receiver(&e);
 
-        defindex::Client::new(&e, &defindex_address).initialize(
-            &assets,
-            &manager,
-            &emergency_manager,
-            &fee_receiver,
-            &vault_fee,
-            &defindex_receiver,
-            &current_contract,
-            &vault_name,
-            &vault_symbol,
-        );
+        let mut init_args: Vec<Val> = vec![&e];
+        init_args.push_back(assets.to_val());
+        init_args.push_back(manager.to_val());
+        init_args.push_back(emergency_manager.to_val());
+        init_args.push_back(fee_receiver.to_val());
+        init_args.push_back(vault_fee.into_val(&e));
+        init_args.push_back(defindex_receiver.to_val());
+        init_args.push_back(current_contract.to_val());
+        init_args.push_back(vault_name.to_val());
+        init_args.push_back(vault_symbol.to_val());
+
+        e.invoke_contract::<Val>(&defindex_address, &Symbol::new(&e, "initialize"), init_args);
 
         add_new_defindex(&e, defindex_address.clone());
         events::emit_create_defindex_vault(&e, emergency_manager, fee_receiver, manager, vault_fee, assets);
@@ -298,30 +300,30 @@ impl FactoryTrait for DeFindexFactory {
 
         let defindex_receiver = get_defindex_receiver(&e);
 
-        let defindex_client = defindex::Client::new(&e, &defindex_address);
+        let mut init_args: Vec<Val> = vec![&e];
+        init_args.push_back(assets.to_val());
+        init_args.push_back(manager.to_val());
+        init_args.push_back(emergency_manager.to_val());
+        init_args.push_back(fee_receiver.to_val());
+        init_args.push_back(vault_fee.into_val(&e));
+        init_args.push_back(defindex_receiver.to_val());
+        init_args.push_back(current_contract.to_val());
+        init_args.push_back(vault_name.to_val());
+        init_args.push_back(vault_symbol.to_val());
 
-        defindex_client.initialize(
-            &assets,
-            &manager,
-            &emergency_manager,
-            &fee_receiver,
-            &vault_fee,
-            &defindex_receiver,
-            &current_contract,
-            &vault_name,
-            &vault_symbol,
-        );
+        e.invoke_contract::<Val>(&defindex_address, &Symbol::new(&e, "initialize"), init_args);
 
         let mut amounts_min = Vec::new(&e);
         for _ in 0..amounts.len() {
             amounts_min.push_back(0i128);
         }
 
-        defindex_client.deposit(
-            &amounts,
-            &amounts_min,
-            &caller
-        );
+        let mut deposit_args: Vec<Val> = vec![&e];
+        deposit_args.push_back(amounts.to_val());
+        deposit_args.push_back(amounts_min.to_val());
+        deposit_args.push_back(caller.to_val());
+        
+        e.invoke_contract::<Val>(&defindex_address, &Symbol::new(&e, "deposit"), deposit_args);
 
         add_new_defindex(&e, defindex_address.clone());
         events::emit_create_defindex_vault(&e, emergency_manager, fee_receiver, manager, vault_fee, assets);

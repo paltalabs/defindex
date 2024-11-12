@@ -1,7 +1,7 @@
 #![cfg(test)]
 extern crate std;
-use crate::defindex::{AssetStrategySet, Strategy};
 use crate::{DeFindexFactory, DeFindexFactoryClient};
+use common::models::{AssetStrategySet, Strategy};
 use soroban_sdk::token::{
     StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient,
 };

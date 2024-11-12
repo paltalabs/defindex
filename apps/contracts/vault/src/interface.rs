@@ -1,9 +1,10 @@
 use soroban_sdk::{Address, Env, Map, String, Vec};
 
 use crate::{
-    models::{AssetStrategySet, Instruction, AssetInvestmentAllocation},
+    models::{Instruction, AssetInvestmentAllocation},
     ContractError,
 };
+use common::models::AssetStrategySet;
 
 pub trait VaultTrait {
     /// Initializes the DeFindex Vault contract with the required parameters.

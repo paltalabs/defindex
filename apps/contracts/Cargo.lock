@@ -145,6 +145,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "common"
+version = "1.0.0"
+dependencies = [
+ "soroban-sdk",
+]
+
+[[package]]
 name = "const-oid"
 version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -275,6 +282,8 @@ dependencies = [
 name = "defindex-factory"
 version = "1.0.0"
 dependencies = [
+ "common",
+ "defindex-strategy-core",
  "soroban-sdk",
 ]
 
@@ -289,6 +298,7 @@ dependencies = [
 name = "defindex-vault"
 version = "1.0.0"
 dependencies = [
+ "common",
  "defindex-strategy-core",
  "soroban-sdk",
  "soroban-token-sdk",

@@ -2,10 +2,6 @@
 #![allow(unused)]
 use soroban_sdk::{contracttype, contracterror, xdr::ToXdr, Address, Bytes, BytesN, Env, Vec};
 
-soroban_sdk::contractimport!(
-    file = "../target/wasm32-unknown-unknown/release/defindex_vault.optimized.wasm"
-);
-
 // Define a function to create a new contract instance
 pub fn create_contract(
     e: &Env, // Pass in the current environment as an argument
