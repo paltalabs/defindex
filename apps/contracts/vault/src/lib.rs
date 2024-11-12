@@ -308,7 +308,7 @@ impl VaultTrait for DeFindexVault {
         shares_amount: i128, 
         from: Address) -> Result<Vec<i128>, ContractError> {
 
-        extend_instance_ttl(&e);
+        extend_instance_ttl(&e); 
         check_initialized(&e)?;
         check_nonnegative_amount(shares_amount)?;
         from.require_auth();
@@ -319,13 +319,6 @@ impl VaultTrait for DeFindexVault {
         // Check if the user has enough dfTokens. // TODO, we can move this error into the internal_burn function
         let df_user_balance = VaultToken::balance(e.clone(), from.clone());
         if df_user_balance < shares_amount {
-            // return vec[df_user_balance, shares amount]
-            // let mut result: Vec<i128> = Vec::new(&e);
-            // result.push_back(df_user_balance);
-            // result.push_back(shares_amount);
-            // return Ok(result);
-
-            
             return Err(ContractError::InsufficientBalance);
         }
 

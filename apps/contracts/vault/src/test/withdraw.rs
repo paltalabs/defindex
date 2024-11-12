@@ -12,8 +12,83 @@ use crate::test::{
     DeFindexVaultTest,
 };
 
+
 #[test]
-fn test_withdraw_from_idle_success() {
+fn test_withdraw_not_yet_initialized() {
+    let test = DeFindexVaultTest::setup();
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+
+    let result = test.defindex_contract.try_withdraw(&100i128, &users[0]);
+    assert_eq!(result, Err(Ok(ContractError::NotInitialized)));
+}
+
+// check that withdraw with negative amount after initialized returns error
+#[test]
+fn test_withdraw_negative_amount() {
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token0.address.clone(),
+            strategies: strategy_params_token0.clone()
+        }
+    ];
+
+    test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
+        &test.emergency_manager,
+        &test.vault_fee_receiver,
+        &2000u32,
+        &test.defindex_protocol_receiver,
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
+    );
+
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+
+    let result = test.defindex_contract.try_withdraw(&-100i128, &users[0]);
+    assert_eq!(result, Err(Ok(ContractError::NegativeNotAllowed)));
+}
+
+
+// check that withdraw without balance after initialized returns error InsufficientBalance
+#[test]
+fn test_withdraw_insufficient_balance() {
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token0.address.clone(),
+            strategies: strategy_params_token0.clone()
+        }
+    ];
+
+    test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
+        &test.emergency_manager,
+        &test.vault_fee_receiver,
+        &2000u32,
+        &test.defindex_protocol_receiver,
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
+    );
+
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+
+    let result = test.defindex_contract.try_withdraw(&100i128, &users[0]);
+    assert_eq!(result, Err(Ok(ContractError::InsufficientBalance)));
+}
+
+#[test]
+fn test_withdraw_from_idle_success() { 
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -199,3 +274,9 @@ fn test_withdraw_from_strategy_success() {
     assert_eq!(user_balance, amount - 1000);
 }
  
+
+// test withdraw without mock all auths
+#[test]
+fn test_withdraw_from_strategy_success_no_mock_all_auths() {
+    todo!();
+}

@@ -68,15 +68,17 @@ pub fn calculate_withdrawal_amounts(
 
 pub fn calculate_asset_amounts_for_dftokens(
     env: &Env,
-    df_token_amount: i128,
+    shares_amount: i128,
 ) -> Map<Address, i128> {
     let mut asset_amounts: Map<Address, i128> = Map::new(&env);
     let total_supply = VaultToken::total_supply(env.clone());
     let total_managed_funds = fetch_total_managed_funds(&env);
 
-    // Iterate over each asset and calculate the corresponding amount based on df_token_amount
+    // Iterate over each asset and calculate the corresponding amount based on shares_amount
     for (asset_address, amount) in total_managed_funds.iter() {
-        let asset_amount = (amount * df_token_amount) / total_supply;
+        let asset_amount = amount
+            .checked_mul(shares_amount).unwrap_or_else(|| panic_with_error!(&env, ContractError::ArithmeticError))
+            .checked_div(total_supply).unwrap_or_else(|| panic_with_error!(&env, ContractError::ArithmeticError));
         asset_amounts.set(asset_address.clone(), asset_amount);
     }
 
