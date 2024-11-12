@@ -1,6 +1,6 @@
 #![no_std]
 
-mod defindex;
+mod vault;
 mod events;
 mod storage;
 mod error;
@@ -10,7 +10,7 @@ use soroban_sdk::{
     contract, contractimpl, vec, Address, BytesN, Env, Map, String, Symbol, Val, Vec, IntoVal
 };
 use error::FactoryError;
-pub use defindex::create_contract;
+pub use vault::create_contract;
 use storage::{ add_new_defindex, extend_instance_ttl, get_admin, get_defi_wasm_hash, get_defindex_receiver, get_deployed_defindexes, get_fee_rate, has_admin, put_admin, put_defi_wasm_hash, put_defindex_receiver, put_defindex_fee };
 
 fn check_initialized(e: &Env) -> Result<(), FactoryError> {
