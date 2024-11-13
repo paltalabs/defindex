@@ -65,8 +65,6 @@ pub struct DeFindexFactoryTest<'a> {
 impl<'a> DeFindexFactoryTest<'a> {
     fn setup() -> Self {
         let env = Env::default();
-        env.budget().reset_unlimited();
-        // env.mock_all_auths();
         // let factory_contract = create_defindex_factory(&env);
         
         // let admin = Address::generate(&env);
@@ -91,6 +89,7 @@ impl<'a> DeFindexFactoryTest<'a> {
         // // TODO: Add a strategy adapter, this is a mockup
         let strategy_contract = create_strategy_contract(&env, &token.address, &Vec::new(&env));
         // let strategy_contract_token1 = create_strategy_contract(&env, &token1.address, &Vec::new(&env));
+        env.budget().reset_unlimited();
 
         DeFindexFactoryTest {
             env,
