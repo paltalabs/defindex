@@ -20,13 +20,13 @@ Here's a simple example of how to use the `DefiIndex` class to deposit an amount
 import 'package:defindex/defindex.dart';
 
 void main() async {
-  var defiIndex = DefiIndex(
+  var vault = Vault(
     sorobanRPCUrl: 'your_rpc_url',
     network: SorobanNetwork.TESTNET,
     contractId: 'contract_id'
   );
 
-  String? transactionHash = await defiIndex.deposit(
+  String? transactionHash = await vault.deposit(
     'your_account_id',
     100.0,
     (transaction) async => 'your_signed_transaction',
