@@ -1,5 +1,5 @@
 import { VaultMethod, useVaultCallback } from '@/hooks/useVault'
-import { useAppSelector } from '@/store/lib/storeHooks'
+import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import {
   Button,
   Input,
@@ -16,6 +16,10 @@ import { Address, nativeToScVal, scValToNative, xdr } from '@stellar/stellar-sdk
 import React, { useEffect, useState } from 'react'
 import { DialogBody, DialogContent, DialogHeader } from '../ui/dialog'
 import { NativeSelectRoot } from '../ui/native-select'
+import { InputGroup } from '../ui/input-group'
+import { useVault } from '@/hooks/useVault'
+import { setVaultTVL } from '@/store/lib/features/walletStore'
+import { Strategy } from '@/store/lib/types'
 
 export const InteractWithVault = () => {
   const [amount, set_amount] = useState<number>(0)
@@ -23,7 +27,9 @@ export const InteractWithVault = () => {
   const vaultMethod = selectedVault?.method
 
   const { address } = useSorobanReact();
-  const vault = useVaultCallback()
+  const vaultCB = useVaultCallback()
+  const vault = useVault()
+  const dispatch = useAppDispatch()
 
   const vaultOperation = async () => {
     if (!address || !vaultMethod) return;
@@ -36,14 +42,19 @@ export const InteractWithVault = () => {
     ]
     console.log('Vault method:', vaultMethod)
     try {
-      const result = await vault(
+      const result = await vaultCB(
         vaultMethod!,
         selectedVault?.address!,
         depositParams,
         true,
       )
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error:', error)
+    } finally {
+      const newTVL = await vault.getVaultTotalValues(selectedVault?.address!)
+      const parsedNewTVL = Number(newTVL) / 10 ** 7
+      dispatch(setVaultTVL(parsedNewTVL))
     }
   }
 
@@ -61,6 +72,7 @@ export const InteractWithVault = () => {
         <DialogBody zIndex={'docked'}>
           <Grid templateColumns="repeat(12, 1fr)" gap={6}>
             <GridItem colSpan={12}>
+              <h2>Vault address:</h2>
               <Textarea
                 defaultValue={selectedVault?.address}
                 rows={1}
@@ -69,7 +81,7 @@ export const InteractWithVault = () => {
                 resize={'none'} />
             </GridItem>
             <GridItem colSpan={6} colEnd={13} textAlign={'end'}>
-              <h2>Current index balance: {selectedVault?.totalValues}</h2>
+              <h2>TVL: {selectedVault?.totalValues}</h2>
             </GridItem>
             {vaultMethod != VaultMethod.EMERGENCY_WITHDRAW &&
               <>
@@ -79,8 +91,11 @@ export const InteractWithVault = () => {
 
                 <GridItem colSpan={6} colEnd={13} textAlign={'end'} >
                   <Stack alignContent={'center'} alignItems={'center'}>
+                  <InputGroup
+                    endElement={'$'}
+                  >
                     <Input my={4} type="text" onChange={(e) => setAmount(Number(e.target.value))} placeholder='Amount' value={amount} />
-                    <InputAddon>$ USDC</InputAddon>
+                  </InputGroup>
                   </Stack>
                 </GridItem>
               </>
@@ -94,7 +109,7 @@ export const InteractWithVault = () => {
                 <GridItem colSpan={6} colEnd={13} textAlign={'end'} >
                   <NativeSelectRoot>
                     <NativeSelectField>
-                      {selectedVault?.strategies.map((strategy) => {
+                      {selectedVault?.assets.strategies[0].map((strategy: Strategy) => {
                         return (
                           <option key={strategy.address} value={strategy.address}>{strategy.name}</option>
                         )

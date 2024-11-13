@@ -3,7 +3,8 @@ import { useCallback } from "react";
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { scValToNative } from "@stellar/stellar-sdk";
 import { TxResponse, contractInvoke } from '@soroban-react/contracts';
-import { VaultData } from "@/store/lib/features/walletStore";
+import { getTokenSymbol } from "@/helpers/getTokenInfo";
+import { VaultData } from "@/store/lib/types";
 
 
 export enum VaultMethod {
@@ -48,10 +49,18 @@ export function useVaultCallback() {
 }
 export const useVault = (vaultAddress?: string | undefined) => {
     const vault = useVaultCallback();
+    const sorobanContext = useSorobanReact();
     const getVaultInfo = async (vaultAddress: string) => {
     if (!vaultAddress) return;
     try {
-        const [manager, emergencyManager, feeReceiver, name, strategies, totalValues] = await Promise.all([
+        const [
+            manager, 
+            emergencyManager, 
+            feeReceiver, 
+            name, 
+            assets,
+            totalValues
+        ] = await Promise.all([
             getVaultManager(vaultAddress),
             getVaultEmergencyManager(vaultAddress),
             getVaultFeeReceiver(vaultAddress),
@@ -60,13 +69,18 @@ export const useVault = (vaultAddress?: string | undefined) => {
             getVaultTotalValues(vaultAddress),
         ]);
         const parsedTotalValues = Number(totalValues) / 10 ** 7;
+        console.log(assets);
+        for (let asset of assets){
+            const symbol = await getTokenSymbol(asset.address, sorobanContext);
+            if(symbol === 'native') asset.symbol = 'XLM';
+        }
         const newData: VaultData = {
             name: name || '',
             address: vaultAddress,
             manager: manager,
             emergencyManager: emergencyManager,
             feeReceiver: feeReceiver,
-            strategies: strategies[0].strategies || [],
+            assets: assets || [],
             totalValues: parsedTotalValues || 0,
         }
     return newData
