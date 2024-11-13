@@ -1,1 +1,1 @@
-export * from "./defindex";
+export { Vault, SorobanNetwork } from './Vault';

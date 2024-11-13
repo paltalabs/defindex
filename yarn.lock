@@ -1276,6 +1276,15 @@
     tweetnacl "^1.0.3"
     tweetnacl-util "^0.15.1"
 
+"@creit.tech/xbull-wallet-connect@0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@creit.tech/xbull-wallet-connect/-/xbull-wallet-connect-0.3.0.tgz#c0686fcacf6794381ce71396d0ad803e09f742ce"
+  integrity sha512-pByi0bTAWd2ZdolVtkXcAU1DYTtz/cJc/IkRUz9x9/1NsFVyrM4UxE8tHgVZ3mwrJ4josoDwYP957ynQw195YQ==
+  dependencies:
+    rxjs "^7.5.5"
+    tweetnacl "^1.0.3"
+    tweetnacl-util "^0.15.1"
+
 "@cspotcode/source-map-support@^0.8.0":
   version "0.8.1"
   resolved "https://registry.yarnpkg.com/@cspotcode/source-map-support/-/source-map-support-0.8.1.tgz#00629c35a688e05a88b1cda684fb9d5e73f000a1"
@@ -2640,6 +2649,14 @@
     "@soroban-react/core" "^9.1.13"
     "@stellar/stellar-sdk" "12.2.0"
 
+"@soroban-react/contracts@^9.3.0":
+  version "9.3.0"
+  resolved "https://registry.yarnpkg.com/@soroban-react/contracts/-/contracts-9.3.0.tgz#8200cb4b638cf4de3902c5366bcdbc22f866d739"
+  integrity sha512-3qaqNATj23aeEPdbZqjzZvdstyDOe11vnAMAwXNXcDd9C4iigi/lYoGi0YNorsdMS36MhxgBq41vSOdmnq3shQ==
+  dependencies:
+    "@soroban-react/core" "^9.3.0"
+    "@stellar/stellar-sdk" "12.2.0"
+
 "@soroban-react/core@^9.1.13":
   version "9.1.13"
   resolved "https://registry.yarnpkg.com/@soroban-react/core/-/core-9.1.13.tgz#65122c3cd5793720d5e1341b19f96f5a541e4549"
@@ -2649,6 +2666,17 @@
     "@soroban-react/lobstr" "^9.1.13"
     "@soroban-react/types" "^9.1.13"
     "@soroban-react/xbull" "^9.1.13"
+    "@stellar/stellar-sdk" "12.2.0"
+
+"@soroban-react/core@^9.3.0":
+  version "9.3.0"
+  resolved "https://registry.yarnpkg.com/@soroban-react/core/-/core-9.3.0.tgz#e420a6c0f9c686376b4f5e496073a026748261ac"
+  integrity sha512-CCXSjPKnhdQi80eL2Vt7vvdzXgJmOQJBpN70rll6I4PXGpwg77f2lxKQaQRmcAkH/OymuXi4AteyzhSbX7nLsg==
+  dependencies:
+    "@soroban-react/freighter" "^9.1.13"
+    "@soroban-react/lobstr" "^9.1.13"
+    "@soroban-react/types" "^9.1.13"
+    "@soroban-react/xbull" "^9.3.0"
     "@stellar/stellar-sdk" "12.2.0"
 
 "@soroban-react/freighter@^9.1.13":
@@ -2699,6 +2727,15 @@
   integrity sha512-tYsVg39LYytVBSXvXKECz+O3GjvZM/NTz3R52SwaohRjT6DAoEuGnbdHw01CyGn6FQIt2UkydGxrI5AQZ+lHwQ==
   dependencies:
     "@creit-tech/xbull-wallet-connect" "github:Creit-Tech/xBull-Wallet-Connect"
+    "@soroban-react/types" "^9.1.13"
+    "@stellar/stellar-sdk" "12.2.0"
+
+"@soroban-react/xbull@^9.3.0":
+  version "9.3.0"
+  resolved "https://registry.yarnpkg.com/@soroban-react/xbull/-/xbull-9.3.0.tgz#89c81463f956129e1065e4b0e8457a05e9329c45"
+  integrity sha512-TDhpyeHlS0Zv7AgCO8t9ymH4QkREo3A9lpjVtFQmlO4VvnVm70oTT3U12uARwVpgJrVShaesKIsyhvO20v4K0A==
+  dependencies:
+    "@creit.tech/xbull-wallet-connect" "0.3.0"
     "@soroban-react/types" "^9.1.13"
     "@stellar/stellar-sdk" "12.2.0"
 
