@@ -1,204 +1,129 @@
-use soroban_sdk::{testutils::Address as _, vec as svec, Address, String, Vec as SVec};
+use soroban_sdk::token::{StellarAssetClient, TokenClient};
+use soroban_sdk::BytesN;
+use soroban_sdk::{testutils::Address as _, vec as sorobanvec, Address, String};
 
-mod hodl_strategy {
-    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/hodl_strategy.optimized.wasm");
-    pub type StrategyContractClient<'a> = Client<'a>;
+use crate::hodl_strategy::{create_hodl_strategy_contract, HodlStrategyClient};
+use crate::test::IntegrationTest;
+use crate::token::create_token;
+use crate::factory::{AssetStrategySet, Strategy};
+use crate::vault::defindex_vault_contract::VaultContractClient;
+
+pub struct VaultOneAseetHodl<'a> {
+    pub setup: IntegrationTest<'a>,
+    pub token: TokenClient<'a>,
+    pub token_admin_client: StellarAssetClient<'a>,
+    pub strategy_contract: HodlStrategyClient<'a>,
+    pub vault_contract: VaultContractClient<'a>,
+    pub manager: Address,
+    pub emergency_manager: Address,
+    pub fee_receiver: Address,
+    pub vault_fee: u32,
 }
 
-/// Create a test fixture with a pool and a whale depositing and borrowing all assets
-pub fn create_fixture_with_data<'a>(wasm: bool) -> TestFixture<'a> {
-    // let mut fixture = TestFixture::create(wasm);
+pub fn create_vault_one_asset_hodl_strategy<'a>() -> VaultOneAseetHodl<'a> {
+    let setup = IntegrationTest::setup();
 
-    // // mint whale tokens
-    // let frodo = fixture.users[0].clone();
-    // fixture.tokens[TokenIndex::STABLE].mint(&frodo, &(100_000 * 10i128.pow(6)));
-    // fixture.tokens[TokenIndex::XLM].mint(&frodo, &(1_000_000 * SCALAR_7));
-    // fixture.tokens[TokenIndex::WETH].mint(&frodo, &(100 * 10i128.pow(9)));
+    let token_admin = Address::generate(&setup.env);
+    let (token, token_admin_client) = create_token(&setup.env, &token_admin);
 
-    // // mint LP tokens with whale
-    // // frodo has 40m BLND from drop
-    // fixture.tokens[TokenIndex::BLND].mint(&frodo, &(70_000_000 * SCALAR_7));
-    // fixture.tokens[TokenIndex::USDC].mint(&frodo, &(2_600_000 * SCALAR_7));
-    // fixture.lp.join_pool(
-    //     &(10_000_000 * SCALAR_7),
-    //     &svec![&fixture.env, 110_000_000 * SCALAR_7, 2_600_000 * SCALAR_7,],
-    //     &frodo,
-    // );
+    let strategy_contract = create_hodl_strategy_contract(&setup.env, &token.address, &sorobanvec![&setup.env]);
 
-    // // create pool
-    // fixture.create_pool(String::from_str(&fixture.env, "Teapot"), 0_1000000, 6);
+    let emergency_manager = Address::generate(&setup.env);
+    let fee_receiver = Address::generate(&setup.env);
+    let vault_fee = 100u32;
+    let vault_name = String::from_str(&setup.env, "HodlVault");
+    let vault_symbol = String::from_str(&setup.env, "HVLT");
+    let manager = Address::generate(&setup.env);
+    
+    let assets = sorobanvec![
+        &setup.env,
+        AssetStrategySet {
+            address: token.address.clone(),
+            strategies: sorobanvec![
+                &setup.env,
+                Strategy {
+                    address: strategy_contract.address.clone(),
+                    name: String::from_str(&setup.env, "Hodl Strategy"),
+                    paused: false,
+                }
+            ],
+        }
+    ];
 
-    // let mut stable_config = default_reserve_metadata();
-    // stable_config.decimals = 6;
-    // stable_config.c_factor = 0_900_0000;
-    // stable_config.l_factor = 0_950_0000;
-    // stable_config.util = 0_850_0000;
-    // fixture.create_pool_reserve(0, TokenIndex::STABLE, &stable_config);
+    let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
-    // let mut xlm_config = default_reserve_metadata();
-    // xlm_config.c_factor = 0_750_0000;
-    // xlm_config.l_factor = 0_750_0000;
-    // xlm_config.util = 0_500_0000;
-    // fixture.create_pool_reserve(0, TokenIndex::XLM, &xlm_config);
+    let vault_contract_address = setup.factory_contract.create_defindex_vault(
+        &emergency_manager, 
+        &fee_receiver, 
+        &vault_fee, 
+        &vault_name, 
+        &vault_symbol, 
+        &manager, 
+        &assets, 
+        &salt
+    );
 
-    // let mut weth_config = default_reserve_metadata();
-    // weth_config.decimals = 9;
-    // weth_config.c_factor = 0_800_0000;
-    // weth_config.l_factor = 0_800_0000;
-    // weth_config.util = 0_700_0000;
-    // fixture.create_pool_reserve(0, TokenIndex::WETH, &weth_config);
+    let vault_contract = VaultContractClient::new(&setup.env, &vault_contract_address);
 
-    // // enable emissions for pool
-    // let pool_fixture = &fixture.pools[0];
-
-    // let reserve_emissions: soroban_sdk::Vec<ReserveEmissionMetadata> = soroban_sdk::vec![
-    //     &fixture.env,
-    //     ReserveEmissionMetadata {
-    //         res_index: 0, // STABLE
-    //         res_type: 0,  // d_token
-    //         share: 0_600_0000
-    //     },
-    //     ReserveEmissionMetadata {
-    //         res_index: 1, // XLM
-    //         res_type: 1,  // b_token
-    //         share: 0_400_0000
-    //     },
-    // ];
-    // pool_fixture.pool.set_emissions_config(&reserve_emissions);
-
-    // // deposit into backstop, add to reward zone
-    // fixture
-    //     .backstop
-    //     .deposit(&frodo, &pool_fixture.pool.address, &(50_000 * SCALAR_7));
-    // fixture.backstop.update_tkn_val();
-    // fixture
-    //     .backstop
-    //     .add_reward(&pool_fixture.pool.address, &Address::generate(&fixture.env));
-    // pool_fixture.pool.set_status(&3);
-    // pool_fixture.pool.update_status();
-
-    // // enable emissions
-    // fixture.emitter.distribute();
-    // fixture.backstop.gulp_emissions();
-    // pool_fixture.pool.gulp_emissions();
-
-    // fixture.jump(60);
-
-    // // supply and borrow STABLE for 80% utilization (close to target)
-    // let requests: SVec<Request> = svec![
-    //     &fixture.env,
-    //     Request {
-    //         request_type: RequestType::SupplyCollateral as u32,
-    //         address: fixture.tokens[TokenIndex::STABLE].address.clone(),
-    //         amount: 10_000 * 10i128.pow(6),
-    //     },
-    //     Request {
-    //         request_type: RequestType::Borrow as u32,
-    //         address: fixture.tokens[TokenIndex::STABLE].address.clone(),
-    //         amount: 8_000 * 10i128.pow(6),
-    //     },
-    // ];
-    // pool_fixture.pool.submit(&frodo, &frodo, &frodo, &requests);
-
-    // // supply and borrow WETH for 50% utilization (below target)
-    // let requests: SVec<Request> = svec![
-    //     &fixture.env,
-    //     Request {
-    //         request_type: RequestType::SupplyCollateral as u32,
-    //         address: fixture.tokens[TokenIndex::WETH].address.clone(),
-    //         amount: 10 * 10i128.pow(9),
-    //     },
-    //     Request {
-    //         request_type: RequestType::Borrow as u32,
-    //         address: fixture.tokens[TokenIndex::WETH].address.clone(),
-    //         amount: 5 * 10i128.pow(9),
-    //     },
-    // ];
-    // pool_fixture.pool.submit(&frodo, &frodo, &frodo, &requests);
-
-    // // supply and borrow XLM for 65% utilization (above target)
-    // let requests: SVec<Request> = svec![
-    //     &fixture.env,
-    //     Request {
-    //         request_type: RequestType::SupplyCollateral as u32,
-    //         address: fixture.tokens[TokenIndex::XLM].address.clone(),
-    //         amount: 100_000 * SCALAR_7,
-    //     },
-    //     Request {
-    //         request_type: RequestType::Borrow as u32,
-    //         address: fixture.tokens[TokenIndex::XLM].address.clone(),
-    //         amount: 65_000 * SCALAR_7,
-    //     },
-    // ];
-    // pool_fixture.pool.submit(&frodo, &frodo, &frodo, &requests);
-
-    // fixture.jump(60 * 60); // 1 hr
-
-    // fixture.env.budget().reset_unlimited();
-    // fixture
+    VaultOneAseetHodl {
+        setup,
+        token,
+        token_admin_client,
+        strategy_contract,
+        vault_contract,
+        manager,
+        emergency_manager,
+        fee_receiver,
+        vault_fee,
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::vault::{VaultAssetStrategySet, VaultStrategy};
 
-    // use crate::test_fixture::PoolFixture;
-
-    // use super::*;
+    use super::*;
 
     #[test]
-    fn test_create_fixture_with_data_wasm() {
-        // let fixture: TestFixture<'_> = create_fixture_with_data(true);
-        // let frodo = fixture.users.get(0).unwrap();
-        // let pool_fixture: &PoolFixture = fixture.pools.get(0).unwrap();
+    fn test_create_vault_one_asset_hodl_strategy() {
+        let enviroment = create_vault_one_asset_hodl_strategy();
+        let setup = enviroment.setup;
+        assert_eq!(setup.factory_contract.deployed_defindexes().len(), 1);
 
-        // // validate backstop deposit and drop
-        // assert_eq!(
-        //     50_000 * SCALAR_7,
-        //     fixture.lp.balance(&fixture.backstop.address)
-        // );
-        // assert_eq!(
-        //     10_000_000 * SCALAR_7,
-        //     fixture.tokens[TokenIndex::BLND].balance(&fixture.bombadil)
-        // );
+        let strategy_token = enviroment.strategy_contract.asset();
+        assert_eq!(strategy_token, enviroment.token.address);
 
-        // // validate pool actions
-        // assert_eq!(
-        //     2_000 * 10i128.pow(6),
-        //     fixture.tokens[TokenIndex::STABLE].balance(&pool_fixture.pool.address)
-        // );
-        // assert_eq!(
-        //     35_000 * SCALAR_7,
-        //     fixture.tokens[TokenIndex::XLM].balance(&pool_fixture.pool.address)
-        // );
-        // assert_eq!(
-        //     5 * 10i128.pow(9),
-        //     fixture.tokens[TokenIndex::WETH].balance(&pool_fixture.pool.address)
-        // );
+        let assets = sorobanvec![
+            &setup.env,
+            VaultAssetStrategySet {
+                address: enviroment.token.address.clone(),
+                strategies: sorobanvec![
+                    &setup.env,
+                    VaultStrategy {
+                        address: enviroment.strategy_contract.address.clone(),
+                        name: String::from_str(&setup.env, "Hodl Strategy"),
+                        paused: false,
+                    }
+                ],
+            }
+        ];
 
-        // assert_eq!(
-        //     98_000 * 10i128.pow(6),
-        //     fixture.tokens[TokenIndex::STABLE].balance(&frodo)
-        // );
-        // assert_eq!(
-        //     965_000 * SCALAR_7,
-        //     fixture.tokens[TokenIndex::XLM].balance(&frodo)
-        // );
-        // assert_eq!(
-        //     95 * 10i128.pow(9),
-        //     fixture.tokens[TokenIndex::WETH].balance(&frodo)
-        // );
+        let vault_assets = enviroment.vault_contract.get_assets();
+        assert_eq!(vault_assets, assets);
 
-        // // validate emissions are turned on
-        // let (emis_config, emis_data) = fixture.read_reserve_emissions(0, TokenIndex::STABLE, 0);
-        // assert_eq!(
-        //     emis_data.last_time,
-        //     fixture.env.ledger().timestamp() - 60 * 61
-        // );
-        // assert_eq!(emis_data.index, 0);
-        // assert_eq!(0_180_0000, emis_config.eps);
-        // assert_eq!(
-        //     fixture.env.ledger().timestamp() + 7 * 24 * 60 * 60 - 60 * 61,
-        //     emis_config.expiration
-        // )
+        let vault_emergency_manager = enviroment.vault_contract.get_emergency_manager();
+        assert_eq!(vault_emergency_manager, enviroment.emergency_manager);
+
+        let vault_fee_receiver = enviroment.vault_contract.get_fee_receiver();
+        assert_eq!(vault_fee_receiver, enviroment.fee_receiver);
+
+        let vault_manager = enviroment.vault_contract.get_manager();
+        assert_eq!(vault_manager, enviroment.manager);
+
+        let vault_name = enviroment.vault_contract.name();
+        assert_eq!(vault_name, String::from_str(&setup.env, "HodlVault"));
+
+        let vault_symbol = enviroment.vault_contract.symbol();
+        assert_eq!(vault_symbol, String::from_str(&setup.env, "HVLT"));
     }
 }

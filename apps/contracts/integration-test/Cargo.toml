@@ -11,3 +11,4 @@ soroban-sdk = { workspace = true, features = ["testutils"] }
 factory = { path = "../factory", package = "defindex-factory" }
 vault = { path = "../vault", package = "defindex-vault"}
 hodl-strategy={ path="../strategies/hodl", package="hodl_strategy"}
+common = { workspace = true }

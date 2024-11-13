@@ -11,7 +11,7 @@ use soroban_sdk::{
 };
 use error::FactoryError;
 pub use vault::create_contract;
-use storage::{ add_new_defindex, extend_instance_ttl, get_admin, get_defi_wasm_hash, get_defindex_receiver, get_deployed_defindexes, get_fee_rate, has_admin, put_admin, put_defi_wasm_hash, put_defindex_receiver, put_defindex_fee };
+use storage::{ add_new_defindex, extend_instance_ttl, get_admin, get_vault_wasm_hash, get_defindex_receiver, get_deployed_defindexes, get_fee_rate, has_admin, put_admin, put_vault_wasm_hash, put_defindex_receiver, put_defindex_fee };
 
 fn check_initialized(e: &Env) -> Result<(), FactoryError> {
     if !has_admin(e) {
@@ -28,7 +28,7 @@ pub trait FactoryTrait {
     /// * `admin` - The address of the contract administrator, who can manage settings.
     /// * `defindex_receiver` - The default address designated to receive a portion of fees.
     /// * `defindex_fee` - The initial annual fee rate (in basis points).
-    /// * `defindex_wasm_hash` - The hash of the DeFindex Vault's WASM file for deploying new vaults.
+    /// * `vault_wasm_hash` - The hash of the DeFindex Vault's WASM file for deploying new vaults.
     /// 
     /// # Returns
     /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, otherwise an error.
@@ -37,7 +37,7 @@ pub trait FactoryTrait {
         admin: Address,
         defindex_receiver: Address,
         defindex_fee: u32,
-        defindex_wasm_hash: BytesN<32>
+        vault_wasm_hash: BytesN<32>
     ) -> Result<(), FactoryError>;
 
     /// Creates a new DeFindex Vault with specified parameters.
@@ -181,7 +181,7 @@ impl FactoryTrait for DeFindexFactory {
     /// * `admin` - The address of the contract administrator, who can manage settings.
     /// * `defindex_receiver` - The default address designated to receive a portion of fees.
     /// * `defindex_fee` - The initial annual fee rate (in basis points).
-    /// * `defindex_wasm_hash` - The hash of the DeFindex Vault's WASM file for deploying new vaults.
+    /// * `vault_wasm_hash` - The hash of the DeFindex Vault's WASM file for deploying new vaults.
     /// 
     /// # Returns
     /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, otherwise an error.
@@ -190,7 +190,7 @@ impl FactoryTrait for DeFindexFactory {
         admin: Address, 
         defindex_receiver: Address,
         defindex_fee: u32,
-        defi_wasm_hash: BytesN<32>
+        vault_wasm_hash: BytesN<32>
     ) -> Result<(), FactoryError> {
         if has_admin(&e) {
             return Err(FactoryError::AlreadyInitialized);
@@ -198,7 +198,7 @@ impl FactoryTrait for DeFindexFactory {
 
         put_admin(&e, &admin);
         put_defindex_receiver(&e, &defindex_receiver);
-        put_defi_wasm_hash(&e, defi_wasm_hash);
+        put_vault_wasm_hash(&e, vault_wasm_hash);
         put_defindex_fee(&e, &defindex_fee);
 
         events::emit_initialized(&e, admin, defindex_receiver, defindex_fee);
@@ -234,8 +234,8 @@ impl FactoryTrait for DeFindexFactory {
 
         let current_contract = e.current_contract_address();
 
-        let defi_wasm_hash = get_defi_wasm_hash(&e)?;
-        let defindex_address = create_contract(&e, defi_wasm_hash, salt);
+        let vault_wasm_hash = get_vault_wasm_hash(&e)?;
+        let defindex_address = create_contract(&e, vault_wasm_hash, salt);
 
         let defindex_receiver = get_defindex_receiver(&e);
 
@@ -295,8 +295,8 @@ impl FactoryTrait for DeFindexFactory {
 
         let current_contract = e.current_contract_address();
 
-        let defi_wasm_hash = get_defi_wasm_hash(&e)?;
-        let defindex_address = create_contract(&e, defi_wasm_hash, salt);
+        let vault_wasm_hash = get_vault_wasm_hash(&e)?;
+        let defindex_address = create_contract(&e, vault_wasm_hash, salt);
 
         let defindex_receiver = get_defindex_receiver(&e);
 
