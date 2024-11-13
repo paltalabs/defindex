@@ -3,7 +3,12 @@ use soroban_sdk::{vec as sorobanvec, String, Vec};
 use crate::test::{
     create_strategy_params_token0,
     defindex_vault::{
-        ActionType, AssetAllocation, Instruction, Investment, OptionalSwapDetailsExactIn,
+        ActionType, 
+        AssetStrategySet, 
+        Instruction, 
+        AssetInvestmentAllocation,  
+        StrategyInvestment,
+        OptionalSwapDetailsExactIn,
         OptionalSwapDetailsExactOut,
     },
     DeFindexVaultTest,
@@ -14,9 +19,9 @@ fn rebalance() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         }
@@ -33,7 +38,7 @@ fn rebalance() {
         &String::from_str(&test.env, "dfToken"),
         &String::from_str(&test.env, "DFT"),
     );
-    let amount = 1000i128;
+    let amount = 987654321i128;
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
@@ -51,14 +56,20 @@ fn rebalance() {
     );
 
     let df_balance = test.defindex_contract.balance(&users[0]);
-    assert_eq!(df_balance, amount);
+    assert_eq!(df_balance, amount - 1000);
 
     let investments = sorobanvec![
         &test.env,
-        Investment {
-            amount: amount,
-            strategy: test.strategy_client_token0.address.clone()
-        }
+        Some(AssetInvestmentAllocation {
+            asset: test.token0.address.clone(),
+            strategy_investments: sorobanvec![
+                &test.env,
+                Some(StrategyInvestment {
+                    strategy: test.strategy_client_token0.address.clone(),
+                    amount: amount,
+                }),
+            ],
+        }),
     ];
 
     test.defindex_contract.invest(&investments);

@@ -2,22 +2,23 @@ use soroban_sdk::{vec as sorobanvec, String, Vec};
 
 use crate::test::{
     create_strategy_params_token0, create_strategy_params_token1,
-    defindex_vault::{AssetAllocation, ContractError},
+    defindex_vault::{AssetStrategySet, ContractError},
     DeFindexVaultTest,
 };
+
 
 #[test]
 fn test_initialize_and_get_roles() {
     let test = DeFindexVaultTest::setup();
     let strategy_params_token0 = create_strategy_params_token0(&test);
     let strategy_params_token1 = create_strategy_params_token1(&test);
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         },
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token1.address.clone(),
             strategies: strategy_params_token1.clone()
         }
@@ -44,6 +45,66 @@ fn test_initialize_and_get_roles() {
     assert_eq!(emergency_manager_role, test.emergency_manager);
 }
 
+
+// Test that if strategy does support other asset we get an error when initializing
+#[test]
+fn test_initialize_with_unsupported_strategy() {
+    let test = DeFindexVaultTest::setup();
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token0.address.clone(),
+            strategies: strategy_params_token0.clone()
+        },
+        AssetStrategySet {
+            address: test.token1.address.clone(),
+            strategies: strategy_params_token0.clone() // Here Strategy 0 supports token0
+        }
+    ];
+
+    let result = test.defindex_contract.try_initialize(
+        &assets,
+        &test.manager,
+        &test.emergency_manager,
+        &test.vault_fee_receiver,
+        &2000u32,
+        &test.defindex_protocol_receiver,
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
+    );
+
+    assert_eq!(
+        result,
+        Err(Ok(ContractError::StrategyDoesNotSupportAsset))
+    );
+}
+
+// test that if we try to initialize with an empty asset allocation fails
+#[test]
+fn test_initialize_with_empty_asset_allocation() {
+    let test = DeFindexVaultTest::setup();
+    // let strategy_params_token0 = create_strategy_params_token0(&test);
+
+    let assets: Vec<AssetStrategySet> = sorobanvec![&test.env];
+
+    let result = test.defindex_contract.try_initialize(
+        &assets,
+        &test.manager,
+        &test.emergency_manager,
+        &test.vault_fee_receiver,
+        &2000u32,
+        &test.defindex_protocol_receiver,
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
+    );
+
+    assert_eq!(result, Err(Ok(ContractError::NoAssetAllocation)));
+}
+
 #[test]
 fn test_get_roles_not_yet_initialized() {
     let test = DeFindexVaultTest::setup();
@@ -62,13 +123,13 @@ fn test_initialize_twice() {
     let strategy_params_token0 = create_strategy_params_token0(&test);
     let strategy_params_token1 = create_strategy_params_token1(&test);
 
-    let assets: Vec<AssetAllocation> = sorobanvec![
+    let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
             strategies: strategy_params_token0.clone()
         },
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token1.address.clone(),
             strategies: strategy_params_token1.clone()
         }
@@ -104,17 +165,6 @@ fn test_initialize_twice() {
     );
 }
 
-// TODO finish DEPOSIT when ready
-// #[test]
-// fn test_deposit_not_yet_initialized() {
-//     let test = DeFindexVaultTest::setup();
-//     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
-
-//     let result = test.defindex_contract.try_deposit(&100i128, &users[0]);
-
-//     assert_eq!(result, Err(Ok(ContractError::NotInitialized)));
-// }
-
 #[test]
 fn test_withdraw_not_yet_initialized() {
     let test = DeFindexVaultTest::setup();
@@ -129,7 +179,6 @@ fn test_emergency_withdraw_not_yet_initialized() {
     let test = DeFindexVaultTest::setup();
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
-    let strategy_params_token1 = create_strategy_params_token1(&test);
     let strategy_params_token1 = create_strategy_params_token1(&test);
 
     let result = test
