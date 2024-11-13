@@ -9,7 +9,7 @@ import {
 } from '@chakra-ui/react'
 import { FaRegTrashCan } from "react-icons/fa6";
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { setStrategyValue, removeStrategy } from '@/store/lib/features/vaultStore'
+//import { setStrategyValue, removeStrategy } from '@/store/lib/features/vaultStore'
 import { InputGroup } from '../ui/input-group'
 import { Slider } from '../ui/slider'
 
@@ -30,7 +30,7 @@ function ItemSlider({
     const total = totalShares! - share + val
     if (total <= 100) {
       setInputValue(val)
-      dispatch(setStrategyValue({ address, share: val }))
+      // dispatch(setStrategyValue({ address, share: val }))
     } else {
       setMax()
     }
@@ -40,7 +40,7 @@ function ItemSlider({
     const rest = 100 - totalShares!
     const newVal = share + rest
     setInputValue(newVal)
-    dispatch(setStrategyValue({ address, share: newVal }))
+    //dispatch(setStrategyValue({ address, share: newVal }))
   }
 
   const handleValueInput = (e: any) => {
@@ -80,8 +80,8 @@ function ItemSlider({
   }
 
   const handleDelete = () => {
-    dispatch(setStrategyValue({ address, share: 0 }))
-    dispatch(removeStrategy({ address: address, share: 0 }))
+    //dispatch(setStrategyValue({ address, share: 0 }))
+    //dispatch(removeStrategy({ address: address, share: 0 }))
   }
 
   useEffect(() => {

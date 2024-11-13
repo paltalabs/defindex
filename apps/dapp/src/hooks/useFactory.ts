@@ -7,6 +7,7 @@ import { fetchFactoryAddress } from "@/utils/factory";
 
 export enum FactoryMethod {
   CREATE_DEFINDEX_VAULT = "create_defindex_vault",
+  CREATE_DEFINDEX_VAULT_DEPOSIT = "create_defindex_vault_deposit",
   DEPLOYED_DEFINDEXES = "deployed_defindexes",
 }
 

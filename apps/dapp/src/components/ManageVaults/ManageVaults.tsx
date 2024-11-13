@@ -11,9 +11,8 @@ import AllVaults from "./AllVaults"
 import { useState } from "react"
 import { DeployVault } from "../DeployVault/DeployVault"
 import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
-import { pushStrategy, resetStrategies } from "@/store/lib/features/vaultStore"
 import { InteractWithVault } from "../InteractWithVault/InteractWithVault"
-import { setSelectedVault, Strategy } from "@/store/lib/features/walletStore"
+import { setSelectedVault } from "@/store/lib/features/walletStore"
 import ConnectButton from "../Wallet/ConnectButton"
 import { useSorobanReact } from "@soroban-react/core"
 import { VaultMethod } from "@/hooks/useVault"
@@ -21,6 +20,7 @@ import { InputGroup } from "../ui/input-group"
 import { DialogBackdrop, DialogRoot, DialogTrigger } from "../ui/dialog"
 import { CiSearch } from "react-icons/ci";
 import { InspectVault } from "./InspectVault"
+import { Strategy, VaultData } from "@/store/lib/types"
 
 export const ManageVaults = () => {
   const { address } = useSorobanReact()
@@ -46,7 +46,7 @@ export const ManageVaults = () => {
     }
   })
   const dispatch = useAppDispatch()
-  const vaults = useAppSelector(state => state.wallet.vaults.createdVaults)
+  const vaults: VaultData[] = useAppSelector(state => state.wallet.vaults.createdVaults)
   const handleInspectVault = async (value: boolean, args?: any) => {
     await dispatch(setSelectedVault({ ...args }))
     setModalStatus({ ...modalStatus, inspect: { isOpen: value } })
@@ -54,16 +54,16 @@ export const ManageVaults = () => {
   const handleOpenDeployVault = async (method: string, value: boolean, args?: any) => {
     switch (method) {
       case 'create_vault':
-        await dispatch(resetStrategies())
+        //await dispatch(resetStrategies())
         setModalStatus({ ...modalStatus, deployVault: { isOpen: value } })
         break
       case 'edit_vault':
-        await dispatch(resetStrategies())
+        //await dispatch(resetStrategies())
         const selectedVault = vaults.find(vault => vault.address === args.address)
         if (!selectedVault) return;
-        for (const item of selectedVault.strategies) {
-          const newStrategy: Strategy = { ...item, share: selectedVault.strategies.length > 1 ? 100 / selectedVault.strategies.length : 100 };
-          await dispatch(pushStrategy(newStrategy))
+        for (const item of selectedVault.assets) {
+        //const newStrategy: Strategy = { ...item, share: selectedVault.strategies.length > 1 ? 100 / selectedVault.strategies.length : 100 };
+        //await dispatch(pushStrategy(newStrategy))
         }
         setModalStatus({ ...modalStatus, deployVault: { isOpen: value } })
         break
@@ -132,7 +132,7 @@ export const ManageVaults = () => {
         >
           <ConnectButton />
 
-          {!!address && <DialogRoot
+          {/* !!address */true && <DialogRoot
             open={modalStatus.deployVault.isOpen}
             onOpenChange={(e) => { handleOpenDeployVault('create_vault', e.open) }}
             size={'lg'}
