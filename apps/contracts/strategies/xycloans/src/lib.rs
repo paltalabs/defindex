@@ -5,11 +5,11 @@ mod storage;
 mod soroswap_router;
 mod xycloans_pool;
 
-use soroban_sdk::{auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation}, contract, contractimpl, vec, Address, Env, IntoVal, Symbol, Val, Vec};
+use soroban_sdk::{contract, contractimpl, Address, Env, IntoVal, Val, Vec};
 use storage::{
-    extend_instance_ttl, get_soroswap_router_address, get_pool_token, get_token_in, get_xycloans_pool_address, is_initialized, set_initialized, set_soroswap_router_address, set_pool_token, set_token_in, set_xycloans_pool_address, set_soroswap_factory_address, get_soroswap_factory_address
+    extend_instance_ttl, get_pool_token, get_token_in, get_xycloans_pool_address, is_initialized, set_initialized, set_soroswap_router_address, set_pool_token, set_token_in, set_xycloans_pool_address, set_soroswap_factory_address, get_soroswap_factory_address
 };
-use soroswap_router::{get_amount_out, get_reserves, pair_for, swap, SoroswapRouterClient};
+use soroswap_router::{get_amount_out, get_reserves, swap};
 use xycloans_pool::XycloansPoolClient;
 use defindex_strategy_core::{StrategyError, DeFindexStrategyTrait};
 
@@ -92,7 +92,7 @@ impl DeFindexStrategyTrait for XycloansAdapter {
         Ok(())
     }
 
-    fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
+    fn harvest(e: Env, _from: Address) -> Result<(), StrategyError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
 
@@ -101,7 +101,7 @@ impl DeFindexStrategyTrait for XycloansAdapter {
 
     fn withdraw(
         e: Env,
-        amount: i128,
+        _amount: i128,
         from: Address,
     ) -> Result<i128, StrategyError> {
         from.require_auth();

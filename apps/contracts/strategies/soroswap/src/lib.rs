@@ -123,7 +123,7 @@ impl DeFindexStrategyTrait for SoroswapAdapter {
         let total_swapped_amount = swap_result.last().unwrap();
 
         // Add liquidity
-        let result = soroswap_router_client.add_liquidity(
+        let _result = soroswap_router_client.add_liquidity(
             &usdc_address,
             &xlm_address,
             &swap_amount,
@@ -137,7 +137,7 @@ impl DeFindexStrategyTrait for SoroswapAdapter {
         Ok(())
     }
 
-    fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
+    fn harvest(e: Env, _from: Address) -> Result<(), StrategyError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
 
@@ -146,7 +146,7 @@ impl DeFindexStrategyTrait for SoroswapAdapter {
 
     fn withdraw(
         e: Env,
-        amount: i128,
+        _amount: i128,
         from: Address,
     ) -> Result<i128, StrategyError> {
         from.require_auth();
@@ -186,7 +186,7 @@ impl DeFindexStrategyTrait for SoroswapAdapter {
         ]);
 
         // Remove liquidity
-        let (usdc_amount, xlm_amount) = soroswap_router_client.remove_liquidity(
+        let (_usdc_amount, xlm_amount) = soroswap_router_client.remove_liquidity(
             &usdc_address,
             &xlm_address,
             &lp_balance,

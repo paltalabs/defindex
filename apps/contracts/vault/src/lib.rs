@@ -25,16 +25,16 @@ mod utils;
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use aggregator::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
 use fee::collect_fees;
-use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds};
+use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds}; //, fetch_idle_funds_for_asset};
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
-use investment::{execute_investment, prepare_investment};
+use investment::{check_and_execute_investments};
 use models::{
-    ActionType, AssetAllocation, Instruction, Investment, OptionalSwapDetailsExactIn,
+    ActionType, AssetStrategySet, Instruction, AssetInvestmentAllocation, OptionalSwapDetailsExactIn,
     OptionalSwapDetailsExactOut,
 };
 use storage::{
-    get_assets, set_asset, set_defindex_protocol_fee_receiver, set_factory, set_last_fee_assesment,
-    set_total_assets, set_vault_fee,
+    get_assets, set_asset, set_defindex_protocol_fee_receiver, set_factory,
+    set_total_assets, set_vault_fee, extend_instance_ttl
 };
 use strategies::{
     get_asset_allocation_from_address, get_strategy_asset, get_strategy_client,
@@ -48,6 +48,8 @@ use utils::{
 };
 
 use defindex_strategy_core::DeFindexStrategyClient;
+
+static MINIMUM_LIQUIDITY: i128 = 1000;
 
 pub use error::ContractError;
 
@@ -82,7 +84,7 @@ impl VaultTrait for DeFindexVault {
     ///
     fn initialize(
         e: Env,
-        assets: Vec<AssetAllocation>,
+        assets: Vec<AssetStrategySet>,
         manager: Address,
         emergency_manager: Address,
         vault_fee_receiver: Address,
@@ -92,6 +94,8 @@ impl VaultTrait for DeFindexVault {
         vault_name: String,
         vault_symbol: String,
     ) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
+
         let access_control = AccessControl::new(&e);
         if access_control.has_role(&RolesDataKey::Manager) {
             panic_with_error!(&e, ContractError::AlreadyInitialized);
@@ -112,12 +116,16 @@ impl VaultTrait for DeFindexVault {
 
         // Store Assets Objects
         let total_assets = assets.len();
-        // TODO Require minimum 1 asset
+
+        // fails if the total assets is 0
+        if total_assets == 0 {
+            panic_with_error!(&e, ContractError::NoAssetAllocation);
+        }
+        
         set_total_assets(&e, total_assets as u32);
         for (i, asset) in assets.iter().enumerate() {
-            // for every asset, we need to check that the list of strategyes indeed support this asset
+            // for every asset, we need to check that the list of strategies indeed support this asset
 
-            // TODO Fix, currently failing
             for strategy in asset.strategies.iter() {
                 let strategy_client = DeFindexStrategyClient::new(&e, &strategy.address);
                 if strategy_client.asset() != asset.address {
@@ -152,33 +160,49 @@ impl VaultTrait for DeFindexVault {
         Ok(())
     }
 
-    /// Handles deposits into the DeFindex Vault.
+    /// Handles user deposits into the DeFindex Vault.
     ///
-    /// This function transfers the desired amounts of each asset into the vault, distributes the assets
-    /// across the strategies according to the vault's ratios, and mints dfTokens representing the user's
-    /// share in the vault.
+    /// This function processes a deposit by transferring each specified asset amount from the user's address to
+    /// the vault, allocating assets according to the vault's defined strategy ratios, and minting dfTokens that 
+    /// represent the user's proportional share in the vault. The `amounts_desired` and `amounts_min` vectors should 
+    /// align with the vault's asset order to ensure correct allocation.
     ///
-    /// # Arguments:
-    /// * `e` - The environment.
-    /// * `amounts_desired` - A vector of the amounts the user wishes to deposit for each asset.
-    /// * `amounts_min` - A vector of minimum amounts required for the deposit to proceed.
+    /// # Parameters
+    /// * `e` - The current environment reference (`Env`), for access to the contract state and utilities.
+    /// * `amounts_desired` - A vector specifying the user's intended deposit amounts for each asset.
+    /// * `amounts_min` - A vector of minimum deposit amounts required for the transaction to proceed.
     /// * `from` - The address of the user making the deposit.
     ///
-    /// # Returns:
-    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
+    /// # Returns
+    /// * `Result<(Vec<i128>, i128), ContractError>` - Returns the actual deposited `amounts` and `shares_to_mint` if successful,
+    ///   otherwise a `ContractError`.
+    ///
+    /// # Function Flow
+    /// 1. **Fee Collection**: Collects accrued fees before processing the deposit.
+    /// 2. **Validation**: Checks that the lengths of `amounts_desired` and `amounts_min` match the vault's assets.
+    /// 3. **Share Calculation**: Calculates `shares_to_mint` based on the vault's total managed funds and the deposit amount.
+    /// 4. **Asset Transfer**: Transfers each specified amount from the user’s address to the vault as idle funds.
+    /// 5. **Vault shares Minting**: Mints vault shares for the user to represent their ownership in the vault.
+    ///
+    /// # Notes
+    /// - For the first deposit, if the vault has only one asset, shares are calculated directly based on the deposit amount.
+    /// - For multiple assets, the function delegates to `calculate_deposit_amounts_and_shares_to_mint`
+    ///   for precise share computation.
+    /// - An event is emitted to log the deposit, including the actual deposited amounts and minted shares.
+    ///
     fn deposit(
         e: Env,
         amounts_desired: Vec<i128>,
         amounts_min: Vec<i128>,
         from: Address,
-    ) -> Result<(), ContractError> {
+    ) -> Result<(Vec<i128>, i128), ContractError> {
+        extend_instance_ttl(&e);
         check_initialized(&e)?;
         from.require_auth();
 
-        // Set LastFeeAssessment if it is the first deposit
-        if VaultToken::total_supply(e.clone()) == 0 {
-            set_last_fee_assesment(&e, &e.ledger().timestamp());
-        }
+        // Collect Fees
+        // If this was not done before, last_fee_assesment will set to be current timestamp and this will return without action
+        collect_fees(&e)?; 
 
         // get assets
         let assets = get_assets(&e);
@@ -195,82 +219,121 @@ impl VaultTrait for DeFindexVault {
         }
         // for amount min is not necesary to check if it is negative
 
+        let total_supply = VaultToken::total_supply(e.clone());
         let (amounts, shares_to_mint) = if assets_length == 1 {
-            // If Total Assets == 1
-            let shares = if VaultToken::total_supply(e.clone()) == 0 {
+            let shares = if total_supply == 0 {
+                // If we have only one asset, and this is the first deposit, we will mint a share proportional to the amount desired
                 // TODO In this case we might also want to mint a MINIMUM LIQUIDITY to be locked forever in the contract
                 // this might be for security and practical reasons as well
                 // shares will be equal to the amount desired to deposit, just for simplicity
                 amounts_desired.get(0).unwrap() // here we have already check same lenght
             } else {
-                // in this case we will mint a share proportional to the total managed funds
+                // If we have only one asset, but we already have some shares minted
+                // we will mint a share proportional to the total managed funds 
+                // read whitepaper!
                 let total_managed_funds = fetch_total_managed_funds(&e);
-                VaultToken::total_supply(e.clone()) * amounts_desired.get(0).unwrap()
-                    / total_managed_funds
-                        .get(assets.get(0).unwrap().address.clone())
-                        .unwrap()
+                // if checked mul gives error, return ArithmeticError
+                VaultToken::total_supply(e.clone()).checked_mul(amounts_desired.get(0)
+                .unwrap()).unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError))
+                .checked_div(total_managed_funds.get(assets.get(0).unwrap().address.clone())
+                .unwrap()).unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError))
             };
+            // TODO check that min amount is ok
             (amounts_desired, shares)
         } else {
-            // If Total Assets > 1
-            calculate_deposit_amounts_and_shares_to_mint(
-                &e,
-                &assets,
-                &amounts_desired,
-                &amounts_min,
-            )
+            if total_supply == 0 {
+                // for ths first supply, we will consider the amounts desired, and the shares to mint will just be the sum
+                // of the amounts desired
+                (amounts_desired.clone(), amounts_desired.iter().sum())
+            }
+            else {
+                // If Total Assets > 1
+                calculate_deposit_amounts_and_shares_to_mint(
+                    &e,
+                    &assets,
+                    &amounts_desired,
+                    &amounts_min,
+                )?
+            }
         };
 
         // for every asset
         for (i, amount) in amounts.iter().enumerate() {
+            // if amount is less than minimum, return error InsufficientAmount
+            if amount < amounts_min.get(i as u32).unwrap() {
+                panic_with_error!(&e, ContractError::InsufficientAmount);
+            }
+            // its possible that some amounts are 0.
             if amount > 0 {
                 let asset = assets.get(i as u32).unwrap();
                 let asset_client = TokenClient::new(&e, &asset.address);
-                // send the current amount to this contract
+                // send the current amount to this contract. This will be held as idle funds.
                 asset_client.transfer(&from, &e.current_contract_address(), &amount);
             }
         }
 
-        // now we mint the corresponding dfTOkenb
-        internal_mint(e.clone(), from.clone(), shares_to_mint);
+        // Now we mint the corresponding dfToken shares to the user
+        // If total_sypply==0, mint minimum liquidity to be locked forever in the contract. So we will never come again to total_supply==0
+        if total_supply == 0 {
+            if shares_to_mint < MINIMUM_LIQUIDITY {
+                panic_with_error!(&e, ContractError::InsufficientAmount);
+            }
+            internal_mint(e.clone(), e.current_contract_address(), MINIMUM_LIQUIDITY);
+            internal_mint(e.clone(), from.clone(), shares_to_mint.checked_sub(MINIMUM_LIQUIDITY).unwrap());
+        }
+        else {
+            internal_mint(e.clone(), from.clone(), shares_to_mint);
+        }
 
-        events::emit_deposit_event(&e, from, amounts, shares_to_mint);
+        events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone());
 
-        // fees assesment
-        collect_fees(&e)?;
-        // TODO return amounts and shares to mint
-        Ok(())
+        Ok((amounts, shares_to_mint))
     }
 
-    /// Withdraws assets from the DeFindex Vault by burning dfTokens.
+    /// Withdraws assets from the DeFindex Vault by burning Vault Share tokens.
     ///
-    /// This function calculates the amount of assets to withdraw based on the number of dfTokens being burned,
+    /// This function calculates the amount of assets to withdraw based on the number of Vault Share tokens being burned,
     /// then transfers the appropriate assets back to the user, pulling from both idle funds and strategies
     /// as needed.
     ///
     /// # Arguments:
     /// * `e` - The environment.
-    /// * `df_amount` - The amount of dfTokens to burn for the withdrawal.
+    /// * `shares_amount` - The amount of Vault Share tokens to burn for the withdrawal.
     /// * `from` - The address of the user requesting the withdrawal.
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn withdraw(e: Env, df_amount: i128, from: Address) -> Result<Vec<i128>, ContractError> {
+    fn withdraw(
+        e: Env, 
+        shares_amount: i128, 
+        from: Address) -> Result<Vec<i128>, ContractError> {
+
+        extend_instance_ttl(&e);
         check_initialized(&e)?;
-        check_nonnegative_amount(df_amount)?;
+        check_nonnegative_amount(shares_amount)?;
         from.require_auth();
 
-        // Check if the user has enough dfTokens
+        // fees assesment
+        collect_fees(&e)?;
+    
+        // Check if the user has enough dfTokens. // TODO, we can move this error into the internal_burn function
         let df_user_balance = VaultToken::balance(e.clone(), from.clone());
-        if df_user_balance < df_amount {
+        if df_user_balance < shares_amount {
+            // return vec[df_user_balance, shares amount]
+            // let mut result: Vec<i128> = Vec::new(&e);
+            // result.push_back(df_user_balance);
+            // result.push_back(shares_amount);
+            // return Ok(result);
+
+            
             return Err(ContractError::InsufficientBalance);
         }
 
         // Calculate the withdrawal amounts for each asset based on the dfToken amount
-        let asset_amounts = calculate_asset_amounts_for_dftokens(&e, df_amount);
+        let asset_amounts = calculate_asset_amounts_for_dftokens(&e, shares_amount);
 
         // Burn the dfTokens after calculating the withdrawal amounts (so total supply is correct)
-        internal_burn(e.clone(), from.clone(), df_amount);
+        internal_burn(e.clone(), from.clone(), shares_amount);
 
         // Create a map to store the total amounts to transfer for each asset address
         let mut total_amounts_to_transfer: Map<Address, i128> = Map::new(&e);
@@ -326,11 +389,8 @@ impl VaultTrait for DeFindexVault {
             amounts_withdrawn.push_back(total_amount);
         }
 
-        events::emit_withdraw_event(&e, from, df_amount, amounts_withdrawn.clone());
-
-        // fees assesment
-        collect_fees(&e)?;
-
+        events::emit_withdraw_event(&e, from, shares_amount, amounts_withdrawn.clone());
+    
         Ok(amounts_withdrawn)
     }
 
@@ -352,6 +412,7 @@ impl VaultTrait for DeFindexVault {
         strategy_address: Address,
         caller: Address,
     ) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
         check_initialized(&e)?;
 
         // Ensure the caller is the Manager or Emergency Manager
@@ -400,6 +461,7 @@ impl VaultTrait for DeFindexVault {
         strategy_address: Address,
         caller: Address,
     ) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
         // Ensure the caller is the Manager or Emergency Manager
         // TODO: Should check if the strategy has any amount invested on it, and return an error if it has, should we let the manager to pause a strategy with funds invested?
         let access_control = AccessControl::new(&e);
@@ -430,6 +492,7 @@ impl VaultTrait for DeFindexVault {
         strategy_address: Address,
         caller: Address,
     ) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
         // Ensure the caller is the Manager or Emergency Manager
         let access_control = AccessControl::new(&e);
         access_control.require_any_role(
@@ -448,8 +511,9 @@ impl VaultTrait for DeFindexVault {
     /// * `e` - The environment.
     ///
     /// # Returns:
-    /// * `Vec<AssetAllocation>` - A vector of `AssetAllocation` structs representing the assets managed by the vault.
-    fn get_assets(e: Env) -> Vec<AssetAllocation> {
+    /// * `Vec<AssetStrategySet>` - A vector of `AssetStrategySet` structs representing the assets managed by the vault.
+    fn get_assets(e: Env) -> Vec<AssetStrategySet> {
+        extend_instance_ttl(&e);
         get_assets(&e)
     }
 
@@ -464,6 +528,7 @@ impl VaultTrait for DeFindexVault {
     /// # Returns:
     /// * `Map<Address, i128>` - A map of asset addresses to their total managed amounts.
     fn fetch_total_managed_funds(e: &Env) -> Map<Address, i128> {
+        extend_instance_ttl(&e);
         fetch_total_managed_funds(e)
     }
 
@@ -478,6 +543,7 @@ impl VaultTrait for DeFindexVault {
     /// # Returns:
     /// * `Map<Address, i128>` - A map of asset addresses to their total invested amounts.
     fn fetch_current_invested_funds(e: &Env) -> Map<Address, i128> {
+        extend_instance_ttl(&e);
         fetch_current_invested_funds(e)
     }
 
@@ -492,12 +558,14 @@ impl VaultTrait for DeFindexVault {
     /// # Returns:
     /// * `Map<Address, i128>` - A map of asset addresses to their total idle amounts.
     fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128> {
+        extend_instance_ttl(&e);
         fetch_current_idle_funds(e)
     }
 
     // TODO: DELETE THIS, USED FOR TESTING
     /// Temporary method for testing purposes.
     fn get_asset_amounts_for_dftokens(e: Env, df_tokens: i128) -> Map<Address, i128> {
+        extend_instance_ttl(&e);
         calculate_asset_amounts_for_dftokens(&e, df_tokens)
     }
 }
@@ -516,6 +584,7 @@ impl AdminInterfaceTrait for DeFindexVault {
     /// # Returns:
     /// * `()` - No return value.
     fn set_fee_receiver(e: Env, caller: Address, new_fee_receiver: Address) {
+        extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         access_control.set_fee_receiver(&caller, &new_fee_receiver);
 
@@ -530,6 +599,7 @@ impl AdminInterfaceTrait for DeFindexVault {
     /// # Returns:
     /// * `Result<Address, ContractError>` - The fee receiver address if successful, otherwise returns a ContractError.
     fn get_fee_receiver(e: Env) -> Result<Address, ContractError> {
+        extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         access_control.get_fee_receiver()
     }
@@ -545,6 +615,7 @@ impl AdminInterfaceTrait for DeFindexVault {
     /// # Returns:
     /// * `()` - No return value.
     fn set_manager(e: Env, manager: Address) {
+        extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         access_control.set_manager(&manager);
 
@@ -559,6 +630,7 @@ impl AdminInterfaceTrait for DeFindexVault {
     /// # Returns:
     /// * `Result<Address, ContractError>` - The manager address if successful, otherwise returns a ContractError.
     fn get_manager(e: Env) -> Result<Address, ContractError> {
+        extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         access_control.get_manager()
     }
@@ -574,6 +646,7 @@ impl AdminInterfaceTrait for DeFindexVault {
     /// # Returns:
     /// * `()` - No return value.
     fn set_emergency_manager(e: Env, emergency_manager: Address) {
+        extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         access_control.set_emergency_manager(&emergency_manager);
 
@@ -595,43 +668,59 @@ impl AdminInterfaceTrait for DeFindexVault {
 
 #[contractimpl]
 impl VaultManagementTrait for DeFindexVault {
-    /// Invests the vault's idle funds into the specified strategies.
+    /// Executes the investment of the vault's idle funds based on the specified asset allocations.
+    /// This function allows partial investments by providing an optional allocation for each asset,
+    /// and it ensures proper authorization and validation checks before proceeding with investments.
     ///
-    /// # Arguments:
-    /// * `e` - The environment.
-    /// * `investment` - A vector of `Investment` structs representing the amount to invest in each strategy.
-    /// * `caller` - The address of the caller.
+    /// # Arguments
+    /// * `e` - The current environment reference.
+    /// * `asset_investments` - A vector of optional `AssetInvestmentAllocation` structures, where each element 
+    ///   represents an allocation for a specific asset. The vector must match the number of vault assets in length.
     ///
-    /// # Returns:
-    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn invest(e: Env, investments: Vec<Investment>) -> Result<(), ContractError> {
+    /// # Returns
+    /// * `Result<(), ContractError>` - Returns `Ok(())` if the investments are successful or a `ContractError`
+    ///   if any issue occurs during validation or execution.
+    ///
+    /// # Function Flow
+    /// 1. **Extend Instance TTL**: Extends the contract instance's time-to-live to keep the instance active.
+    /// 2. **Check Initialization**: Verifies that the vault is properly initialized before proceeding.
+    /// 3. **Access Control**: Ensures the caller has the `Manager` role required to initiate investments.
+    /// 4. **Asset Count Validation**: Verifies that the length of the `asset_investments` vector matches
+    ///    the number of assets managed by the vault. If they don't match, a `WrongInvestmentLength` error is returned.
+    /// 5. **Investment Execution**: Calls the `check_and_execute_investments` function to perform the investment
+    ///    after validating the inputs and ensuring correct execution flows for each asset allocation.
+    ///
+    /// # Errors
+    /// * Returns `ContractError::WrongInvestmentLength` if the length of `asset_investments` does not match the vault assets.
+    /// * Returns `ContractError` if access control validation fails or if investment execution encounters an issue.
+    ///
+    /// # Security
+    /// - Only addresses with the `Manager` role can call this function, ensuring restricted access to managing investments.
+    fn invest(
+        e: Env, 
+        asset_investments: Vec<Option<AssetInvestmentAllocation>>
+    ) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
         check_initialized(&e)?;
 
+        // Access control: ensure caller has the required manager role
         let access_control = AccessControl::new(&e);
         access_control.require_role(&RolesDataKey::Manager);
-        e.current_contract_address().require_auth();
 
-        // Get the current idle funds for all assets
-        let idle_funds = fetch_current_idle_funds(&e);
+        let assets = get_assets(&e);
+        
+        // Ensure the length of `asset_investments` matches the number of vault assets
+        if asset_investments.len() != assets.len() {
+            panic_with_error!(&e, ContractError::WrongInvestmentLength);
+        }
 
-        // Prepare investments based on current idle funds
-        // This checks if the total investment exceeds the idle funds
-        prepare_investment(&e, investments.clone(), idle_funds)?;
-
-        // Now proceed with the actual investments if all checks passed
-        execute_investment(&e, investments)?;
-
-        // auto invest mockup
-        // if auto_invest {
-        //     let idle_funds = fetch_current_idle_funds(&e);
-
-        //     // Prepare investments based on current ratios of invested funds
-        //     let investments = calculate_investments_based_on_ratios(&e);
-        //     prepare_investment(&e, investments.clone(), idle_funds)?;
-        //     execute_investment(&e, investments)?;
-        // }
+        // Check and execute investments for each asset allocation
+        check_and_execute_investments(e, assets, asset_investments)?;
+    
         Ok(())
     }
+
+
 
     /// Rebalances the vault by executing a series of instructions.
     ///
@@ -642,6 +731,7 @@ impl VaultManagementTrait for DeFindexVault {
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn rebalance(e: Env, instructions: Vec<Instruction>) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
         check_initialized(&e)?;
 
         let access_control = AccessControl::new(&e);
@@ -658,7 +748,8 @@ impl VaultManagementTrait for DeFindexVault {
                 },
                 ActionType::Invest => match (&instruction.strategy, &instruction.amount) {
                     (Some(strategy_address), Some(amount)) => {
-                        invest_in_strategy(&e, strategy_address, amount)?;
+                        invest_in_strategy(
+                            &e, strategy_address, strategy_address, amount)?; // TODO THIS WILL FAIUL FOR NOW
                     }
                     _ => return Err(ContractError::MissingInstructionData),
                 },
