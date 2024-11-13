@@ -9,7 +9,8 @@
     "publish-addresses": "tsc && node dist/publish_addresses.js",
     "test": "tsc && node dist/test.js",
     "test-vault": "tsc && node dist/tests/testOnlyVault.js",
-    "test-dev": "tsc && node dist/tests/dev.js"
+    "test-dev": "tsc && node dist/tests/dev.js",
+    "test-rebalance": "tsc && node dist/tests/rebalanceTest.js"
   },
   "type": "module",
   "devDependencies": {
