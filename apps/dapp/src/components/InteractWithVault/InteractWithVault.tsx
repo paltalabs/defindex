@@ -51,8 +51,10 @@ export const InteractWithVault = () => {
       params = depositParams
     };
     if (vaultMethod === VaultMethod.WITHDRAW) {
+      const withdrawAmount = ((amount * selectedVault.totalSupply) / selectedVault.TVL)
+      const convertedWithdrawAmount = withdrawAmount * Math.pow(10, 7)
       const withdrawParams: xdr.ScVal[] = [
-        nativeToScVal(convertedAmount, { type: "i128" }),
+        nativeToScVal(convertedWithdrawAmount, { type: "i128" }),
         new Address(address).toScVal(),
       ]
       params = withdrawParams
@@ -67,7 +69,7 @@ export const InteractWithVault = () => {
       ).then((res) =>
         statusModal.handleSuccess(res.txHash)
       ).finally(async () => {
-        const newTVL = await vault.getVaultTotalValues(selectedVault?.address!)
+        const newTVL = await vault.getTVL(selectedVault?.address!)
         const parsedNewTVL = Number(newTVL) / 10 ** 7
         dispatch(setVaultTVL(parsedNewTVL))
       });
@@ -113,7 +115,7 @@ export const InteractWithVault = () => {
                 resize={'none'} />
             </GridItem>
             <GridItem colSpan={5} colStart={1} textAlign={'start'}>
-              <h2>Total value locked: ${selectedVault?.totalValues} {selectedVault.assets[0]?.symbol}</h2>
+              <h2>Total value locked: ${selectedVault?.TVL} {selectedVault.assets[0]?.symbol}</h2>
             </GridItem>
             <GridItem colSpan={6} colStart={6} textAlign={'end'}>
               <h2>User balance in vault: ${selectedVault?.userBalance} {selectedVault.assets[0]?.symbol}</h2>

@@ -24,6 +24,11 @@ export interface Strategy {
   name: string;
   paused: boolean;
 }
+
+export interface AssetAmmount {
+  address: string;
+  amount: number;
+}
 export interface VaultData {
   address: string;
   emergencyManager: string;
@@ -31,7 +36,10 @@ export interface VaultData {
   manager: string;
   name: string;
   assets: Asset[];
-  totalValues: number;
+  TVL: number;
+  totalSupply: number;
+  idleFunds: AssetAmmount[];
+  investedFunds: AssetAmmount[]
   userBalance?: number;
 }
 

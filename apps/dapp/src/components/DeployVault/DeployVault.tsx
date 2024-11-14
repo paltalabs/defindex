@@ -127,13 +127,12 @@ export const DeployVault = () => {
         <DialogRoot open={openConfirm} onOpenChange={(e) => setOpenConfirm(e.open)}>
           <Button
             onClick={() => setOpenConfirm(true)}
-            disabled={vaultName == '' || vaultName.length < 3 || vaultSymbol == '' || vaultSymbol.length < 4 || assets.length == 0}
+            disabled={vaultName == '' || vaultSymbol == '' || assets.length == 0}
             colorScheme="green"
             size="lg"
-            mt={4}
             w={['100%', null, 'auto']}
             >
-              Deploy Defindex
+            Create Vault
           </Button>
           <DialogContent>
             <DialogHeader>

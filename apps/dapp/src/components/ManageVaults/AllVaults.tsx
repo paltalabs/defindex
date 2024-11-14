@@ -90,7 +90,7 @@ export const AllVaults = ({
   useEffect(() => {
     if (address) {
       createdVaults.forEach(async (v: VaultData) => {
-        const userBalance = await vault.getBalance(v.address, address)
+        const userBalance = await vault.getUserBalance(v.address, address)
         if (userBalance) {
           dispatch(setVaultUserBalance({ address: v.address, vaule: userBalance }))
         }
@@ -128,7 +128,7 @@ export const AllVaults = ({
                       </p>
                     </Tooltip>
                   </Table.Cell>
-                  <Table.Cell textAlign={'center'}>${vault.totalValues}</Table.Cell>
+                  <Table.Cell textAlign={'center'}>${vault.TVL}</Table.Cell>
                   {address && <Table.Cell textAlign={'center'}>${vault.userBalance ? `${vault.userBalance}` : 0}</Table.Cell>}
                   <Table.Cell textAlign={'center'}>
                     {vault.assets[0]?.symbol}
@@ -143,7 +143,8 @@ export const AllVaults = ({
             <Box key={i} p={4} shadow="md" borderWidth="1px" borderRadius="lg" w="100%" onClick={() => { handleOpenInspect(true, vault) }} css={{ cursor: 'pointer' }}>
               <Text fontSize="lg" fontWeight="bold">{vault.name ? vault.name : shortenAddress(vault.address)}</Text>
               <Text >Address: {shortenAddress(vault.address)}</Text>
-              <Text>TVL: ${vault.totalValues}</Text>
+              <Text>TVL: ${vault.TVL}</Text>
+              {address && <Text>User balance: ${vault.userBalance ? `${vault.userBalance}` : 0}</Text>}
               <Text>Asset: {vault.name?.includes('Blend USDC') ? '11.31' : '23.36'}%</Text>
             </Box>
           ))}

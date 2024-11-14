@@ -58,7 +58,7 @@ export const ModalProvider = ({
     setTransactionStatusModalError(error)
     setTransactionStatusModalStatus(TransactionStatusModalStatus.ERROR)
     setTransactionStatusModalStep(2)
-    setTimeout(() => handleResetModal(), 5000)
+    setTimeout(() => handleResetModal(), 8000)
   }
 
   const handleSuccess = (txHash: string) => {

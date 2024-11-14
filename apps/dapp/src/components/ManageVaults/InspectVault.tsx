@@ -5,7 +5,7 @@ import { shortenAddress } from "@/helpers/address"
 import { VaultMethod } from "@/hooks/useVault"
 
 import { useAppSelector } from "@/store/lib/storeHooks"
-import { Asset, VaultData } from "@/store/lib/types"
+import { Asset, AssetAmmount, VaultData } from "@/store/lib/types"
 
 import { Button, Grid, GridItem, HStack, Icon, Stack, Text } from "@chakra-ui/react"
 import { DialogBody, DialogContent, DialogFooter, DialogHeader } from "../ui/dialog"
@@ -54,7 +54,7 @@ export const InspectVault = ({
             <p>{selectedVault.address}</p>
           </GridItem>
         </Grid>
-        <HStack justify={'space-around'} mt={6}>
+        <Stack justify={'space-around'} direction={{ sm: 'column', md: 'row' }} mt={6}>
           <Stack>
             <Text>Strategies:</Text>
             {selectedVault.assets.map((asset: Asset, index: number) => (
@@ -67,20 +67,42 @@ export const InspectVault = ({
           <Stack>
             <Text>Total value locked:</Text>
             <HStack alignContent={'center'}>
-              • ${selectedVault.totalValues.toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 4 })}
+              ${selectedVault.TVL.toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 4 })}
               <Text fontSize={'2xs'}>{`(${selectedVault.assets[0]!.symbol})`}</Text>
             </HStack>
+          </Stack>
+          <Stack>
+            <Text>Idle funds:</Text>
+            {selectedVault.idleFunds.map((asset: AssetAmmount, index: number) => (
+              <HStack key={index}>
+                <Text>
+                  ${asset.amount.toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 4 })}
+                </Text>
+                <Text fontSize={'2xs'}>{`(${selectedVault.assets.find((a) => asset.address === a.address)?.symbol})`}</Text>
+              </HStack>
+            ))}
+          </Stack>
+          <Stack>
+            <Text>Invested funds:</Text>
+            {selectedVault.investedFunds.map((asset: AssetAmmount, index: number) => (
+              <HStack key={index}>
+                <Text>
+                  ${asset.amount.toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 4 })}
+                </Text>
+                <Text fontSize={'2xs'}>{`(${selectedVault.assets.find((a) => asset.address === a.address)?.symbol})`}</Text>
+              </HStack>
+            ))}
           </Stack>
           {(address && selectedVault.userBalance) &&
             <Stack>
               <Text>User balance:</Text>
               <HStack>
-                • ${selectedVault.userBalance.toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 4 })}
+                ${selectedVault.userBalance.toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 4 })}
                 <Text fontSize={'2xs'}>{`(${selectedVault.assets[0]!.symbol})`}</Text>
               </HStack>
             </Stack>
           }
-        </HStack>
+        </Stack>
       </DialogBody>
       <DialogFooter>
         <HStack justifyContent={'space-around'} w={'full'}>
