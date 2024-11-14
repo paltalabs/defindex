@@ -24,6 +24,21 @@ services:
     stdin_open: true
     tty: true
 
+  dart:
+    image: ghcr.io/cirruslabs/flutter:3.24.4
+    container_name: dart-defindex
+    profiles:
+      - on-demand
+    networks:
+      - defindex-network
+    volumes:
+      - .:/workspace
+    ports:
+      - "8080:8080"
+    stdin_open: true
+    tty: true
+    working_dir: /workspace/packages/defindex-dart-sdk
+
 networks:
   defindex-network:
     driver: bridge
