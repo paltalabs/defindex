@@ -11,6 +11,7 @@ use crate::vault::defindex_vault_contract::VaultContractClient;
 pub struct VaultOneAseetHodl<'a> {
     pub setup: IntegrationTest<'a>,
     pub token: TokenClient<'a>,
+    pub token_admin: Address,
     pub token_admin_client: StellarAssetClient<'a>,
     pub strategy_contract: HodlStrategyClient<'a>,
     pub vault_contract: VaultContractClient<'a>,
@@ -19,6 +20,8 @@ pub struct VaultOneAseetHodl<'a> {
     pub fee_receiver: Address,
     pub vault_fee: u32,
 }
+
+pub static VAULT_FEE: u32 = 100;
 
 pub fn create_vault_one_asset_hodl_strategy<'a>() -> VaultOneAseetHodl<'a> {
     let setup = IntegrationTest::setup();
@@ -30,7 +33,7 @@ pub fn create_vault_one_asset_hodl_strategy<'a>() -> VaultOneAseetHodl<'a> {
 
     let emergency_manager = Address::generate(&setup.env);
     let fee_receiver = Address::generate(&setup.env);
-    let vault_fee = 100u32;
+    let vault_fee = VAULT_FEE;
     let vault_name = String::from_str(&setup.env, "HodlVault");
     let vault_symbol = String::from_str(&setup.env, "HVLT");
     let manager = Address::generate(&setup.env);
@@ -68,6 +71,7 @@ pub fn create_vault_one_asset_hodl_strategy<'a>() -> VaultOneAseetHodl<'a> {
     VaultOneAseetHodl {
         setup,
         token,
+        token_admin,
         token_admin_client,
         strategy_contract,
         vault_contract,
@@ -126,4 +130,5 @@ mod tests {
         let vault_symbol = enviroment.vault_contract.symbol();
         assert_eq!(vault_symbol, String::from_str(&setup.env, "HVLT"));
     }
+
 }

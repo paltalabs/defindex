@@ -5,4 +5,7 @@ pub mod defindex_vault_contract {
     pub type VaultContractClient<'a> = Client<'a>;
 }
 
-pub use defindex_vault_contract::{AssetStrategySet as VaultAssetStrategySet, Strategy as VaultStrategy};
+pub use defindex_vault_contract::{AssetStrategySet as VaultAssetStrategySet, Strategy as VaultStrategy, ContractError as VaultContractError};
+
+pub static MINIMUM_LIQUIDITY: i128 = 1000;
+
