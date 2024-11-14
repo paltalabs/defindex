@@ -1,10 +1,11 @@
-import { useSorobanReact } from "@soroban-react/core";
 import { useCallback } from "react";
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { scValToNative } from "@stellar/stellar-sdk";
+import { useSorobanReact } from "@soroban-react/core";
 import { TxResponse, contractInvoke } from '@soroban-react/contracts';
-import { getTokenSymbol } from "@/helpers/getTokenInfo";
+
 import { VaultData } from "@/store/lib/types";
+import { getTokenSymbol } from "@/helpers/getTokenInfo";
 
 
 export enum VaultMethod {
@@ -18,14 +19,13 @@ export enum VaultMethod {
     GETNAME= "name",
     GETTOTALVALUES = "total_supply",
     GETASSETS = "get_assets",
+    GETASSETAMMOUNT = "get_asset_amounts_for_dftokens",
 }   
 
 const isObject = (val: unknown) => typeof val === 'object' && val !== null && !Array.isArray(val);
 
 export function useVaultCallback() {
     const sorobanContext = useSorobanReact();
-
-
     return useCallback(
         async (method: VaultMethod, address: string, args?: StellarSdk.xdr.ScVal[], signAndSend?: boolean) => {
             const result = (await contractInvoke({
@@ -50,6 +50,7 @@ export function useVaultCallback() {
 export const useVault = (vaultAddress?: string | undefined) => {
     const vault = useVaultCallback();
     const sorobanContext = useSorobanReact();
+    const {address} = sorobanContext;
     const getVaultInfo = async (vaultAddress: string) => {
     if (!vaultAddress) return;
     try {
@@ -59,7 +60,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
             feeReceiver, 
             name, 
             assets,
-            totalValues
+            totalValues,
         ] = await Promise.all([
             getVaultManager(vaultAddress),
             getVaultEmergencyManager(vaultAddress),
@@ -69,7 +70,6 @@ export const useVault = (vaultAddress?: string | undefined) => {
             getVaultTotalValues(vaultAddress),
         ]);
         const parsedTotalValues = Number(totalValues) / 10 ** 7;
-        console.log(assets);
         for (let asset of assets){
             const symbol = await getTokenSymbol(asset.address, sorobanContext);
             if(symbol === 'native') asset.symbol = 'XLM';
@@ -82,6 +82,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
             feeReceiver: feeReceiver,
             assets: assets || [],
             totalValues: parsedTotalValues || 0,
+
         }
     return newData
     } catch (error) {
@@ -137,7 +138,20 @@ export const useVault = (vaultAddress?: string | undefined) => {
         console.error(error);
         }
     }
+    const getBalance = async (vaultAddress: string, address: string) => {
+        try {
+            const formattedAddress = new StellarSdk.Address(address).toScVal();
+            const dfTokens = await vault(VaultMethod.BALANCE, vaultAddress, [formattedAddress], false).then((res: any) => scValToNative(res));
+            if(Number(dfTokens) === 0) return 0;
+            const amount = await vault(VaultMethod.GETASSETAMMOUNT, vaultAddress, [StellarSdk.nativeToScVal(dfTokens, {type: 'i128'})], false).then((res: any) => scValToNative(res));
+            const amountValue = isObject(amount) ? Object.values(amount)[0] : amount;
+            const parsedBalance = Number(amountValue) / 10 ** 7;
+        return parsedBalance;
+        } catch (error) {
+        console.error(error);
+        }
+    }
 
     const vaultInfo = getVaultInfo(vaultAddress!);
-    return { vaultInfo, getVaultInfo, getVaultManager, getVaultEmergencyManager, getVaultFeeReceiver, getVaultName, getVaultAssets, getVaultTotalValues };
+    return { vaultInfo, getVaultInfo, getVaultManager, getVaultEmergencyManager, getVaultFeeReceiver, getVaultName, getVaultAssets, getVaultTotalValues, getBalance };
 }
