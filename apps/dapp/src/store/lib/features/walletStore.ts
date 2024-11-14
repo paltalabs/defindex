@@ -91,7 +91,7 @@ export const walletSlice = createSlice({
     setVaultTVL: (state, action: PayloadAction<number>) => {
       state.vaults.createdVaults.forEach(vault => {
         if (vault.address === state.vaults.selectedVault?.address) {
-          vault.totalValues = action.payload
+          vault.TVL = action.payload
         }
       })
     },

@@ -22,7 +22,7 @@ function ItemSlider({
     share: number,
   name?: string,
   }) {
-  const totalShares = useAppSelector(state => state.newVault.totalValues)
+  const totalShares = 100//useAppSelector(state => state.newVault.totalValues)
   const [inputValue, setInputValue] = React.useState<number | string>(share)
   const setVal = (val: number) => {
     const total = totalShares! - share + val

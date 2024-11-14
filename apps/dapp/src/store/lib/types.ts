@@ -16,7 +16,7 @@ export interface NewVaultState {
   symbol: string;
   assets: Asset[];
   amounts: number[];
-  totalValues?: number;
+  TVL?: number;
 }
 
 export interface Strategy {

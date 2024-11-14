@@ -23,7 +23,6 @@ export const DeployVault = () => {
   //const strategies: Strategy[] = []//useAppSelector(state => state.newVault.strategies)
   const assets: Asset[] = useAppSelector(state => state.newVault.assets)
   const amounts: number[] = useAppSelector(state => state.newVault.amounts)
-  const totalValues = useAppSelector(state => state.newVault.totalValues)
   const vaultName = useAppSelector(state => state.newVault.name)
   const vaultSymbol = useAppSelector(state => state.newVault.symbol)
   const [openConfirm, setOpenConfirm] = useState<boolean>(false)

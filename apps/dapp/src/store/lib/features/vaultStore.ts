@@ -13,7 +13,7 @@ const initialState: NewVaultState = {
   vaultShare: 0,
   assets: [],
   amounts: [],
-  totalValues: 0,
+  TVL: 0,
 }
 
 //Filtrar Strategies por network y retornar array de Strategies
@@ -94,7 +94,7 @@ export const newVaultSlice = createSlice({
       state.emergencyManager = action.payload.emergencyManager;
       state.feeReceiver = action.payload.feeReceiver;
       state.assets = action.payload.assets;
-      state.totalValues = action.payload.totalValues;
+      state.TVL = action.payload.TVL;
     }),
     resetNewVault: ((state) => {
       state = initialState;
@@ -120,6 +120,6 @@ export const {
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectAsset = (state: RootState) => state.newVault.assets
-export const selectTotalValues = (state: RootState) => state.newVault.totalValues
+export const selectTotalValues = (state: RootState) => state.newVault.TVL
 
 export default newVaultSlice.reducer
