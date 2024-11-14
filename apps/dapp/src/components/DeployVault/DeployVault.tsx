@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   Card,
   Grid,
@@ -7,15 +7,14 @@ import {
   Button,
   For,
   Box,
-  IconButton,
 } from '@chakra-ui/react'
 import AddNewStrategyButton from './AddNewStrategyButton'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { ConfirmDelpoyModal } from './ConfirmDelpoyModal'
 import { removeAmountByIndex, removeAsset, setName, setSymbol } from '@/store/lib/features/vaultStore'
-import { DialogBody, DialogCloseTrigger, DialogContent, DialogFooter, DialogHeader, DialogRoot, DialogTitle } from '../ui/dialog'
+import { DialogBody, DialogCloseTrigger, DialogContent, DialogFooter, DialogHeader, DialogRoot } from '../ui/dialog'
 import { Asset } from '@/store/lib/types'
-import { shortenAddress } from '@/helpers/shortenAddress'
+import { shortenAddress } from '@/helpers/address'
 import { Tooltip } from '../ui/tooltip'
 import { FaRegTrashCan } from "react-icons/fa6";
 

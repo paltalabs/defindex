@@ -1,7 +1,7 @@
 'use client'
 import { useSorobanReact } from "@soroban-react/core"
 
-import { shortenAddress } from "@/helpers/shortenAddress"
+import { shortenAddress } from "@/helpers/address"
 import { VaultMethod } from "@/hooks/useVault"
 
 import { useAppSelector } from "@/store/lib/storeHooks"

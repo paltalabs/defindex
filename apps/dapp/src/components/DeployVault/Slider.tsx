@@ -8,8 +8,7 @@ import {
   Button
 } from '@chakra-ui/react'
 import { FaRegTrashCan } from "react-icons/fa6";
-import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-//import { setStrategyValue, removeStrategy } from '@/store/lib/features/vaultStore'
+import { useAppSelector } from '@/store/lib/storeHooks'
 import { InputGroup } from '../ui/input-group'
 import { Slider } from '../ui/slider'
 
@@ -22,8 +21,7 @@ function ItemSlider({
   address: string,
     share: number,
   name?: string,
-}) {
-  const dispatch = useAppDispatch()
+  }) {
   const totalShares = useAppSelector(state => state.newVault.totalValues)
   const [inputValue, setInputValue] = React.useState<number | string>(share)
   const setVal = (val: number) => {

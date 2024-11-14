@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { scValToNative } from '@stellar/stellar-sdk'
 import { useSorobanReact } from '@soroban-react/core'
 
-import { shortenAddress } from '@/helpers/shortenAddress'
+import { shortenAddress } from '@/helpers/address'
 import { useVault } from '@/hooks/useVault'
 import { FactoryMethod, useFactoryCallback } from '@/hooks/useFactory'
 

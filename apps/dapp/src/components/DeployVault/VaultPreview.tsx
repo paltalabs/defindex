@@ -11,7 +11,7 @@ import {
   Icon,
   Link,
 } from '@chakra-ui/react'
-import { shortenAddress } from '@/helpers/shortenAddress'
+import { shortenAddress, isValidAddress } from '@/helpers/address'
 import { setEmergencyManager, setFeeReceiver, setManager, setVaultShare } from '@/store/lib/features/vaultStore'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { FaRegPaste } from "react-icons/fa6";
@@ -25,7 +25,6 @@ import {
   AccordionRoot,
 } from "@chakra-ui/react"
 import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io'
-import { isValidAddress } from '@/utils/factory'
 import { Asset } from '@/store/lib/types'
 import { InfoTip } from '../ui/toggle-tip'
 
