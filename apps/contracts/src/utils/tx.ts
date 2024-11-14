@@ -1,7 +1,7 @@
 import {
   Account,
   Keypair,
-  SorobanRpc,
+  rpc,
   Transaction,
   TransactionBuilder,
   xdr,
@@ -9,11 +9,11 @@ import {
 import { config } from "./env_config.js";
 
 type txResponse =
-  | SorobanRpc.Api.SendTransactionResponse
-  | SorobanRpc.Api.GetTransactionResponse;
+  | rpc.Api.SendTransactionResponse
+  | rpc.Api.GetTransactionResponse;
 type txStatus =
-  | SorobanRpc.Api.SendTransactionStatus
-  | SorobanRpc.Api.GetTransactionStatus;
+  | rpc.Api.SendTransactionStatus
+  | rpc.Api.GetTransactionStatus;
 
 const network = process.argv[2];
 const loadedConfig = config(network);
@@ -50,7 +50,7 @@ export async function invokeTransaction(
   // simulate the TX
   console.log(tx.toXDR());
   const simulation_resp = await loadedConfig.rpc.simulateTransaction(tx);
-  if (SorobanRpc.Api.isSimulationError(simulation_resp)) {
+  if (rpc.Api.isSimulationError(simulation_resp)) {
     // No resource estimation available from a simulation error. Allow the response formatter
     // to fetch the error.
     console.log("simulation_resp", simulation_resp);
@@ -72,7 +72,7 @@ export async function invokeTransaction(
       txResources.writeBytes()
     )
     .build();
-  const assemble_tx = SorobanRpc.assembleTransaction(tx, simulation_resp);
+  const assemble_tx = rpc.assembleTransaction(tx, simulation_resp);
   sim_tx_data.resourceFee(
     xdr.Int64.fromString(
       (Number(sim_tx_data.resourceFee().toString()) + 100000).toString()

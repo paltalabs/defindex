@@ -195,8 +195,7 @@ export async function bumpContractInstance(
   txBuilder.addOperation(Operation.extendFootprintTtl({ extendTo: 535670 })); // 1 year
   txBuilder.setSorobanData(bumpTransactionData);
   const result = await invokeTransaction(txBuilder.build(), source, false);
-  // @ts-expect-error console.log(status)
-  console.log(result.status, "\n");
+  console.log('status' in result ? result.status : "No status", "\n");
 }
 
 export async function bumpContractCode(
@@ -231,8 +230,7 @@ export async function bumpContractCode(
   txBuilder.addOperation(Operation.extendFootprintTtl({ extendTo: 535670 })); // 1 year
   txBuilder.setSorobanData(bumpTransactionData);
   const result = await invokeTransaction(txBuilder.build(), source, false);
-  // @ts-expect-error console.log(status)
-  console.log(result.status, "\n");
+  console.log('status' in result ? result.status : "No status", "\n");
 }
 
 export async function airdropAccount(user: Keypair) {

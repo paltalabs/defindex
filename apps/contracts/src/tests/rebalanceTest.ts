@@ -15,12 +15,12 @@ import {
 } from "@stellar/stellar-sdk";
 import { randomBytes } from "crypto";
 
-export async function test_factory(addressBook: AddressBook) {
+export async function deploy_vault(addressBook: AddressBook) {
     if (network !== "mainnet") await airdropAccount(loadedConfig.admin);
     console.log("Admin publicKey:", loadedConfig.admin.publicKey());
 
     console.log("-------------------------------------------------------");
-    console.log("Testing Create DeFindex on Factory");
+    console.log("Deploying DeFindex Vault");
     console.log("-------------------------------------------------------");
 
     // Setup roles
@@ -71,7 +71,7 @@ export async function test_factory(addressBook: AddressBook) {
                             }),
                             new xdr.ScMapEntry({
                                 key: xdr.ScVal.scvSymbol("paused"),
-                                val: nativeToScVal(false, { type: "bool" }),
+                                val: nativeToScVal(strategy.paused, { type: "bool" }),
                             }),
                         ])
                     )
@@ -110,63 +110,37 @@ const xlm: Asset = Asset.native();
 const passphrase = network === "mainnet" ? Networks.PUBLIC : network === "testnet" ? Networks.TESTNET : Networks.STANDALONE;
 const loadedConfig = config(network);
 
-async function main() {
-    // Step 1: Deploy the vault and get the manager
-    console.log("Step 1: Deploying vault...");
-    const { deployedVault, manager } = await test_factory(addressBook);
-    console.log("Vault deployed at:", deployedVault);
-    console.log("Manager address:", manager.publicKey());
-
-    // Step 2: Create and fund a new user for deposit
-    console.log("\nStep 2: Creating new user for deposit...");
-    const depositUser = Keypair.random();
-    if (network !== "mainnet") await airdropAccount(depositUser);
-    console.log("Deposit user created with address:", depositUser.publicKey());
-
-    // Step 3: User deposits into vault
-    console.log("\nStep 3: Making deposit...");
-    const depositAmount = 1000000000; // 100 XLM
-    const { balanceBefore: depositBalanceBefore, balanceAfter: depositBalanceAfter }
-        = await depositToVault(deployedVault, depositAmount, depositUser);
-    console.log("Deposit completed - Balance before:", depositBalanceBefore, "Balance after:", depositBalanceAfter);
-
-    // Step 4: Manager invests in strategy
+async function investInStrategy(
+    deployedVault: string,
+    strategyAddress: string,
+    investmentAmount: number,
+    manager: Keypair
+) {
     console.log("\nStep 4: Manager investing in strategy...");
-    const strategyAddress = addressBook.getContractId("hodl_strategy");
-    const investmentAmount = depositAmount; // Invest all deposited amount
-
-    const assetInvestments = [{
-        asset: new Address(xlm.contractId(passphrase)),
-        strategy_investments: [{
-            strategy: new Address(strategyAddress),
-            amount: BigInt(investmentAmount)
-        }]
-    }];
-
     const investParams: xdr.ScVal[] = [
-        xdr.ScVal.scvVec(assetInvestments.map(investment =>
+        xdr.ScVal.scvVec([
             xdr.ScVal.scvMap([
                 new xdr.ScMapEntry({
                     key: xdr.ScVal.scvSymbol("asset"),
-                    val: investment.asset.toScVal(),
+                    val: new Address(xlm.contractId(passphrase)).toScVal(),
                 }),
                 new xdr.ScMapEntry({
                     key: xdr.ScVal.scvSymbol("strategy_investments"),
-                    val: xdr.ScVal.scvVec(investment.strategy_investments.map(si =>
+                    val: xdr.ScVal.scvVec([
                         xdr.ScVal.scvMap([
                             new xdr.ScMapEntry({
                                 key: xdr.ScVal.scvSymbol("strategy"),
-                                val: si.strategy.toScVal(),
+                                val: new Address(strategyAddress).toScVal(),
                             }),
                             new xdr.ScMapEntry({
                                 key: xdr.ScVal.scvSymbol("amount"),
-                                val: nativeToScVal(si.amount, { type: "i128" }),
+                                val: nativeToScVal(BigInt(investmentAmount), { type: "u64" }),
                             }),
                         ])
-                    )),
+                    ]),
                 }),
             ])
-        ))
+        ])
     ];
 
     try {
@@ -177,13 +151,53 @@ async function main() {
             manager
         );
         console.log("Investment successful:", scValToNative(investResult.returnValue));
-
-        // Check strategy balance after investment
-        const strategyBalance = await checkUserBalance(strategyAddress, depositUser.publicKey(), depositUser);
-        console.log("Strategy balance after investment:", strategyBalance);
+        return investResult;
     } catch (error) {
         console.error("Investment failed:", error);
+        throw error;
     }
+}
+
+async function main() {
+    // // Step 1: Deploy the vault and get the manager
+    // console.log("Step 1: Deploying vault...");
+    // const { deployedVault, manager } = await deploy_vault(addressBook);
+    // console.log("Vault deployed at:", deployedVault);
+    // console.log("Manager address:", manager.publicKey());
+
+    // // Step 2: Create and fund a new user for deposit
+    // console.log("\nStep 2: Creating new user for deposit...");
+    // const depositUser = Keypair.random();
+    // console.log("Generated deposit user public key:", depositUser.publicKey());
+    // console.log("Generated deposit user secret key:", depositUser.secret());
+    // if (network !== "mainnet") await airdropAccount(depositUser);
+    // console.log("Deposit user created with address:", depositUser.publicKey());
+
+    // // Step 3: User deposits into vault
+    // console.log("\nStep 3: Making deposit...");
+    // const depositAmount = 1000000000; // 100 XLM
+    // const { balanceBefore: depositBalanceBefore, balanceAfter: depositBalanceAfter }
+    // = await depositToVault(deployedVault, depositAmount, depositUser);
+    // console.log("Deposit completed - Balance before:", depositBalanceBefore, "Balance after:", depositBalanceAfter);
+
+    // Step 4: Manager investing in strategy
+    const deployedVault = "CCRUI2UGJCGHAGYISQGD22YBHADRCUWAE7GQ6CWMJNYXXZPMQ5J643QF";  // Replace with your vault address
+    const strategyAddress = addressBook.getContractId("hodl_strategy");
+    const manager = loadedConfig.getUser("DEFINDEX_MANAGER_SECRET_KEY");
+    const investmentAmount = 100000000; // 100 XLM
+    const depositUser = Keypair.fromSecret("SBPAP2WHWOOAUB6DARBU2UQ6BUK77LSSMLHSJY4JDBJF26LSRGTL7Y6R");
+
+    await investInStrategy(
+        deployedVault,
+        strategyAddress,
+        investmentAmount,
+        // manager,
+        depositUser
+    );
+
+    //     // Step 5: Check strategy balance
+    //     const strategyBalance = await checkUserBalance(strategyAddress, depositUser.publicKey(), depositUser);
+    //     console.log("Strategy balance after investment:", strategyBalance);
 }
 
 // Run the test
