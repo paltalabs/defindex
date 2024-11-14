@@ -1,12 +1,12 @@
 use soroban_sdk::{panic_with_error, Address, Env, Map, Vec};
 
 use crate::{
+    models::{AssetStrategySet, CurrentAssetInvestmentAllocation},
     access::{AccessControl, AccessControlTrait, RolesDataKey},
     funds::{
         fetch_invested_funds_for_asset, fetch_invested_funds_for_strategy,
         fetch_total_managed_funds,
     },
-    models::AssetStrategySet,
     token::VaultToken,
     ContractError,
 };
@@ -47,7 +47,7 @@ pub fn calculate_withdrawal_amounts(
 ) -> Map<Address, i128> {
     let mut withdrawal_amounts = Map::<Address, i128>::new(e);
 
-    let total_invested_in_strategies: i128 = fetch_invested_funds_for_asset(&e, &asset);
+    let (total_invested_in_strategies, _) = fetch_invested_funds_for_asset(&e, &asset);
 
     for strategy in asset.strategies.iter() {
         // TODO: if strategy is paused but still holds assets on it shouldnt we withdraw them?
@@ -96,10 +96,10 @@ pub fn calculate_asset_amounts_per_vault_shares(
     }
 
     // Iterate over each asset and calculate the corresponding amount based on shares_amount
-    for (asset_address, total_asset_amount) in total_managed_funds.iter() {
+    for (asset_address, current_asset_allocation) in total_managed_funds.iter() {
         // Calculate the proportional asset amount per the given number of shares
         let asset_amount = if total_shares_supply != 0 {
-            total_asset_amount
+            current_asset_allocation.total_amount
                 .checked_mul(shares_amount)
                 .ok_or(ContractError::ArithmeticError)?
                 .checked_div(total_shares_supply)
@@ -152,7 +152,7 @@ pub fn calculate_asset_amounts_per_vault_shares(
 
 pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
     e: &Env,
-    total_managed_funds: &Map<Address, i128>,
+    total_managed_funds: &Map<Address, CurrentAssetInvestmentAllocation>,
     assets: &Vec<AssetStrategySet>,
     amounts_desired: &Vec<i128>,
     i: &u32,
@@ -162,7 +162,8 @@ pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
     // reserve (total manage funds) of the asset we are enforcing
     let reserve_target = total_managed_funds
         .get(assets.get(*i).unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength)).address)
-        .unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength));
+        .unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength))
+        .total_amount;
 
     // If reserve target is zero, we cannot calculate the optimal amounts
     if reserve_target == 0 {
@@ -177,7 +178,9 @@ pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
         if j == (*i as usize) {
             optimal_amounts.push_back(amount_desired_target);
         } else {
-            let reserve = total_managed_funds.get(asset.address).unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength));
+            let reserve = total_managed_funds
+                            .get(asset.address).unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength))
+                            .total_amount;
             let amount = reserve.checked_mul(amount_desired_target)
                 .unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError))
                 .checked_div(reserve_target)

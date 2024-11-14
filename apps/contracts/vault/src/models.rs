@@ -29,7 +29,18 @@ pub struct AssetInvestmentAllocation {
     pub asset: Address,
     pub strategy_investments: Vec<Option<StrategyInvestment>>,
 }
+// Current Asset Investment Allocation
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CurrentAssetInvestmentAllocation {
+    pub asset: Address,
+    pub total_amount: i128,
+    pub idle_amount: i128,
+    pub invested_amount: i128,
+    pub strategy_investments: Vec<StrategyInvestment>,
+}
 
+//
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Instruction {

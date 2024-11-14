@@ -1,7 +1,7 @@
 use soroban_sdk::token::TokenClient;
-use soroban_sdk::{Address, Env, Map};
+use soroban_sdk::{Address, Env, Map, Vec};
 
-use crate::models::AssetStrategySet;
+use crate::models::{AssetStrategySet, StrategyInvestment, CurrentAssetInvestmentAllocation};
 use crate::storage::get_assets;
 use crate::strategies::get_strategy_client;
 
@@ -34,21 +34,28 @@ pub fn fetch_invested_funds_for_strategy(e: &Env, strategy_address: &Address) ->
     strategy_client.balance(&e.current_contract_address())
 }
 
-/// Fetches the total funds that are invested for a given asset.
-/// It iterates through all the strategies associated with the asset and sums their balances.
-///
-/// # Arguments
-/// * `e` - The current environment instance.
-/// * `asset` - The asset for which invested funds are being fetched.
-///
-/// # Returns
-/// * The total invested balance (i128) of the asset across all strategies.
-pub fn fetch_invested_funds_for_asset(e: &Env, asset: &AssetStrategySet) -> i128 {
+// // Investment Allocation in Strategies
+// #[contracttype]
+// #[derive(Clone, Debug, Eq, PartialEq)]
+// pub struct StrategyInvestment {
+//     pub strategy: Address,
+//     pub amount: i128,
+// }
+
+
+// return total invested funds but also a vec of StrategyInvestment
+pub fn fetch_invested_funds_for_asset(e: &Env, asset: &AssetStrategySet) -> (i128, Vec<StrategyInvestment>){
     let mut invested_funds = 0;
+    let mut strategy_investments: Vec<StrategyInvestment> = Vec::new(e);
     for strategy in asset.strategies.iter() {
-        invested_funds += fetch_invested_funds_for_strategy(e, &strategy.address);
+        let strategy_balance = fetch_invested_funds_for_strategy(e, &strategy.address);
+        invested_funds += strategy_balance;
+        strategy_investments.push_back(StrategyInvestment {
+            strategy: strategy.address.clone(),
+            amount: strategy_balance,
+        });
     }
-    invested_funds
+    (invested_funds, strategy_investments)
 }
 
 // Pub functions
@@ -82,9 +89,10 @@ pub fn fetch_current_invested_funds(e: &Env) -> Map<Address, i128> {
     let assets = get_assets(e);
     let mut map: Map<Address, i128> = Map::new(e);
     for asset in assets {
+        let (invested_funds, _) = fetch_invested_funds_for_asset(e, &asset);
         map.set(
             asset.address.clone(),
-            fetch_invested_funds_for_asset(e, &asset),
+            invested_funds
         );
     }
     map
@@ -99,13 +107,35 @@ pub fn fetch_current_invested_funds(e: &Env) -> Map<Address, i128> {
 ///
 /// # Returns
 /// * A map where each entry represents an asset's address and its total managed balance.
-pub fn fetch_total_managed_funds(e: &Env) -> Map<Address, i128> {
+
+
+// // Current Asset Investment Allocation
+// #[contracttype]
+// #[derive(Clone, Debug, Eq, PartialEq)]
+// pub struct CurrentAssetInvestmentAllocation {
+//     pub asset: Address,
+//     pub total_amount: i128,
+//     pub idle_amount: i128,
+//     pub invested_amount: i128,
+//     pub strategy_investments: Vec<StrategyInvestment>,
+// }
+pub fn fetch_total_managed_funds(e: &Env) -> Map<Address, CurrentAssetInvestmentAllocation> {
     let assets = get_assets(e);
-    let mut map: Map<Address, i128> = Map::new(e);
+    let mut map: Map<Address, CurrentAssetInvestmentAllocation> = Map::new(e);
     for asset in assets {
-        let idle_funds = fetch_idle_funds_for_asset(e, &asset.address);
-        let invested_funds = fetch_invested_funds_for_asset(e, &asset);
-        map.set(asset.address.clone(), idle_funds + invested_funds);
+        let idle_amount = fetch_idle_funds_for_asset(e, &asset.address);
+        let (invested_amount, strategy_investments) = fetch_invested_funds_for_asset(e, &asset);
+        let total_amount = idle_amount + invested_amount;
+        map.set(
+            asset.address.clone(),
+            CurrentAssetInvestmentAllocation {
+                asset: asset.address.clone(),
+                total_amount,
+                idle_amount,
+                invested_amount,
+                strategy_investments,
+            },
+        );
     }
     map
 }

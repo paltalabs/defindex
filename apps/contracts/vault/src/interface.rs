@@ -1,7 +1,7 @@
 use soroban_sdk::{Address, Env, Map, String, Vec};
 
 use crate::{
-    models::{AssetStrategySet, Instruction, AssetInvestmentAllocation},
+    models::{AssetStrategySet, Instruction, AssetInvestmentAllocation, CurrentAssetInvestmentAllocation},
     ContractError,
 };
 
@@ -169,7 +169,7 @@ pub trait VaultTrait {
     ///
     /// # Returns:
     /// * `Map<Address, i128>` - A map of asset addresses to their total managed amounts.
-    fn fetch_total_managed_funds(e: &Env) -> Map<Address, i128>;
+    fn fetch_total_managed_funds(e: &Env) -> Map<Address, CurrentAssetInvestmentAllocation>;
 
     /// Returns the current invested funds, representing the total assets allocated to strategies.
     ///

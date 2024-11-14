@@ -30,7 +30,7 @@ use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::{check_and_execute_investments};
 use models::{
     ActionType, AssetStrategySet, Instruction, AssetInvestmentAllocation, OptionalSwapDetailsExactIn,
-    OptionalSwapDetailsExactOut,
+    OptionalSwapDetailsExactOut, CurrentAssetInvestmentAllocation
 };
 use storage::{
     get_assets, set_asset, set_defindex_protocol_fee_receiver, set_factory,
@@ -235,8 +235,10 @@ impl VaultTrait for DeFindexVault {
                 // if checked mul gives error, return ArithmeticError
                 VaultToken::total_supply(e.clone()).checked_mul(amounts_desired.get(0)
                 .unwrap()).unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError))
-                .checked_div(total_managed_funds.get(assets.get(0).unwrap().address.clone())
-                .unwrap()).unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError))
+                .checked_div(
+                    total_managed_funds.get(assets.get(0).unwrap().address.clone())
+                    .unwrap().total_amount
+                ).unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError))
             };
             // TODO check that min amount is ok
             (amounts_desired, shares)
@@ -324,6 +326,7 @@ impl VaultTrait for DeFindexVault {
 
         // Calculate the withdrawal amounts for each asset based on the share amounts
         // Map<Address, i128> Maps asset address to the amount to withdraw
+        // this already considers the idle funds and all the invested amounts in strategies
         let asset_amounts = calculate_asset_amounts_per_vault_shares(&e, shares_amount)?;
 
         // Burn the shares after calculating the withdrawal amounts (so total supply is correct
@@ -528,7 +531,7 @@ impl VaultTrait for DeFindexVault {
     ///
     /// # Returns:
     /// * `Map<Address, i128>` - A map of asset addresses to their total managed amounts.
-    fn fetch_total_managed_funds(e: &Env) -> Map<Address, i128> {
+    fn fetch_total_managed_funds(e: &Env) -> Map<Address, CurrentAssetInvestmentAllocation> {
         extend_instance_ttl(&e);
         fetch_total_managed_funds(e)
     }
