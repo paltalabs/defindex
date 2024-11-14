@@ -1,7 +1,8 @@
-import { SorobanContextType, useSorobanReact } from "@soroban-react/core";
 import { useCallback, useEffect, useState } from "react";
 import * as StellarSdk from '@stellar/stellar-sdk';
+import { SorobanContextType, useSorobanReact } from "@soroban-react/core";
 import { TxResponse, contractInvoke } from '@soroban-react/contracts';
+
 import { getNetworkName } from "@/helpers/networkName";
 import { fetchFactoryAddress } from "@/utils/factory";
 
@@ -76,8 +77,6 @@ export function useFactoryCallback() {
         }
         console.log("Factory Callback result", result)
         if (!signAndSend) return result;
-        const parsedResult = StellarSdk.scValToNative(result as any);
-        console.log("Factory Callback parsed result", parsedResult)
         if (
           isObject(result) &&
           result?.status !== StellarSdk.SorobanRpc.Api.GetTransactionStatus.SUCCESS
@@ -88,7 +87,8 @@ export function useFactoryCallback() {
         const error = e.toString()
         if (error.includes('ExistingValue')) throw new Error('Index already exists.')
         if (error.includes('Sign')) throw new Error('Request denied by user. Please try to sign again.')
-        throw new Error('Failed to create index. If the problem persists, please contact support.')
+        if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
+        throw new Error('Failed to create index.', e)
       }
     }, [sorobanContext, factoryAddress])
 }
