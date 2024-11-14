@@ -94,6 +94,16 @@ export const walletSlice = createSlice({
           vault.totalValues = action.payload
         }
       })
+    },
+    resetSelectedVault: (state) => { 
+      state.vaults.selectedVault = undefined
+    },
+    setVaultUserBalance: (state, action: PayloadAction<{address:string, vaule:number}>) => {
+      state.vaults.createdVaults.forEach(vault => {
+        if (vault.address === action.payload.address) {
+          vault.userBalance = action.payload.vaule
+        }
+      })
     }
   },
   extraReducers(builder) {
@@ -119,7 +129,9 @@ export const {
   setIsVaultsLoading, 
   setSelectedVault, 
   setVaults,
-  setVaultTVL
+  setVaultTVL,
+  resetSelectedVault,
+  setVaultUserBalance
 } = walletSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type

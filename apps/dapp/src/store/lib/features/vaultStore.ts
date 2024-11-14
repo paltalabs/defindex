@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import type { RootState } from '../store'
 import { getRemoteConfig } from '@/helpers/getRemoteConfig';
-import { Asset, NewVaultState, Strategy } from '../types';
+import type { RootState } from '../store'
+import { Asset, NewVaultState, Strategy, VaultData } from '../types';
 // Define the initial state using that type
 const initialState: NewVaultState = {
   address: "",
@@ -73,6 +73,9 @@ export const newVaultSlice = createSlice({
         state.assets.push(action.payload);
       }
     }),
+    resetAssets: ((state) => {
+      state.assets = [];
+    }),
     removeAsset: ((state, action: PayloadAction<string>) => {
       state.assets = state.assets.filter(asset => asset.address !== action.payload);
     }),
@@ -84,7 +87,18 @@ export const newVaultSlice = createSlice({
     }),
     removeAmountByIndex: ((state, action: PayloadAction<number>) => {
       state.amounts?.splice(action.payload, 1);
-    })
+    }),
+    openEditVault: ((state, action: PayloadAction<VaultData>) => {
+      state.name = action.payload.name;
+      state.manager = action.payload.manager;
+      state.emergencyManager = action.payload.emergencyManager;
+      state.feeReceiver = action.payload.feeReceiver;
+      state.assets = action.payload.assets;
+      state.totalValues = action.payload.totalValues;
+    }),
+    resetNewVault: ((state) => {
+      state = initialState;
+    }),
   }
 })
 
@@ -99,6 +113,9 @@ export const {
   pushAmount,
   removeAsset,
   removeAmountByIndex,
+  resetAssets,
+  openEditVault,
+  resetNewVault
 } = newVaultSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type

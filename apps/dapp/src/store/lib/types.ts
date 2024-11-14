@@ -32,6 +32,7 @@ export interface VaultData {
   name: string;
   assets: Asset[];
   totalValues: number;
+  userBalance?: number;
 }
 
 export interface SelectedVault extends VaultData {
