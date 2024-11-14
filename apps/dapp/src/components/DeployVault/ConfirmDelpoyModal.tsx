@@ -1,32 +1,23 @@
-import React from "react";
-import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
-import {
-  Box,
-  Button,
-  Link,
-  ProgressCircleRoot,
-  Text,
-} from "@chakra-ui/react"
+import React, { useContext, useEffect, useState } from "react";
+import { useSorobanReact } from "@soroban-react/core";
 import {
   Address,
   nativeToScVal,
   scValToNative,
   xdr,
 } from "@stellar/stellar-sdk";
-import { pushVault } from '@/store/lib/features/walletStore'
-import { useFactoryCallback, FactoryMethod } from '@/hooks/useFactory'
-import { AccordionItems, FormControlInterface, VaultPreview } from "./VaultPreview";
-import { DeploySteps } from "./DeploySteps";
-import { useEffect, useState } from "react";
-import { PiWarningCircleFill } from "react-icons/pi";
-import { FaCheckCircle } from "react-icons/fa";
-import { useSorobanReact } from "@soroban-react/core";
-
 import { randomBytes } from "crypto";
-import { LuExternalLink } from "react-icons/lu";
-import { ProgressCircleRing } from "../ui/progress-circle";
-import { DialogBody, DialogCloseTrigger, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
+
+import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
+import { pushVault } from '@/store/lib/features/walletStore'
 import { Asset, NewVaultState } from "@/store/lib/types";
+
+import { useFactoryCallback, FactoryMethod } from '@/hooks/useFactory'
+import { ModalContext, TransactionStatusModalStatus } from "@/contexts";
+
+import { AccordionItems, FormControlInterface, VaultPreview } from "./VaultPreview";
+import { DialogBody, DialogCloseTrigger, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Button } from "@chakra-ui/react"
 
 interface Status {
   isSuccess: boolean,
@@ -56,7 +47,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   const managerString = useAppSelector(state => state.newVault.manager)
   const emergencyManagerString = useAppSelector(state => state.newVault.emergencyManager)
   const feeReceiverString = useAppSelector(state => state.newVault.feeReceiver)
-
+  const { transactionStatusModal: txModal } = useContext(ModalContext);
   const dispatch = useAppDispatch();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [status, setStatus] = useState<Status>({
@@ -84,19 +75,6 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
 
 
 
-
-  const handleCloseModal = async () => {
-    setStatus({
-      ...status,
-      isSuccess: false,
-      hasError: false,
-      message: undefined,
-      txHash: undefined
-    });
-    //setActiveStep(0);
-    //await dispatch(resetStrategies())
-    onClose();
-  }
 
   /* useEffect(() => {
     const newChartData: ChartData[] = strategies.map((strategy: Strategy, index: number) => {
@@ -126,14 +104,15 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
 
   const autoCloseModal = async () => {
     await new Promise(resolve => setTimeout(resolve, 30000))
-    handleCloseModal();
+    txModal.resetModal();
+    onClose();
   }
 
   useEffect(() => {
-    if (status.isSuccess || status.hasError) {
+    if (txModal.status !== TransactionStatusModalStatus.PENDING) {
       autoCloseModal();
     }
-  }, [status.isSuccess, status.hasError])
+  }, [txModal.status])
   const activeStep: number = 0;
   const [buttonText, setButtonText] = useState<string>('')
   const [accordionValue, setAccordionValue] = useState<AccordionItems[]>([AccordionItems.STRATEGY_DETAILS])
@@ -153,20 +132,6 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     vaultShare: 0
   })
 
-  const handleNext = (accordionValue: AccordionItems[]) => {
-    if (accordionValue.length === 0) {
-      setAccordionValue([AccordionItems.STRATEGY_DETAILS])
-    }
-    if (accordionValue[0] === AccordionItems.STRATEGY_DETAILS) {
-      setAccordionValue([AccordionItems.MANAGER_CONFIGS])
-    }
-    if (accordionValue[0] === AccordionItems.MANAGER_CONFIGS && formControl.manager.isValid && formControl.emergencyManager.isValid) {
-      setAccordionValue([AccordionItems.FEES_CONFIGS])
-    }
-    if (accordionValue[0] === AccordionItems.FEES_CONFIGS && formControl.feeReceiver.isValid) {
-      setAccordionValue([])
-    }
-  }
   useEffect(() => {
     if (managerString === '' || emergencyManagerString === '') {
       setButtonText('Fill manager info')
@@ -190,6 +155,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       setAccordionValue([AccordionItems.FEES_CONFIGS])
       return
     }
+    txModal.initModal();
 
     const vaultName = nativeToScVal(indexName, { type: "string" })
     const vaultSymbol = nativeToScVal(indexSymbol, { type: "string" })
@@ -255,7 +221,6 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       assets: vec<AssetAllocation>, 
       salt: bytesn<32>) -> result<address,FactoryError>
  */
-    //goToNext();
     let result: any;
     if (amountsScVal.length === 0) {
       const createDefindexParams: xdr.ScVal[] = [
@@ -277,13 +242,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       }
       catch (e: any) {
         console.error(e)
-        //setActiveStep(3)
-        setStatus({
-          ...status,
-          hasError: true,
-          message: e.toString(),
-          txHash: undefined,
-        })
+        txModal.handleError(e.toString());
         return
       }
     } else {
@@ -310,13 +269,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       }
       catch (e: any) {
         console.error(e)
-        //setActiveStep(3)
-        setStatus({
-          ...status,
-          hasError: true,
-          message: e.toString(),
-          txHash: undefined,
-        })
+        txModal.handleError(e.toString());
         return
       }
     }
@@ -326,15 +279,8 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       ...newVault,
       address: parsedResult
     }
+    txModal.handleSuccess(result.txHash);
     dispatch(pushVault(tempVault));
-    //setActiveStep(3);
-    setStatus({
-      ...status,
-      isSuccess: true,
-      hasError: false,
-      message: 'DeFindex deployed successfully.',
-      txHash: result.txHash
-    });
     return result;
   }
 
@@ -348,47 +294,17 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
         </DialogTitle>
       </DialogHeader>
           <DialogCloseTrigger />
-          <DialogBody>
-            <DeploySteps activeStep={activeStep} hasError={status.hasError} />
-            {activeStep == 0 && (
-          <VaultPreview
-            data={newVault.assets}
-            accordionValue={accordionValue}
-            setAccordionValue={setAccordionValue}
-            formControl={formControl}
-            setFormControl={setFormControl}
-          />
-            )}
-            {activeStep == 1 && (
-              <Box textAlign={'center'}>
-                <Text mt={8}>Please, sign the transaction in your wallet.</Text>
-                <ProgressCircleRoot>
-                  <ProgressCircleRing />
-                </ProgressCircleRoot>
-              </Box>
-            )}
-            {(activeStep == 3 && status.hasError) && (
-              <Box mt={8} textAlign={'center'}>
-            <PiWarningCircleFill />
-                <Text mt={4}>{`${status.message}`}</Text>
-              </Box>
-            )}
-            {(activeStep == 3 && status.isSuccess === true && status.txHash != undefined) && (
-              <>
-                <Box mt={8} textAlign={'center'}>
-              <FaCheckCircle />
-                  <Text mt={4}>{`${status.message}`}</Text>
-                </Box>
-                <Box mt={8} textAlign={'center'}>
-                  <Link mt={4} href={`https://stellar.expert/explorer/${activeChain?.name?.toLowerCase()}/tx/${status.txHash}`}>
-                    View on explorer <LuExternalLink />
-                  </Link>
-                </Box>
-              </>
-            )}
-          </DialogBody>
+      <DialogBody>
+        <VaultPreview
+          data={newVault.assets}
+          accordionValue={accordionValue}
+          setAccordionValue={setAccordionValue}
+          formControl={formControl}
+          setFormControl={setFormControl}
+        />
+      </DialogBody>
 
-          <DialogFooter>
+      <DialogFooter>
         {(activeStep == 0 && !status.hasError) && (
           <Button
             aria-label='add_strategy'

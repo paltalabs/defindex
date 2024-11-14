@@ -1,5 +1,17 @@
-import { VaultMethod, useVaultCallback } from '@/hooks/useVault'
+import React, { useContext, useState } from 'react'
+import { Address, nativeToScVal, xdr } from '@stellar/stellar-sdk'
+import { useSorobanReact } from '@soroban-react/core'
+
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
+import { setVaultTVL } from '@/store/lib/features/walletStore'
+import { Strategy } from '@/store/lib/types'
+
+import { VaultMethod, useVaultCallback, useVault } from '@/hooks/useVault'
+import { ModalContext } from '@/contexts'
+
+import { DialogBody, DialogContent, DialogHeader } from '../ui/dialog'
+import { NativeSelectRoot } from '../ui/native-select'
+import { InputGroup } from '../ui/input-group'
 import {
   Button,
   Input,
@@ -8,18 +20,9 @@ import {
   Grid,
   GridItem,
   Stack,
-  InputAddon,
   NativeSelectField,
+  HStack,
 } from '@chakra-ui/react'
-import { useSorobanReact } from '@soroban-react/core'
-import { Address, nativeToScVal, scValToNative, xdr } from '@stellar/stellar-sdk'
-import React, { useEffect, useState } from 'react'
-import { DialogBody, DialogContent, DialogHeader } from '../ui/dialog'
-import { NativeSelectRoot } from '../ui/native-select'
-import { InputGroup } from '../ui/input-group'
-import { useVault } from '@/hooks/useVault'
-import { setVaultTVL } from '@/store/lib/features/walletStore'
-import { Strategy } from '@/store/lib/types'
 
 export const InteractWithVault = () => {
   const [amount, set_amount] = useState<number>(0)
@@ -30,75 +33,105 @@ export const InteractWithVault = () => {
   const vaultCB = useVaultCallback()
   const vault = useVault()
   const dispatch = useAppDispatch()
+  const { transactionStatusModal: statusModal, interactWithVaultModal: interactModal, inspectVaultModal: inspectModal } = useContext(ModalContext)
 
   const vaultOperation = async () => {
     if (!address || !vaultMethod) return;
     if (!amount) throw new Error('Amount is required');
-    if (vaultMethod != VaultMethod.DEPOSIT) return;
-    const depositParams: xdr.ScVal[] = [
-      xdr.ScVal.scvVec([nativeToScVal((amount * Math.pow(10, 7)), { type: "i128" })]),
-      xdr.ScVal.scvVec([nativeToScVal(((amount * 0.9) * Math.pow(10, 7)), { type: "i128" })]),
-      new Address(address).toScVal(),
-    ]
+    const parsedAmount = parseFloat(amount.toString())
+    const convertedAmount = parsedAmount * Math.pow(10, 7)
+    statusModal.initModal()
+    let params: xdr.ScVal[] = []
+    if (vaultMethod === VaultMethod.DEPOSIT) {
+      const depositParams: xdr.ScVal[] = [
+        xdr.ScVal.scvVec([nativeToScVal(parseFloat(convertedAmount.toString()), { type: "i128" })]),
+        xdr.ScVal.scvVec([nativeToScVal((convertedAmount * 0.9), { type: "i128" })]),
+        new Address(address).toScVal(),
+      ]
+      params = depositParams
+    };
+    if (vaultMethod === VaultMethod.WITHDRAW) {
+      const withdrawParams: xdr.ScVal[] = [
+        nativeToScVal(convertedAmount, { type: "i128" }),
+        new Address(address).toScVal(),
+      ]
+      params = withdrawParams
+    };
     console.log('Vault method:', vaultMethod)
     try {
       const result = await vaultCB(
         vaultMethod!,
         selectedVault?.address!,
-        depositParams,
+        params,
         true,
-      )
+      ).then((res) =>
+        statusModal.handleSuccess(res.txHash)
+      ).finally(async () => {
+        const newTVL = await vault.getVaultTotalValues(selectedVault?.address!)
+        const parsedNewTVL = Number(newTVL) / 10 ** 7
+        dispatch(setVaultTVL(parsedNewTVL))
+      });
     }
-    catch (error) {
+    catch (error: any) {
       console.error('Error:', error)
-    } finally {
-      const newTVL = await vault.getVaultTotalValues(selectedVault?.address!)
-      const parsedNewTVL = Number(newTVL) / 10 ** 7
-      dispatch(setVaultTVL(parsedNewTVL))
+      statusModal.handleError(error.toString())
     }
   }
 
-  const setAmount = (e: any) => {
-    if (Number.isNaN(e)) return;
-    set_amount(e)
+  const setAmount = (input: any) => {
+    if (input < 0) return;
+    if (vaultMethod === VaultMethod.WITHDRAW) {
+      console.log(input, selectedVault?.userBalance)
+      if (input > selectedVault?.userBalance) return;
+    }
+    const decimalRegex = /^(\d+)?(\.\d{0,7})?$/;
+    if (!decimalRegex.test(input)) return;
+    if (input.startsWith('.')) {
+      set_amount(0 + input)
+      return
+    }
+    set_amount(input)
   }
+  if (!selectedVault) return null
 
   return (
     <>
       <DialogContent zIndex={'docked'}>
         <DialogHeader>
-          <Text fontSize='xl'>{selectedVault?.method === 'deposit' ? 'Deposit to' : 'Withdraw from'} {selectedVault?.name}</Text>
+          <Text fontSize='xl'>{selectedVault.method === 'deposit' ? 'Deposit to' : 'Withdraw from'} {selectedVault.name}</Text>
         </DialogHeader>
         <DialogBody zIndex={'docked'}>
-          <Grid templateColumns="repeat(12, 1fr)" gap={6}>
+          <Grid templateColumns="repeat(11, 1fr)" gap={1}>
             <GridItem colSpan={12}>
               <h2>Vault address:</h2>
               <Textarea
-                defaultValue={selectedVault?.address}
+                defaultValue={selectedVault.address}
                 rows={1}
+                w={'full'}
                 textAlign={'center'}
                 readOnly
                 resize={'none'} />
             </GridItem>
-            <GridItem colSpan={6} colEnd={13} textAlign={'end'}>
-              <h2>TVL: {selectedVault?.totalValues}</h2>
+            <GridItem colSpan={5} colStart={1} textAlign={'start'}>
+              <h2>Total value locked: ${selectedVault?.totalValues} {selectedVault.assets[0].symbol}</h2>
+            </GridItem>
+            <GridItem colSpan={6} colStart={6} textAlign={'end'}>
+              <h2>User balance in vault: ${selectedVault?.userBalance} {selectedVault.assets[0].symbol}</h2>
             </GridItem>
             {vaultMethod != VaultMethod.EMERGENCY_WITHDRAW &&
-              <>
-                <GridItem colSpan={6} textAlign={'end'} alignContent={'center'}>
-                  <Text fontSize='lg'>Amount to {vaultMethod}:</Text>
-                </GridItem>
-
-                <GridItem colSpan={6} colEnd={13} textAlign={'end'} >
-                  <Stack alignContent={'center'} alignItems={'center'}>
+              <GridItem colSpan={12} pt={6}>
+                <HStack justify={'end'}>
+                  <Text fontSize='sm'>Amount to {vaultMethod}:</Text>
+                  <Stack alignContent={'center'} alignItems={'end'}>
                   <InputGroup
-                    endElement={'$'}
+                      endElement={selectedVault?.assets[0]?.symbol}
                   >
-                    <Input my={4} type="text" onChange={(e) => setAmount(Number(e.target.value))} placeholder='Amount' value={amount} />
+                      <Input my={4} type="text" onChange={(e) => setAmount(e.target.value)} placeholder='Amount' value={amount} />
                   </InputGroup>
                   </Stack>
-                </GridItem>
-              </>
+                </HStack>
+
+              </GridItem>
             }
             {
               vaultMethod === VaultMethod.EMERGENCY_WITHDRAW &&
@@ -123,6 +156,7 @@ export const InteractWithVault = () => {
           <Button
             disabled={vaultMethod != VaultMethod.EMERGENCY_WITHDRAW && amount < 0.0000001}
             my={4}
+            w={'full'}
             colorScheme='green'
             onClick={() => vaultOperation()}>
             {selectedVault?.method === VaultMethod.DEPOSIT && 'Deposit' ||
