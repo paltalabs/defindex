@@ -22,7 +22,7 @@ export const InspectVault = ({
     handleOpenInteract: (method: string, args?: any) => any,
     onClose: () => void,
 }) => {
-  const selectedVault: VaultData = useAppSelector(state => state.wallet.vaults.selectedVault)
+  const selectedVault: VaultData | undefined = useAppSelector(state => state.wallet.vaults.selectedVault)
   const { address } = useSorobanReact()
   if (!selectedVault) return null
 

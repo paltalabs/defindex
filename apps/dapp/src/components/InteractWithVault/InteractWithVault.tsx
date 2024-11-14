@@ -79,10 +79,10 @@ export const InteractWithVault = () => {
   }
 
   const setAmount = (input: any) => {
-    if (input < 0) return;
+    if (input < 0 || !selectedVault) return;
     if (vaultMethod === VaultMethod.WITHDRAW) {
       console.log(input, selectedVault?.userBalance)
-      if (input > selectedVault?.userBalance) return;
+      if (input > selectedVault.userBalance!) return;
     }
     const decimalRegex = /^(\d+)?(\.\d{0,7})?$/;
     if (!decimalRegex.test(input)) return;
@@ -113,10 +113,10 @@ export const InteractWithVault = () => {
                 resize={'none'} />
             </GridItem>
             <GridItem colSpan={5} colStart={1} textAlign={'start'}>
-              <h2>Total value locked: ${selectedVault?.totalValues} {selectedVault.assets[0].symbol}</h2>
+              <h2>Total value locked: ${selectedVault?.totalValues} {selectedVault.assets[0]?.symbol}</h2>
             </GridItem>
             <GridItem colSpan={6} colStart={6} textAlign={'end'}>
-              <h2>User balance in vault: ${selectedVault?.userBalance} {selectedVault.assets[0].symbol}</h2>
+              <h2>User balance in vault: ${selectedVault?.userBalance} {selectedVault.assets[0]?.symbol}</h2>
             </GridItem>
             {vaultMethod != VaultMethod.EMERGENCY_WITHDRAW &&
               <GridItem colSpan={12} pt={6}>
@@ -142,7 +142,7 @@ export const InteractWithVault = () => {
                 <GridItem colSpan={6} colEnd={13} textAlign={'end'} >
                   <NativeSelectRoot>
                     <NativeSelectField>
-                      {selectedVault?.assets.strategies[0].map((strategy: Strategy) => {
+                      {selectedVault?.assets[0]?.strategies.map((strategy: Strategy) => {
                         return (
                           <option key={strategy.address} value={strategy.address}>{strategy.name}</option>
                         )
