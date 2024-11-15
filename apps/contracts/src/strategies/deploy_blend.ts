@@ -1,12 +1,12 @@
-import { Address, nativeToScVal, xdr, Asset, Networks } from "@stellar/stellar-sdk";
-import { AddressBook } from "./utils/address_book.js";
+import { Address, Asset, Networks, xdr } from "@stellar/stellar-sdk";
+import { AddressBook } from "../utils/address_book.js";
 import {
   airdropAccount,
   deployContract,
   installContract,
   invokeContract,
-} from "./utils/contract.js";
-import { config } from "./utils/env_config.js";
+} from "../utils/contract.js";
+import { config } from "../utils/env_config.js";
 
 export async function deployContracts(addressBook: AddressBook) {
   if (network != "mainnet") await airdropAccount(loadedConfig.admin);
