@@ -1,4 +1,4 @@
-import { Address, nativeToScVal, xdr, Asset, Networks } from "@stellar/stellar-sdk";
+import { Address, Asset, Networks, xdr } from "@stellar/stellar-sdk";
 import { AddressBook } from "./utils/address_book.js";
 import {
   airdropAccount,
@@ -45,14 +45,17 @@ export async function deployContracts(addressBook: AddressBook) {
   const xlmAddress = new Address(xlmContractId);
   const xlmScVal = xlmAddress.toScVal();
 
+  const soroswapUSDC = new Address("CAAFIHB4I7WQMJMKC22CZVQNNX7EONWSOMT6SUXK6I3G3F6J4XFRWNDI");
+  const usdcScVal = soroswapUSDC.toScVal();
+
   const emptyVecScVal = xdr.ScVal.scvVec([]);
 
-  console.log("Initializing Soroswap Adapter");
+  console.log("Initializing DeFindex HODL Strategy");
   await invokeContract(
     "hodl_strategy",
     addressBook,
     "initialize",
-    [xlmScVal, emptyVecScVal],
+    [usdcScVal, emptyVecScVal],
     loadedConfig.admin
   );
 }

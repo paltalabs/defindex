@@ -1,37 +1,23 @@
-import React from "react";
-import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Link,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
-  Text,
-  useSteps,
-} from "@chakra-ui/react"
+import { useSorobanReact } from "@soroban-react/core";
 import {
   Address,
   nativeToScVal,
   scValToNative,
   xdr,
 } from "@stellar/stellar-sdk";
-import { pushVault, Strategy } from '@/store/lib/features/walletStore'
-import { useFactoryCallback, FactoryMethod } from '@/hooks/useFactory'
-import { VaultPreview } from "./VaultPreview";
-import { DeploySteps } from "./DeploySteps";
-import { useEffect, useState } from "react";
-import { WarningIcon, CheckCircleIcon, ExternalLinkIcon } from '@chakra-ui/icons'
-import { NewVaultState } from "@/store/lib/features/vaultStore";
-import { useSorobanReact } from "@soroban-react/core";
-
 import { randomBytes } from "crypto";
-import { StrategyMethod, useStrategyCallback } from "@/hooks/useStrategy";
+import { useContext, useEffect, useState } from "react";
+
+import { pushVault } from '@/store/lib/features/walletStore';
+import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks";
+import { Asset, NewVaultState } from "@/store/lib/types";
+
+import { ModalContext, TransactionStatusModalStatus } from "@/contexts";
+import { FactoryMethod, useFactoryCallback } from '@/hooks/useFactory';
+
+import { Button } from "@chakra-ui/react";
+import { DialogBody, DialogCloseTrigger, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
+import { AccordionItems, FormControlInterface, VaultPreview } from "./VaultPreview";
 
 interface Status {
   isSuccess: boolean,
@@ -50,23 +36,20 @@ export interface ChartData {
 }
 
 export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
-  const { goToNext, setActiveStep, activeStep } = useSteps({
-    index: 0
-  });
   const sorobanContext = useSorobanReact();
-  // const { activeChain } = sorobanContext;
-  const activeChain = { name: "testnet", networkPassphrase: "Test SDF Network ; September 2015" } // REMOVE_THIS
-
+  const { activeChain, address } = sorobanContext;
   const factory = useFactoryCallback();
   const newVault: NewVaultState = useAppSelector(state => state.newVault);
-  const strategies: Strategy[] = newVault.strategies;
+  //const strategies: Strategy[] = newVault.strategies;
   const indexName = useAppSelector(state => state.newVault.name)
+  const indexSymbol = useAppSelector(state => state.newVault.symbol)
+  const indexShare = useAppSelector(state => state.newVault.vaultShare)
   const managerString = useAppSelector(state => state.newVault.manager)
   const emergencyManagerString = useAppSelector(state => state.newVault.emergencyManager)
   const feeReceiverString = useAppSelector(state => state.newVault.feeReceiver)
-
+  const { transactionStatusModal: txModal } = useContext(ModalContext);
   const dispatch = useAppDispatch();
-  const [chartData, setChartData] = useState<ChartData[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
   const [status, setStatus] = useState<Status>({
     isSuccess: false,
     hasError: false,
@@ -75,157 +58,25 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     txHash: undefined
   });
 
-  const [loadingAssets, setLoadingAssets] = useState(true);
-  const [assets, setAssets] = useState<string[]>([]);
-
   const [deployDisabled, setDeployDisabled] = useState(true);
-
-  const strategyCallback = useStrategyCallback();
 
   useEffect(() => {
     if (
-      strategies.length > 0
-      && managerString !== ""
+      managerString !== ""
       && emergencyManagerString !== ""
       && feeReceiverString !== ""
-      && assets.length > 0
-      && loadingAssets === false
+      && !indexShare 
     ) {
       setDeployDisabled(false);
     } else {
       setDeployDisabled(true);
     }
-  }, [strategies, managerString, emergencyManagerString, feeReceiverString])
-
-  useEffect(() => {
-    const fetchAssets = async () => {
-      setLoadingAssets(true);
-      try {
-        const assetsPromises = strategies.map((param) =>
-          strategyCallback(
-            param.address,
-            StrategyMethod.ASSET,
-            undefined,
-            false
-          ).then((result) => {
-            const resultScval = result as xdr.ScVal;
-            const asset = scValToNative(resultScval);
-            return asset;
-          })
-        );
-        const assetsArray = await Promise.all(assetsPromises);
-        setAssets(assetsArray);
-        setLoadingAssets(false);
-      } catch (error) {
-        console.error(error);
-        setLoadingAssets(false);
-      }
-    };
-
-    fetchAssets();
-
-  }, [strategies]);
-
-  const deployDefindex = async () => {
-
-    if (managerString === "" || managerString === undefined) {
-      console.log("Set manager please")
-      return
-    }
-    if (emergencyManagerString === "" || emergencyManagerString === undefined) {
-      console.log("Set emergency manager please")
-      return
-    }
-    if (feeReceiverString === "" || feeReceiverString === undefined) {
-      console.log("Set fee receiver please")
-      return
-    }
-
-    const emergencyManager = new Address(emergencyManagerString)
-    const feeReceiver = new Address(feeReceiverString)
-    const manager = new Address(managerString)
-    const salt = randomBytes(32)
-
-    const ratios = [1];
-
-    const strategyParamsScVal = strategies.map((param) => {
-      return xdr.ScVal.scvMap([
-        new xdr.ScMapEntry({
-          key: xdr.ScVal.scvSymbol('address'),
-          val: new Address(param.address).toScVal(),
-        }),
-        new xdr.ScMapEntry({
-          key: xdr.ScVal.scvSymbol('name'),
-          val: nativeToScVal(param.name, { type: "string" }),
-        }),
-      ]);
-    });
-
-    const strategyParamsScValVec = xdr.ScVal.scvVec(strategyParamsScVal);
-
-    const createDefindexParams: xdr.ScVal[] = [
-      emergencyManager.toScVal(),
-      feeReceiver.toScVal(),
-      manager.toScVal(),
-      xdr.ScVal.scvVec(assets.map((token) => new Address(token).toScVal())),
-      xdr.ScVal.scvVec(ratios.map((ratio) => nativeToScVal(ratio, { type: "u32" }))),
-      strategyParamsScValVec,
-      nativeToScVal(salt),
-    ];
+  }, [managerString, emergencyManagerString, feeReceiverString])
 
 
-    goToNext();
-    let result: any;
-    try {
-      result = await factory(
-        FactoryMethod.CREATE_DEFINDEX_VAULT,
-        createDefindexParams,
-        true,
-      )
-    }
-    catch (e: any) {
-      console.error(e)
-      setActiveStep(3)
-      setStatus({
-        ...status,
-        hasError: true,
-        message: e.toString(),
-        txHash: undefined,
-      })
-      return
-    }
-    const parsedResult: string = scValToNative(result.returnValue);
-    if (parsedResult.length !== 56) throw new Error('Invalid result')
-    const tempVault: any = {
-      ...newVault,
-      address: parsedResult
-    }
-    dispatch(pushVault(tempVault));
-    setActiveStep(3);
-    setStatus({
-      ...status,
-      isSuccess: true,
-      hasError: false,
-      message: 'DeFindex deployed successfully.',
-      txHash: result.txHash
-    });
-    return result;
-  }
 
-  const handleCloseModal = async () => {
-    setStatus({
-      ...status,
-      isSuccess: false,
-      hasError: false,
-      message: undefined,
-      txHash: undefined
-    });
-    setActiveStep(0);
-    //await dispatch(resetStrategies())
-    onClose();
-  }
 
-  useEffect(() => {
+  /* useEffect(() => {
     const newChartData: ChartData[] = strategies.map((strategy: Strategy, index: number) => {
       return {
         id: index,
@@ -249,71 +100,221 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       setChartData(newChartData);
       return;
     }
-  }, [strategies]);
+  }, [strategies]); */
 
   const autoCloseModal = async () => {
     await new Promise(resolve => setTimeout(resolve, 30000))
-    handleCloseModal();
+    txModal.resetModal();
+    onClose();
   }
 
   useEffect(() => {
-    if (status.isSuccess || status.hasError) {
+    if (txModal.status !== TransactionStatusModalStatus.PENDING) {
       autoCloseModal();
     }
-  }, [status.isSuccess, status.hasError])
+  }, [txModal.status])
+  const activeStep: number = 0;
+  const [buttonText, setButtonText] = useState<string>('')
+  const [accordionValue, setAccordionValue] = useState<AccordionItems[]>([AccordionItems.STRATEGY_DETAILS])
+  const [formControl, setFormControl] = useState<FormControlInterface>({
+    manager: {
+      isValid: undefined,
+      value: undefined
+    },
+    emergencyManager: {
+      isValid: undefined,
+      value: undefined
+    },
+    feeReceiver: {
+      isValid: undefined,
+      value: undefined
+    },
+    vaultShare: 0
+  })
 
+  useEffect(() => {
+    if (managerString === '' || emergencyManagerString === '') {
+      setButtonText('Fill manager info')
+      return
+    } else if (feeReceiverString === '' || indexShare === 0) {
+      setButtonText('Fill fee settings')
+      return
+    } else {
+      setButtonText('Deploy')
+    }
+
+  }, [managerString, emergencyManagerString, feeReceiverString, indexShare])
+  const deployDefindex = async () => {
+    if (managerString === '' || emergencyManagerString === '') {
+      console.log('please fill manager config')
+      setAccordionValue([AccordionItems.MANAGER_CONFIGS])
+      return
+    }
+    if (feeReceiverString === '' || indexShare === 0) {
+      console.log('please fill the fee reciever info')
+      setAccordionValue([AccordionItems.FEES_CONFIGS])
+      return
+    }
+    txModal.initModal();
+
+    const vaultName = nativeToScVal(indexName, { type: "string" })
+    const vaultSymbol = nativeToScVal(indexSymbol, { type: "string" })
+    const vaultShare = nativeToScVal(indexShare, { type: "u32" })
+    const emergencyManager = new Address(emergencyManagerString)
+    const feeReceiver = new Address(feeReceiverString)
+    const manager = new Address(managerString)
+    const salt = randomBytes(32)
+
+    /*
+        pub struct AssetAllocation {
+          pub address: Address,
+          pub strategies: Vec<Strategy>,
+        } 
+        pub struct Strategy {
+          pub address: Address,
+          pub name: String,
+          pub paused: bool,
+        }
+    */
+
+    const assetParamsScVal = newVault.assets.map((asset) => {
+      const strategyParamsScVal = asset.strategies.map((param) => {
+        return xdr.ScVal.scvMap([
+          new xdr.ScMapEntry({
+            key: xdr.ScVal.scvSymbol('address'),
+            val: new Address(param.address).toScVal(),
+          }),
+          new xdr.ScMapEntry({
+            key: xdr.ScVal.scvSymbol('name'),
+            val: nativeToScVal(param.name, { type: "string" }),
+          }),
+          new xdr.ScMapEntry({
+            key: xdr.ScVal.scvSymbol('paused'),
+            val: nativeToScVal(false, { type: "bool" }),
+          }),
+        ]);
+      });
+      const strategyParamsScValVec = xdr.ScVal.scvVec(strategyParamsScVal);
+      return xdr.ScVal.scvMap([
+        new xdr.ScMapEntry({
+          key: xdr.ScVal.scvSymbol('address'),
+          val: new Address(asset.address).toScVal(),
+        }),
+        new xdr.ScMapEntry({
+          key: xdr.ScVal.scvSymbol('strategies'),
+          val: strategyParamsScValVec,
+        }),
+      ]);
+    });
+    const assetParamsScValVec = xdr.ScVal.scvVec(assetParamsScVal);
+    const amountsScVal = newVault.amounts.map((amount) => {
+      return nativeToScVal((amount * Math.pow(10, 7)), { type: "i128" });
+    });
+    const amountsScValVec = xdr.ScVal.scvVec(amountsScVal);
+     /*  fn create_defindex_vault(
+      emergency_manager: address, 
+      fee_receiver: address, 
+      vault_share: u32, 
+      vault_name: string, 
+      vault_symbol: string, 
+      manager: address, 
+      assets: vec<AssetAllocation>, 
+      salt: bytesn<32>) -> result<address,FactoryError>
+ */
+    let result: any;
+    if (amountsScVal.length === 0) {
+      const createDefindexParams: xdr.ScVal[] = [
+        emergencyManager.toScVal(),
+        feeReceiver.toScVal(),
+        vaultShare,
+        vaultName,
+        vaultSymbol,
+        manager.toScVal(),
+        assetParamsScValVec,
+        nativeToScVal(salt),
+      ];
+      try {
+        result = await factory(
+          FactoryMethod.CREATE_DEFINDEX_VAULT,
+          createDefindexParams,
+          true,
+        )
+      }
+      catch (e: any) {
+        console.error(e)
+        txModal.handleError(e.toString());
+        return
+      }
+    } else {
+      if (!address) throw new Error('Address not found')
+      const caller = new Address(address);
+      const createDefindexParams: xdr.ScVal[] = [
+        caller.toScVal(),
+        emergencyManager.toScVal(),
+        feeReceiver.toScVal(),
+        vaultShare,
+        vaultName,
+        vaultSymbol,
+        manager.toScVal(),
+        assetParamsScValVec,
+        amountsScValVec,
+        nativeToScVal(salt),
+      ];
+      try {
+        result = await factory(
+          FactoryMethod.CREATE_DEFINDEX_VAULT_DEPOSIT,
+          createDefindexParams,
+          true,
+        )
+      }
+      catch (e: any) {
+        console.error(e)
+        txModal.handleError(e.toString());
+        return
+      }
+    }
+    const parsedResult: string = scValToNative(result.returnValue);
+    if (parsedResult.length !== 56) throw new Error('Invalid result')
+    const tempVault: any = {
+      ...newVault,
+      address: parsedResult
+    }
+    txModal.handleSuccess(result.txHash);
+    dispatch(pushVault(tempVault));
+    return result;
+  }
+
+  //to-do Use chakra-ui stepper component
   return (
-    <>
-      <Modal isOpen={isOpen} onClose={handleCloseModal} isCentered>
-        <ModalOverlay />
-        <ModalContent minW={'40vw'}>
-          <ModalHeader>Deploying {indexName === "" ? 'new index' : indexName}</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <DeploySteps activeStep={activeStep} hasError={status.hasError} />
-            {activeStep == 0 && (
-              <VaultPreview data={chartData} />
-            )}
-            {activeStep == 1 && (
-              <Box textAlign={'center'}>
-                <Text mt={8}>Please, sign the transaction in your wallet.</Text>
-                <CircularProgress mt={8} isIndeterminate color='green.500' />
-              </Box>
-            )}
-            {(activeStep == 3 && status.hasError) && (
-              <Box mt={8} textAlign={'center'}>
-                <WarningIcon boxSize={'4em'} color={'red'} />
-                <Text mt={4}>{`${status.message}`}</Text>
-              </Box>
-            )}
-            {(activeStep == 3 && status.isSuccess === true && status.txHash != undefined) && (
-              <>
-                <Box mt={8} textAlign={'center'}>
-                  <CheckCircleIcon boxSize={'4em'} color={'green'} />
-                  <Text mt={4}>{`${status.message}`}</Text>
-                </Box>
-                <Box mt={8} textAlign={'center'}>
-                  <Link mt={4} href={`https://stellar.expert/explorer/${activeChain?.name?.toLowerCase()}/tx/${status.txHash}`} isExternal>
-                    View on explorer <ExternalLinkIcon mx='2px' />
-                  </Link>
-                </Box>
-              </>
-            )}
-          </ModalBody>
 
-          <ModalFooter>
-            {(activeStep == 0 && !status.hasError) && (
-              <Button
-                isDisabled={deployDisabled}
-                aria-label='add_strategy'
-                colorScheme='green'
-                onClick={deployDefindex}>
-                Deploy
-              </Button>
-            )}
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+    <>
+      <DialogHeader>
+        <DialogTitle>
+          Deploying {indexName === "" ? 'new index' : indexName}
+        </DialogTitle>
+      </DialogHeader>
+          <DialogCloseTrigger />
+      <DialogBody>
+        <VaultPreview
+          data={newVault.assets}
+          accordionValue={accordionValue}
+          setAccordionValue={setAccordionValue}
+          formControl={formControl}
+          setFormControl={setFormControl}
+        />
+      </DialogBody>
+
+      <DialogFooter>
+        {(activeStep == 0 && !status.hasError) && (
+          <Button
+            aria-label='add_strategy'
+            colorScheme='green'
+            onClick={deployDefindex}>
+            {buttonText}
+          </Button>
+        )}
+      </DialogFooter>
     </>
+
   )
 }

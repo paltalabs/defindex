@@ -1,5 +1,4 @@
-import { Stack, Step, StepIcon, StepIndicator, Stepper, StepSeparator, StepStatus, Text, useSteps } from "@chakra-ui/react"
-import { WarningIcon } from '@chakra-ui/icons'
+import { Stack, StepsItem, StepsList, StepsRoot, Text } from "@chakra-ui/react"
 
 const steps = [
   { title: 'Review Vault', description: 'Review vault' },
@@ -8,10 +7,6 @@ const steps = [
 ]
 
 export function DeploySteps({ activeStep, hasError }: { activeStep: number, hasError: boolean }) {
-  const { setActiveStep } = useSteps({
-    index: 0,
-    count: steps.length,
-  })
 
   const activeStepText = steps[activeStep]?.description
 
@@ -20,16 +15,19 @@ export function DeploySteps({ activeStep, hasError }: { activeStep: number, hasE
       <Text>
         <b>{activeStepText}</b>
       </Text>
-      <Stepper colorScheme={!hasError ? 'green' : 'red'} size='sm' index={activeStep} gap='4'>
-        {steps.map((step, index) => (
-          <Step key={index}>
+      <StepsRoot colorScheme={!hasError ? 'green' : 'red'} size='sm' gap='4'>
+        <StepsList>
+          <StepsItem index={0}>
+
+          </StepsItem>
+        </StepsList>
+        {/*         {steps.map((step, index) => (
             <StepIndicator>
               <StepStatus complete={!hasError ? <StepIcon /> : <WarningIcon />} />
             </StepIndicator>
             <StepSeparator />
-          </Step>
-        ))}
-      </Stepper>
+        ))} */}
+      </StepsRoot>
     </Stack>
   )
 }

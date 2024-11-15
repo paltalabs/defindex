@@ -1,61 +1,54 @@
-import { shortenAddress } from '@/helpers/shortenAddress'
-import { VaultMethod, useVaultCallback } from '@/hooks/useVault'
-import { fetchDefaultAddresses, setIsVaultsLoading, setVaultRoles, VaultData } from '@/store/lib/features/walletStore'
-import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { ArrowLeftIcon, SettingsIcon, WarningTwoIcon } from '@chakra-ui/icons'
-import {
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  TableContainer,
-  Tooltip,
-  Skeleton,
-  Stat,
-  StatHelpText,
-  StatArrow,
-  IconButton,
-  Box,
-  Stack,
-  Text,
-  VStack,
-  useBreakpointValue
-} from '@chakra-ui/react'
-import { useSorobanReact } from '@soroban-react/core'
+import { useEffect } from 'react'
 import { scValToNative } from '@stellar/stellar-sdk'
-import { useEffect, useState } from 'react'
+import { useSorobanReact } from '@soroban-react/core'
+
+import { shortenAddress } from '@/helpers/address'
+import { useVault } from '@/hooks/useVault'
+import { FactoryMethod, useFactoryCallback } from '@/hooks/useFactory'
+
+import { setIsVaultsLoading, setVaults, setVaultUserBalance } from '@/store/lib/features/walletStore'
+import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
+import { VaultData } from '@/store/lib/types'
+
+import { Tooltip } from '../ui/tooltip'
+import {
+  Box,
+  Skeleton,
+  Table,
+  Text,
+  useBreakpointValue,
+  VStack,
+} from '@chakra-ui/react'
 
 const SkeletonRow = () => {
+  const { address } = useSorobanReact()
   return (
-    <Tr>
-      <Td>
+    <Table.Row>
+      <Table.Cell>
         <Skeleton height='20px' />
-      </Td>
-      <Td>
+      </Table.Cell>
+      <Table.Cell>
         <Skeleton height='20px' />
-      </Td>
-      <Td>
+      </Table.Cell>
+      <Table.Cell>
         <Skeleton height='20px' />
-      </Td>
-      <Td>
+      </Table.Cell>
+      <Table.Cell>
         <Skeleton height='20px' />
-      </Td>
-      <Td>
-        <Skeleton height='20px' />
-      </Td>
-    </Tr>
+      </Table.Cell>
+      {address && (
+        <Table.Cell>
+          <Skeleton height='20px' />
+        </Table.Cell>
+      )}
+    </Table.Row>
   )
 }
 export const AllVaults = ({
-  handleOpenDeployVault,
-  handleOpenDeposit
+  handleOpenInspect
 }: {
-  handleOpenDeployVault: (method: string, args?: any) => any,
-  handleOpenDeposit: (method: string, args?: any) => any
-}) => {
-  const vault = useVaultCallback()
+    handleOpenInspect: (value: boolean, args?: any) => any
+  }) => {
   const { activeChain, address } = useSorobanReact()
   // const { address } = useSorobanReact()
   // const activeChain = { id: "testnet", name: "testnet", networkPassphrase: "Test SDF Network ; September 2015" } // REMOVE_THIS
@@ -64,220 +57,98 @@ export const AllVaults = ({
   const vaults = useAppSelector(state => state.wallet.vaults)
   const isLoading = vaults.isLoading
   const createdVaults = vaults.createdVaults
-
+  const factory = useFactoryCallback()
+  const vault = useVault()
   const isMobile = useBreakpointValue({ base: true, md: false });
+  const { getVaultInfo } = useVault()
 
-  const getRoles = async (selectedVault: string) => {
-    setIsVaultsLoading(true)
+  const getDefindexVaults = async () => {
+    dispatch(setIsVaultsLoading(true))
     try {
-      const manager: any = await vault(
-        VaultMethod.GETMANAGER,
-        selectedVault,
-        undefined,
-        false,
-      )
-      const emergencyManager: any = await vault(
-        VaultMethod.GETEMERGENCYMANAGER,
-        selectedVault,
-        undefined,
-        false,
-      )
-      const feeReceiver: any = await vault(
-        VaultMethod.GETFEERECEIVER,
-        selectedVault,
-        undefined,
-        false,
-      )
-      const parsedManager = scValToNative(manager)
-      const parsedEmergencyManager = scValToNative(emergencyManager)
-      const parsedFeeReceiver = scValToNative(feeReceiver)
-      return {
-        address: selectedVault,
-        manager: parsedManager,
-        emergencyManager: parsedEmergencyManager,
-        feeReceiver: parsedFeeReceiver
+      const defindexVaults: any = await factory(FactoryMethod.DEPLOYED_DEFINDEXES)
+      if (!defindexVaults) throw new Error('No defindex vaults found');
+      const parsedDefindexVaults = scValToNative(defindexVaults)
+      const defindexVaultsArray: VaultData[] = []
+      dispatch(setIsVaultsLoading(true))
+      for (let vault in parsedDefindexVaults) {
+        vault = parsedDefindexVaults[vault]
+        const newData = await getVaultInfo(vault)
+        if (!newData) continue;
+        defindexVaultsArray.push(newData)
       }
+      if (defindexVaultsArray.length === 0) throw new Error('No defindex vaults found');
+      dispatch(setVaults(defindexVaultsArray))
+      dispatch(setIsVaultsLoading(false))
     } catch (e: any) {
-      if (e.toString().includes('MissingValue')) {
-        console.warn(`The vault ${shortenAddress(selectedVault)} is missing some values, some features may not work as expected`)
-      } else {
-        console.error(e)
-      }
-      return {
-        address: selectedVault,
-        manager: undefined,
-        emergencyManager: undefined,
-        feeReceiver: undefined
-      }
-    } finally {
-      setIsVaultsLoading(false)
+      dispatch(setIsVaultsLoading(false))
+      console.error(e)
     }
   }
 
-  const fetchVaultRoles = async () => {
-    for (const vault of createdVaults) {
-      const roles = await getRoles(vault.address)
-      await dispatch(setVaultRoles(roles))
-    }
-  }
 
   useEffect(() => {
-    dispatch(fetchDefaultAddresses(activeChain?.networkPassphrase!))
-  }, [activeChain?.networkPassphrase, address]);
+    getDefindexVaults()
+  }, [activeChain?.networkPassphrase, address])
 
   useEffect(() => {
-    if (createdVaults?.length > 0) {
-      fetchVaultRoles()
+    if (address) {
+      createdVaults.forEach(async (v: VaultData) => {
+        const userBalance = await vault.getUserBalance(v.address, address)
+        if (userBalance) {
+          dispatch(setVaultUserBalance({ address: v.address, vaule: userBalance }))
+        }
+      })
     }
-  }, [createdVaults.length, address])
+  }, [createdVaults])
 
   return (
     <Box mx={'auto'} minW={'100%'} p={4}>
       {!isMobile ? (
-        <TableContainer>
-          <Table variant="simple">
-            <Thead>
-              <Tr>
-                <Th>Name</Th>
-                <Th textAlign={'center'}>Address</Th>
-                <Th textAlign={'center'}>Balance</Th>
-                <Th textAlign={'center'}>Status</Th>
-                <Th textAlign={'center'}>% APR</Th>
-                {address && (
-                  <Th textAlign={'center'}>Options</Th>
-                )}
-              </Tr>
-            </Thead>
-            {isLoading && <Tbody>
+        <Table.Root interactive>
+          <Table.Header>
+            <Table.Row>
+              <Table.Cell>Name</Table.Cell>
+              <Table.Cell textAlign={'center'}>Address</Table.Cell>
+              <Table.Cell textAlign={'center'}>TVL</Table.Cell>
+              {address && <Table.Cell textAlign={'center'}>User Balance</Table.Cell>}
+              <Table.Cell textAlign={'center'}>Asset</Table.Cell>
+            </Table.Row>
+          </Table.Header>
+          {isLoading && <Table.Body>
               <SkeletonRow />
               <SkeletonRow />
               <SkeletonRow />
-            </Tbody>}
-            {(!isLoading && createdVaults?.length != undefined) && <Tbody>
+            <SkeletonRow />
+          </Table.Body>}
+          {(!isLoading && createdVaults?.length != undefined) && <Table.Body>
               {createdVaults.map((vault: VaultData, i: number) => (
-                <Tr key={i}>
-                  <Td>{vault.name ? vault.name : vault.address}</Td>
-                  <Td sx={{ cursor: 'pointer' }} textAlign={'center'}>
-                    <Tooltip
-                      placement='bottom'
-                      label={vault.address}
-                      textAlign={'center'}
-                      rounded={'lg'}>
-                      {vault.address ? shortenAddress(vault.address) : '-'}
+                <Table.Row key={i} onClick={() => { handleOpenInspect(true, vault) }} css={{ cursor: 'pointer' }}>
+                  <Table.Cell>{vault.name ? vault.name : vault.address}</Table.Cell>
+                  <Table.Cell textAlign={'center'}>
+                    <Tooltip content={vault.address}>
+                      <p>
+                        {vault.address ? shortenAddress(vault.address) : '-'}
+                      </p>
                     </Tooltip>
-                  </Td>
-                  <Td textAlign={'center'}>${vault.totalValues}</Td>
-                  <Td textAlign={'center'}>{vault.name?.includes('Blend USDC') ? '200' : '400'}</Td>
-                  <Td textAlign={'center'}>
-                    <Stat>
-                      <StatHelpText>
-                        <StatArrow type='increase' />
-                        {vault.name?.includes('Blend USDC') ? '11.31' : '23.36'}%
-                      </StatHelpText>
-                    </Stat>
-                  </Td>
-                  {address && (
-                    <Td textAlign={'center'}>
-                      <Tooltip hasArrow label={'Deposit'} rounded={'lg'}>
-                        <IconButton
-                          mx={1}
-                          colorScheme='blue'
-                          aria-label='deposit'
-                          size='sm'
-                          icon={<ArrowLeftIcon __css={{ transform: 'rotate(90deg)' }} />}
-                          onClick={() => handleOpenDeposit(VaultMethod.DEPOSIT, vault)}
-                        />
-                      </Tooltip>
-                      <Tooltip hasArrow label={'Withdraw'} rounded={'lg'}>
-                        <IconButton
-                          mx={1}
-                          colorScheme='orange'
-                          aria-label='withdraw'
-                          size='sm'
-                          icon={<ArrowLeftIcon __css={{ transform: 'rotate(-90deg)' }} />}
-                          onClick={() => handleOpenDeposit(VaultMethod.WITHDRAW, vault)}
-                        />
-                      </Tooltip>
-                      {(address == vault.manager) &&
-                        <Tooltip hasArrow label={'Rebalance'} rounded={'lg'}>
-                          <IconButton
-                            mx={1}
-                            colorScheme='teal'
-                            aria-label='rebalance'
-                            size='sm'
-                            icon={<SettingsIcon />}
-                            onClick={() => handleOpenDeployVault('edit_vault', vault)}
-                          />
-                        </Tooltip>}
-                      {(address == vault.emergencyManager || address == vault.manager) &&
-                        <Tooltip hasArrow label={'Emergency withdraw'} rounded={'lg'}>
-                          <IconButton
-                            mx={1}
-                            colorScheme='yellow'
-                            aria-label='emergency-withdraw'
-                            size='sm'
-                            icon={<WarningTwoIcon color={'white'} />}
-                            onClick={() => handleOpenDeposit(VaultMethod.EMERGENCY_WITHDRAW, vault)}
-                          />
-                        </Tooltip>}
-                    </Td>
-                  )}
-                </Tr>
+                  </Table.Cell>
+                  <Table.Cell textAlign={'center'}>${vault.TVL}</Table.Cell>
+                  {address && <Table.Cell textAlign={'center'}>${vault.userBalance ? `${vault.userBalance}` : 0}</Table.Cell>}
+                  <Table.Cell textAlign={'center'}>
+                    {vault.assets[0]?.symbol}
+                  </Table.Cell>
+                </Table.Row>
               ))}
-            </Tbody>}
-          </Table>
-        </TableContainer>
+          </Table.Body>}
+        </Table.Root>
       ) : (
-        <VStack spacing={4}>
+          <VStack>
           {createdVaults.map((vault: VaultData, i: number) => (
-            <Box key={i} p={4} shadow="md" borderWidth="1px" borderRadius="lg" w="100%">
+            <Box key={i} p={4} shadow="md" borderWidth="1px" borderRadius="lg" w="100%" onClick={() => { handleOpenInspect(true, vault) }} css={{ cursor: 'pointer' }}>
               <Text fontSize="lg" fontWeight="bold">{vault.name ? vault.name : shortenAddress(vault.address)}</Text>
               <Text >Address: {shortenAddress(vault.address)}</Text>
-              <Text>Balance: ${vault.totalValues}</Text>
-              <Text>Status: {vault.name?.includes('Blend USDC') ? '200' : '400'}</Text>
-              <Text>APR: {vault.name?.includes('Blend USDC') ? '11.31' : '23.36'}%</Text>
-              {address && (
-                <Stack direction="row" spacing={4} mt={2}>
-                  <Tooltip hasArrow label={'Deposit'} rounded={'lg'}>
-                    <IconButton
-                      colorScheme='blue'
-                      aria-label={VaultMethod.DEPOSIT}
-                      size='sm'
-                      icon={<ArrowLeftIcon __css={{ transform: 'rotate(90deg)' }} />}
-                      onClick={() => handleOpenDeposit(VaultMethod.DEPOSIT, vault)}
-                    />
-                  </Tooltip>
-                  <Tooltip hasArrow label={'Withdraw'} rounded={'lg'}>
-                    <IconButton
-                      colorScheme='orange'
-                      aria-label={VaultMethod.WITHDRAW}
-                      size='sm'
-                      icon={<ArrowLeftIcon __css={{ transform: 'rotate(-90deg)' }} />}
-                      onClick={() => handleOpenDeposit(VaultMethod.WITHDRAW, vault)}
-                    />
-                  </Tooltip>
-                  {(address == vault.manager) &&
-                    <Tooltip hasArrow label={'Rebalance'} rounded={'lg'}>
-                      <IconButton
-                        colorScheme='teal'
-                        aria-label='rebalance'
-                        size='sm'
-                        icon={<SettingsIcon />}
-                        onClick={() => handleOpenDeployVault('edit_vault', vault)}
-                      />
-                    </Tooltip>}
-                  {(address == vault.emergencyManager || address == vault.manager) &&
-                    <Tooltip hasArrow label={'Emergency withdraw'} rounded={'lg'}>
-                      <IconButton
-                        colorScheme='yellow'
-                        aria-label={VaultMethod.EMERGENCY_WITHDRAW}
-                        size='sm'
-                        icon={<WarningTwoIcon color={'white'} />}
-                        onClick={() => handleOpenDeposit(VaultMethod.EMERGENCY_WITHDRAW, vault)}
-                      />
-                    </Tooltip>}
-                </Stack>
-              )}
+              <Text>TVL: ${vault.TVL}</Text>
+              {address && <Text>User balance: ${vault.userBalance ? `${vault.userBalance}` : 0}</Text>}
+              <Text>Asset: {vault.name?.includes('Blend USDC') ? '11.31' : '23.36'}%</Text>
             </Box>
           ))}
         </VStack>

@@ -1,6 +1,6 @@
 #![cfg(test)]
 extern crate std;
-use crate::defindex::{AssetAllocation, Strategy};
+use crate::defindex::{AssetStrategySet, Strategy};
 use crate::{DeFindexFactory, DeFindexFactoryClient};
 use soroban_sdk::token::{
     StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient,
@@ -43,7 +43,7 @@ mod defindex_vault_contract {
 
 // Create Test Token
 pub(crate) fn create_token_contract<'a>(e: &Env, admin: &Address) -> SorobanTokenClient<'a> {
-    SorobanTokenClient::new(e, &e.register_stellar_asset_contract(admin.clone()))
+    SorobanTokenClient::new(e, &e.register_stellar_asset_contract_v2(admin.clone()).address())
 }
 
 pub(crate) fn get_token_admin_client<'a>(
@@ -53,32 +53,28 @@ pub(crate) fn get_token_admin_client<'a>(
     SorobanTokenAdminClient::new(e, address)
 }
 
-pub(crate) fn create_asset_params(test: &DeFindexFactoryTest) -> Vec<AssetAllocation> {
+pub(crate) fn create_asset_params(test: &DeFindexFactoryTest) -> Vec<AssetStrategySet> {
     sorobanvec![
         &test.env,
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token0.address.clone(),
-            ratio: 1i128,
             strategies: sorobanvec![
                 &test.env,
                 Strategy {
                     address: test.strategy_contract_token0.address.clone(),
                     name: String::from_str(&test.env, "Strategy 1"),
                     paused: false,
-                    ratio: 1i128
                 }
             ],
         },
-        AssetAllocation {
+        AssetStrategySet {
             address: test.token1.address.clone(),
-            ratio: 1i128,
             strategies: sorobanvec![
                 &test.env,
                 Strategy {
                     address: test.strategy_contract_token1.address.clone(),
                     name: String::from_str(&test.env, "Strategy 1"),
                     paused: false,
-                    ratio: 1i128
                 }
             ],
         }
@@ -104,8 +100,8 @@ pub struct DeFindexFactoryTest<'a> {
 
 impl<'a> DeFindexFactoryTest<'a> {
     fn setup() -> Self {
-
         let env = Env::default();
+        env.budget().reset_unlimited();
         // env.mock_all_auths();
         let factory_contract = create_defindex_factory(&env);
         

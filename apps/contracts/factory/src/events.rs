@@ -1,6 +1,6 @@
 //! Definition of the Events used in the contract
 use soroban_sdk::{contracttype, symbol_short, Address, Env, Vec};
-use crate::defindex::AssetAllocation;
+use crate::defindex::AssetStrategySet;
 
 // INITIALIZED
 #[contracttype]
@@ -8,14 +8,14 @@ use crate::defindex::AssetAllocation;
 pub struct InitializedEvent {
     pub admin: Address,
     pub defindex_receiver: Address,
-    pub fee_rate: u32,
+    pub defindex_fee: u32,
 }
 
-pub(crate) fn emit_initialized(e: &Env, admin: Address, defindex_receiver: Address, fee_rate: u32) {
+pub(crate) fn emit_initialized(e: &Env, admin: Address, defindex_receiver: Address, defindex_fee: u32) {
     let event: InitializedEvent = InitializedEvent {
         admin,
         defindex_receiver,
-        fee_rate,
+        defindex_fee,
     };
     e.events()
         .publish(("DeFindexFactory", symbol_short!("init")), event);
@@ -28,8 +28,8 @@ pub struct CreateDeFindexEvent {
     pub emergency_manager: Address, 
     pub fee_receiver: Address, 
     pub manager: Address,
-    pub vault_share: u32,
-    pub assets: Vec<AssetAllocation>
+    pub vault_fee: u32,
+    pub assets: Vec<AssetStrategySet>
 }
 
 /// Publishes an `CreateDeFindexEvent` to the event stream.
@@ -38,14 +38,14 @@ pub(crate) fn emit_create_defindex_vault(
     emergency_manager: Address, 
     fee_receiver: Address, 
     manager: Address,
-    vault_share: u32,
-    assets: Vec<AssetAllocation>,
+    vault_fee: u32,
+    assets: Vec<AssetStrategySet>,
 ) {
     let event = CreateDeFindexEvent { 
       emergency_manager,
       fee_receiver,
       manager,
-      vault_share,
+      vault_fee,
       assets,
     };
 
@@ -81,16 +81,16 @@ pub(crate) fn emit_new_defindex_receiver(e: &Env, new_defindex_receiver: Address
         .publish(("DeFindexFactory", symbol_short!("nreceiver")), event);
 }
 
-// NEW FEE RATE EVENT
+// NEW DEFINDEX FEE EVENT
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct NewFeeRateEvent {
-    pub new_fee_rate: u32,
+    pub new_defindex_fee: u32,
 }
 
-pub(crate) fn emit_new_fee_rate(e: &Env, new_fee_rate: u32) {
-    let event = NewFeeRateEvent { new_fee_rate };
+pub(crate) fn emit_new_defindex_fee(e: &Env, new_defindex_fee: u32) {
+    let event = NewFeeRateEvent { new_defindex_fee };
 
     e.events()
-        .publish(("DeFindexFactory", symbol_short!("nfee_rate")), event);
+        .publish(("DeFindexFactory", symbol_short!("n_fee")), event);
 }

@@ -1,21 +1,40 @@
 {
   "name": "defindex-sdk",
-  "version": "0.1.0",
-  "repository": "https://github.com/paltalabs/defindex.git",
+  "version": "0.1.2",
+  "description": "TypeScript SDK for interacting with DeFindex Vaults on the Stellar Soroban network",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/paltalabs/defindex.git"
+  },
   "author": "coderipper <joaquin@paltalabs.io>",
+  "license": "MIT",
+  "keywords": [
+    "defindex",
+    "stellar",
+    "soroban",
+    "blockchain",
+    "sdk"
+  ],
   "scripts": {
     "build": "tsdx build",
     "docs": "typedoc",
-    "test": "jest"
+    "test": "jest",
+    "example": "node --loader ts-node/esm examples/vault-example.ts",
+    "prepublishOnly": "npm run build"
   },
   "private": false,
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "module": "dist/defindex-sdk.esm.js",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "dependencies": {
+    "@soroban-react/contracts": "^9.1.13",
+    "@soroban-react/core": "^9.1.13",
     "@stellar/stellar-sdk": "^12.1.0"
   },
   "devDependencies": {

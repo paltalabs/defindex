@@ -1,21 +1,16 @@
 import React, { useEffect } from 'react'
 import {
-  Slider,
-  SliderTrack,
-  SliderFilledTrack,
-  SliderThumb,
-  Button,
-  Tooltip,
   Grid,
   GridItem,
   Input,
-  InputGroup,
-  InputRightAddon,
-  IconButton
+  IconButton,
+  HStack,
+  Button
 } from '@chakra-ui/react'
-import { DeleteIcon } from '@chakra-ui/icons'
-import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { setStrategyValue, removeStrategy } from '@/store/lib/features/vaultStore'
+import { FaRegTrashCan } from "react-icons/fa6";
+import { useAppSelector } from '@/store/lib/storeHooks'
+import { InputGroup } from '../ui/input-group'
+import { Slider } from '../ui/slider'
 
 
 function ItemSlider({
@@ -26,18 +21,14 @@ function ItemSlider({
   address: string,
     share: number,
   name?: string,
-}) {
-  const dispatch = useAppDispatch()
-  const [showTooltip, setShowTooltip] = React.useState(false)
-
-  const totalShares = useAppSelector(state => state.newVault.totalValues)
+  }) {
+  const totalShares = 100//useAppSelector(state => state.newVault.totalValues)
   const [inputValue, setInputValue] = React.useState<number | string>(share)
-
   const setVal = (val: number) => {
     const total = totalShares! - share + val
     if (total <= 100) {
       setInputValue(val)
-      dispatch(setStrategyValue({ address, share: val }))
+      // dispatch(setStrategyValue({ address, share: val }))
     } else {
       setMax()
     }
@@ -47,7 +38,7 @@ function ItemSlider({
     const rest = 100 - totalShares!
     const newVal = share + rest
     setInputValue(newVal)
-    dispatch(setStrategyValue({ address, share: newVal }))
+    //dispatch(setStrategyValue({ address, share: newVal }))
   }
 
   const handleValueInput = (e: any) => {
@@ -87,8 +78,8 @@ function ItemSlider({
   }
 
   const handleDelete = () => {
-    dispatch(setStrategyValue({ address, share: 0 }))
-    dispatch(removeStrategy({ address: address, share: 0 }))
+    //dispatch(setStrategyValue({ address, share: 0 }))
+    //dispatch(removeStrategy({ address: address, share: 0 }))
   }
 
   useEffect(() => {
@@ -96,72 +87,59 @@ function ItemSlider({
   }, [share])
 
   return (
-    <Grid templateColumns="repeat(12, 1fr)" alignItems={'center'} my={4}>
+    <>
+      <Grid templateColumns="repeat(12, 1fr)" alignItems={'center'} my={4}>
       <GridItem colSpan={8} display={'flex'} alignItems={'center'}>
         <h3>{name ? name : address}</h3>
         <IconButton
           aria-label='delete__button'
           mx={2}
           onClick={handleDelete}
-          icon={<DeleteIcon />}
           variant='outline'
           colorScheme='red'
           size={'xs'}
-        />
+        >
+            <FaRegTrashCan />
+        </IconButton>
       </GridItem>
       <GridItem colSpan={1} colStart={12} justifySelf={'end'} alignContent={'end'}>
-        <InputGroup>
-          <Input
-            px={2}
-            type='number'
+          <HStack>
+            <InputGroup endElement={'%'}>
+              <Input
+                px={2}
+                type='number'
+                min={0}
+                width={'82px'}
+                placeholder={share.toString()}
+                onInput={handleValueInput}
+                onBlur={handleBlur}
+                onKeyDown={handleEnter}
+                value={inputValue}
+              />
+            </InputGroup>
+          </HStack>
+        </GridItem>
+        <GridItem colSpan={12} mt={4}>
+          <Slider
             min={0}
-            placeholder={share.toString()}
-            onInput={handleValueInput}
-            onBlur={handleBlur}
-            onKeyDown={handleEnter}
-            value={inputValue} />
-          <InputRightAddon px={1}>%</InputRightAddon>
-        </InputGroup>
-      </GridItem>
-      <GridItem colSpan={12} mt={4}>
-        <Slider
-          aria-label='slider-ex-5'
-          id='slider'
-          defaultValue={share}
-          value={share}
-          min={0}
-          max={100}
-          colorScheme='green'
-          maxWidth={'100%'}
-          onChange={(v) => { setVal(v) }}
-          onMouseEnter={() => setShowTooltip(true)}
-          onMouseLeave={() => setShowTooltip(false)}
-          onChangeEnd={(val) => setVal(val)}>
-          <SliderTrack boxShadow={'sm'}>
-            <SliderFilledTrack boxShadow={'dark-lg'} />
-          </SliderTrack>
-          <Tooltip
-            hasArrow
-            bg='green.500'
-            color='white'
-            placement='top'
-            isOpen={showTooltip}
-            label={`${share}%`}
+            max={100}
+            defaultValue={[0]}
+            maxWidth={'100%'}
+            marks={[0, 25, 50, 75, 100]}
+            value={[inputValue as number]}
+            onValueChange={(val: any) => setVal(val.value[0])}
+          />
+        </GridItem>
+        <GridItem colSpan={1} colStart={12} mt={4} justifySelf={'end'}>
+          <Button
+            onClick={() => { setMax() }}
+            size={'xs'}
           >
-            <SliderThumb />
-          </Tooltip>
-        </Slider>
-      </GridItem>
-      <GridItem colSpan={1} colStart={12} mt={4} justifySelf={'end'}>
-        <Button
-          onClick={() => { setMax() }}
-          colorScheme={'green'}
-          size={'lg'}
-        >
-          Set Max
-        </Button>
-      </GridItem>
-    </Grid>
+            Set Max
+          </Button>
+        </GridItem>
+      </Grid>
+    </>
   )
 }
 

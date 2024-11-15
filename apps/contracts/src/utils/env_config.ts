@@ -1,4 +1,4 @@
-import { Horizon, Keypair, SorobanRpc } from "@stellar/stellar-sdk";
+import { Horizon, Keypair, rpc } from "@stellar/stellar-sdk";
 import dotenv from "dotenv";
 import * as fs from "fs";
 import path from "path";
@@ -23,14 +23,14 @@ interface Config {
 }
 
 class EnvConfig {
-  rpc: SorobanRpc.Server;
+  rpc: rpc.Server;
   horizonRpc: Horizon.Server;
   passphrase: string;
   friendbot: string | undefined;
   admin: Keypair;
 
   constructor(
-    rpc: SorobanRpc.Server,
+    rpc: rpc.Server,
     horizonRpc: Horizon.Server,
     passphrase: string,
     friendbot: string | undefined,
@@ -81,17 +81,18 @@ class EnvConfig {
       horizon_rpc_url === undefined ||
       (network != "mainnet" && friendbot_url === undefined) ||
       passphrase === undefined ||
-      admin === undefined
+      admin === undefined ||
+      admin === ""
     ) {
       throw new Error(
-        "Error: Configuration is missing required fields, include <network>"
+        "Error: Configuration is missing required fields. Please check your .env file."
       );
     }
 
     const allowHttp = network === "standalone";
 
     return new EnvConfig(
-      new SorobanRpc.Server(rpc_url, { allowHttp }),
+      new rpc.Server(rpc_url, { allowHttp }),
       new Horizon.Server(horizon_rpc_url, { allowHttp }),
       passphrase,
       friendbot_url,

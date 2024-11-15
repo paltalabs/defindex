@@ -1,114 +1,219 @@
-import React from 'react'
-import { useEffect, useState } from 'react'
+'use client'
+import {
+  DialogBackdrop,
+  DialogBody,
+  DialogContent,
+  DialogFooter,
+  DialogRoot,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { getTokenSymbol } from '@/helpers/getTokenInfo'
+import { StrategyMethod, useStrategyCallback } from '@/hooks/useStrategy'
+import { getDefaultStrategies, pushAmount, pushAsset } from '@/store/lib/features/vaultStore'
+import { useAppDispatch } from '@/store/lib/storeHooks'
+import { Asset, Strategy } from '@/store/lib/types'
 import {
   Button,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  useDisclosure,
+  For,
+  Grid,
+  GridItem,
   IconButton,
-  Select,
+  Input,
+  Skeleton,
+  Stack,
+  Text,
 } from '@chakra-ui/react'
-import { AddIcon } from '@chakra-ui/icons'
-import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { pushStrategy, getDefaultStrategies } from '@/store/lib/features/vaultStore'
 import { useSorobanReact } from '@soroban-react/core'
-import { Strategy } from '@/store/lib/features/walletStore'
+import { scValToNative, xdr } from '@stellar/stellar-sdk'
+import { useEffect, useState } from 'react'
+import { MdAdd } from 'react-icons/md'
+import { Checkbox } from '../ui/checkbox'
+import { CheckboxCard } from '../ui/checkbox-card'
+import { InputGroup } from '../ui/input-group'
+
+interface AmountInputProps {
+  amount: number
+  enabled: boolean
+}
 
 function AddNewStrategyButton() {
-  const strategies = useAppSelector(state => state.newVault.strategies)
   const dispatch = useAppDispatch();
-  // const { activeChain } = useSorobanReact() // RESTORE_THIS
-  const activeChain = { name: "testnet", networkPassphrase: "Test SDF Network ; September 2015" } // REMOVE_THIS
+  const sorobanContext = useSorobanReact()
+  const { activeChain } = useSorobanReact()
+  const strategyCallback = useStrategyCallback();
+  const [open, setOpen] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
   const [defaultStrategies, setDefaultStrategies] = useState<Strategy[]>([])
-  const [newStrategy, setNewStrategy] = useState<Strategy>()
-  const [newAddress, setNewAddress] = useState<string>()
-  const [newName, setNewName] = useState<string>()
-  const [selectValue, setSelectValue] = useState<string>('')
-
+  const [asset, setAsset] = useState<Asset>({ address: '', strategies: [] })
+  const [amountInput, setAmountInput] = useState<AmountInputProps>({ amount: 0, enabled: false })
 
   useEffect(() => {
-    const fetchStragegies = async () => {
+    const fetchStrategies = async () => {
       const tempStrategies = await getDefaultStrategies(activeChain?.name?.toLowerCase() || 'testnet')
+      for (const strategy of tempStrategies) {
+        const assetAddress = await strategyCallback(
+          strategy.address,
+          StrategyMethod.ASSET,
+          undefined,
+          false
+        ).then((result) => {
+          const resultScval = result as xdr.ScVal;
+          const asset = scValToNative(resultScval);
+          return asset;
+        })
+        const assetSymbol = await getSymbol(assetAddress)
+        setAsset({ ...asset, address: assetAddress, symbol: assetSymbol! })
+      }
       setDefaultStrategies(tempStrategies)
     }
-    fetchStragegies()
+    fetchStrategies();
   }, [activeChain?.networkPassphrase])
 
-  const { isOpen, onOpen, onClose } = useDisclosure()
-  const handleOpenModal = () => {
-    isOpen ? onClose() : onOpen()
-  }
 
   const resetForm = () => {
-    setNewStrategy({ address: '', name: '', share: 0, index: '0' })
-    setNewAddress('')
-    setNewName('')
-    setSelectValue('')
+    setAsset({ address: '', strategies: [] })
+    setAmountInput({ amount: 0, enabled: false })
+    setOpen(false)
   }
 
-  const handleInputSelect = async (e: any) => {
-    const value = e.target.value
-    setSelectValue(value)
-    const isDefaultStrategy = await defaultStrategies.find(strategy => strategy.address === value)
-    if (!!isDefaultStrategy) {
-      setNewStrategy(isDefaultStrategy)
+  const getSymbol = async (address: string) => {
+    const symbol = await getTokenSymbol(address, sorobanContext)
+    if (!symbol) return '';
+    return symbol === 'native' ? 'XLM' : symbol
+  }
+
+  const handleSelectStrategy = (value: boolean, strategy: Strategy) => {
+    setIsLoading(true)
+    switch (value) {
+      case true:
+        const fetchAssets = async () => {
+          try {
+            const asset = await strategyCallback(
+              strategy.address,
+              StrategyMethod.ASSET,
+              undefined,
+              false
+            ).then((result) => {
+              const resultScval = result as xdr.ScVal;
+              const asset = scValToNative(resultScval);
+              return asset;
+            });
+            const symbol = await getSymbol(asset);
+            const newAsset = { address: asset, symbol: symbol!, strategies: [strategy] }
+            console.log(newAsset)
+            setAsset({ address: asset, symbol: symbol!, strategies: [strategy] })
+          } catch (error) {
+            console.error(error);
+          } finally {
+            setIsLoading(false)
+          }
+        };
+        fetchAssets();
+        break
+      case false:
+        setAsset({ ...asset, strategies: asset.strategies.filter(str => str.address !== strategy.address) })
+        setIsLoading(false)
+        break
     }
   }
 
-  const addStrategy = async () => {
-    const isDefaultStrategy = await defaultStrategies.find(strategy => strategy.address === newStrategy?.address)
-    const hasEmptyFields = newStrategy?.address === '' || newStrategy?.name === '' || newName === '' || newAddress === ''
-    const strategyExists = strategies.find((strategy: Strategy) => strategy.address === newStrategy?.address)
-    if (strategyExists) {
-      console.error('Strategy already exists')
-      return false
+  const addAsset = async () => {
+    const newAsset: Asset = {
+      address: asset.address,
+      strategies: asset.strategies,
+      symbol: asset.symbol
     }
-    if (hasEmptyFields && !isDefaultStrategy) {
-      console.error('Please fill all fields')
-      return false
+    await dispatch(pushAsset(newAsset))
+    if (amountInput.enabled && amountInput.amount! > 0) {
+      await dispatch(pushAmount(amountInput.amount!))
     }
-    await dispatch(pushStrategy(newStrategy!))
     resetForm()
-    isOpen ? onClose() : onOpen()
+  }
+
+
+
+  const handleAmountInput = async (e: any) => {
+    const input = e.target.value
+    const decimalRegex = /^(\d+)?(\.\d{0,7})?$/
+    if (!decimalRegex.test(input)) return
+    if (input.startsWith('.')) {
+      setAmountInput({ amount: 0 + input, enabled: true });
+      return
+    }
+    setAmountInput({ amount: input, enabled: true });
   }
   return (
-    <>
-      <Button colorScheme="green" size="md" onClick={handleOpenModal} textAlign={'end'} isDisabled={defaultStrategies.length === 0}>
-        Add new strategy
-      </Button>
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay backdropFilter='blur(5px)' />
-        <ModalContent >
-          <ModalHeader>Add new strategy</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
+    <DialogRoot open={open} onOpenChange={(e) => { setOpen(e.open) }} placement={'center'}>
+      <DialogBackdrop backdropFilter='blur(1px)' />
+      <DialogTrigger asChild>
+        <Button
+          size="md"
+          textAlign={'end'}
+          disabled={defaultStrategies.length === 0}>
+          Add Strategy
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogBody>
+          <Text fontSize='lg'>Select strategies:</Text>
+          <For each={defaultStrategies}>
+            {(strategy, index) => (
+              <Stack key={index} my={2}>
+                {isLoading && <Skeleton height={12} />}
+                {!isLoading && <CheckboxCard
+                  checked={asset.strategies.some((str) => str.address === strategy.address)}
+                  onCheckedChange={(e) => handleSelectStrategy(!!e.checked, strategy)}
+                  label={strategy.name}
+                />}
+                {asset.strategies.some((str) => str.address === strategy.address) &&
+                  <Grid templateColumns={['1fr', null, 'repeat(12, 2fr)']} alignItems={'center'} >
+                    <GridItem colSpan={2} colEnd={12}>
+                      <Text fontSize={'xs'}>Initial deposit:</Text>
+                    </GridItem>
+                    <GridItem colStart={12} mt={1} ml={1}>
+                      <Checkbox
+                        size={'sm'}
+                        checked={amountInput.enabled}
+                        onCheckedChange={(e) => setAmountInput({ ...amountInput, enabled: !!e.checked })}
+                      />
+                    </GridItem>
 
-            <Select placeholder='Select option' onChange={handleInputSelect} value={selectValue}>
-              {defaultStrategies.map((strategy, index) => (
-                <option key={strategy.name} value={strategy.address}>{(strategy.name != '') ? strategy.name : strategy.address}</option>
-              ))}
-            </Select>
-          </ModalBody>
+                  </Grid>
+                }
+                {amountInput.enabled && (
+                  <Grid templateColumns={['1fr', null, 'repeat(12, 2fr)']}>
+                    <GridItem alignContent={'center'} colStart={1}>
+                      <Text fontSize={'sm'}>Amount:</Text>
+                    </GridItem>
+                    <GridItem colStart={8} colEnd={13}>
+                      <InputGroup
+                        endElement={`${asset.symbol}`}
+                      >
+                        <Input onChange={handleAmountInput} value={amountInput.amount} />
+                      </InputGroup>
+                    </GridItem>
+                  </Grid>
+                )}
+              </Stack>
+            )}
+          </For>
 
-          <ModalFooter>
-            <Button variant='ghost' mr={3} onClick={onClose}>
-              Close
-            </Button>
-            <IconButton
-              aria-label='add_strategy'
-              colorScheme='green'
-              icon={<AddIcon />}
-              onClick={addStrategy}
-            />
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </>
+        </DialogBody>
+        <DialogFooter>
+          <Button variant='ghost' mr={3} onClick={() => setOpen(false)}>
+            Close
+          </Button>
+          <IconButton
+            disabled={asset.strategies.length === 0}
+            aria-label='add_strategy'
+            colorScheme='green'
+            onClick={addAsset}
+          >
+            <MdAdd />
+          </IconButton>
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
   )
 }
 

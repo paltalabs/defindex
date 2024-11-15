@@ -1,6 +1,12 @@
-use soroban_sdk::{vec, BytesN, Map, Vec};
+use soroban_sdk::{vec, BytesN, String};
 
-use crate::test::{create_asset_params, defindex_vault_contract::{self, Investment}, DeFindexFactoryTest};
+use crate::test::{
+  create_asset_params, 
+  defindex_vault_contract::{
+    self, 
+    AssetInvestmentAllocation,  
+    StrategyInvestment, 
+  }, DeFindexFactoryTest};
 
 #[test]
 fn test_deposit_success() {
@@ -17,6 +23,8 @@ fn test_deposit_success() {
     &test.emergency_manager, 
     &test.fee_receiver,
     &2000u32,
+    &String::from_str(&test.env, "dfToken"),
+    &String::from_str(&test.env, "DFT"),
     &test.manager,
     &asset_params,
     &salt
@@ -47,7 +55,7 @@ fn test_deposit_success() {
   defindex_contract.deposit(&vec![&test.env, amount_token0, amount_token1], &vec![&test.env, 0, 0], &users[0]);
 
   let df_balance = defindex_contract.balance(&users[0]);
-  assert_eq!(df_balance, amount_token0 + amount_token1); // TODO: The amount of dfTokens minted is the sum of both asset deposited?
+  assert_eq!(df_balance, amount_token0 + amount_token1 - 1000); // TODO: The amount of dfTokens minted is the sum of both asset deposited?
 
 
   // defindex_contract.withdraw(&df_balance, &users[0]);
@@ -75,6 +83,8 @@ fn test_withdraw_success() {
     &test.emergency_manager, 
     &test.fee_receiver,
     &2000u32,
+    &String::from_str(&test.env, "dfToken"),
+    &String::from_str(&test.env, "DFT"),
     &test.manager,
     &asset_params,
     &salt
@@ -105,7 +115,7 @@ fn test_withdraw_success() {
   defindex_contract.deposit(&vec![&test.env, amount_token0, amount_token1], &vec![&test.env, 0, 0], &users[0]);
 
   let df_balance = defindex_contract.balance(&users[0]);
-  assert_eq!(df_balance.clone(), amount_token0 + amount_token1); // TODO: The amount of dfTokens minted is the sum of both asset deposited?
+  assert_eq!(df_balance.clone(), amount_token0 + amount_token1 - 1000); // TODO: The amount of dfTokens minted is the sum of both asset deposited?
 
   let vault_token0_balance = test.token0.balance(&defindex_contract.address);
   assert_eq!(vault_token0_balance, amount_token0);
@@ -114,15 +124,28 @@ fn test_withdraw_success() {
   assert_eq!(vault_token1_balance, amount_token1);
 
   let investments = vec![
-    &test.env, 
-    Investment {
-      amount: amount_token0, 
-      strategy: test.strategy_contract_token0.address.clone()
-    }, 
-    Investment {
-      amount: amount_token1, 
-      strategy: test.strategy_contract_token1.address.clone()
-    }];
+        &test.env,
+        Some(AssetInvestmentAllocation {
+            asset: test.token0.address.clone(),
+            strategy_investments: vec![
+                &test.env,
+                Some(StrategyInvestment {
+                    strategy: test.strategy_contract_token0.address.clone(),
+                    amount: amount_token0,
+                }),
+            ],
+        }),
+        Some(AssetInvestmentAllocation {
+          asset: test.token1.address.clone(),
+          strategy_investments: vec![
+              &test.env,
+              Some(StrategyInvestment {
+                  strategy: test.strategy_contract_token1.address.clone(),
+                  amount: amount_token1,
+              }),
+          ],
+      })
+    ];
 
 
   defindex_contract.invest(&investments);
