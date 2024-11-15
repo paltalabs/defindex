@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import {
-  Box,
   Table,
   Text,
   Grid,
@@ -10,13 +9,11 @@ import {
   Fieldset,
   Stack,
   Icon,
+  Link,
 } from '@chakra-ui/react'
-import { shortenAddress } from '@/helpers/shortenAddress'
-
-import { ChartData } from './ConfirmDelpoyModal'
+import { shortenAddress, isValidAddress } from '@/helpers/address'
 import { setEmergencyManager, setFeeReceiver, setManager, setVaultShare } from '@/store/lib/features/vaultStore'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { StrKey } from '@stellar/stellar-sdk'
 import { FaRegPaste } from "react-icons/fa6";
 import { useSorobanReact } from '@soroban-react/core'
 import { InputGroup } from '../ui/input-group'
@@ -28,13 +25,16 @@ import {
   AccordionRoot,
 } from "@chakra-ui/react"
 import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io'
+import { Asset } from '@/store/lib/types'
+import { InfoTip } from '../ui/toggle-tip'
 
-enum AccordionItems {
+
+export enum AccordionItems {
   STRATEGY_DETAILS = 'strategy-details',
   MANAGER_CONFIGS = 'manager-configs',
   FEES_CONFIGS = 'fees-configs',
 }
-interface FormControlInterface {
+export interface FormControlInterface {
   manager: {
     isValid: boolean | undefined;
     value: string | undefined;
@@ -59,7 +59,7 @@ const CustomAccordionTrigger = ({ title, type, accordionValue, setAccordionValue
       <Grid templateColumns={'repeat(12, 1fr)'} width={'100%'}>
         <GridItem colSpan={6} colStart={1}>
           <Text fontSize='lg' textAlign={'left'} fontWeight='bold' mb={2}>
-            {title} settings
+            {title === 'Strategies' ? 'Strategies' : title + ' settings'}
           </Text>
         </GridItem>
         <GridItem colSpan={1} colStart={12}>
@@ -86,32 +86,50 @@ const CustomInputField = ({
   onChange,
   handleClick,
   placeholder,
-  invalid
+  invalid,
+  description,
+  href,
 }: {
   label: string,
   value: string,
   onChange: (e: any) => void,
   handleClick: (address: string) => void,
   placeholder: string,
-  invalid: boolean
+    invalid: boolean,
+    description?: string,
+    href?: string,
 }) => {
   const { address } = useSorobanReact()
-  if (!address) return null
   return (
     <Fieldset.Root invalid={invalid}>
-      <Fieldset.Legend>{label}</Fieldset.Legend>
+      <Fieldset.Legend>{label}
+        <InfoTip content={
+          <>
+            <Text fontSize={'xs'} maxW={'25vw'}>{description}</Text>
+            <Link
+              href={href ?? ''}
+              colorPalette={'blue'}
+              target='_blank'
+            >
+              Learn more.
+            </Link>
+
+          </>
+        } />
+      </Fieldset.Legend>
       <Stack>
         <InputGroup endElement={
           <Tooltip content='Use connected wallet'>
             <IconButton
               aria-label='Connected address'
               size={'sm'}
-              onClick={() => handleClick(address)}
+              onClick={() => handleClick(address!)}
             >
               <FaRegPaste />
             </IconButton>
           </Tooltip>
-        }>
+          }
+        >
           <Input
             value={value}
             onChange={onChange}
@@ -123,34 +141,25 @@ const CustomInputField = ({
     </Fieldset.Root>
   )
 }
-export const VaultPreview = ({ data }: { data: ChartData[] }) => {
+
+interface VaultPreviewProps {
+
+  data: Asset[];
+
+  accordionValue: AccordionItems[];
+
+  setAccordionValue: React.Dispatch<React.SetStateAction<AccordionItems[]>>;
+
+  formControl: FormControlInterface;
+
+  setFormControl: (args: FormControlInterface) => any;
+
+}
+export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue, setAccordionValue, formControl, setFormControl }) => {
 
   const dispatch = useAppDispatch()
-  const { address } = useSorobanReact()
-  const vaultShare = useAppSelector(state => state.newVault.vaultShare)
-  const [accordionValue, setAccordionValue] = useState<AccordionItems[]>([AccordionItems.STRATEGY_DETAILS])
-  const [formControl, setFormControl] = useState<FormControlInterface>({
-    manager: {
-      isValid: undefined,
-      value: undefined
-    },
-    emergencyManager: {
-      isValid: undefined,
-      value: undefined
-    },
-    feeReceiver: {
-      isValid: undefined,
-      value: undefined
-    },
-    vaultShare: 0
-  })
-  const isValidAddress = (address: string) => {
-    if (StrKey.isValidEd25519PublicKey(address) || StrKey.isValidMed25519PublicKey(address) || StrKey.isValidContract(address)) {
-      return true
-    } else {
-      return false
-    }
-  }
+  const amounts = useAppSelector(state => state.newVault.amounts)
+
   const handleManagerChange = (input: string) => {
     const isValid = isValidAddress(input)
     while (!isValid) {
@@ -225,10 +234,13 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
     dispatch(setFeeReceiver(input))
   };
   const handleVaultShareChange = (input: any) => {
-    if (isNaN(input)) return
     if (input < 0 || input > 100) return
     const decimalRegex = /^(\d+)?(\.\d{0,2})?$/
     if (!decimalRegex.test(input)) return
+    if (input.startsWith('.')) {
+      setFormControl({ ...formControl, vaultShare: 0 + input });
+      return
+    }
     setFormControl({
       ...formControl,
       vaultShare: input
@@ -236,43 +248,61 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
     dispatch(setVaultShare(input * 100))
   }
 
+  const dropdownData = {
+    strategies: {
+      title: 'Strategies',
+      description: 'A strategy is a set of steps to be followed to execute an investment in one or several protocols.',
+      href: 'https://docs.defindex.io/whitepaper/10-whitepaper/01-introduction#core-concepts'
+    },
+    manager: {
+      title: 'Manager',
+      description: 'The Manager can rebalance the Vault, emergency withdraw and invest IDLE funds in strategies.',
+      href: 'https://docs.defindex.io/whitepaper/10-whitepaper/03-the-defindex-approach/02-contracts/01-vault-contract#management'
+    },
+    emergencyManager: {
+      title: 'Emergency manager',
+      description: 'The Emergency Manager has the authority to withdraw assets from the DeFindex in case of an emergency.',
+      href: 'https://docs.defindex.io/whitepaper/10-whitepaper/03-the-defindex-approach/02-contracts/01-vault-contract#emergency-management'
+    },
+    feeReceiver: {
+      title: 'Fee receiver',
+      description: ' Fee Receiver could be the manager using the same address, or it could be a different entity such as a streaming contract, a DAO, or another party.',
+      href: 'https://docs.defindex.io/whitepaper/10-whitepaper/03-the-defindex-approach/02-contracts/01-vault-contract#fee-collection'
+    }
+  }
   return (
     <>
-      <Box display='flex' my={4}>
-        {/* <PieChart
-          series={[
-            {
-              data: data,
-            },
-          ]}
-          width={500}
-          height={200}
-        /> */}
-      </Box>
       <AccordionRoot value={accordionValue} onValueChange={(e: any) => setAccordionValue(e.value)}>
         <AccordionItem value={AccordionItems.STRATEGY_DETAILS}>
           <CustomAccordionTrigger
             setAccordionValue={setAccordionValue}
-            title='Strategies'
+            title={dropdownData.strategies.title}
             type={AccordionItems.STRATEGY_DETAILS}
-            accordionValue={accordionValue} />
+            accordionValue={accordionValue}
+          />
           <AccordionItemContent>
             <Table.Root size={'lg'} w={'full'}>
               <Table.Header>
                 <Table.Row >
                   <Table.Cell>Name</Table.Cell>
                   <Table.Cell textAlign={'center'}>Address</Table.Cell>
-                  <Table.Cell textAlign={'center'} >Percentage</Table.Cell>
+                  <Table.Cell textAlign={'center'} >Asset</Table.Cell>
+                  {amounts.length > 0 && (
+                    <Table.Cell textAlign={'center'}>Initial deposit</Table.Cell>
+                  )}
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {data.map((strategy: ChartData, index: number) => (
+                {data.map((asset: Asset, index: number) => (
                   <Table.Row key={index}>
-                    <Table.Cell>{strategy.label}</Table.Cell>
+                    <Table.Cell>{asset.strategies[0]?.name}</Table.Cell>
                     <Table.Cell textAlign={'center'}>
-                      {strategy.address ? shortenAddress(strategy.address) : '-'}
+                      {asset.strategies[0]?.address ? shortenAddress(asset.strategies[0]?.address) : '-'}
                     </Table.Cell>
-                    <Table.Cell textAlign={'center'}>{strategy.value}%</Table.Cell>
+                    <Table.Cell textAlign={'center'}>{asset.symbol}</Table.Cell>
+                    {amounts.length > 0 && (
+                      <Table.Cell textAlign={'center'}>${amounts[index]} {asset.symbol}</Table.Cell>
+                    )}
                   </Table.Row>
                 ))}
               </Table.Body>
@@ -282,26 +312,30 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
         <AccordionItem value={AccordionItems.MANAGER_CONFIGS}>
           <CustomAccordionTrigger
             setAccordionValue={setAccordionValue}
-            title='Manager'
+            title={dropdownData.manager.title}
             type={AccordionItems.MANAGER_CONFIGS}
             accordionValue={accordionValue}
           />
           <AccordionItemContent>
             <CustomInputField
-              label='Manager'
+              label={dropdownData.manager.title}
               value={formControl.manager.value || ''}
               onChange={(e) => handleManagerChange(e.target.value)}
               handleClick={(address: string) => handleManagerChange(address)}
               placeholder='GAFS3TLVM...'
               invalid={formControl.manager.isValid === false}
+              description={dropdownData.manager.description}
+              href={dropdownData.manager.href}
             />
             <CustomInputField
-              label='Emergency manager'
+              label={dropdownData.emergencyManager.title}
               value={formControl.emergencyManager.value || ''}
               onChange={(e) => handleEmergencyManagerChange(e.target.value)}
               handleClick={(address: string) => handleEmergencyManagerChange(address)}
               placeholder='GAFS3TLVM...'
               invalid={formControl.emergencyManager.isValid === false}
+              description={dropdownData.emergencyManager.description}
+              href={dropdownData.emergencyManager.href}
             />
           </AccordionItemContent>
         </AccordionItem>
@@ -319,15 +353,34 @@ export const VaultPreview = ({ data }: { data: ChartData[] }) => {
               handleClick={(address: string) => handleFeeReceiverChange(address)}
               placeholder='GAFS3TLVM...'
               invalid={formControl.feeReceiver.isValid === false}
+              description={dropdownData.feeReceiver.description}
+              href={dropdownData.feeReceiver.href}
             />
-            <InputGroup
-              endElement={'%'}
+            <Fieldset.Root invalid={formControl.vaultShare == 0} mt={4}>
+              <Fieldset.Legend>Fee percentage <InfoTip content={
+                <>
+                  <Text fontSize={'xs'} maxW={'25vw'}>The recommended initial setup suggests a fee of 0.5% - 2% APR on these shares.</Text>
+                  <Link
+                    href={dropdownData.feeReceiver.href}
+                    colorPalette={'blue'}
+                    target='_blank'
             >
-              <Input
-                value={formControl.vaultShare}
-                onChange={(e) => { handleVaultShareChange(e.target.value) }}
-              />
-            </InputGroup>
+                    Learn more.
+                  </Link>
+
+                </>
+              } /></Fieldset.Legend>
+              <Stack w={100}>
+                <InputGroup endElement={'%'}>
+                  <Input
+                    value={formControl.vaultShare}
+                    onChange={(e) => { handleVaultShareChange(e.target.value) }}
+                    required
+                  />
+                </InputGroup>
+              </Stack>
+              <Fieldset.ErrorText>This field is required.</Fieldset.ErrorText>
+            </Fieldset.Root>
           </AccordionItemContent>
         </AccordionItem>
       </AccordionRoot >

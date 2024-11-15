@@ -4,38 +4,7 @@ import type { RootState } from '../store'
 import { ChainMetadata } from '@soroban-react/types'
 import vaults from '@/constants/constants.json'
 import { Networks } from '@stellar/stellar-sdk'
-import { VaultMethod } from '@/hooks/useVault'
-// Define a type for the slice state
-export interface Strategy {
-  address: string;
-  index: string;
-  share: number;
-  name: string;
-}
-export interface VaultData {
-  address: string;
-  totalValues: number;
-  emergencyManager?: string;
-  feeReceiver?: string;
-  manager?: string;
-  name: string;
-  strategies: Strategy[];
-}
-
-interface SelectedVault extends VaultData {
-  method: VaultMethod;
-}
-export interface WalletState {
-  address: string;
-  selectedChain: ChainMetadata;
-  vaults: {
-    isLoading: boolean;
-    createdVaults: VaultData[];
-    hasError: boolean;
-    selectedVault: SelectedVault | undefined;
-  }
-}
-
+import { SelectedVault, VaultData, WalletState } from '../types'
 
 const getDefaultVaults = async (network: string) => {
   const filteredVaults = vaults.filter(vault => {
@@ -119,6 +88,23 @@ export const walletSlice = createSlice({
     setVaults: (state, action: PayloadAction<VaultData[]>) => {
       state.vaults.createdVaults = action.payload
     },
+    setVaultTVL: (state, action: PayloadAction<number>) => {
+      state.vaults.createdVaults.forEach(vault => {
+        if (vault.address === state.vaults.selectedVault?.address) {
+          vault.TVL = action.payload
+        }
+      })
+    },
+    resetSelectedVault: (state) => { 
+      state.vaults.selectedVault = undefined
+    },
+    setVaultUserBalance: (state, action: PayloadAction<{address:string, vaule:number}>) => {
+      state.vaults.createdVaults.forEach(vault => {
+        if (vault.address === action.payload.address) {
+          vault.userBalance = action.payload.vaule
+        }
+      })
+    }
   },
   extraReducers(builder) {
     builder.addCase(fetchDefaultAddresses.pending, (state) => {
@@ -143,6 +129,9 @@ export const {
   setIsVaultsLoading, 
   setSelectedVault, 
   setVaults,
+  setVaultTVL,
+  resetSelectedVault,
+  setVaultUserBalance
 } = walletSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
