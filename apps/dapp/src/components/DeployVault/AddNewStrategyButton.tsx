@@ -1,6 +1,17 @@
 'use client'
-import React from 'react'
-import { useEffect, useState } from 'react'
+import {
+  DialogBackdrop,
+  DialogBody,
+  DialogContent,
+  DialogFooter,
+  DialogRoot,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { getTokenSymbol } from '@/helpers/getTokenInfo'
+import { StrategyMethod, useStrategyCallback } from '@/hooks/useStrategy'
+import { getDefaultStrategies, pushAmount, pushAsset } from '@/store/lib/features/vaultStore'
+import { useAppDispatch } from '@/store/lib/storeHooks'
+import { Asset, Strategy } from '@/store/lib/types'
 import {
   Button,
   For,
@@ -12,25 +23,13 @@ import {
   Stack,
   Text,
 } from '@chakra-ui/react'
-import { MdAdd } from 'react-icons/md'
-import {  
-  DialogBackdrop,
-  DialogBody,
-  DialogContent,
-  DialogFooter,
-  DialogRoot,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { getDefaultStrategies, pushAmount, pushAsset } from '@/store/lib/features/vaultStore'
 import { useSorobanReact } from '@soroban-react/core'
-import { Asset, Strategy } from '@/store/lib/types'
-import { CheckboxCard } from '../ui/checkbox-card'
-import { getTokenSymbol } from '@/helpers/getTokenInfo'
-import { StrategyMethod, useStrategyCallback } from '@/hooks/useStrategy'
 import { scValToNative, xdr } from '@stellar/stellar-sdk'
-import { InputGroup } from '../ui/input-group'
+import { useEffect, useState } from 'react'
+import { MdAdd } from 'react-icons/md'
 import { Checkbox } from '../ui/checkbox'
+import { CheckboxCard } from '../ui/checkbox-card'
+import { InputGroup } from '../ui/input-group'
 
 interface AmountInputProps {
   amount: number
@@ -151,7 +150,7 @@ function AddNewStrategyButton() {
           size="md"
           textAlign={'end'}
           disabled={defaultStrategies.length === 0}>
-          Add new assets
+          Add Strategy
         </Button>
       </DialogTrigger>
       <DialogContent>
