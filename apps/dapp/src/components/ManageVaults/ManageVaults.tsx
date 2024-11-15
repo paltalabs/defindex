@@ -20,6 +20,7 @@ import { VaultMethod } from "@/hooks/useVault"
 import { InputGroup } from "../ui/input-group"
 import { DialogBackdrop, DialogRoot, DialogTrigger } from "../ui/dialog"
 import { CiSearch } from "react-icons/ci";
+import { InspectVault } from "./InspectVault"
 
 export const ManageVaults = () => {
   const { address } = useSorobanReact()
@@ -27,19 +28,29 @@ export const ManageVaults = () => {
     deployVault: {
       isOpen: boolean
     },
-    deposit: {
+    interact: {
+      isOpen: boolean
+    },
+    inspect: {
       isOpen: boolean
     }
   }>({
     deployVault: {
       isOpen: false
     },
-    deposit: {
+    interact: {
+      isOpen: false
+    },
+    inspect: {
       isOpen: false
     }
   })
   const dispatch = useAppDispatch()
   const vaults = useAppSelector(state => state.wallet.vaults.createdVaults)
+  const handleInspectVault = async (value: boolean, args?: any) => {
+    await dispatch(setSelectedVault({ ...args }))
+    setModalStatus({ ...modalStatus, inspect: { isOpen: value } })
+  }
   const handleOpenDeployVault = async (method: string, value: boolean, args?: any) => {
     switch (method) {
       case 'create_vault':
@@ -59,20 +70,20 @@ export const ManageVaults = () => {
     }
   }
 
-  const handleOpenDeposit = async (method: string, args?: any) => {
+  const handleOpenInteract = async (method: string, args?: any) => {
     switch (method) {
       case VaultMethod.DEPOSIT:
-        await setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
+        await setModalStatus({ ...modalStatus, interact: { isOpen: true } })
         await dispatch(setSelectedVault({ ...args, method: VaultMethod.DEPOSIT }))
         console.log(args)
         break
       case VaultMethod.WITHDRAW:
-        await setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
+        await setModalStatus({ ...modalStatus, interact: { isOpen: true } })
         await dispatch(setSelectedVault({ ...args, method: VaultMethod.WITHDRAW }))
         console.log(args)
         break
       case VaultMethod.EMERGENCY_WITHDRAW:
-        await setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
+        await setModalStatus({ ...modalStatus, interact: { isOpen: true } })
         await dispatch(setSelectedVault({ ...args, method: VaultMethod.EMERGENCY_WITHDRAW }))
         console.log(args)
         break
@@ -139,16 +150,29 @@ export const ManageVaults = () => {
         </GridItem>
         <GridItem colSpan={12} colStart={1} colEnd={13} zIndex={'base'}>
           <DialogRoot
-            open={modalStatus.deposit.isOpen}
-            onOpenChange={(e) => { setModalStatus({ ...modalStatus, deposit: { isOpen: e.open } }) }}
+            open={modalStatus.interact.isOpen}
+            onOpenChange={(e) => { setModalStatus({ ...modalStatus, interact: { isOpen: e.open } }) }}
             size={'lg'}
             placement={'center'}
           >
             <DialogBackdrop backdropFilter='blur(1px)' />
             <InteractWithVault />
           </DialogRoot>
-          <AllVaults handleOpenDeployVault={handleOpenDeployVault} handleOpenDeposit={handleOpenDeposit} />
+          <AllVaults handleOpenInspect={handleInspectVault} />
         </GridItem>
+        <DialogRoot
+          open={modalStatus.inspect.isOpen}
+          onOpenChange={(e) => { setModalStatus({ ...modalStatus, inspect: { isOpen: e.open } }) }}
+          size={'lg'}
+          placement={'center'}
+        >
+          <DialogBackdrop backdropFilter='blur(1px)' />
+          <InspectVault
+            handleOpenDeployVault={handleOpenDeployVault}
+            handleOpenInteract={handleOpenInteract}
+            onClose={() => { setModalStatus({ ...modalStatus, inspect: { isOpen: false } }) }}
+          />
+        </DialogRoot>
       </Grid>
     </>
   )

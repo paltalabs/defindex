@@ -2,7 +2,7 @@ import { SorobanContextType, useSorobanReact } from "@soroban-react/core";
 import { useCallback, useEffect, useState } from "react";
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { TxResponse, contractInvoke } from '@soroban-react/contracts';
-import { getRemoteConfig } from "@/helpers/getRemoteConfig";
+import { getNetworkName } from "@/helpers/networkName";
 import { fetchFactoryAddress } from "@/utils/factory";
 
 export enum FactoryMethod {
@@ -11,20 +11,18 @@ export enum FactoryMethod {
 }
 
 const isObject = (val: unknown) => typeof val === 'object' && val !== null && !Array.isArray(val);
-
 export const useFactory = () => {
   const sorobanContext: SorobanContextType = useSorobanReact();
   const { activeChain } = sorobanContext;
   const [address, setAddress] = useState<string>();
-
+  const networkName = getNetworkName(activeChain?.networkPassphrase as string);
   useEffect(() => {
     if (!sorobanContext) return;
-
-    if (activeChain?.name?.toLowerCase() !== 'public' && activeChain?.name?.toLowerCase() !== 'testnet') {
+    if (networkName !== 'mainnet' && networkName !== 'testnet') {
       throw new Error(`Invalid network when fetching factory address: ${activeChain?.id}. It should be mainnet or testnet`);
     }
 
-    fetchFactoryAddress(activeChain?.id as string).then(
+    fetchFactoryAddress(networkName).then(
       (factoryAddress) => {
         setAddress(factoryAddress);
       }
@@ -32,29 +30,53 @@ export const useFactory = () => {
       throw new Error(`Failed to fetch factory address: ${error}`);
     });
 
-  }, [activeChain?.id, sorobanContext]);
+  }, [activeChain?.id]);
 
   return { address };
 }
 
 export function useFactoryCallback() {
   const sorobanContext = useSorobanReact();
+  const {activeChain} = sorobanContext;
   const { address: factoryAddress } = useFactory();
+  const networkName = getNetworkName(activeChain?.networkPassphrase as string);
 
   return useCallback(
     async (method: FactoryMethod, args?: StellarSdk.xdr.ScVal[], signAndSend?: boolean) => {
-      if(factoryAddress) try {
-        const result = (await contractInvoke({
-          contractAddress: factoryAddress as string,
-          method: method,
-          args: args,
-          sorobanContext,
-          signAndSend: signAndSend,
-          reconnectAfterTx: false,
-        })) as TxResponse;
+      try {
+        let result: TxResponse;
+        if(!factoryAddress) {
+          const fallbackAddress = await fetchFactoryAddress(networkName)
+          .catch((error) => {
+            console.warn(`Failed to fetch fallback address: ${error}`);
+            return undefined;
+          });
+          if (!fallbackAddress) {
+            throw new Error('Failed to fetch fallback address');
+          }
+          result = (await contractInvoke({
+            contractAddress: fallbackAddress,
+            method: method,
+            args: args,
+            sorobanContext,
+            signAndSend: signAndSend,
+            reconnectAfterTx: false,
+          })) as TxResponse;
+          return result;
+        } else {
+          result = (await contractInvoke({
+            contractAddress: factoryAddress as string,
+            method: method,
+            args: args,
+            sorobanContext,
+            signAndSend: signAndSend,
+            reconnectAfterTx: false,
+          })) as TxResponse;
+        }
         console.log("Factory Callback result", result)
         if (!signAndSend) return result;
-
+        const parsedResult = StellarSdk.scValToNative(result as any);
+        console.log("Factory Callback parsed result", parsedResult)
         if (
           isObject(result) &&
           result?.status !== StellarSdk.SorobanRpc.Api.GetTransactionStatus.SUCCESS
