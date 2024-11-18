@@ -40,6 +40,7 @@ export type ModalContextType = {
   deployVaultModal: ToggleModalProps,
   inspectVaultModal: ToggleModalProps,
   interactWithVaultModal: ToggleModalProps,
+  editVaultModal: ToggleModalProps,
 
 };
 export const ModalContext = React.createContext<ModalContextType>({
@@ -72,5 +73,9 @@ export const ModalContext = React.createContext<ModalContextType>({
   interactWithVaultModal: {
     isOpen: false,
     setIsOpen: () => {},
-  }
+  },
+  editVaultModal: {
+    isOpen: false,
+    setIsOpen: () => {},
+  },
 });
