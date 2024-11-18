@@ -1,5 +1,6 @@
 [package]
 name = "defindex-strategy-core"
+description = "A foundational library for developing and integrating strategies into the DeFindex ecosystem, providing reusable abstractions, events, and custom error handling."
 version = { workspace = true }
 authors = ["coderipper <joaquin@paltalabs.io>"]
 license = { workspace = true }
