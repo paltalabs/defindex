@@ -8,7 +8,7 @@ import {
 } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
 
-export async function deployContracts(addressBook: AddressBook) {
+export async function deployBlendStrategy(addressBook: AddressBook) {
   if (network != "mainnet") await airdropAccount(loadedConfig.admin);
   let account = await loadedConfig.horizonRpc.loadAccount(
     loadedConfig.admin.publicKey()
@@ -18,12 +18,12 @@ export async function deployContracts(addressBook: AddressBook) {
   console.log("Current Admin account balance:", balance[0].balance);
 
   console.log("-------------------------------------------------------");
-  console.log("Deploying Hodl Strategy");
+  console.log("Deploying Blend Strategy");
   console.log("-------------------------------------------------------");
-  await installContract("hodl_strategy", addressBook, loadedConfig.admin);
+  await installContract("blend_strategy", addressBook, loadedConfig.admin);
   await deployContract(
-    "hodl_strategy",
-    "hodl_strategy",
+    "blend_strategy",
+    "blend_strategy",
     addressBook,
     loadedConfig.admin
   );
@@ -47,12 +47,17 @@ export async function deployContracts(addressBook: AddressBook) {
 
   const emptyVecScVal = xdr.ScVal.scvVec([]);
 
+  const args: xdr.ScVal[] = [
+    xlmScVal,
+    emptyVecScVal
+  ];
+
   console.log("Initializing DeFindex HODL Strategy");
   await invokeContract(
-    "hodl_strategy",
+    "blend_strategy",
     addressBook,
     "initialize",
-    [xlmScVal, emptyVecScVal],
+    args,
     loadedConfig.admin
   );
 }
@@ -62,7 +67,7 @@ const loadedConfig = config(network);
 const addressBook = AddressBook.loadFromFile(network);
 
 try {
-  await deployContracts(addressBook);
+  await deployBlendStrategy(addressBook);
 } catch (e) {
   console.error(e);
 }
