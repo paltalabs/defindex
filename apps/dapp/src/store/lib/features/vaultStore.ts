@@ -97,7 +97,16 @@ export const newVaultSlice = createSlice({
       state.TVL = action.payload.TVL;
     }),
     resetNewVault: ((state) => {
-      state = initialState;
+      state.address = "";
+      state.emergencyManager = "";
+      state.feeReceiver = "";
+      state.manager = "";
+      state.name = "";
+      state.symbol = "";
+      state.vaultShare = 0;
+      state.assets = [];
+      state.amounts = [];
+      state.TVL = 0;
     }),
   }
 })

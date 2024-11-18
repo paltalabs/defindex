@@ -18,6 +18,7 @@ import { ModalContext, TransactionStatusModalStatus } from "@/contexts";
 import { AccordionItems, FormControlInterface, VaultPreview } from "./VaultPreview";
 import { DialogBody, DialogCloseTrigger, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "@chakra-ui/react"
+import { resetNewVault } from "@/store/lib/features/vaultStore";
 
 interface Status {
   isSuccess: boolean,
@@ -279,8 +280,9 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       ...newVault,
       address: parsedResult
     }
-    txModal.handleSuccess(result.txHash);
+    await txModal.handleSuccess(result.txHash);
     dispatch(pushVault(tempVault));
+    dispatch(resetNewVault());
     return result;
   }
 
