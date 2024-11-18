@@ -4,7 +4,7 @@ version = { workspace = true }
 authors = ["coderipper <joaquin@paltalabs.io>"]
 license = { workspace = true }
 edition = { workspace = true }
-publish = false
+publish = true
 repository = { workspace = true }
 homepage = { workspace = true }
 keywords = ["soroban", "defindex", "strategy", "core", "stellar"]
