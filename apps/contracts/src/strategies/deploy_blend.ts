@@ -45,14 +45,16 @@ export async function deployBlendStrategy(addressBook: AddressBook) {
   const xlmAddress = new Address(xlmContractId);
   const xlmScVal = xlmAddress.toScVal();
 
-  const emptyVecScVal = xdr.ScVal.scvVec([]);
+  const initArgs = xdr.ScVal.scvVec([
+    new Address("CCEVW3EEW4GRUZTZRTAMJAXD6XIF5IG7YQJMEEMKMVVGFPESTRXY2ZAV").toScVal(), //Blend pool on testnet!
+  ]);
 
   const args: xdr.ScVal[] = [
     xlmScVal,
-    emptyVecScVal
+    initArgs
   ];
 
-  console.log("Initializing DeFindex HODL Strategy");
+  console.log("Initializing Blend Strategy");
   await invokeContract(
     "blend_strategy",
     addressBook,
