@@ -80,7 +80,8 @@ export const useVault = (vaultAddress?: string | undefined) => {
         ]);
         for (let asset of assets){
             const symbol = await getTokenSymbol(asset.address, sorobanContext);
-            if(symbol === 'native') asset.symbol = 'XLM';
+            if(symbol === 'native') asset.symbol = 'XLM'
+            else asset.symbol = symbol
         }
         getInvestedFunds(vaultAddress);
         const newData: VaultData = {
