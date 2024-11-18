@@ -45,6 +45,9 @@ export async function deployContracts(addressBook: AddressBook) {
   const xlmAddress = new Address(xlmContractId);
   const xlmScVal = xlmAddress.toScVal();
 
+  const soroswapUSDC = new Address("CAAFIHB4I7WQMJMKC22CZVQNNX7EONWSOMT6SUXK6I3G3F6J4XFRWNDI");
+  const usdcScVal = soroswapUSDC.toScVal();
+
   const emptyVecScVal = xdr.ScVal.scvVec([]);
 
   console.log("Initializing DeFindex HODL Strategy");
@@ -52,7 +55,7 @@ export async function deployContracts(addressBook: AddressBook) {
     "hodl_strategy",
     addressBook,
     "initialize",
-    [xlmScVal, emptyVecScVal],
+    [usdcScVal, emptyVecScVal],
     loadedConfig.admin
   );
 }

@@ -1,8 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit'
 import walletSlice from './features/walletStore'
 import newVaultSlice from './features/vaultStore'
-import type { WalletState } from './features/walletStore'
-import type { NewVaultState } from './features/vaultStore'
+import { NewVaultState, WalletState } from './types'
 
 
 export const makeStore = () => {
