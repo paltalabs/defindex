@@ -1,1 +1,0 @@
-export { DeFindexSDK } from "./defindex";

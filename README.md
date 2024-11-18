@@ -144,3 +144,29 @@ Then, you will need to open a terminal connected to the container and run the fo
 curl http://localhost:33791/?code...
 ```
 This will log you in and you can publish the package.
+
+## TypeScript SDK Development
+
+See the [TypeScript SDK README](./packages/defindex-sdk/README.md) for more information.
+
+You can use the defindex-soroban container to develop the SDK.
+```sh
+bash run.sh --nb
+```
+Then, move to the folder `packages/defindex-sdk`.
+
+### Publish TypeScript SDK
+Inside the container, on the `defindex-sdk` folder, run:
+```sh
+# Login to npm
+npm login
+
+# Install dependencies
+yarn install
+
+# Build the package
+yarn build
+
+# Publish to npm
+npm publish --access public
+```
