@@ -113,41 +113,64 @@ const loadedConfig = config(network);
 async function investInStrategy(
     deployedVault: string,
     strategyAddress: string,
-    investmentAmount: number,
+    investmentAmount: number | bigint,
     manager: Keypair
 ) {
+    console.log('🚀 « manager:', manager);
     console.log("\nStep 4: Manager investing in strategy...");
-    const investParams: xdr.ScVal[] = [
-        xdr.ScVal.scvVec([
+
+    // Prepare asset address
+    const xlmAddress = new Address(xlm.contractId(passphrase));
+    console.log("XLM address:", xlmAddress);
+
+    // Create parameter structure
+    const someParam = [
+        {
+            asset: xlmAddress,
+            strategy_investments: [
+                {
+                    amount: BigInt(investmentAmount),
+                    strategy: new Address(strategyAddress),
+                }
+            ]
+        }
+    ];
+
+    // Map parameter structure to ScVal
+    const mappedParam = xdr.ScVal.scvVec(
+        someParam.map((entry) =>
             xdr.ScVal.scvMap([
                 new xdr.ScMapEntry({
                     key: xdr.ScVal.scvSymbol("asset"),
-                    val: new Address(xlm.contractId(passphrase)).toScVal(),
+                    val: entry.asset.toScVal(), // Convert asset address to ScVal
                 }),
                 new xdr.ScMapEntry({
                     key: xdr.ScVal.scvSymbol("strategy_investments"),
-                    val: xdr.ScVal.scvVec([
-                        xdr.ScVal.scvMap([
-                            new xdr.ScMapEntry({
-                                key: xdr.ScVal.scvSymbol("strategy"),
-                                val: new Address(strategyAddress).toScVal(),
-                            }),
-                            new xdr.ScMapEntry({
-                                key: xdr.ScVal.scvSymbol("amount"),
-                                val: nativeToScVal(BigInt(investmentAmount), { type: "u64" }),
-                            }),
-                        ])
-                    ]),
+                    val: xdr.ScVal.scvVec(
+                        entry.strategy_investments.map((investment) =>
+                            xdr.ScVal.scvMap([
+                                new xdr.ScMapEntry({
+                                    key: xdr.ScVal.scvSymbol("amount"),
+                                    val: nativeToScVal(BigInt(investment.amount), { type: "i128" }), // Ensure i128 conversion
+                                }),
+                                new xdr.ScMapEntry({
+                                    key: xdr.ScVal.scvSymbol("strategy"),
+                                    val: investment.strategy.toScVal(), // Convert strategy address
+                                }),
+                            ])
+                        )
+                    ),
                 }),
             ])
-        ])
-    ];
+        )
+    );
 
     try {
+        // Invoke contract with the mapped parameters
         const investResult = await invokeCustomContract(
             deployedVault,
             "invest",
-            investParams,
+            [mappedParam], // Pass the ScVal array as an argument
             manager
         );
         console.log("Investment successful:", scValToNative(investResult.returnValue));
@@ -177,22 +200,28 @@ async function main() {
     // console.log("\nStep 3: Making deposit...");
     // const depositAmount = 1000000000; // 100 XLM
     // const { balanceBefore: depositBalanceBefore, balanceAfter: depositBalanceAfter }
-    // = await depositToVault(deployedVault, depositAmount, depositUser);
+    //     = await depositToVault(deployedVault, depositAmount, depositUser);
     // console.log("Deposit completed - Balance before:", depositBalanceBefore, "Balance after:", depositBalanceAfter);
 
+    // // Step 4: Manager investing in strategy
+    // const deployedVault = "CCRUI2UGJCGHAGYISQGD22YBHADRCUWAE7GQ6CWMJNYXXZPMQ5J643QF";  // Replace with your vault address
+    // const manager = loadedConfig.getUser("DEFINDEX_MANAGER_SECRET_KEY");
+    // const depositUser = Keypair.fromSecret("SBPAP2WHWOOAUB6DARBU2UQ6BUK77LSSMLHSJY4JDBJF26LSRGTL7Y6R");
+
     // Step 4: Manager investing in strategy
-    const deployedVault = "CCRUI2UGJCGHAGYISQGD22YBHADRCUWAE7GQ6CWMJNYXXZPMQ5J643QF";  // Replace with your vault address
-    const strategyAddress = addressBook.getContractId("hodl_strategy");
+    const deployedVault = "CC4USANGI47STLELFD4GNDHBIDMOHEGSE3RLRQ723JMYTRHEDUQH2U5A";  // Replace with your vault address
     const manager = loadedConfig.getUser("DEFINDEX_MANAGER_SECRET_KEY");
+    const depositUser = Keypair.fromSecret("SBQUFFGELWDAUJDBNCW3E3LA575MVG3WYWCYBFBYT73PXFGUAMVA3UHG");
+
+    const strategyAddress = addressBook.getContractId("hodl_strategy");
     const investmentAmount = 100000000; // 100 XLM
-    const depositUser = Keypair.fromSecret("SBPAP2WHWOOAUB6DARBU2UQ6BUK77LSSMLHSJY4JDBJF26LSRGTL7Y6R");
 
     await investInStrategy(
         deployedVault,
         strategyAddress,
         investmentAmount,
-        // manager,
-        depositUser
+        manager,
+        // depositUser
     );
 
     //     // Step 5: Check strategy balance
