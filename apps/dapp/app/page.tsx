@@ -1,10 +1,11 @@
 "use client";
-import { Container, HStack } from '@chakra-ui/react'
+import { HStack } from '@chakra-ui/react'
 import { useSorobanReact } from '@soroban-react/core'
 import ManageVaults from '@/components/ManageVaults/ManageVaults';
+import { TestTokens } from '@/components/TestTokens';
 import {
-  Chart as ChartJS,
   ArcElement,
+  Chart as ChartJS,
 } from 'chart.js';
 
 ChartJS.register(ArcElement);

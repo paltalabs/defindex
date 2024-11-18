@@ -1,4 +1,3 @@
-// import { randomBytes } from 'crypto';
 import {
   Address,
   Asset,
@@ -195,7 +194,7 @@ export async function bumpContractInstance(
   txBuilder.addOperation(Operation.extendFootprintTtl({ extendTo: 535670 })); // 1 year
   txBuilder.setSorobanData(bumpTransactionData);
   const result = await invokeTransaction(txBuilder.build(), source, false);
-  // @ts-expect-error console.log(status)
+  //@ts-ignore
   console.log(result.status, "\n");
 }
 
@@ -231,7 +230,7 @@ export async function bumpContractCode(
   txBuilder.addOperation(Operation.extendFootprintTtl({ extendTo: 535670 })); // 1 year
   txBuilder.setSorobanData(bumpTransactionData);
   const result = await invokeTransaction(txBuilder.build(), source, false);
-  // @ts-expect-error console.log(status)
+  //@ts-ignore
   console.log(result.status, "\n");
 }
 

@@ -87,4 +87,5 @@
   Code will be available on [GitHub](https://github.com/paltalabs). A React app can call a DeFindex Smart Contract instance with less than 10 lines of code.
 
 - **Result:**
-    - 🛠️ Code available on [GitHub](https://github.com/paltalabs/defindex/tree/main/packages/defindex-sdk)
+    - ✅ Code available on [GitHub](https://github.com/paltalabs/defindex/tree/main/packages/defindex-sdk)
+    - ✅ Published on [npm](https://www.npmjs.com/package/defindex-sdk)
