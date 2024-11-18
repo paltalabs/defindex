@@ -6,6 +6,9 @@ license = { workspace = true }
 edition = { workspace = true }
 publish = false
 repository = { workspace = true }
+homepage = { workspace = true }
+keywords = ["soroban", "defindex", "strategy", "core", "stellar"]
+categories = ["cryptography::cryptocurrencies", "no-std", "development-tools"]
 
 [dependencies]
 soroban-sdk = { workspace = true }
