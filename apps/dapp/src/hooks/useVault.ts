@@ -182,7 +182,6 @@ export const useVault = (vaultAddress?: string | undefined) => {
         assets.forEach((asset)=>{
             idleFunds.push({address: asset, amount:  Number(rawIdleFunds[asset]) / 10 ** 7})
         })
-        console.log(idleFunds);
         return idleFunds;
         } catch (error) {
         console.error(error);
@@ -196,7 +195,6 @@ export const useVault = (vaultAddress?: string | undefined) => {
         assets.forEach((asset)=>{
             investedFunds.push({address: asset, amount:  Number(rawInvestedFunds[asset]) / 10 ** 7})
         })
-        console.log(investedFunds);
         return investedFunds;
         } catch (error) {
         console.error(error);

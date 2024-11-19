@@ -41,7 +41,6 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   const { activeChain, address } = sorobanContext;
   const factory = useFactoryCallback();
   const newVault: NewVaultState = useAppSelector(state => state.newVault);
-  //const strategies: Strategy[] = newVault.strategies;
   const indexName = useAppSelector(state => state.newVault.name)
   const indexSymbol = useAppSelector(state => state.newVault.symbol)
   const indexShare = useAppSelector(state => state.newVault.vaultShare)
@@ -50,14 +49,6 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   const feeReceiverString = useAppSelector(state => state.newVault.feeReceiver)
   const { transactionStatusModal: txModal } = useContext(ModalContext);
   const dispatch = useAppDispatch();
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [status, setStatus] = useState<Status>({
-    isSuccess: false,
-    hasError: false,
-    network: undefined,
-    message: undefined,
-    txHash: undefined
-  });
 
   const [deployDisabled, setDeployDisabled] = useState(true);
 
@@ -73,35 +64,6 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       setDeployDisabled(true);
     }
   }, [managerString, emergencyManagerString, feeReceiverString])
-
-
-
-
-  /* useEffect(() => {
-    const newChartData: ChartData[] = strategies.map((strategy: Strategy, index: number) => {
-      return {
-        id: index,
-        label: strategy.name,
-        address: strategy.address,
-        value: strategy.share,
-      }
-    });
-    const total = newChartData.reduce((acc: number, curr: ChartData) => acc + curr.value, 0)
-    if (total == 100) {
-      setChartData(newChartData);
-      return;
-    } else {
-      newChartData.push({
-        id: newChartData.length,
-        label: 'Unassigned',
-        value: 100 - newChartData.reduce((acc: number, curr: ChartData) => acc + curr.value, 0),
-        address: undefined,
-        color: '#e0e0e0'
-      })
-      setChartData(newChartData);
-      return;
-    }
-  }, [strategies]); */
 
   const autoCloseModal = async () => {
     await new Promise(resolve => setTimeout(resolve, 30000))
@@ -307,14 +269,12 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       </DialogBody>
 
       <DialogFooter>
-        {(activeStep == 0 && !status.hasError) && (
           <Button
             aria-label='add_strategy'
             colorScheme='green'
             onClick={deployDefindex}>
             {buttonText}
-          </Button>
-        )}
+        </Button>
       </DialogFooter>
     </>
 
