@@ -76,7 +76,6 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       autoCloseModal();
     }
   }, [txModal.status])
-  const activeStep: number = 0;
   const [buttonText, setButtonText] = useState<string>('')
   const [accordionValue, setAccordionValue] = useState<AccordionItems[]>([AccordionItems.STRATEGY_DETAILS])
   const [formControl, setFormControl] = useState<FormControlInterface>({
@@ -107,6 +106,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     }
 
   }, [managerString, emergencyManagerString, feeReceiverString, indexShare])
+
   const deployDefindex = async () => {
     if (managerString === '' || emergencyManagerString === '') {
       console.log('please fill manager config')
@@ -170,9 +170,13 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       ]);
     });
     const assetParamsScValVec = xdr.ScVal.scvVec(assetParamsScVal);
-    const amountsScVal = newVault.amounts.map((amount) => {
-      return nativeToScVal((amount * Math.pow(10, 7)), { type: "i128" });
+    const amountsScVal = newVault.assets.map((asset, index) => {
+      if (newVault.amounts.length === 0) return nativeToScVal(0, { type: "i128" });
+      return nativeToScVal((newVault.amounts[index]!) * 100, { type: "i128" });
     });
+   /*  const amountsScVal = newVault.amounts.map((amount) => {
+      return nativeToScVal((amount * Math.pow(10, 7)), { type: "i128" });
+    }); */
     const amountsScValVec = xdr.ScVal.scvVec(amountsScVal);
      /*  fn create_defindex_vault(
       emergency_manager: address, 
@@ -185,6 +189,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       salt: bytesn<32>) -> result<address,FactoryError>
  */
     let result: any;
+
     if (amountsScVal.length === 0) {
       const createDefindexParams: xdr.ScVal[] = [
         emergencyManager.toScVal(),
@@ -205,6 +210,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       }
       catch (e: any) {
         console.error(e)
+        dispatch(resetNewVault());
         txModal.handleError(e.toString());
         return
       }
@@ -232,6 +238,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       }
       catch (e: any) {
         console.error(e)
+        dispatch(resetNewVault());
         txModal.handleError(e.toString());
         return
       }

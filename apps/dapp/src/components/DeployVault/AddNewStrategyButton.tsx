@@ -9,8 +9,8 @@ import {
 } from '@/components/ui/dialog'
 import { getTokenSymbol } from '@/helpers/getTokenInfo'
 import { StrategyMethod, useStrategyCallback } from '@/hooks/useStrategy'
-import { getDefaultStrategies, pushAmount, pushAsset } from '@/store/lib/features/vaultStore'
-import { useAppDispatch } from '@/store/lib/storeHooks'
+import { getDefaultStrategies, pushAmount, pushAsset, setAmountByAddress } from '@/store/lib/features/vaultStore'
+import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { Asset, Strategy } from '@/store/lib/types'
 import {
   Button,
@@ -42,8 +42,8 @@ function AddNewStrategyButton() {
   const { activeChain } = useSorobanReact()
   const strategyCallback = useStrategyCallback();
   const [open, setOpen] = useState<boolean>(false)
-  const [isLoading, setIsLoading] = useState<boolean>(false)
-  const [defaultStrategies, setDefaultStrategies] = useState<Strategy[]>([])
+  const newVault = useAppSelector((state) => state.newVault)
+  const [defaultStrategies, setDefaultStrategies] = useState<any[]>([])
   const [selectedAsset, setSelectedAsset] = useState<Asset>({ address: '', strategies: [], symbol: '' })
   const [assets, setAssets] = useState<Asset[]>([])
   const [amountInput, setAmountInput] = useState<AmountInputProps>({ amount: 0, enabled: false })
@@ -110,12 +110,18 @@ function AddNewStrategyButton() {
     }
     setAmountInput({ amount: input, enabled: true });
   }
-
+  const strategyExists = (strategy: Strategy) => {
+    const exists = newVault.assets.some((asset) => asset.strategies.some((str) => str.address === strategy.address))
+    return exists
+  }
   const addAsset = async () => {
     const newAsset: Asset = {
       address: selectedAsset.address,
       strategies: selectedAsset.strategies,
       symbol: selectedAsset.symbol
+    }
+    if (strategyExists(selectedAsset.strategies[0]!)) {
+      await dispatch(setAmountByAddress({ address: selectedAsset.address, amount: amountInput.amount }))
     }
     await dispatch(pushAsset(newAsset))
     if (amountInput.enabled && amountInput.amount! > 0) {
@@ -141,12 +147,11 @@ function AddNewStrategyButton() {
           <For each={defaultStrategies}>
             {(strategy, index) => (
               <Stack key={index} my={2}>
-                {isLoading && <Skeleton height={12} />}
-                {!isLoading && <CheckboxCard
-                  checked={selectedAsset.strategies.some((str) => str.address === strategy.address)}
+                <CheckboxCard
+                  checked={strategyExists(strategy) || selectedAsset.strategies.some((str) => str.address === strategy.address)}
                   onCheckedChange={(e) => handleSelectStrategy(!!e.checked, strategy)}
                   label={strategy.name}
-                />}
+                />
                 {selectedAsset.strategies.some((str) => str.address === strategy.address) &&
                   <Grid templateColumns={['1fr', null, 'repeat(12, 2fr)']} alignItems={'center'} >
                     <GridItem colSpan={2} colEnd={12}>
