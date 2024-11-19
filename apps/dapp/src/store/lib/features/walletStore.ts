@@ -88,10 +88,10 @@ export const walletSlice = createSlice({
     setVaults: (state, action: PayloadAction<VaultData[]>) => {
       state.vaults.createdVaults = action.payload
     },
-    setVaultTVL: (state, action: PayloadAction<number>) => {
+    setVaultTVL: (state, action: PayloadAction<{address:string, value: number}>) => {
       state.vaults.createdVaults.forEach(vault => {
-        if (vault.address === state.vaults.selectedVault?.address) {
-          vault.TVL = action.payload
+        if (vault.address === action.payload.address) {
+          vault.TVL = action.payload.value
         }
       })
     },
@@ -104,7 +104,7 @@ export const walletSlice = createSlice({
           vault.userBalance = action.payload.vaule
         }
       })
-    }
+    },
   },
   extraReducers(builder) {
     builder.addCase(fetchDefaultAddresses.pending, (state) => {

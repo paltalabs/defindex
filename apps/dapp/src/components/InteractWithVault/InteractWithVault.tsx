@@ -71,7 +71,7 @@ export const InteractWithVault = () => {
       ).finally(async () => {
         const newTVL = await vault.getTVL(selectedVault?.address!)
         const parsedNewTVL = Number(newTVL) / 10 ** 7
-        dispatch(setVaultTVL(parsedNewTVL))
+        dispatch(setVaultTVL({ value: parsedNewTVL, address: selectedVault?.address! }))
       });
     }
     catch (error: any) {

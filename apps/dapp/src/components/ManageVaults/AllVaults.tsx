@@ -6,7 +6,7 @@ import { shortenAddress } from '@/helpers/address'
 import { useVault } from '@/hooks/useVault'
 import { FactoryMethod, useFactoryCallback } from '@/hooks/useFactory'
 
-import { setIsVaultsLoading, setVaults, setVaultUserBalance } from '@/store/lib/features/walletStore'
+import { setIsVaultsLoading, setVaults, setVaultTVL, setVaultUserBalance } from '@/store/lib/features/walletStore'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { VaultData } from '@/store/lib/types'
 
@@ -93,6 +93,10 @@ export const AllVaults = ({
         const userBalance = await vault.getUserBalance(v.address, address)
         if (userBalance) {
           dispatch(setVaultUserBalance({ address: v.address, vaule: userBalance }))
+        }
+        const TVL = await vault.getTVL(v.address)
+        if (TVL) {
+          dispatch(setVaultTVL({ value: TVL, address: v.address }))
         }
       })
     }
