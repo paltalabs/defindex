@@ -26,10 +26,6 @@ export const ModalProvider = ({
   const [txHash, setTxHash] = React.useState<string>('')
 
   const handleResetModal = () => {
-    console.log('resetting modal')
-    setIsDeployVaultModalOpen(false)
-    setIsInspectVaultModalOpen(false)
-    setIsInteractWithVaultModalOpen(false)
     setIsTransactionStatusModalOpen(false)
     setTransactionStatusModalStep(0)
     setTransactionStatusModalStatus(TransactionStatusModalStatus.PENDING)
@@ -38,23 +34,23 @@ export const ModalProvider = ({
     setTxHash('')
   }
 
+  const handleFirstStep = setTimeout(() => setTransactionStatusModalStep(1), 3000)
   useEffect(() => {
-    const handleFirstStep = setTimeout(() => setTransactionStatusModalStep(1), 3000)
     if (isTransactionStatusModalOpen && transactionStatusModalStep === 0 && transactionStatusModalStatus === TransactionStatusModalStatus.PENDING) {
-      console.log('modal is open')
       handleFirstStep
-    } else {
+    } else if (transactionStatusModalStatus !== TransactionStatusModalStatus.PENDING) {
       clearTimeout(handleFirstStep)
+      setTransactionStatusModalStep(2)
     }
   }, [isTransactionStatusModalOpen, transactionStatusModalStep, transactionStatusModalStatus])
 
   const handleInitModal = () => {
-    console.log('init modal')
     handleResetModal()
     setIsTransactionStatusModalOpen(true)
   }
 
   const handleError = (error: string) => {
+    clearTimeout(handleFirstStep)
     setTransactionStatusModalError(error)
     setTransactionStatusModalStatus(TransactionStatusModalStatus.ERROR)
     setTransactionStatusModalStep(2)
@@ -62,6 +58,7 @@ export const ModalProvider = ({
   }
 
   const handleSuccess = (txHash: string) => {
+    clearTimeout(handleFirstStep)
     setTxHash(txHash)
     setTransactionStatusModalStatus(TransactionStatusModalStatus.SUCCESS)
     setTransactionStatusModalStep(2)

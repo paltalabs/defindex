@@ -2,7 +2,7 @@
 import { useSorobanReact } from "@soroban-react/core"
 
 import { shortenAddress } from "@/helpers/address"
-import { VaultMethod } from "@/hooks/useVault"
+import { useVault, VaultMethod } from "@/hooks/useVault"
 
 import { useAppSelector } from "@/store/lib/storeHooks"
 import { Asset, AssetAmmount, VaultData } from "@/store/lib/types"
@@ -11,7 +11,6 @@ import { Button, Grid, GridItem, HStack, Icon, Stack, Text } from "@chakra-ui/re
 import { DialogBody, DialogContent, DialogFooter, DialogHeader } from "../ui/dialog"
 import { FaRegEdit } from "react-icons/fa"
 import { IoClose } from "react-icons/io5"
-
 
 export const InspectVault = ({
   handleOpenDeployVault,
@@ -24,8 +23,8 @@ export const InspectVault = ({
 }) => {
   const selectedVault: VaultData | undefined = useAppSelector(state => state.wallet.vaults.selectedVault)
   const { address } = useSorobanReact()
-  if (!selectedVault) return null
 
+  if (!selectedVault) return null
   return (
     <DialogContent>
       <DialogHeader>

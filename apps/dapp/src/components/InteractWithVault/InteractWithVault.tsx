@@ -66,8 +66,11 @@ export const InteractWithVault = () => {
         selectedVault?.address!,
         params,
         true,
-      ).then((res) =>
-        statusModal.handleSuccess(res.txHash)
+      ).then((res) => {
+        interactModal.setIsOpen(false),
+          inspectModal.setIsOpen(false),
+          statusModal.handleSuccess(res.txHash)
+      }
       ).finally(async () => {
         const newTVL = await vault.getTVL(selectedVault?.address!)
         const parsedNewTVL = Number(newTVL) / 10 ** 7
@@ -76,6 +79,7 @@ export const InteractWithVault = () => {
     }
     catch (error: any) {
       console.error('Error:', error)
+      interactModal.setIsOpen(false)
       statusModal.handleError(error.toString())
     }
   }
