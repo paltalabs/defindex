@@ -85,7 +85,18 @@ export const AllVaults = ({
 
   useEffect(() => {
     getDefindexVaults()
-  }, [activeChain?.networkPassphrase, address])
+  }, [activeChain?.networkPassphrase])
+
+  useEffect(() => {
+    if (address) {
+      createdVaults.forEach(async (v: VaultData) => {
+        const TVL = await vault.getTVL(v.address)
+        if (TVL) {
+          dispatch(setVaultTVL({ value: TVL, address: v.address }))
+        }
+      })
+    }
+  }, [createdVaults])
 
   useEffect(() => {
     if (address) {
@@ -94,13 +105,9 @@ export const AllVaults = ({
         if (userBalance) {
           dispatch(setVaultUserBalance({ address: v.address, vaule: userBalance }))
         }
-        const TVL = await vault.getTVL(v.address)
-        if (TVL) {
-          dispatch(setVaultTVL({ value: TVL, address: v.address }))
-        }
       })
     }
-  }, [createdVaults])
+  }, [createdVaults, address])
 
   return (
     <Box mx={'auto'} minW={'100%'} p={4}>
