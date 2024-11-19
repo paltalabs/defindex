@@ -44,13 +44,34 @@ function AddNewStrategyButton() {
   const [open, setOpen] = useState<boolean>(false)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [defaultStrategies, setDefaultStrategies] = useState<Strategy[]>([])
-  const [asset, setAsset] = useState<Asset>({ address: '', strategies: [] })
+  const [selectedAsset, setSelectedAsset] = useState<Asset>({ address: '', strategies: [], symbol: '' })
+  const [assets, setAssets] = useState<Asset[]>([])
   const [amountInput, setAmountInput] = useState<AmountInputProps>({ amount: 0, enabled: false })
+
+  const resetForm = () => {
+    setSelectedAsset({ address: '', strategies: [], symbol: '' })
+    setAmountInput({ amount: 0, enabled: false })
+    setOpen(false)
+  }
+
+  const getSymbol = async (address: string) => {
+    const symbol = await getTokenSymbol(address, sorobanContext)
+    if (!symbol) return '';
+    return symbol === 'native' ? 'XLM' : symbol
+  }
 
   useEffect(() => {
     const fetchStrategies = async () => {
       const tempStrategies = await getDefaultStrategies(activeChain?.name?.toLowerCase() || 'testnet')
-      for (const strategy of tempStrategies) {
+      setDefaultStrategies(tempStrategies)
+    }
+    fetchStrategies();
+  }, [activeChain?.networkPassphrase])
+
+  useEffect(() => {
+    const fetchStrategies = async () => {
+      const rawDefaultStrategies = await getDefaultStrategies(activeChain?.name?.toLowerCase() || 'testnet')
+      const defaultStrategiesWithAssets = await Promise.all(rawDefaultStrategies.map(async (strategy) => {
         const assetAddress = await strategyCallback(
           strategy.address,
           StrategyMethod.ASSET,
@@ -62,75 +83,22 @@ function AddNewStrategyButton() {
           return asset;
         })
         const assetSymbol = await getSymbol(assetAddress)
-        setAsset({ ...asset, address: assetAddress, symbol: assetSymbol! })
+        const asset = { address: assetAddress, strategies: [strategy], symbol: assetSymbol! }
+        return asset
       }
-      setDefaultStrategies(tempStrategies)
+      ))
+      setAssets(defaultStrategiesWithAssets)
     }
     fetchStrategies();
   }, [activeChain?.networkPassphrase])
 
 
-  const resetForm = () => {
-    setAsset({ address: '', strategies: [] })
-    setAmountInput({ amount: 0, enabled: false })
-    setOpen(false)
-  }
-
-  const getSymbol = async (address: string) => {
-    const symbol = await getTokenSymbol(address, sorobanContext)
-    if (!symbol) return '';
-    return symbol === 'native' ? 'XLM' : symbol
-  }
-
   const handleSelectStrategy = (value: boolean, strategy: Strategy) => {
-    setIsLoading(true)
-    switch (value) {
-      case true:
-        const fetchAssets = async () => {
-          try {
-            const asset = await strategyCallback(
-              strategy.address,
-              StrategyMethod.ASSET,
-              undefined,
-              false
-            ).then((result) => {
-              const resultScval = result as xdr.ScVal;
-              const asset = scValToNative(resultScval);
-              return asset;
-            });
-            const symbol = await getSymbol(asset);
-            const newAsset = { address: asset, symbol: symbol!, strategies: [strategy] }
-            console.log(newAsset)
-            setAsset({ address: asset, symbol: symbol!, strategies: [strategy] })
-          } catch (error) {
-            console.error(error);
-          } finally {
-            setIsLoading(false)
-          }
-        };
-        fetchAssets();
-        break
-      case false:
-        setAsset({ ...asset, strategies: asset.strategies.filter(str => str.address !== strategy.address) })
-        setIsLoading(false)
-        break
+    const selectedAsset = assets.find((asset) => asset.strategies.some((str) => str.address === strategy.address))
+    if (selectedAsset) {
+      setSelectedAsset(selectedAsset)
     }
   }
-
-  const addAsset = async () => {
-    const newAsset: Asset = {
-      address: asset.address,
-      strategies: asset.strategies,
-      symbol: asset.symbol
-    }
-    await dispatch(pushAsset(newAsset))
-    if (amountInput.enabled && amountInput.amount! > 0) {
-      await dispatch(pushAmount(amountInput.amount!))
-    }
-    resetForm()
-  }
-
-
 
   const handleAmountInput = async (e: any) => {
     const input = e.target.value
@@ -142,6 +110,20 @@ function AddNewStrategyButton() {
     }
     setAmountInput({ amount: input, enabled: true });
   }
+
+  const addAsset = async () => {
+    const newAsset: Asset = {
+      address: selectedAsset.address,
+      strategies: selectedAsset.strategies,
+      symbol: selectedAsset.symbol
+    }
+    await dispatch(pushAsset(newAsset))
+    if (amountInput.enabled && amountInput.amount! > 0) {
+      await dispatch(pushAmount(amountInput.amount!))
+    }
+    resetForm()
+  }
+
   return (
     <DialogRoot open={open} onOpenChange={(e) => { setOpen(e.open) }} placement={'center'}>
       <DialogBackdrop backdropFilter='blur(1px)' />
@@ -161,11 +143,11 @@ function AddNewStrategyButton() {
               <Stack key={index} my={2}>
                 {isLoading && <Skeleton height={12} />}
                 {!isLoading && <CheckboxCard
-                  checked={asset.strategies.some((str) => str.address === strategy.address)}
+                  checked={selectedAsset.strategies.some((str) => str.address === strategy.address)}
                   onCheckedChange={(e) => handleSelectStrategy(!!e.checked, strategy)}
                   label={strategy.name}
                 />}
-                {asset.strategies.some((str) => str.address === strategy.address) &&
+                {selectedAsset.strategies.some((str) => str.address === strategy.address) &&
                   <Grid templateColumns={['1fr', null, 'repeat(12, 2fr)']} alignItems={'center'} >
                     <GridItem colSpan={2} colEnd={12}>
                       <Text fontSize={'xs'}>Initial deposit:</Text>
@@ -187,7 +169,7 @@ function AddNewStrategyButton() {
                     </GridItem>
                     <GridItem colStart={8} colEnd={13}>
                       <InputGroup
-                        endElement={`${asset.symbol}`}
+                        endElement={`${selectedAsset.symbol}`}
                       >
                         <Input onChange={handleAmountInput} value={amountInput.amount} />
                       </InputGroup>
@@ -204,7 +186,7 @@ function AddNewStrategyButton() {
             Close
           </Button>
           <IconButton
-            disabled={asset.strategies.length === 0}
+            disabled={selectedAsset.strategies.length === 0}
             aria-label='add_strategy'
             colorScheme='green'
             onClick={addAsset}
