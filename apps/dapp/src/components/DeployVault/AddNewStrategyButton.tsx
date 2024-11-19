@@ -121,7 +121,11 @@ function AddNewStrategyButton() {
       symbol: selectedAsset.symbol
     }
     if (strategyExists(selectedAsset.strategies[0]!)) {
+      if (amountInput.enabled && amountInput.amount! > 0) {
       await dispatch(setAmountByAddress({ address: selectedAsset.address, amount: amountInput.amount }))
+      } else if (amountInput.enabled == false || amountInput.amount! == 0) {
+        await dispatch(setAmountByAddress({ address: selectedAsset.address, amount: 0 }))
+      }
     }
     await dispatch(pushAsset(newAsset))
     if (amountInput.enabled && amountInput.amount! > 0) {
