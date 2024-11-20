@@ -198,6 +198,8 @@ pub trait VaultTrait {
     // TODO: DELETE THIS, USED FOR TESTING
     /// Temporary method for testing purposes.
     fn get_asset_amounts_for_dftokens(e: Env, df_token: i128) -> Map<Address, i128>;
+
+    fn get_fees(e: Env) -> (u32, u32);
 }
 
 pub trait AdminInterfaceTrait {

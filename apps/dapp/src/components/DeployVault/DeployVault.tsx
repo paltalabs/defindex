@@ -103,7 +103,7 @@ export const DeployVault = () => {
                                 Strategy Address: {shortenAddress(strategy.address)}
                               </li>
                             </Tooltip>
-                            {amounts[j] && <li>Initial deposit: ${amounts[j]} {asset.symbol}</li>}
+                            {(amounts[j]! > 0) && <li>Initial deposit: ${amounts[j]} {asset.symbol}</li>}
                           </Box>
                         )}
                       </For>

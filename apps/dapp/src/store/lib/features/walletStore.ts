@@ -5,6 +5,7 @@ import { ChainMetadata } from '@soroban-react/types'
 import vaults from '@/constants/constants.json'
 import { Networks } from '@stellar/stellar-sdk'
 import { SelectedVault, VaultData, WalletState } from '../types'
+import { VaultMethod } from '@/hooks/useVault'
 
 const getDefaultVaults = async (network: string) => {
   const filteredVaults = vaults.filter(vault => {
@@ -88,10 +89,10 @@ export const walletSlice = createSlice({
     setVaults: (state, action: PayloadAction<VaultData[]>) => {
       state.vaults.createdVaults = action.payload
     },
-    setVaultTVL: (state, action: PayloadAction<number>) => {
+    setVaultTVL: (state, action: PayloadAction<{address:string, value: number}>) => {
       state.vaults.createdVaults.forEach(vault => {
-        if (vault.address === state.vaults.selectedVault?.address) {
-          vault.TVL = action.payload
+        if (vault.address === action.payload.address) {
+          vault.TVL = action.payload.value
         }
       })
     },
@@ -104,7 +105,21 @@ export const walletSlice = createSlice({
           vault.userBalance = action.payload.vaule
         }
       })
-    }
+    },
+    setVaultFeeReceiver: (state, action: PayloadAction<string>) => {
+      state.vaults.createdVaults.forEach(vault => {
+        if (vault.address === state.vaults.selectedVault?.address) {
+          vault.feeReceiver = action.payload
+        }
+      })
+    },
+    updateVaultData: (state, action: PayloadAction<Partial<VaultData>>) => {
+      state.vaults.createdVaults.forEach(vault => {
+        if (vault.address === action.payload.address) {
+          Object.assign(vault, action.payload)
+        }
+      })
+    },
   },
   extraReducers(builder) {
     builder.addCase(fetchDefaultAddresses.pending, (state) => {
@@ -131,7 +146,9 @@ export const {
   setVaults,
   setVaultTVL,
   resetSelectedVault,
-  setVaultUserBalance
+  setVaultFeeReceiver,
+  setVaultUserBalance,
+  updateVaultData
 } = walletSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
