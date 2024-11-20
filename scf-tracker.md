@@ -34,7 +34,7 @@
 
 - **Result:**
     - ✅ Code available on [GitHub](https://github.com/paltalabs/defindex/tree/main/apps/contracts/strategies)
-    - 🛠️ Adapter Struct published at crates.io
+    - ✅ Adapter Struct published at crates.io
     - 🛠️ SEP proposal
 
 ---
