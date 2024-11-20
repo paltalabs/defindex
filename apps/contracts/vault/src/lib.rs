@@ -24,7 +24,7 @@ mod utils;
 
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use aggregator::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
-use fee::collect_fees;
+use fee::{collect_fees, fetch_defindex_fee};
 use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds}; //, fetch_idle_funds_for_asset};
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::{check_and_execute_investments};
@@ -33,8 +33,7 @@ use models::{
     OptionalSwapDetailsExactOut,
 };
 use storage::{
-    get_assets, set_asset, set_defindex_protocol_fee_receiver, set_factory,
-    set_total_assets, set_vault_fee, extend_instance_ttl
+    extend_instance_ttl, get_assets, get_vault_fee, set_asset, set_defindex_protocol_fee_receiver, set_factory, set_total_assets, set_vault_fee
 };
 use strategies::{
     get_asset_allocation_from_address, get_strategy_asset, get_strategy_client,
@@ -567,6 +566,13 @@ impl VaultTrait for DeFindexVault {
     fn get_asset_amounts_for_dftokens(e: Env, df_tokens: i128) -> Map<Address, i128> {
         extend_instance_ttl(&e);
         calculate_asset_amounts_for_dftokens(&e, df_tokens)
+    }
+
+    fn get_fees(e: Env) -> (u32, u32) {
+        extend_instance_ttl(&e);
+        let defindex_protocol_fee = fetch_defindex_fee(&e);
+        let vault_fee = get_vault_fee(&e);
+        (defindex_protocol_fee, vault_fee)
     }
 }
 
