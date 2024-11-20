@@ -26,10 +26,17 @@ import {
   Input,
   Stack,
 } from "@chakra-ui/react"
+import { EditVaultModal } from "../InteractWithVault/EditVault"
 
 export const ManageVaults = () => {
   const { address, activeChain } = useSorobanReact()
-  const { inspectVaultModal: inspectModal, deployVaultModal: deployModal, interactWithVaultModal: interactModal, transactionStatusModal: txModal } = useContext(ModalContext)
+  const {
+    inspectVaultModal: inspectModal,
+    deployVaultModal: deployModal,
+    interactWithVaultModal: interactModal,
+    transactionStatusModal: txModal,
+    editVaultModal: editModal
+  } = useContext(ModalContext)
   const dispatch = useAppDispatch()
   const modalContext = useContext(ModalContext)
   const vaults: VaultData[] = useAppSelector(state => state.wallet.vaults.createdVaults)
@@ -154,6 +161,15 @@ export const ManageVaults = () => {
             handleOpenInteract={handleOpenInteract}
             onClose={() => { inspectModal.setIsOpen(false) }}
           />
+        </DialogRoot>
+        <DialogRoot
+          open={editModal.isOpen}
+          onOpenChange={(e) => { editModal.setIsOpen(e.open) }}
+          size={'lg'}
+          placement={'center'}
+        >
+          <DialogBackdrop backdropFilter='blur(1px)' />
+          <EditVaultModal />
         </DialogRoot>
         <DialogRoot
           open={modalContext.transactionStatusModal.isOpen}

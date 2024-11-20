@@ -6,7 +6,7 @@ import { shortenAddress } from '@/helpers/address'
 import { useVault } from '@/hooks/useVault'
 import { FactoryMethod, useFactoryCallback } from '@/hooks/useFactory'
 
-import { setIsVaultsLoading, setVaults, setVaultUserBalance } from '@/store/lib/features/walletStore'
+import { setIsVaultsLoading, setVaults, setVaultTVL, setVaultUserBalance } from '@/store/lib/features/walletStore'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { VaultData } from '@/store/lib/types'
 
@@ -88,7 +88,18 @@ export const AllVaults = ({
 
   useEffect(() => {
     getDefindexVaults()
-  }, [activeChain?.networkPassphrase, address])
+  }, [activeChain?.networkPassphrase])
+
+  useEffect(() => {
+    if (address) {
+      createdVaults.forEach(async (v: VaultData) => {
+        const TVL = await vault.getTVL(v.address)
+        if (TVL) {
+          dispatch(setVaultTVL({ value: TVL, address: v.address }))
+        }
+      })
+    }
+  }, [createdVaults])
 
   useEffect(() => {
     if (address) {
@@ -99,7 +110,7 @@ export const AllVaults = ({
         }
       })
     }
-  }, [createdVaults])
+  }, [createdVaults, address])
 
   return (
     <Box mx={'auto'} minW={'100%'} p={4}>
