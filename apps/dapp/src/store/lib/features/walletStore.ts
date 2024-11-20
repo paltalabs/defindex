@@ -112,20 +112,6 @@ export const walletSlice = createSlice({
           Object.assign(vault, action.payload)
         }
       })
-      state.vaults.selectedVault = {
-        address: action.payload.address ?? state.vaults.selectedVault?.address ?? '',
-        name: action.payload.name ?? state.vaults.selectedVault?.name ?? '',
-        manager: action.payload.manager ?? state.vaults.selectedVault?.manager ?? '',
-        emergencyManager: action.payload.emergencyManager ?? state.vaults.selectedVault?.emergencyManager ?? '',
-        feeReceiver: action.payload.feeReceiver ?? state.vaults.selectedVault?.feeReceiver ?? '',
-        TVL: action.payload.TVL ?? state.vaults.selectedVault?.TVL ?? 0,
-        userBalance: action.payload.userBalance ?? state.vaults.selectedVault?.userBalance ?? 0,
-        assets: action.payload.assets ?? state.vaults.selectedVault?.assets ?? [],
-        idleFunds: action.payload.idleFunds ?? state.vaults.selectedVault?.idleFunds ?? [],
-        investedFunds: action.payload.investedFunds ?? state.vaults.selectedVault?.investedFunds ?? [],
-        totalSupply: action.payload.totalSupply ?? state.vaults.selectedVault?.totalSupply ?? 0,
-        method: state.vaults.selectedVault?.method || VaultMethod.DEPOSIT,
-      }
     },
   },
   extraReducers(builder) {

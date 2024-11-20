@@ -3,8 +3,8 @@ import { Address, nativeToScVal, xdr } from '@stellar/stellar-sdk'
 import { useSorobanReact } from '@soroban-react/core'
 
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { setVaultTVL } from '@/store/lib/features/walletStore'
-import { Strategy } from '@/store/lib/types'
+import { setVaultTVL, setVaultUserBalance, updateVaultData } from '@/store/lib/features/walletStore'
+import { Strategy, VaultData } from '@/store/lib/types'
 
 import { VaultMethod, useVaultCallback, useVault } from '@/hooks/useVault'
 import { ModalContext } from '@/contexts'
@@ -36,7 +36,7 @@ export const InteractWithVault = () => {
   const { transactionStatusModal: statusModal, interactWithVaultModal: interactModal, inspectVaultModal: inspectModal } = useContext(ModalContext)
 
   const vaultOperation = async () => {
-    if (!address || !vaultMethod) return;
+    if (!address || !vaultMethod || !selectedVault.address) return;
     if (!amount) throw new Error('Amount is required');
     const parsedAmount = parseFloat(amount.toString())
     const convertedAmount = parsedAmount * Math.pow(10, 7)
@@ -52,42 +52,53 @@ export const InteractWithVault = () => {
     };
     if (vaultMethod === VaultMethod.WITHDRAW) {
       const withdrawAmount = ((amount * selectedVault.totalSupply) / selectedVault.TVL)
-      const convertedWithdrawAmount = withdrawAmount * Math.pow(10, 7)
+      const truncatedWithdrawAmount = Math.floor(withdrawAmount * 1e7) / 1e7;
+      const convertedWithdrawAmount = Number(truncatedWithdrawAmount) * Math.pow(10, 7)
       const withdrawParams: xdr.ScVal[] = [
-        nativeToScVal(convertedWithdrawAmount, { type: "i128" }),
+        nativeToScVal(Math.ceil(convertedWithdrawAmount), { type: "i128" }),
         new Address(address).toScVal(),
       ]
       params = withdrawParams
     };
-    console.log('Vault method:', vaultMethod)
     try {
       const result = await vaultCB(
         vaultMethod!,
         selectedVault?.address!,
         params,
         true,
-      ).then((res) => {
-        interactModal.setIsOpen(false),
-          inspectModal.setIsOpen(false),
-          statusModal.handleSuccess(res.txHash)
+      ).then(async (res) => {
+        await statusModal.handleSuccess(res.txHash)
       }
       ).finally(async () => {
+        const newBalance = await vault.getUserBalance(selectedVault.address, address)
+        const newIdleFunds = await vault.getIdleFunds(selectedVault.address!)
+        const newInvestedFunds = await vault.getInvestedFunds(selectedVault.address)
         const newTVL = await vault.getTVL(selectedVault?.address!)
-        const parsedNewTVL = Number(newTVL) / 10 ** 7
-        dispatch(setVaultTVL({ value: parsedNewTVL, address: selectedVault?.address! }))
+        const newVaultData: Partial<VaultData> = {
+          address: selectedVault.address,
+          userBalance: newBalance || 0,
+          idleFunds: newIdleFunds,
+          investedFunds: newInvestedFunds,
+          TVL: newTVL
+        }
+        dispatch(updateVaultData(newVaultData))
       });
     }
     catch (error: any) {
       console.error('Error:', error)
-      interactModal.setIsOpen(false)
-      statusModal.handleError(error.toString())
+      await statusModal.handleError(error.toString())
+    } finally {
+      set_amount(0)
+      await setTimeout(() => {
+        interactModal.setIsOpen(false)
+        inspectModal.setIsOpen(false)
+      }, 3000)
     }
   }
 
   const setAmount = (input: any) => {
     if (input < 0 || !selectedVault) return;
     if (vaultMethod === VaultMethod.WITHDRAW) {
-      console.log(input, selectedVault?.userBalance)
       if (input > selectedVault.userBalance!) return;
     }
     const decimalRegex = /^(\d+)?(\.\d{0,7})?$/;
@@ -122,7 +133,7 @@ export const InteractWithVault = () => {
               <h2>Total value locked: ${selectedVault?.TVL} {selectedVault.assets[0]?.symbol}</h2>
             </GridItem>
             <GridItem colSpan={6} colStart={6} textAlign={'end'}>
-              <h2>User balance in vault: ${selectedVault?.userBalance} {selectedVault.assets[0]?.symbol}</h2>
+              <h2>User balance in vault: ${`${selectedVault.userBalance ?? 0}`} {selectedVault.assets[0]?.symbol}</h2>
             </GridItem>
             {vaultMethod != VaultMethod.EMERGENCY_WITHDRAW &&
               <GridItem colSpan={12} pt={6}>
