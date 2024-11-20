@@ -174,8 +174,11 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     });
     const assetParamsScValVec = xdr.ScVal.scvVec(assetParamsScVal);
     const amountsScVal = newVault.assets.map((asset, index) => {
+      const parsedAmount = newVault.amounts[index] || 0;
+      const truncatedAmount = Math.floor(parsedAmount * 1e7) / 1e7;
+      const convertedAmount = Number(truncatedAmount) * Math.pow(10, 7)
       if (newVault.amounts.length === 0) return nativeToScVal(0, { type: "i128" });
-      return nativeToScVal((newVault.amounts[index]!) * 100, { type: "i128" });
+      return nativeToScVal(convertedAmount, { type: "i128" });
     });
    /*  const amountsScVal = newVault.amounts.map((amount) => {
       return nativeToScVal((amount * Math.pow(10, 7)), { type: "i128" });

@@ -120,7 +120,8 @@ function AddNewStrategyButton() {
       strategies: selectedAsset.strategies,
       symbol: selectedAsset.symbol
     }
-    if (strategyExists(selectedAsset.strategies[0]!)) {
+    const exists = strategyExists(selectedAsset.strategies[0]!)
+    if (exists) {
       if (amountInput.enabled && amountInput.amount! > 0) {
       await dispatch(setAmountByAddress({ address: selectedAsset.address, amount: amountInput.amount }))
       } else if (amountInput.enabled == false || amountInput.amount! == 0) {
@@ -128,7 +129,7 @@ function AddNewStrategyButton() {
       }
     }
     await dispatch(pushAsset(newAsset))
-    if (amountInput.enabled && amountInput.amount! > 0) {
+    if (!exists && amountInput.enabled && amountInput.amount! > 0) {
       await dispatch(pushAmount(amountInput.amount!))
     }
     resetForm()
