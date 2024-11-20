@@ -11,6 +11,8 @@ import { Button, Grid, GridItem, HStack, Icon, Stack, Text } from "@chakra-ui/re
 import { DialogBody, DialogContent, DialogFooter, DialogHeader } from "../ui/dialog"
 import { FaRegEdit } from "react-icons/fa"
 import { IoClose } from "react-icons/io5"
+import { ModalContext } from "@/contexts"
+import { useContext } from "react"
 
 
 export const InspectVault = ({
@@ -24,6 +26,7 @@ export const InspectVault = ({
 }) => {
   const selectedVault: VaultData | undefined = useAppSelector(state => state.wallet.vaults.selectedVault)
   const { address } = useSorobanReact()
+  const { editVaultModal: editModal } = useContext(ModalContext)
   if (!selectedVault) return null
 
   return (
@@ -34,11 +37,11 @@ export const InspectVault = ({
             <h2>Inspect {selectedVault?.name ? selectedVault.name : shortenAddress(selectedVault.address)}</h2>
           </GridItem>
           {address === selectedVault.manager &&
-          <GridItem colSpan={1}>
-            <Icon onClick={() => { handleOpenDeployVault('edit_vault', true, selectedVault) }} css={{ cursor: "pointer" }}>
-              <FaRegEdit />
-            </Icon>
-          </GridItem>
+            <GridItem colSpan={1}>
+              <Icon onClick={() => { editModal.setIsOpen(true) }} css={{ cursor: "pointer" }}>
+                <FaRegEdit />
+              </Icon>
+            </GridItem>
           }
           <GridItem colSpan={1}>
             <Icon onClick={onClose} css={{ cursor: "pointer" }}>

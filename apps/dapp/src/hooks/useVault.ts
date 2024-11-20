@@ -23,6 +23,7 @@ export enum VaultMethod {
     GETASSETAMMOUNT = "get_asset_amounts_for_dftokens",
     GETIDLEFUNDS = "fetch_current_idle_funds",
     GETINVESTEDFUNDS = "fetch_current_invested_funds",
+    SETFEERECIEVER = "set_fee_receiver",
 }   
 
 const isObject = (val: unknown) => typeof val === 'object' && val !== null && !Array.isArray(val);

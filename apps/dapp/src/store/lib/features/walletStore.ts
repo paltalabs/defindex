@@ -104,7 +104,14 @@ export const walletSlice = createSlice({
           vault.userBalance = action.payload.vaule
         }
       })
-    }
+    },
+    setVaultFeeReceiver: (state, action: PayloadAction<string>) => {
+      state.vaults.createdVaults.forEach(vault => {
+        if (vault.address === state.vaults.selectedVault?.address) {
+          vault.feeReceiver = action.payload
+        }
+      })
+    },
   },
   extraReducers(builder) {
     builder.addCase(fetchDefaultAddresses.pending, (state) => {
@@ -131,7 +138,8 @@ export const {
   setVaults,
   setVaultTVL,
   resetSelectedVault,
-  setVaultUserBalance
+  setVaultUserBalance,
+  setVaultFeeReceiver
 } = walletSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type

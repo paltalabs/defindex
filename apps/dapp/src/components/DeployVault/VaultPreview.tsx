@@ -155,6 +155,29 @@ interface VaultPreviewProps {
   setFormControl: (args: FormControlInterface) => any;
 
 }
+
+export const dropdownData = {
+  strategies: {
+    title: 'Strategies',
+    description: 'A strategy is a set of steps to be followed to execute an investment in one or several protocols.',
+    href: 'https://docs.defindex.io/whitepaper/10-whitepaper/01-introduction#core-concepts'
+  },
+  manager: {
+    title: 'Manager',
+    description: 'The Manager can rebalance the Vault, emergency withdraw and invest IDLE funds in strategies.',
+    href: 'https://docs.defindex.io/whitepaper/10-whitepaper/03-the-defindex-approach/02-contracts/01-vault-contract#management'
+  },
+  emergencyManager: {
+    title: 'Emergency manager',
+    description: 'The Emergency Manager has the authority to withdraw assets from the DeFindex in case of an emergency.',
+    href: 'https://docs.defindex.io/whitepaper/10-whitepaper/03-the-defindex-approach/02-contracts/01-vault-contract#emergency-management'
+  },
+  feeReceiver: {
+    title: 'Fee receiver',
+    description: ' Fee Receiver could be the manager using the same address, or it could be a different entity such as a streaming contract, a DAO, or another party.',
+    href: 'https://docs.defindex.io/whitepaper/10-whitepaper/03-the-defindex-approach/02-contracts/01-vault-contract#fee-collection'
+  }
+}
 export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue, setAccordionValue, formControl, setFormControl }) => {
 
   const dispatch = useAppDispatch()
@@ -248,28 +271,7 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
     dispatch(setVaultShare(input * 100))
   }
 
-  const dropdownData = {
-    strategies: {
-      title: 'Strategies',
-      description: 'A strategy is a set of steps to be followed to execute an investment in one or several protocols.',
-      href: 'https://docs.defindex.io/whitepaper/10-whitepaper/01-introduction#core-concepts'
-    },
-    manager: {
-      title: 'Manager',
-      description: 'The Manager can rebalance the Vault, emergency withdraw and invest IDLE funds in strategies.',
-      href: 'https://docs.defindex.io/whitepaper/10-whitepaper/03-the-defindex-approach/02-contracts/01-vault-contract#management'
-    },
-    emergencyManager: {
-      title: 'Emergency manager',
-      description: 'The Emergency Manager has the authority to withdraw assets from the DeFindex in case of an emergency.',
-      href: 'https://docs.defindex.io/whitepaper/10-whitepaper/03-the-defindex-approach/02-contracts/01-vault-contract#emergency-management'
-    },
-    feeReceiver: {
-      title: 'Fee receiver',
-      description: ' Fee Receiver could be the manager using the same address, or it could be a different entity such as a streaming contract, a DAO, or another party.',
-      href: 'https://docs.defindex.io/whitepaper/10-whitepaper/03-the-defindex-approach/02-contracts/01-vault-contract#fee-collection'
-    }
-  }
+
   return (
     <>
       <AccordionRoot value={accordionValue} onValueChange={(e: any) => setAccordionValue(e.value)}>
