@@ -269,7 +269,6 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       idleFunds: idleFunds,
       investedFunds: [{ address: '', amount: 0 }],
     }
-    console.log(tempVault)
     await txModal.handleSuccess(result.txHash);
     dispatch(pushVault(tempVault));
     dispatch(resetNewVault());
