@@ -1,18 +1,18 @@
 import {
   Address,
   Asset,
+  Keypair,
   nativeToScVal,
   Networks,
   scValToNative,
-  xdr,
-  Keypair
+  xdr
 } from "@stellar/stellar-sdk";
 import { randomBytes } from "crypto";
+import { checkUserBalance, depositToStrategy, withdrawFromStrategy } from "./tests/strategy.js";
 import { depositToVault, withdrawFromVault } from "./tests/vault.js";
 import { AddressBook } from "./utils/address_book.js";
 import { airdropAccount, invokeContract } from "./utils/contract.js";
 import { config } from "./utils/env_config.js";
-import { checkUserBalance, depositToStrategy, withdrawFromStrategy} from "./tests/strategy.js";
 
 
 export async function test_factory(addressBook: AddressBook) {
@@ -157,7 +157,7 @@ console.log(" -- ")
 
 // Step 1: Deposit to vault and capture initial balances
 const { user, balanceBefore: depositBalanceBefore, result: depositResult, balanceAfter: depositBalanceAfter } 
-  = await depositToVault(deployedVault, 987654321);
+  = await depositToVault(deployedVault, [987654321]);
 console.log(" -- ")
 console.log(" -- ")
 console.log("Step 1: Deposited to Vault using user:", user.publicKey(), "with balance before:", depositBalanceBefore, "and balance after:", depositBalanceAfter);
@@ -218,7 +218,7 @@ console.table([
   }
 ]);
 
-await depositToVault(deployedVault, 98765421);
+await depositToVault(deployedVault, [98765421]);
 
 // await getDfTokenBalance("CCL54UEU2IGTCMIJOYXELIMVA46CLT3N5OG35XN45APXDZYHYLABF53N", "GDAMXOJUSW6O67UVI6U4LBHI5IIJFUKQVDHPKNFKOIYRLYB2LA6YDAFI", loadedConfig.admin)
 // await depositToVault("CCIOE3BLPYOYDFB5KALLDXED2CZT3GJDZSHY453U4TTOIRZLAKMKZPLR");

@@ -11,19 +11,16 @@
 
 import {
     Address,
+    Keypair,
     nativeToScVal,
     scValToNative,
-    xdr,
-    Keypair,
-    Networks
+    xdr
 } from "@stellar/stellar-sdk";
 import { airdropAccount, invokeCustomContract } from "../utils/contract.js";
-import { randomBytes } from "crypto";
-import { config } from "../utils/env_config.js";
 
 const network = process.argv[2];
 
-export async function depositToVault(deployedVault: string, amount: number, user?: Keypair, ) {
+export async function depositToVault(deployedVault: string, amount: number[], user?: Keypair, ) {
     // Create and fund a new user account if not provided
     const newUser = user ? user : Keypair.random();
     console.log('🚀 ~ depositToVault ~ newUser.publicKey():', newUser.publicKey());
@@ -37,9 +34,8 @@ export async function depositToVault(deployedVault: string, amount: number, user
     let result: any;
 
     // Define deposit parameters
-    const depositAmount = BigInt(amount); // 1 XLM in stroops (1 XLM = 10^7 stroops)
-    const amountsDesired = [depositAmount];
-    const amountsMin = [BigInt(0)]; // Minimum amount for transaction to succeed
+    const amountsDesired = amount.map((am) => BigInt(am)); // 1 XLM in stroops (1 XLM = 10^7 stroops)
+    const amountsMin = amount.map((_) => BigInt(0));; // Minimum amount for transaction to succeed
 
     const depositParams: xdr.ScVal[] = [
         xdr.ScVal.scvVec(amountsDesired.map((amount) => nativeToScVal(amount, { type: "i128" }))),
@@ -193,4 +189,66 @@ export async function fetchCurrentIdleFunds(deployedVault: string, user: Keypair
         console.error("❌ Failed to fetch current idle funds:", error);
         throw error;
     }
+}
+
+export async function rebalanceVault(deployedVault: string, manager: Keypair ) {
+    if (network !== "mainnet") await airdropAccount(manager);
+    console.log("Manager publicKey:", manager.publicKey());
+
+    let balanceBefore: number;
+    let balanceAfter: number;
+    let result: any;
+
+    let vaultAssets = await invokeCustomContract(
+        deployedVault,
+        "get_assets",
+        [],
+        manager
+    );
+    console.log('🚀 « vaultAssets BEFORE:', vaultAssets);
+    vaultAssets = scValToNative(vaultAssets);
+    console.log('🚀 « vaultAssets AFTER', vaultAssets);
+    // // Define deposit parameters
+    // const depositAmount = BigInt(amount); // 1 XLM in stroops (1 XLM = 10^7 stroops)
+    // const amountsDesired = [depositAmount];
+    // const amountsMin = [BigInt(0)]; // Minimum amount for transaction to succeed
+
+    // const depositParams: xdr.ScVal[] = [
+    //     xdr.ScVal.scvVec(amountsDesired.map((amount) => nativeToScVal(amount, { type: "i128" }))),
+    //     xdr.ScVal.scvVec(amountsMin.map((min) => nativeToScVal(min, { type: "i128" }))),
+    //     (new Address(newUser.publicKey())).toScVal()
+    // ];
+
+    // try {
+    //     // Check the user's balance before the deposit
+    //     balanceBefore = await getDfTokenBalance(deployedVault, newUser.publicKey(), newUser);
+    //     console.log("🔢 « dfToken balance before deposit:", balanceBefore);
+    // } catch (error) {
+    //     console.error("❌ Balance check before deposit failed:", error);
+    //     throw error;
+    // }
+
+    // try {
+    //     result = await invokeCustomContract(
+    //         deployedVault,
+    //         "deposit",
+    //         depositParams,
+    //         newUser
+    //     );
+    //     console.log("🚀 « Deposit successful:", scValToNative(result.returnValue));
+    // } catch (error) {
+    //     console.error("❌ Deposit failed:", error);
+    //     throw error;
+    // }
+
+    // try {
+    //     // Check the user's balance after the deposit
+    //     balanceAfter = await getDfTokenBalance(deployedVault, newUser.publicKey(), newUser);
+    //     console.log("🔢 « dfToken balance after deposit:", balanceAfter);
+    // } catch (error) {
+    //     console.error("❌ Balance check after deposit failed:", error);
+    //     throw error;
+    // }
+
+    // return { user: newUser, balanceBefore, result, balanceAfter };
 }
