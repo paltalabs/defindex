@@ -23,6 +23,7 @@ import {
   NativeSelectField,
   HStack,
 } from '@chakra-ui/react'
+import { ClipboardIconButton, ClipboardRoot } from '../ui/clipboard'
 
 export const InteractWithVault = () => {
   const [amount, set_amount] = useState<number>(0)
@@ -121,13 +122,14 @@ export const InteractWithVault = () => {
           <Grid templateColumns="repeat(11, 1fr)" gap={1}>
             <GridItem colSpan={12}>
               <h2>Vault address:</h2>
-              <Textarea
-                defaultValue={selectedVault.address}
-                rows={1}
-                w={'full'}
-                textAlign={'center'}
-                readOnly
-                resize={'none'} />
+              <ClipboardRoot value={selectedVault.address}>
+                <HStack alignItems={'center'} justifyItems={'center'}>
+                  <Text>
+                    {selectedVault.address}
+                  </Text>
+                  <ClipboardIconButton />
+                </HStack>
+              </ClipboardRoot>
             </GridItem>
             <GridItem colSpan={5} colStart={1} textAlign={'start'}>
               <h2>Total value locked: ${selectedVault?.TVL} {selectedVault.assets[0]?.symbol}</h2>

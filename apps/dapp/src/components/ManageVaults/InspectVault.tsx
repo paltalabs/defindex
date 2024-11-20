@@ -11,6 +11,7 @@ import { Button, Grid, GridItem, HStack, Icon, Stack, Text } from "@chakra-ui/re
 import { DialogBody, DialogContent, DialogFooter, DialogHeader } from "../ui/dialog"
 import { FaRegEdit } from "react-icons/fa"
 import { IoClose } from "react-icons/io5"
+import { ClipboardIconButton, ClipboardRoot } from "../ui/clipboard"
 
 export const InspectVault = ({
   handleOpenDeployVault,
@@ -50,7 +51,14 @@ export const InspectVault = ({
         <Grid templateColumns="repeat(12, 1fr)" gap={4}>
           <GridItem colSpan={12} justifyItems={'center'}>
             <h3>Vault address</h3>
-            <p>{selectedVault.address}</p>
+            <ClipboardRoot value={selectedVault.address}>
+              <HStack alignItems={'center'}>
+                <Text>
+                  {selectedVault.address}
+                </Text>
+                <ClipboardIconButton />
+              </HStack>
+            </ClipboardRoot>
           </GridItem>
         </Grid>
         <Stack justify={'space-around'} direction={{ sm: 'column', md: 'row' }} mt={6}>
