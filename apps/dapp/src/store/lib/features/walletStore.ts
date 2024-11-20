@@ -106,6 +106,13 @@ export const walletSlice = createSlice({
         }
       })
     },
+    setVaultFeeReceiver: (state, action: PayloadAction<string>) => {
+      state.vaults.createdVaults.forEach(vault => {
+        if (vault.address === state.vaults.selectedVault?.address) {
+          vault.feeReceiver = action.payload
+        }
+      })
+    },
     updateVaultData: (state, action: PayloadAction<Partial<VaultData>>) => {
       state.vaults.createdVaults.forEach(vault => {
         if (vault.address === action.payload.address) {
@@ -139,6 +146,7 @@ export const {
   setVaults,
   setVaultTVL,
   resetSelectedVault,
+  setVaultFeeReceiver,
   setVaultUserBalance,
   updateVaultData
 } = walletSlice.actions

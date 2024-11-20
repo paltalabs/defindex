@@ -17,6 +17,7 @@ export const ModalProvider = ({
   const [isDeployVaultModalOpen, setIsDeployVaultModalOpen] = React.useState<boolean>(false)
   const [isInspectVaultModalOpen, setIsInspectVaultModalOpen] = React.useState<boolean>(false)
   const [isInteractWithVaultModalOpen, setIsInteractWithVaultModalOpen] = React.useState<boolean>(false)
+  const [isEditVaultModalOpen, setIsEditVaultModalOpen] = React.useState<boolean>(false)
 
   const [isTransactionStatusModalOpen, setIsTransactionStatusModalOpen] = React.useState<boolean>(false)
   const [transactionStatusModalStep, setTransactionStatusModalStep] = React.useState<number>(0)
@@ -97,6 +98,10 @@ export const ModalProvider = ({
     interactWithVaultModal: {
       isOpen: isInteractWithVaultModalOpen,
       setIsOpen: setIsInteractWithVaultModalOpen,
+    },
+    editVaultModal: {
+      isOpen: isEditVaultModalOpen,
+      setIsOpen: setIsEditVaultModalOpen,
     },
   }
 

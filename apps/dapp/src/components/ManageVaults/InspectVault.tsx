@@ -12,19 +12,22 @@ import { DialogBody, DialogContent, DialogFooter, DialogHeader } from "../ui/dia
 import { FaRegEdit } from "react-icons/fa"
 import { IoClose } from "react-icons/io5"
 import { ClipboardIconButton, ClipboardRoot } from "../ui/clipboard"
+import { ModalContext } from "@/contexts"
+import { useContext } from "react"
+
 
 export const InspectVault = ({
   handleOpenDeployVault,
   handleOpenInteract,
   onClose
 }: {
-    handleOpenDeployVault: (method: string, value: boolean, args?: any) => any,
-    handleOpenInteract: (method: string, args?: any) => any,
-    onClose: () => void,
+  handleOpenDeployVault: (method: string, value: boolean, args?: any) => any,
+  handleOpenInteract: (method: string, args?: any) => any,
+  onClose: () => void,
 }) => {
   const selectedVault: VaultData | undefined = useAppSelector(state => state.wallet.vaults.selectedVault)
   const { address } = useSorobanReact()
-
+  const { editVaultModal: editModal } = useContext(ModalContext)
   if (!selectedVault) return null
   return (
     <DialogContent>
@@ -34,11 +37,11 @@ export const InspectVault = ({
             <h2>Inspect {selectedVault?.name ? selectedVault.name : shortenAddress(selectedVault.address)}</h2>
           </GridItem>
           {address === selectedVault.manager &&
-          <GridItem colSpan={1}>
-            <Icon onClick={() => { handleOpenDeployVault('edit_vault', true, selectedVault) }} css={{ cursor: "pointer" }}>
-              <FaRegEdit />
-            </Icon>
-          </GridItem>
+            <GridItem colSpan={1}>
+              <Icon onClick={() => { editModal.setIsOpen(true) }} css={{ cursor: "pointer" }}>
+                <FaRegEdit />
+              </Icon>
+            </GridItem>
           }
           <GridItem colSpan={1}>
             <Icon onClick={onClose} css={{ cursor: "pointer" }}>
