@@ -85,6 +85,12 @@ export const newVaultSlice = createSlice({
     pushAmount: ((state, action: PayloadAction<number>) => {
       state.amounts?.push(action.payload);
     }),
+    setAmountByAddress: ((state, action: PayloadAction<{address:string, amount:number}>) => {
+      const index = state.assets.findIndex(asset => asset.address === action.payload.address);
+      if(index !== -1) {
+        state.amounts[index] = action.payload.amount;
+      }
+    }),
     removeAmountByIndex: ((state, action: PayloadAction<number>) => {
       state.amounts?.splice(action.payload, 1);
     }),
@@ -97,7 +103,16 @@ export const newVaultSlice = createSlice({
       state.TVL = action.payload.TVL;
     }),
     resetNewVault: ((state) => {
-      state = initialState;
+      state.address = "";
+      state.emergencyManager = "";
+      state.feeReceiver = "";
+      state.manager = "";
+      state.name = "";
+      state.symbol = "";
+      state.vaultShare = 0;
+      state.assets = [];
+      state.amounts = [];
+      state.TVL = 0;
     }),
   }
 })
@@ -115,7 +130,8 @@ export const {
   removeAmountByIndex,
   resetAssets,
   openEditVault,
-  resetNewVault
+  resetNewVault,
+  setAmountByAddress
 } = newVaultSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type

@@ -10,7 +10,7 @@ import { randomBytes } from "crypto";
 
 import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
 import { pushVault } from '@/store/lib/features/walletStore'
-import { Asset, NewVaultState } from "@/store/lib/types";
+import { Asset, NewVaultState, VaultData } from "@/store/lib/types";
 
 import { useFactoryCallback, FactoryMethod } from '@/hooks/useFactory'
 import { ModalContext, TransactionStatusModalStatus } from "@/contexts";
@@ -18,6 +18,8 @@ import { ModalContext, TransactionStatusModalStatus } from "@/contexts";
 import { AccordionItems, FormControlInterface, VaultPreview } from "./VaultPreview";
 import { DialogBody, DialogCloseTrigger, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "@chakra-ui/react"
+import { resetNewVault } from "@/store/lib/features/vaultStore";
+import { useVault } from "@/hooks/useVault";
 
 interface Status {
   isSuccess: boolean,
@@ -40,23 +42,15 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   const { activeChain, address } = sorobanContext;
   const factory = useFactoryCallback();
   const newVault: NewVaultState = useAppSelector(state => state.newVault);
-  //const strategies: Strategy[] = newVault.strategies;
   const indexName = useAppSelector(state => state.newVault.name)
   const indexSymbol = useAppSelector(state => state.newVault.symbol)
   const indexShare = useAppSelector(state => state.newVault.vaultShare)
   const managerString = useAppSelector(state => state.newVault.manager)
   const emergencyManagerString = useAppSelector(state => state.newVault.emergencyManager)
   const feeReceiverString = useAppSelector(state => state.newVault.feeReceiver)
-  const { transactionStatusModal: txModal } = useContext(ModalContext);
+  const { transactionStatusModal: txModal, deployVaultModal: deployModal } = useContext(ModalContext);
   const dispatch = useAppDispatch();
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [status, setStatus] = useState<Status>({
-    isSuccess: false,
-    hasError: false,
-    network: undefined,
-    message: undefined,
-    txHash: undefined
-  });
+  const { getIdleFunds, getInvestedFunds, getTVL, getUserBalance } = useVault()
 
   const [deployDisabled, setDeployDisabled] = useState(true);
 
@@ -73,35 +67,6 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     }
   }, [managerString, emergencyManagerString, feeReceiverString])
 
-
-
-
-  /* useEffect(() => {
-    const newChartData: ChartData[] = strategies.map((strategy: Strategy, index: number) => {
-      return {
-        id: index,
-        label: strategy.name,
-        address: strategy.address,
-        value: strategy.share,
-      }
-    });
-    const total = newChartData.reduce((acc: number, curr: ChartData) => acc + curr.value, 0)
-    if (total == 100) {
-      setChartData(newChartData);
-      return;
-    } else {
-      newChartData.push({
-        id: newChartData.length,
-        label: 'Unassigned',
-        value: 100 - newChartData.reduce((acc: number, curr: ChartData) => acc + curr.value, 0),
-        address: undefined,
-        color: '#e0e0e0'
-      })
-      setChartData(newChartData);
-      return;
-    }
-  }, [strategies]); */
-
   const autoCloseModal = async () => {
     await new Promise(resolve => setTimeout(resolve, 30000))
     txModal.resetModal();
@@ -113,7 +78,6 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       autoCloseModal();
     }
   }, [txModal.status])
-  const activeStep: number = 0;
   const [buttonText, setButtonText] = useState<string>('')
   const [accordionValue, setAccordionValue] = useState<AccordionItems[]>([AccordionItems.STRATEGY_DETAILS])
   const [formControl, setFormControl] = useState<FormControlInterface>({
@@ -144,6 +108,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     }
 
   }, [managerString, emergencyManagerString, feeReceiverString, indexShare])
+
   const deployDefindex = async () => {
     if (managerString === '' || emergencyManagerString === '') {
       console.log('please fill manager config')
@@ -155,6 +120,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       setAccordionValue([AccordionItems.FEES_CONFIGS])
       return
     }
+    deployModal.setIsOpen(false)
     txModal.initModal();
 
     const vaultName = nativeToScVal(indexName, { type: "string" })
@@ -207,9 +173,16 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       ]);
     });
     const assetParamsScValVec = xdr.ScVal.scvVec(assetParamsScVal);
-    const amountsScVal = newVault.amounts.map((amount) => {
-      return nativeToScVal((amount * Math.pow(10, 7)), { type: "i128" });
+    const amountsScVal = newVault.assets.map((asset, index) => {
+      const parsedAmount = newVault.amounts[index] || 0;
+      const truncatedAmount = Math.floor(parsedAmount * 1e7) / 1e7;
+      const convertedAmount = Number(truncatedAmount) * Math.pow(10, 7)
+      if (newVault.amounts.length === 0) return nativeToScVal(0, { type: "i128" });
+      return nativeToScVal(convertedAmount, { type: "i128" });
     });
+   /*  const amountsScVal = newVault.amounts.map((amount) => {
+      return nativeToScVal((amount * Math.pow(10, 7)), { type: "i128" });
+    }); */
     const amountsScValVec = xdr.ScVal.scvVec(amountsScVal);
      /*  fn create_defindex_vault(
       emergency_manager: address, 
@@ -222,7 +195,9 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       salt: bytesn<32>) -> result<address,FactoryError>
  */
     let result: any;
-    if (amountsScVal.length === 0) {
+
+
+    if (newVault.amounts.length === 0) {
       const createDefindexParams: xdr.ScVal[] = [
         emergencyManager.toScVal(),
         feeReceiver.toScVal(),
@@ -242,6 +217,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       }
       catch (e: any) {
         console.error(e)
+        dispatch(resetNewVault());
         txModal.handleError(e.toString());
         return
       }
@@ -269,18 +245,33 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       }
       catch (e: any) {
         console.error(e)
+        dispatch(resetNewVault());
         txModal.handleError(e.toString());
         return
       }
     }
     const parsedResult: string = scValToNative(result.returnValue);
     if (parsedResult.length !== 56) throw new Error('Invalid result')
-    const tempVault: any = {
+    const idleFunds = newVault.assets.map((asset, index) => {
+      return {
+        address: asset.address,
+        amount: newVault.amounts[index] || 0
+      }
+    })
+    const tempVault: VaultData = {
       ...newVault,
-      address: parsedResult
+      address: parsedResult,
+      emergencyManager: emergencyManagerString,
+      feeReceiver: feeReceiverString,
+      manager: managerString,
+      TVL: 0,
+      totalSupply: 0,
+      idleFunds: idleFunds,
+      investedFunds: [{ address: '', amount: 0 }],
     }
-    txModal.handleSuccess(result.txHash);
+    await txModal.handleSuccess(result.txHash);
     dispatch(pushVault(tempVault));
+    dispatch(resetNewVault());
     return result;
   }
 
@@ -305,14 +296,12 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       </DialogBody>
 
       <DialogFooter>
-        {(activeStep == 0 && !status.hasError) && (
           <Button
             aria-label='add_strategy'
             colorScheme='green'
             onClick={deployDefindex}>
             {buttonText}
-          </Button>
-        )}
+        </Button>
       </DialogFooter>
     </>
 

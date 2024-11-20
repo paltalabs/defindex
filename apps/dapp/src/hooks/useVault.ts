@@ -81,7 +81,8 @@ export const useVault = (vaultAddress?: string | undefined) => {
         ]);
         for (let asset of assets){
             const symbol = await getTokenSymbol(asset.address, sorobanContext);
-            if(symbol === 'native') asset.symbol = 'XLM';
+            if(symbol === 'native') asset.symbol = 'XLM'
+            else asset.symbol = symbol
         }
         getInvestedFunds(vaultAddress);
         const newData: VaultData = {
@@ -182,7 +183,6 @@ export const useVault = (vaultAddress?: string | undefined) => {
         assets.forEach((asset)=>{
             idleFunds.push({address: asset, amount:  Number(rawIdleFunds[asset]) / 10 ** 7})
         })
-        console.log(idleFunds);
         return idleFunds;
         } catch (error) {
         console.error(error);
@@ -196,7 +196,6 @@ export const useVault = (vaultAddress?: string | undefined) => {
         assets.forEach((asset)=>{
             investedFunds.push({address: asset, amount:  Number(rawInvestedFunds[asset]) / 10 ** 7})
         })
-        console.log(investedFunds);
         return investedFunds;
         } catch (error) {
         console.error(error);
