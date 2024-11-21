@@ -16,6 +16,7 @@ import {
     scValToNative,
     xdr
 } from "@stellar/stellar-sdk";
+import { i128, u32, u64 } from "@stellar/stellar-sdk/contract";
 import { airdropAccount, invokeCustomContract } from "../utils/contract.js";
 
 const network = process.argv[2];
@@ -190,65 +191,249 @@ export async function fetchCurrentIdleFunds(deployedVault: string, user: Keypair
         throw error;
     }
 }
+export interface AssetInvestmentAllocation {
+    asset: Address;
+    strategy_investments: { amount: bigint, strategy: Address }[];
+}
 
-export async function rebalanceVault(deployedVault: string, manager: Keypair ) {
-    if (network !== "mainnet") await airdropAccount(manager);
-    console.log("Manager publicKey:", manager.publicKey());
+export async function investVault(
+    deployedVault: string,
+    investParams: AssetInvestmentAllocation[],
+    manager: Keypair
+) {
 
-    let balanceBefore: number;
-    let balanceAfter: number;
-    let result: any;
-
-    let vaultAssets = await invokeCustomContract(
-        deployedVault,
-        "get_assets",
-        [],
-        manager
+    const mappedParam = xdr.ScVal.scvVec(
+        investParams.map((entry) =>
+            xdr.ScVal.scvMap([
+                new xdr.ScMapEntry({
+                    key: xdr.ScVal.scvSymbol("asset"),
+                    val: entry.asset.toScVal(), // Convert asset address to ScVal
+                }),
+                new xdr.ScMapEntry({
+                    key: xdr.ScVal.scvSymbol("strategy_investments"),
+                    val: xdr.ScVal.scvVec(
+                        entry.strategy_investments.map((investment) =>
+                            xdr.ScVal.scvMap([
+                                new xdr.ScMapEntry({
+                                    key: xdr.ScVal.scvSymbol("amount"),
+                                    val: nativeToScVal(BigInt(investment.amount), { type: "i128" }), // Ensure i128 conversion
+                                }),
+                                new xdr.ScMapEntry({
+                                    key: xdr.ScVal.scvSymbol("strategy"),
+                                    val: investment.strategy.toScVal(), // Convert strategy address
+                                }),
+                            ])
+                        )
+                    ),
+                }),
+            ])
+        )
     );
-    console.log('🚀 « vaultAssets BEFORE:', vaultAssets);
-    vaultAssets = scValToNative(vaultAssets);
-    console.log('🚀 « vaultAssets AFTER', vaultAssets);
-    // // Define deposit parameters
-    // const depositAmount = BigInt(amount); // 1 XLM in stroops (1 XLM = 10^7 stroops)
-    // const amountsDesired = [depositAmount];
-    // const amountsMin = [BigInt(0)]; // Minimum amount for transaction to succeed
 
-    // const depositParams: xdr.ScVal[] = [
-    //     xdr.ScVal.scvVec(amountsDesired.map((amount) => nativeToScVal(amount, { type: "i128" }))),
-    //     xdr.ScVal.scvVec(amountsMin.map((min) => nativeToScVal(min, { type: "i128" }))),
-    //     (new Address(newUser.publicKey())).toScVal()
-    // ];
+    try {
+        // Invoke contract with the mapped parameters
+        const investResult = await invokeCustomContract(
+            deployedVault,
+            "invest",
+            [mappedParam],
+            manager
+        );
+        console.log("Investment successful:", scValToNative(investResult.returnValue));
+        return investResult;
+    } catch (error) {
+        console.error("Investment failed:", error);
+        throw error;
+    }
+}
+  
+export enum ActionType {
+    Withdraw = 0,
+    Invest = 1,
+    SwapExactIn = 2,
+    SwapExactOut = 3,
+    Zapper = 4,
+  }
 
-    // try {
-    //     // Check the user's balance before the deposit
-    //     balanceBefore = await getDfTokenBalance(deployedVault, newUser.publicKey(), newUser);
-    //     console.log("🔢 « dfToken balance before deposit:", balanceBefore);
-    // } catch (error) {
-    //     console.error("❌ Balance check before deposit failed:", error);
-    //     throw error;
-    // }
+export interface DexDistribution {
+    parts: u32;
+    path: Array<string>;
+    protocol_id: string;
+  }
 
-    // try {
-    //     result = await invokeCustomContract(
-    //         deployedVault,
-    //         "deposit",
-    //         depositParams,
-    //         newUser
-    //     );
-    //     console.log("🚀 « Deposit successful:", scValToNative(result.returnValue));
-    // } catch (error) {
-    //     console.error("❌ Deposit failed:", error);
-    //     throw error;
-    // }
+export interface SwapDetailsExactIn {
+    amount_in: i128;
+    amount_out_min: i128;
+    deadline: u64;
+    distribution: Array<DexDistribution>;
+    token_in: string;
+    token_out: string;
+}
 
-    // try {
-    //     // Check the user's balance after the deposit
-    //     balanceAfter = await getDfTokenBalance(deployedVault, newUser.publicKey(), newUser);
-    //     console.log("🔢 « dfToken balance after deposit:", balanceAfter);
-    // } catch (error) {
-    //     console.error("❌ Balance check after deposit failed:", error);
-    //     throw error;
-    // }
 
-    // return { user: newUser, balanceBefore, result, balanceAfter };
+export interface SwapDetailsExactOut {
+    amount_in_max: i128;
+    amount_out: i128;
+    deadline: u64;
+    distribution: Array<DexDistribution>;
+    token_in: string;
+    token_out: string;
+}
+
+export type Option<T> = T | undefined;
+
+export interface Instruction {
+    action: ActionType;
+    amount: Option<i128>;
+    strategy: Option<string>;
+    swap_details_exact_in: Option<SwapDetailsExactIn>;
+    swap_details_exact_out: Option<SwapDetailsExactOut>;
+}
+
+export async function rebalanceVault(deployedVault: string, instructions: Instruction[], manager: Keypair) {
+    const mappedInstructions = xdr.ScVal.scvVec(
+        instructions.map((instruction) =>
+            xdr.ScVal.scvMap([
+                new xdr.ScMapEntry({
+                    key: xdr.ScVal.scvSymbol("action"),
+                    val: nativeToScVal(instruction.action, { type: "u32" }),
+                }),
+                new xdr.ScMapEntry({
+                    key: xdr.ScVal.scvSymbol("amount"),
+                    val: instruction.amount !== undefined
+                        ? nativeToScVal(instruction.amount, { type: "i128" })
+                        : xdr.ScVal.scvVoid(),
+                }),
+                new xdr.ScMapEntry({
+                    key: xdr.ScVal.scvSymbol("strategy"),
+                    val: instruction.strategy
+                        ? new Address(instruction.strategy).toScVal()
+                        : xdr.ScVal.scvVoid(),
+                }),
+                new xdr.ScMapEntry({
+                    key: xdr.ScVal.scvSymbol("swap_details_exact_in"),
+                    val: instruction.swap_details_exact_in
+                        ? xdr.ScVal.scvMap(
+                              mapSwapDetailsExactIn(instruction.swap_details_exact_in)
+                          )
+                        : xdr.ScVal.scvVec([xdr.ScVal.scvSymbol("None")]),
+                }),
+                new xdr.ScMapEntry({
+                    key: xdr.ScVal.scvSymbol("swap_details_exact_out"),
+                    val: instruction.swap_details_exact_out
+                        ? xdr.ScVal.scvMap(
+                              mapSwapDetailsExactOut(instruction.swap_details_exact_out)
+                          )
+                        : xdr.ScVal.scvVec([xdr.ScVal.scvSymbol("None")]),
+                }),
+            ])
+        )
+    );
+    
+    try {
+        const investResult = await invokeCustomContract(
+            deployedVault,
+            "rebalance",
+            [mappedInstructions],
+            manager
+        );
+        console.log("Rebalance successful:", scValToNative(investResult.returnValue));
+        return investResult;
+    } catch (error) {
+        console.error("Rebalance failed:", error);
+        throw error;
+    }
+}
+
+// Helper function to map SwapDetailsExactIn
+function mapSwapDetailsExactIn(details: SwapDetailsExactIn) {
+    return [
+        new xdr.ScMapEntry({
+            key: xdr.ScVal.scvSymbol("token_in"),
+            val: new Address(details.token_in).toScVal(),
+        }),
+        new xdr.ScMapEntry({
+            key: xdr.ScVal.scvSymbol("token_out"),
+            val: new Address(details.token_out).toScVal(),
+        }),
+        new xdr.ScMapEntry({
+            key: xdr.ScVal.scvSymbol("amount_in"),
+            val: nativeToScVal(details.amount_in, { type: "i128" }),
+        }),
+        new xdr.ScMapEntry({
+            key: xdr.ScVal.scvSymbol("amount_out_min"),
+            val: nativeToScVal(details.amount_out_min, { type: "i128" }),
+        }),
+        new xdr.ScMapEntry({
+            key: xdr.ScVal.scvSymbol("deadline"),
+            val: nativeToScVal(details.deadline, { type: "u64" }),
+        }),
+        new xdr.ScMapEntry({
+            key: xdr.ScVal.scvSymbol("distribution"),
+            val: xdr.ScVal.scvVec(
+                details.distribution.map((d) =>
+                    xdr.ScVal.scvMap([
+                        new xdr.ScMapEntry({
+                            key: xdr.ScVal.scvSymbol("protocol_id"),
+                            val: xdr.ScVal.scvString(d.protocol_id),
+                        }),
+                        new xdr.ScMapEntry({
+                            key: xdr.ScVal.scvSymbol("path"),
+                            val: xdr.ScVal.scvVec(d.path.map((address) => new Address(address).toScVal())),
+                        }),
+                        new xdr.ScMapEntry({
+                            key: xdr.ScVal.scvSymbol("parts"),
+                            val: nativeToScVal(d.parts, { type: "u32" }),
+                        }),
+                    ])
+                )
+            ),
+        }),
+    ];
+}
+
+// Helper function to map SwapDetailsExactOut
+function mapSwapDetailsExactOut(details: SwapDetailsExactOut) {
+    return [
+        new xdr.ScMapEntry({
+            key: xdr.ScVal.scvSymbol("token_in"),
+            val: new Address(details.token_in).toScVal(),
+        }),
+        new xdr.ScMapEntry({
+            key: xdr.ScVal.scvSymbol("token_out"),
+            val: new Address(details.token_out).toScVal(),
+        }),
+        new xdr.ScMapEntry({
+            key: xdr.ScVal.scvSymbol("amount_out"),
+            val: nativeToScVal(details.amount_out, { type: "i128" }),
+        }),
+        new xdr.ScMapEntry({
+            key: xdr.ScVal.scvSymbol("amount_in_max"),
+            val: nativeToScVal(details.amount_in_max, { type: "i128" }),
+        }),
+        new xdr.ScMapEntry({
+            key: xdr.ScVal.scvSymbol("deadline"),
+            val: nativeToScVal(details.deadline, { type: "u64" }),
+        }),
+        new xdr.ScMapEntry({
+            key: xdr.ScVal.scvSymbol("distribution"),
+            val: xdr.ScVal.scvVec(
+                details.distribution.map((d) =>
+                    xdr.ScVal.scvMap([
+                        new xdr.ScMapEntry({
+                            key: xdr.ScVal.scvSymbol("protocol_id"),
+                            val: xdr.ScVal.scvString(d.protocol_id),
+                        }),
+                        new xdr.ScMapEntry({
+                            key: xdr.ScVal.scvSymbol("path"),
+                            val: xdr.ScVal.scvVec(d.path.map((address) => new Address(address).toScVal())),
+                        }),
+                        new xdr.ScMapEntry({
+                            key: xdr.ScVal.scvSymbol("parts"),
+                            val: nativeToScVal(d.parts, { type: "u32" }),
+                        }),
+                    ])
+                )
+            ),
+        }),
+    ];
 }
