@@ -123,6 +123,7 @@ const CustomInputField = ({
             <IconButton
               aria-label='Connected address'
               size={'sm'}
+              variant={'ghost'}
               onClick={() => handleClick(address!)}
             >
               <FaRegPaste />
@@ -181,8 +182,7 @@ export const dropdownData = {
 export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue, setAccordionValue, formControl, setFormControl }) => {
 
   const dispatch = useAppDispatch()
-  const amounts = useAppSelector(state => state.newVault.amounts)
-
+  const newVault = useAppSelector(state => state.newVault)
   const handleManagerChange = (input: string) => {
     const isValid = isValidAddress(input)
     while (!isValid) {
@@ -289,7 +289,7 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
                   <Table.Cell>Name</Table.Cell>
                   <Table.Cell textAlign={'center'}>Address</Table.Cell>
                   <Table.Cell textAlign={'center'} >Asset</Table.Cell>
-                  {amounts.length > 0 && (
+                  {newVault.assets.some((asset) => asset.amount) && (
                     <Table.Cell textAlign={'center'}>Initial deposit</Table.Cell>
                   )}
                 </Table.Row>
@@ -302,8 +302,8 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
                       {asset.strategies[0]?.address ? shortenAddress(asset.strategies[0]?.address) : '-'}
                     </Table.Cell>
                     <Table.Cell textAlign={'center'}>{asset.symbol}</Table.Cell>
-                    {amounts.length > 0 && (
-                      <Table.Cell textAlign={'center'}>${amounts[index]} {asset.symbol}</Table.Cell>
+                    {(asset.amount && asset.amount > 0) && (
+                      <Table.Cell textAlign={'center'}>${asset.amount} {asset.symbol}</Table.Cell>
                     )}
                   </Table.Row>
                 ))}
