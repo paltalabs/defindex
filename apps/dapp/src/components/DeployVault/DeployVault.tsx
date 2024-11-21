@@ -7,13 +7,16 @@ import {
   Button,
   For,
   Box,
+  HStack,
+  Text,
+  Stack,
 } from '@chakra-ui/react'
 import AddNewStrategyButton from './AddNewStrategyButton'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { ConfirmDelpoyModal } from './ConfirmDelpoyModal'
-import { removeAmountByIndex, removeAsset, setName, setSymbol } from '@/store/lib/features/vaultStore'
+import { removeStrategy, setName, setSymbol } from '@/store/lib/features/vaultStore'
 import { DialogBody, DialogCloseTrigger, DialogContent, DialogFooter, DialogHeader, DialogRoot } from '../ui/dialog'
-import { Asset } from '@/store/lib/types'
+import { Asset, Strategy } from '@/store/lib/types'
 import { shortenAddress } from '@/helpers/address'
 import { Tooltip } from '../ui/tooltip'
 import { FaRegTrashCan } from "react-icons/fa6";
@@ -22,7 +25,6 @@ export const DeployVault = () => {
   const dispatch = useAppDispatch()
   //const strategies: Strategy[] = []//useAppSelector(state => state.newVault.strategies)
   const assets: Asset[] = useAppSelector(state => state.newVault.assets)
-  const amounts: number[] = useAppSelector(state => state.newVault.amounts)
   const vaultName = useAppSelector(state => state.newVault.name)
   const vaultSymbol = useAppSelector(state => state.newVault.symbol)
   const [openConfirm, setOpenConfirm] = useState<boolean>(false)
@@ -39,9 +41,8 @@ export const DeployVault = () => {
     await dispatch(setSymbol(e.target.value))
   }
 
-  const handleRemoveAsset = (asset: Asset, index: number) => {
-    dispatch(removeAmountByIndex(index))
-    dispatch(removeAsset(asset.address))
+  const handleRemoveStrategy = (strategy: Strategy) => {
+    dispatch(removeStrategy(strategy))
   }
 
   return (
@@ -64,34 +65,31 @@ export const DeployVault = () => {
             <AddNewStrategyButton />
           </GridItem>
         </Grid>
-        <Grid
-          templateColumns={['1fr', null, 'repeat(12, 1fr)']}
-          alignSelf={'end'}
-          alignContent={'center'}
-          mb={4}
-          gap={6}>
-          <For each={assets}>
-            {(asset, j) => (
-              <GridItem colSpan={6} key={j}>
-                <Card.Root>
-                  <Card.Header>
-                    <Grid
-                      templateColumns={['1fr', null, 'repeat(12, 1fr)']}
-                    >
-                      <GridItem colSpan={11}>
-                        <Card.Title>{asset.strategies[0] ? asset.strategies[0].name : shortenAddress(asset.strategies[0]!.address)}</Card.Title>
-                      </GridItem>
-                      <GridItem css={{ cursor: 'pointer' }} onClick={() => handleRemoveAsset(asset, j)}>
-                        <Box>
-                          <FaRegTrashCan />
-                        </Box>
-                      </GridItem>
-                    </Grid>
-                  </Card.Header>
-                  <Card.Body>
-                    <ul>
-                      <For each={asset.strategies}>
-                        {(strategy, index) => (
+        <For each={assets}>
+          {(asset, j) => (
+            <Stack key={j}>
+              <Text>{asset.symbol}</Text>
+              {asset.amount && <Text>Initial deposit: {asset.amount}</Text>}
+              <HStack w='full' justifyContent={'space-evenly'}>
+                <For each={asset.strategies}>
+                  {(strategy, index) => (
+                    <Card.Root key={index}>
+                      <Card.Header>
+                        <Grid
+                          templateColumns={['1fr', null, 'repeat(12, 1fr)']}
+                        >
+                          <GridItem colSpan={11}>
+                            <Card.Title>{strategy.name ?? shortenAddress(strategy.address)}</Card.Title>
+                          </GridItem>
+                          <GridItem css={{ cursor: 'pointer' }} onClick={() => handleRemoveStrategy(strategy)}>
+                            <Box>
+                              <FaRegTrashCan />
+                            </Box>
+                          </GridItem>
+                        </Grid>
+                      </Card.Header>
+                      <Card.Body>
+                        <ul>
                           <Box key={index}>
                             <li>
                               Strategy asset: {asset.symbol}
@@ -103,24 +101,17 @@ export const DeployVault = () => {
                                 Strategy Address: {shortenAddress(strategy.address)}
                               </li>
                             </Tooltip>
-                            {(amounts[j]! > 0) && <li>Initial deposit: ${amounts[j]} {asset.symbol}</li>}
                           </Box>
-                        )}
-                      </For>
-                    </ul>
-                  </Card.Body>
-                </Card.Root>
-              </GridItem>
-            )}
-          </For>
-        </Grid>
-        {/*         {assets.length > 0 &&
-        <Grid templateColumns={['1fr', null, 'repeat(8, 2fr)']} dir='reverse'>
-          <GridItem colStart={[1, null, 8]} textAlign={['center', null, 'end']}>
-              <h2>Total: {totalValues}</h2>
-          </GridItem>
-          </Grid>
-        } */}
+
+                        </ul>
+                      </Card.Body>
+                    </Card.Root>
+                  )}
+                </For>
+              </HStack>
+            </Stack>
+          )}
+        </For>
       </DialogBody>
       <DialogFooter>
         <DialogRoot open={openConfirm} onOpenChange={(e) => setOpenConfirm(e.open)}>
