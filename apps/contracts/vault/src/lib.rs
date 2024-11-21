@@ -742,7 +742,10 @@ impl VaultManagementTrait for DeFindexVault {
 
         let access_control = AccessControl::new(&e);
         access_control.require_role(&RolesDataKey::Manager);
-        e.current_contract_address().require_auth();
+
+        if instructions.is_empty() {
+            panic_with_error!(&e, ContractError::NoInstructions);
+        }
 
         for instruction in instructions.iter() {
             match instruction.action {

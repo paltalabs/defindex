@@ -174,13 +174,13 @@ console.log('🚀 « investResult:', investResult);
 
 // Step 3: Rebalance Vault
 const rebalanceParams: Instruction[] = [
-  {
-    action: ActionType.Withdraw,
-    strategy: addressBook.getContractId("hodl_strategy"),
-    amount: BigInt(500_0_000_000),
-    swap_details_exact_in: undefined,
-    swap_details_exact_out: undefined,
-  },
+  // {
+  //   action: ActionType.Withdraw,
+  //   strategy: addressBook.getContractId("hodl_strategy"),
+  //   amount: BigInt(500_0_000_000),
+  //   swap_details_exact_in: undefined,
+  //   swap_details_exact_out: undefined,
+  // },
   {
     action: ActionType.Invest,
     strategy: addressBook.getContractId("fixed_apr_strategy"),

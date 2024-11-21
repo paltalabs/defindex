@@ -81,6 +81,7 @@ export async function invokeTransaction(
   const prepped_tx = assemble_tx.setSorobanData(sim_tx_data).build();
   prepped_tx.sign(source);
   const tx_hash = prepped_tx.hash().toString("hex");
+  console.log('🛑🛑🛑🛑🛑:', prepped_tx.toXDR());
 
   console.log("submitting tx...");
   let response: txResponse = await loadedConfig.rpc.sendTransaction(prepped_tx);
