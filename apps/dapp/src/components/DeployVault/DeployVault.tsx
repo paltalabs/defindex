@@ -14,7 +14,7 @@ import {
 import AddNewStrategyButton from './AddNewStrategyButton'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { ConfirmDelpoyModal } from './ConfirmDelpoyModal'
-import { removeStrategy, setName, setSymbol } from '@/store/lib/features/vaultStore'
+import { removeAsset, removeStrategy, setAssetAmount, setName, setSymbol } from '@/store/lib/features/vaultStore'
 import { DialogBody, DialogCloseTrigger, DialogContent, DialogFooter, DialogHeader, DialogRoot } from '../ui/dialog'
 import { Asset, Strategy } from '@/store/lib/types'
 import { shortenAddress } from '@/helpers/address'
@@ -42,7 +42,12 @@ export const DeployVault = () => {
   }
 
   const handleRemoveStrategy = (strategy: Strategy) => {
+    const asset = assets.find((a) => a.strategies.includes(strategy))
     dispatch(removeStrategy(strategy))
+    console.log(asset)
+    if (asset?.strategies.length === 1) {
+      dispatch(removeAsset(asset.address))
+    }
   }
 
   return (

@@ -17,9 +17,8 @@ import {
   For,
   Grid,
   GridItem,
+  HStack,
   IconButton,
-  Input,
-  Skeleton,
   Stack,
   Text,
 } from '@chakra-ui/react'
@@ -179,22 +178,18 @@ function AddNewStrategyButton() {
             )}
           </For>
           {amountInput.enabled && (
-            <Grid templateColumns={['1fr', null, 'repeat(12, 2fr)']}>
-              <GridItem alignContent={'center'} colStart={1}>
-                <Text fontSize={'sm'}>Amount:</Text>
-              </GridItem>
-              <GridItem colStart={8} colEnd={13}>
-                <InputGroup
-                  endElement={`${selectedAsset.symbol}`}
+            <HStack justifyContent={'flex-end'}>
+              <Text fontSize={'sm'}>Amount:</Text>
+              <InputGroup
+                endElement={`${selectedAsset.symbol}`}
+              >
+                <NumberInputRoot
+                  onChange={handleAmountInput}
                 >
-                  <NumberInputRoot
-                    onChange={handleAmountInput}
-                  >
-                    <NumberInputField />
-                  </NumberInputRoot>
-                </InputGroup>
-              </GridItem>
-            </Grid>
+                  <NumberInputField />
+                </NumberInputRoot>
+              </InputGroup>
+            </HStack>
           )}
         </DialogBody>
         <DialogFooter>
