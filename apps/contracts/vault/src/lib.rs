@@ -757,8 +757,9 @@ impl VaultManagementTrait for DeFindexVault {
                 },
                 ActionType::Invest => match (&instruction.strategy, &instruction.amount) {
                     (Some(strategy_address), Some(amount)) => {
+                        let asset_address = get_strategy_asset(&e, strategy_address)?;
                         invest_in_strategy(
-                            &e, strategy_address, strategy_address, amount)?; // TODO THIS WILL FAIUL FOR NOW
+                            &e, &asset_address.address, strategy_address, amount)?;
                     }
                     _ => return Err(ContractError::MissingInstructionData),
                 },
