@@ -5,6 +5,7 @@ export interface Asset {
   address: string;
   strategies: Strategy[];
   symbol?: string;
+  amount?: number;
 }
 export interface NewVaultState {
   address: string;
@@ -15,7 +16,6 @@ export interface NewVaultState {
   name: string;
   symbol: string;
   assets: Asset[];
-  amounts: number[];
   TVL?: number;
 }
 

@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog'
 import { getTokenSymbol } from '@/helpers/getTokenInfo'
 import { StrategyMethod, useStrategyCallback } from '@/hooks/useStrategy'
-import { getDefaultStrategies, pushAmount, pushAsset, setAmountByAddress } from '@/store/lib/features/vaultStore'
+import { getDefaultStrategies, pushAsset, setAssetAmount } from '@/store/lib/features/vaultStore'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { Asset, Strategy } from '@/store/lib/types'
 import {
@@ -17,9 +17,8 @@ import {
   For,
   Grid,
   GridItem,
+  HStack,
   IconButton,
-  Input,
-  Skeleton,
   Stack,
   Text,
 } from '@chakra-ui/react'
@@ -30,6 +29,7 @@ import { MdAdd } from 'react-icons/md'
 import { Checkbox } from '../ui/checkbox'
 import { CheckboxCard } from '../ui/checkbox-card'
 import { InputGroup } from '../ui/input-group'
+import { NumberInputField, NumberInputRoot } from '../ui/number-input'
 
 interface AmountInputProps {
   amount: number
@@ -44,7 +44,7 @@ function AddNewStrategyButton() {
   const [open, setOpen] = useState<boolean>(false)
   const newVault = useAppSelector((state) => state.newVault)
   const [defaultStrategies, setDefaultStrategies] = useState<any[]>([])
-  const [selectedAsset, setSelectedAsset] = useState<Asset>({ address: '', strategies: [], symbol: '' })
+  const [selectedAsset, setSelectedAsset] = useState<Asset>({ address: '', strategies: [], symbol: '', amount: 0 })
   const [assets, setAssets] = useState<Asset[]>([])
   const [amountInput, setAmountInput] = useState<AmountInputProps>({ amount: 0, enabled: false })
 
@@ -102,6 +102,11 @@ function AddNewStrategyButton() {
 
   const handleAmountInput = async (e: any) => {
     const input = e.target.value
+    if (!input) {
+      console.log('input is empty')
+      setSelectedAsset({ ...selectedAsset, amount: 0 })
+    }
+    console.log(input)
     const decimalRegex = /^(\d+)?(\.\d{0,7})?$/
     if (!decimalRegex.test(input)) return
     if (input.startsWith('.')) {
@@ -122,15 +127,11 @@ function AddNewStrategyButton() {
     }
     const exists = strategyExists(selectedAsset.strategies[0]!)
     if (exists) {
-      if (amountInput.enabled && amountInput.amount! > 0) {
-      await dispatch(setAmountByAddress({ address: selectedAsset.address, amount: amountInput.amount }))
-      } else if (amountInput.enabled == false || amountInput.amount! == 0) {
-        await dispatch(setAmountByAddress({ address: selectedAsset.address, amount: 0 }))
-      }
+
     }
     await dispatch(pushAsset(newAsset))
     if (!exists && amountInput.enabled && amountInput.amount! > 0) {
-      await dispatch(pushAmount(amountInput.amount!))
+      await dispatch(setAssetAmount({ address: newAsset.address, amount: amountInput.amount! }))
     }
     resetForm()
   }
@@ -154,6 +155,7 @@ function AddNewStrategyButton() {
               <Stack key={index} my={2}>
                 <CheckboxCard
                   checked={strategyExists(strategy) || selectedAsset.strategies.some((str) => str.address === strategy.address)}
+                  disabled={strategyExists(strategy)}
                   onCheckedChange={(e) => handleSelectStrategy(!!e.checked, strategy)}
                   label={strategy.name}
                 />
@@ -172,24 +174,23 @@ function AddNewStrategyButton() {
 
                   </Grid>
                 }
-                {amountInput.enabled && (
-                  <Grid templateColumns={['1fr', null, 'repeat(12, 2fr)']}>
-                    <GridItem alignContent={'center'} colStart={1}>
-                      <Text fontSize={'sm'}>Amount:</Text>
-                    </GridItem>
-                    <GridItem colStart={8} colEnd={13}>
-                      <InputGroup
-                        endElement={`${selectedAsset.symbol}`}
-                      >
-                        <Input onChange={handleAmountInput} value={amountInput.amount} />
-                      </InputGroup>
-                    </GridItem>
-                  </Grid>
-                )}
               </Stack>
             )}
           </For>
-
+          {amountInput.enabled && (
+            <HStack justifyContent={'flex-end'}>
+              <Text fontSize={'sm'}>Amount:</Text>
+              <InputGroup
+                endElement={`${selectedAsset.symbol}`}
+              >
+                <NumberInputRoot
+                  onChange={handleAmountInput}
+                >
+                  <NumberInputField />
+                </NumberInputRoot>
+              </InputGroup>
+            </HStack>
+          )}
         </DialogBody>
         <DialogFooter>
           <Button variant='ghost' mr={3} onClick={() => setOpen(false)}>

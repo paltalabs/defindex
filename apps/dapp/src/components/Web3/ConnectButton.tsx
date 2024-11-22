@@ -92,7 +92,7 @@ export const ConnectButton = () => {
       <DialogRoot open={open} size={"lg"} onOpenChange={(e) => { setOpen(e.open) }} placement={'center'}>
         <DialogBackdrop />
         <DialogTrigger asChild >
-          <Button colorScheme='green' rounded={18} mb={{ base: 4, md: 0 }}>
+          <Button colorScheme='green' rounded={18} mb={{ base: 4, md: 0 }} mx={4}>
             {address ? 'Disconnect' : 'Connect'}
           </Button>
         </DialogTrigger>
