@@ -50,22 +50,6 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   const feeReceiverString = useAppSelector(state => state.newVault.feeReceiver)
   const { transactionStatusModal: txModal, deployVaultModal: deployModal } = useContext(ModalContext);
   const dispatch = useAppDispatch();
-  const { getIdleFunds, getInvestedFunds, getTVL, getUserBalance } = useVault()
-
-  const [deployDisabled, setDeployDisabled] = useState(true);
-
-  useEffect(() => {
-    if (
-      managerString !== ""
-      && emergencyManagerString !== ""
-      && feeReceiverString !== ""
-      && !indexShare 
-    ) {
-      setDeployDisabled(false);
-    } else {
-      setDeployDisabled(true);
-    }
-  }, [managerString, emergencyManagerString, feeReceiverString])
 
   const autoCloseModal = async () => {
     await new Promise(resolve => setTimeout(resolve, 30000))
