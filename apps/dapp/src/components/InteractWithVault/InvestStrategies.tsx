@@ -3,13 +3,14 @@ import { DialogBody, DialogContent, DialogHeader } from "../ui/dialog"
 import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
 import { useVault, useVaultCallback, VaultMethod } from "@/hooks/useVault"
 import { setStrategyTempAmount } from "@/store/lib/features/walletStore"
-import { useContext, useEffect } from "react"
+import { useContext, useEffect, useState } from "react"
 import { InputGroup } from "../ui/input-group"
 import { NumberInputField } from "../ui/number-input"
 import { AssetInvestmentAllocation } from "@/hooks/types"
-import { Address, nativeToScVal, xdr } from "@stellar/stellar-sdk"
+import { Address, Asset, nativeToScVal, xdr } from "@stellar/stellar-sdk"
 import { ModalContext } from "@/contexts"
 import { useSorobanReact } from "@soroban-react/core"
+import { Field } from "../ui/field"
 
 
 export const InvestStrategies = () => {
@@ -17,36 +18,26 @@ export const InvestStrategies = () => {
   const { getUserBalance } = useVault()
   const vaultCB = useVaultCallback()
   const dispatch = useAppDispatch()
-  const { transactionStatusModal: txModal } = useContext(ModalContext)
+  const {
+    transactionStatusModal: txModal,
+    investStrategiesModal: investModal
+  } = useContext(ModalContext)
   const { address } = useSorobanReact()
-  const investment: AssetInvestmentAllocation[] = []
+  const [investment, setInvestment] = useState<AssetInvestmentAllocation[]>([])
 
-  const handleInvestInput = (asset: string, strategy: string, amount: number) => {
-    const assetIndex = investment.findIndex((a) => a.asset === asset)
-    if (assetIndex === -1) {
-      investment.push({
-        asset,
-        strategy_investments: [{
-          amount,
-          strategy
-        }]
-      })
-    } else {
-      const strategyIndex = investment[assetIndex]!.strategy_investments.findIndex((s) => s.strategy === strategy)
-      if (strategyIndex === -1) {
-        investment[assetIndex]!.strategy_investments.push({
-          amount,
-          strategy
-        })
-      } else {
-        investment[assetIndex]!.strategy_investments[strategyIndex]!.amount = amount
-      }
-    }
+  const handleInvestInput = (assetIndex: number, strategyIndex: number, amount: number) => {
+    if (isNaN(amount)) { amount = 0 }
+    if (investment[assetIndex] == undefined) return
+    if (investment[assetIndex].strategy_investments[strategyIndex] == undefined) return
+    const newInvestment = [...investment]
+    newInvestment[assetIndex]!.strategy_investments[strategyIndex]!.amount = amount
+    setInvestment(newInvestment)
   }
 
   const handleInvest = async () => {
     if (!selectedVault || !address) return
     txModal.initModal()
+    investModal.setIsOpen(false)
     const mappedParam = xdr.ScVal.scvVec(
       investment.map((entry) =>
         xdr.ScVal.scvMap([
@@ -57,18 +48,18 @@ export const InvestStrategies = () => {
           new xdr.ScMapEntry({
             key: xdr.ScVal.scvSymbol("strategy_investments"),
             val: xdr.ScVal.scvVec(
-              entry.strategy_investments.map((strategy_investment) =>
-                xdr.ScVal.scvMap([
+              entry.strategy_investments.map((strategy_investment) => {
+                return xdr.ScVal.scvMap([
                   new xdr.ScMapEntry({
                     key: xdr.ScVal.scvSymbol("amount"),
-                    val: nativeToScVal(BigInt(strategy_investment.amount * 10 ** 7), { type: "i128" }), // Ensure i128 conversion
+                    val: nativeToScVal(BigInt((parseInt(strategy_investment.amount.toString()) ?? 0) * 10 ** 7), { type: "i128" }), // Ensure i128 conversion
                   }),
                   new xdr.ScMapEntry({
                     key: xdr.ScVal.scvSymbol("strategy"),
                     val: new Address(strategy_investment.strategy).toScVal() // Convert strategy address
                   }),
                 ])
-              )
+              })
             ),
           }),
         ])
@@ -77,12 +68,41 @@ export const InvestStrategies = () => {
     try {
       const response = await vaultCB(VaultMethod.INVEST, selectedVault.address, [mappedParam], true)
       console.log(response)
-      txModal.handleSuccess(response.txHash)
+      await txModal.handleSuccess(response.txHash)
+      await investModal.setIsOpen(false)
     } catch (error: any) {
-      txModal.handleError(error.toString())
+      await txModal.handleError(error.toString())
       console.error('Could not invest: ', error)
     }
   }
+
+  useEffect(() => {
+    if (!selectedVault) return
+    if (selectedVault.assets && investModal.isOpen) {
+      selectedVault.assets.forEach((asset) => {
+        const investmentAllocation: AssetInvestmentAllocation = {
+          asset: asset.address,
+          strategy_investments: []
+        }
+        asset.strategies.forEach((strategy) => {
+          investmentAllocation.strategy_investments.push({
+            amount: 0,
+            strategy: strategy.address
+          })
+        })
+        if (investment.length === 0) {
+          setInvestment([investmentAllocation])
+        } else {
+          const assetIndex = investment.findIndex((a) => a.asset === asset.address)
+          if (assetIndex === -1) {
+            setInvestment([...investment, investmentAllocation])
+          }
+        }
+      })
+    } else if (!investModal.isOpen) {
+      setInvestment([])
+    }
+  }, [selectedVault, selectedVault?.assets, investModal.isOpen])
 
   useEffect(() => {
     if (!selectedVault) return
@@ -134,13 +154,18 @@ export const InvestStrategies = () => {
                           <Text fontSize={'2xs'}>{asset.symbol}</Text>
                         </HStack>
                       </HStack>
-                      <InputGroup endElement={
-                        <Text fontSize={'2xs'}>{asset.symbol}</Text>
-                      }>
-                        <NumberInputRoot onValueChange={(e) => handleInvestInput(asset.address, strategy.address, e.valueAsNumber)}>
-                          <NumberInputField />
-                        </NumberInputRoot>
-                      </InputGroup>
+                      <Field invalid={investment[j]?.strategy_investments[k]?.amount == 0}>
+                        <InputGroup endElement={
+                          <Text fontSize={'2xs'}>{asset.symbol}</Text>
+                        }>
+                          <NumberInputRoot
+                            value={investment[j]?.strategy_investments[k]?.amount.toString()}
+                            onValueChange={(e) => handleInvestInput(j, k, e.valueAsNumber)}
+                          >
+                            <NumberInputField />
+                          </NumberInputRoot>
+                        </InputGroup>
+                      </Field>
                     </Stack>
                   )}
                 </For>
