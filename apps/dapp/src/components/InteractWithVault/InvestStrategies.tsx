@@ -1,4 +1,4 @@
-import { Button, For, HStack, NumberInput, NumberInputRoot, Stack, Text } from "@chakra-ui/react"
+import { Box, Button, For, HStack, NumberInput, NumberInputRoot, Stack, Text } from "@chakra-ui/react"
 import { DialogBody, DialogContent, DialogHeader } from "../ui/dialog"
 import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
 import { useVault, useVaultCallback, VaultMethod } from "@/hooks/useVault"
@@ -12,6 +12,9 @@ import { ModalContext } from "@/contexts"
 import { useSorobanReact } from "@soroban-react/core"
 import { Field } from "../ui/field"
 
+interface InvestState extends AssetInvestmentAllocation {
+  total: number
+}
 
 export const InvestStrategies = () => {
   const { selectedVault } = useAppSelector(state => state.wallet.vaults)
@@ -23,14 +26,33 @@ export const InvestStrategies = () => {
     investStrategiesModal: investModal
   } = useContext(ModalContext)
   const { address } = useSorobanReact()
-  const [investment, setInvestment] = useState<AssetInvestmentAllocation[]>([])
+  const [investment, setInvestment] = useState<InvestState[]>([])
+  const [invalidAmount, setInvalidAmount] = useState<boolean>(false)
 
-  const handleInvestInput = (assetIndex: number, strategyIndex: number, amount: number) => {
-    if (isNaN(amount)) { amount = 0 }
-    if (investment[assetIndex] == undefined) return
-    if (investment[assetIndex].strategy_investments[strategyIndex] == undefined) return
+  const handleInvestInput = (assetIndex: number, strategyIndex: number, amount: string) => {
+    console.log(amount)
+    if (amount.includes(',')) {
+      amount = amount.replace(',', '.')
+    }
+    if (isNaN(parseFloat(amount)) || amount === '') {
+      amount = '0'
+    }
+    if (investment[assetIndex] == undefined) {
+      console.warn('Asset investment not found')
+      return
+    }
+    if (investment[assetIndex].strategy_investments[strategyIndex] == undefined) {
+      console.warn('Strategy investment not found')
+      return
+    }
+    if (!selectedVault?.userBalance) {
+      console.warn('User balance not found')
+      return
+    }
     const newInvestment = [...investment]
-    newInvestment[assetIndex]!.strategy_investments[strategyIndex]!.amount = amount
+    console.log(parseFloat(amount))
+    newInvestment[assetIndex]!.strategy_investments[strategyIndex]!.amount = parseFloat(amount)
+    newInvestment[assetIndex]!.total = newInvestment[assetIndex]!.strategy_investments.reduce((acc, curr) => acc + curr.amount, 0)
     setInvestment(newInvestment)
   }
 
@@ -77,12 +99,35 @@ export const InvestStrategies = () => {
   }
 
   useEffect(() => {
+    const totals = investment.map((asset) => {
+      const totalAmount = asset.strategy_investments.reduce((acc, curr) => acc + curr.amount, 0)
+      const element = {
+        asset: asset.asset,
+        total: totalAmount
+      }
+      return element
+    })
+    totals.forEach((asset) => {
+      const assetFunds = selectedVault?.idleFunds.find((fund) => {
+        return fund.address === asset.asset
+      })?.amount
+      if (assetFunds && assetFunds < asset.total) {
+        setInvalidAmount(true)
+        return
+      } else if (assetFunds && assetFunds >= asset.total) {
+        setInvalidAmount(false)
+      }
+    })
+  }, [investment])
+
+  useEffect(() => {
     if (!selectedVault) return
     if (selectedVault.assets && investModal.isOpen) {
       selectedVault.assets.forEach((asset) => {
-        const investmentAllocation: AssetInvestmentAllocation = {
+        const investmentAllocation: InvestState = {
           asset: asset.address,
-          strategy_investments: []
+          strategy_investments: [],
+          total: 0
         }
         asset.strategies.forEach((strategy) => {
           investmentAllocation.strategy_investments.push({
@@ -140,39 +185,43 @@ export const InvestStrategies = () => {
             )}
           </For>
           <Text>Strategies:</Text>
-          <HStack justifyContent={'space-around'} my={6}>
-            <For each={selectedVault?.assets}>
-              {(asset, j) => (
-                <For each={asset.strategies} key={j}>
-                  {(strategy, k) => (
-                    <Stack key={k}>
-                      <HStack>
-                        <Text>{strategy.name}</Text>
-                        <HStack alignItems={'center'}>
-                          <Text>Balance:</Text>
-                          <Text>$ {strategy.tempAmount}</Text>
-                          <Text fontSize={'2xs'}>{asset.symbol}</Text>
+          <For each={selectedVault?.assets}>
+            {(asset, j) => (
+              <Stack mb={6} key={j}>
+                <HStack justifyContent={'space-around'} my={6}>
+                  <For each={asset.strategies}>
+                    {(strategy, k) => (
+                      <Stack key={k}>
+                        <HStack>
+                          <Text>{strategy.name}</Text>
+                          <HStack alignItems={'center'}>
+                            <Text>Balance:</Text>
+                            <Text>$ {strategy.tempAmount}</Text>
+                            <Text fontSize={'2xs'}>{asset.symbol}</Text>
+                          </HStack>
                         </HStack>
-                      </HStack>
-                      <Field invalid={investment[j]?.strategy_investments[k]?.amount == 0}>
-                        <InputGroup endElement={
-                          <Text fontSize={'2xs'}>{asset.symbol}</Text>
-                        }>
-                          <NumberInputRoot
-                            value={investment[j]?.strategy_investments[k]?.amount.toString()}
-                            onValueChange={(e) => handleInvestInput(j, k, e.valueAsNumber)}
-                          >
-                            <NumberInputField />
-                          </NumberInputRoot>
-                        </InputGroup>
-                      </Field>
-                    </Stack>
-                  )}
-                </For>
-              )}
-            </For>
-          </HStack>
-          <Button onClick={() => handleInvest()}>Invest</Button>
+                        <Field invalid={invalidAmount} errorText={`Total of investment exceeds idle funds.`} >
+                          <InputGroup endElement={
+                            <Text fontSize={'2xs'}>{asset.symbol}</Text>
+                          }>
+                            <NumberInputRoot
+                              inputMode="decimal"
+                              value={investment[j]?.strategy_investments[k]?.amount.toString()}
+                              onValueChange={(e) => handleInvestInput(j, k, e.value)}
+                            >
+                              <NumberInputField />
+                            </NumberInputRoot>
+                          </InputGroup>
+                        </Field>
+                      </Stack>
+                    )}
+                  </For>
+                </HStack>
+                <Text alignSelf={'end'}>Total of investment: ${investment[j]?.total.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 7 })}</Text>
+              </Stack>
+            )}
+          </For>
+          <Button disabled={invalidAmount} onClick={() => handleInvest()}>Invest</Button>
         </Stack>
       </DialogBody>
     </DialogContent>
