@@ -5,7 +5,6 @@ import { ChainMetadata } from '@soroban-react/types'
 import vaults from '@/constants/constants.json'
 import { Networks } from '@stellar/stellar-sdk'
 import { SelectedVault, VaultData, WalletState } from '../types'
-import { VaultMethod } from '@/hooks/useVault'
 
 const getDefaultVaults = async (network: string) => {
   const filteredVaults = vaults.filter(vault => {
@@ -120,6 +119,15 @@ export const walletSlice = createSlice({
         }
       })
     },
+    setStrategyTempAmount: (state, action: PayloadAction<{vaultAddress: string, strategyAddress: string, amount: number}>) => {
+      state.vaults.selectedVault?.assets.forEach(asset => {
+        asset.strategies.forEach(strategy => {
+          if (strategy.address === action.payload.strategyAddress) {
+            strategy.tempAmount = action.payload.amount
+          }
+        })
+      })
+    }
   },
   extraReducers(builder) {
     builder.addCase(fetchDefaultAddresses.pending, (state) => {
@@ -148,7 +156,8 @@ export const {
   resetSelectedVault,
   setVaultFeeReceiver,
   setVaultUserBalance,
-  updateVaultData
+  updateVaultData,
+  setStrategyTempAmount
 } = walletSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type

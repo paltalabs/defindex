@@ -24,6 +24,7 @@ export enum VaultMethod {
     GETIDLEFUNDS = "fetch_current_idle_funds",
     GETINVESTEDFUNDS = "fetch_current_invested_funds",
     SETFEERECIEVER = "set_fee_receiver",
+    INVEST = "invest",
 }   
 
 const isObject = (val: unknown) => typeof val === 'object' && val !== null && !Array.isArray(val);
@@ -54,7 +55,6 @@ export function useVaultCallback() {
 export const useVault = (vaultAddress?: string | undefined) => {
     const vault = useVaultCallback();
     const sorobanContext = useSorobanReact();
-    const {address} = sorobanContext;
     const getVaultInfo = async (vaultAddress: string) => {
     if (!vaultAddress) return;
     try {
@@ -201,7 +201,6 @@ export const useVault = (vaultAddress?: string | undefined) => {
         console.error(error);
         }
     }
-
     const vaultInfo = getVaultInfo(vaultAddress!);
     return { 
         vaultInfo, 

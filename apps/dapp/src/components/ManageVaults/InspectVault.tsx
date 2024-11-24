@@ -27,7 +27,7 @@ export const InspectVault = ({
 }) => {
   const selectedVault: VaultData | undefined = useAppSelector(state => state.wallet.vaults.selectedVault)
   const { address } = useSorobanReact()
-  const { editVaultModal: editModal } = useContext(ModalContext)
+  const { editVaultModal: editModal, investStrategiesModal: investModal } = useContext(ModalContext)
   if (!selectedVault) return null
   return (
     <DialogContent>
@@ -117,6 +117,9 @@ export const InspectVault = ({
       <DialogFooter>
         <HStack justifyContent={'space-around'} w={'full'}>
           {address && <Button onClick={() => { handleOpenInteract(VaultMethod.DEPOSIT, selectedVault) }}>Deposit</Button>}
+          {(address && selectedVault.idleFunds[0]?.amount! > 0) &&
+            <Button onClick={() => { investModal.setIsOpen(true) }}>Invest</Button>
+          }
           {(address === selectedVault.emergencyManager || address === selectedVault.manager) &&
             <Button onClick={() => { handleOpenInteract(VaultMethod.EMERGENCY_WITHDRAW, selectedVault) }}>Emergency Withdraw</Button>
           }

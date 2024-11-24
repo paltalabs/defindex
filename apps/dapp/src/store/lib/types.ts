@@ -23,6 +23,7 @@ export interface Strategy {
   address: string;
   name: string;
   paused: boolean;
+  tempAmount: number;
 }
 
 export interface AssetAmmount {
