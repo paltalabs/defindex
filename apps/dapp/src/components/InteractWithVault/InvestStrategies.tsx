@@ -7,8 +7,9 @@ import { useContext, useEffect } from "react"
 import { InputGroup } from "../ui/input-group"
 import { NumberInputField } from "../ui/number-input"
 import { AssetInvestmentAllocation } from "@/hooks/types"
-import { Address, nativeToScVal, scValToNative, xdr } from "@stellar/stellar-sdk"
+import { Address, nativeToScVal, xdr } from "@stellar/stellar-sdk"
 import { ModalContext } from "@/contexts"
+import { useSorobanReact } from "@soroban-react/core"
 
 
 export const InvestStrategies = () => {
@@ -17,6 +18,7 @@ export const InvestStrategies = () => {
   const vaultCB = useVaultCallback()
   const dispatch = useAppDispatch()
   const { transactionStatusModal: txModal } = useContext(ModalContext)
+  const { address } = useSorobanReact()
   const investment: AssetInvestmentAllocation[] = []
 
   const handleInvestInput = (asset: string, strategy: string, amount: number) => {
@@ -43,7 +45,7 @@ export const InvestStrategies = () => {
   }
 
   const handleInvest = async () => {
-    if (!selectedVault) return
+    if (!selectedVault || !address) return
     txModal.initModal()
     const mappedParam = xdr.ScVal.scvVec(
       investment.map((entry) =>
