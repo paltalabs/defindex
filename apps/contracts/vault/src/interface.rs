@@ -200,6 +200,9 @@ pub trait VaultTrait {
     fn get_asset_amounts_for_dftokens(e: Env, df_token: i128) -> Map<Address, i128>;
 
     fn get_fees(e: Env) -> (u32, u32);
+
+    /// Collects the fees from the vault and transfers them to the fee receiver addresses. 
+    fn collect_fees(e: Env) -> Result<(), ContractError>;
 }
 
 pub trait AdminInterfaceTrait {
