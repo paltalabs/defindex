@@ -31,19 +31,6 @@ export const InvestStrategies = () => {
   const [invalidAmount, setInvalidAmount] = useState<boolean>(false)
 
   const handleInvestInput = (assetIndex: number, strategyIndex: number, amount: number) => {
-    console.log(amount)
-    if (investment[assetIndex] == undefined) {
-      console.warn('Asset investment not found')
-      return
-    }
-    if (investment[assetIndex]!.strategy_investments[strategyIndex] !== undefined) {
-      console.warn('Strategy investment not found')
-      return
-    }
-    if (!selectedVault?.userBalance) {
-      console.warn('User balance not found')
-      return
-    }
     const newInvestment = [...investment]
     newInvestment[assetIndex]!.strategy_investments[strategyIndex]!.amount = amount
     newInvestment[assetIndex]!.total = newInvestment[assetIndex]!.strategy_investments.reduce((acc, curr) => acc + curr.amount, 0)
@@ -206,7 +193,6 @@ export const InvestStrategies = () => {
                           }>
                             <NumberInputRoot
                               inputMode="decimal"
-                              defaultValue="0"
                               onValueChange={(e) => handleInvestInput(j, k, Number(e.value))}
                             >
                               <NumberInputField />
