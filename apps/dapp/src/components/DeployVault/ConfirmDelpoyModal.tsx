@@ -41,6 +41,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   const sorobanContext = useSorobanReact();
   const { activeChain, address } = sorobanContext;
   const factory = useFactoryCallback();
+  const { getInvestedFunds } = useVault();
   const newVault: NewVaultState = useAppSelector(state => state.newVault);
   const indexName = useAppSelector(state => state.newVault.name)
   const indexSymbol = useAppSelector(state => state.newVault.symbol)
@@ -242,6 +243,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
         amount: newVault.assets[index]?.amount || 0
       }
     })
+    const investedFunds = await getInvestedFunds(parsedResult);
     const tempVault: VaultData = {
       ...newVault,
       address: parsedResult,
@@ -251,7 +253,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       TVL: 0,
       totalSupply: 0,
       idleFunds: idleFunds,
-      investedFunds: [{ address: '', amount: 0 }],
+      investedFunds: investedFunds ?? [],
     }
     await txModal.handleSuccess(result.txHash);
     dispatch(pushVault(tempVault));

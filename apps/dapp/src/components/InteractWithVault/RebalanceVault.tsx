@@ -114,7 +114,6 @@ const RebalanceVault: React.FC = (() => {
       selectedVault.assets.forEach(async (asset) => {
         asset.strategies.forEach(async (strategy) => {
           const tempAmount = await getUserBalance(selectedVault.address, strategy.address)
-          console.log(tempAmount)
           dispatch(setStrategyTempAmount({
             vaultAddress: selectedVault?.address!,
             strategyAddress: strategy.address,
