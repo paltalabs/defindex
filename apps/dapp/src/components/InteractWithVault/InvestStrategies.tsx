@@ -36,7 +36,7 @@ export const InvestStrategies = () => {
       console.warn('Asset investment not found')
       return
     }
-    if (investment[assetIndex].strategy_investments[strategyIndex] == undefined) {
+    if (investment[assetIndex]!.strategy_investments[strategyIndex] !== undefined) {
       console.warn('Strategy investment not found')
       return
     }
