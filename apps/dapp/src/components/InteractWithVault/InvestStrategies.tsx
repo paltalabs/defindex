@@ -30,14 +30,8 @@ export const InvestStrategies = () => {
   const [investment, setInvestment] = useState<InvestState[]>([])
   const [invalidAmount, setInvalidAmount] = useState<boolean>(false)
 
-  const handleInvestInput = (assetIndex: number, strategyIndex: number, amount: string) => {
+  const handleInvestInput = (assetIndex: number, strategyIndex: number, amount: number) => {
     console.log(amount)
-    if (amount.includes(',')) {
-      amount = amount.replace(',', '.')
-    }
-    if (isNaN(parseFloat(amount)) || amount === '') {
-      amount = '0'
-    }
     if (investment[assetIndex] == undefined) {
       console.warn('Asset investment not found')
       return
@@ -51,8 +45,7 @@ export const InvestStrategies = () => {
       return
     }
     const newInvestment = [...investment]
-    console.log(parseFloat(amount))
-    newInvestment[assetIndex]!.strategy_investments[strategyIndex]!.amount = parseFloat(amount)
+    newInvestment[assetIndex]!.strategy_investments[strategyIndex]!.amount = amount
     newInvestment[assetIndex]!.total = newInvestment[assetIndex]!.strategy_investments.reduce((acc, curr) => acc + curr.amount, 0)
     setInvestment(newInvestment)
   }
@@ -75,7 +68,7 @@ export const InvestStrategies = () => {
                 return xdr.ScVal.scvMap([
                   new xdr.ScMapEntry({
                     key: xdr.ScVal.scvSymbol("amount"),
-                    val: nativeToScVal(BigInt((parseInt(strategy_investment.amount.toString()) ?? 0) * 10 ** 7), { type: "i128" }), // Ensure i128 conversion
+                    val: nativeToScVal(BigInt((strategy_investment.amount ?? 0) * 10 ** 7), { type: "i128" }), // Ensure i128 conversion
                   }),
                   new xdr.ScMapEntry({
                     key: xdr.ScVal.scvSymbol("strategy"),
@@ -213,8 +206,8 @@ export const InvestStrategies = () => {
                           }>
                             <NumberInputRoot
                               inputMode="decimal"
-                              value={investment[j]?.strategy_investments[k]?.amount.toString()}
-                              onValueChange={(e) => handleInvestInput(j, k, e.value)}
+                              defaultValue="0"
+                              onValueChange={(e) => handleInvestInput(j, k, Number(e.value))}
                             >
                               <NumberInputField />
                             </NumberInputRoot>
