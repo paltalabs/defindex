@@ -25,6 +25,7 @@ export enum VaultMethod {
     GETINVESTEDFUNDS = "fetch_current_invested_funds",
     SETFEERECIEVER = "set_fee_receiver",
     INVEST = "invest",
+    REBALANCE= "rebalance",
 }   
 
 const isObject = (val: unknown) => typeof val === 'object' && val !== null && !Array.isArray(val);

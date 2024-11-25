@@ -22,3 +22,17 @@ export interface AssetInvestmentAllocation {
   asset: string;
   strategy_investments: StrategyInvestment[];
 }
+export interface RebalanceInstruction {
+  action: ActionType;
+  amount: number;
+  strategy: string;
+  swapDetailsExactIn?: any//SwapDetails;
+  swapDetailsExactOut?: any//SwapDetails;
+}
+export enum ActionType {
+  Withdraw = 0,
+  Invest = 1,
+  SwapExactIn = 2,
+  SwapExactOut = 3,
+  Zapper = 4,
+}
