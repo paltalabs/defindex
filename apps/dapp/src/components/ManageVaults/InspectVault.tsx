@@ -7,7 +7,7 @@ import { useVault, VaultMethod } from "@/hooks/useVault"
 import { useAppSelector } from "@/store/lib/storeHooks"
 import { Asset, AssetAmmount, VaultData } from "@/store/lib/types"
 
-import { Button, Grid, GridItem, HStack, Icon, Stack, Text } from "@chakra-ui/react"
+import { Button, For, Grid, GridItem, HStack, Icon, Stack, Text } from "@chakra-ui/react"
 import { DialogBody, DialogContent, DialogFooter, DialogHeader } from "../ui/dialog"
 import { FaRegEdit } from "react-icons/fa"
 import { IoClose } from "react-icons/io5"
@@ -27,7 +27,7 @@ export const InspectVault = ({
 }) => {
   const selectedVault: VaultData | undefined = useAppSelector(state => state.wallet.vaults.selectedVault)
   const { address } = useSorobanReact()
-  const { editVaultModal: editModal, investStrategiesModal: investModal } = useContext(ModalContext)
+  const { editVaultModal: editModal, investStrategiesModal: investModal, rebalanceVaultModal: rebalanceModal } = useContext(ModalContext)
   if (!selectedVault) return null
   return (
     <DialogContent>
@@ -68,10 +68,14 @@ export const InspectVault = ({
           <Stack>
             <Text>Strategies:</Text>
             {selectedVault.assets.map((asset: Asset, index: number) => (
-              <HStack key={index} alignContent={'center'}>
-                • {asset.strategies[0]?.name}
-                <Text fontSize={'2xs'}>{`(${asset.symbol})`}</Text>
-              </HStack>
+              <For each={asset.strategies} key={index}>
+                {(strategy, i) => (
+                  <HStack key={i} alignContent={'center'}>
+                    • {strategy.name}
+                    <Text fontSize={'2xs'}>{`(${asset.symbol})`}</Text>
+                  </HStack>
+                )}
+              </For>
             ))}
           </Stack>
           <Stack>
@@ -120,6 +124,7 @@ export const InspectVault = ({
           {(address && selectedVault.idleFunds[0]?.amount! > 0) &&
             <Button onClick={() => { investModal.setIsOpen(true) }}>Invest</Button>
           }
+          {(address === selectedVault.manager) && <Button onClick={() => { rebalanceModal.setIsOpen(true) }}>Rebalance</Button>}
           {(address === selectedVault.emergencyManager || address === selectedVault.manager) &&
             <Button onClick={() => { handleOpenInteract(VaultMethod.EMERGENCY_WITHDRAW, selectedVault) }}>Emergency Withdraw</Button>
           }

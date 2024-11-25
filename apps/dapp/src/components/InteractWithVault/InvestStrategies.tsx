@@ -2,7 +2,7 @@ import { Box, Button, For, HStack, NumberInput, NumberInputRoot, Stack, Text } f
 import { DialogBody, DialogContent, DialogHeader } from "../ui/dialog"
 import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
 import { useVault, useVaultCallback, VaultMethod } from "@/hooks/useVault"
-import { setStrategyTempAmount } from "@/store/lib/features/walletStore"
+import { setStrategyTempAmount, updateVaultData } from "@/store/lib/features/walletStore"
 import { useContext, useEffect, useState } from "react"
 import { InputGroup } from "../ui/input-group"
 import { NumberInputField } from "../ui/number-input"
@@ -18,12 +18,13 @@ interface InvestState extends AssetInvestmentAllocation {
 
 export const InvestStrategies = () => {
   const { selectedVault } = useAppSelector(state => state.wallet.vaults)
-  const { getUserBalance } = useVault()
+  const { getUserBalance, getIdleFunds, getInvestedFunds } = useVault()
   const vaultCB = useVaultCallback()
   const dispatch = useAppDispatch()
   const {
     transactionStatusModal: txModal,
-    investStrategiesModal: investModal
+    investStrategiesModal: investModal,
+    inspectVaultModal: inspectModal
   } = useContext(ModalContext)
   const { address } = useSorobanReact()
   const [investment, setInvestment] = useState<InvestState[]>([])
@@ -89,9 +90,15 @@ export const InvestStrategies = () => {
     );
     try {
       const response = await vaultCB(VaultMethod.INVEST, selectedVault.address, [mappedParam], true)
-      console.log(response)
       await txModal.handleSuccess(response.txHash)
-      await investModal.setIsOpen(false)
+      const newInvestedFunds = await getInvestedFunds(selectedVault.address)
+      const newIdleFunds = await getIdleFunds(selectedVault.address)
+      await dispatch(updateVaultData({
+        address: selectedVault.address,
+        idleFunds: newIdleFunds,
+        investedFunds: newInvestedFunds
+      }))
+
     } catch (error: any) {
       await txModal.handleError(error.toString())
       console.error('Could not invest: ', error)

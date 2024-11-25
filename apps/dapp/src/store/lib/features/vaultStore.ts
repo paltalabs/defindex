@@ -29,6 +29,7 @@ export const getDefaultStrategies = async (network: string) => {
           address: remoteStrategies.ids[strategy],
           name: parsedName ? prettierName : '',
           paused: false,
+          tempAmount: 0
         })
       }
     }
