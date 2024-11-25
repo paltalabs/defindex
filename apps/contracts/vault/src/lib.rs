@@ -574,6 +574,11 @@ impl VaultTrait for DeFindexVault {
         let vault_fee = get_vault_fee(&e);
         (defindex_protocol_fee, vault_fee)
     }
+
+    fn collect_fees(e: Env) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
+        collect_fees(&e)
+    }
 }
 
 #[contractimpl]
