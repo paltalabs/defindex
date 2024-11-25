@@ -17,9 +17,8 @@ import {
   For,
   Grid,
   GridItem,
+  HStack,
   IconButton,
-  Input,
-  Skeleton,
   Stack,
   Text,
 } from '@chakra-ui/react'
@@ -106,7 +105,6 @@ function AddNewStrategyButton() {
       console.log('input is empty')
       setSelectedAsset({ ...selectedAsset, amount: 0 })
     }
-    console.log(e)
     const decimalRegex = /^(\d+)?(\.\d{0,7})?$/
     if (!decimalRegex.test(e)) return
     setAmountInput({ amount: e, enabled: true });

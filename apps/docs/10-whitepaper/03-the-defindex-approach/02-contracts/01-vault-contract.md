@@ -134,7 +134,7 @@ The Emergency Manager has the authority to withdraw assets from the DeFindex in 
 
 ## Management
 Every DeFindex has a manager, who is responsible for managing the DeFindex. The Manager can ebalance the Vault, and invest IDLE funds in strategies. 
-## Fees
+## Fees.
 
 ### Fee Receivers
 The DeFindex protocol defines two distinct fee receivers to reward both the creators of the DeFindex Protocol and the deployers of individual Vaults:

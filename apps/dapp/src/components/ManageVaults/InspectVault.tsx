@@ -1,19 +1,19 @@
 'use client'
+import { useContext } from "react"
 import { useSorobanReact } from "@soroban-react/core"
 
+import { ModalContext } from "@/contexts"
 import { shortenAddress } from "@/helpers/address"
-import { useVault, VaultMethod } from "@/hooks/useVault"
+import { VaultMethod } from "@/hooks/useVault"
 
 import { useAppSelector } from "@/store/lib/storeHooks"
-import { Asset, AssetAmmount, VaultData } from "@/store/lib/types"
+import { Asset, AssetAmmount, Strategy, VaultData } from "@/store/lib/types"
 
 import { Button, For, Grid, GridItem, HStack, Icon, Stack, Text } from "@chakra-ui/react"
 import { DialogBody, DialogContent, DialogFooter, DialogHeader } from "../ui/dialog"
 import { FaRegEdit } from "react-icons/fa"
 import { IoClose } from "react-icons/io5"
 import { ClipboardIconButton, ClipboardRoot } from "../ui/clipboard"
-import { ModalContext } from "@/contexts"
-import { useContext } from "react"
 
 
 export const InspectVault = ({
@@ -68,14 +68,16 @@ export const InspectVault = ({
           <Stack>
             <Text>Strategies:</Text>
             {selectedVault.assets.map((asset: Asset, index: number) => (
-              <For each={asset.strategies} key={index}>
-                {(strategy, i) => (
-                  <HStack key={i} alignContent={'center'}>
-                    • {strategy.name}
-                    <Text fontSize={'2xs'}>{`(${asset.symbol})`}</Text>
-                  </HStack>
-                )}
-              </For>
+              <Stack>
+                <For each={asset.strategies}>
+                  {(strategy: Strategy, index: number) => (
+                    <HStack key={index} alignContent={'center'}>
+                      • {strategy.name}
+                      <Text fontSize={'2xs'}>{`(${asset.symbol})`}</Text>
+                    </HStack>
+                  )}
+                </For>
+              </Stack>
             ))}
           </Stack>
           <Stack>
