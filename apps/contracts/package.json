@@ -11,7 +11,8 @@
     "publish-addresses": "tsc && node dist/publish_addresses.js",
     "test": "tsc && node dist/test.js",
     "test-vault": "tsc && node dist/tests/testOnlyVault.js",
-    "test-blend": "tsc && node dist/tests/blend/test.js",
+    "test-blend-strategy": "tsc && node dist/tests/blend/test_strategy.js",
+    "test-blend-vault": "tsc && node dist/tests/blend/test_vault.js",
     "test-dev": "tsc && node dist/tests/dev.js",
     "test-two-strat-vault": "tsc && node dist/tests/testTwoStrategiesVault.js"
   },

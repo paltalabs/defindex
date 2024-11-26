@@ -1,13 +1,12 @@
 #![no_std]
-use blend_pool::RequestType;
 use soroban_sdk::{
-    contract, contractimpl, Address, Env, IntoVal, String, Val, Vec};
+    contract, contractimpl, token::TokenClient, Address, Env, IntoVal, String, Val, Vec};
 
 mod blend_pool;
 mod storage;
 
 use storage::{
-    extend_instance_ttl, get_underlying_asset, is_initialized, set_blend_pool, set_initialized, set_underlying_asset
+    extend_instance_ttl, get_reserve_id, get_underlying_asset, is_initialized, set_blend_pool, set_initialized, set_reserve_id, set_underlying_asset
 };
 
 pub use defindex_strategy_core::{
@@ -48,9 +47,11 @@ impl DeFindexStrategyTrait for BlendStrategy {
         }
 
         let blend_pool_address = init_args.get(0).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
+        let reserve_id = init_args.get(1).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
 
         set_initialized(&e);
         set_blend_pool(&e, blend_pool_address);
+        set_reserve_id(&e, reserve_id);
         set_underlying_asset(&e, &asset);
 
         event::emit_initialize(&e, String::from_str(&e, STARETEGY_NAME), asset);
@@ -75,7 +76,11 @@ impl DeFindexStrategyTrait for BlendStrategy {
         extend_instance_ttl(&e);
         from.require_auth();
 
-        blend_pool::submit(&e, &from, amount, RequestType::SupplyCollateral);
+        // transfer tokens from the vault to the contract
+        let underlying_asset = get_underlying_asset(&e);
+        TokenClient::new(&e, &underlying_asset).transfer(&from, &e.current_contract_address(), &amount);
+
+        blend_pool::supply(&e, &from, underlying_asset, amount);
 
         event::emit_deposit(&e, String::from_str(&e, STARETEGY_NAME), amount, from);
         Ok(())
@@ -84,6 +89,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
     fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
+        from.require_auth();
 
         blend_pool::claim(&e, &from);
 
@@ -96,12 +102,13 @@ impl DeFindexStrategyTrait for BlendStrategy {
         amount: i128,
         from: Address,
     ) -> Result<i128, StrategyError> {
-        from.require_auth();
         check_initialized(&e)?;
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
+        from.require_auth();
         
-        blend_pool::submit(&e, &from, amount, RequestType::WithdrawCollateral);
+        let underlying_asset = get_underlying_asset(&e);
+        blend_pool::withdraw(&e, &from, underlying_asset, amount);
 
         event::emit_withdraw(&e, String::from_str(&e, STARETEGY_NAME), amount, from);
 
@@ -116,9 +123,10 @@ impl DeFindexStrategyTrait for BlendStrategy {
         extend_instance_ttl(&e);
 
         let positions = blend_pool::get_positions(&e, &from);
+        let reserve_id = get_reserve_id(&e);
 
-        let collateral = positions.collateral.get(1u32).unwrap_or(0i128);
-        Ok(collateral)
+        let supply = positions.supply.get(reserve_id).unwrap_or(0i128);
+        Ok(supply)
     }
 }
 

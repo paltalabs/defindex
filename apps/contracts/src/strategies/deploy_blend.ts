@@ -1,4 +1,4 @@
-import { Address, Asset, Networks, xdr } from "@stellar/stellar-sdk";
+import { Address, Asset, nativeToScVal, Networks, xdr } from "@stellar/stellar-sdk";
 import { AddressBook } from "../utils/address_book.js";
 import {
   airdropAccount,
@@ -47,6 +47,7 @@ export async function deployBlendStrategy(addressBook: AddressBook) {
 
   const initArgs = xdr.ScVal.scvVec([
     new Address("CCEVW3EEW4GRUZTZRTAMJAXD6XIF5IG7YQJMEEMKMVVGFPESTRXY2ZAV").toScVal(), //Blend pool on testnet!
+    nativeToScVal(0, {type: "u32"}) // ReserveId 0 is XLM
   ]);
 
   const args: xdr.ScVal[] = [

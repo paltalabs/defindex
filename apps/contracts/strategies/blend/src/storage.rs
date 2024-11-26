@@ -7,7 +7,8 @@ pub enum DataKey {
     Initialized,
     UnderlyingAsset,
     BlendPool,
-    Balance(Address)
+    Balance(Address),
+    ReserveId
 }
 
 const DAY_IN_LEDGERS: u32 = 17280;
@@ -44,4 +45,12 @@ pub fn set_blend_pool(e: &Env, address: Address) {
 
 pub fn get_blend_pool(e: &Env) -> Address {
     e.storage().instance().get(&DataKey::BlendPool).unwrap()
+}
+
+pub fn set_reserve_id(e: &Env, id: u32) {
+    e.storage().instance().set(&DataKey::ReserveId, &id);
+}
+
+pub fn get_reserve_id(e: &Env) -> u32 {
+    e.storage().instance().get(&DataKey::ReserveId).unwrap()
 }
