@@ -1,4 +1,4 @@
-use soroban_sdk::{vec as sorobanvec, String, Vec, Map};
+use soroban_sdk::{vec as sorobanvec, InvokeError, Map, String, Vec};
 
 use crate::test::defindex_vault::{AssetStrategySet, ContractError};
 use crate::test::{
@@ -942,3 +942,69 @@ fn deposit_amounts_desired_zero() {
     assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
 }
 
+
+    // Deposit with insufficient funds and check for specific error message
+#[test]
+fn deposit_insufficient_funds_with_error_message() {
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
+
+    // Initialize with 2 assets
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token0.address.clone(),
+            strategies: strategy_params_token0.clone()
+        },
+        AssetStrategySet {
+            address: test.token1.address.clone(),
+            strategies: strategy_params_token1.clone()
+        }
+    ];
+
+    test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
+        &test.emergency_manager,
+        &test.vault_fee_receiver,
+        &2000u32,
+        &test.defindex_protocol_receiver,
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
+    );
+
+    let amount0 = 123456789i128;
+    let amount1 = 987654321i128;
+
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+
+    // Mint tokens to user
+    test.token0_admin_client.mint(&users[0], &amount0);
+    test.token1_admin_client.mint(&users[0], &amount1);
+
+    // Balances before deposit
+    let user_balance0 = test.token0.balance(&users[0]);
+    assert_eq!(user_balance0, amount0);
+    let user_balance1 = test.token1.balance(&users[0]);
+    assert_eq!(user_balance1, amount1);
+
+    let df_balance = test.defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, 0i128);
+
+    // Attempt to deposit more than available balance
+    let deposit_result = test.defindex_contract.try_deposit(
+        &sorobanvec![&test.env, amount0 + 1, amount1 + 1],
+        &sorobanvec![&test.env, amount0 + 1, amount1 + 1],
+        &users[0],
+    );
+
+    if deposit_result == Err(Err(InvokeError::Contract(10))) {
+        return;
+    } else {
+        panic!("Expected error not returned");
+    }
+
+}
