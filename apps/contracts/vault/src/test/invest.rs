@@ -446,6 +446,7 @@ fn test_invest_in_strategy() {
         &sorobanvec![&test.env, amount_0, amount_1], // asset 0
         &sorobanvec![&test.env, amount_0, amount_1], // asset 1 
         &users[0],
+        &false,
     );
 
 
@@ -609,6 +610,7 @@ fn test_invest_more_than_idle_funds() {
         &sorobanvec![&test.env, amount_0, amount_1], // asset 0
         &sorobanvec![&test.env, amount_0, amount_1], // asset 1 
         &users[0],
+        &false,
     );
 
     // check vault balances
@@ -753,6 +755,7 @@ fn test_invest_without_mock_all_auths() {
         &sorobanvec![&test.env, amount_0, amount_1], // asset 0
         &sorobanvec![&test.env, amount_0, amount_1], // asset 1 
         &users[0],
+        &false,
     );
 
     // TODO check that the blockchain saw this authorizations

@@ -78,26 +78,7 @@ pub trait VaultTrait {
         amounts_desired: Vec<i128>,
         amounts_min: Vec<i128>,
         from: Address,
-    ) -> Result<(Vec<i128>, i128), ContractError>;
-
-    /// Handles user deposits into the DeFindex Vault and invest them immediately.
-    ///
-    ///
-    /// # Parameters
-    /// * `e` - The current environment reference (`Env`), for access to the contract state and utilities.
-    /// * `amounts_desired` - A vector specifying the user's intended deposit amounts for each asset.
-    /// * `amounts_min` - A vector of minimum deposit amounts required for the transaction to proceed.
-    /// * `from` - The address of the user making the deposit.
-    ///
-    /// # Returns
-    /// * `Result<(Vec<i128>, i128), ContractError>` - Returns the actual deposited `amounts` and `shares_to_mint` if successful,
-    ///   otherwise a `ContractError`.
-    ///
-    fn deposit_and_invest(
-        e: Env,
-        amounts_desired: Vec<i128>,
-        amounts_min: Vec<i128>,
-        from: Address,
+        invest: bool,
     ) -> Result<(Vec<i128>, i128), ContractError>;
 
     /// Withdraws assets from the DeFindex Vault by burning dfTokens.

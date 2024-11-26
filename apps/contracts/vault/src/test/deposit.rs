@@ -15,6 +15,7 @@ fn test_deposit_not_yet_initialized() {
         &sorobanvec![&test.env, 100i128],
         &sorobanvec![&test.env, 100i128],
         &users[0],
+        &false,
     );
 
     assert_eq!(result, Err(Ok(ContractError::NotInitialized)));
@@ -60,6 +61,7 @@ fn deposit_amounts_desired_less_length() {
         &sorobanvec![&test.env, amount], // wrong amount desired
         &sorobanvec![&test.env, amount, amount],
         &users[0],
+        &false,
     );
 
     assert_eq!(response, Err(Ok(ContractError::WrongAmountsLength)));
@@ -101,6 +103,7 @@ fn deposit_amounts_desired_more_length() {
         &sorobanvec![&test.env, amount, amount], // wrong amount desired
         &sorobanvec![&test.env, amount],
         &users[0],
+        &false,
     );
 
     assert_eq!(response, Err(Ok(ContractError::WrongAmountsLength)));
@@ -146,6 +149,7 @@ fn deposit_amounts_min_less_length() {
         &sorobanvec![&test.env, amount, amount],
         &sorobanvec![&test.env, amount], // wrong amount min
         &users[0],
+        &false,
     );
 
     assert_eq!(response, Err(Ok(ContractError::WrongAmountsLength)));
@@ -192,6 +196,7 @@ fn deposit_amounts_min_more_length() {
         &sorobanvec![&test.env, amount, amount],
         &sorobanvec![&test.env, amount, amount, amount], // wrong amount min
         &users[0],
+        &false,
     );
 
     assert_eq!(response, Err(Ok(ContractError::WrongAmountsLength)));
@@ -237,6 +242,7 @@ fn deposit_amounts_desired_negative() {
         &sorobanvec![&test.env, -amount, amount],
         &sorobanvec![&test.env, amount, amount],
         &users[0],
+        &false,
     );
 
     assert_eq!(response, Err(Ok(ContractError::NegativeNotAllowed)));
@@ -286,6 +292,7 @@ fn deposit_one_asset_success() {
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
+        &false,
     );
 
     // check balances after deposit
@@ -330,6 +337,7 @@ fn deposit_one_asset_success() {
         &sorobanvec![&test.env, amount2],
         &sorobanvec![&test.env, amount2],
         &users[0],
+        &false,
     );
 
     //map shuould be map
@@ -412,6 +420,7 @@ fn deposit_one_asset_min_more_than_desired() {
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount + 1],
         &users[0],
+        &false,
     );
     // this should fail
     assert_eq!(result, Err(Ok(ContractError::InsufficientAmount)));
@@ -471,6 +480,7 @@ fn deposit_several_assets_success() {
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0, amount1],
         &users[0],
+        &false,
     );
 
     // check deposit result
@@ -541,6 +551,7 @@ fn deposit_several_assets_success() {
         &sorobanvec![&test.env, amount0_new, amount1_new],
         &sorobanvec![&test.env, 0i128, 0i128],
         &users[1],
+        &false,
     );
 
     // check deposit result. Ok((amounts, shares_to_mint))
@@ -607,6 +618,7 @@ fn deposit_several_assets_success() {
         &sorobanvec![&test.env, amount0_new, amount1_new],
         &sorobanvec![&test.env, 0i128, 0i128],
         &users[1],
+        &false,
     );
 
     // check deposit result. Ok((amounts, shares_to_mint))
@@ -668,6 +680,7 @@ fn deposit_several_assets_min_greater_than_optimal() {
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0 + 1, amount1],
         &users[0],
+        &false,
     );
 
     // this should fail
@@ -678,6 +691,7 @@ fn deposit_several_assets_min_greater_than_optimal() {
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0, amount1],
         &users[0],
+        &false,
     );
 
     // check deposit result
@@ -697,6 +711,7 @@ fn deposit_several_assets_min_greater_than_optimal() {
         &sorobanvec![&test.env, amount0_new, amount1_new],
         &sorobanvec![&test.env, amount0*2+1, amount1*2],
         &users[0],
+        &false,
     );
 
     // this should fail

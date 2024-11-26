@@ -45,10 +45,11 @@ fn deposit_and_invest_one_asset_success() {
     assert_eq!(df_balance, 0i128);
 
     // deposit
-    test.defindex_contract.deposit_and_invest(
+    test.defindex_contract.deposit(
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
+        &true,
     );
 
     // check balances after deposit
@@ -88,10 +89,11 @@ fn deposit_and_invest_one_asset_success() {
     assert_eq!(user_balance, amount2);
 
     // deposit
-    test.defindex_contract.deposit_and_invest(
+    test.defindex_contract.deposit(
         &sorobanvec![&test.env, amount2],
         &sorobanvec![&test.env, amount2],
         &users[0],
+        &true,
     );
 
     //map shuould be map
@@ -174,10 +176,11 @@ fn deposit_and_invest_several_assets_success() {
     assert_eq!(df_balance, 0i128);
 
     // deposit
-    let deposit_result=test.defindex_contract.deposit_and_invest(
+    let deposit_result=test.defindex_contract.deposit(
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0, amount1],
         &users[0],
+        &true,
     );
 
     // check deposit result
@@ -242,10 +245,11 @@ fn deposit_and_invest_several_assets_success() {
 
 
     // user 1 deposits
-    let deposit_result=test.defindex_contract.deposit_and_invest(
+    let deposit_result=test.defindex_contract.deposit(
         &sorobanvec![&test.env, amount0_new, amount1_new],
         &sorobanvec![&test.env, 0i128, 0i128],
         &users[1],
+        &true,
     );
 
     // check deposit result. Ok((amounts, shares_to_mint))
@@ -307,10 +311,11 @@ fn deposit_and_invest_several_assets_success() {
     assert_eq!(user_balance1, amount1_new);
 
     // user 1 deposits
-    let deposit_result=test.defindex_contract.deposit_and_invest(
+    let deposit_result=test.defindex_contract.deposit(
         &sorobanvec![&test.env, amount0_new, amount1_new],
         &sorobanvec![&test.env, 0i128, 0i128],
         &users[1],
+        &true,
     );
 
     // check deposit result. Ok((amounts, shares_to_mint))

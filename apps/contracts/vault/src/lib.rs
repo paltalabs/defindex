@@ -195,6 +195,7 @@ impl VaultTrait for DeFindexVault {
         amounts_desired: Vec<i128>,
         amounts_min: Vec<i128>,
         from: Address,
+        invest: bool,
     ) -> Result<(Vec<i128>, i128), ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
@@ -204,45 +205,15 @@ impl VaultTrait for DeFindexVault {
         // If this was not done before, last_fee_assesment will set to be current timestamp and this will return without action
         collect_fees(&e)?; 
 
-        let (amounts, shares_to_mint) = process_deposit(&e, &amounts_desired, &amounts_min, &from)?;
-
-        events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone());
-
-        Ok((amounts, shares_to_mint))
-    }
-
-    /// Handles user deposits into the DeFindex Vault and invest them immediately.
-    ///
-    ///
-    /// # Parameters
-    /// * `e` - The current environment reference (`Env`), for access to the contract state and utilities.
-    /// * `amounts_desired` - A vector specifying the user's intended deposit amounts for each asset.
-    /// * `amounts_min` - A vector of minimum deposit amounts required for the transaction to proceed.
-    /// * `from` - The address of the user making the deposit.
-    ///
-    /// # Returns
-    /// * `Result<(Vec<i128>, i128), ContractError>` - Returns the actual deposited `amounts` and `shares_to_mint` if successful,
-    ///   otherwise a `ContractError`.
-    ///
-    fn deposit_and_invest(
-        e: Env,
-        amounts_desired: Vec<i128>,
-        amounts_min: Vec<i128>,
-        from: Address,
-    ) -> Result<(Vec<i128>, i128), ContractError> {
-        extend_instance_ttl(&e);
-        check_initialized(&e)?;
-        from.require_auth();
-
-        // Collect Fees
-        collect_fees(&e)?; 
-
-        let (amounts, shares_to_mint) = process_deposit(&e, &amounts_desired, &amounts_min, &from)?;
-        events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone());
-
         let assets = get_assets(&e);
-        // Generate investment allocations and execute them
-        generate_and_execute_investments(&e, &amounts, assets)?;
+
+        let (amounts, shares_to_mint) = process_deposit(&e, &assets, &amounts_desired, &amounts_min, &from)?;
+        events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone());
+
+        if invest {
+            // Generate investment allocations and execute them
+            generate_and_execute_investments(&e, &amounts, &assets)?;
+        }
 
         Ok((amounts, shares_to_mint))
     }

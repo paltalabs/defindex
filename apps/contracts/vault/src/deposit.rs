@@ -5,11 +5,11 @@ use crate::{funds::{fetch_invested_funds_for_asset, fetch_invested_funds_for_str
 /// Common logic for processing deposits.
 pub fn process_deposit(
     e: &Env,
+    assets: &Vec<AssetStrategySet>,
     amounts_desired: &Vec<i128>,
     amounts_min: &Vec<i128>,
     from: &Address,
 ) -> Result<(Vec<i128>, i128), ContractError> {
-    let assets = get_assets(&e);
     let assets_length = assets.len();
 
     // Validate inputs
@@ -97,7 +97,7 @@ fn mint_shares(
 pub fn generate_and_execute_investments(
     e: &Env,
     amounts: &Vec<i128>,
-    assets: Vec<AssetStrategySet>,
+    assets: &Vec<AssetStrategySet>,
 ) -> Result<(), ContractError> {
     let mut asset_investments = Vec::new(&e);
 
@@ -135,6 +135,6 @@ pub fn generate_and_execute_investments(
         }));
     }
 
-    check_and_execute_investments(e.clone(), assets, asset_investments)?;
+    check_and_execute_investments(e.clone(), assets.clone(), asset_investments)?;
     Ok(())
 }
