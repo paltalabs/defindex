@@ -726,7 +726,8 @@ fn test_invest_without_mock_all_auths() {
             args: (
                 Vec::from_array(&test.env,[amount_0, amount_1]),
                 Vec::from_array(&test.env,[amount_0, amount_1]),
-                users[0].clone()
+                users[0].clone(),
+                false
             ).into_val(&test.env),
             // mock toke 0 and token 1 subtransfer
             sub_invokes: &[

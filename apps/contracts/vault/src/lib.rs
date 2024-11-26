@@ -27,11 +27,11 @@ mod utils;
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use aggregator::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
 use fee::{collect_fees, fetch_defindex_fee};
-use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_invested_funds_for_asset, fetch_invested_funds_for_strategy, fetch_total_managed_funds}; //, fetch_idle_funds_for_asset};
+use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds}; //, fetch_idle_funds_for_asset};
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
-use investment::{check_and_execute_investments};
+use investment::check_and_execute_investments;
 use models::{
-    ActionType, AssetInvestmentAllocation, AssetStrategySet, Instruction, OptionalSwapDetailsExactIn, OptionalSwapDetailsExactOut, StrategyInvestment
+    ActionType, AssetInvestmentAllocation, AssetStrategySet, Instruction, OptionalSwapDetailsExactIn, OptionalSwapDetailsExactOut
 };
 use storage::{
     extend_instance_ttl, get_assets, get_vault_fee, set_asset, set_defindex_protocol_fee_receiver, set_factory, set_total_assets, set_vault_fee
@@ -41,9 +41,9 @@ use strategies::{
     get_strategy_struct, invest_in_strategy, pause_strategy, unpause_strategy,
     withdraw_from_strategy,
 };
-use token::{internal_burn, internal_mint, write_metadata, VaultToken};
+use token::{internal_burn, write_metadata, VaultToken};
 use utils::{
-    calculate_asset_amounts_for_dftokens, calculate_deposit_amounts_and_shares_to_mint,
+    calculate_asset_amounts_for_dftokens,
     calculate_withdrawal_amounts, check_initialized, check_nonnegative_amount,
 };
 
