@@ -705,3 +705,240 @@ fn deposit_several_assets_min_greater_than_optimal() {
 
 }
 
+//test deposit amounts_min greater than amounts_desired
+#[test]
+fn deposit_amounts_min_greater_than_amounts_desired(){
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
+
+    // initialize with 2 assets
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token0.address.clone(),
+            strategies: strategy_params_token0.clone()
+        },
+        AssetStrategySet {
+            address: test.token1.address.clone(),
+            strategies: strategy_params_token1.clone()
+        }
+    ];
+
+    test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
+        &test.emergency_manager,
+        &test.vault_fee_receiver,
+        &2000u32,
+        &test.defindex_protocol_receiver,
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
+    );
+    let amount0 = 123456789i128;
+    let amount1 = 987654321i128;
+
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
+
+    // Balances before deposit
+    test.token0_admin_client.mint(&users[0], &amount0);
+    test.token1_admin_client.mint(&users[0], &amount1);
+    let user_balance0 = test.token0.balance(&users[0]);
+    assert_eq!(user_balance0, amount0);
+    let user_balance1 = test.token1.balance(&users[0]);
+    assert_eq!(user_balance1, amount1);
+
+    let df_balance = test.defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, 0i128);
+
+    // deposit
+    let deposit_result=test.defindex_contract.try_deposit(
+        &sorobanvec![&test.env, amount0, amount1],
+        &sorobanvec![&test.env, amount0 + 1, amount1 + 1],
+        &users[0],
+    );
+
+    // this should fail
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+}
+
+//Test token transfer from user to vault on deposit
+#[test]
+fn deposit_transfers_tokens_from_user_to_vault(){
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
+
+    // initialize with 2 assets
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token0.address.clone(),
+            strategies: strategy_params_token0.clone()
+        },
+        AssetStrategySet {
+            address: test.token1.address.clone(),
+            strategies: strategy_params_token1.clone()
+        }
+    ];
+
+    test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
+        &test.emergency_manager,
+        &test.vault_fee_receiver,
+        &2000u32,
+        &test.defindex_protocol_receiver,
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
+    );
+    let amount0 = 123456789i128;
+    let amount1 = 987654321i128;
+
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
+
+    // Balances before deposit
+    test.token0_admin_client.mint(&users[0], &amount0);
+    test.token1_admin_client.mint(&users[0], &amount1);
+    let user_balance0 = test.token0.balance(&users[0]);
+    assert_eq!(user_balance0, amount0);
+    let user_balance1 = test.token1.balance(&users[0]);
+    assert_eq!(user_balance1, amount1);
+
+    let df_balance = test.defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, 0i128);
+
+    // deposit
+    test.defindex_contract.deposit(
+        &sorobanvec![&test.env, amount0, amount1],
+        &sorobanvec![&test.env, amount0, amount1],
+        &users[0],
+    );
+
+    // check balances after deposit
+    let df_balance = test.defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, amount0 + amount1 - 1000);
+
+    let user_balance0 = test.token0.balance(&users[0]);
+    assert_eq!(user_balance0, 0i128);
+}
+
+#[test]
+fn test_deposit_arithmetic_error() {
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+
+    // Initialize with 1 asset
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token0.address.clone(),
+            strategies: strategy_params_token0.clone()
+        }
+    ];
+
+    test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
+        &test.emergency_manager,
+        &test.vault_fee_receiver,
+        &2000u32,
+        &test.defindex_protocol_receiver,
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
+    );
+
+    // Mock the environment to provoke a division by zero
+    let mut mock_map = Map::new(&test.env);
+    mock_map.set(test.token0.address.clone(), 0i128); // Total funds for token0 is 0
+
+    let amount = 123456789i128;
+
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+
+    // Mint tokens to user
+    test.token0_admin_client.mint(&users[0], &amount);
+
+    let large_amount = i128::MAX / 2;
+    test.token0_admin_client.mint(&users[0], &large_amount);
+
+    //first deposit to overflow the balance
+    test.defindex_contract.deposit(
+        &sorobanvec![&test.env, large_amount],
+        &sorobanvec![&test.env, large_amount],
+        &users[0],
+    );
+    
+    // Try to deposit a large amount
+    let result = test.defindex_contract.try_deposit(
+        &sorobanvec![&test.env, large_amount],
+        &sorobanvec![&test.env, large_amount],
+        &users[0],
+    );
+
+    // Verify that the returned error is ContractError::ArithmeticError
+    assert_eq!(result, Err(Ok(ContractError::ArithmeticError)));
+}
+
+//all amounts are cero
+#[test]
+fn deposit_amounts_desired_zero() {
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+
+    // Initialize with 1 asset
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token0.address.clone(),
+            strategies: strategy_params_token0.clone()
+        }
+    ];
+
+    test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
+        &test.emergency_manager,
+        &test.vault_fee_receiver,
+        &2000u32,
+        &test.defindex_protocol_receiver,
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
+    );
+
+    let amount = 123456789i128;
+
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+
+    // Mint tokens to user
+    test.token0_admin_client.mint(&users[0], &amount);
+
+    // Balances before deposit
+    let user_balance_before = test.token0.balance(&users[0]);
+    assert_eq!(user_balance_before, amount);
+
+    let vault_balance_before = test.token0.balance(&test.defindex_contract.address);
+    assert_eq!(vault_balance_before, 0i128);
+
+    let df_balance_before = test.defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance_before, 0i128);
+
+    // Attempt to deposit with amounts_desired all set to 0
+    let deposit_result = test.defindex_contract.try_deposit(
+        &sorobanvec![&test.env, 0i128],
+        &sorobanvec![&test.env, 0i128],
+        &users[0],
+    );
+
+    // Verify that the returned error is ContractError::InsufficientAmount
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+}
+
