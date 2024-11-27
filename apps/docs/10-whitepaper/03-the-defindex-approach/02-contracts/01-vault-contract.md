@@ -139,133 +139,72 @@ Every DeFindex has a manager, who is responsible for managing the DeFindex. The 
 ### Fee Receivers
 The DeFindex protocol defines two distinct fee receivers to reward both the creators of the DeFindex Protocol and the deployers of individual Vaults:
 
-1. **DeFindex Protocol Fee Receiver**: Receives a fixed protocol fee of 0.5% APR.
-2. **Vault Fee Receiver**: Receives a fee set by the vault deployer, typically recommended between 0.5% and 2% APR.
+1. **DeFindex Protocol Fee Receiver**
+2. **Vault Fee Receiver**
 
-The Total Management Fee consists of both the protocol fee and the vault fee. Thus, each Vault has a total APR fee rate $f_{\text{total}}$ such that:
-
-$$
-f_{\text{total}} = f_{\text{DeFindex}} + f_{\text{Vault}}
-$$
-
-where $f_{\text{DeFindex}} = 0.5\%$ is a fixed `defindex_fee` that goes to the DeFindex Protocol Fee Receiver address, and $f_{\text{Vault}}$ is a variable APR `vault_fee`, typically between 0.5% and 2%, that goes to the Vault Fee Receiver address.
+The fees collected are from the gains of the strategies. Thus, it is a performance-based fee.
 
 ### Fee Collection Methodology
 
-The fee collection process mints new shares, or dfTokens, to cover the accrued management fees. These shares are calculated based on the elapsed time since the last fee assessment, ensuring fees are accrued based on the actual period of asset management. The fee collection is triggered whenever there is a vault interaction, such as a `deposit`, `withdrawal`, or even an explicit `fee_collection` call, with calculations based on the time elapsed since the last fee assessment.
+The fee collection process locks the fees in the vault until they are distributed. These fees are got from the gains of the strategies.
 
-### Mathematical Derivation of New Fees
+Let's see an example of how this works.
+1. The fees for the DeFindex Protocol Fee Receiver is set to 5% and the fees for the Vault Fee Receiver is set to 15%.
+2. A user deposits 100 USDC into the vault that only has one strategy.
+3. The strategy gains 10 USDC.
+4. The strategy reports the gains to the vault.
+5. The vault collects the fees from the gains. In this case, 2 USDC (20% of 10 USDC).
+6. The vault distributes the fees to the protocol and the manager.
 
-Let:
+Now the total assets of the vault are 100 USDC + 10 USDC - 2 USDC = 108 USDC.
 
-- $V_0$  be the Total Value Locked (TVL) at the last assessment,
-- $s_0$  be the Total Shares (dfTokens) at the last assessment,
-- $f_{\text{total}}$  be the Total Management Fee (APR).
+And the 2 USDC are locked in the vault, for future distributions.
 
-Over a time period $\Delta t$, the fees due for collection are derived as a value represented by newly minted shares.
+These fees are collected in a per strategy basis. So, if there are multiple strategies, each strategy will have its own fees.
 
-To mint new shares for fee distribution, we calculate the required number of new shares, $s_f$, that correspond to the total management fee over the elapsed period.
+In order to account for the fees, as fees depend on the gains of the strategy, we need to track the gains of the strategy.
+So, we create a function called `report()` that will keep record of the gains and losses of the strategy.
+In this function, we will:
+- store gains and losses from the strategy since the last time we checked.
 
-After a period $\Delta t$ (expressed in seconds), and after the fee collection process the new total shares $s_1$ should be:
+Let's see a pseudocode for this function:
 
-$$
-s_1 = s_0 + s_f
-$$
+```rust
+fn report(strategy: Address) -> (u256, u256) {
+    let current_balance = get_current_balance(strategy);
+    let prev_balance = get_prev_balance(strategy);
+    let gains_or_losses = current_balance - prev_balance;
 
-Since `fee_collection` is always called before any `deposit` or `withdrawal`, we assume that the Total Value $V_1$ remains equal to $V_0$.
+    store_gains_or_losses(strategy, gains_or_losses);
+    store_prev_balance(strategy, current_balance);
+}
 
-We establish the following condition to ensure the number of minted shares accurately reflects the management fee accrued over $\Delta t$. The value of the new minted shares $s_f$ should equal the prorated APR fee share of the total value of the vault. In mathematical terms:
+fn report_all_strategies() {
+    for strategy in strategies {
+        report(strategy);
+    }
+}
+```
+This report_all_strategies() function is called at the beginning whenever the manager wants to rebalance the DeFindex, or a user wants to deposit or withdraw.
+Then, at the end of a rebalance, deposit or withdrawal function call, the store_prev_balance() function is called to update the previous balance of the strategy.
 
-$$
-\frac{V_0}{s_1} \times s_f = V_0 \times f_{\text{total}} \times \frac{\Delta t}{\text{SECONDS PER YEAR}}
-$$
+Then another function will be called to distribute the fees to the protocol and the manager. And it will set the gains and losses to 0.
 
-Rearranging terms, we get:
+Here is a pseudocode for the fee distribution function:  
 
-$$
-s_f = \frac{f_{\text{total}} \times s_0 \times \Delta t}{\text{SECONDS PER YEAR} - f_{\text{total}} \times \Delta t}
-$$
-
-This equation gives the precise quantity of new shares $s_f$ to mint as dfTokens for the management fee over the period $\Delta t$.
-
-### Distribution of Fees
-
-Once the total fees, $s_f$, are calculated, the shares are split proportionally between the DeFindex Protocol Fee Receiver and the Vault Fee Receiver. This is done by calculating the ratio of each fee receiver’s APR to the total APR:
-
-$$
-s_{\text{DeFindex}} = \frac{s_f \times f_{\text{DeFindex}}}{f_{\text{total}}}
-$$
-
-$$
-s_{\text{Vault}} = s_f - s_{\text{DeFindex}}
-$$
-
-This ensures that each fee receiver is allocated their respective share of dfTokens based on their fee contribution to $f_{\text{total}}$. The dfTokens are then minted to each receiver’s address as a direct representation of the fees collected.
-
-
-### Example
-
-Suppose a DeFindex vault begins with an initial value of 1 USDC per share and a total of 100 shares (dfTokens), representing an investment of 100 USDC. This investment is placed in a lending protocol with an 8% APY. The DeFindex protocol has a total management fee of 1% APR, split between a 0.5% protocol fee and a 0.5% vault fee.
-
-After one year, the investment grows to 108 USDC due to the 8% APY.
-
-#### Step 1: Calculate the Shares to Mint for Fees
-
-Using the formula:
-
-$
-s_f = \frac{f_{\text{total}} \times s_0 \times \Delta t}{\text{SECONDS PER YEAR} - f_{\text{total}} \times \Delta t}
-$
-
-where:
-- \( f_{\text{total}} = 0.01 \) (1% APR management fee),
-- \( s_0 = 100 \) (initial shares),
-- \( \Delta t = \text{SECONDS PER YEAR} \) (since this example spans a full year),
-
-we calculate \( s_f \), the number of shares to mint for the fee collection.
-
-Substituting values:
-
-$
-s_f = \frac{0.01 \times 100 \times \text{SECONDS PER YEAR}}{\text{SECONDS PER YEAR} - (0.01 \times \text{SECONDS PER YEAR})}
-$
-
-Simplifying:
-
-$
-s_f = \frac{1 \times \text{SECONDS PER YEAR}}{0.99 \times \text{SECONDS PER YEAR}} \approx 1.0101
-$
-
-Thus, approximately 1.01 dfTokens are minted as fees.
-
-#### Step 2: Update Total Shares and Calculate Price per Share
-
-With the fee tokens minted, the total dfTokens increase from 100 to 101.01.
-
-The vault now holds 108 USDC backing 101.01 dfTokens, so the new price per share is:
-
-$
-\text{Price per Share} = \frac{108}{101.01} \approx 1.069 \, \text{USDC}
-$
-
-#### Step 3: Determine the Value for a User Holding 100 dfTokens
-
-For a user holding 100 dfTokens, the value of their holdings after one year is approximately:
-
-$
-100 \, \text{dfTokens} \times 1.069 \, \text{USDC per share} = 106.9 \, \text{USDC}
-$
-
-The remaining 1.01 dfTokens represent the collected fee, backed by around:
-
-$
-1.01 \, \text{dfTokens} \times 1.069 \, \text{USDC per share} \approx 1.08 \, \text{USDC}
-$
-
----
-
-This breakdown clarifies how the investment grows and the management fee is deducted by minting new dfTokens, resulting in a proportional share value for both users and fee recipients.
-
+```rust
+fn distribute_fees() {
+    for strategy in strategies {
+        let gains_or_losses = get_gains_or_losses(strategy);
+        let protocol_fee = gains_or_losses * protocol_fee_receiver/MAX_BPS;
+        let vault_fee = gains_or_losses * vault_fee_receiver/MAX_BPS;
+        transfer(strategy.asset, protocol_fee_receiver, protocol_fee);
+        transfer(strategy.asset, vault_fee_receiver, vault_fee);
+        reset_gains_or_losses(strategy);
+    }
+}
+```
+**Note:** in order to show the current balance for users, we should discount the fees (if there is gains) from the total assets of the Vaults.
 
 It is expected that the Fee Receiver is associated with the manager, allowing the entity managing the Vault to be compensated through the Fee Receiver. In other words, the Fee Receiver could be the manager using the same address, or it could be a different entity such as a streaming contract, a DAO, or another party.
 

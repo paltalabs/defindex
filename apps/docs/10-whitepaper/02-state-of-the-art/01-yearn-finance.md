@@ -215,3 +215,28 @@ $$
     These fees are designed to incentivize protocol development and cover operational costs.
 
 TODO: CHeck who decides the amounts of these fees
+
+## Fees Collection
+All info is in the this website; https://docs.yearn.fi/developers/v3/protocol_fees
+
+Yearn collects fees through a performance-based system defined by governance, which controls the percentage of protocol fees and allows customization for each vault and strategy. This ensures flexibility and precise tuning of the fee structure.
+Yearn Governance dictates the amount of the Protocol fee and can be set anywhere between 0 - 50%. Yearn governance also holds the ability to set custom protocol fees for individual vaults and strategies. Allowing full customization of the system.
+
+Example 
+```
+profit = 100
+performance_fee = 20%
+protocol_fee = 10%
+
+total_fees = profit * performance_fee = 20
+protocol_fees = total_fees * protocol_fee = 2
+performance_fees = total_fees - protocol_fees = 18
+
+18 would get paid to the vault managers performance_fee_recipient.
+2 would get paid to the Yearn Treasury.
+``` 
+
+### When Fees Are Collected
+
+Fees are collected when a strategy reports gains or losses via the report() function. During the report, the strategy will calculate the gains since the last report and then calculate the fees based on the gains. This fees are then distributed as shares of the vault. 
+Then, fees are collected per strategy.
