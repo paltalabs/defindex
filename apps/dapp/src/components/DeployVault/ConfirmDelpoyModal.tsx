@@ -50,7 +50,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   const feeReceiverString = useAppSelector(state => state.newVault.feeReceiver)
   const { transactionStatusModal: txModal, deployVaultModal: deployModal } = useContext(ModalContext);
   const dispatch = useAppDispatch();
-  const { getIdleFunds, getInvestedFunds, getTVL, getUserBalance } = useVault()
+  const { getFees } = useVault()
 
   const [deployDisabled, setDeployDisabled] = useState(true);
 
@@ -258,6 +258,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
         amount: newVault.assets[index]?.amount || 0
       }
     })
+    const fees = await getFees(parsedResult)
     const tempVault: VaultData = {
       ...newVault,
       address: parsedResult,
@@ -268,6 +269,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       totalSupply: 0,
       idleFunds: idleFunds,
       investedFunds: [{ address: '', amount: 0 }],
+      fees: fees,
     }
     await txModal.handleSuccess(result.txHash);
     dispatch(pushVault(tempVault));
