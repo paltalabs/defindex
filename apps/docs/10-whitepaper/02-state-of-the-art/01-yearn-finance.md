@@ -240,3 +240,12 @@ performance_fees = total_fees - protocol_fees = 18
 
 Fees are collected when a strategy reports gains or losses via the report() function. During the report, the strategy will calculate the gains since the last report and then calculate the fees based on the gains. This fees are then distributed as shares of the vault. 
 Then, fees are collected per strategy.
+
+Accountant reports the fees or refunds to the vault, from the gains or losses of the strategy. Then, the vault will calculate the fees and the protocol fees and then distribute the fees to the vault manager and the protocol fee recipient. This accountant is an interface and apparently it depends on the vault.
+
+Yearn burns shares when there is fees or losses. When there is a loss and there is still fees not paid, the vault will burn shares to pay the fees.
+
+The Vaults utilizes several mechanisms to mitigate price per share (pps) fluctuations and manipulation:
+1. Internal accounting is used instead of balanceOf() to keep track of the vault's debt and idle.
+2. A profit locking machenism designed by V3 Vaults locks profits or accountant's refunds by issuing new shares to the vault itself that are slowly burnt over the  unlock perior. 
+3. In the event of losses or fees, the vault will always try to offset them by butning locked shares it owns. the price per share is expected to decrease only when excess losses or fees occur upon processing a report, or a loss occurs upon force revoking a strategy.
