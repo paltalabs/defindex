@@ -249,3 +249,5 @@ The Vaults utilizes several mechanisms to mitigate price per share (pps) fluctua
 1. Internal accounting is used instead of balanceOf() to keep track of the vault's debt and idle.
 2. A profit locking machenism designed by V3 Vaults locks profits or accountant's refunds by issuing new shares to the vault itself that are slowly burnt over the  unlock perior. 
 3. In the event of losses or fees, the vault will always try to offset them by butning locked shares it owns. the price per share is expected to decrease only when excess losses or fees occur upon processing a report, or a loss occurs upon force revoking a strategy.
+ [reference](https://github.com/yearn/yearn-security/blob/master/audits/20240504_ChainSecurity_Yearn_V3/Yearn-Smart-Contract-Audit_V3_Vaults_-ChainSecurity.pdf)
+ 
