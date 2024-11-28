@@ -134,7 +134,8 @@ The Emergency Manager has the authority to withdraw assets from the DeFindex in 
 
 ## Management
 Every DeFindex has a manager, who is responsible for managing the DeFindex. The Manager can ebalance the Vault, and invest IDLE funds in strategies. 
-## Fees.
+
+## Fee Collection
 
 ### Fee Receivers
 The DeFindex protocol defines two distinct fee receivers to reward both the creators of the DeFindex Protocol and the deployers of individual Vaults:
@@ -198,8 +199,8 @@ fn distribute_fees() {
         let gains_or_losses = get_gains_or_losses(strategy);
         let protocol_fee = gains_or_losses * protocol_fee_receiver/MAX_BPS;
         let vault_fee = gains_or_losses * vault_fee_receiver/MAX_BPS;
-        transfer(strategy.asset, protocol_fee_receiver, protocol_fee);
-        transfer(strategy.asset, vault_fee_receiver, vault_fee);
+        transfer_from_strategy(strategy.asset, protocol_fee_receiver, protocol_fee);
+        transfer_from_strategy(strategy.asset, vault_fee_receiver, vault_fee);
         reset_gains_or_losses(strategy);
     }
 }
