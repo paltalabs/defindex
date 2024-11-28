@@ -207,6 +207,8 @@ fn distribute_fees() {
 ```
 **Note:** in order to show the current balance for users, we should discount the fees (if there is gains) from the total assets of the Vaults.
 
+This function is public and can be called by anyone.
+
 It is expected that the Fee Receiver is associated with the manager, allowing the entity managing the Vault to be compensated through the Fee Receiver. In other words, the Fee Receiver could be the manager using the same address, or it could be a different entity such as a streaming contract, a DAO, or another party.
 
 <!-- ### Multi-transaction Actions _(TODO)_
