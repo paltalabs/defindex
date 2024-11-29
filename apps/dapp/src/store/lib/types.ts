@@ -39,7 +39,8 @@ export interface VaultData {
   TVL: number;
   totalSupply: number;
   idleFunds: AssetAmmount[];
-  investedFunds: AssetAmmount[]
+  investedFunds: AssetAmmount[];
+  fees: number[];
   userBalance?: number;
 }
 

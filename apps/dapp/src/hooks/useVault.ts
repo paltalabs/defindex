@@ -24,6 +24,7 @@ export enum VaultMethod {
     GETIDLEFUNDS = "fetch_current_idle_funds",
     GETINVESTEDFUNDS = "fetch_current_invested_funds",
     SETFEERECIEVER = "set_fee_receiver",
+    GETFEES = "get_fees",
 }   
 
 const isObject = (val: unknown) => typeof val === 'object' && val !== null && !Array.isArray(val);
@@ -67,7 +68,8 @@ export const useVault = (vaultAddress?: string | undefined) => {
             TVL,
             totalSupply,
             idleFunds,
-            investedFunds
+            investedFunds,
+            fees
         ] = await Promise.all([
             getVaultManager(vaultAddress),
             getVaultEmergencyManager(vaultAddress),
@@ -77,7 +79,8 @@ export const useVault = (vaultAddress?: string | undefined) => {
             getTVL(vaultAddress),
             getVaultTotalSupply(vaultAddress),
             getIdleFunds(vaultAddress),
-            getInvestedFunds(vaultAddress)
+            getInvestedFunds(vaultAddress),
+            getFees(vaultAddress)
         ]);
         for (let asset of assets){
             const symbol = await getTokenSymbol(asset.address, sorobanContext);
@@ -96,6 +99,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
             totalSupply: totalSupply || 0,
             idleFunds: idleFunds || [],
             investedFunds: investedFunds || [],
+            fees: fees || [50,0],
         }
     return newData
     } catch (error) {
@@ -201,6 +205,14 @@ export const useVault = (vaultAddress?: string | undefined) => {
         console.error(error);
         }
     }
+    const getFees = async (vaultAddress: string) => {
+        try {
+        const fees = await vault(VaultMethod.GETFEES, vaultAddress, undefined, false).then((res: any) => scValToNative(res));
+        return fees || [50,0];
+        } catch (error) {
+        console.error(error);
+        }
+    }
 
     const vaultInfo = getVaultInfo(vaultAddress!);
     return { 
@@ -215,6 +227,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
         getUserBalance, 
         getTVL,
         getIdleFunds,
-        getInvestedFunds, 
+        getInvestedFunds,
+        getFees
     };
 }
