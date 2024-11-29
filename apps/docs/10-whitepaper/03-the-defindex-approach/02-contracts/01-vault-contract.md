@@ -176,7 +176,7 @@ fn report(strategy: Address) -> (u256, u256) {
     let gains_or_losses = current_balance - prev_balance;
 
     add_gains_or_losses(strategy, gains_or_losses);
-    add_prev_balance(strategy, current_balance);
+    store_prev_balance(strategy, current_balance);
 }
 
 fn report_all_strategies() {
