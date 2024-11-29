@@ -166,7 +166,7 @@ Fees are charged on a per-strategy basis, meaning each strategy independently ca
    - The total assets of the vault become \(100 + 10 - 2 = 108\) USDC.
 
 #### Strategy Gains Tracking
-Since fees depend on strategy performance, gains and losses must be tracked meticulously. To achieve this, a `report()` function is implemented (in the vault contract)to log the gains or losses since the last update.  
+Since fees depend on strategy performance, gains and losses must be tracked meticulously. To achieve this, a `report()` function is implemented (in the vault contract) to log the gains or losses since the last update.  
 
 **Pseudocode for Tracking Gains and Losses**:
 ```rust
