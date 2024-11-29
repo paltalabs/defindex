@@ -208,7 +208,7 @@ fn distribute_fees() {
 This function is public and can be called by anyone.
 
 #### Displaying User Balances
-To provide users with an accurate view of their balances, the vault deducts any outstanding fees from the total assets when reporting current balances.
+To provide users with an accurate view of their balances, any outstanding fees should be deducted offchain from the total assets when showing the current balances.
 
 By following this structured methodology, DeFindex ensures transparent and fair fee collection, tracking, and distribution processes.
 
