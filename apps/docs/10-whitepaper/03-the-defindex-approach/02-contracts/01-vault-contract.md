@@ -150,7 +150,7 @@ The fees collected are from the gains of the strategies. Thus, it is a performan
 The DeFindex fee collection process is designed to track fees in the vault until distribution, with fees originating from the strategy gains. This ensures an organized and accountable fee handling system.
 
 #### General Overview
-Fees are charged on a per-strategy basis, meaning each strategy independently calculates its gains and the corresponding fees. These fees are then collected and distributed to the protocol and manager. The fee percentages are decided when creating the Vault.
+Fees are charged on a per-strategy basis, meaning each strategy independently calculates its gains and the corresponding fees. These fees are then collected and distributed to the protocol and manager. The fee percentages are fixed per vault and they are decided when creating it.
 
 #### Detailed Workflow
 
