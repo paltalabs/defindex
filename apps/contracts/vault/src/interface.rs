@@ -79,6 +79,7 @@ pub trait VaultTrait {
         amounts_desired: Vec<i128>,
         amounts_min: Vec<i128>,
         from: Address,
+        invest: bool,
     ) -> Result<(Vec<i128>, i128), ContractError>;
 
     /// Withdraws assets from the DeFindex Vault by burning dfTokens.
