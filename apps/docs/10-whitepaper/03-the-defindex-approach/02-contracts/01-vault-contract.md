@@ -173,9 +173,12 @@ Since fees depend on strategy performance, gains and losses must be tracked meti
 fn report(strategy: Address) -> (u256, u256) {
     let current_balance = get_current_balance(strategy);
     let prev_balance = get_prev_balance(strategy);
+    let previous_gains_or_losses = get_gains_or_losses(strategy);
+    
     let gains_or_losses = current_balance - prev_balance;
-
-    add_gains_or_losses(strategy, gains_or_losses);
+    let current_gains_or_losses = previous_gains_or_losses + gains_or_losses;
+    
+    store_gains_or_losses(strategy, current_gains_or_losses);
     store_prev_balance(strategy, current_balance);
 }
 
