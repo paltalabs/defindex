@@ -1,6 +1,6 @@
 use soroban_sdk::{contracttype, Address, Env};
 
-use crate::{positions::VaultPosition, reserves::StrategyReserves};
+use crate::reserves::StrategyReserves;
 
 #[contracttype]
 pub struct Config {
@@ -49,22 +49,27 @@ pub fn get_config(e: &Env) -> Config {
 }
 
 // Vault Position
-pub fn set_vault_position(e: &Env, address: &Address, vault_position: VaultPosition) {
+/// Set the number of shares shares a user owns. Shares are stored with 7 decimal places of precision.
+pub fn set_vault_shares(e: &Env, address: &Address, shares: i128) {
     let key = DataKey::VaultPos(address.clone());
-    e.storage().persistent().set(&key, &vault_position);
+    e.storage().persistent().set::<DataKey, i128>(&key, &shares);
     e.storage()
         .persistent()
         .extend_ttl(&key, LEDGER_THRESHOLD, LEDGER_BUMP);
 }
 
-pub fn get_vault_position(e: &Env, address: &Address) -> VaultPosition {
-    e.storage().persistent().get(&DataKey::VaultPos(address.clone())).unwrap_or(
-        VaultPosition {
-            deposited: 0,
-            withdrawn: 0,
-            b_tokens: 0,
+/// Get the number of strategy shares a user owns. Shares are stored with 7 decimal places of precision.
+pub fn get_vault_shares(e: &Env, address: &Address) -> i128 {
+    let result = e.storage().persistent().get::<DataKey, i128>(&DataKey::VaultPos(address.clone()));
+    match result {
+        Some(shares) => {
+            e.storage()
+                .persistent()
+                .extend_ttl(&DataKey::VaultPos(address.clone()), LEDGER_THRESHOLD, LEDGER_BUMP);
+            shares
         }
-    )
+        None => 0,
+    }
 }
 
 // Strategy Reserves
@@ -75,7 +80,7 @@ pub fn set_strategy_reserves(e: &Env, new_reserves: StrategyReserves) {
 pub fn get_strategy_reserves(e: &Env) -> StrategyReserves {
     e.storage().instance().get(&DataKey::Reserves).unwrap_or(
         StrategyReserves {
-            total_deposited: 0,
+            total_shares: 0,
             total_b_tokens: 0,
             b_rate: 0,
         }

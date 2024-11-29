@@ -113,5 +113,5 @@ pub fn claim(e: &Env, from: &Address, config: &Config) -> i128 {
     let pool_client = BlendPoolClient::new(e, &config.pool);
 
     // TODO: Check reserve_token_ids and how to get the correct one
-    pool_client.claim(from, &vec![&e, 3u32], from)
+    pool_client.claim(from, &vec![&e, config.reserve_id], from)
 }

@@ -5,7 +5,6 @@ use soroban_sdk::{
 
 mod blend_pool;
 mod constants;
-mod positions;
 mod reserves;
 mod storage;
 
@@ -89,7 +88,13 @@ impl DeFindexStrategyTrait for BlendStrategy {
             return Err(StrategyError::InvalidArgument); //TODO: create a new error type for this
         }
 
-        let mut reserves = storage::get_strategy_reserves(&e);
+        // Harvest if rewards exceed threshold
+        // let rewards = blend_pool::claim_rewards(&e);
+        // if rewards > REWARD_THRESHOLD {
+        //     blend_pool::reinvest_rewards(&e, rewards);
+        // }
+
+        let reserves = storage::get_strategy_reserves(&e);
 
         let config = storage::get_config(&e);
         // transfer tokens from the vault to the strategy contract
@@ -98,14 +103,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
         let b_tokens_minted = blend_pool::supply(&e, &from, &amount, &config);
 
         // Keeping track of the total deposited amount and the total bTokens owned by the strategy depositors
-        reserves.add(amount, b_tokens_minted);
-
-        // Keeping track of the total amount deposited by the user and the total amount of bTokens owned by the user
-        let mut vault_position = storage::get_vault_position(&e, &from);
-        vault_position.add(amount, b_tokens_minted);
-
-        storage::set_strategy_reserves(&e, reserves);
-        storage::set_vault_position(&e, &from, vault_position);
+        reserves::deposit(&e, reserves, &from, amount, b_tokens_minted);
 
         event::emit_deposit(&e, String::from_str(&e, STARETEGY_NAME), amount, from);
         Ok(())
@@ -117,7 +115,12 @@ impl DeFindexStrategyTrait for BlendStrategy {
         from.require_auth();        
 
         let config = storage::get_config(&e);
-        blend_pool::claim(&e, &from, &config);
+        let _harvested_blend = blend_pool::claim(&e, &from, &config);
+
+        // should swap to usdc
+        // should supply to the pool
+
+        // etcetc
 
         event::emit_harvest(&e, String::from_str(&e, STARETEGY_NAME), 0i128, from);
         Ok(())
@@ -139,28 +142,13 @@ impl DeFindexStrategyTrait for BlendStrategy {
             return Err(StrategyError::InvalidArgument) //TODO: create a new error type for this
         }
 
-        let mut reserves = storage::get_strategy_reserves(&e);
+        let reserves = storage::get_strategy_reserves(&e);
 
         let config = storage::get_config(&e);
 
-
         let (tokens_withdrawn, b_tokens_burnt) = blend_pool::withdraw(&e, &from, &amount, &config);
 
-
-        if tokens_withdrawn <= 0 {
-            panic_with_error!(e, StrategyError::InvalidArgument);
-        }
-        if b_tokens_burnt <= 0 {
-            panic_with_error!(e, StrategyError::InvalidArgument);
-        }
-        
-        reserves.remove(tokens_withdrawn, b_tokens_burnt);
-    
-        let mut vault_position = storage::get_vault_position(&e, &from);
-        vault_position.remove(amount, b_tokens_burnt);
-        
-        storage::set_strategy_reserves(&e, reserves);
-        storage::set_vault_position(&e, &from, vault_position);
+        let _burnt_shares = reserves::withdraw(&e, reserves, &from, tokens_withdrawn, b_tokens_burnt);
 
         event::emit_withdraw(&e, String::from_str(&e, STARETEGY_NAME), amount, from);
 
@@ -174,9 +162,9 @@ impl DeFindexStrategyTrait for BlendStrategy {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
 
-        let vault_position = storage::get_vault_position(&e, &from);
+        let vault_shares = storage::get_vault_shares(&e, &from);
 
-        Ok(vault_position.b_tokens)
+        Ok(vault_shares)
     }
 }
 
