@@ -27,6 +27,8 @@ import {
   Stack,
 } from "@chakra-ui/react"
 import { EditVaultModal } from "../InteractWithVault/EditVault"
+import RebalanceVault from "../InteractWithVault/RebalanceVault"
+import { InvestStrategies } from "../InteractWithVault/InvestStrategies"
 
 export const ManageVaults = () => {
   const { address, activeChain } = useSorobanReact()
@@ -35,7 +37,9 @@ export const ManageVaults = () => {
     deployVaultModal: deployModal,
     interactWithVaultModal: interactModal,
     transactionStatusModal: txModal,
-    editVaultModal: editModal
+    editVaultModal: editModal,
+    rebalanceVaultModal: rebalanceModal,
+    investStrategiesModal: investModal,
   } = useContext(ModalContext)
   const dispatch = useAppDispatch()
   const modalContext = useContext(ModalContext)
@@ -187,6 +191,24 @@ export const ManageVaults = () => {
         >
           <DialogBackdrop backdropFilter='blur(1px)' />
           <TransactionStatusModal />
+        </DialogRoot>
+        <DialogRoot
+          open={rebalanceModal.isOpen}
+          onOpenChange={(e) => { rebalanceModal.setIsOpen(e.open) }}
+          size={'lg'}
+          placement={'center'}
+        >
+          <DialogBackdrop backdropFilter='blur(1px)' />
+          <RebalanceVault />
+        </DialogRoot>
+        <DialogRoot
+          open={investModal.isOpen}
+          onOpenChange={(e) => { investModal.setIsOpen(e.open) }}
+          size={'lg'}
+          placement={'center'}
+        >
+          <DialogBackdrop backdropFilter='blur(1px)' />
+          <InvestStrategies />
         </DialogRoot>
       </Grid>
     </>

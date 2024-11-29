@@ -24,6 +24,8 @@ export enum VaultMethod {
     GETIDLEFUNDS = "fetch_current_idle_funds",
     GETINVESTEDFUNDS = "fetch_current_invested_funds",
     SETFEERECIEVER = "set_fee_receiver",
+    INVEST = "invest",
+    REBALANCE= "rebalance",
     GETFEES = "get_fees",
 }   
 
@@ -55,7 +57,6 @@ export function useVaultCallback() {
 export const useVault = (vaultAddress?: string | undefined) => {
     const vault = useVaultCallback();
     const sorobanContext = useSorobanReact();
-    const {address} = sorobanContext;
     const getVaultInfo = async (vaultAddress: string) => {
     if (!vaultAddress) return;
     try {
