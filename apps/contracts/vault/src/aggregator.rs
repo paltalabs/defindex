@@ -37,19 +37,19 @@ pub fn internal_swap_exact_tokens_for_tokens(
         return Err(ContractError::UnsupportedAsset);
     }
 
-    let mut init_args: Vec<Val> = vec![&e];
-    init_args.push_back(token_in.to_val());
-    init_args.push_back(token_out.to_val());
-    init_args.push_back(amount_in.into_val(e));
-    init_args.push_back(amount_out_min.into_val(e));
-    init_args.push_back(distribution.into_val(e));
-    init_args.push_back(e.current_contract_address().to_val());
-    init_args.push_back(deadline.into_val(e));
+    let mut swap_args: Vec<Val> = vec![&e];
+    swap_args.push_back(token_in.to_val());
+    swap_args.push_back(token_out.to_val());
+    swap_args.push_back(amount_in.into_val(e));
+    swap_args.push_back(amount_out_min.into_val(e));
+    swap_args.push_back(distribution.into_val(e));
+    swap_args.push_back(e.current_contract_address().to_val());
+    swap_args.push_back(deadline.into_val(e));
 
     e.invoke_contract(
         &aggregator_address,
         &Symbol::new(&e, "swap_exact_tokens_for_tokens"),
-        Vec::new(&e),
+        swap_args,
     )
 }
 
@@ -69,18 +69,18 @@ pub fn internal_swap_tokens_for_exact_tokens(
         return Err(ContractError::UnsupportedAsset);
     }
 
-    let mut init_args: Vec<Val> = vec![&e];
-    init_args.push_back(token_in.to_val());
-    init_args.push_back(token_out.to_val());
-    init_args.push_back(amount_out.into_val(e));
-    init_args.push_back(amount_in_max.into_val(e));
-    init_args.push_back(distribution.into_val(e));
-    init_args.push_back(e.current_contract_address().to_val());
-    init_args.push_back(deadline.into_val(e));
+    let mut swap_args: Vec<Val> = vec![&e];
+    swap_args.push_back(token_in.to_val());
+    swap_args.push_back(token_out.to_val());
+    swap_args.push_back(amount_out.into_val(e));
+    swap_args.push_back(amount_in_max.into_val(e));
+    swap_args.push_back(distribution.into_val(e));
+    swap_args.push_back(e.current_contract_address().to_val());
+    swap_args.push_back(deadline.into_val(e));
 
     e.invoke_contract(
         &aggregator_address,
         &Symbol::new(&e, "swap_tokens_for_exact_tokens"),
-        Vec::new(&e),
+        swap_args,
     )
 }

@@ -68,7 +68,7 @@ export const InspectVault = ({
           <Stack>
             <Text>Strategies:</Text>
             {selectedVault.assets.map((asset: Asset, index: number) => (
-              <Stack>
+              <Stack key={index}>
                 <For each={asset.strategies}>
                   {(strategy: Strategy, index: number) => (
                     <HStack key={index} alignContent={'center'}>
@@ -108,6 +108,15 @@ export const InspectVault = ({
                 <Text fontSize={'2xs'}>{`(${selectedVault.assets.find((a) => asset.address === a.address)?.symbol})`}</Text>
               </HStack>
             ))}
+          </Stack>
+          <Stack>
+            <Text>Fees:</Text>
+            <Text>
+              Defindex fee: {(selectedVault.fees[0]! / 100).toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 2 })} %
+            </Text>
+            <Text>
+              Vault fee: {(selectedVault.fees[1]! / 100).toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 2 })} %
+            </Text>
           </Stack>
           {(address && selectedVault.userBalance) &&
             <Stack>

@@ -141,6 +141,8 @@ export const ManageVaults = () => {
             <DeployVault />
           </DialogRoot>}
         </GridItem>
+
+        {/* Interact with vault */}
         <GridItem colSpan={12} colStart={1} colEnd={13} zIndex={'base'}>
           <DialogRoot
             open={interactModal.isOpen}
@@ -153,10 +155,12 @@ export const ManageVaults = () => {
           </DialogRoot>
           <AllVaults handleOpenInspect={handleInspectVault} />
         </GridItem>
+
+        {/* Inspect vault */}
         <DialogRoot
           open={inspectModal.isOpen}
           onOpenChange={(e) => { inspectModal.setIsOpen(e.open) }}
-          size={'lg'}
+          size={'xl'}
           placement={'center'}
         >
           <DialogBackdrop backdropFilter='blur(1px)' />
@@ -166,6 +170,8 @@ export const ManageVaults = () => {
             onClose={() => { inspectModal.setIsOpen(false) }}
           />
         </DialogRoot>
+
+        {/* Edit vault */}
         <DialogRoot
           open={editModal.isOpen}
           onOpenChange={(e) => { editModal.setIsOpen(e.open) }}
@@ -175,6 +181,8 @@ export const ManageVaults = () => {
           <DialogBackdrop backdropFilter='blur(1px)' />
           <EditVaultModal />
         </DialogRoot>
+
+        {/* Transaction status modal */}
         <DialogRoot
           open={modalContext.transactionStatusModal.isOpen}
           onOpenChange={(e) => { txModal.setIsOpen(e.open) }}

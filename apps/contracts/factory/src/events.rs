@@ -1,6 +1,6 @@
 //! Definition of the Events used in the contract
+use common::models::AssetStrategySet;
 use soroban_sdk::{contracttype, symbol_short, Address, Env, Vec};
-use crate::defindex::AssetStrategySet;
 
 // INITIALIZED
 #[contracttype]

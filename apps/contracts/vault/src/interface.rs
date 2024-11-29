@@ -1,9 +1,10 @@
 use soroban_sdk::{Address, Env, Map, String, Vec};
 
 use crate::{
-    models::{AssetStrategySet, Instruction, AssetInvestmentAllocation},
+    models::{Instruction, AssetInvestmentAllocation},
     ContractError,
 };
+use common::models::AssetStrategySet;
 
 pub trait VaultTrait {
     /// Initializes the DeFindex Vault contract with the required parameters.
@@ -78,6 +79,7 @@ pub trait VaultTrait {
         amounts_desired: Vec<i128>,
         amounts_min: Vec<i128>,
         from: Address,
+        invest: bool,
     ) -> Result<(Vec<i128>, i128), ContractError>;
 
     /// Withdraws assets from the DeFindex Vault by burning dfTokens.
@@ -200,6 +202,9 @@ pub trait VaultTrait {
     fn get_asset_amounts_for_dftokens(e: Env, df_token: i128) -> Map<Address, i128>;
 
     fn get_fees(e: Env) -> (u32, u32);
+
+    /// Collects the fees from the vault and transfers them to the fee receiver addresses. 
+    fn collect_fees(e: Env) -> Result<(), ContractError>;
 }
 
 pub trait AdminInterfaceTrait {
