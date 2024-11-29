@@ -147,29 +147,28 @@ The fees collected are from the gains of the strategies. Thus, it is a performan
 
 ### Fee Collection Methodology
 
-The fee collection process locks the fees in the vault until they are distributed. These fees are got from the gains of the strategies.
+The DeFindex fee collection process is designed to track fees in the vault until distribution, with fees originating from the strategy gains. This ensures an organized and accountable fee handling system.
 
-Let's see an example of how this works.
-1. The fees for the DeFindex Protocol Fee Receiver is set to 5% and the fees for the Vault Fee Receiver is set to 15%.
-2. A user deposits 100 USDC into the vault that only has one strategy.
-3. The strategy gains 10 USDC.
-4. The strategy reports the gains to the vault.
-5. The vault collects the fees from the gains. In this case, 2 USDC (20% of 10 USDC).
-6. The vault distributes the fees to the protocol and the manager.
+#### General Overview
+Fees are charged on a per-strategy basis, meaning each strategy independently calculates its gains and the corresponding fees. These fees are then collected and distributed to the protocol and manager. The fee percentages can vary, and the vault adjusts total assets accordingly by deducting fees from the strategy gains.
 
-Now the total assets of the vault are 100 USDC + 10 USDC - 2 USDC = 108 USDC.
+#### Detailed Workflow
 
-And the 2 USDC are locked in the vault, for future distributions.
+1. **Fee Structure Example**:
+   - Protocol Fee Receiver: 5%
+   - Vault Fee Receiver: 15%
 
-These fees are collected in a per strategy basis. So, if there are multiple strategies, each strategy will have its own fees.
+2. **Execution Example**:
+   - A user deposits 100 USDC into a vault with one strategy.
+   - The strategy earns 10 USDC in gains.
+   - The vault collects 20% of the gains as fees (2 USDC).
+   - Fees are distributed between the protocol (0.5 USDC) and the manager (1.5 USDC).
+   - The total assets of the vault become \(100 + 10 - 2 = 108\) USDC.
 
-In order to account for the fees, as fees depend on the gains of the strategy, we need to track the gains of the strategy.
-So, we create a function called `report()` that will keep record of the gains and losses of the strategy.
-In this function, we will:
-- store gains and losses from the strategy since the last time we checked.
+#### Strategy Gains Tracking
+Since fees depend on strategy performance, gains and losses must be tracked meticulously. To achieve this, a `report()` function is implemented to log the gains or losses since the last update.  
 
-Let's see a pseudocode for this function:
-
+**Pseudocode for Tracking Gains and Losses**:
 ```rust
 fn report(strategy: Address) -> (u256, u256) {
     let current_balance = get_current_balance(strategy);
@@ -186,28 +185,33 @@ fn report_all_strategies() {
     }
 }
 ```
-This report_all_strategies() function is called at the beginning whenever the manager wants to rebalance the DeFindex, or a user wants to deposit or withdraw.
-Then, at the end of a rebalance, deposit or withdrawal function call, the store_prev_balance() function is called to update the previous balance of the strategy.
+- **Usage**: The `report_all_strategies()` function is invoked during key operations such as rebalancing, deposits, or withdrawals to ensure accurate gain tracking.
 
-Then another function will be called to distribute the fees to the protocol and the manager. And it will set the gains and losses to 0.
+#### Fee Distribution
+Once gains are tracked, fees are calculated and distributed accordingly. After distribution, the gains and losses for each strategy are reset to 0.
 
-Here is a pseudocode for the fee distribution function:  
-
+**Pseudocode for Fee Distribution**:
 ```rust
 fn distribute_fees() {
     for strategy in strategies {
         let gains_or_losses = get_gains_or_losses(strategy);
-        let protocol_fee = gains_or_losses * protocol_fee_receiver/MAX_BPS;
-        let vault_fee = gains_or_losses * vault_fee_receiver/MAX_BPS;
-        transfer_from_strategy(strategy.asset, protocol_fee_receiver, protocol_fee);
-        transfer_from_strategy(strategy.asset, vault_fee_receiver, vault_fee);
-        reset_gains_or_losses(strategy);
+        if gains_or_losses > 0 {
+            let protocol_fee = gains_or_losses * protocol_fee_receiver / MAX_BPS;
+            let vault_fee = gains_or_losses * vault_fee_receiver / MAX_BPS;
+            transfer_from_strategy(strategy.asset, protocol_fee_receiver, protocol_fee);
+            transfer_from_strategy(strategy.asset, vault_fee_receiver, vault_fee);
+            reset_gains_or_losses(strategy);
+        }
     }
 }
 ```
-**Note:** in order to show the current balance for users, we should discount the fees (if there is gains) from the total assets of the Vaults.
-
 This function is public and can be called by anyone.
+
+#### Displaying User Balances
+To provide users with an accurate view of their balances, the vault deducts any outstanding fees from the total assets when reporting current balances.
+
+By following this structured methodology, DeFindex ensures transparent and fair fee collection, tracking, and distribution processes.
+
 
 It is expected that the Fee Receiver is associated with the manager, allowing the entity managing the Vault to be compensated through the Fee Receiver. In other words, the Fee Receiver could be the manager using the same address, or it could be a different entity such as a streaming contract, a DAO, or another party.
 
