@@ -6,10 +6,10 @@ use crate::{
         fetch_invested_funds_for_asset, fetch_invested_funds_for_strategy,
         fetch_total_managed_funds,
     },
-    models::AssetStrategySet,
     token::VaultToken,
     ContractError,
 };
+use common::models::AssetStrategySet;
 
 pub const DAY_IN_LEDGERS: u32 = 17280;
 

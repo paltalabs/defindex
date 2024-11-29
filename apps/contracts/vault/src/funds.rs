@@ -1,7 +1,7 @@
 use soroban_sdk::token::TokenClient;
 use soroban_sdk::{Address, Env, Map};
 
-use crate::models::AssetStrategySet;
+use common::models::AssetStrategySet;
 use crate::storage::get_assets;
 use crate::strategies::get_strategy_client;
 

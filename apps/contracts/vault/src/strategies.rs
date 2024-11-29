@@ -4,10 +4,11 @@ use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractIn
 
 
 use crate::{
-    models::{AssetStrategySet, Strategy},
     storage::{get_asset, get_assets, get_total_assets, set_asset},
     ContractError,
 };
+
+use common::models::{AssetStrategySet, Strategy};
 
 pub fn get_strategy_client(e: &Env, address: Address) -> DeFindexStrategyClient {
     DeFindexStrategyClient::new(&e, &address)
