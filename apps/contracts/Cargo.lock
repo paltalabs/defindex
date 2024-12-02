@@ -97,6 +97,7 @@ name = "blend_strategy"
 version = "0.1.0"
 dependencies = [
  "defindex-strategy-core",
+ "soroban-fixed-point-math",
  "soroban-sdk",
 ]
 
@@ -1112,6 +1113,15 @@ dependencies = [
  "serde_json",
  "stellar-xdr",
  "syn",
+]
+
+[[package]]
+name = "soroban-fixed-point-math"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a9d386a1ca0a148121b21331f9da68f33bf3dfb6de69646f719935d2dec3d49c"
+dependencies = [
+ "soroban-sdk",
 ]
 
 [[package]]

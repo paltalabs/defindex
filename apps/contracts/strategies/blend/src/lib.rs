@@ -1,13 +1,14 @@
 #![no_std]
+use constants::MIN_DUST;
 use soroban_sdk::{
-    contract, contractimpl, token::TokenClient, Address, Env, IntoVal, String, Val, Vec};
+    contract, contractimpl, panic_with_error, token::TokenClient, Address, Env, IntoVal, String, Val, Vec};
 
 mod blend_pool;
+mod constants;
+mod reserves;
 mod storage;
 
-use storage::{
-    extend_instance_ttl, get_reserve_id, get_underlying_asset, is_initialized, set_blend_pool, set_initialized, set_reserve_id, set_underlying_asset
-};
+use storage::{extend_instance_ttl, is_initialized, set_initialized, Config};
 
 pub use defindex_strategy_core::{
     DeFindexStrategyTrait, 
@@ -46,14 +47,19 @@ impl DeFindexStrategyTrait for BlendStrategy {
             return Err(StrategyError::AlreadyInitialized);
         }
 
-        let blend_pool_address = init_args.get(0).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
-        let reserve_id = init_args.get(1).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
+        let blend_pool_address: Address = init_args.get(0).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
+        let reserve_id: u32 = init_args.get(1).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
 
         set_initialized(&e);
-        set_blend_pool(&e, blend_pool_address);
-        set_reserve_id(&e, reserve_id);
-        set_underlying_asset(&e, &asset);
 
+        let config = Config {
+            asset: asset.clone(),
+            pool: blend_pool_address.clone(),
+            reserve_id: reserve_id.clone(),
+        };
+        
+        storage::set_config(&e, config);
+        
         event::emit_initialize(&e, String::from_str(&e, STARETEGY_NAME), asset);
         extend_instance_ttl(&e);
         Ok(())
@@ -63,7 +69,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
 
-        Ok(get_underlying_asset(&e))
+        Ok(storage::get_config(&e).asset)
     }
 
     fn deposit(
@@ -76,11 +82,28 @@ impl DeFindexStrategyTrait for BlendStrategy {
         extend_instance_ttl(&e);
         from.require_auth();
 
-        // transfer tokens from the vault to the contract
-        let underlying_asset = get_underlying_asset(&e);
-        TokenClient::new(&e, &underlying_asset).transfer(&from, &e.current_contract_address(), &amount);
+        // protect against rouding of reserve_vault::update_rate, as small amounts
+        // can cause incorrect b_rate calculations due to the pool rounding
+        if amount < MIN_DUST {
+            return Err(StrategyError::InvalidArgument); //TODO: create a new error type for this
+        }
 
-        blend_pool::supply(&e, &from, underlying_asset, amount);
+        // Harvest if rewards exceed threshold
+        // let rewards = blend_pool::claim_rewards(&e);
+        // if rewards > REWARD_THRESHOLD {
+        //     blend_pool::reinvest_rewards(&e, rewards);
+        // }
+
+        let reserves = storage::get_strategy_reserves(&e);
+
+        let config = storage::get_config(&e);
+        // transfer tokens from the vault to the strategy contract
+        TokenClient::new(&e, &config.asset).transfer(&from, &e.current_contract_address(), &amount);
+
+        let b_tokens_minted = blend_pool::supply(&e, &from, &amount, &config);
+
+        // Keeping track of the total deposited amount and the total bTokens owned by the strategy depositors
+        reserves::deposit(&e, reserves, &from, amount, b_tokens_minted);
 
         event::emit_deposit(&e, String::from_str(&e, STARETEGY_NAME), amount, from);
         Ok(())
@@ -89,9 +112,15 @@ impl DeFindexStrategyTrait for BlendStrategy {
     fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-        from.require_auth();
+        from.require_auth();        
 
-        blend_pool::claim(&e, &from);
+        let config = storage::get_config(&e);
+        let _harvested_blend = blend_pool::claim(&e, &from, &config);
+
+        // should swap to usdc
+        // should supply to the pool
+
+        // etcetc
 
         event::emit_harvest(&e, String::from_str(&e, STARETEGY_NAME), 0i128, from);
         Ok(())
@@ -106,13 +135,24 @@ impl DeFindexStrategyTrait for BlendStrategy {
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
         from.require_auth();
-        
-        let underlying_asset = get_underlying_asset(&e);
-        blend_pool::withdraw(&e, &from, underlying_asset, amount);
+
+        // protect against rouding of reserve_vault::update_rate, as small amounts
+        // can cause incorrect b_rate calculations due to the pool rounding
+        if amount < MIN_DUST {
+            return Err(StrategyError::InvalidArgument) //TODO: create a new error type for this
+        }
+
+        let reserves = storage::get_strategy_reserves(&e);
+
+        let config = storage::get_config(&e);
+
+        let (tokens_withdrawn, b_tokens_burnt) = blend_pool::withdraw(&e, &from, &amount, &config);
+
+        let _burnt_shares = reserves::withdraw(&e, reserves, &from, tokens_withdrawn, b_tokens_burnt);
 
         event::emit_withdraw(&e, String::from_str(&e, STARETEGY_NAME), amount, from);
 
-        Ok(amount)
+        Ok(tokens_withdrawn)
     }
 
     fn balance(
@@ -122,12 +162,10 @@ impl DeFindexStrategyTrait for BlendStrategy {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
 
-        let positions = blend_pool::get_positions(&e, &from);
-        let reserve_id = get_reserve_id(&e);
+        let vault_shares = storage::get_vault_shares(&e, &from);
 
-        let supply = positions.supply.get(reserve_id).unwrap_or(0i128);
-        Ok(supply)
+        Ok(vault_shares)
     }
 }
 
-mod test;
+// mod test;
