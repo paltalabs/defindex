@@ -27,6 +27,7 @@ import {
 import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io'
 import { Asset } from '@/store/lib/types'
 import { InfoTip } from '../ui/toggle-tip'
+import { NumberInputField, NumberInputRoot } from '../ui/number-input'
 
 
 export enum AccordionItems {
@@ -260,10 +261,6 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
     if (input < 0 || input > 100) return
     const decimalRegex = /^(\d+)?(\.\d{0,2})?$/
     if (!decimalRegex.test(input)) return
-    if (input.startsWith('.')) {
-      setFormControl({ ...formControl, vaultShare: 0 + input });
-      return
-    }
     setFormControl({
       ...formControl,
       vaultShare: input
@@ -374,11 +371,12 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
               } /></Fieldset.Legend>
               <Stack w={100}>
                 <InputGroup endElement={'%'}>
-                  <Input
-                    value={formControl.vaultShare}
-                    onChange={(e) => { handleVaultShareChange(e.target.value) }}
+                  <NumberInputRoot
+                    onValueChange={(e) => { handleVaultShareChange(Number(e.value)) }}
                     required
-                  />
+                  >
+                    <NumberInputField />
+                  </NumberInputRoot>
                 </InputGroup>
               </Stack>
               <Fieldset.ErrorText>This field is required.</Fieldset.ErrorText>

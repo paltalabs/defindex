@@ -10,7 +10,7 @@ import { randomBytes } from "crypto";
 import { AddressBook } from "../utils/address_book.js";
 import { airdropAccount, invokeContract, invokeCustomContract } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
-import { ActionType, AssetInvestmentAllocation, depositToVault, Instruction, investVault, rebalanceVault } from "./vault.js";
+import { ActionType, AssetInvestmentAllocation, depositToVault, getVaultBalanceInStrategy, Instruction, investVault, rebalanceVault, fetchParsedCurrentIdleFunds, fetchCurrentInvestedFunds } from "./vault.js";
 
 const soroswapUSDC = new Address("CAAFIHB4I7WQMJMKC22CZVQNNX7EONWSOMT6SUXK6I3G3F6J4XFRWNDI");
   
@@ -110,6 +110,8 @@ export async function deployVaultTwoStrategies(addressBook: AddressBook) {
 
 const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
+const hodl_strategy = addressBook.getContractId("hodl_strategy");
+const fixed_apr_strategy = addressBook.getContractId("fixed_apr_strategy");
 const xlm: Asset = Asset.native()
 
 const loadedConfig = config(network);
@@ -138,13 +140,21 @@ const mintToken = async () => {
 await mintToken();
 
 // Step 1: Deposit to vault and capture initial balances
-const { user, balanceBefore: depositBalanceBefore, result: depositResult, balanceAfter: depositBalanceAfter } 
+const { user, balanceBefore: depositBalanceBefore, result: depositResult, balanceAfter: depositBalanceAfter, status: depositStatus } 
   = await depositToVault(deployedVault, [initialAmount], testUser);
 console.log(" -- ")
 console.log(" -- ")
 console.log("Step 1: Deposited to Vault using user:", user.publicKey(), "with balance before:", depositBalanceBefore, "and balance after:", depositBalanceAfter);
 console.log(" -- ")
 console.log(" -- ")
+
+
+
+const idleFundsAfterDeposit = await fetchParsedCurrentIdleFunds(deployedVault, user);
+const investedFundsAfterDeposit = await fetchCurrentInvestedFunds(deployedVault, user);
+
+const hodlBalanceBeforeInvest = await getVaultBalanceInStrategy(hodl_strategy, deployedVault, user);
+const fixedBalanceBeforeInvest = await getVaultBalanceInStrategy(fixed_apr_strategy, deployedVault, user);
 
 // Step 2: Invest in vault idle funds
 const investParams: AssetInvestmentAllocation[] = [
@@ -167,12 +177,19 @@ const manager = loadedConfig.getUser("DEFINDEX_MANAGER_SECRET_KEY");
 const investResult = await investVault(deployedVault, investParams, manager)
 console.log('🚀 « investResult:', investResult);
 
+const idleFundsAfterInvest = await fetchParsedCurrentIdleFunds(deployedVault, user);
+const investedFundsAfterInvest = await fetchCurrentInvestedFunds(deployedVault, user);
+
+const afterInvestHodlBalance = await getVaultBalanceInStrategy(hodl_strategy, deployedVault, user);
+const afterInvestFixedBalance = await getVaultBalanceInStrategy(fixed_apr_strategy, deployedVault, user);
+
 // 10000 USDC -> Total Balance
 // 1500 USDC -> Hodl Strategy
 // 2000 USDC -> Fixed Strategy
 // 6500 USDC -> Idle
 
 // Step 3: Rebalance Vault
+
 const rebalanceParams: Instruction[] = [
   {
     action: ActionType.Withdraw,
@@ -193,10 +210,53 @@ const rebalanceParams: Instruction[] = [
 console.log('🚀 « rebalanceParams:', rebalanceParams);
 
 // this should leave us with:
+
+// this should leave us with:
 // 10000 USDC -> Total Balance
 // 1000 USDC -> Hodl Strategy
 // 5500 USDC -> Fixed Strategy
 // 3500 USDC -> Idle
 
 const rebalanceResult = await rebalanceVault(deployedVault, rebalanceParams, manager);
-console.log('🚀 « rebalanceResult:', rebalanceResult);
+console.log('🚀 « rebalanceResult:', rebalanceResult)
+
+const idleFundsAfterRebalance = await fetchParsedCurrentIdleFunds(deployedVault, user);
+const investedFundsAfterRebalance = await fetchCurrentInvestedFunds(deployedVault, user);
+
+const afterRebalanceHodlBalance = await getVaultBalanceInStrategy(hodl_strategy, deployedVault, user);
+const afterRebalanceFixedBalance = await getVaultBalanceInStrategy(fixed_apr_strategy, deployedVault, user);
+
+console.table({
+  hodlStrategy: {
+    'Balance before invest': hodlBalanceBeforeInvest,
+    'Balance after invest': afterInvestHodlBalance,
+    'Balance after rebalance': afterRebalanceHodlBalance
+  },
+  fixedStrategy: {
+    'Balance before invest': fixedBalanceBeforeInvest,
+    'Balance after invest': afterInvestFixedBalance,
+    'Balance after rebalance': afterRebalanceFixedBalance
+  },
+  'Invested funds': {
+    'Balance before invest': investedFundsAfterDeposit[0].amount,
+    'Balance after invest': investedFundsAfterInvest[0].amount,
+    'Balance after rebalance': investedFundsAfterRebalance[0].amount
+  },
+  'Idle funds': {
+    'Balance before invest': idleFundsAfterDeposit[0].amount,
+    'Balance after invest': idleFundsAfterInvest[0].amount,
+    'Balance after rebalance': idleFundsAfterRebalance[0].amount
+  }
+})
+
+console.table({
+  deposit: {
+    'Status': depositStatus ? '🟢 Success' : '🔴 Failed',
+  },
+  invest: {
+    'Status': investResult.status ? '🟢 Success' : '🔴 Failed',
+  },
+  rebalance: {
+    'Status': rebalanceResult.status ? '🟢 Success' : '🔴 Failed',
+  }
+})

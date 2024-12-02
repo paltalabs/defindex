@@ -101,19 +101,13 @@ function AddNewStrategyButton() {
   }
 
   const handleAmountInput = async (e: any) => {
-    const input = e.target.value
-    if (!input) {
+    if (!e) {
       console.log('input is empty')
       setSelectedAsset({ ...selectedAsset, amount: 0 })
     }
-    console.log(input)
     const decimalRegex = /^(\d+)?(\.\d{0,7})?$/
-    if (!decimalRegex.test(input)) return
-    if (input.startsWith('.')) {
-      setAmountInput({ amount: 0 + input, enabled: true });
-      return
-    }
-    setAmountInput({ amount: input, enabled: true });
+    if (!decimalRegex.test(e)) return
+    setAmountInput({ amount: e, enabled: true });
   }
   const strategyExists = (strategy: Strategy) => {
     const exists = newVault.assets.some((asset) => asset.strategies.some((str) => str.address === strategy.address))
@@ -178,18 +172,22 @@ function AddNewStrategyButton() {
             )}
           </For>
           {amountInput.enabled && (
-            <HStack justifyContent={'flex-end'}>
-              <Text fontSize={'sm'}>Amount:</Text>
-              <InputGroup
-                endElement={`${selectedAsset.symbol}`}
-              >
-                <NumberInputRoot
-                  onChange={handleAmountInput}
+            <Grid templateColumns={['1fr', null, 'repeat(12, 2fr)']}>
+              <GridItem alignContent={'center'} colStart={1}>
+                <Text fontSize={'sm'}>Amount:</Text>
+              </GridItem>
+              <GridItem colStart={8} colEnd={13}>
+                <InputGroup
+                  endElement={`${selectedAsset.symbol}`}
                 >
-                  <NumberInputField />
-                </NumberInputRoot>
-              </InputGroup>
-            </HStack>
+                  <NumberInputRoot
+                    onValueChange={(e) => handleAmountInput(Number(e.value))}
+                  >
+                    <NumberInputField />
+                  </NumberInputRoot>
+                </InputGroup>
+              </GridItem>
+            </Grid>
           )}
         </DialogBody>
         <DialogFooter>

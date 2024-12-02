@@ -41,6 +41,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   const sorobanContext = useSorobanReact();
   const { activeChain, address } = sorobanContext;
   const factory = useFactoryCallback();
+  const { getInvestedFunds } = useVault();
   const newVault: NewVaultState = useAppSelector(state => state.newVault);
   const indexName = useAppSelector(state => state.newVault.name)
   const indexSymbol = useAppSelector(state => state.newVault.symbol)
@@ -50,7 +51,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   const feeReceiverString = useAppSelector(state => state.newVault.feeReceiver)
   const { transactionStatusModal: txModal, deployVaultModal: deployModal } = useContext(ModalContext);
   const dispatch = useAppDispatch();
-  const { getIdleFunds, getInvestedFunds, getTVL, getUserBalance } = useVault()
+  const { getFees } = useVault()
 
   const [deployDisabled, setDeployDisabled] = useState(true);
 
@@ -59,7 +60,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       managerString !== ""
       && emergencyManagerString !== ""
       && feeReceiverString !== ""
-      && !indexShare 
+      && !indexShare
     ) {
       setDeployDisabled(false);
     } else {
@@ -180,20 +181,20 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       if (newVault.assets[index]?.amount === 0) return nativeToScVal(0, { type: "i128" });
       return nativeToScVal(convertedAmount, { type: "i128" });
     });
-   /*  const amountsScVal = newVault.amounts.map((amount) => {
-      return nativeToScVal((amount * Math.pow(10, 7)), { type: "i128" });
-    }); */
+    /*  const amountsScVal = newVault.amounts.map((amount) => {
+       return nativeToScVal((amount * Math.pow(10, 7)), { type: "i128" });
+     }); */
     const amountsScValVec = xdr.ScVal.scvVec(amountsScVal);
-     /*  fn create_defindex_vault(
-      emergency_manager: address, 
-      fee_receiver: address, 
-      vault_share: u32, 
-      vault_name: string, 
-      vault_symbol: string, 
-      manager: address, 
-      assets: vec<AssetAllocation>, 
-      salt: bytesn<32>) -> result<address,FactoryError>
- */
+    /*  fn create_defindex_vault(
+     emergency_manager: address, 
+     fee_receiver: address, 
+     vault_share: u32, 
+     vault_name: string, 
+     vault_symbol: string, 
+     manager: address, 
+     assets: vec<AssetAllocation>, 
+     salt: bytesn<32>) -> result<address,FactoryError>
+*/
     let result: any;
 
 
@@ -258,6 +259,8 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
         amount: newVault.assets[index]?.amount || 0
       }
     })
+    const investedFunds = await getInvestedFunds(parsedResult);
+    const fees = await getFees(parsedResult)
     const tempVault: VaultData = {
       ...newVault,
       address: parsedResult,
@@ -268,6 +271,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       totalSupply: 0,
       idleFunds: idleFunds,
       investedFunds: [{ address: '', amount: 0 }],
+      fees: fees,
     }
     await txModal.handleSuccess(result.txHash);
     dispatch(pushVault(tempVault));
@@ -284,7 +288,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
           Deploying {indexName === "" ? 'new index' : indexName}
         </DialogTitle>
       </DialogHeader>
-          <DialogCloseTrigger />
+      <DialogCloseTrigger />
       <DialogBody>
         <VaultPreview
           data={newVault.assets}
@@ -296,11 +300,11 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       </DialogBody>
 
       <DialogFooter>
-          <Button
-            aria-label='add_strategy'
-            colorScheme='green'
-            onClick={deployDefindex}>
-            {buttonText}
+        <Button
+          aria-label='add_strategy'
+          colorScheme='green'
+          onClick={deployDefindex}>
+          {buttonText}
         </Button>
       </DialogFooter>
     </>

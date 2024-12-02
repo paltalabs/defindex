@@ -54,6 +54,7 @@ fn test_withdraw_from_idle_success() {
         &sorobanvec![&test.env, amount_to_deposit],
         &sorobanvec![&test.env, amount_to_deposit],
         &users[0],
+        &false
     );
 
     // Check Balances after deposit
@@ -165,6 +166,7 @@ fn test_withdraw_from_strategy_success() {
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
+        &false
     );
 
     let df_balance = test.defindex_contract.balance(&users[0]);
