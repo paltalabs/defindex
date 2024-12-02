@@ -1,5 +1,5 @@
 [workspace]
-members = ["strategies/*", "vault", "factory"]
+members = ["common", "strategies/*", "vault", "factory", "integration-test"]
 exclude = [
     "strategies/external_wasms",
 ]
@@ -17,6 +17,7 @@ soroban-sdk = "21.7.6"
 soroban-token-sdk = { version = "21.0.1-preview.3" }
 # soroswap-library = "0.3.0"
 defindex-strategy-core={ path="./strategies/core", package="defindex-strategy-core" }
+common={ path="./common", package="common" }
 
 [profile.release]
 opt-level = "z"

@@ -54,6 +54,7 @@ fn rebalance_multi_instructions() {
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
+        &false
     );
 
     let df_balance = test.defindex_contract.balance(&users[0]);

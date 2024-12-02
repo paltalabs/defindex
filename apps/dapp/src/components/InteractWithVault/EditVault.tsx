@@ -24,6 +24,7 @@ import {
 import { InfoTip } from '../ui/toggle-tip'
 import { Tooltip } from '../ui/tooltip'
 import { FaRegPaste } from 'react-icons/fa6'
+import { LuSettings2 } from "react-icons/lu";
 import { dropdownData } from '../DeployVault/VaultPreview'
 import { Button } from '../ui/button'
 
@@ -71,6 +72,7 @@ const CustomInputField = ({
               css={{ "--bg": "{colors.red.400/40}" }}
               aria-label='Connected address'
               size={'sm'}
+              variant={'ghost'}
               onClick={() => handleClick(address!)}
             >
               <FaRegPaste />
@@ -98,7 +100,10 @@ export const EditVaultModal = () => {
   const vaultCB = useVaultCallback()
   const vault = useVault()
   const dispatch = useAppDispatch()
-  const { transactionStatusModal: statusModal, interactWithVaultModal: interactModal, inspectVaultModal: inspectModal } = useContext(ModalContext)
+  const {
+    transactionStatusModal: statusModal,
+    rebalanceVaultModal: rebalanceModal
+  } = useContext(ModalContext)
   const [formControl, setFormControl] = useState({
     feeReceiver: {
       value: selectedVault?.feeReceiver ?? '',
@@ -207,7 +212,15 @@ export const EditVaultModal = () => {
     <>
       <DialogContent zIndex={'docked'}>
         <DialogHeader>
-          <Text fontSize='xl'>Manage {selectedVault.name}</Text>
+          <HStack justifyContent={'space-between'}>
+            <Text fontSize='xl'>Manage {selectedVault.name}</Text>
+            <IconButton variant={'ghost'}
+              onClick={() => rebalanceModal.setIsOpen(true)}
+              size={'sm'}
+            >
+              <LuSettings2 />
+            </IconButton>
+          </HStack>
         </DialogHeader>
         <DialogBody zIndex={'docked'}>
           <HStack align={'baseline'}>

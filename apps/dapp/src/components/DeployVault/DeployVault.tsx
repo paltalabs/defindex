@@ -44,7 +44,6 @@ export const DeployVault = () => {
   const handleRemoveStrategy = (strategy: Strategy) => {
     const asset = assets.find((a) => a.strategies.includes(strategy))
     dispatch(removeStrategy(strategy))
-    console.log(asset)
     if (asset?.strategies.length === 1) {
       dispatch(removeAsset(asset.address))
     }
@@ -126,7 +125,7 @@ export const DeployVault = () => {
             colorScheme="green"
             size="lg"
             w={['100%', null, 'auto']}
-            >
+          >
             Create Vault
           </Button>
           <DialogContent>

@@ -174,3 +174,4 @@ mod invest;
 mod withdraw;
 mod emergency_withdraw;
 mod rebalance;
+mod deposit_and_invest;

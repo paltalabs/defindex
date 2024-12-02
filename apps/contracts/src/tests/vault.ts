@@ -75,7 +75,7 @@ export async function depositToVault(deployedVault: string, amount: number[], us
         throw error;
     }
 
-    return { user: newUser, balanceBefore, result, balanceAfter };
+    return { user: newUser, balanceBefore, result, balanceAfter, status:true };
 }
 
 
@@ -191,6 +191,21 @@ export async function fetchCurrentIdleFunds(deployedVault: string, user: Keypair
         throw error;
     }
 }
+
+export async function fetchParsedCurrentIdleFunds(deployedVault: string, user: Keypair) {
+    try {
+        const res = await invokeCustomContract(deployedVault, "fetch_current_idle_funds", [], user);
+        const funds = scValToNative(res.returnValue);
+        const mappedFunds = Object.entries(funds).map(([key, value]) => ({
+            address: key,
+            amount: value,
+        }));
+        return mappedFunds;
+    } catch (error) {
+        console.error("Error:", error);
+        throw error;
+    }
+}
 export interface AssetInvestmentAllocation {
     asset: Address;
     strategy_investments: { amount: bigint, strategy: Address }[];
@@ -239,7 +254,7 @@ export async function investVault(
             manager
         );
         console.log("Investment successful:", scValToNative(investResult.returnValue));
-        return investResult;
+        return {result: investResult, status: true};
     } catch (error) {
         console.error("Investment failed:", error);
         throw error;
@@ -337,7 +352,7 @@ export async function rebalanceVault(deployedVault: string, instructions: Instru
             manager
         );
         console.log("Rebalance successful:", scValToNative(investResult.returnValue));
-        return investResult;
+        return {result: investResult, status: true};
     } catch (error) {
         console.error("Rebalance failed:", error);
         throw error;
@@ -436,4 +451,30 @@ function mapSwapDetailsExactOut(details: SwapDetailsExactOut) {
             ),
         }),
     ];
+}
+
+export async function getVaultBalanceInStrategy(strategyAddress: string, vaultAddress: string, user: Keypair) {
+    const address = new Address(vaultAddress);
+    try {
+      const res = await invokeCustomContract(strategyAddress, "balance",[address.toScVal()],user)
+      return scValToNative(res.returnValue);
+    } catch (error) {
+      console.error('🔴 « error:', error);
+      return 0;
+    }
+  }
+
+export async function fetchCurrentInvestedFunds(deployedVault:string, user:Keypair) {
+    try {
+        const res = await invokeCustomContract(deployedVault, "fetch_current_invested_funds", [], user);
+        const funds = scValToNative(res.returnValue);
+        const mappedFunds = Object.entries(funds).map(([key, value]) => ({
+            address: key,
+            amount: value,
+        }));
+        return mappedFunds;
+    } catch (error) {
+        console.error("Error:", error);
+        throw error;
+    }
 }

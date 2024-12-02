@@ -27,7 +27,7 @@ export const InspectVault = ({
 }) => {
   const selectedVault: VaultData | undefined = useAppSelector(state => state.wallet.vaults.selectedVault)
   const { address } = useSorobanReact()
-  const { editVaultModal: editModal } = useContext(ModalContext)
+  const { editVaultModal: editModal, investStrategiesModal: investModal, rebalanceVaultModal: rebalanceModal } = useContext(ModalContext)
   if (!selectedVault) return null
   return (
     <DialogContent>
@@ -68,7 +68,7 @@ export const InspectVault = ({
           <Stack>
             <Text>Strategies:</Text>
             {selectedVault.assets.map((asset: Asset, index: number) => (
-              <Stack>
+              <Stack key={index}>
                 <For each={asset.strategies}>
                   {(strategy: Strategy, index: number) => (
                     <HStack key={index} alignContent={'center'}>
@@ -109,6 +109,15 @@ export const InspectVault = ({
               </HStack>
             ))}
           </Stack>
+          <Stack>
+            <Text>Fees:</Text>
+            <Text>
+              Defindex fee: {(selectedVault.fees[0]! / 100).toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 2 })} %
+            </Text>
+            <Text>
+              Vault fee: {(selectedVault.fees[1]! / 100).toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 2 })} %
+            </Text>
+          </Stack>
           {(address && selectedVault.userBalance) &&
             <Stack>
               <Text>User balance:</Text>
@@ -123,6 +132,10 @@ export const InspectVault = ({
       <DialogFooter>
         <HStack justifyContent={'space-around'} w={'full'}>
           {address && <Button onClick={() => { handleOpenInteract(VaultMethod.DEPOSIT, selectedVault) }}>Deposit</Button>}
+          {(address && selectedVault.idleFunds[0]?.amount! > 0) &&
+            <Button onClick={() => { investModal.setIsOpen(true) }}>Invest</Button>
+          }
+          {(address === selectedVault.manager) && <Button onClick={() => { rebalanceModal.setIsOpen(true) }}>Rebalance</Button>}
           {(address === selectedVault.emergencyManager || address === selectedVault.manager) &&
             <Button onClick={() => { handleOpenInteract(VaultMethod.EMERGENCY_WITHDRAW, selectedVault) }}>Emergency Withdraw</Button>
           }

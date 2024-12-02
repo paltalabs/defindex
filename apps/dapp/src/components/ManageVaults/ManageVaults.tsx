@@ -27,6 +27,8 @@ import {
   Stack,
 } from "@chakra-ui/react"
 import { EditVaultModal } from "../InteractWithVault/EditVault"
+import RebalanceVault from "../InteractWithVault/RebalanceVault"
+import { InvestStrategies } from "../InteractWithVault/InvestStrategies"
 
 export const ManageVaults = () => {
   const { address, activeChain } = useSorobanReact()
@@ -35,7 +37,9 @@ export const ManageVaults = () => {
     deployVaultModal: deployModal,
     interactWithVaultModal: interactModal,
     transactionStatusModal: txModal,
-    editVaultModal: editModal
+    editVaultModal: editModal,
+    rebalanceVaultModal: rebalanceModal,
+    investStrategiesModal: investModal,
   } = useContext(ModalContext)
   const dispatch = useAppDispatch()
   const modalContext = useContext(ModalContext)
@@ -137,6 +141,8 @@ export const ManageVaults = () => {
             <DeployVault />
           </DialogRoot>}
         </GridItem>
+
+        {/* Interact with vault */}
         <GridItem colSpan={12} colStart={1} colEnd={13} zIndex={'base'}>
           <DialogRoot
             open={interactModal.isOpen}
@@ -149,10 +155,12 @@ export const ManageVaults = () => {
           </DialogRoot>
           <AllVaults handleOpenInspect={handleInspectVault} />
         </GridItem>
+
+        {/* Inspect vault */}
         <DialogRoot
           open={inspectModal.isOpen}
           onOpenChange={(e) => { inspectModal.setIsOpen(e.open) }}
-          size={'lg'}
+          size={'xl'}
           placement={'center'}
         >
           <DialogBackdrop backdropFilter='blur(1px)' />
@@ -162,6 +170,8 @@ export const ManageVaults = () => {
             onClose={() => { inspectModal.setIsOpen(false) }}
           />
         </DialogRoot>
+
+        {/* Edit vault */}
         <DialogRoot
           open={editModal.isOpen}
           onOpenChange={(e) => { editModal.setIsOpen(e.open) }}
@@ -171,6 +181,8 @@ export const ManageVaults = () => {
           <DialogBackdrop backdropFilter='blur(1px)' />
           <EditVaultModal />
         </DialogRoot>
+
+        {/* Transaction status modal */}
         <DialogRoot
           open={modalContext.transactionStatusModal.isOpen}
           onOpenChange={(e) => { txModal.setIsOpen(e.open) }}
@@ -179,6 +191,24 @@ export const ManageVaults = () => {
         >
           <DialogBackdrop backdropFilter='blur(1px)' />
           <TransactionStatusModal />
+        </DialogRoot>
+        <DialogRoot
+          open={rebalanceModal.isOpen}
+          onOpenChange={(e) => { rebalanceModal.setIsOpen(e.open) }}
+          size={'lg'}
+          placement={'center'}
+        >
+          <DialogBackdrop backdropFilter='blur(1px)' />
+          <RebalanceVault />
+        </DialogRoot>
+        <DialogRoot
+          open={investModal.isOpen}
+          onOpenChange={(e) => { investModal.setIsOpen(e.open) }}
+          size={'lg'}
+          placement={'center'}
+        >
+          <DialogBackdrop backdropFilter='blur(1px)' />
+          <InvestStrategies />
         </DialogRoot>
       </Grid>
     </>
