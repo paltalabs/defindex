@@ -10,7 +10,7 @@ import { randomBytes } from "crypto";
 import { AddressBook } from "../utils/address_book.js";
 import { airdropAccount, invokeContract, invokeCustomContract } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
-import { ActionType, AssetInvestmentAllocation, depositToVault, getVaultBalanceInStrategy, Instruction, investVault, rebalanceVault, fetchParsedCurrentIdleFunds, fetchCurrentInvestedFunds } from "./vault.js";
+import { ActionType, AssetInvestmentAllocation, depositToVault, Instruction, investVault, rebalanceVault, fetchParsedCurrentIdleFunds, fetchCurrentInvestedFunds } from "./vault.js";
 import { checkUserBalance } from "./strategy.js";
 
 const soroswapUSDC = new Address("CAAFIHB4I7WQMJMKC22CZVQNNX7EONWSOMT6SUXK6I3G3F6J4XFRWNDI");
