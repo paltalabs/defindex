@@ -46,7 +46,7 @@ fn test_fixed_apr_no_invest_withdraw_success() {
             ]
         },
     }])
-    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user);
+    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user, &false);
 
     setup.env.ledger().set_timestamp(setup.env.ledger().timestamp() + ONE_YEAR_IN_SECONDS);
 
@@ -128,7 +128,7 @@ fn test_fixed_apr_invest_withdraw_success() {
             ]
         },
     }])
-    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user);
+    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user, &false);
 
     let investments = svec![
         &setup.env,

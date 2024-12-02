@@ -147,6 +147,7 @@ fn rebalance_one_instruction() {
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
+        &false
     );
 
     let df_balance = test.defindex_contract.balance(&users[0]);
@@ -226,6 +227,7 @@ fn rebalance_empty_instructions(){
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
+        &false
     );
     let df_balance = test.defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount - 1000);
@@ -304,6 +306,7 @@ fn rebalance_no_instructions(){
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
+        &false
     );
     let df_balance = test.defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount - 1000);
@@ -346,8 +349,9 @@ fn rebalance_insufficient_balance(){
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
+        &false
     );
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance: i128 = test.defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount - 1000);
 
     let withdraw_instructions = sorobanvec![
