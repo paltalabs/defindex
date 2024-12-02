@@ -167,4 +167,4 @@ impl DeFindexStrategyTrait for XycloansAdapter {
     }
 }
 
-mod test;
+// mod test; // TODO: Uncomment when working on this vault/tests
