@@ -11,6 +11,7 @@ import { AddressBook } from "../utils/address_book.js";
 import { airdropAccount, invokeContract, invokeCustomContract } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
 import { ActionType, AssetInvestmentAllocation, depositToVault, getVaultBalanceInStrategy, Instruction, investVault, rebalanceVault, fetchParsedCurrentIdleFunds, fetchCurrentInvestedFunds } from "./vault.js";
+import { checkUserBalance } from "./strategy.js";
 
 const soroswapUSDC = new Address("CAAFIHB4I7WQMJMKC22CZVQNNX7EONWSOMT6SUXK6I3G3F6J4XFRWNDI");
   
@@ -138,7 +139,6 @@ const mintToken = async () => {
 }
 
 await mintToken();
-
 // Step 1: Deposit to vault and capture initial balances
 const { user, balanceBefore: depositBalanceBefore, result: depositResult, balanceAfter: depositBalanceAfter, status: depositStatus } 
   = await depositToVault(deployedVault, [initialAmount], testUser);
@@ -149,12 +149,11 @@ console.log(" -- ")
 console.log(" -- ")
 
 
-
 const idleFundsAfterDeposit = await fetchParsedCurrentIdleFunds(deployedVault, user);
 const investedFundsAfterDeposit = await fetchCurrentInvestedFunds(deployedVault, user);
 
-const hodlBalanceBeforeInvest = await getVaultBalanceInStrategy(hodl_strategy, deployedVault, user);
-const fixedBalanceBeforeInvest = await getVaultBalanceInStrategy(fixed_apr_strategy, deployedVault, user);
+const hodlBalanceBeforeInvest = await checkUserBalance(hodl_strategy, deployedVault, user);
+const fixedBalanceBeforeInvest = await checkUserBalance(fixed_apr_strategy, deployedVault, user);
 
 // Step 2: Invest in vault idle funds
 const investParams: AssetInvestmentAllocation[] = [
@@ -180,8 +179,8 @@ console.log('🚀 « investResult:', investResult);
 const idleFundsAfterInvest = await fetchParsedCurrentIdleFunds(deployedVault, user);
 const investedFundsAfterInvest = await fetchCurrentInvestedFunds(deployedVault, user);
 
-const afterInvestHodlBalance = await getVaultBalanceInStrategy(hodl_strategy, deployedVault, user);
-const afterInvestFixedBalance = await getVaultBalanceInStrategy(fixed_apr_strategy, deployedVault, user);
+const afterInvestHodlBalance = await checkUserBalance(hodl_strategy, deployedVault, user);
+const afterInvestFixedBalance = await checkUserBalance(fixed_apr_strategy, deployedVault, user);
 
 // 10000 USDC -> Total Balance
 // 1500 USDC -> Hodl Strategy
@@ -218,13 +217,12 @@ console.log('🚀 « rebalanceParams:', rebalanceParams);
 // 3500 USDC -> Idle
 
 const rebalanceResult = await rebalanceVault(deployedVault, rebalanceParams, manager);
-console.log('🚀 « rebalanceResult:', rebalanceResult)
 
 const idleFundsAfterRebalance = await fetchParsedCurrentIdleFunds(deployedVault, user);
 const investedFundsAfterRebalance = await fetchCurrentInvestedFunds(deployedVault, user);
 
-const afterRebalanceHodlBalance = await getVaultBalanceInStrategy(hodl_strategy, deployedVault, user);
-const afterRebalanceFixedBalance = await getVaultBalanceInStrategy(fixed_apr_strategy, deployedVault, user);
+const afterRebalanceHodlBalance = await checkUserBalance(hodl_strategy, deployedVault, user);
+const afterRebalanceFixedBalance = await checkUserBalance(fixed_apr_strategy, deployedVault, user);
 
 console.table({
   hodlStrategy: {
