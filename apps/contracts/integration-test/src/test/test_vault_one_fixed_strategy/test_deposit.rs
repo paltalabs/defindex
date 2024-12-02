@@ -49,7 +49,7 @@ fn test_fixed_apr_deposit_success() {
             ]
         },
     }])
-    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user);
+    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user, &false);
 
     let vault_balance = enviroment.token.balance(&enviroment.vault_contract.address);
     assert_eq!(vault_balance, deposit_amount);
@@ -113,7 +113,7 @@ fn test_fixed_apr_deposit_insufficient_balance() {
             ]
         },
     }])
-    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user);
+    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user, &false);
 }
 
 #[test]
@@ -177,7 +177,7 @@ fn test_fixed_apr_deposit_multiple_users() {
             ]
         },
     }])
-    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user1);
+    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user1, &false);
 
     enviroment.vault_contract
     .mock_auths(&[MockAuth {
@@ -204,7 +204,7 @@ fn test_fixed_apr_deposit_multiple_users() {
             ]
         },
     }])
-    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user2);
+    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user2, &false);
 
     let vault_balance = enviroment.token.balance(&enviroment.vault_contract.address);
     assert_eq!(vault_balance, deposit_amount * 2);
@@ -250,6 +250,7 @@ fn test_fixed_apr_deposit_zero_amount() {
         &svec![&setup.env, deposit_amount],
         &svec![&setup.env, deposit_amount],
         &user,
+        &false
     );
 
     assert_eq!(result, Err(Ok(VaultContractError::InsufficientAmount)));
@@ -282,6 +283,7 @@ fn test_fixed_apr_deposit_negative_amount() {
         &svec![&setup.env, deposit_amount],
         &svec![&setup.env, deposit_amount],
         &user,
+        &false
     );
 
     assert_eq!(result, Err(Ok(VaultContractError::NegativeNotAllowed)));
@@ -314,6 +316,7 @@ fn test_fixed_apr_deposit_insufficient_minimum_liquidity() {
         &svec![&setup.env, deposit_amount],
         &svec![&setup.env, deposit_amount],
         &user,
+        &false
     );
 
     assert_eq!(result, Err(Ok(VaultContractError::InsufficientAmount)));

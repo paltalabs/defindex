@@ -773,6 +773,7 @@ fn deposit_amounts_min_greater_than_amounts_desired(){
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0 + 1, amount1 + 1],
         &users[0],
+        &false
     );
 
     // this should fail
@@ -832,6 +833,7 @@ fn deposit_transfers_tokens_from_user_to_vault(){
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0, amount1],
         &users[0],
+        &false
     );
 
     // check balances after deposit
@@ -888,6 +890,7 @@ fn test_deposit_arithmetic_error() {
         &sorobanvec![&test.env, large_amount],
         &sorobanvec![&test.env, large_amount],
         &users[0],
+        &false
     );
     
     // Try to deposit a large amount
@@ -895,6 +898,7 @@ fn test_deposit_arithmetic_error() {
         &sorobanvec![&test.env, large_amount],
         &sorobanvec![&test.env, large_amount],
         &users[0],
+        &false
     );
 
     // Verify that the returned error is ContractError::ArithmeticError
@@ -951,6 +955,7 @@ fn deposit_amounts_desired_zero() {
         &sorobanvec![&test.env, 0i128],
         &sorobanvec![&test.env, 0i128],
         &users[0],
+        &false
     );
 
     // Verify that the returned error is ContractError::InsufficientAmount
@@ -1014,6 +1019,7 @@ fn deposit_insufficient_funds_with_error_message() {
         &sorobanvec![&test.env, amount0 + 1, amount1 + 1],
         &sorobanvec![&test.env, amount0 + 1, amount1 + 1],
         &users[0],
+        &false
     );
 
     if deposit_result == Err(Err(InvokeError::Contract(10))) {
