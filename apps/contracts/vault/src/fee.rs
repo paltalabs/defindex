@@ -14,7 +14,7 @@ use crate::{
 
 /// Fetches the current fee rate from the factory contract.
 /// The fee rate is expressed in basis points (BPS).
-fn fetch_defindex_fee(e: &Env) -> u32 {
+pub fn fetch_defindex_fee(e: &Env) -> u32 {
     let factory_address = get_factory(e);
     // Interacts with the factory contract to get the fee rate.
     e.invoke_contract(

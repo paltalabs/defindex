@@ -1,7 +1,8 @@
 use soroban_sdk::token::TokenClient;
 use soroban_sdk::{Address, Env, Map, Vec};
 
-use crate::models::{AssetStrategySet, StrategyInvestment, CurrentAssetInvestmentAllocation};
+use common::models::AssetStrategySet;
+use crate::models::{StrategyInvestment, CurrentAssetInvestmentAllocation};
 use crate::storage::get_assets;
 use crate::strategies::get_strategy_client;
 

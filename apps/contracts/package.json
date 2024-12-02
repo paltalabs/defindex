@@ -5,11 +5,14 @@
   "scripts": {
     "build": "docker-compose run --rm --no-deps defindex-soroban make build",
     "deploy-factory": "tsc && node dist/deploy_factory.js",
-    "deploy-hodl": "tsc && node dist/deploy_hodl.js",
+    "deploy-hodl": "tsc && node dist/strategies/deploy_hodl.js",
+    "deploy-fixed": "tsc && node dist/strategies/deploy_fixed.js",
+    "deploy-blend": "tsc && node dist/strategies/deploy_blend.js",
     "publish-addresses": "tsc && node dist/publish_addresses.js",
     "test": "tsc && node dist/test.js",
     "test-vault": "tsc && node dist/tests/testOnlyVault.js",
-    "test-dev": "tsc && node dist/tests/dev.js"
+    "test-dev": "tsc && node dist/tests/dev.js",
+    "test-two-strat-vault": "tsc && node dist/tests/testTwoStrategiesVault.js"
   },
   "type": "module",
   "devDependencies": {
@@ -25,7 +28,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@stellar/stellar-sdk": "^12.2.0",
+    "@stellar/stellar-sdk": "^13.0.0",
     "dotenv": "^16.4.5"
   }
 }

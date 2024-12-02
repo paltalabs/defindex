@@ -101,3 +101,72 @@ To build all apps and packages, run the following command:
 cd my-turborepo
 yarn build
 ```
+
+## Dart Package development
+
+First, get the specific dart container up by running:
+```sh
+docker compose up -d dart
+```
+The genereal docker compose won't launch the dart service.
+
+then, once the container is up, run:
+```sh
+docker exec -it dart-defindex bash
+```
+Then you can launch the example app by running:
+```sh
+cd example
+flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0
+```
+This will launch the example app on the port 8080 of your localhost. so you can go to
+`http://localhost:8080` to see the app.
+
+
+### Publish dart package
+This is published on https://pub.dev/packages/defindex_sdk
+
+Once everything is ok, you can run the following command to check the package:
+```sh
+dart pub publish --dry-run
+```
+
+once, there is no issues you can run the following command to publish the package:
+```sh
+dart pub publish
+```
+It will prompt a link to login:
+```sh
+Please login with your Google account: http://localhost:<port>/?code...
+```
+Then, you will need to open a terminal connected to the container and run the following command:
+```sh
+curl http://localhost:33791/?code...
+```
+This will log you in and you can publish the package.
+
+## TypeScript SDK Development
+
+See the [TypeScript SDK README](./packages/defindex-sdk/README.md) for more information.
+
+You can use the defindex-soroban container to develop the SDK.
+```sh
+bash run.sh --nb
+```
+Then, move to the folder `packages/defindex-sdk`.
+
+### Publish TypeScript SDK
+Inside the container, on the `defindex-sdk` folder, run:
+```sh
+# Login to npm
+npm login
+
+# Install dependencies
+yarn install
+
+# Build the package
+yarn build
+
+# Publish to npm
+npm publish --access public
+```

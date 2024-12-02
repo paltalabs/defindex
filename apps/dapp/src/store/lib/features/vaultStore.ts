@@ -1,21 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import type { RootState } from '../store'
 import { getRemoteConfig } from '@/helpers/getRemoteConfig';
-import { Strategy } from './walletStore';
-
-
-export interface NewVaultState {
-  address: string;
-  emergencyManager: string;
-  feeReceiver: string;
-  manager: string;
-  vaultShare: number;
-  name: string;
-  symbol: string;
-  strategies: Strategy[];
-  totalValues?: number;
-}
-
+import type { RootState } from '../store'
+import { Asset, NewVaultState, Strategy, VaultData } from '../types';
 // Define the initial state using that type
 const initialState: NewVaultState = {
   address: "",
@@ -25,15 +11,8 @@ const initialState: NewVaultState = {
   name: "",
   symbol: "",
   vaultShare: 0,
-  strategies: [
-    {
-      address: "",
-      index: "",
-      name: "",
-      share: 0
-    }
-  ],
-  totalValues: 0,
+  assets: [],
+  TVL: 0,
 }
 
 //Filtrar Strategies por network y retornar array de Strategies
@@ -48,9 +27,9 @@ export const getDefaultStrategies = async (network: string) => {
         const prettierName = parsedName.charAt(0).toUpperCase() + parsedName.slice(1)
         strategies.push({
           address: remoteStrategies.ids[strategy],
-          index: strategies.length.toString(),
           name: parsedName ? prettierName : '',
-          share: 0,
+          paused: false,
+          tempAmount: 0
         })
       }
     }
@@ -67,42 +46,6 @@ export const newVaultSlice = createSlice({
   name: 'Strategies',
   initialState,
   reducers: {
-    pushStrategy: (state, action: PayloadAction<Strategy>) => {
-      state.strategies.push(action.payload)
-      state.totalValues = state.strategies.reduce((acc, Strategy) => acc + Strategy.share, 0)
-    },
-    resetStrategies: (state) => {
-      state.strategies = []
-      state.name = ""
-      state.totalValues = 0
-    },
-    removeStrategy: (state, action: PayloadAction<Partial<Strategy>>) => {
-      state.strategies = state.strategies.filter(Strategy => Strategy.address !== action.payload.address)
-    },
-    setStrategyValue: (state, action: PayloadAction<Partial<Strategy>>) => {
-      state.strategies = state.strategies.map(strategy => {
-        if (strategy.address === action.payload.address) {
-          return {
-            ...strategy,
-            share: action.payload.share!
-          }
-        }
-        return strategy
-      })
-      state.totalValues = state.strategies.reduce((acc, Strategy) => acc + Strategy.share, 0)
-    },
-    resetStrategyValue: (state, action: PayloadAction<Strategy>) => {
-      state.strategies = state.strategies.map(strategy => {
-        if (strategy.address === action.payload.address) {
-          return {
-            ...strategy,
-            share: 0
-          }
-        }
-        return strategy
-      })
-      state.totalValues = state.strategies.reduce((acc, Strategy) => acc + Strategy.share, 0)
-    },
     setName: ((state, action: PayloadAction<string>) => {
       state.name = action.payload;
     }),
@@ -121,25 +64,76 @@ export const newVaultSlice = createSlice({
     setVaultShare: ((state, action: PayloadAction<number>) => {
       state.vaultShare = action.payload;
     }),
+    pushAsset: ((state, action: PayloadAction<Asset>) => {
+      const assetIndex = state.assets.findIndex(asset => asset.address === action.payload.address);
+      if (assetIndex === -1) {
+        state.assets.push(action.payload);
+      } else if (assetIndex !== -1) {
+        action.payload.strategies.forEach(strategy => {
+          state.assets[assetIndex]!.strategies.push(strategy);
+        });
+      }
+    }),
+    resetAssets: ((state) => {
+      state.assets = [];
+    }),
+    removeAsset: ((state, action: PayloadAction<string>) => {
+      state.assets = state.assets.filter(asset => asset.address !== action.payload);
+    }),
+    pushStrategy: ((state, action: PayloadAction<Strategy>) => {
+      state.assets.find(asset => asset.address === action.payload.address)?.strategies.push(action.payload);
+    }),
+    setAssetAmount: ((state, action: PayloadAction<{address:string, amount:number}>) => {
+      const assetIndex = state.assets.findIndex(asset => asset.address === action.payload.address);
+      if (assetIndex !== -1) {
+        state.assets[assetIndex]!.amount = Number(state.assets[assetIndex]!.amount || 0) + Number(action.payload.amount);
+      }
+    }),
+    openEditVault: ((state, action: PayloadAction<VaultData>) => {
+      state.name = action.payload.name;
+      state.manager = action.payload.manager;
+      state.emergencyManager = action.payload.emergencyManager;
+      state.feeReceiver = action.payload.feeReceiver;
+      state.assets = action.payload.assets;
+      state.TVL = action.payload.TVL;
+    }),
+    resetNewVault: ((state) => {
+      state.address = "";
+      state.emergencyManager = "";
+      state.feeReceiver = "";
+      state.manager = "";
+      state.name = "";
+      state.symbol = "";
+      state.vaultShare = 0;
+      state.assets = [];
+      state.TVL = 0;
+    }),
+    removeStrategy: ((state, action: PayloadAction<Strategy>) => {
+      state.assets.forEach(asset => {
+        asset.strategies = asset.strategies.filter(strategy => strategy.address !== action.payload.address);
+      });
+    }),
   }
 })
 
 export const {
-  pushStrategy,
-  resetStrategies,
-  removeStrategy,
-  setStrategyValue,
-  resetStrategyValue,
   setName,
   setSymbol,
   setManager,
   setEmergencyManager,
   setFeeReceiver,
-  setVaultShare
+  setVaultShare,
+  pushAsset,
+  removeAsset,
+  resetAssets,
+  openEditVault,
+  resetNewVault,
+  removeStrategy,
+  setAssetAmount,
 } = newVaultSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
-export const selectStrategies = (state: RootState) => state.newVault.strategies
-export const selectTotalValues = (state: RootState) => state.newVault.totalValues
+export const selectAsset = (state: RootState) => state.newVault.assets
+export const selectTotalValues = (state: RootState) => state.newVault.TVL
 
 export default newVaultSlice.reducer

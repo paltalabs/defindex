@@ -1,4 +1,23 @@
-import React from "react"
+import React, { useContext } from "react"
+import { useSorobanReact } from "@soroban-react/core"
+
+import { VaultMethod } from "@/hooks/useVault"
+import { ModalContext } from "@/contexts"
+
+import { openEditVault, resetAssets } from "@/store/lib/features/vaultStore"
+import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
+import { setSelectedVault } from "@/store/lib/features/walletStore"
+import { VaultData } from "@/store/lib/types"
+
+import { InputGroup } from "../ui/input-group"
+import { DialogBackdrop, DialogRoot, DialogTrigger } from "../ui/dialog"
+import AllVaults from "./AllVaults"
+import { DeployVault } from "../DeployVault/DeployVault"
+import { InspectVault } from "./InspectVault"
+import { InteractWithVault } from "../InteractWithVault/InteractWithVault"
+import { TransactionStatusModal } from "../Web3/TransactionStatusModal"
+import ConnectButton from "../Web3/ConnectButton"
+import { CiSearch } from "react-icons/ci";
 import {
   Button,
   Grid,
@@ -7,78 +26,63 @@ import {
   Input,
   Stack,
 } from "@chakra-ui/react"
-import AllVaults from "./AllVaults"
-import { useState } from "react"
-import { DeployVault } from "../DeployVault/DeployVault"
-import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
-import { pushStrategy, resetStrategies } from "@/store/lib/features/vaultStore"
-import { InteractWithVault } from "../InteractWithVault/InteractWithVault"
-import { setSelectedVault, Strategy } from "@/store/lib/features/walletStore"
-import ConnectButton from "../Wallet/ConnectButton"
-import { useSorobanReact } from "@soroban-react/core"
-import { VaultMethod } from "@/hooks/useVault"
-import { InputGroup } from "../ui/input-group"
-import { DialogBackdrop, DialogRoot, DialogTrigger } from "../ui/dialog"
-import { CiSearch } from "react-icons/ci";
+import { EditVaultModal } from "../InteractWithVault/EditVault"
+import RebalanceVault from "../InteractWithVault/RebalanceVault"
+import { InvestStrategies } from "../InteractWithVault/InvestStrategies"
 
 export const ManageVaults = () => {
-  const { address } = useSorobanReact()
-  const [modalStatus, setModalStatus] = useState<{
-    deployVault: {
-      isOpen: boolean
-    },
-    deposit: {
-      isOpen: boolean
-    }
-  }>({
-    deployVault: {
-      isOpen: false
-    },
-    deposit: {
-      isOpen: false
-    }
-  })
+  const { address, activeChain } = useSorobanReact()
+  const {
+    inspectVaultModal: inspectModal,
+    deployVaultModal: deployModal,
+    interactWithVaultModal: interactModal,
+    transactionStatusModal: txModal,
+    editVaultModal: editModal,
+    rebalanceVaultModal: rebalanceModal,
+    investStrategiesModal: investModal,
+  } = useContext(ModalContext)
   const dispatch = useAppDispatch()
-  const vaults = useAppSelector(state => state.wallet.vaults.createdVaults)
+  const modalContext = useContext(ModalContext)
+  const vaults: VaultData[] = useAppSelector(state => state.wallet.vaults.createdVaults)
+  const handleInspectVault = async (value: boolean, args?: any) => {
+    await dispatch(setSelectedVault({ ...args }))
+    inspectModal.setIsOpen(value)
+  }
   const handleOpenDeployVault = async (method: string, value: boolean, args?: any) => {
     switch (method) {
       case 'create_vault':
-        await dispatch(resetStrategies())
-        setModalStatus({ ...modalStatus, deployVault: { isOpen: value } })
+        await dispatch(resetAssets())
+        deployModal.setIsOpen(value)
         break
       case 'edit_vault':
-        await dispatch(resetStrategies())
+        await dispatch(resetAssets())
         const selectedVault = vaults.find(vault => vault.address === args.address)
         if (!selectedVault) return;
-        for (const item of selectedVault.strategies) {
-          const newStrategy: Strategy = { ...item, share: selectedVault.strategies.length > 1 ? 100 / selectedVault.strategies.length : 100 };
-          await dispatch(pushStrategy(newStrategy))
-        }
-        setModalStatus({ ...modalStatus, deployVault: { isOpen: value } })
+        await dispatch(openEditVault(selectedVault))
+        deployModal.setIsOpen(value)
         break
     }
   }
 
-  const handleOpenDeposit = async (method: string, args?: any) => {
+  const handleOpenInteract = async (method: string, args?: any) => {
     switch (method) {
       case VaultMethod.DEPOSIT:
-        await setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
+        interactModal.setIsOpen(true)
         await dispatch(setSelectedVault({ ...args, method: VaultMethod.DEPOSIT }))
         console.log(args)
         break
       case VaultMethod.WITHDRAW:
-        await setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
+        interactModal.setIsOpen(true)
         await dispatch(setSelectedVault({ ...args, method: VaultMethod.WITHDRAW }))
         console.log(args)
         break
       case VaultMethod.EMERGENCY_WITHDRAW:
-        await setModalStatus({ ...modalStatus, deposit: { isOpen: true } })
+        interactModal.setIsOpen(true)
         await dispatch(setSelectedVault({ ...args, method: VaultMethod.EMERGENCY_WITHDRAW }))
         console.log(args)
         break
     }
   }
-
 
   return (
     <>
@@ -122,7 +126,7 @@ export const ManageVaults = () => {
           <ConnectButton />
 
           {!!address && <DialogRoot
-            open={modalStatus.deployVault.isOpen}
+            open={deployModal.isOpen}
             onOpenChange={(e) => { handleOpenDeployVault('create_vault', e.open) }}
             size={'lg'}
             placement={'center'}>
@@ -137,18 +141,75 @@ export const ManageVaults = () => {
             <DeployVault />
           </DialogRoot>}
         </GridItem>
+
+        {/* Interact with vault */}
         <GridItem colSpan={12} colStart={1} colEnd={13} zIndex={'base'}>
           <DialogRoot
-            open={modalStatus.deposit.isOpen}
-            onOpenChange={(e) => { setModalStatus({ ...modalStatus, deposit: { isOpen: e.open } }) }}
+            open={interactModal.isOpen}
+            onOpenChange={(e) => { interactModal.setIsOpen(e.open) }}
             size={'lg'}
             placement={'center'}
           >
             <DialogBackdrop backdropFilter='blur(1px)' />
             <InteractWithVault />
           </DialogRoot>
-          <AllVaults handleOpenDeployVault={handleOpenDeployVault} handleOpenDeposit={handleOpenDeposit} />
+          <AllVaults handleOpenInspect={handleInspectVault} />
         </GridItem>
+
+        {/* Inspect vault */}
+        <DialogRoot
+          open={inspectModal.isOpen}
+          onOpenChange={(e) => { inspectModal.setIsOpen(e.open) }}
+          size={'xl'}
+          placement={'center'}
+        >
+          <DialogBackdrop backdropFilter='blur(1px)' />
+          <InspectVault
+            handleOpenDeployVault={handleOpenDeployVault}
+            handleOpenInteract={handleOpenInteract}
+            onClose={() => { inspectModal.setIsOpen(false) }}
+          />
+        </DialogRoot>
+
+        {/* Edit vault */}
+        <DialogRoot
+          open={editModal.isOpen}
+          onOpenChange={(e) => { editModal.setIsOpen(e.open) }}
+          size={'lg'}
+          placement={'center'}
+        >
+          <DialogBackdrop backdropFilter='blur(1px)' />
+          <EditVaultModal />
+        </DialogRoot>
+
+        {/* Transaction status modal */}
+        <DialogRoot
+          open={modalContext.transactionStatusModal.isOpen}
+          onOpenChange={(e) => { txModal.setIsOpen(e.open) }}
+          size={'lg'}
+          placement={'center'}
+        >
+          <DialogBackdrop backdropFilter='blur(1px)' />
+          <TransactionStatusModal />
+        </DialogRoot>
+        <DialogRoot
+          open={rebalanceModal.isOpen}
+          onOpenChange={(e) => { rebalanceModal.setIsOpen(e.open) }}
+          size={'lg'}
+          placement={'center'}
+        >
+          <DialogBackdrop backdropFilter='blur(1px)' />
+          <RebalanceVault />
+        </DialogRoot>
+        <DialogRoot
+          open={investModal.isOpen}
+          onOpenChange={(e) => { investModal.setIsOpen(e.open) }}
+          size={'lg'}
+          placement={'center'}
+        >
+          <DialogBackdrop backdropFilter='blur(1px)' />
+          <InvestStrategies />
+        </DialogRoot>
       </Grid>
     </>
   )

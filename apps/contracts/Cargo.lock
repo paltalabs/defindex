@@ -93,6 +93,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c3c1a368f70d6cf7302d78f8f7093da241fb8e8807c05cc9e51a125895a6d5b"
 
 [[package]]
+name = "blend_strategy"
+version = "0.1.0"
+dependencies = [
+ "defindex-strategy-core",
+ "soroban-sdk",
+]
+
+[[package]]
 name = "block-buffer"
 version = "0.10.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -142,6 +150,13 @@ dependencies = [
  "num-traits",
  "serde",
  "windows-targets",
+]
+
+[[package]]
+name = "common"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk",
 ]
 
 [[package]]
@@ -273,22 +288,25 @@ dependencies = [
 
 [[package]]
 name = "defindex-factory"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
+ "common",
+ "defindex-strategy-core",
  "soroban-sdk",
 ]
 
 [[package]]
 name = "defindex-strategy-core"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "soroban-sdk",
 ]
 
 [[package]]
 name = "defindex-vault"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
+ "common",
  "defindex-strategy-core",
  "soroban-sdk",
  "soroban-token-sdk",
@@ -441,7 +459,7 @@ checksum = "28dea519a9695b9977216879a3ebfddf92f1c08c05d984f8996aecd6ecdc811d"
 
 [[package]]
 name = "fixed_apr_strategy"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "defindex-strategy-core",
  "soroban-sdk",
@@ -532,7 +550,7 @@ dependencies = [
 
 [[package]]
 name = "hodl_strategy"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "defindex-strategy-core",
  "soroban-sdk",
@@ -594,6 +612,17 @@ name = "indexmap-nostd"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8e04e2fd2b8188ea827b32ef11de88377086d690286ab35747ef7f9bf3ccb590"
+
+[[package]]
+name = "integration-test"
+version = "0.0.0"
+dependencies = [
+ "common",
+ "defindex-factory",
+ "defindex-vault",
+ "hodl_strategy",
+ "soroban-sdk",
+]
 
 [[package]]
 name = "itertools"
@@ -1192,7 +1221,7 @@ dependencies = [
 
 [[package]]
 name = "soroswap_strategy"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "defindex-strategy-core",
  "soroban-sdk",
@@ -1511,7 +1540,7 @@ checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
 
 [[package]]
 name = "xycloans_adapter"
-version = "1.0.0"
+version = "0.1.0"
 dependencies = [
  "defindex-strategy-core",
  "soroban-sdk",

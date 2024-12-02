@@ -34,7 +34,7 @@
 
 - **Result:**
     - ✅ Code available on [GitHub](https://github.com/paltalabs/defindex/tree/main/apps/contracts/strategies)
-    - 🛠️ Adapter Struct published at crates.io
+    - ✅ Adapter Struct published at crates.io
     - 🛠️ SEP proposal
 
 ---
@@ -73,7 +73,8 @@
   Code will be available on [GitHub](https://github.com/paltalabs). A Flutter app can call a DeFindex Smart Contract instance with less than 10 lines of code.
 
 - **Result:**
-    - 🛠️ Code available on [GitHub](https://github.com/paltalabs/defindex/tree/main/packages/defindex-dart-sdk)
+    - ✅ Code available on [GitHub](https://github.com/paltalabs/defindex/tree/main/packages/defindex-dart-sdk)
+    - ✅ Code published on [pub.dev](https://pub.dev/packages/defindex_sdk)
 
 ---
 
@@ -86,4 +87,5 @@
   Code will be available on [GitHub](https://github.com/paltalabs). A React app can call a DeFindex Smart Contract instance with less than 10 lines of code.
 
 - **Result:**
-    - 🛠️ Code available on [GitHub](https://github.com/paltalabs/defindex/tree/main/packages/defindex-sdk)
+    - ✅ Code available on [GitHub](https://github.com/paltalabs/defindex/tree/main/packages/defindex-sdk)
+    - ✅ Published on [npm](https://www.npmjs.com/package/defindex-sdk)

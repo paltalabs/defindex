@@ -1,4 +1,3 @@
-// import { randomBytes } from 'crypto';
 import {
   Address,
   Asset,
@@ -28,6 +27,10 @@ const CONTRACT_REL_PATH: object = {
     "../../target/wasm32-unknown-unknown/release/soroswap_adapter.optimized.wasm",
   hodl_strategy:
     "../../target/wasm32-unknown-unknown/release/hodl_strategy.optimized.wasm",
+  blend_strategy:
+    "../../target/wasm32-unknown-unknown/release/blend_strategy.optimized.wasm",
+  fixed_apr_strategy:
+    "../../target/wasm32-unknown-unknown/release/fixed_apr_strategy.optimized.wasm",
 };
 
 const network = process.argv[2];
@@ -195,7 +198,7 @@ export async function bumpContractInstance(
   txBuilder.addOperation(Operation.extendFootprintTtl({ extendTo: 535670 })); // 1 year
   txBuilder.setSorobanData(bumpTransactionData);
   const result = await invokeTransaction(txBuilder.build(), source, false);
-  // @ts-expect-error console.log(status)
+  //@ts-ignore
   console.log(result.status, "\n");
 }
 
@@ -231,7 +234,7 @@ export async function bumpContractCode(
   txBuilder.addOperation(Operation.extendFootprintTtl({ extendTo: 535670 })); // 1 year
   txBuilder.setSorobanData(bumpTransactionData);
   const result = await invokeTransaction(txBuilder.build(), source, false);
-  // @ts-expect-error console.log(status)
+  //@ts-ignore
   console.log(result.status, "\n");
 }
 

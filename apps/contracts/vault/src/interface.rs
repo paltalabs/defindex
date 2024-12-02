@@ -1,9 +1,10 @@
 use soroban_sdk::{Address, Env, Map, String, Vec};
 
 use crate::{
-    models::{AssetStrategySet, Instruction, AssetInvestmentAllocation, CurrentAssetInvestmentAllocation},
+    models::{Instruction, AssetInvestmentAllocation, CurrentAssetInvestmentAllocation},
     ContractError,
 };
+use common::models::AssetStrategySet;
 
 pub trait VaultTrait {
     /// Initializes the DeFindex Vault contract with the required parameters.
@@ -78,6 +79,7 @@ pub trait VaultTrait {
         amounts_desired: Vec<i128>,
         amounts_min: Vec<i128>,
         from: Address,
+        invest: bool,
     ) -> Result<(Vec<i128>, i128), ContractError>;
 
     /// Withdraws assets from the DeFindex Vault by burning dfTokens.
@@ -195,6 +197,7 @@ pub trait VaultTrait {
     /// * `Map<Address, i128>` - A map of asset addresses to their total idle amounts.
     fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128>;
 
+
     // Calculates the corresponding amounts of each asset per a given number of vault shares.
     /// This function extends the contract's time-to-live and calculates how much of each asset corresponds 
     /// per the provided number of vault shares (`vault_shares`). It provides proportional allocations for each asset 
@@ -208,6 +211,14 @@ pub trait VaultTrait {
     /// * `Map<Address, i128>` - A map containing each asset address and its corresponding proportional amount.
     fn get_asset_amounts_per_shares(e: Env, vault_shares: i128) -> Result<Map<Address, i128>, ContractError>;
     
+    // TODO: DELETE THIS, USED FOR TESTING
+    /// Temporary method for testing purposes.
+    // fn get_asset_amounts_for_dftokens(e: Env, df_token: i128) -> Map<Address, i128>;
+
+    fn get_fees(e: Env) -> (u32, u32);
+
+    /// Collects the fees from the vault and transfers them to the fee receiver addresses. 
+    fn collect_fees(e: Env) -> Result<(), ContractError>;
 }
 
 pub trait AdminInterfaceTrait {
