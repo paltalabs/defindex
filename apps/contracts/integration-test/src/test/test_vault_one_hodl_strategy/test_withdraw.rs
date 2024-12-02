@@ -49,7 +49,7 @@ fn test_withdraw_no_invest_success() {
             ]
         },
     }])
-    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user);
+    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user, &false);
 
     let df_balance = enviroment.vault_contract.balance(&user);
     assert_eq!(df_balance, deposit_amount - MINIMUM_LIQUIDITY);
@@ -133,7 +133,7 @@ fn test_withdraw_partial_success() {
             ]
         },
     }])
-    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user);
+    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user, &false);
 
     let df_balance = enviroment.vault_contract.balance(&user);
     assert_eq!(df_balance, deposit_amount - MINIMUM_LIQUIDITY);
@@ -212,7 +212,7 @@ fn test_withdraw_insufficient_balance() {
             ]
         },
     }])
-    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user);
+    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user, &false);
 
     let df_balance = enviroment.vault_contract.balance(&user);
     assert_eq!(df_balance, deposit_amount - MINIMUM_LIQUIDITY);
@@ -292,7 +292,7 @@ fn test_withdraw_after_invest() {
             ]
         },
     }])
-    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user);
+    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user, &false);
 
     let user_balance_after_deposit = enviroment.token.balance(user);
     assert_eq!(user_balance_after_deposit, 0);
@@ -445,7 +445,7 @@ fn test_withdraw_multiple_users() {
             ]
         },
     }])
-    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user1);
+    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user1, &false);
 
     enviroment.vault_contract
     .mock_auths(&[MockAuth {
@@ -472,7 +472,7 @@ fn test_withdraw_multiple_users() {
             ]
         },
     }])
-    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user2);
+    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user2, &false);
 
     let df_balance_user1 = enviroment.vault_contract.balance(&user1);
     let df_balance_user2 = enviroment.vault_contract.balance(&user2);
@@ -587,7 +587,7 @@ fn test_withdraw_after_invest_multiple_users() {
             ]
         },
     }])
-    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user1);
+    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user1, &false);
 
     enviroment.vault_contract
     .mock_auths(&[MockAuth {
@@ -614,7 +614,7 @@ fn test_withdraw_after_invest_multiple_users() {
             ]
         },
     }])
-    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user2);
+    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user2, &false);
 
     let df_balance_user1 = enviroment.vault_contract.balance(&user1);
     let df_balance_user2 = enviroment.vault_contract.balance(&user2);

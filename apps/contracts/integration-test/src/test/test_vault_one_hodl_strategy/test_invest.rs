@@ -49,7 +49,7 @@ fn test_invest_success() {
             ]
         },
     }])
-    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user);
+    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user, &false);
 
     let df_balance = enviroment.vault_contract.balance(&user);
     assert_eq!(df_balance, deposit_amount - MINIMUM_LIQUIDITY);
@@ -153,7 +153,7 @@ fn test_invest_exceeding_investing_lenght() {
             ]
         },
     }])
-    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user);
+    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user, &false);
 
     let df_balance = enviroment.vault_contract.balance(&user);
     assert_eq!(df_balance, deposit_amount - MINIMUM_LIQUIDITY);
@@ -276,7 +276,7 @@ fn test_invest_insufficient_balance() {
             ]
         },
     }])
-    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user);
+    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user, &false);
 }
 
 #[test]
@@ -340,7 +340,7 @@ fn test_invest_multiple_users() {
             ]
         },
     }])
-    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user1);
+    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user1, &false);
 
     enviroment.vault_contract
     .mock_auths(&[MockAuth {
@@ -367,7 +367,7 @@ fn test_invest_multiple_users() {
             ]
         },
     }])
-    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user2);
+    .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user2, &false);
 
     let df_balance_user1 = enviroment.vault_contract.balance(&user1);
     let df_balance_user2 = enviroment.vault_contract.balance(&user2);
