@@ -21,9 +21,10 @@ import { airdropAccount, invokeCustomContract } from "../utils/contract.js";
 
 const network = process.argv[2];
 
-export async function depositToVault(deployedVault: string, amount: number[], user?: Keypair, ) {
+export async function depositToVault(deployedVault: string, amount: number[], user?: Keypair, invest?: boolean) {
     // Create and fund a new user account if not provided
     const newUser = user ? user : Keypair.random();
+    const investDeposit = invest ? invest : false;
     console.log('🚀 ~ depositToVault ~ newUser.publicKey():', newUser.publicKey());
     console.log('🚀 ~ depositToVault ~ newUser.secret():', newUser.secret());
 
@@ -41,7 +42,8 @@ export async function depositToVault(deployedVault: string, amount: number[], us
     const depositParams: xdr.ScVal[] = [
         xdr.ScVal.scvVec(amountsDesired.map((amount) => nativeToScVal(amount, { type: "i128" }))),
         xdr.ScVal.scvVec(amountsMin.map((min) => nativeToScVal(min, { type: "i128" }))),
-        (new Address(newUser.publicKey())).toScVal()
+        (new Address(newUser.publicKey())).toScVal(),
+        xdr.ScVal.scvBool(investDeposit)
     ];
 
     try {

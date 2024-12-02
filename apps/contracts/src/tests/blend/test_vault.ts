@@ -173,7 +173,7 @@ export async function testBlendVault(user?: Keypair) {
     console.log('🚀 « investResult:', investResult);
     
     console.log(green, '---------------------- Invested in strategy ----------------------')
-    console.log(green, 'Invested: ', scValToNative(investResult.returnValue), ' in the strategy')
+    console.log(green, 'Invested: ', investResult, ' in the strategy')
     console.log(green, '------------------------------------------------------------------')
   } catch (error) {
     console.log('❌ Error Investing the Vault:', error);
