@@ -322,6 +322,7 @@ impl FactoryTrait for DeFindexFactory {
         deposit_args.push_back(amounts.to_val());
         deposit_args.push_back(amounts_min.to_val());
         deposit_args.push_back(caller.to_val());
+        deposit_args.push_back(false.into_val(&e));
         
         e.invoke_contract::<Val>(&defindex_address, &Symbol::new(&e, "deposit"), deposit_args);
 
