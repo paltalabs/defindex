@@ -3,7 +3,7 @@ use soroban_sdk::{vec, BytesN, String, Vec};
 use crate::test::{create_asset_params, DeFindexFactoryTest};
 
 #[test]
-fn test_create_defindex_success() {
+fn create_success() {
   let test = DeFindexFactoryTest::setup();
 
   test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &100u32, &test.defindex_wasm_hash);
@@ -28,7 +28,7 @@ fn test_create_defindex_success() {
 }
 
 #[test]
-fn test_create_defindex_deposit_success() {
+fn create_and_deposit_success() {
   let test = DeFindexFactoryTest::setup();
   test.env.mock_all_auths();
 

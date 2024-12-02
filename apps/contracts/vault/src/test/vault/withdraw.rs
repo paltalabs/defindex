@@ -13,7 +13,7 @@ use crate::test::{
 };
 
 #[test]
-fn test_withdraw_from_idle_success() {
+fn withdraw_from_idle_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -127,7 +127,7 @@ fn test_withdraw_from_idle_success() {
 }
 
 #[test]
-fn test_withdraw_from_strategy_success() {
+fn withdraw_from_strategy_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);

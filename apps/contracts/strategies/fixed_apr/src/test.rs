@@ -58,7 +58,4 @@ impl<'a> FixAprStrategyTest<'a> {
     }
 }
 
-mod initialize;
-mod deposit;
-mod harvest;
-mod withdraw;
+mod fixed_apr;
