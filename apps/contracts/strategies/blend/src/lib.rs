@@ -2,7 +2,7 @@
 use blend_pool::perform_reinvest;
 use constants::{MIN_DUST, SCALAR_9};
 use soroban_sdk::{
-    contract, contractimpl, token::TokenClient, vec, Address, Env, IntoVal, String, Val, Vec};
+    contract, contractimpl, token::TokenClient, Address, Env, IntoVal, String, Val, Vec};
 
 mod blend_pool;
 mod constants;
@@ -10,7 +10,6 @@ mod reserves;
 mod soroswap;
 mod storage;
 
-use soroswap::internal_swap_exact_tokens_for_tokens;
 use storage::{extend_instance_ttl, is_initialized, set_initialized, Config};
 
 pub use defindex_strategy_core::{
@@ -96,6 +95,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
         }
 
         let config = storage::get_config(&e);
+        blend_pool::claim(&e, &e.current_contract_address(), &config);
         perform_reinvest(&e, &config)?;
 
         let reserves = storage::get_strategy_reserves(&e);
@@ -184,5 +184,4 @@ impl DeFindexStrategyTrait for BlendStrategy {
     }
 }
 
-#[cfg(any(test, feature = "testutils"))]
 mod test;

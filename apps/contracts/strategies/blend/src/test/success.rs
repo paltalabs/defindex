@@ -1,14 +1,13 @@
 #![cfg(test)]
 use crate::blend_pool::{BlendPoolClient, Request};
-use crate::constants::{MIN_DUST, SCALAR_7};
+use crate::constants::MIN_DUST;
 use crate::storage::DAY_IN_LEDGERS;
 use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils};
 use crate::BlendStrategyClient;
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
-use soroban_fixed_point_math::FixedPoint;
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
-use soroban_sdk::{vec, Address, Env, Error, IntoVal, Symbol};
+use soroban_sdk::{vec, Address, Env, IntoVal, Symbol};
 use crate::test::std;
 
 #[test]
@@ -22,12 +21,11 @@ fn success() {
     let user_2 = Address::generate(&e);
     let user_3 = Address::generate(&e);
     let user_4 = Address::generate(&e);
-    let user_5 = Address::generate(&e);
 
     let blnd = e.register_stellar_asset_contract_v2(admin.clone());
     let usdc = e.register_stellar_asset_contract_v2(admin.clone());
     let xlm = e.register_stellar_asset_contract_v2(admin.clone());
-    let blnd_client = MockTokenClient::new(&e, &blnd.address());
+    let _blnd_client = MockTokenClient::new(&e, &blnd.address());
     let usdc_client = MockTokenClient::new(&e, &usdc.address());
     let xlm_client = MockTokenClient::new(&e, &xlm.address());
 
@@ -43,27 +41,27 @@ fn success() {
 
     /*
      * Deposit into pool
-     * -> deposit 100 into blend strategy for each user_3 and user_4
-     * -> deposit 200 into pool for user_5
+     * -> deposit 100 into blend strategy for each user_2 and user_3
+     * -> deposit 200 into pool for user_4
      * -> admin borrow from pool to return to 50% util rate
      * -> verify a deposit into an uninitialized vault fails
      */
     let pool_usdc_balace_start = usdc_client.balance(&pool);
     let starting_balance = 100_0000000;
+    usdc_client.mint(&user_2, &starting_balance);
     usdc_client.mint(&user_3, &starting_balance);
-    usdc_client.mint(&user_4, &starting_balance);
 
-    let user_3_balance = usdc_client.balance(&user_3);
+    let user_3_balance = usdc_client.balance(&user_2);
     assert_eq!(user_3_balance, starting_balance);
 
 
-    strategy_client.deposit(&starting_balance, &user_3);
+    strategy_client.deposit(&starting_balance, &user_2);
     // -> verify deposit auth
     
     assert_eq!(
         e.auths()[0],
         (
-            user_3.clone(),
+            user_2.clone(),
             AuthorizedInvocation {
                 function: AuthorizedFunction::Contract((
                     strategy.clone(),
@@ -71,7 +69,7 @@ fn success() {
                     vec![
                         &e,
                         starting_balance.into_val(&e),
-                        user_3.to_val(),
+                        user_2.to_val(),
                     ]
                 )),
                 sub_invocations: std::vec![AuthorizedInvocation {
@@ -80,7 +78,7 @@ fn success() {
                         Symbol::new(&e, "transfer"),
                         vec![
                             &e,
-                            user_3.to_val(),
+                            user_2.to_val(),
                             strategy.to_val(),
                             starting_balance.into_val(&e)
                         ]
@@ -91,13 +89,13 @@ fn success() {
         )
     );
 
-    strategy_client.deposit(&starting_balance, &user_4);
+    strategy_client.deposit(&starting_balance, &user_3);
 
     // verify deposit (pool b_rate still 1 as no time has passed)
+    assert_eq!(usdc_client.balance(&user_2), 0);
     assert_eq!(usdc_client.balance(&user_3), 0);
-    assert_eq!(usdc_client.balance(&user_4), 0);
+    assert_eq!(strategy_client.balance(&user_2), starting_balance);
     assert_eq!(strategy_client.balance(&user_3), starting_balance);
-    assert_eq!(strategy_client.balance(&user_4), starting_balance);
     assert_eq!(
         usdc_client.balance(&pool),
         pool_usdc_balace_start + starting_balance * 2
@@ -105,13 +103,13 @@ fn success() {
     let vault_positions = pool_client.get_positions(&strategy);
     assert_eq!(vault_positions.supply.get(0).unwrap(), starting_balance * 2);
 
-    // user_5 deposit directly into pool
+    // user_4 deposit directly into pool
     let merry_starting_balance = 200_0000000;
-    usdc_client.mint(&user_5, &merry_starting_balance);
+    usdc_client.mint(&user_4, &merry_starting_balance);
     pool_client.submit(
-        &user_5,
-        &user_5,
-        &user_5,
+        &user_4,
+        &user_4,
+        &user_4,
         &vec![
             &e,
             Request {
@@ -145,18 +143,18 @@ fn success() {
 
     /*
      * Withdraw from pool
-     * -> withdraw all funds from pool for user_5
-     * -> withdraw (excluding dust) from blend strategy for user_3 and user_4
+     * -> withdraw all funds from pool for user_4
+     * -> withdraw (excluding dust) from blend strategy for user_2 and user_3
      * -> verify a withdraw from an uninitialized vault fails
      * -> verify a withdraw from an empty vault fails
      * -> verify an over withdraw fails
      */
 
-    // withdraw all funds from pool for user_5
+    // withdraw all funds from pool for user_4
     pool_client.submit(
-        &user_5,
-        &user_5,
-        &user_5,
+        &user_4,
+        &user_4,
+        &user_4,
         &vec![
             &e,
             Request {
@@ -166,25 +164,25 @@ fn success() {
             },
         ],
     );
-    let user_5_final_balance = usdc_client.balance(&user_5);
+    let user_5_final_balance = usdc_client.balance(&user_4);
     let user_5_profit = user_5_final_balance - merry_starting_balance;
 
-    // withdraw from blend strategy for user_3 and user_4
-    // they are expected to receive half of the profit of user_5
+    // withdraw from blend strategy for user_2 and user_3
+    // they are expected to receive half of the profit of user_4
     let expected_user_4_profit = user_5_profit / 2;
     let withdraw_amount = starting_balance + expected_user_4_profit;
     // withdraw_amount = 100_0958904
 
     // -> verify over withdraw fails
-    let result = strategy_client.try_withdraw(&(withdraw_amount + 100_000_000_0000000), &user_4);
+    let result = strategy_client.try_withdraw(&(withdraw_amount + 100_000_000_0000000), &user_3);
     assert_eq!(result, Err(Ok(StrategyError::InvalidArgument))); // TODO: Check which is the one failing
 
-    strategy_client.withdraw(&withdraw_amount, &user_3);
+    strategy_client.withdraw(&withdraw_amount, &user_2);
     // -> verify withdraw auth
     assert_eq!(
         e.auths()[0],
         (
-            user_3.clone(),
+            user_2.clone(),
             AuthorizedInvocation {
                 function: AuthorizedFunction::Contract((
                     strategy.clone(),
@@ -192,7 +190,7 @@ fn success() {
                     vec![
                         &e,
                         withdraw_amount.into_val(&e),
-                        user_3.to_val(),
+                        user_2.to_val(),
                     ]
                 )),
                 sub_invocations: std::vec![]
@@ -200,16 +198,16 @@ fn success() {
         )
     );
 
-    strategy_client.withdraw(&withdraw_amount, &user_4);
+    strategy_client.withdraw(&withdraw_amount, &user_3);
 
     // -> verify withdraw
+    assert_eq!(usdc_client.balance(&user_2), withdraw_amount);
     assert_eq!(usdc_client.balance(&user_3), withdraw_amount);
-    assert_eq!(usdc_client.balance(&user_4), withdraw_amount);
+    assert_eq!(strategy_client.balance(&user_2), 0);
     assert_eq!(strategy_client.balance(&user_3), 0);
-    assert_eq!(strategy_client.balance(&user_4), 0);
 
     // -> verify withdraw from empty vault fails
-    let result = strategy_client.try_withdraw(&MIN_DUST, &user_4);
+    let result = strategy_client.try_withdraw(&MIN_DUST, &user_3);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
 
     // TODO: Finish harvest testings, pending soroswap router setup with a blend token pair with the underlying asset

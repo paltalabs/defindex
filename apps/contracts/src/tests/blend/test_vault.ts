@@ -139,7 +139,7 @@ export async function testBlendVault(user?: Keypair) {
     console.log(purple, '----------------------- Depositing XLM to the vault -----------------------')
     console.log(purple, '---------------------------------------------------------------------------')
     const { user, balanceBefore: depositBalanceBefore, result: depositResult, balanceAfter: depositBalanceAfter } 
-      = await depositToVault(blendVaultAddress, [initialAmount], newUser);
+      = await depositToVault(blendVaultAddress, [initialAmount], newUser, false);
     
     console.log(green, '------------ XLM deposited to the vault ------------')
     console.log(green, 'Deposit balance before: ', depositBalanceBefore)

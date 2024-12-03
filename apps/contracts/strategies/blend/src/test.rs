@@ -2,10 +2,9 @@
 extern crate std;
 
 use crate::{
-    blend_pool::{self, BlendPoolClient, Request, ReserveConfig, ReserveEmissionMetadata}, constants::SCALAR_7, storage::DAY_IN_LEDGERS, BlendStrategy, BlendStrategyClient
+    blend_pool::{self, BlendPoolClient, Request, ReserveConfig, ReserveEmissionMetadata}, storage::DAY_IN_LEDGERS, BlendStrategy, BlendStrategyClient
 };
 use sep_41_token::testutils::MockTokenClient;
-use soroban_fixed_point_math::FixedPoint;
 use soroban_sdk::{
     testutils::{Address as _, BytesN as _, Ledger as _, LedgerInfo}, token::StellarAssetClient, vec, Address, BytesN, Env, IntoVal, String, Symbol, Val, Vec
 };
@@ -33,7 +32,7 @@ pub(crate) fn register_blend_strategy(e: &Env) -> Address {
 pub struct BlendFixture<'a> {
     pub backstop: blend_backstop::Client<'a>,
     pub emitter: blend_emitter::Client<'a>,
-    pub backstop_token: blend_comet::Client<'a>,
+    pub _backstop_token: blend_comet::Client<'a>,
     pub pool_factory: blend_factory_pool::Client<'a>,
 }
 
@@ -177,7 +176,7 @@ pub trait EnvTestUtils {
     fn jump(&self, ledgers: u32);
 
     /// Jump the env by the given amount of seconds. Incremends the sequence by 1.
-    fn jump_time(&self, seconds: u64);
+    // fn jump_time(&self, seconds: u64);
 
     /// Set the ledger to the default LedgerInfo
     ///
@@ -200,18 +199,18 @@ impl EnvTestUtils for Env {
         });
     }
 
-    fn jump_time(&self, seconds: u64) {
-        self.ledger().set(LedgerInfo {
-            timestamp: self.ledger().timestamp().saturating_add(seconds),
-            protocol_version: 21,
-            sequence_number: self.ledger().sequence().saturating_add(1),
-            network_id: Default::default(),
-            base_reserve: 10,
-            min_temp_entry_ttl: 30 * DAY_IN_LEDGERS,
-            min_persistent_entry_ttl: 30 * DAY_IN_LEDGERS,
-            max_entry_ttl: 365 * DAY_IN_LEDGERS,
-        });
-    }
+    // fn jump_time(&self, seconds: u64) {
+    //     self.ledger().set(LedgerInfo {
+    //         timestamp: self.ledger().timestamp().saturating_add(seconds),
+    //         protocol_version: 21,
+    //         sequence_number: self.ledger().sequence().saturating_add(1),
+    //         network_id: Default::default(),
+    //         base_reserve: 10,
+    //         min_temp_entry_ttl: 30 * DAY_IN_LEDGERS,
+    //         min_persistent_entry_ttl: 30 * DAY_IN_LEDGERS,
+    //         max_entry_ttl: 365 * DAY_IN_LEDGERS,
+    //     });
+    // }
 
     fn set_default_info(&self) {
         self.ledger().set(LedgerInfo {
@@ -227,32 +226,32 @@ impl EnvTestUtils for Env {
     }
 }
 
-pub fn assert_approx_eq_abs(a: i128, b: i128, delta: i128) {
-    assert!(
-        a > b - delta && a < b + delta,
-        "assertion failed: `(left != right)` \
-         (left: `{:?}`, right: `{:?}`, epsilon: `{:?}`)",
-        a,
-        b,
-        delta
-    );
-}
+// pub fn assert_approx_eq_abs(a: i128, b: i128, delta: i128) {
+//     assert!(
+//         a > b - delta && a < b + delta,
+//         "assertion failed: `(left != right)` \
+//          (left: `{:?}`, right: `{:?}`, epsilon: `{:?}`)",
+//         a,
+//         b,
+//         delta
+//     );
+// }
 
 /// Asset that `b` is within `percentage` of `a` where `percentage`
 /// is a percentage in decimal form as a fixed-point number with 7 decimal
 /// places
-pub fn assert_approx_eq_rel(a: i128, b: i128, percentage: i128) {
-    let rel_delta = b.fixed_mul_floor(percentage, SCALAR_7).unwrap();
+// pub fn assert_approx_eq_rel(a: i128, b: i128, percentage: i128) {
+//     let rel_delta = b.fixed_mul_floor(percentage, SCALAR_7).unwrap();
 
-    assert!(
-        a > b - rel_delta && a < b + rel_delta,
-        "assertion failed: `(left != right)` \
-         (left: `{:?}`, right: `{:?}`, epsilon: `{:?}`)",
-        a,
-        b,
-        rel_delta
-    );
-}
+//     assert!(
+//         a > b - rel_delta && a < b + rel_delta,
+//         "assertion failed: `(left != right)` \
+//          (left: `{:?}`, right: `{:?}`, epsilon: `{:?}`)",
+//         a,
+//         b,
+//         rel_delta
+//     );
+// }
 
 /// Oracle
 use sep_40_oracle::testutils::{Asset, MockPriceOracleClient, MockPriceOracleWASM};
@@ -344,7 +343,7 @@ impl<'a> BlendFixture<'a> {
         BlendFixture {
             backstop: backstop_client,
             emitter: emitter_client,
-            backstop_token: comet_client,
+            _backstop_token: comet_client,
             pool_factory: pool_factory_client,
         }
     }
