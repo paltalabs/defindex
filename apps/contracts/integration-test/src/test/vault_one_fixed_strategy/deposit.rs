@@ -2,7 +2,7 @@ use crate::{setup::create_vault_one_asset_fixed_strategy, test::IntegrationTest,
 use soroban_sdk::{testutils::{MockAuth, MockAuthInvoke}, vec as svec, IntoVal, Vec};
 
 #[test]
-fn test_fixed_apr_deposit_success() {
+fn fixed_apr_deposit_success() {
     let enviroment = create_vault_one_asset_fixed_strategy();
     let setup = enviroment.setup;
 
@@ -66,7 +66,7 @@ fn test_fixed_apr_deposit_success() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #10)")]
-fn test_fixed_apr_deposit_insufficient_balance() {
+fn fixed_apr_deposit_insufficient_balance() {
     let enviroment = create_vault_one_asset_fixed_strategy();
     let setup = enviroment.setup;
 
@@ -117,7 +117,7 @@ fn test_fixed_apr_deposit_insufficient_balance() {
 }
 
 #[test]
-fn test_fixed_apr_deposit_multiple_users() {
+fn fixed_apr_deposit_multiple_users() {
     let enviroment = create_vault_one_asset_fixed_strategy();
     let setup = enviroment.setup;
 
@@ -224,7 +224,7 @@ fn test_fixed_apr_deposit_multiple_users() {
 }
 
 #[test]
-fn test_fixed_apr_deposit_zero_amount() {
+fn fixed_apr_deposit_zero_amount() {
     let enviroment = create_vault_one_asset_fixed_strategy();
     let setup = enviroment.setup;
 
@@ -257,7 +257,7 @@ fn test_fixed_apr_deposit_zero_amount() {
 }
 
 #[test]
-fn test_fixed_apr_deposit_negative_amount() {
+fn fixed_apr_deposit_negative_amount() {
     let enviroment = create_vault_one_asset_fixed_strategy();
     let setup = enviroment.setup;
 
@@ -290,7 +290,7 @@ fn test_fixed_apr_deposit_negative_amount() {
 }
 
 #[test]
-fn test_fixed_apr_deposit_insufficient_minimum_liquidity() {
+fn fixed_apr_deposit_insufficient_minimum_liquidity() {
     let enviroment = create_vault_one_asset_fixed_strategy();
     let setup = enviroment.setup;
 

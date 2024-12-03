@@ -2,20 +2,15 @@ use soroban_sdk::{vec as sorobanvec, String, Vec};
 
 use crate::test::{
     create_strategy_params_token0,
-    defindex_vault::{
-        ActionType, 
-        AssetStrategySet, 
-        Instruction, 
-        AssetInvestmentAllocation,  
-        StrategyInvestment,
-        OptionalSwapDetailsExactIn,
-        OptionalSwapDetailsExactOut,
+    defindex_vault::{AssetStrategySet,
+    AssetInvestmentAllocation,  
+    StrategyInvestment
     },
     DeFindexVaultTest,
 };
 
 #[test]
-fn rebalance() {
+fn withdraw_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -49,6 +44,7 @@ fn rebalance() {
     let df_balance = test.defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
+    // Deposit
     test.defindex_contract.deposit(
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
@@ -57,8 +53,12 @@ fn rebalance() {
     );
 
     let df_balance = test.defindex_contract.balance(&users[0]);
-    assert_eq!(df_balance, amount - 1000);
+    assert_eq!(df_balance, amount - 1000);   
 
+    // Balance of the token0 on the vault should be `amount` since it is deposited into the vault first
+    let vault_balance_of_token = test.token0.balance(&test.defindex_contract.address);
+    assert_eq!(vault_balance_of_token, amount);
+    
     let investments = sorobanvec![
         &test.env,
         Some(AssetInvestmentAllocation {
@@ -73,36 +73,35 @@ fn rebalance() {
         }),
     ];
 
+
     test.defindex_contract.invest(&investments);
 
-    let vault_balance = test.token0.balance(&test.defindex_contract.address);
-    assert_eq!(vault_balance, 0);
+    // Balance of the token0 on the vault should be 0
+    let vault_balance_of_token = test.token0.balance(&test.defindex_contract.address);
+    assert_eq!(vault_balance_of_token, 0);
 
-    // REBALANCE
+    // Balance of the vault on the strategy contract should be `amount`
+    let strategy_balance = test
+        .strategy_client_token0
+        .balance(&test.defindex_contract.address);
+    assert_eq!(strategy_balance, amount);
 
-    let instruction_amount_0 = 200i128;
-    let instruction_amount_1 = 100i128;
+    test.defindex_contract.emergency_withdraw(
+        &strategy_params_token0.first().unwrap().address,
+        &test.emergency_manager,
+    );
 
-    let instructions = sorobanvec![
-        &test.env,
-        Instruction {
-            action: ActionType::Withdraw,
-            strategy: Some(test.strategy_client_token0.address.clone()),
-            amount: Some(instruction_amount_0),
-            swap_details_exact_in: OptionalSwapDetailsExactIn::None,
-            swap_details_exact_out: OptionalSwapDetailsExactOut::None,
-        },
-        Instruction {
-            action: ActionType::Invest,
-            strategy: Some(test.strategy_client_token0.address.clone()),
-            amount: Some(instruction_amount_1),
-            swap_details_exact_in: OptionalSwapDetailsExactIn::None,
-            swap_details_exact_out: OptionalSwapDetailsExactOut::None,
-        }
-    ];
+    // Balance of the vault on the strategy should be 0
+    let strategy_balance = test
+        .strategy_client_token0
+        .balance(&test.defindex_contract.address);
+    assert_eq!(strategy_balance, 0);
 
-    test.defindex_contract.rebalance(&instructions);
+    // Balance of the token0 on the vault should be `amount`
+    let vault_balance_of_token = test.token0.balance(&test.defindex_contract.address);
+    assert_eq!(vault_balance_of_token, amount);
 
-    let vault_balance = test.token0.balance(&test.defindex_contract.address);
-    assert_eq!(vault_balance, instruction_amount_1);
+    // check if strategy is paused
+    let asset = test.defindex_contract.get_assets().first().unwrap();
+    assert_eq!(asset.strategies.first().unwrap().paused, true);
 }

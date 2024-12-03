@@ -29,11 +29,13 @@ export async function checkUserBalance(contractAddress: string, userPublicKey: s
             contractAddress,
             methodName,
             [userAddress],
-            source ? source : Keypair.random()
+            source ? source : Keypair.random(),
+            true
         );
 
         // Convert the result to a native JavaScript number
-        const balance = scValToNative(result.returnValue) as number;
+        console.log(result.result.retval)
+        const balance = scValToNative(result.result.retval) as number;
         console.log(`Balance for user ${userPublicKey}:`, balance);
 
         return balance;

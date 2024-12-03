@@ -54,5 +54,5 @@ impl<'a> IntegrationTest<'a> {
 }
 
 #[cfg(test)]
-mod test_vault_one_hodl_strategy;
-mod test_vault_one_fixed_strategy;
+mod vault_one_hodl_strategy;
+mod vault_one_fixed_strategy;

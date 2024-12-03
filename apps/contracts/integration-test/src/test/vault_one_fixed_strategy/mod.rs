@@ -1,7 +1,7 @@
 use super::ONE_YEAR_IN_SECONDS;
 
-mod test_deposit;
-mod test_withdraw;
+mod deposit;
+mod withdraw;
 
 pub fn calculate_yield(user_balance: i128, apr: u32, time_elapsed: u64) -> i128 {
     // Calculate yield based on the APR, time elapsed, and user's balance

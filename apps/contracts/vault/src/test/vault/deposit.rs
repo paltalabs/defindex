@@ -7,7 +7,7 @@ use crate::test::{
 
 // Test deposit not yet initialized
 #[test]
-fn test_deposit_not_yet_initialized() {
+fn not_yet_initialized() {
     let test = DeFindexVaultTest::setup();
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
@@ -23,7 +23,7 @@ fn test_deposit_not_yet_initialized() {
 
 
 #[test]
-fn deposit_amounts_desired_less_length() {
+fn amounts_desired_less_length() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -69,7 +69,7 @@ fn deposit_amounts_desired_less_length() {
 
 // test deposit amount desired more length
 #[test]
-fn deposit_amounts_desired_more_length() {
+fn amounts_desired_more_length() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -111,7 +111,7 @@ fn deposit_amounts_desired_more_length() {
 
 // test deposit amount min less length
 #[test]
-fn deposit_amounts_min_less_length() {
+fn amounts_min_less_length() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -158,7 +158,7 @@ fn deposit_amounts_min_less_length() {
 
 // test deposit amount min more length
 #[test]
-fn deposit_amounts_min_more_length() {
+fn amounts_min_more_length() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -204,7 +204,7 @@ fn deposit_amounts_min_more_length() {
 
 // test amount desired negative
 #[test]
-fn deposit_amounts_desired_negative() {
+fn amounts_desired_negative() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -250,7 +250,7 @@ fn deposit_amounts_desired_negative() {
 
 // test deposit one asset success 
 #[test]
-fn deposit_one_asset_success() {
+fn one_asset_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -378,7 +378,7 @@ fn deposit_one_asset_success() {
 
 // test deposit one asset with minimum more than desired
 #[test]
-fn deposit_one_asset_min_more_than_desired() {
+fn one_asset_min_more_than_desired() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -429,7 +429,7 @@ fn deposit_one_asset_min_more_than_desired() {
 
 // test deposit of several asset, considering different proportion of assets
 #[test]
-fn deposit_several_assets_success() {
+fn several_assets_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -629,7 +629,7 @@ fn deposit_several_assets_success() {
 
 // test deposit of several asset, imposing a minimum amount greater than optimal for asset 0
 #[test]
-fn deposit_several_assets_min_greater_than_optimal() {
+fn several_assets_min_greater_than_optimal() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -722,7 +722,7 @@ fn deposit_several_assets_min_greater_than_optimal() {
 
 //test deposit amounts_min greater than amounts_desired
 #[test]
-fn deposit_amounts_min_greater_than_amounts_desired(){
+fn amounts_min_greater_than_amounts_desired(){
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -773,6 +773,7 @@ fn deposit_amounts_min_greater_than_amounts_desired(){
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0 + 1, amount1 + 1],
         &users[0],
+        &false
     );
 
     // this should fail
@@ -781,7 +782,7 @@ fn deposit_amounts_min_greater_than_amounts_desired(){
 
 //Test token transfer from user to vault on deposit
 #[test]
-fn deposit_transfers_tokens_from_user_to_vault(){
+fn transfers_tokens_from_user_to_vault(){
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -832,6 +833,7 @@ fn deposit_transfers_tokens_from_user_to_vault(){
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0, amount1],
         &users[0],
+        &false
     );
 
     // check balances after deposit
@@ -843,7 +845,7 @@ fn deposit_transfers_tokens_from_user_to_vault(){
 }
 
 #[test]
-fn test_deposit_arithmetic_error() {
+fn arithmetic_error() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -888,6 +890,7 @@ fn test_deposit_arithmetic_error() {
         &sorobanvec![&test.env, large_amount],
         &sorobanvec![&test.env, large_amount],
         &users[0],
+        &false
     );
     
     // Try to deposit a large amount
@@ -895,6 +898,7 @@ fn test_deposit_arithmetic_error() {
         &sorobanvec![&test.env, large_amount],
         &sorobanvec![&test.env, large_amount],
         &users[0],
+        &false
     );
 
     // Verify that the returned error is ContractError::ArithmeticError
@@ -903,7 +907,7 @@ fn test_deposit_arithmetic_error() {
 
 //all amounts are cero
 #[test]
-fn deposit_amounts_desired_zero() {
+fn amounts_desired_zero() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -951,6 +955,7 @@ fn deposit_amounts_desired_zero() {
         &sorobanvec![&test.env, 0i128],
         &sorobanvec![&test.env, 0i128],
         &users[0],
+        &false
     );
 
     // Verify that the returned error is ContractError::InsufficientAmount
@@ -960,7 +965,7 @@ fn deposit_amounts_desired_zero() {
 
     // Deposit with insufficient funds and check for specific error message
 #[test]
-fn deposit_insufficient_funds_with_error_message() {
+fn insufficient_funds_with_error_message() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -1014,6 +1019,7 @@ fn deposit_insufficient_funds_with_error_message() {
         &sorobanvec![&test.env, amount0 + 1, amount1 + 1],
         &sorobanvec![&test.env, amount0 + 1, amount1 + 1],
         &users[0],
+        &false
     );
 
     if deposit_result == Err(Err(InvokeError::Contract(10))) {

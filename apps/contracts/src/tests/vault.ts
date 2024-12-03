@@ -24,7 +24,7 @@ const network = process.argv[2];
 export async function depositToVault(deployedVault: string, amount: number[], user?: Keypair, invest?: boolean) {
     // Create and fund a new user account if not provided
     const newUser = user ? user : Keypair.random();
-    const investDeposit = invest ? invest : false;
+    const investBool = invest ? invest : false;
     console.log('🚀 ~ depositToVault ~ newUser.publicKey():', newUser.publicKey());
     console.log('🚀 ~ depositToVault ~ newUser.secret():', newUser.secret());
 
@@ -43,7 +43,7 @@ export async function depositToVault(deployedVault: string, amount: number[], us
         xdr.ScVal.scvVec(amountsDesired.map((amount) => nativeToScVal(amount, { type: "i128" }))),
         xdr.ScVal.scvVec(amountsMin.map((min) => nativeToScVal(min, { type: "i128" }))),
         new Address(newUser.publicKey()).toScVal(),
-        xdr.ScVal.scvBool(investDeposit)
+        xdr.ScVal.scvBool(investBool)
     ];
 
     try {
@@ -104,7 +104,6 @@ export async function getDfTokenBalance(deployedVault: string, userPublicKey: st
             source ? source : Keypair.random(),  // No specific source is needed as we are just querying the balance
             true   // Set to simulate mode if testing on an uncommitted transaction
         );
-
         const balance = scValToNative(result.result.retval)
         return balance;
     } catch (error) {
@@ -186,19 +185,19 @@ export async function withdrawFromVault(deployedVault: string, withdrawAmount: n
  */
 export async function fetchCurrentIdleFunds(deployedVault: string, user: Keypair): Promise<Map<Address, bigint>> {
     try {
-        const result = await invokeCustomContract(deployedVault, "fetch_current_idle_funds", [], user);
-        return result.map(scValToNative); // Convert result to native format if needed
+        const result = await invokeCustomContract(deployedVault, "fetch_current_idle_funds", [], user, false);
+        const parsedResult = scValToNative(result.returnValue);
+        return parsedResult; // Convert result to native format if needed
     } catch (error) {
         console.error("❌ Failed to fetch current idle funds:", error);
         throw error;
     }
 }
 
-export async function fetchParsedCurrentIdleFunds(deployedVault: string, user: Keypair) {
+export async function fetchParsedCurrentIdleFunds(deployedVault: string, user: Keypair): Promise<{ address: string, amount: bigint }[]> {
     try {
-        const res = await invokeCustomContract(deployedVault, "fetch_current_idle_funds", [], user);
-        const funds = scValToNative(res.returnValue);
-        const mappedFunds = Object.entries(funds).map(([key, value]) => ({
+        const res = await fetchCurrentIdleFunds(deployedVault, user);
+        const mappedFunds = Object.entries(res).map(([key, value]) => ({
             address: key,
             amount: value,
         }));
@@ -454,17 +453,6 @@ function mapSwapDetailsExactOut(details: SwapDetailsExactOut) {
         }),
     ];
 }
-
-export async function getVaultBalanceInStrategy(strategyAddress: string, vaultAddress: string, user: Keypair) {
-    const address = new Address(vaultAddress);
-    try {
-      const res = await invokeCustomContract(strategyAddress, "balance",[address.toScVal()],user)
-      return scValToNative(res.returnValue);
-    } catch (error) {
-      console.error('🔴 « error:', error);
-      return 0;
-    }
-  }
 
 export async function fetchCurrentInvestedFunds(deployedVault:string, user:Keypair) {
     try {

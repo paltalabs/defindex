@@ -18,7 +18,10 @@ fn deposit_with_negative_amount() {
 // check auth
 #[test]
 fn deposit_mock_auths() {
-    todo!()
+    let test = HodlStrategyTest::setup();
+    let init_fn_args: Vec<Val> = (0,).into_val(&test.env);
+    test.strategy.initialize(&test.token.address, &init_fn_args);
+    test.env.mock_all_auths();
 }
 
 #[test]
