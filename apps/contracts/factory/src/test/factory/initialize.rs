@@ -4,7 +4,7 @@ use crate::error::FactoryError;
 use crate::test::{create_asset_params, DeFindexFactoryTest};
 
 #[test]
-fn test_initialize_and_get_storage() {
+fn initialize_and_get_storage() {
     let test = DeFindexFactoryTest::setup();
 
     test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &100u32, &test.defindex_wasm_hash);
@@ -17,7 +17,7 @@ fn test_initialize_and_get_storage() {
 }
 
 #[test]
-fn test_get_storage_not_yet_initialized() {
+fn get_storage_not_yet_initialized() {
     let test = DeFindexFactoryTest::setup();
     let factory_admin = test.factory_contract.try_admin();
     let factory_defindex_receiver = test.factory_contract.try_defindex_receiver();
@@ -27,7 +27,7 @@ fn test_get_storage_not_yet_initialized() {
 }
 
 #[test]
-fn test_initialize_twice() {
+fn initialize_twice() {
     let test = DeFindexFactoryTest::setup();
 
     test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &100u32, &test.defindex_wasm_hash);
@@ -40,7 +40,7 @@ fn test_initialize_twice() {
 }
 
 #[test]
-fn test_create_defindex_not_yet_initialized() {
+fn create_defindex_not_yet_initialized() {
     let test = DeFindexFactoryTest::setup();
 
     let asset_params = create_asset_params(&test);

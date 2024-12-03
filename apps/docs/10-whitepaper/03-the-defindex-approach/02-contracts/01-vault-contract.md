@@ -150,7 +150,7 @@ The fees collected are from the gains of the strategies. Thus, it is a performan
 The DeFindex fee collection process is designed to track fees in the vault until distribution, with fees originating from the strategy gains. This ensures an organized and accountable fee handling system.
 
 #### General Overview
-Fees are charged on a per-strategy basis, meaning each strategy independently calculates its gains and the corresponding fees. These fees are then collected and distributed to the protocol and manager. The fee percentages are fixed per vault and they are decided when creating it.
+Fees are charged on a per-strategy basis, meaning each strategy independently calculates its gains and the corresponding fees. These fees are then collected and distributed to the protocol and manager. The fee percentages are fixed per vault and they are decided when creating it. However, the manager can change the ratio of the Vault fees at any time.
 
 #### Detailed Workflow
 
@@ -190,25 +190,42 @@ fn report_all_strategies() {
 ```
 - **Usage**: The `report_all_strategies()` function is invoked during key operations such as rebalancing, deposits, or withdrawals to ensure accurate gain tracking.
 
-#### Fee Distribution
-Once gains are tracked, fees are calculated and distributed accordingly. After distribution, the gains and losses for each strategy are reset to 0.
+#### Fee Locking and Distribution
+Once gains are tracked, fees can be inspected and/or locked for future distribution. So, the manager can see the current gains and losses, and decide if he wants to change the ratio of the fees, before locking them.
 
-**Pseudocode for Fee Distribution**:
+The locking process is done by the manager calling the `lock_fees()` function.
+
 ```rust
-fn distribute_fees() {
+fn lock_fees() {
     for strategy in strategies {
-        let gains_or_losses = get_gains_or_losses(strategy);
         if gains_or_losses > 0 {
             let protocol_fee = gains_or_losses * protocol_fee_receiver / MAX_BPS;
             let vault_fee = gains_or_losses * vault_fee_receiver / MAX_BPS;
-            transfer_from_strategy(strategy.asset, protocol_fee_receiver, protocol_fee);
-            transfer_from_strategy(strategy.asset, vault_fee_receiver, vault_fee);
+            lock_fee(strategy.asset, protocol_fee_receiver, protocol_fee);
+            lock_fee(strategy.asset, vault_fee_receiver, vault_fee);
             reset_gains_or_losses(strategy);
         }
     }
 }
 ```
-This function is public and can be called by anyone.
+
+When locking the fees, it is applied the current ratio to all the gains, and then they are reset to 0. If there is not gains, there is no fee to lock, and gains_or_losses can't be reset to 0.
+
+Then, the fees are distributed to the protocol and manager, whenever a person calls the `distribute_fees()` function.
+
+**Pseudocode for Fee Distribution**:
+```rust
+fn distribute_fees() {
+    for strategy in strategies {
+        let locked_fees = get_locked_fees(strategy);
+        if locked_fees > 0 {
+            transfer_from_strategy(strategy.asset, protocol_fee_receiver, locked_fees * protocol_fee_receiver / MAX_BPS);
+            transfer_from_strategy(strategy.asset, vault_fee_receiver, locked_fees * vault_fee_receiver / MAX_BPS);
+            reset_locked_fees(strategy);
+        }
+    }
+}
+```
 
 #### Displaying User Balances
 To provide users with an accurate view of their balances, any outstanding fees should be deducted offchain from the total assets when showing the current balances.

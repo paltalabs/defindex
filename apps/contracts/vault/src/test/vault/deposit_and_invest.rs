@@ -7,7 +7,7 @@ use crate::test::{
 
 // test deposit one asset success 
 #[test]
-fn deposit_and_invest_one_asset_success() {
+fn one_asset_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -129,7 +129,7 @@ fn deposit_and_invest_one_asset_success() {
 
 // test deposit of several asset, considering different proportion of assets
 #[test]
-fn deposit_and_invest_several_assets_success() {
+fn several_assets_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);

@@ -16,7 +16,7 @@ use crate::test::{
 
 // check that invest can only be called after initialized
 #[test]
-fn test_invest_not_yet_initialized() {
+fn not_yet_initialized() {
     let test = DeFindexVaultTest::setup();
 
     let asset_investments = vec![
@@ -41,7 +41,7 @@ fn test_invest_not_yet_initialized() {
 
 // try to invest with a wrong AssetInvestmentAllocation length
 #[test]
-fn test_invest_wrong_asset_investment_length() {
+fn wrong_asset_investment_length() {
     let test = DeFindexVaultTest::setup();
 
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -120,7 +120,7 @@ fn test_invest_wrong_asset_investment_length() {
 
 // check that fails if strategy length is wrong
 #[test]
-fn test_invest_wrong_strategy_length() {
+fn wrong_strategy_length() {
     let test = DeFindexVaultTest::setup();
 
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -224,7 +224,7 @@ fn test_invest_wrong_strategy_length() {
 
 // check that fails if asset address is wrong
 #[test]
-fn test_invest_wrong_asset_address() {
+fn wrong_asset_address() {
     let test = DeFindexVaultTest::setup();
 
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -281,7 +281,7 @@ fn test_invest_wrong_asset_address() {
 
 // check that we cannot invest with negative amounts
 #[test]
-fn test_invest_negative_amount() {
+fn negative_amount() {
     let test = DeFindexVaultTest::setup();
 
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -338,7 +338,7 @@ fn test_invest_negative_amount() {
 
 // check that we cannot invest in paused strategy. Will initialize with paused strategy and then try to invest
 #[test]
-fn test_invest_paused_strategy() {
+fn paused_strategy() {
     let test = DeFindexVaultTest::setup();
 
 
@@ -394,7 +394,7 @@ fn test_invest_paused_strategy() {
 
 // invest in strategy should work
 #[test]
-fn test_invest_in_strategy() {
+fn in_strategy() {
     let test = DeFindexVaultTest::setup();
 
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -558,7 +558,7 @@ fn test_invest_in_strategy() {
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #10)")] // balance is not sufficient to spend
 // we get the error from the token contract
-fn test_invest_more_than_idle_funds() {
+fn more_than_idle_funds() {
     let test = DeFindexVaultTest::setup();
 
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -651,7 +651,7 @@ fn test_invest_more_than_idle_funds() {
 
 // invest without mock aut, mocking only specific auths
 #[test]
-fn test_invest_without_mock_all_auths() {
+fn without_mock_all_auths() {
     let test = DeFindexVaultTest::setup();
 
     let strategy_params_token0 = create_strategy_params_token0(&test);

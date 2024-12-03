@@ -57,7 +57,4 @@ impl<'a> HodlStrategyTest<'a> {
     // }
 }
 
-mod initialize;
-mod deposit;
-mod events;
-mod withdraw;
+mod hodl;
