@@ -1,13 +1,16 @@
 #![no_std]
-use constants::MIN_DUST;
+use blend_pool::perform_reinvest;
+use constants::{MIN_DUST, SCALAR_9};
 use soroban_sdk::{
-    contract, contractimpl, panic_with_error, token::TokenClient, Address, Env, IntoVal, String, Val, Vec};
+    contract, contractimpl, token::TokenClient, vec, Address, Env, IntoVal, String, Val, Vec};
 
 mod blend_pool;
 mod constants;
 mod reserves;
+mod soroswap;
 mod storage;
 
+use soroswap::internal_swap_exact_tokens_for_tokens;
 use storage::{extend_instance_ttl, is_initialized, set_initialized, Config};
 
 pub use defindex_strategy_core::{
@@ -49,13 +52,17 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         let blend_pool_address: Address = init_args.get(0).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
         let reserve_id: u32 = init_args.get(1).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
+        let blend_token: Address = init_args.get(2).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
+        let soroswap_router: Address = init_args.get(3).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
 
         set_initialized(&e);
 
         let config = Config {
             asset: asset.clone(),
-            pool: blend_pool_address.clone(),
-            reserve_id: reserve_id.clone(),
+            pool: blend_pool_address,
+            reserve_id,
+            blend_token,
+            router: soroswap_router,
         };
         
         storage::set_config(&e, config);
@@ -88,15 +95,11 @@ impl DeFindexStrategyTrait for BlendStrategy {
             return Err(StrategyError::InvalidArgument); //TODO: create a new error type for this
         }
 
-        // Harvest if rewards exceed threshold
-        // let rewards = blend_pool::claim_rewards(&e);
-        // if rewards > REWARD_THRESHOLD {
-        //     blend_pool::reinvest_rewards(&e, rewards);
-        // }
+        let config = storage::get_config(&e);
+        perform_reinvest(&e, &config)?;
 
         let reserves = storage::get_strategy_reserves(&e);
 
-        let config = storage::get_config(&e);
         // transfer tokens from the vault to the strategy contract
         TokenClient::new(&e, &config.asset).transfer(&from, &e.current_contract_address(), &amount);
 
@@ -112,17 +115,13 @@ impl DeFindexStrategyTrait for BlendStrategy {
     fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-        from.require_auth();        
 
         let config = storage::get_config(&e);
-        let _harvested_blend = blend_pool::claim(&e, &from, &config);
+        let harvested_blend = blend_pool::claim(&e, &e.current_contract_address(), &config);
 
-        // should swap to usdc
-        // should supply to the pool
+        perform_reinvest(&e, &config)?;
 
-        // etcetc
-
-        event::emit_harvest(&e, String::from_str(&e, STARETEGY_NAME), 0i128, from);
+        event::emit_harvest(&e, String::from_str(&e, STARETEGY_NAME), harvested_blend, from);
         Ok(())
     }
 
@@ -161,11 +160,29 @@ impl DeFindexStrategyTrait for BlendStrategy {
     ) -> Result<i128, StrategyError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-
+    
+        // Get the vault's shares
         let vault_shares = storage::get_vault_shares(&e, &from);
-
-        Ok(vault_shares)
+    
+        // Get the strategy's total shares and bTokens
+        let reserves = storage::get_strategy_reserves(&e);
+        let total_shares = reserves.total_shares;
+        let total_b_tokens = reserves.total_b_tokens;
+    
+        if total_shares == 0 || total_b_tokens == 0 {
+            // No shares or bTokens in the strategy
+            return Ok(0);
+        }
+    
+        // Calculate the bTokens corresponding to the vault's shares
+        let vault_b_tokens = (vault_shares * total_b_tokens) / total_shares;
+    
+        // Use the b_rate to convert bTokens to underlying assets
+        let underlying_balance = (vault_b_tokens * reserves.b_rate) / SCALAR_9;
+    
+        Ok(underlying_balance)
     }
 }
 
-// mod test;
+#[cfg(any(test, feature = "testutils"))]
+mod test;

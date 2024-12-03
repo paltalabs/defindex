@@ -17,3 +17,5 @@ soroban-fixed-point-math = "1.2.0"
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
+sep-40-oracle = { version = "1.0.0", features = ["testutils"] }
+sep-41-token = { version = " 1.0.0", features = ["testutils"] }

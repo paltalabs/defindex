@@ -7,6 +7,8 @@ pub struct Config {
     pub asset: Address,
     pub pool: Address,
     pub reserve_id: u32,
+    pub blend_token: Address,
+    pub router: Address,
 }
 
 #[derive(Clone)]
@@ -19,7 +21,7 @@ pub enum DataKey {
     VaultPos(Address) // Vaults Positions
 }
 
-const DAY_IN_LEDGERS: u32 = 17280;
+pub const DAY_IN_LEDGERS: u32 = 17280;
 pub const INSTANCE_BUMP_AMOUNT: u32 = 30 * DAY_IN_LEDGERS;
 pub const INSTANCE_LIFETIME_THRESHOLD: u32 = INSTANCE_BUMP_AMOUNT - DAY_IN_LEDGERS;
 const LEDGER_BUMP: u32 = 120 * DAY_IN_LEDGERS;

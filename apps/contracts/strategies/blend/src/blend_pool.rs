@@ -1,7 +1,7 @@
 use defindex_strategy_core::StrategyError;
 use soroban_sdk::{auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation}, panic_with_error, token::TokenClient, vec, Address, Env, IntoVal, Symbol, Vec};
 
-use crate::storage::Config;
+use crate::{constants::REWARD_THRESHOLD, reserves, soroswap::internal_swap_exact_tokens_for_tokens, storage::{self, Config}};
 
 soroban_sdk::contractimport!(
     file = "../external_wasms/blend/blend_pool.wasm"
@@ -114,4 +114,44 @@ pub fn claim(e: &Env, from: &Address, config: &Config) -> i128 {
 
     // TODO: Check reserve_token_ids and how to get the correct one
     pool_client.claim(from, &vec![&e, config.reserve_id], from)
+}
+
+pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError>{
+    // Check the current BLND balance
+    let blnd_balance = TokenClient::new(e, &config.blend_token).balance(&e.current_contract_address());
+
+    // If balance does not exceed threshold, skip harvest
+    if blnd_balance < REWARD_THRESHOLD {
+        return Ok(false);
+    }
+    
+    // Swap BLND to the underlying asset
+    let mut swap_path: Vec<Address> = vec![&e];
+    swap_path.push_back(config.blend_token.clone());
+    swap_path.push_back(config.asset.clone());
+
+    let deadline = e.ledger().timestamp() + 600;
+
+    // Swapping BLND tokens to Underlying Asset
+    let swapped_amounts = internal_swap_exact_tokens_for_tokens(
+        e,
+        &blnd_balance,
+        &0i128,
+        swap_path,
+        &e.current_contract_address(),
+        &deadline,
+        config,
+    )?;
+    let amount_out: i128 = swapped_amounts
+        .get(1)
+        .ok_or(StrategyError::InvalidArgument)?
+        .into_val(e);
+    
+    // Supplying underlying asset into blend pool
+    let b_tokens_minted = supply(&e, &e.current_contract_address(), &amount_out, &config);
+
+    let reserves = storage::get_strategy_reserves(&e);
+    reserves::harvest(&e, reserves, amount_out, b_tokens_minted);
+
+    Ok(true)
 }

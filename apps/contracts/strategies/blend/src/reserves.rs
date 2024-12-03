@@ -124,3 +124,24 @@ pub fn withdraw(
 
     share_amount
 }
+
+pub fn harvest(
+    e: &Env,
+    mut reserves: StrategyReserves,
+    underlying_amount: i128,
+    b_tokens_amount: i128,
+) {
+    if underlying_amount <= 0 {
+        panic_with_error!(e, StrategyError::InvalidArgument); //TODO: create a new error type for this
+    }
+
+    if b_tokens_amount <= 0 {
+        panic_with_error!(e, StrategyError::InvalidArgument); //TODO: create a new error type for this
+    }
+
+    reserves.update_rate(underlying_amount, b_tokens_amount);
+    
+    reserves.total_b_tokens += b_tokens_amount;
+
+    storage::set_strategy_reserves(&e, reserves);
+}
