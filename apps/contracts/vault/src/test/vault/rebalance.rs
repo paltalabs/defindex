@@ -3,7 +3,7 @@ use soroban_sdk::{vec as sorobanvec, InvokeError, String, Vec};
 use crate::test::{
     create_strategy_params_token0, defindex_vault::{
         ActionType, AssetInvestmentAllocation, AssetStrategySet, Instruction, OptionalSwapDetailsExactIn, OptionalSwapDetailsExactOut, StrategyInvestment
-    }, invest, DeFindexVaultTest
+    }, DeFindexVaultTest
 };
 use crate::test::defindex_vault::ContractError;
 
