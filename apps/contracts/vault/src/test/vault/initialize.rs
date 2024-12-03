@@ -8,7 +8,7 @@ use crate::test::{
 
 
 #[test]
-fn test_initialize_and_get_roles() {
+fn initialize_and_get_roles() {
     let test = DeFindexVaultTest::setup();
     let strategy_params_token0 = create_strategy_params_token0(&test);
     let strategy_params_token1 = create_strategy_params_token1(&test);
@@ -48,7 +48,7 @@ fn test_initialize_and_get_roles() {
 
 // Test that if strategy does support other asset we get an error when initializing
 #[test]
-fn test_initialize_with_unsupported_strategy() {
+fn initialize_with_unsupported_strategy() {
     let test = DeFindexVaultTest::setup();
     let strategy_params_token0 = create_strategy_params_token0(&test);
 
@@ -84,7 +84,7 @@ fn test_initialize_with_unsupported_strategy() {
 
 // test that if we try to initialize with an empty asset allocation fails
 #[test]
-fn test_initialize_with_empty_asset_allocation() {
+fn initialize_with_empty_asset_allocation() {
     let test = DeFindexVaultTest::setup();
     // let strategy_params_token0 = create_strategy_params_token0(&test);
 
@@ -106,7 +106,7 @@ fn test_initialize_with_empty_asset_allocation() {
 }
 
 #[test]
-fn test_get_roles_not_yet_initialized() {
+fn get_roles_not_yet_initialized() {
     let test = DeFindexVaultTest::setup();
     let manager_role = test.defindex_contract.try_get_manager();
     let fee_receiver_role = test.defindex_contract.try_get_manager();
@@ -118,7 +118,7 @@ fn test_get_roles_not_yet_initialized() {
 }
 
 #[test]
-fn test_initialize_twice() {
+fn initialize_twice() {
     let test = DeFindexVaultTest::setup();
     let strategy_params_token0 = create_strategy_params_token0(&test);
     let strategy_params_token1 = create_strategy_params_token1(&test);
@@ -166,7 +166,7 @@ fn test_initialize_twice() {
 }
 
 #[test]
-fn test_withdraw_not_yet_initialized() {
+fn withdraw_not_yet_initialized() {
     let test = DeFindexVaultTest::setup();
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
@@ -175,7 +175,7 @@ fn test_withdraw_not_yet_initialized() {
 }
 
 #[test]
-fn test_emergency_withdraw_not_yet_initialized() {
+fn emergency_withdraw_not_yet_initialized() {
     let test = DeFindexVaultTest::setup();
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 

@@ -155,6 +155,4 @@ impl<'a> DeFindexFactoryTest<'a> {
     }
 }
 
-mod admin;
-mod initialize;
-mod create_defindex;
+mod factory;

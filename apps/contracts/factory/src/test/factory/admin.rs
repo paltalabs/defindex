@@ -5,7 +5,7 @@ use alloc::vec;
 use crate::test::DeFindexFactoryTest;
 
 #[test]
-fn test_set_new_admin_by_admin() {
+fn set_new_admin_by_admin() {
 
     let test = DeFindexFactoryTest::setup();
 
@@ -46,7 +46,7 @@ fn test_set_new_admin_by_admin() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Auth, InvalidAction)")] // Unauthorized
-fn test_set_new_admin_by_unauthorized() {
+fn set_new_admin_by_unauthorized() {
     let test = DeFindexFactoryTest::setup();
 
     test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &100u32, &test.defindex_wasm_hash);
@@ -69,7 +69,7 @@ fn test_set_new_admin_by_unauthorized() {
 }
 
 #[test]
-fn test_set_defindex_receiver_by_admin() {
+fn set_defindex_receiver_by_admin() {
     let test = DeFindexFactoryTest::setup();
 
     test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &100u32, &test.defindex_wasm_hash);
@@ -109,7 +109,7 @@ fn test_set_defindex_receiver_by_admin() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Auth, InvalidAction)")] // Unauthorized
-fn test_set_fee_receiver_by_unauthorized() {
+fn set_fee_receiver_by_unauthorized() {
     let test = DeFindexFactoryTest::setup();
 
     test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &100u32, &test.defindex_wasm_hash);
