@@ -2,25 +2,8 @@ use soroban_sdk::{vec as sorobanvec, InvokeError, Map, String, Vec};
 
 use crate::test::defindex_vault::{AssetStrategySet, ContractError, CurrentAssetInvestmentAllocation, StrategyAllocation};
 use crate::test::{
-    create_strategy_params_token0, create_strategy_params_token1, DeFindexVaultTest,
+    create_defindex_vault, create_strategy_params_token0, create_strategy_params_token1, DeFindexVaultTest
 };
-
-// Test deposit not yet initialized
-#[test]
-fn not_yet_initialized() {
-    let test = DeFindexVaultTest::setup();
-    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
-
-    let result = test.defindex_contract.try_deposit(
-        &sorobanvec![&test.env, 100i128],
-        &sorobanvec![&test.env, 100i128],
-        &users[0],
-        &false,
-    );
-
-    assert_eq!(result, Err(Ok(ContractError::NotInitialized)));
-}
-
 
 #[test]
 fn amounts_desired_less_length() {
@@ -42,22 +25,23 @@ fn amounts_desired_less_length() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount = 1000i128;
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
-    let response = test.defindex_contract.try_deposit(
+    let response = defindex_contract.try_deposit(
         &sorobanvec![&test.env, amount], // wrong amount desired
         &sorobanvec![&test.env, amount, amount],
         &users[0],
@@ -84,22 +68,23 @@ fn amounts_desired_more_length() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount = 1000i128;
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
-    let response = test.defindex_contract.try_deposit(
+    let response = defindex_contract.try_deposit(
         &sorobanvec![&test.env, amount, amount], // wrong amount desired
         &sorobanvec![&test.env, amount],
         &users[0],
@@ -130,22 +115,23 @@ fn amounts_min_less_length() {
         }
     ]; 
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount = 1000i128;
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
-    let response = test.defindex_contract.try_deposit(
+    let response = defindex_contract.try_deposit(
         &sorobanvec![&test.env, amount, amount],
         &sorobanvec![&test.env, amount], // wrong amount min
         &users[0],
@@ -177,22 +163,23 @@ fn amounts_min_more_length() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount = 1000i128;
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
-    let response = test.defindex_contract.try_deposit(
+    let response = defindex_contract.try_deposit(
         &sorobanvec![&test.env, amount, amount],
         &sorobanvec![&test.env, amount, amount, amount], // wrong amount min
         &users[0],
@@ -223,22 +210,23 @@ fn amounts_desired_negative() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount = 1000i128;
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
-    let response = test.defindex_contract.try_deposit(
+    let response = defindex_contract.try_deposit(
         &sorobanvec![&test.env, -amount, amount],
         &sorobanvec![&test.env, amount, amount],
         &users[0],
@@ -264,16 +252,17 @@ fn one_asset_success() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount = 123456789i128;
 
@@ -284,11 +273,11 @@ fn one_asset_success() {
     let user_balance = test.token0.balance(&users[0]);
     assert_eq!(user_balance, amount);
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
     // deposit
-    test.defindex_contract.deposit(
+    defindex_contract.deposit(
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
@@ -296,14 +285,14 @@ fn one_asset_success() {
     );
 
     // check balances after deposit
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount - 1000);
 
     let user_balance = test.token0.balance(&users[0]);
     assert_eq!(user_balance, 0i128);
 
     // check that all the assets are in the vault
-    let vault_balance = test.token0.balance(&test.defindex_contract.address);
+    let vault_balance = test.token0.balance(&defindex_contract.address);
     assert_eq!(vault_balance, amount);
     
     // check total manage funds
@@ -325,14 +314,14 @@ fn one_asset_success() {
    
 
     // check that fetch_total_managed_funds returns correct amount
-    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
+    let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
 
     // check current idle funds, 
     let mut expected_idle_funds_map = Map::new(&test.env);
     expected_idle_funds_map.set(test.token0.address.clone(), amount);
 
-    let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
+    let current_idle_funds = defindex_contract.fetch_current_idle_funds();
     assert_eq!(current_idle_funds, expected_idle_funds_map);
 
     //map shuould be map
@@ -340,7 +329,7 @@ fn one_asset_success() {
     expected_map.set(test.token0.address.clone(), 0i128);
 
     // check that current invested funds is now 0, funds still in idle funds
-    let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
+    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
     assert_eq!(current_invested_funds, expected_map);
 
     // Now user deposits for the second time
@@ -350,7 +339,7 @@ fn one_asset_success() {
     assert_eq!(user_balance, amount2);
 
     // deposit
-    test.defindex_contract.deposit(
+    defindex_contract.deposit(
         &sorobanvec![&test.env, amount2],
         &sorobanvec![&test.env, amount2],
         &users[0],
@@ -362,14 +351,14 @@ fn one_asset_success() {
     expected_map.set(test.token0.address.clone(), amount + amount2);
 
     // check balances after deposit
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount + amount2 - 1000);
 
     let user_balance = test.token0.balance(&users[0]);
     assert_eq!(user_balance, 0i128);
     
     // check that all the assets are in the vault
-    let vault_balance = test.token0.balance(&test.defindex_contract.address);
+    let vault_balance = test.token0.balance(&defindex_contract.address);
     assert_eq!(vault_balance, amount + amount2);
     
     // check that fetch_total_managed_funds returns correct amount
@@ -387,11 +376,11 @@ fn one_asset_success() {
             strategy_allocations: strategy_investments_expected,
         }
     );
-    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
+    let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
     
     // check current idle funds
-    let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
+    let current_idle_funds = defindex_contract.fetch_current_idle_funds();
     assert_eq!(current_idle_funds, expected_map);
     
 
@@ -400,7 +389,7 @@ fn one_asset_success() {
     expected_map.set(test.token0.address.clone(), 0i128);
     
     // check that current invested funds is now 0, funds still in idle funds
-    let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
+    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
     assert_eq!(current_invested_funds, expected_map);
 
 
@@ -423,16 +412,17 @@ fn one_asset_min_more_than_desired() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount = 123456789i128;
 
@@ -443,11 +433,11 @@ fn one_asset_min_more_than_desired() {
     let user_balance = test.token0.balance(&users[0]);
     assert_eq!(user_balance, amount);
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
     // deposit
-    let result=test.defindex_contract.try_deposit(
+    let result=defindex_contract.try_deposit(
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount + 1],
         &users[0],
@@ -479,16 +469,17 @@ fn several_assets_success() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount0 = 123456789i128;
     let amount1 = 987654321i128;
@@ -503,11 +494,11 @@ fn several_assets_success() {
     let user_balance1 = test.token1.balance(&users[0]);
     assert_eq!(user_balance1, amount1);
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
     // deposit
-    let deposit_result=test.defindex_contract.deposit(
+    let deposit_result=defindex_contract.deposit(
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0, amount1],
         &users[0],
@@ -518,12 +509,12 @@ fn several_assets_success() {
     assert_eq!(deposit_result, (sorobanvec![&test.env, amount0, amount1], amount0 + amount1));
 
     // check balances after deposit
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     // For first deposit, a minimum amount LIQUIDITY OF 1000 is being locked in the contract
     assert_eq!(df_balance, amount0 + amount1 - 1000);
 
     // check that the vault holds 1000 shares
-    let vault_df_shares = test.defindex_contract.balance(&test.defindex_contract.address);
+    let vault_df_shares = defindex_contract.balance(&defindex_contract.address);
     assert_eq!(vault_df_shares, 1000i128);
     
     let user_balance0 = test.token0.balance(&users[0]);
@@ -532,10 +523,10 @@ fn several_assets_success() {
     assert_eq!(user_balance1,0i128);
 
     // check vault balance of asset 0
-    let vault_balance0 = test.token0.balance(&test.defindex_contract.address);
+    let vault_balance0 = test.token0.balance(&defindex_contract.address);
     assert_eq!(vault_balance0, amount0);
     // check vault balance of asset 1
-    let vault_balance1 = test.token1.balance(&test.defindex_contract.address);
+    let vault_balance1 = test.token1.balance(&defindex_contract.address);
     assert_eq!(vault_balance1, amount1);
 
     // check total managed funds
@@ -566,7 +557,7 @@ fn several_assets_success() {
             strategy_allocations: strategy_investments_expected_token_1,
         }
     );
-    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
+    let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
 
      //map shuould be map
@@ -576,7 +567,7 @@ fn several_assets_success() {
  
 
     // check current idle funds
-    let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
+    let current_idle_funds = defindex_contract.fetch_current_idle_funds();
     assert_eq!(current_idle_funds, expected_map);
     
     //map shuould be map
@@ -585,7 +576,7 @@ fn several_assets_success() {
     expected_map.set(test.token1.address.clone(), 0i128);
 
     // check that current invested funds is now 0, funds still in idle funds
-    let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
+    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
     assert_eq!(current_invested_funds, expected_map);
 
 
@@ -606,7 +597,7 @@ fn several_assets_success() {
 
 
     // user 1 deposits
-    let deposit_result=test.defindex_contract.deposit(
+    let deposit_result=defindex_contract.deposit(
         &sorobanvec![&test.env, amount0_new, amount1_new],
         &sorobanvec![&test.env, 0i128, 0i128],
         &users[1],
@@ -620,7 +611,7 @@ fn several_assets_success() {
 
 
     // check balances after deposit
-    let df_balance = test.defindex_contract.balance(&users[1]);
+    let df_balance = defindex_contract.balance(&users[1]);
     assert_eq!(df_balance, 2*(amount0 + amount1));
 
     let user_balance0 = test.token0.balance(&users[1]);
@@ -630,10 +621,10 @@ fn several_assets_success() {
     assert_eq!(user_balance1, amount1_new - 2*amount1);
 
     // check vault balance of asset 0
-    let vault_balance0 = test.token0.balance(&test.defindex_contract.address);
+    let vault_balance0 = test.token0.balance(&defindex_contract.address);
     assert_eq!(vault_balance0, 3*amount0);
     // check vault balance of asset 1
-    let vault_balance1 = test.token1.balance(&test.defindex_contract.address);
+    let vault_balance1 = test.token1.balance(&defindex_contract.address);
     assert_eq!(vault_balance1, 3*amount1);
 
     
@@ -665,7 +656,7 @@ fn several_assets_success() {
             strategy_allocations: strategy_investments_expected_token_1,
         }
     );
-    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
+    let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
 
     //map shuould be map
@@ -673,7 +664,7 @@ fn several_assets_success() {
     expected_map.set(test.token0.address.clone(), 3*amount0);
     expected_map.set(test.token1.address.clone(), 3*amount1);
     // check current idle funds
-    let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
+    let current_idle_funds = defindex_contract.fetch_current_idle_funds();
     assert_eq!(current_idle_funds, expected_map);
 
     //map shuould be map
@@ -682,7 +673,7 @@ fn several_assets_success() {
     expected_map.set(test.token1.address.clone(), 0i128);
 
     // check that current invested funds is now 0, funds still in idle funds
-    let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
+    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
     assert_eq!(current_invested_funds, expected_map);
 
     // we will repeat one more time, now enforcing the first asset
@@ -700,7 +691,7 @@ fn several_assets_success() {
     assert_eq!(user_balance1, amount1_new);
 
     // user 1 deposits
-    let deposit_result=test.defindex_contract.deposit(
+    let deposit_result=defindex_contract.deposit(
         &sorobanvec![&test.env, amount0_new, amount1_new],
         &sorobanvec![&test.env, 0i128, 0i128],
         &users[1],
@@ -734,16 +725,17 @@ fn several_assets_min_greater_than_optimal() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount0 = 123456789i128;
     let amount1 = 987654321i128;
@@ -758,11 +750,11 @@ fn several_assets_min_greater_than_optimal() {
     let user_balance1 = test.token1.balance(&users[0]);
     assert_eq!(user_balance1, amount1);
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
     // deposit
-    let deposit_result=test.defindex_contract.try_deposit(
+    let deposit_result=defindex_contract.try_deposit(
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0 + 1, amount1],
         &users[0],
@@ -773,7 +765,7 @@ fn several_assets_min_greater_than_optimal() {
     assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
     
     // now we manage to deposit
-    test.defindex_contract.deposit(
+    defindex_contract.deposit(
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0, amount1],
         &users[0],
@@ -793,7 +785,7 @@ fn several_assets_min_greater_than_optimal() {
     test.token0_admin_client.mint(&users[0], &amount0_new);
     test.token1_admin_client.mint(&users[0], &amount1_new);
 
-    let deposit_result=test.defindex_contract.try_deposit(
+    let deposit_result=defindex_contract.try_deposit(
         &sorobanvec![&test.env, amount0_new, amount1_new],
         &sorobanvec![&test.env, amount0*2+1, amount1*2],
         &users[0],
@@ -827,16 +819,17 @@ fn amounts_min_greater_than_amounts_desired(){
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount0 = 123456789i128;
     let amount1 = 987654321i128;
@@ -851,11 +844,11 @@ fn amounts_min_greater_than_amounts_desired(){
     let user_balance1 = test.token1.balance(&users[0]);
     assert_eq!(user_balance1, amount1);
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
     // deposit
-    let deposit_result=test.defindex_contract.try_deposit(
+    let deposit_result=defindex_contract.try_deposit(
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0 + 1, amount1 + 1],
         &users[0],
@@ -887,16 +880,17 @@ fn transfers_tokens_from_user_to_vault(){
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount0 = 123456789i128;
     let amount1 = 987654321i128;
@@ -911,11 +905,11 @@ fn transfers_tokens_from_user_to_vault(){
     let user_balance1 = test.token1.balance(&users[0]);
     assert_eq!(user_balance1, amount1);
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
     // deposit
-    test.defindex_contract.deposit(
+    defindex_contract.deposit(
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0, amount1],
         &users[0],
@@ -923,7 +917,7 @@ fn transfers_tokens_from_user_to_vault(){
     );
 
     // check balances after deposit
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount0 + amount1 - 1000);
 
     let user_balance0 = test.token0.balance(&users[0]);
@@ -945,16 +939,17 @@ fn arithmetic_error() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
 
     // Mock the environment to provoke a division by zero
@@ -972,7 +967,7 @@ fn arithmetic_error() {
     test.token0_admin_client.mint(&users[0], &large_amount);
 
     //first deposit to overflow the balance
-    test.defindex_contract.deposit(
+    defindex_contract.deposit(
         &sorobanvec![&test.env, large_amount],
         &sorobanvec![&test.env, large_amount],
         &users[0],
@@ -980,7 +975,7 @@ fn arithmetic_error() {
     );
     
     // Try to deposit a large amount
-    let result = test.defindex_contract.try_deposit(
+    let result = defindex_contract.try_deposit(
         &sorobanvec![&test.env, large_amount],
         &sorobanvec![&test.env, large_amount],
         &users[0],
@@ -1007,16 +1002,17 @@ fn amounts_desired_zero() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
 
     let amount = 123456789i128;
@@ -1030,14 +1026,14 @@ fn amounts_desired_zero() {
     let user_balance_before = test.token0.balance(&users[0]);
     assert_eq!(user_balance_before, amount);
 
-    let vault_balance_before = test.token0.balance(&test.defindex_contract.address);
+    let vault_balance_before = test.token0.balance(&defindex_contract.address);
     assert_eq!(vault_balance_before, 0i128);
 
-    let df_balance_before = test.defindex_contract.balance(&users[0]);
+    let df_balance_before = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance_before, 0i128);
 
     // Attempt to deposit with amounts_desired all set to 0
-    let deposit_result = test.defindex_contract.try_deposit(
+    let deposit_result = defindex_contract.try_deposit(
         &sorobanvec![&test.env, 0i128],
         &sorobanvec![&test.env, 0i128],
         &users[0],
@@ -1070,16 +1066,17 @@ fn insufficient_funds_with_error_message() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
 
     let amount0 = 123456789i128;
@@ -1097,11 +1094,11 @@ fn insufficient_funds_with_error_message() {
     let user_balance1 = test.token1.balance(&users[0]);
     assert_eq!(user_balance1, amount1);
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
     // Attempt to deposit more than available balance
-    let deposit_result = test.defindex_contract.try_deposit(
+    let deposit_result = defindex_contract.try_deposit(
         &sorobanvec![&test.env, amount0 + 1, amount1 + 1],
         &sorobanvec![&test.env, amount0 + 1, amount1 + 1],
         &users[0],

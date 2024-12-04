@@ -2,7 +2,7 @@ use soroban_sdk::{vec as sorobanvec, String, Vec, Map};
 
 use crate::test::defindex_vault::{AssetStrategySet, ContractError};
 use crate::test::{
-    create_strategy_params_token0, create_strategy_params_token1, DeFindexVaultTest,
+    create_defindex_vault, create_strategy_params_token0, create_strategy_params_token1, DeFindexVaultTest
 };
 
 
@@ -29,16 +29,17 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
 
     let amount0 = 123456789i128;
@@ -54,11 +55,11 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
     let user_balance1 = test.token1.balance(&users[0]);
     assert_eq!(user_balance1, amount1);
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
     // deposit
-    test.defindex_contract.deposit(
+    defindex_contract.deposit(
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0, amount1],
         &users[0],
@@ -67,12 +68,12 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
 
     // function is fn get_asset_amounts_per_shares(e: Env, vault_shares: i128) -> Map<Address, i128>
     // get several results of the function using different vault_shares
-    let result1 = test.defindex_contract.get_asset_amounts_per_shares(&0i128);
-    let result2 = test.defindex_contract.get_asset_amounts_per_shares(&1000i128);
-    let result3 = test.defindex_contract.get_asset_amounts_per_shares(&2000i128);
-    let result4 = test.defindex_contract.get_asset_amounts_per_shares(&3000i128);
-    let result5 = test.defindex_contract.get_asset_amounts_per_shares(&4000i128);
-    let result6 = test.defindex_contract.get_asset_amounts_per_shares(&5000i128);
+    let result1 = defindex_contract.get_asset_amounts_per_shares(&0i128);
+    let result2 = defindex_contract.get_asset_amounts_per_shares(&1000i128);
+    let result3 = defindex_contract.get_asset_amounts_per_shares(&2000i128);
+    let result4 = defindex_contract.get_asset_amounts_per_shares(&3000i128);
+    let result5 = defindex_contract.get_asset_amounts_per_shares(&4000i128);
+    let result6 = defindex_contract.get_asset_amounts_per_shares(&5000i128);
 
     // calculate result1_should by hand (put aritmentic as a comment) and check that results are ok
     // result1_should = {token0: 0, token1: 0}
@@ -160,7 +161,7 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
 
     // *************************************************
     // now we will consider an amount over total supply , we should get error AmountOverTotalSupply
-    let result7 = test.defindex_contract.try_get_asset_amounts_per_shares(&1111111111i128);
+    let result7 = defindex_contract.try_get_asset_amounts_per_shares(&1111111111i128);
     assert_eq!(result7, Err(Ok(ContractError::AmountOverTotalSupply)));
 
 }
