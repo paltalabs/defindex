@@ -139,7 +139,7 @@ pub fn generate_and_execute_investments(
             remaining_amount -= invest_amount;
 
             strategy_allocations.push_back(Some(StrategyAllocation {
-                strategy: strategy.address.clone(),
+                strategy_address: strategy.address.clone(),
                 amount: invest_amount,
             }));
         }

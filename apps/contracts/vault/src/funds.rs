@@ -52,7 +52,7 @@ pub fn fetch_invested_funds_for_asset(e: &Env, asset: &AssetStrategySet) -> (i12
         let strategy_balance = fetch_invested_funds_for_strategy(e, &strategy.address);
         invested_funds += strategy_balance;
         strategy_allocations.push_back(StrategyAllocation {
-            strategy: strategy.address.clone(),
+            strategy_address: strategy.address.clone(),
             amount: strategy_balance,
         });
     }

@@ -65,7 +65,7 @@ fn one_asset_success() {
     // check total managed funds
     let mut total_managed_funds_expected = Map::new(&test.env);
     let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyAllocation {
-        strategy: test.strategy_client_token0.address.clone(),
+        strategy_address: test.strategy_client_token0.address.clone(),
         amount: amount, // everything has been invested
     }];
     
@@ -126,7 +126,7 @@ fn one_asset_success() {
     // check that fetch_total_managed_funds returns correct amount
     let mut total_managed_funds_expected = Map::new(&test.env);
     let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyAllocation {
-        strategy: test.strategy_client_token0.address.clone(),
+        strategy_address: test.strategy_client_token0.address.clone(),
         amount: amount + amount2, // everything has been invested
     }];
 
@@ -238,11 +238,11 @@ fn several_assets_success() {
     // check that fetch_total_managed_funds returns correct amount
     let mut total_managed_funds_expected = Map::new(&test.env);
     let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyAllocation {
-        strategy: test.strategy_client_token0.address.clone(),
+        strategy_address: test.strategy_client_token0.address.clone(),
         amount: amount0, // everything has been invested
     }];
     let strategy_investments_expected_token_1 = sorobanvec![&test.env, StrategyAllocation {
-        strategy: test.strategy_client_token1.address.clone(),
+        strategy_address: test.strategy_client_token1.address.clone(),
         amount: amount1, // everything has been invested
     }];
     total_managed_funds_expected.set(test.token0.address.clone(),
@@ -330,11 +330,11 @@ fn several_assets_success() {
     // check that fetch_total_managed_funds returns correct amount
     let mut total_managed_funds_expected = Map::new(&test.env);
     let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyAllocation {
-        strategy: test.strategy_client_token0.address.clone(),
+        strategy_address: test.strategy_client_token0.address.clone(),
         amount: amount0*3, // everything has been invested
     }];
     let strategy_investments_expected_token_1 = sorobanvec![&test.env, StrategyAllocation {
-        strategy: test.strategy_client_token1.address.clone(),
+        strategy_address: test.strategy_client_token1.address.clone(),
         amount: amount1*3, // everything has been invested
     }];
     total_managed_funds_expected.set(test.token0.address.clone(),

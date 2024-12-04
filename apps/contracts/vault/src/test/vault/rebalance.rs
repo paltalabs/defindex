@@ -59,7 +59,7 @@ fn multi_instructions() {
             strategy_allocations: sorobanvec![
                 &test.env,
                 Some(StrategyAllocation {
-                    strategy: test.strategy_client_token0.address.clone(),
+                    strategy_address: test.strategy_client_token0.address.clone(),
                     amount: amount,
                 }),
             ],
@@ -152,7 +152,7 @@ fn one_instruction() {
             strategy_allocations: sorobanvec![
                 &test.env,
                 Some(StrategyAllocation {
-                    strategy: test.strategy_client_token0.address.clone(),
+                    strategy_address: test.strategy_client_token0.address.clone(),
                     amount: amount,
                 }),
             ],

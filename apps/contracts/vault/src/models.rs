@@ -4,7 +4,7 @@ use soroban_sdk::{contracttype, Address, String, Vec};
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct StrategyAllocation {
-    pub strategy: Address,
+    pub strategy_address: Address,
     pub amount: i128,
 }
 

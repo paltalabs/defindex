@@ -304,7 +304,7 @@ impl VaultTrait for DeFindexVault {
                     (remaining_withdrawal_amount * strategy_allocation.amount) / total_invested_amount;
                     
                     if strategy_withdrawal_share > 0 {
-                        withdraw_from_strategy(&e, &strategy_allocation.strategy, &strategy_withdrawal_share)?;
+                        withdraw_from_strategy(&e, &strategy_allocation.strategy_address, &strategy_withdrawal_share)?;
                         TokenClient::new(&e, &asset_address).transfer(
                             &e.current_contract_address(),
                             &from,
