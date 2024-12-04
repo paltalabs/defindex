@@ -124,7 +124,7 @@ pub fn unpause_strategy(e: &Env, strategy_address: Address) -> Result<(), Contra
     Err(ContractError::StrategyNotFound)
 }
 
-pub fn withdraw_from_strategy(
+pub fn unwind_from_strategy(
     e: &Env,
     strategy_address: &Address,
     amount: &i128,

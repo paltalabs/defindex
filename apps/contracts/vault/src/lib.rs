@@ -42,7 +42,7 @@ use storage::{
 use strategies::{
     get_strategy_asset, get_strategy_client,
     get_strategy_struct, invest_in_strategy, pause_strategy, unpause_strategy,
-    withdraw_from_strategy,
+    unwind_from_strategy,
 };
 use token::{internal_burn, write_metadata, VaultToken};
 use utils::{
@@ -285,43 +285,47 @@ impl VaultTrait for DeFindexVault {
                 withdrawn_amounts.push_back(requested_withdrawal_amount);
                 continue;
             } else {
-                let mut total_withdrawn_for_asset = 0;
-                // Partial withdrawal from idle funds
-                total_withdrawn_for_asset += idle_funds;
-                let remaining_withdrawal_amount = requested_withdrawal_amount - idle_funds;
+                let mut cumulative_amount_for_asset = idle_funds;
+                let remaining_amount_to_unwind = requested_withdrawal_amount
+                    .checked_sub(idle_funds)
+                    .unwrap();
                 
-                // Withdraw the remaining amount from strategies
+                    
+                // Withdraw the remaining amount from invested funds in Strategies
                 let total_invested_amount = asset_allocation.invested_amount;
-                
-                for strategy_allocation in asset_allocation.strategy_allocations.iter() {
+
+                for (i, strategy_allocation) in asset_allocation.strategy_allocations.iter().enumerate() {
                     // TODO: If strategy is paused, should we skip it? Otherwise, the calculation will go wrong.
                     // if strategy.paused {
                     //     continue;
                     // }
                     
-                    // Amount to unwind from strategy
-                    let strategy_withdrawal_share =
-                    (remaining_withdrawal_amount * strategy_allocation.amount) / total_invested_amount;
-                    
-                    if strategy_withdrawal_share > 0 {
-                        withdraw_from_strategy(&e, &strategy_allocation.strategy_address, &strategy_withdrawal_share)?;
-                        TokenClient::new(&e, &asset_address).transfer(
-                            &e.current_contract_address(),
-                            &from,
-                            &strategy_withdrawal_share,
-                        );
-                        total_withdrawn_for_asset += strategy_withdrawal_share;
+                    // Amount to unwind from strategy. If this is the last strategy, we will take the remaining amount
+                    // due to possible rounding errors.
+                    let strategy_amount_to_withdraw:i128 = if  i == (asset_allocation.strategy_allocations.len() as usize) - 1{
+                        remaining_amount_to_unwind.checked_sub(cumulative_amount_for_asset).unwrap()
+                    } else {
+                        remaining_amount_to_unwind
+                        .checked_mul(strategy_allocation.amount)
+                        .and_then(|result| result.checked_div(total_invested_amount))
+                        .ok_or_else(|| ContractError::ArithmeticError)?
+                    };
+    
+                    if strategy_amount_to_withdraw > 0 {
+                        unwind_from_strategy(&e, &strategy_allocation.strategy_address, &strategy_amount_to_withdraw)?;
+                        cumulative_amount_for_asset += strategy_amount_to_withdraw;
                     }
                 }
                 TokenClient::new(&e, &asset_address).transfer(
                     &e.current_contract_address(),
                     &from,
-                    &total_withdrawn_for_asset,
+                    &cumulative_amount_for_asset,
                 );
-                withdrawn_amounts.push_back(total_withdrawn_for_asset);
+                withdrawn_amounts.push_back(cumulative_amount_for_asset);
             }
         }
-    
+        
+        // TODO: Add minimuim amounts for withdrawn_amounts
         events::emit_withdraw_event(&e, from, withdraw_shares, withdrawn_amounts.clone());
     
         Ok(withdrawn_amounts)
@@ -700,7 +704,7 @@ impl VaultManagementTrait for DeFindexVault {
             match instruction.action {
                 ActionType::Withdraw => match (&instruction.strategy, &instruction.amount) {
                     (Some(strategy_address), Some(amount)) => {
-                        withdraw_from_strategy(&e, strategy_address, amount)?;
+                        unwind_from_strategy(&e, strategy_address, amount)?;
                     }
                     _ => return Err(ContractError::MissingInstructionData),
                 },
