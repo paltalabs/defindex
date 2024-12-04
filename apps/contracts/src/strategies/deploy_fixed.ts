@@ -10,6 +10,12 @@ import {
 import { config } from "../utils/env_config.js";
 
 export async function deployFixedAPRStrategy(addressBook: AddressBook) {
+  if (network == "standalone") {
+    console.log("Fixed Strategy can only be tested in testnet or mainnet");
+    console.log("Since it requires a custom token, we are currently using soroswap USDC");
+    console.log("TODO: Create our own token for standalone testing");
+    return;
+  };
   if (network != "mainnet") await airdropAccount(loadedConfig.admin);
   let account = await loadedConfig.horizonRpc.loadAccount(
     loadedConfig.admin.publicKey()
@@ -48,7 +54,7 @@ export async function deployFixedAPRStrategy(addressBook: AddressBook) {
 
   const soroswapUsdc = "CAAFIHB4I7WQMJMKC22CZVQNNX7EONWSOMT6SUXK6I3G3F6J4XFRWNDI"
   const soroswapScVal = new Address(soroswapUsdc).toScVal();
-
+  
   const initialAmount = 100_000_000_0_000_000;
 
   // Mint to the admin the initailAmount
