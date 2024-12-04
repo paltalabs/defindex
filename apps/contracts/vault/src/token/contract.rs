@@ -11,6 +11,7 @@ use crate::token::storage_types::{INSTANCE_BUMP_AMOUNT, INSTANCE_LIFETIME_THRESH
 use soroban_sdk::token::{self, Interface as _};
 use soroban_sdk::{contract, contractimpl, Address, Env, String};
 use soroban_token_sdk::TokenUtils;
+use crate::ContractError;
 
 fn check_nonnegative_amount(amount: i128) {
     if amount < 0 {

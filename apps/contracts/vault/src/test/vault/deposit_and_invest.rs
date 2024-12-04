@@ -1,6 +1,6 @@
 use soroban_sdk::{vec as sorobanvec, String, Vec, Map};
 
-use crate::test::defindex_vault::{AssetStrategySet};
+use crate::test::defindex_vault::{AssetStrategySet, StrategyAllocation, CurrentAssetInvestmentAllocation};
 use crate::test::{
     create_strategy_params_token0, create_strategy_params_token1, DeFindexVaultTest,
 };
@@ -44,7 +44,7 @@ fn one_asset_success() {
     let df_balance = test.defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
-    // deposit
+    // deposit AND INVEST
     test.defindex_contract.deposit(
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
@@ -59,26 +59,41 @@ fn one_asset_success() {
     let user_balance = test.token0.balance(&users[0]);
     assert_eq!(user_balance, 0i128);
 
-    //map shuould be map
-    let mut expected_invested_map = Map::new(&test.env);
-    expected_invested_map.set(test.token0.address.clone(), amount);
-
-    let mut expected_idle_map = Map::new(&test.env);
-    expected_idle_map.set(test.token0.address.clone(), 0);
-
-    // check that all the assets are invested
     let vault_balance = test.token0.balance(&test.defindex_contract.address);
     assert_eq!(vault_balance, 0);
 
-    // check that fetch_total_managed_funds returns correct amount
-    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
-    assert_eq!(total_managed_funds, expected_invested_map);
+    // check total managed funds
+    let mut total_managed_funds_expected = Map::new(&test.env);
+    let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyAllocation {
+        strategy_address: test.strategy_client_token0.address.clone(),
+        amount: amount, // everything has been invested
+    }];
+    
+    total_managed_funds_expected.set(test.token0.address.clone(),
+    CurrentAssetInvestmentAllocation {
+        asset: test.token0.address.clone(),
+        total_amount: amount,
+        idle_amount: 0,
+        invested_amount: amount,
+        strategy_allocations: strategy_investments_expected_token_0,
+    });
 
+    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
+    assert_eq!(total_managed_funds, total_managed_funds_expected);
+
+    
+    
+    
     // check current idle funds, 
+    let mut expected_idle_map = Map::new(&test.env);
+    expected_idle_map.set(test.token0.address.clone(), 0);
     let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
     assert_eq!(current_idle_funds, expected_idle_map);
-
+    
     // check that current invested funds is now 0, funds still in idle funds
+    //map shuould be map
+    let mut expected_invested_map = Map::new(&test.env);
+    expected_invested_map.set(test.token0.address.clone(), amount);
     let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
     assert_eq!(current_invested_funds, expected_invested_map);
 
@@ -88,7 +103,7 @@ fn one_asset_success() {
     let user_balance = test.token0.balance(&users[0]);
     assert_eq!(user_balance, amount2);
 
-    // deposit
+    // deposit AND INVEST
     test.defindex_contract.deposit(
         &sorobanvec![&test.env, amount2],
         &sorobanvec![&test.env, amount2],
@@ -96,17 +111,11 @@ fn one_asset_success() {
         &true,
     );
 
-    //map shuould be map
-    let mut expected_invested_map = Map::new(&test.env);
-    expected_invested_map.set(test.token0.address.clone(), amount + amount2);
-
-    let mut expected_idle_map = Map::new(&test.env);
-    expected_idle_map.set(test.token0.address.clone(), 0);
-
+    
     // check balances after deposit
     let df_balance = test.defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount + amount2 - 1000);
-
+    
     let user_balance = test.token0.balance(&users[0]);
     assert_eq!(user_balance, 0i128);
     
@@ -115,14 +124,33 @@ fn one_asset_success() {
     assert_eq!(vault_balance, 0);
     
     // check that fetch_total_managed_funds returns correct amount
+    let mut total_managed_funds_expected = Map::new(&test.env);
+    let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyAllocation {
+        strategy_address: test.strategy_client_token0.address.clone(),
+        amount: amount + amount2, // everything has been invested
+    }];
+
+    total_managed_funds_expected.set(test.token0.address.clone(),
+    CurrentAssetInvestmentAllocation {
+        asset: test.token0.address.clone(),
+        total_amount: amount + amount2,
+        idle_amount: 0,
+        invested_amount: amount + amount2,
+        strategy_allocations: strategy_investments_expected_token_0,
+    });
+
     let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
-    assert_eq!(total_managed_funds, expected_invested_map);
+    assert_eq!(total_managed_funds, total_managed_funds_expected);
     
     // check current idle funds
+    let mut expected_idle_map = Map::new(&test.env);
+    expected_idle_map.set(test.token0.address.clone(), 0);
     let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
     assert_eq!(current_idle_funds, expected_idle_map);
     
     // check that current invested funds is now 0, funds still in idle funds
+    let mut expected_invested_map = Map::new(&test.env);
+    expected_invested_map.set(test.token0.address.clone(), amount + amount2);
     let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
     assert_eq!(current_invested_funds, expected_invested_map);
 }
@@ -207,24 +235,47 @@ fn several_assets_success() {
     let vault_balance1 = test.token1.balance(&test.defindex_contract.address);
     assert_eq!(vault_balance1, 0);
 
-    //map shuould be map
-    let mut expected_invested_map = Map::new(&test.env);
-    expected_invested_map.set(test.token0.address.clone(), amount0);
-    expected_invested_map.set(test.token1.address.clone(), amount1);
+    // check that fetch_total_managed_funds returns correct amount
+    let mut total_managed_funds_expected = Map::new(&test.env);
+    let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyAllocation {
+        strategy_address: test.strategy_client_token0.address.clone(),
+        amount: amount0, // everything has been invested
+    }];
+    let strategy_investments_expected_token_1 = sorobanvec![&test.env, StrategyAllocation {
+        strategy_address: test.strategy_client_token1.address.clone(),
+        amount: amount1, // everything has been invested
+    }];
+    total_managed_funds_expected.set(test.token0.address.clone(),
+    CurrentAssetInvestmentAllocation {
+        asset: test.token0.address.clone(),
+        total_amount: amount0,
+        idle_amount: 0,
+        invested_amount: amount0,
+        strategy_allocations: strategy_investments_expected_token_0,
+    });
+    total_managed_funds_expected.set(test.token1.address.clone(),
+    CurrentAssetInvestmentAllocation {
+        asset: test.token1.address.clone(),
+        total_amount: amount1,
+        idle_amount: 0,
+        invested_amount: amount1,
+        strategy_allocations: strategy_investments_expected_token_1,
+    });
 
+    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
+    assert_eq!(total_managed_funds, total_managed_funds_expected);
+    
+    // check current idle funds
     let mut expected_idle_map = Map::new(&test.env);
     expected_idle_map.set(test.token0.address.clone(), 0);
     expected_idle_map.set(test.token1.address.clone(), 0);
-
-    // check that fetch_total_managed_funds returns correct amount
-    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
-    assert_eq!(total_managed_funds, expected_invested_map);
-
-    // check current idle funds
     let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
     assert_eq!(current_idle_funds, expected_idle_map);
     
     // check that current invested funds is now correct, funds should be invested
+    let mut expected_invested_map = Map::new(&test.env);
+    expected_invested_map.set(test.token0.address.clone(), amount0);
+    expected_invested_map.set(test.token1.address.clone(), amount1);
     let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
     assert_eq!(current_invested_funds, expected_invested_map);
 
@@ -275,24 +326,47 @@ fn several_assets_success() {
     let vault_balance1 = test.token1.balance(&test.defindex_contract.address);
     assert_eq!(vault_balance1, 0);
 
-    //map shuould be map
-    let mut expected_invested_map = Map::new(&test.env);
-    expected_invested_map.set(test.token0.address.clone(), 3*amount0);
-    expected_invested_map.set(test.token1.address.clone(), 3*amount1);
-
+    
+    // check that fetch_total_managed_funds returns correct amount
+    let mut total_managed_funds_expected = Map::new(&test.env);
+    let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyAllocation {
+        strategy_address: test.strategy_client_token0.address.clone(),
+        amount: amount0*3, // everything has been invested
+    }];
+    let strategy_investments_expected_token_1 = sorobanvec![&test.env, StrategyAllocation {
+        strategy_address: test.strategy_client_token1.address.clone(),
+        amount: amount1*3, // everything has been invested
+    }];
+    total_managed_funds_expected.set(test.token0.address.clone(),
+    CurrentAssetInvestmentAllocation {
+        asset: test.token0.address.clone(),
+        total_amount: amount0*3,
+        idle_amount: 0,
+        invested_amount: amount0*3,
+        strategy_allocations: strategy_investments_expected_token_0,
+    });
+    total_managed_funds_expected.set(test.token1.address.clone(),
+    CurrentAssetInvestmentAllocation {
+        asset: test.token1.address.clone(),
+        total_amount: amount1*3,
+        idle_amount: 0,
+        invested_amount: amount1*3,
+        strategy_allocations: strategy_investments_expected_token_1,
+    });
+    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
+    assert_eq!(total_managed_funds, total_managed_funds_expected);
+    
+    // check current idle funds
     let mut expected_idle_map = Map::new(&test.env);
     expected_idle_map.set(test.token0.address.clone(), 0);
     expected_idle_map.set(test.token1.address.clone(), 0);
-
-    // check that fetch_total_managed_funds returns correct amount
-    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
-    assert_eq!(total_managed_funds, expected_invested_map);
-
-    // check current idle funds
     let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
     assert_eq!(current_idle_funds, expected_idle_map);
-
+    
     // check that current invested funds is now 0, funds still in idle funds
+    let mut expected_invested_map = Map::new(&test.env);
+    expected_invested_map.set(test.token0.address.clone(), 3*amount0);
+    expected_invested_map.set(test.token1.address.clone(), 3*amount1);
     let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
     assert_eq!(current_invested_funds, expected_invested_map);
 
@@ -322,4 +396,16 @@ fn several_assets_success() {
     // Vec<i128>, i128
     assert_eq!(deposit_result, (sorobanvec![&test.env, amount0*2, amount1*2], amount0*2 + amount1*2));
 
+}
+
+
+
+#[test] 
+fn deposit_simple_then_deposit_and_invest() {
+    /*
+        Here we will check that everything works ok if the user first do a simple deposit without invest, and then does the deposit and invest
+        and if then does the deposit again without invest?
+    
+    */
+    todo!();
 }

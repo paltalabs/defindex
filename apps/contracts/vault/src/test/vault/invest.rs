@@ -5,9 +5,10 @@ use soroban_sdk::{
 };
 
 use crate::test::defindex_vault::{
+    CurrentAssetInvestmentAllocation,
     AssetStrategySet, 
     AssetInvestmentAllocation,  
-    StrategyInvestment, 
+    StrategyAllocation, 
     Strategy,
     ContractError};
 use crate::test::{
@@ -23,10 +24,10 @@ fn not_yet_initialized() {
         &test.env,
         Some(AssetInvestmentAllocation {
         asset: test.token0.address.clone(),
-        strategy_investments: vec![
+        strategy_allocations: vec![
             &test.env,
-            Some(StrategyInvestment {
-            strategy: test.strategy_client_token0.address.clone(),
+            Some(StrategyAllocation {
+            strategy_address: test.strategy_client_token0.address.clone(),
             amount: 100,
         })],
     })];
@@ -76,10 +77,10 @@ fn wrong_asset_investment_length() {
         &test.env,
         Some(AssetInvestmentAllocation {
         asset: test.token0.address.clone(),
-        strategy_investments: vec![
+        strategy_allocations: vec![
             &test.env,
-            Some(StrategyInvestment {
-            strategy: test.strategy_client_token0.address.clone(),
+            Some(StrategyAllocation {
+            strategy_address: test.strategy_client_token0.address.clone(),
             amount: 100,
             })],
         }) // First Asset
@@ -98,10 +99,10 @@ fn wrong_asset_investment_length() {
         &test.env,
         Some(AssetInvestmentAllocation {
         asset: test.token0.address.clone(),
-        strategy_investments: vec![
+        strategy_allocations: vec![
             &test.env,
-            Some(StrategyInvestment {
-            strategy: test.strategy_client_token0.address.clone(),
+            Some(StrategyAllocation {
+            strategy_address: test.strategy_client_token0.address.clone(),
             amount: 100,
             })
         ],
@@ -167,14 +168,14 @@ fn wrong_strategy_length() {
         &test.env,
         Some(AssetInvestmentAllocation {
         asset: test.token0.address.clone(),
-        strategy_investments: vec![
+        strategy_allocations: vec![
             &test.env,
-            Some(StrategyInvestment {
-            strategy: test.strategy_client_token0.address.clone(),
+            Some(StrategyAllocation {
+            strategy_address: test.strategy_client_token0.address.clone(),
             amount: 100,
             }),
-            Some(StrategyInvestment {
-            strategy: test.strategy_client_token1.address.clone(),
+            Some(StrategyAllocation {
+            strategy_address: test.strategy_client_token1.address.clone(),
             amount: 100,
             }),
         ],
@@ -194,16 +195,16 @@ fn wrong_strategy_length() {
         &test.env,
         Some(AssetInvestmentAllocation {
         asset: test.token0.address.clone(),
-        strategy_investments: vec![
+        strategy_allocations: vec![
             &test.env, // 0 instead of 1
             ],
         }),
         Some(AssetInvestmentAllocation {
             asset: test.token1.address.clone(),
-            strategy_investments: vec![
+            strategy_allocations: vec![
                 &test.env,
-                Some(StrategyInvestment {
-                strategy: test.strategy_client_token1.address.clone(),
+                Some(StrategyAllocation {
+                strategy_address: test.strategy_client_token1.address.clone(),
                 amount: 100,
                 }),
                 None
@@ -259,10 +260,10 @@ fn wrong_asset_address() {
         &test.env,
         Some(AssetInvestmentAllocation {
         asset: test.token1.address.clone(), // wrong address, should be asset 0
-        strategy_investments: vec![
+        strategy_allocations: vec![
             &test.env,
-            Some(StrategyInvestment {
-            strategy: test.strategy_client_token0.address.clone(),
+            Some(StrategyAllocation {
+            strategy_address: test.strategy_client_token0.address.clone(),
             amount: 100,
             }),
         ],
@@ -316,10 +317,10 @@ fn negative_amount() {
         &test.env,
         Some(AssetInvestmentAllocation {
         asset: test.token0.address.clone(),
-        strategy_investments: vec![
+        strategy_allocations: vec![
             &test.env,
-            Some(StrategyInvestment {
-            strategy: test.strategy_client_token0.address.clone(),
+            Some(StrategyAllocation {
+            strategy_address: test.strategy_client_token0.address.clone(),
             amount: -100, // negative amount
             }),
         ],
@@ -373,10 +374,10 @@ fn paused_strategy() {
         &test.env,
         Some(AssetInvestmentAllocation {
         asset: test.token0.address.clone(),
-        strategy_investments: vec![
+        strategy_allocations: vec![
             &test.env,
-            Some(StrategyInvestment {
-            strategy: test.strategy_client_token0.address.clone(),
+            Some(StrategyAllocation {
+            strategy_address: test.strategy_client_token0.address.clone(),
             amount: 100,
             }),
         ],
@@ -459,24 +460,50 @@ fn in_strategy() {
     let vault_balance_1 = test.token1.balance(&test.defindex_contract.address);
     assert_eq!(vault_balance_0, amount_0);
     assert_eq!(vault_balance_1, amount_1);
-
-    // check that fetch_total_managed_funds returns correct amount
+    
+    
+    let mut total_managed_funds_expected = Map::new(&test.env);
+    let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyAllocation {
+        strategy_address: test.strategy_client_token0.address.clone(),
+        amount: 0, // funds have not been invested yet!
+    }];
+    let strategy_investments_expected_token_1 = sorobanvec![&test.env, StrategyAllocation {
+        strategy_address: test.strategy_client_token1.address.clone(),
+        amount: 0, // funds have not been invested yet!
+    }];
+    total_managed_funds_expected.set(test.token0.address.clone(),
+    CurrentAssetInvestmentAllocation {
+        asset: test.token0.address.clone(),
+        total_amount: amount_0,
+        idle_amount: amount_0,
+        invested_amount: 0i128,
+        strategy_allocations: strategy_investments_expected_token_0,
+    });
+    total_managed_funds_expected.set(test.token1.address.clone(),
+    CurrentAssetInvestmentAllocation {
+        asset: test.token1.address.clone(),
+        total_amount: amount_1,
+        idle_amount: amount_1,
+        invested_amount: 0i128,
+        strategy_allocations: strategy_investments_expected_token_1,
+    });
+    
     let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
+    assert_eq!(total_managed_funds, total_managed_funds_expected);
+
+    
+    
+    // check current idle funds,
     let mut expected_map = Map::new(&test.env);
     expected_map.set(test.token0.address.clone(), amount_0);
     expected_map.set(test.token1.address.clone(), amount_1);
-    assert_eq!(total_managed_funds, expected_map);
-
-    // check current idle funds,
     let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
     assert_eq!(current_idle_funds, expected_map);
 
-    //map shuould be map
+    // check that current invested funds is now 0, funds still in idle funds
     let mut expected_map = Map::new(&test.env);
     expected_map.set(test.token0.address.clone(), 0i128);
     expected_map.set(test.token1.address.clone(), 0i128);
-
-    // check that current invested funds is now 0, funds still in idle funds
     let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
     assert_eq!(current_invested_funds, expected_map);
 
@@ -486,20 +513,20 @@ fn in_strategy() {
         &test.env,
         Some(AssetInvestmentAllocation {
         asset: test.token0.address.clone(),
-        strategy_investments: vec![
+        strategy_allocations: vec![
             &test.env,
-            Some(StrategyInvestment {
-            strategy: test.strategy_client_token0.address.clone(),
+            Some(StrategyAllocation {
+            strategy_address: test.strategy_client_token0.address.clone(),
             amount: 100,
             }),
         ],
     }),
     Some(AssetInvestmentAllocation {
         asset: test.token1.address.clone(),
-        strategy_investments: vec![
+        strategy_allocations: vec![
             &test.env,
-            Some(StrategyInvestment {
-            strategy: test.strategy_client_token1.address.clone(),
+            Some(StrategyAllocation {
+            strategy_address: test.strategy_client_token1.address.clone(),
             amount: 200,
             }),
         ],
@@ -515,12 +542,35 @@ fn in_strategy() {
     assert_eq!(vault_balance_0, amount_0 - 100);
     assert_eq!(vault_balance_1, amount_1 - 200);
 
-    // check that fetch_total_managed_funds returns correct amount
+    // check total managed funds
+    let mut total_managed_funds_expected = Map::new(&test.env);
+    let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyAllocation {
+        strategy_address: test.strategy_client_token0.address.clone(),
+        amount: 100,
+    }];
+    let strategy_investments_expected_token_1 = sorobanvec![&test.env, StrategyAllocation {
+        strategy_address: test.strategy_client_token1.address.clone(),
+        amount: 200,
+    }];
+    total_managed_funds_expected.set(test.token0.address.clone(),
+    CurrentAssetInvestmentAllocation {
+        asset: test.token0.address.clone(),
+        total_amount: amount_0,
+        idle_amount: amount_0 - 100,
+        invested_amount: 100i128,
+        strategy_allocations: strategy_investments_expected_token_0,
+    });
+    total_managed_funds_expected.set(test.token1.address.clone(),
+    CurrentAssetInvestmentAllocation {
+        asset: test.token1.address.clone(),
+        total_amount: amount_1,
+        idle_amount: amount_1 - 200,
+        invested_amount: 200i128,
+        strategy_allocations: strategy_investments_expected_token_1,
+    });
+
     let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
-    let mut expected_map = Map::new(&test.env);
-    expected_map.set(test.token0.address.clone(), amount_0);
-    expected_map.set(test.token1.address.clone(), amount_1);
-    assert_eq!(total_managed_funds, expected_map);
+    assert_eq!(total_managed_funds, total_managed_funds_expected);
 
     // check current idle funds, for token0 should be amount 0 - 100
     let mut expected_map = Map::new(&test.env);
@@ -623,20 +673,20 @@ fn more_than_idle_funds() {
         &test.env,
         Some(AssetInvestmentAllocation {
         asset: test.token0.address.clone(),
-        strategy_investments: vec![
+        strategy_allocations: vec![
             &test.env,
-            Some(StrategyInvestment {
-            strategy: test.strategy_client_token0.address.clone(),
+            Some(StrategyAllocation {
+            strategy_address: test.strategy_client_token0.address.clone(),
             amount: vault_balance_0 + 1,
             }),
         ],
     }),
     Some(AssetInvestmentAllocation {
         asset: test.token1.address.clone(),
-        strategy_investments: vec![
+        strategy_allocations: vec![
             &test.env,
-            Some(StrategyInvestment {
-            strategy: test.strategy_client_token1.address.clone(),
+            Some(StrategyAllocation {
+            strategy_address: test.strategy_client_token1.address.clone(),
             amount: vault_balance_1 + 1,
             }),
         ],
@@ -778,10 +828,10 @@ fn without_mock_all_auths() {
                     Some(
                         AssetInvestmentAllocation {
                             asset: test.token0.address.clone(),
-                            strategy_investments:
+                            strategy_allocations:
                                 sorobanvec![&test.env,
-                                    Some(StrategyInvestment {
-                                        strategy: test.strategy_client_token0.address.clone(),
+                                    Some(StrategyAllocation {
+                                        strategy_address: test.strategy_client_token0.address.clone(),
                                         amount: 100,
                                     })]
                         }
@@ -789,9 +839,9 @@ fn without_mock_all_auths() {
                     Some(
                         AssetInvestmentAllocation {
                             asset: test.token1.address.clone(),
-                            strategy_investments: sorobanvec![&test.env,
-                                Some(StrategyInvestment {
-                                    strategy: test.strategy_client_token1.address.clone(),
+                            strategy_allocations: sorobanvec![&test.env,
+                                Some(StrategyAllocation {
+                                    strategy_address: test.strategy_client_token1.address.clone(),
                                     amount: 200,
                                 })]
                         }
@@ -805,9 +855,9 @@ fn without_mock_all_auths() {
             Some(
                 AssetInvestmentAllocation {
                     asset: test.token0.address.clone(),
-                    strategy_investments: sorobanvec![&test.env,
-                        Some(StrategyInvestment {
-                            strategy: test.strategy_client_token0.address.clone(),
+                    strategy_allocations: sorobanvec![&test.env,
+                        Some(StrategyAllocation {
+                            strategy_address: test.strategy_client_token0.address.clone(),
                             amount: 100,
                         })]
                 }
@@ -815,9 +865,9 @@ fn without_mock_all_auths() {
             Some(
                 AssetInvestmentAllocation {
                     asset: test.token1.address.clone(),
-                    strategy_investments: sorobanvec![&test.env,
-                        Some(StrategyInvestment {
-                            strategy: test.strategy_client_token1.address.clone(),
+                    strategy_allocations: sorobanvec![&test.env,
+                        Some(StrategyAllocation {
+                            strategy_address: test.strategy_client_token1.address.clone(),
                             amount: 200,
                         })]
                 }

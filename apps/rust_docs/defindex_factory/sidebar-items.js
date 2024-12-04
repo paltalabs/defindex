@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["DeFindexFactoryClient"],"trait":["FactoryTrait"]};
+window.SIDEBAR_ITEMS = {"fn":["create_contract"],"struct":["DeFindexFactoryClient"],"trait":["FactoryTrait"]};

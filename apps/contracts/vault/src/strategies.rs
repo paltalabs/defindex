@@ -34,21 +34,21 @@ pub fn get_strategy_asset(
     Err(ContractError::StrategyNotFound)
 }
 
-/// Finds the AssetStrategySet corresponding to the given asset address.
-pub fn get_asset_allocation_from_address(
-    e: &Env,
-    asset_address: Address,
-) -> Result<AssetStrategySet, ContractError> {
-    let assets = get_assets(e);
+// /// Finds the AssetStrategySet corresponding to the given asset address.
+// pub fn get_asset_allocation_from_address(
+//     e: &Env,
+//     asset_address: Address,
+// ) -> Result<AssetStrategySet, ContractError> {
+//     let assets = get_assets(e);
 
-    for asset in assets.iter() {
-        if asset.address == asset_address {
-            return Ok(asset);
-        }
-    }
+//     for asset in assets.iter() {
+//         if asset.address == asset_address {
+//             return Ok(asset);
+//         }
+//     }
 
-    Err(ContractError::AssetNotFound)
-}
+//     Err(ContractError::AssetNotFound)
+// }
 
 /// Finds the strategy struct corresponding to the given strategy address within the given asset.
 pub fn get_strategy_struct(

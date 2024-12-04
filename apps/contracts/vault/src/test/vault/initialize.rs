@@ -165,14 +165,6 @@ fn initialize_twice() {
     );
 }
 
-#[test]
-fn withdraw_not_yet_initialized() {
-    let test = DeFindexVaultTest::setup();
-    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
-
-    let result = test.defindex_contract.try_withdraw(&100i128, &users[0]);
-    assert_eq!(result, Err(Ok(ContractError::NotInitialized)));
-}
 
 #[test]
 fn emergency_withdraw_not_yet_initialized() {

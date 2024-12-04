@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `defindex/src/interface.rs`."><title>interface.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-081576b923113409.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="defindex_vault" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0 (129f3b996 2024-06-10)" data-channel="1.79.0" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../defindex_vault/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `vault/src/interface.rs`."><title>interface.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-492a78a4a87dcc01.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="defindex_vault" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0 (f6e511eec 2024-10-15)" data-channel="1.82.0" data-search-js="search-a99f1315e7cc5121.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-921df33f47b8780c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -244,63 +244,175 @@
 <a href="#244" id="244">244</a>
 <a href="#245" id="245">245</a>
 <a href="#246" id="246">246</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>soroban_sdk::{Address, Env, Map, Vec};
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>soroban_sdk::{Address, Env, Map, String, Vec};
 
 <span class="kw">use crate</span>::{
-    models::{AssetAllocation, Investment},
+    models::{Instruction, AssetInvestmentAllocation, CurrentAssetInvestmentAllocation},
     ContractError,
 };
+<span class="kw">use </span>common::models::AssetStrategySet;
 
 <span class="kw">pub trait </span>VaultTrait {
-
     <span class="doccomment">/// Initializes the DeFindex Vault contract with the required parameters.
     ///
-    /// This function sets the roles for emergency manager, fee receiver, and manager.
+    /// This function sets the roles for manager, emergency manager, vault fee receiver, and manager.
     /// It also stores the list of assets to be managed by the vault, including strategies for each asset.
-    /// 
-    /// # Arguments:
-    /// * `e` - The environment.
-    /// * `assets` - A vector of `AssetAllocation` structs representing the assets and their associated strategies.
-    /// * `manager` - The address responsible for managing the vault.
-    /// * `emergency_manager` - The address with emergency control over the vault.
-    /// * `fee_receiver` - The address that will receive fees from the vault.
-    /// * `vault_share` - The percentage of the vault's fees that will be sent to the DeFindex receiver. in BPS.
-    /// * `defindex_receiver` - The address that will receive fees for DeFindex from the vault.
-    /// * `factory` - The address of the factory that deployed the vault.
     ///
-    /// # Returns:
-    /// * `Result&lt;(), ContractError&gt;` - Ok if successful, otherwise returns a ContractError.
+    /// # Arguments
+    /// - `assets`: List of asset allocations for the vault, including strategies associated with each asset.
+    /// - `manager`: Primary vault manager with permissions for vault control.
+    /// - `emergency_manager`: Address with emergency access for emergency control over the vault.
+    /// - `vault_fee_receiver`: Address designated to receive the vault fee receiver's portion of management fees.
+    /// - `vault_fee`: Vault-specific fee percentage in basis points (typically set at 0-2% APR).
+    /// - `defindex_protocol_receiver`: Address receiving DeFindex’s protocol-wide fee in basis points (0.5% APR).
+    /// - `factory`: Factory contract address for deployment linkage.
+    /// - `vault_name`: Name of the vault token to be displayed in metadata.
+    /// - `vault_symbol`: Symbol representing the vault’s token.
+    ///
+    /// # Returns
+    /// - `Result&lt;(), ContractError&gt;`: Returns `Ok(())` if initialization succeeds, or a `ContractError` if
+    ///   any setup fails (e.g., strategy mismatch with asset).
+    ///
+    /// # Errors
+    /// - `ContractError::AlreadyInitialized`: If the vault has already been initialized.
+    /// - `ContractError::StrategyDoesNotSupportAsset`: If a strategy within an asset does not support the asset’s contract.
+    ///
     </span><span class="kw">fn </span>initialize(
         e: Env,
-        assets: Vec&lt;AssetAllocation&gt;,
+        assets: Vec&lt;AssetStrategySet&gt;,
         manager: Address,
         emergency_manager: Address,
-        fee_receiver: Address,
-        vault_share: u32,
-        defindex_receiver: Address,
+        vault_fee_receiver: Address,
+        vault_fee: u32,
+        defindex_protocol_receiver: Address,
         factory: Address,
+        vault_name: String,
+        vault_symbol: String,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContractError&gt;;
 
-    <span class="doccomment">/// Handles deposits into the DeFindex Vault.
+    <span class="doccomment">/// Handles user deposits into the DeFindex Vault.
     ///
-    /// This function transfers the desired amounts of each asset into the vault, distributes the assets
-    /// across the strategies according to the vault's ratios, and mints dfTokens representing the user's
-    /// share in the vault.
+    /// This function processes a deposit by transferring each specified asset amount from the user's address to
+    /// the vault, allocating assets according to the vault's defined strategy ratios, and minting dfTokens that 
+    /// represent the user's proportional share in the vault. The `amounts_desired` and `amounts_min` vectors should 
+    /// align with the vault's asset order to ensure correct allocation.
     ///
-    /// # Arguments:
-    /// * `e` - The environment.
-    /// * `amounts_desired` - A vector of the amounts the user wishes to deposit for each asset.
-    /// * `amounts_min` - A vector of minimum amounts required for the deposit to proceed.
+    /// # Parameters
+    /// * `e` - The current environment reference (`Env`), for access to the contract state and utilities.
+    /// * `amounts_desired` - A vector specifying the user's intended deposit amounts for each asset.
+    /// * `amounts_min` - A vector of minimum deposit amounts required for the transaction to proceed.
     /// * `from` - The address of the user making the deposit.
     ///
-    /// # Returns:
-    /// * `Result&lt;(), ContractError&gt;` - Ok if successful, otherwise returns a ContractError.
+    /// # Returns
+    /// * `Result&lt;(Vec&lt;i128&gt;, i128), ContractError&gt;` - Returns the actual deposited `amounts` and `shares_to_mint` if successful,
+    ///   otherwise a `ContractError`.
+    ///
+    /// # Function Flow
+    /// 1. **Fee Collection**: Collects accrued fees before processing the deposit.
+    /// 2. **Validation**: Checks that the lengths of `amounts_desired` and `amounts_min` match the vault's assets.
+    /// 3. **Share Calculation**: Calculates `shares_to_mint` based on the vault's total managed funds and the deposit amount.
+    /// 4. **Asset Transfer**: Transfers each specified amount from the user’s address to the vault as idle funds.
+    /// 5. **dfToken Minting**: Mints new dfTokens for the user to represent their ownership in the vault.
+    ///
+    /// # Notes
+    /// - For the first deposit, if the vault has only one asset, shares are calculated directly based on the deposit amount.
+    /// - For multiple assets, the function delegates to `calculate_deposit_amounts_and_shares_to_mint`
+    ///   for precise share computation.
+    /// - An event is emitted to log the deposit, including the actual deposited amounts and minted shares.
+    ///
     </span><span class="kw">fn </span>deposit(
         e: Env,
         amounts_desired: Vec&lt;i128&gt;,
         amounts_min: Vec&lt;i128&gt;,
         from: Address,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContractError&gt;;
+        invest: bool,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Vec&lt;i128&gt;, i128), ContractError&gt;;
 
     <span class="doccomment">/// Withdraws assets from the DeFindex Vault by burning dfTokens.
     ///
@@ -330,7 +442,11 @@
     ///
     /// # Returns:
     /// * `Result&lt;(), ContractError&gt;` - Ok if successful, otherwise returns a ContractError.
-    </span><span class="kw">fn </span>emergency_withdraw(e: Env, strategy_address: Address, caller: Address) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContractError&gt;;
+    </span><span class="kw">fn </span>emergency_withdraw(
+        e: Env,
+        strategy_address: Address,
+        caller: Address,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContractError&gt;;
 
     <span class="doccomment">/// Pauses a strategy to prevent it from being used in the vault.
     ///
@@ -344,7 +460,11 @@
     ///
     /// # Returns:
     /// * `Result&lt;(), ContractError&gt;` - Ok if successful, otherwise returns a ContractError.
-    </span><span class="kw">fn </span>pause_strategy(e: Env, strategy_address: Address, caller: Address) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContractError&gt;;
+    </span><span class="kw">fn </span>pause_strategy(
+        e: Env,
+        strategy_address: Address,
+        caller: Address,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContractError&gt;;
 
     <span class="doccomment">/// Unpauses a previously paused strategy.
     ///
@@ -358,7 +478,11 @@
     ///
     /// # Returns:
     /// * `Result&lt;(), ContractError&gt;` - Ok if successful, otherwise returns a ContractError.
-    </span><span class="kw">fn </span>unpause_strategy(e: Env, strategy_address: Address, caller: Address) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContractError&gt;;
+    </span><span class="kw">fn </span>unpause_strategy(
+        e: Env,
+        strategy_address: Address,
+        caller: Address,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContractError&gt;;
 
     <span class="doccomment">/// Retrieves the list of assets managed by the DeFindex Vault.
     ///
@@ -366,8 +490,8 @@
     /// * `e` - The environment.
     ///
     /// # Returns:
-    /// * `Vec&lt;AssetAllocation&gt;` - A vector of `AssetAllocation` structs representing the assets managed by the vault.
-    </span><span class="kw">fn </span>get_assets(e: Env) -&gt; Vec&lt;AssetAllocation&gt;;
+    /// * `Vec&lt;AssetStrategySet&gt;` - A vector of `AssetStrategySet` structs representing the assets managed by the vault.
+    </span><span class="kw">fn </span>get_assets(e: Env) -&gt; Vec&lt;AssetStrategySet&gt;;
 
     <span class="doccomment">/// Returns the total managed funds of the vault, including both invested and idle funds.
     ///
@@ -379,8 +503,8 @@
     ///
     /// # Returns:
     /// * `Map&lt;Address, i128&gt;` - A map of asset addresses to their total managed amounts.
-    </span><span class="kw">fn </span>fetch_total_managed_funds(e: <span class="kw-2">&amp;</span>Env) -&gt; Map&lt;Address, i128&gt;;
-    
+    </span><span class="kw">fn </span>fetch_total_managed_funds(e: <span class="kw-2">&amp;</span>Env) -&gt; Map&lt;Address, CurrentAssetInvestmentAllocation&gt;;
+
     <span class="doccomment">/// Returns the current invested funds, representing the total assets allocated to strategies.
     ///
     /// This function provides a map where the key is the asset address and the value is the total amount
@@ -405,10 +529,28 @@
     /// * `Map&lt;Address, i128&gt;` - A map of asset addresses to their total idle amounts.
     </span><span class="kw">fn </span>fetch_current_idle_funds(e: <span class="kw-2">&amp;</span>Env) -&gt; Map&lt;Address, i128&gt;;
 
+
+    <span class="comment">// Calculates the corresponding amounts of each asset per a given number of vault shares.
+    </span><span class="doccomment">/// This function extends the contract's time-to-live and calculates how much of each asset corresponds 
+    /// per the provided number of vault shares (`vault_shares`). It provides proportional allocations for each asset 
+    /// in the vault relative to the specified shares.
+    ///
+    /// # Arguments
+    /// * `e` - The current environment reference.
+    /// * `vault_shares` - The number of vault shares for which the corresponding asset amounts are calculated.
+    ///
+    /// # Returns
+    /// * `Map&lt;Address, i128&gt;` - A map containing each asset address and its corresponding proportional amount.
+    </span><span class="kw">fn </span>get_asset_amounts_per_shares(e: Env, vault_shares: i128) -&gt; <span class="prelude-ty">Result</span>&lt;Map&lt;Address, i128&gt;, ContractError&gt;;
+    
     <span class="comment">// TODO: DELETE THIS, USED FOR TESTING
     </span><span class="doccomment">/// Temporary method for testing purposes.
-    </span><span class="kw">fn </span>get_asset_amounts_for_dftokens(e: Env, df_token: i128) -&gt; Map&lt;Address, i128&gt;;
+    </span><span class="comment">// fn get_asset_amounts_for_dftokens(e: Env, df_token: i128) -&gt; Map&lt;Address, i128&gt;;
 
+    </span><span class="kw">fn </span>get_fees(e: Env) -&gt; (u32, u32);
+
+    <span class="doccomment">/// Collects the fees from the vault and transfers them to the fee receiver addresses. 
+    </span><span class="kw">fn </span>collect_fees(e: Env) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContractError&gt;;
 }
 
 <span class="kw">pub trait </span>AdminInterfaceTrait {
@@ -419,7 +561,7 @@
     /// # Arguments:
     /// * `e` - The environment.
     /// * `caller` - The address initiating the change (must be the manager or emergency manager).
-    /// * `fee_receiver` - The new fee receiver address.
+    /// * `vault_fee_receiver` - The new fee receiver address.
     ///
     /// # Returns:
     /// * `()` - No return value.
@@ -478,15 +620,46 @@
 }
 
 <span class="kw">pub trait </span>VaultManagementTrait {
+    <span class="doccomment">/// Executes the investment of the vault's idle funds based on the specified asset allocations.
+    /// This function allows partial investments by providing an optional allocation for each asset,
+    /// and it ensures proper authorization and validation checks before proceeding with investments.
+    ///
+    /// # Arguments
+    /// * `e` - The current environment reference.
+    /// * `asset_investments` - A vector of optional `AssetInvestmentAllocation` structures, where each element 
+    ///   represents an allocation for a specific asset. The vector must match the number of vault assets in length.
+    ///
+    /// # Returns
+    /// * `Result&lt;(), ContractError&gt;` - Returns `Ok(())` if the investments are successful or a `ContractError`
+    ///   if any issue occurs during validation or execution.
+    ///
+    /// # Function Flow
+    /// 1. **Extend Instance TTL**: Extends the contract instance's time-to-live to keep the instance active.
+    /// 2. **Check Initialization**: Verifies that the vault is properly initialized before proceeding.
+    /// 3. **Access Control**: Ensures the caller has the `Manager` role required to initiate investments.
+    /// 4. **Asset Count Validation**: Verifies that the length of the `asset_investments` vector matches
+    ///    the number of assets managed by the vault. If they don't match, a `WrongInvestmentLength` error is returned.
+    /// 5. **Investment Execution**: Calls the `check_and_execute_investments` function to perform the investment
+    ///    after validating the inputs and ensuring correct execution flows for each asset allocation.
+    ///
+    /// # Errors
+    /// * Returns `ContractError::WrongInvestmentLength` if the length of `asset_investments` does not match the vault assets.
+    /// * Returns `ContractError` if access control validation fails or if investment execution encounters an issue.
+    ///
+    /// # Security
+    /// - Only addresses with the `Manager` role can call this function, ensuring restricted access to managing investments.
+    </span><span class="kw">fn </span>invest(e: Env, 
+        asset_investments: Vec&lt;<span class="prelude-ty">Option</span>&lt;AssetInvestmentAllocation&gt;&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContractError&gt;;
 
-    <span class="doccomment">/// Invests the vault's idle funds into the specified strategies.
-    /// 
+    <span class="doccomment">/// Rebalances the vault by executing a series of instructions.
+    ///
     /// # Arguments:
     /// * `e` - The environment.
-    /// * `investment` - A vector of `Investment` structs representing the amount to invest in each strategy.
-    /// * `caller` - The address of the caller.
-    /// 
+    /// * `instructions` - A vector of `Instruction` structs representing actions (withdraw, invest, swap, zapper) to be taken.
+    ///
     /// # Returns:
     /// * `Result&lt;(), ContractError&gt;` - Ok if successful, otherwise returns a ContractError.
-    </span><span class="kw">fn </span>invest(e: Env, investment: Vec&lt;Investment&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContractError&gt;;
-}</code></pre></div></section></main></body></html>
+    </span><span class="kw">fn </span>rebalance(e: Env, instructions: Vec&lt;Instruction&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContractError&gt;;
+}
+</code></pre></div></section></main></body></html>

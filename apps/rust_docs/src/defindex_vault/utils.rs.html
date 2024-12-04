@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `defindex/src/utils.rs`."><title>utils.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-081576b923113409.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="defindex_vault" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0 (129f3b996 2024-06-10)" data-channel="1.79.0" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../defindex_vault/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `vault/src/utils.rs`."><title>utils.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-492a78a4a87dcc01.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="defindex_vault" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0 (f6e511eec 2024-10-15)" data-channel="1.82.0" data-search-js="search-a99f1315e7cc5121.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-921df33f47b8780c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -254,12 +254,39 @@
 <a href="#254" id="254">254</a>
 <a href="#255" id="255">255</a>
 <a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>soroban_sdk::{panic_with_error, Address, Env, Map, Vec};
 
 <span class="kw">use crate</span>::{
-    access::{AccessControl, AccessControlTrait, RolesDataKey}, funds::{fetch_invested_funds_for_asset, fetch_invested_funds_for_strategy, fetch_total_managed_funds}, models::AssetAllocation, token::VaultToken, ContractError
-
+    models::{CurrentAssetInvestmentAllocation},
+    access::{AccessControl, AccessControlTrait, RolesDataKey},
+    funds::{
+        fetch_total_managed_funds,
+    },
+    token::VaultToken,
+    ContractError,
 };
+<span class="kw">use </span>common::models::AssetStrategySet;
 
 <span class="kw">pub const </span>DAY_IN_LEDGERS: u32 = <span class="number">17280</span>;
 
@@ -288,89 +315,122 @@
     }
 }
 
-<span class="doccomment">/// From an amount, calculates how much to withdraw from each strategy;
-/// returns a map of strategy address to token amount
-</span><span class="kw">pub fn </span>calculate_withdrawal_amounts(
-    e: <span class="kw-2">&amp;</span>Env,
-    amount: i128,
-    asset: AssetAllocation,
-) -&gt; Map&lt;Address, i128&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>withdrawal_amounts = Map::&lt;Address, i128&gt;::new(e);
+<span class="comment">// /// From an amount, calculates how much to withdraw from each strategy;
+// /// returns a map of strategy address to token amount
+// pub fn calculate_withdrawal_amounts(
+//     e: &amp;Env,
+//     amount: i128,
+//     asset: AssetStrategySet,
+// ) -&gt; Map&lt;Address, i128&gt; {
+//     let mut withdrawal_amounts = Map::&lt;Address, i128&gt;::new(e);
 
-    <span class="kw">let </span>total_invested_in_strategies: i128 = fetch_invested_funds_for_asset(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>asset);
+//     let (total_invested_in_strategies, _) = fetch_invested_funds_for_asset(&amp;e, &amp;asset);
 
-    <span class="kw">for </span>strategy <span class="kw">in </span>asset.strategies.iter() {
-        <span class="comment">// TODO: if strategy is paused but still holds assets on it shouldnt we withdraw them?
-        </span><span class="kw">if </span>strategy.paused {
-            <span class="kw">continue</span>;
-        }
+//     for strategy in asset.strategies.iter() {
+//         // TODO: if strategy is paused but still holds assets on it shouldnt we withdraw them?
+//         if strategy.paused {
+//             continue;
+//         }
 
-        <span class="kw">let </span>strategy_invested_funds = fetch_invested_funds_for_strategy(e, <span class="kw-2">&amp;</span>strategy.address);
+//         let strategy_invested_funds = fetch_invested_funds_for_strategy(e, &amp;strategy.address);
 
-        <span class="kw">let </span>strategy_share_of_withdrawal = (amount * strategy_invested_funds) / total_invested_in_strategies;
+//         let strategy_share_of_withdrawal =
+//             (amount * strategy_invested_funds) / total_invested_in_strategies;
 
-        withdrawal_amounts.set(strategy.address.clone(), strategy_share_of_withdrawal);
-    }
+//         withdrawal_amounts.set(strategy.address.clone(), strategy_share_of_withdrawal);
+//     }
 
-    withdrawal_amounts
-}
+//     withdrawal_amounts
+// }
 
-<span class="kw">pub fn </span>calculate_asset_amounts_for_dftokens(
+</span><span class="doccomment">/// Calculates the corresponding amounts of each asset per given number of vault shares.
+/// This function takes the number of vault shares (`shares_amount`) and computes how much of each asset in the vault
+/// corresponds to those shares, based on the total managed funds and the total supply of vault shares.
+///
+/// # Arguments
+/// * `env` - Reference to the current environment.
+/// * `shares_amount` - The number of vault shares for which the equivalent asset amounts are being calculated.
+///
+/// # Returns
+/// * `Map&lt;Address, i128&gt;` - A map of asset addresses to their respective amounts, proportional to the `shares_amount`.
+///
+/// # Errors
+/// * Panics with `ContractError::ArithmeticError` if there are any issues with multiplication or division,
+///   such as overflow or division by zero.
+</span><span class="kw">pub fn </span>calculate_asset_amounts_per_vault_shares(
     env: <span class="kw-2">&amp;</span>Env,
-    df_token_amount: i128,
-) -&gt; Map&lt;Address, i128&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>asset_amounts: Map&lt;Address, i128&gt; = Map::new(<span class="kw-2">&amp;</span>env);
-    <span class="kw">let </span>total_supply = VaultToken::total_supply(env.clone());
-    <span class="kw">let </span>total_managed_funds = fetch_total_managed_funds(<span class="kw-2">&amp;</span>env);
+    shares_amount: i128,
+    total_managed_funds: <span class="kw-2">&amp;</span>Map&lt;Address, CurrentAssetInvestmentAllocation&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;Map&lt;Address, i128&gt;, ContractError&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>asset_amounts: Map&lt;Address, i128&gt; = Map::new(env);
 
-    <span class="comment">// Iterate over each asset and calculate the corresponding amount based on df_token_amount
-    </span><span class="kw">for </span>(asset_address, amount) <span class="kw">in </span>total_managed_funds.iter() {
-        <span class="kw">let </span>asset_amount = (amount * df_token_amount) / total_supply;
-        asset_amounts.set(asset_address.clone(), asset_amount);
+    <span class="comment">// Fetch the total supply of vault shares and the total managed funds for each asset
+    </span><span class="kw">let </span>total_shares_supply = VaultToken::total_supply(env.clone());
+
+    <span class="comment">// if shares amount over total supply, return error AmountOverTotalSupply
+    </span><span class="kw">if </span>shares_amount &gt; total_shares_supply {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(ContractError::AmountOverTotalSupply);
     }
 
-    asset_amounts
-}
+    <span class="comment">// Iterate over each asset and calculate the corresponding amount based on shares_amount
+    </span><span class="kw">for </span>(asset_address, current_asset_allocation) <span class="kw">in </span>total_managed_funds.iter() {
+        <span class="comment">// Calculate the proportional asset amount per the given number of shares
+        </span><span class="kw">let </span>asset_amount = <span class="kw">if </span>total_shares_supply != <span class="number">0 </span>{
+            current_asset_allocation.total_amount
+                .checked_mul(shares_amount)
+                .ok_or(ContractError::ArithmeticError)<span class="question-mark">?
+                </span>.checked_div(total_shares_supply)
+                .ok_or(ContractError::ArithmeticError)<span class="question-mark">?
+        </span>} <span class="kw">else </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(ContractError::AmountOverTotalSupply);
+        };
 
-<span class="kw">pub fn </span>calculate_dftokens_from_asset_amounts(
-    env: <span class="kw-2">&amp;</span>Env,
-    asset_amounts: Map&lt;Address, i128&gt;, <span class="comment">// The input asset amounts
-</span>) -&gt; <span class="prelude-ty">Result</span>&lt;i128, ContractError&gt; {
-    <span class="kw">let </span>total_supply = VaultToken::total_supply(env.clone()); <span class="comment">// Total dfToken supply
-    </span><span class="kw">let </span>total_managed_funds = fetch_total_managed_funds(<span class="kw-2">&amp;</span>env); <span class="comment">// Fetch all managed assets
-
-    // Initialize the minimum dfTokens corresponding to each asset
-    </span><span class="kw">let </span><span class="kw-2">mut </span>min_df_tokens: <span class="prelude-ty">Option</span>&lt;i128&gt; = <span class="prelude-val">None</span>;
-
-    <span class="comment">// Iterate over each asset in the input map
-    </span><span class="kw">for </span>(asset_address, input_amount) <span class="kw">in </span>asset_amounts.iter() {
-        <span class="comment">// Get the total managed amount for this asset
-        </span><span class="kw">let </span>managed_amount = total_managed_funds.get(asset_address.clone()).unwrap_or(<span class="number">0</span>);
-
-        <span class="comment">// Ensure the managed amount is not zero to prevent division by zero
-        </span><span class="kw">if </span>managed_amount == <span class="number">0 </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(ContractError::InsufficientManagedFunds);
-        }
-
-        <span class="comment">// Calculate the dfTokens corresponding to this asset's amount
-        </span><span class="kw">let </span>df_tokens_for_asset = (input_amount * total_supply) / managed_amount;
-
-        <span class="comment">// If this is the first asset or if the calculated df_tokens_for_asset is smaller, update the minimum df_tokens
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(current_min_df_tokens) = min_df_tokens {
-            min_df_tokens = <span class="prelude-val">Some</span>(current_min_df_tokens.min(df_tokens_for_asset));
-        } <span class="kw">else </span>{
-            min_df_tokens = <span class="prelude-val">Some</span>(df_tokens_for_asset);
-        }
+        <span class="comment">// Set the calculated asset amount for the given asset address
+        </span>asset_amounts.set(asset_address.clone(), asset_amount);
     }
 
-    <span class="comment">// Return the minimum dfTokens across all assets
-    </span>min_df_tokens.ok_or(ContractError::NoAssetsProvided)
+    <span class="kw">return </span><span class="prelude-val">Ok</span>(asset_amounts);
 }
 
-<span class="kw">pub fn </span>calculate_optimal_amounts_and_shares_with_enforced_asset(
+<span class="comment">// pub fn calculate_dftokens_from_asset_amounts(
+//     env: &amp;Env,
+//     asset_amounts: Map&lt;Address, i128&gt;, // The input asset amounts
+//     total_managed_funds: Map&lt;Address, i128&gt;, // The total managed funds for each asset
+// ) -&gt; Result&lt;i128, ContractError&gt; {
+//     let total_supply = VaultToken::total_supply(env.clone()); // Total dfToken supply
+
+//     // Initialize the minimum dfTokens corresponding to each asset
+//     let mut min_df_tokens: Option&lt;i128&gt; = None;
+
+//     // Iterate over each asset in the input map
+//     for (asset_address, input_amount) in asset_amounts.iter() {
+//         // Get the total managed amount for this asset
+//         let managed_amount = total_managed_funds.get(asset_address.clone()).unwrap_or(0);
+
+//         // Ensure the managed amount is not zero to prevent division by zero
+//         if managed_amount == 0 {
+//             return Err(ContractError::InsufficientManagedFunds);
+//         }
+
+//         // Calculate the dfTokens corresponding to this asset's amount
+//         let df_tokens_for_asset = (input_amount * total_supply) / managed_amount;
+
+//         // If this is the first asset or if the calculated df_tokens_for_asset is smaller, update the minimum df_tokens
+//         if let Some(current_min_df_tokens) = min_df_tokens {
+//             min_df_tokens = Some(current_min_df_tokens.min(df_tokens_for_asset));
+//         } else {
+//             min_df_tokens = Some(df_tokens_for_asset);
+//         }
+//     }
+
+//     // Return the minimum dfTokens across all assets
+//     min_df_tokens.ok_or(ContractError::NoAssetsProvided)
+// }
+
+</span><span class="kw">pub fn </span>calculate_optimal_amounts_and_shares_with_enforced_asset(
     e: <span class="kw-2">&amp;</span>Env,
-    total_managed_funds: <span class="kw-2">&amp;</span>Map&lt;Address, i128&gt;,
-    assets: <span class="kw-2">&amp;</span>Vec&lt;AssetAllocation&gt;,
+    total_managed_funds: <span class="kw-2">&amp;</span>Map&lt;Address, CurrentAssetInvestmentAllocation&gt;,
+    assets: <span class="kw-2">&amp;</span>Vec&lt;AssetStrategySet&gt;,
     amounts_desired: <span class="kw-2">&amp;</span>Vec&lt;i128&gt;,
     i: <span class="kw-2">&amp;</span>u32,
 ) -&gt; (Vec&lt;i128&gt;, i128) {
@@ -378,48 +438,57 @@
     // we need the total amount managed by this vault in order for the deposit to be proportional
     // reserve (total manage funds) of the asset we are enforcing
     </span><span class="kw">let </span>reserve_target = total_managed_funds
-        .get(assets.get(<span class="kw-2">*</span>i).unwrap().address)
-        .unwrap(); <span class="comment">// i128
+        .get(assets.get(<span class="kw-2">*</span>i).unwrap_or_else(|| <span class="macro">panic_with_error!</span>(<span class="kw-2">&amp;</span>e, ContractError::WrongAmountsLength)).address)
+        .unwrap_or_else(|| <span class="macro">panic_with_error!</span>(<span class="kw-2">&amp;</span>e, ContractError::WrongAmountsLength))
+        .total_amount;
+
+    <span class="comment">// If reserve target is zero, we cannot calculate the optimal amounts
     </span><span class="kw">if </span>reserve_target == <span class="number">0 </span>{
-        <span class="comment">// return sum of amounts desired as shares
-        </span><span class="kw">return </span>(amounts_desired.clone(), amounts_desired.iter().sum()); <span class="comment">// first shares will be equal to the first amounts_desired
-                                                                        // TODO, this amounts desired might be too little?
-                                                                        // this might be the first deposit... in this case, the ratio will be enforced by the first depositor
-                                                                        // TODO: might happen that the reserve_target is zero because everything is in one asset!?
-                                                                        // in this case we ned to check the ratio
-        // TODO VERY DANGEROUS.
-    </span>}
-    <span class="kw">let </span>amount_desired_target = amounts_desired.get(<span class="kw-2">*</span>i).unwrap(); <span class="comment">// i128
+        <span class="macro">panic_with_error!</span>(<span class="kw-2">&amp;</span>e, ContractError::InsufficientManagedFunds);
+    }
 
-    </span><span class="kw">let </span><span class="kw-2">mut </span>optimal_amounts = Vec::new(e);
+    <span class="kw">let </span>amount_desired_target = amounts_desired.get(<span class="kw-2">*</span>i).unwrap_or_else(|| <span class="macro">panic_with_error!</span>(<span class="kw-2">&amp;</span>e, ContractError::WrongAmountsLength));
 
-    <span class="kw">for </span>(j, (_asset_address, reserve)) <span class="kw">in </span>total_managed_funds.iter().enumerate() {
+    <span class="kw">let </span><span class="kw-2">mut </span>optimal_amounts = Vec::new(e);
+    
+    <span class="kw">for </span>(j, asset) <span class="kw">in </span>assets.iter().enumerate() {
         <span class="kw">if </span>j == (<span class="kw-2">*</span>i <span class="kw">as </span>usize) {
             optimal_amounts.push_back(amount_desired_target);
         } <span class="kw">else </span>{
-            <span class="comment">// amount = amount_desired_target * reserve[j] / reserve_target
-            // factor is (amount_desired_target  / reserve_target;)
-            </span><span class="kw">let </span>amount = reserve * amount_desired_target / reserve_target;
-            optimal_amounts.push_back(amount);
+            <span class="kw">let </span>reserve = total_managed_funds
+                            .get(asset.address).unwrap_or_else(|| <span class="macro">panic_with_error!</span>(<span class="kw-2">&amp;</span>e, ContractError::WrongAmountsLength))
+                            .total_amount;
+            <span class="kw">let </span>amount = reserve.checked_mul(amount_desired_target)
+                .unwrap_or_else(|| <span class="macro">panic_with_error!</span>(<span class="kw-2">&amp;</span>e, ContractError::ArithmeticError))
+                .checked_div(reserve_target)
+                .unwrap_or_else(|| <span class="macro">panic_with_error!</span>(<span class="kw-2">&amp;</span>e, ContractError::ArithmeticError));
+            optimal_amounts.push_back(amount);  
         }
     }
+
     <span class="comment">//TODO: calculate the shares to mint = total_supply * amount_desired_target  / reserve_target
-    </span><span class="kw">let </span>shares_to_mint = VaultToken::total_supply(e.clone()) * amount_desired_target / reserve_target;
+    </span><span class="kw">let </span>shares_to_mint =
+        VaultToken::total_supply(e.clone())
+        .checked_mul(amount_desired_target)
+        .unwrap_or_else(|| <span class="macro">panic_with_error!</span>(<span class="kw-2">&amp;</span>e, ContractError::ArithmeticError))
+        .checked_div(reserve_target)
+        .unwrap_or_else(|| <span class="macro">panic_with_error!</span>(<span class="kw-2">&amp;</span>e, ContractError::ArithmeticError));
+        
     (optimal_amounts, shares_to_mint)
 }
 <span class="doccomment">/// Calculates the optimal amounts to deposit for a set of assets, along with the shares to mint.
 /// This function iterates over a list of assets and checks if the desired deposit amounts
 /// match the optimal deposit strategy, based on current managed funds and asset ratios.
-/// 
+///
 /// If the desired amount for a given asset cannot be achieved due to constraints (e.g., it's below the minimum amount),
 /// the function attempts to find an optimal solution by adjusting the amounts of subsequent assets.
-/// 
+///
 /// # Arguments
 /// * `e` - The current environment.
 /// * `assets` - A vector of assets for which deposits are being calculated.
 /// * `amounts_desired` - A vector of desired amounts for each asset.
 /// * `amounts_min` - A vector of minimum amounts for each asset, below which deposits are not allowed.
-/// 
+///
 /// # Returns
 /// A tuple containing:
 /// * A vector of optimal amounts to deposit for each asset.
@@ -434,79 +503,53 @@
 /// be replaced with proper error handling.
 </span><span class="kw">pub fn </span>calculate_deposit_amounts_and_shares_to_mint(
     e: <span class="kw-2">&amp;</span>Env,
-    assets: <span class="kw-2">&amp;</span>Vec&lt;AssetAllocation&gt;,
+    assets: <span class="kw-2">&amp;</span>Vec&lt;AssetStrategySet&gt;,
     amounts_desired: <span class="kw-2">&amp;</span>Vec&lt;i128&gt;,
     amounts_min: <span class="kw-2">&amp;</span>Vec&lt;i128&gt;,
-) -&gt; (Vec&lt;i128&gt;, i128) {
+) -&gt; <span class="prelude-ty">Result</span>&lt;(Vec&lt;i128&gt;, i128), ContractError&gt; {
     <span class="comment">// Retrieve the total managed funds for each asset as a Map&lt;Address, i128&gt;.
-    </span><span class="kw">let </span>total_managed_funds = fetch_total_managed_funds(e); 
+    </span><span class="kw">let </span>total_managed_funds = fetch_total_managed_funds(e);
 
-    <span class="comment">// Iterate over each asset in the assets vector.
-    </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..assets.len() {
-        <span class="comment">// Calculate the optimal amounts and the number of shares to mint for the given asset at index `i`.
-        </span><span class="kw">let </span>(optimal_amounts, shares_to_mint) =
-            calculate_optimal_amounts_and_shares_with_enforced_asset(
-                <span class="kw-2">&amp;</span>e,
-                <span class="kw-2">&amp;</span>total_managed_funds,
-                <span class="kw-2">&amp;</span>assets,
-                <span class="kw-2">&amp;</span>amounts_desired,
-                <span class="kw-2">&amp;</span>i,
-            );
+    <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..assets.len() {
+        <span class="comment">// Calculate the optimal amounts and shares to mint for asset `i`.
+        </span><span class="kw">let </span>(optimal_amounts, shares_to_mint) = calculate_optimal_amounts_and_shares_with_enforced_asset(
+            <span class="kw-2">&amp;</span>e,
+            <span class="kw-2">&amp;</span>total_managed_funds,
+            <span class="kw-2">&amp;</span>assets,
+            <span class="kw-2">&amp;</span>amounts_desired,
+            <span class="kw-2">&amp;</span>i,
+        );
 
-        <span class="comment">// Flag to skip the current asset if necessary.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>should_skip = <span class="bool-val">false</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>should_skip = <span class="bool-val">false</span>;
 
-        <span class="comment">// Check if the calculated optimal amounts meet the desired or minimum requirements.
-        </span><span class="kw">for </span>j <span class="kw">in </span>i + <span class="number">1</span>..assets.len() {
-            <span class="comment">// If the optimal amount for asset[j] is less than the desired amount,
-            // but at least greater than the minimum amount, it is acceptable.
-            </span><span class="kw">if </span>optimal_amounts.get(j).unwrap() &lt;= amounts_desired.get(j).unwrap() {
-                <span class="comment">// If the optimal amount is below the minimum, we cannot proceed with this asset.
-                </span><span class="kw">if </span>optimal_amounts.get(j).unwrap() &lt; amounts_min.get(j).unwrap() {
-                    <span class="macro">panic!</span>(<span class="string">"insufficient amount"</span>); <span class="comment">// TODO: Replace panic with an error return.
+        <span class="kw">for </span>j <span class="kw">in </span>i + <span class="number">1</span>..assets.len() {
+            <span class="comment">// Retrieve the desired and minimum amounts, returning an error if unavailable.
+            </span><span class="kw">let </span>desired_amount = amounts_desired.get(j).ok_or(ContractError::WrongAmountsLength)<span class="question-mark">?</span>;
+            <span class="kw">let </span>min_amount = amounts_min.get(j).ok_or(ContractError::WrongAmountsLength)<span class="question-mark">?</span>;
+            <span class="kw">let </span>optimal_amount = optimal_amounts.get(j).ok_or(ContractError::WrongAmountsLength)<span class="question-mark">?</span>;
+
+            <span class="comment">// Check if optimal amount meets the desired or minimum requirements.
+            </span><span class="kw">if </span>optimal_amount &lt;= desired_amount {
+                <span class="kw">if </span>optimal_amount &lt; min_amount {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(ContractError::InsufficientAmount); <span class="comment">// Insufficient amount error.
                 </span>}
-            } <span class="kw">else </span>{
-                <span class="comment">// If the optimal amount exceeds the desired amount, we skip the current asset {i}.
+            } <span class="kw">else </span>{ <span class="comment">// if not, we should try the next asset as enforced asset
                 </span>should_skip = <span class="bool-val">true</span>;
-
-                <span class="comment">// If we've reached the last asset and still don't find a solution, throw an error.
-                </span><span class="kw">if </span>j == assets.len() - <span class="number">1 </span>{
-                    <span class="macro">panic!</span>(<span class="string">"didn't find optimal amounts"</span>); <span class="comment">// TODO: Replace panic with an error return.
+                <span class="comment">// If we have already analized all assets as enforced (i), return an error.
+                </span><span class="kw">if </span>i == assets.len() - <span class="number">1 </span>{
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(ContractError::NoOptimalAmounts); <span class="comment">// probably enforcing 0? We should never reach this point
                 </span>}
                 <span class="kw">break</span>;
             }
         }
 
-        <span class="comment">// If we should skip this asset, continue to the next one.
-        </span><span class="kw">if </span>should_skip {
-            <span class="kw">continue</span>;
-        } <span class="kw">else </span>{
-            <span class="comment">// Return the calculated optimal amounts and shares to mint.
-            </span><span class="kw">return </span>(optimal_amounts, shares_to_mint);
+        <span class="comment">// If valid amounts found, return the results; otherwise, skip to the next asset.
+        </span><span class="kw">if </span>!should_skip {
+            <span class="kw">return </span><span class="prelude-val">Ok</span>((optimal_amounts, shares_to_mint));
         }
     }
 
-    <span class="comment">// If no solution was found after iterating through all assets, throw an error.
-    </span><span class="macro">panic!</span>(<span class="string">"didn't find optimal amounts"</span>);
+    <span class="comment">// Return an error if no valid deposit configuration is found.
+    </span><span class="prelude-val">Err</span>(ContractError::NoOptimalAmounts)
 }
-
-<span class="comment">// Calculates the amounts to invest in each strategy based on the current ratio of invested funds.
-// The function returns a Vec&lt;Investment&gt; where each element contains a strategy address and the amount to be invested.
-//
-// # Parameters
-// - `e`: The environment object, containing all relevant contract data.
-//
-// # Returns
-// A Vec of `Investment` structs, each containing a strategy address and the calculated amount to invest.
-// pub fn calculate_investments_based_on_ratios(
-//     e: &amp;Env,
-// ) -&gt; Result&lt;Vec&lt;Investment&gt;, ContractError&gt; {
-//     // i should get all managed funds
-//     let total_managed_funds = get_total_managed_funds(e);
-
-    
-//     // Create a vector to store the investment amounts for each strategy
-//     let mut investments: Vec&lt;Investment&gt; = Vec::new(e);
-
-//     Ok(investments)
-// }</span></code></pre></div></section></main></body></html>
+</code></pre></div></section></main></body></html>
