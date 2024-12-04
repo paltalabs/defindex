@@ -224,19 +224,41 @@ impl VaultTrait for DeFindexVault {
         Ok((amounts, shares_to_mint))
     }
 
-    /// Withdraws assets from the DeFindex Vault by burning Vault Share tokens.
+    /// Handles the withdrawal process for a specified number of vault shares.
     ///
-    /// This function calculates the amount of assets to withdraw based on the number of Vault Share tokens being burned,
-    /// then transfers the appropriate assets back to the user, pulling from both idle funds and strategies
-    /// as needed.
+    /// This function performs the following steps:
+    /// 1. Validates the environment and the inputs:
+    ///    - Ensures the contract is initialized.
+    ///    - Checks that the withdrawal amount (`withdraw_shares`) is non-negative.
+    ///    - Verifies the authorization of the `from` address.
+    /// 2. Collects applicable fees.
+    /// 3. Calculates the proportionate withdrawal amounts for each asset based on the number of shares.
+    /// 4. Burns the specified shares from the user's account.
+    /// 5. Processes the withdrawal for each asset:
+    ///    - First attempts to cover the withdrawal amount using idle funds.
+    ///    - If idle funds are insufficient, unwinds investments from the associated strategies
+    ///      to cover the remaining amount, accounting for rounding errors in the last strategy.
+    /// 6. Transfers the withdrawn funds to the user's address (`from`).
+    /// 7. Emits an event to record the withdrawal details.
     ///
-    /// # Arguments:
-    /// * `e` - The environment.
-    /// * `shares_amount` - The amount of Vault Share tokens to burn for the withdrawal.
-    /// * `from` - The address of the user requesting the withdrawal.
+    /// ## Parameters:
+    /// - `e`: The contract environment (`Env`).
+    /// - `withdraw_shares`: The number of vault shares to withdraw.
+    /// - `from`: The address initiating the withdrawal.
     ///
-    /// # Returns:
-    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
+    /// ## Returns:
+    /// - A `Result` containing a vector of withdrawn amounts for each asset (`Vec<i128>`),
+    ///   or a `ContractError` if the withdrawal fails.
+    ///
+    /// ## Errors:
+    /// - `ContractError::AmountOverTotalSupply`: If the specified shares exceed the total supply.
+    /// - `ContractError::ArithmeticError`: If any arithmetic operation fails during calculations.
+    /// - `ContractError::WrongAmountsLength`: If there is a mismatch in asset allocation data.
+    ///
+    /// ## TODOs:
+    /// - Implement minimum amounts for withdrawals to ensure compliance with potential restrictions.
+    /// - Replace the returned vector with the original `asset_withdrawal_amounts` map for better structure.
+
     fn withdraw(
         e: Env,
         withdraw_shares: i128,
@@ -260,7 +282,7 @@ impl VaultTrait for DeFindexVault {
         )?;
     
         // Burn the shares after calculating the withdrawal amounts
-        // this will panic with error if the user does not have enough balance
+        // This will panic with error if the user does not have enough balance
         internal_burn(e.clone(), from.clone(), withdraw_shares);
     
         // Loop through each asset to handle the withdrawal
@@ -283,7 +305,6 @@ impl VaultTrait for DeFindexVault {
                     &requested_withdrawal_amount,
                 );
                 withdrawn_amounts.push_back(requested_withdrawal_amount);
-                continue;
             } else {
                 let mut cumulative_amount_for_asset = idle_funds;
                 let remaining_amount_to_unwind = requested_withdrawal_amount
@@ -302,7 +323,7 @@ impl VaultTrait for DeFindexVault {
                     
                     // Amount to unwind from strategy. If this is the last strategy, we will take the remaining amount
                     // due to possible rounding errors.
-                    let strategy_amount_to_withdraw:i128 = if  i == (asset_allocation.strategy_allocations.len() as usize) - 1{
+                    let strategy_amount_to_unwind:i128 = if  i == (asset_allocation.strategy_allocations.len() as usize) - 1{
                         remaining_amount_to_unwind.checked_sub(cumulative_amount_for_asset).unwrap()
                     } else {
                         remaining_amount_to_unwind
@@ -311,9 +332,9 @@ impl VaultTrait for DeFindexVault {
                         .ok_or_else(|| ContractError::ArithmeticError)?
                     };
     
-                    if strategy_amount_to_withdraw > 0 {
-                        unwind_from_strategy(&e, &strategy_allocation.strategy_address, &strategy_amount_to_withdraw)?;
-                        cumulative_amount_for_asset += strategy_amount_to_withdraw;
+                    if strategy_amount_to_unwind > 0 {
+                        unwind_from_strategy(&e, &strategy_allocation.strategy_address, &strategy_amount_to_unwind)?;
+                        cumulative_amount_for_asset += strategy_amount_to_unwind;
                     }
                 }
                 TokenClient::new(&e, &asset_address).transfer(
@@ -326,6 +347,7 @@ impl VaultTrait for DeFindexVault {
         }
         
         // TODO: Add minimuim amounts for withdrawn_amounts
+        // TODO: Return the asset_withdrawal_amounts Map instead of a vec
         events::emit_withdraw_event(&e, from, withdraw_shares, withdrawn_amounts.clone());
     
         Ok(withdrawn_amounts)
