@@ -62,6 +62,7 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0, amount1],
         &users[0],
+        &false,
     );
 
     // function is fn get_asset_amounts_per_shares(e: Env, vault_shares: i128) -> Map<Address, i128>
@@ -161,5 +162,11 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
     // now we will consider an amount over total supply , we should get error AmountOverTotalSupply
     let result7 = test.defindex_contract.try_get_asset_amounts_per_shares(&1111111111i128);
     assert_eq!(result7, Err(Ok(ContractError::AmountOverTotalSupply)));
+
+}
+
+#[test]
+fn deposit_and_invest_several_assets_get_asset_amounts_per_shares() {
+    todo!();
 
 }
