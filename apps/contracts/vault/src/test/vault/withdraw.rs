@@ -6,7 +6,7 @@ use crate::test::{
     defindex_vault::{
         AssetStrategySet,
         AssetInvestmentAllocation,  
-        StrategyInvestment, 
+        StrategyAllocation, 
         ContractError
     },
     DeFindexVaultTest,
@@ -251,9 +251,9 @@ fn withdraw_from_strategy_success() {
         &test.env,
         Some(AssetInvestmentAllocation {
             asset: test.token0.address.clone(),
-            strategy_investments: sorobanvec![
+            strategy_allocations: sorobanvec![
                 &test.env,
-                Some(StrategyInvestment {
+                Some(StrategyAllocation {
                     strategy: test.strategy_client_token0.address.clone(),
                     amount: amount,
                 }),

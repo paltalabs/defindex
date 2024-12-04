@@ -239,98 +239,94 @@ impl VaultTrait for DeFindexVault {
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn withdraw(
         e: Env,
-        shares_amount: i128,
+        withdraw_shares: i128,
         from: Address,
     ) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
-        check_nonnegative_amount(shares_amount)?;
+        check_nonnegative_amount(withdraw_shares)?;
         from.require_auth();
     
         // Assess fees
         collect_fees(&e)?;
     
-        // Check if the user has enough dfTokens.
-        let df_user_balance = VaultToken::balance(e.clone(), from.clone());
-        if df_user_balance < shares_amount {
-            return Err(ContractError::InsufficientBalance);
-        }
-    
         // Calculate the withdrawal amounts for each asset based on the share amounts
         let total_managed_funds = fetch_total_managed_funds(&e);
 
-        let asset_amounts = calculate_asset_amounts_per_vault_shares(
+        let asset_withdrawal_amounts = calculate_asset_amounts_per_vault_shares(
             &e,
-            shares_amount,
+            withdraw_shares,
             &total_managed_funds,
         )?;
     
         // Burn the shares after calculating the withdrawal amounts
-        internal_burn(e.clone(), from.clone(), shares_amount);
+        // this will panic with error if the user does not have enough balance
+        internal_burn(e.clone(), from.clone(), withdraw_shares);
     
         // Loop through each asset to handle the withdrawal
-        let mut amounts_withdrawn: Vec<i128> = Vec::new(&e);
-        for (asset_address, required_amount) in asset_amounts.iter() {
+        let mut withdrawn_amounts: Vec<i128> = Vec::new(&e);
+        for (asset_address, requested_withdrawal_amount) in asset_withdrawal_amounts.iter() {
 
-            let asset_investment_allocation = total_managed_funds
+            let asset_allocation = total_managed_funds
             .get(asset_address.clone())
             .unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength));
 
             // Check idle funds for this asset
-            let idle_balance = asset_investment_allocation.idle_amount;
+            let idle_funds = asset_allocation.idle_amount;
         
             // Withdraw from idle funds first
-            if idle_balance >= required_amount {
+            if idle_funds >= requested_withdrawal_amount {
                 // Idle funds cover the full amount
                 TokenClient::new(&e, &asset_address).transfer(
                     &e.current_contract_address(),
                     &from,
-                    &required_amount,
+                    &requested_withdrawal_amount,
                 );
-                amounts_withdrawn.push_back(required_amount);
+                withdrawn_amounts.push_back(requested_withdrawal_amount);
                 continue;
             } else {
-                let mut amounts_to_withdraw_asset = 0;
-                // // Partial withdrawal from idle funds
-                amounts_to_withdraw_asset += idle_balance;
-                let remaining_amount = required_amount - idle_balance;
+                let mut total_withdrawn_for_asset = 0;
+                // Partial withdrawal from idle funds
+                total_withdrawn_for_asset += idle_funds;
+                let remaining_withdrawal_amount = requested_withdrawal_amount - idle_funds;
                 
                 // Withdraw the remaining amount from strategies
-                let invested_amount = asset_investment_allocation.invested_amount;
+                let total_invested_amount = asset_allocation.invested_amount;
                 
-                for strategy in asset_investment_allocation.strategy_investments.iter() {
-                    // TODO: If strategy is paused, shuold we skip it? Otherwise the calculation will go wrong.
+                for strategy_allocation in asset_allocation.strategy_allocations.iter() {
+                    // TODO: If strategy is paused, should we skip it? Otherwise, the calculation will go wrong.
                     // if strategy.paused {
                     //     continue;
                     // }
                     
-                    // amount to unwind from strategy
-                    let strategy_share_of_withdrawal =
-                    (remaining_amount * strategy.amount) / invested_amount;
+                    // Amount to unwind from strategy
+                    let strategy_withdrawal_share =
+                    (remaining_withdrawal_amount * strategy_allocation.amount) / total_invested_amount;
                     
-                    if strategy_share_of_withdrawal > 0 {
-                        withdraw_from_strategy(&e, &strategy.strategy, &strategy_share_of_withdrawal)?;
+                    if strategy_withdrawal_share > 0 {
+                        withdraw_from_strategy(&e, &strategy_allocation.strategy, &strategy_withdrawal_share)?;
                         TokenClient::new(&e, &asset_address).transfer(
                             &e.current_contract_address(),
                             &from,
-                            &strategy_share_of_withdrawal,
+                            &strategy_withdrawal_share,
                         );
-                        amounts_to_withdraw_asset += strategy_share_of_withdrawal;
+                        total_withdrawn_for_asset += strategy_withdrawal_share;
                     }
                 }
                 TokenClient::new(&e, &asset_address).transfer(
                     &e.current_contract_address(),
                     &from,
-                    &amounts_to_withdraw_asset,
+                    &total_withdrawn_for_asset,
                 );
-                amounts_withdrawn.push_back(amounts_to_withdraw_asset);
+                withdrawn_amounts.push_back(total_withdrawn_for_asset);
             }
         }
     
-        events::emit_withdraw_event(&e, from, shares_amount, amounts_withdrawn.clone());
+        events::emit_withdraw_event(&e, from, withdraw_shares, withdrawn_amounts.clone());
     
-        Ok(amounts_withdrawn)
+        Ok(withdrawn_amounts)
     }
+
     
 
     /// Executes an emergency withdrawal from a specific strategy.

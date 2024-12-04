@@ -7,7 +7,7 @@ use crate::{
         fetch_total_managed_funds,
     },
     investment::check_and_execute_investments,
-    models::{AssetInvestmentAllocation, StrategyInvestment},
+    models::{AssetInvestmentAllocation, StrategyAllocation},
     storage::get_assets,
     token::{internal_mint, VaultToken},
     utils::{calculate_deposit_amounts_and_shares_to_mint, check_nonnegative_amount},
@@ -120,7 +120,7 @@ pub fn generate_and_execute_investments(
         let asset = assets.get(i as u32).unwrap();
         let (asset_invested_funds, _) = fetch_invested_funds_for_asset(&e, &asset);
 
-        let mut strategy_investments = Vec::new(&e);
+        let mut strategy_allocations = Vec::new(&e);
         let mut remaining_amount = amount;
 
         for (j, strategy) in asset.strategies.iter().enumerate() {
@@ -138,7 +138,7 @@ pub fn generate_and_execute_investments(
 
             remaining_amount -= invest_amount;
 
-            strategy_investments.push_back(Some(StrategyInvestment {
+            strategy_allocations.push_back(Some(StrategyAllocation {
                 strategy: strategy.address.clone(),
                 amount: invest_amount,
             }));
@@ -146,7 +146,7 @@ pub fn generate_and_execute_investments(
 
         asset_investments.push_back(Some(AssetInvestmentAllocation {
             asset: asset.address.clone(),
-            strategy_investments,
+            strategy_allocations,
         }));
     }
 

@@ -54,7 +54,7 @@ pub fn check_and_execute_investments(
             }
 
             // Ensure the number of strategies aligns between asset and investment
-            if asset.strategies.len() != asset_investment.strategy_investments.len() {
+            if asset.strategies.len() != asset_investment.strategy_allocations.len() {
                 panic_with_error!(&e, ContractError::WrongStrategiesLength);
             }
 
@@ -72,7 +72,7 @@ pub fn check_and_execute_investments(
             // }
 
             // Process each defined strategy investment for the current asset
-            for (j, strategy_investment_opt) in asset_investment.strategy_investments.iter().enumerate() {
+            for (j, strategy_investment_opt) in asset_investment.strategy_allocations.iter().enumerate() {
                 if let Some(strategy_investment) = strategy_investment_opt {
                     // Validate amount is non-negative
                     check_nonnegative_amount(strategy_investment.amount)?;

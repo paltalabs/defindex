@@ -2,7 +2,7 @@ use soroban_sdk::token::TokenClient;
 use soroban_sdk::{Address, Env, Map, Vec};
 
 use common::models::AssetStrategySet;
-use crate::models::{StrategyInvestment, CurrentAssetInvestmentAllocation};
+use crate::models::{StrategyAllocation, CurrentAssetInvestmentAllocation};
 use crate::storage::get_assets;
 use crate::strategies::get_strategy_client;
 
@@ -38,25 +38,25 @@ pub fn fetch_invested_funds_for_strategy(e: &Env, strategy_address: &Address) ->
 // // Investment Allocation in Strategies
 // #[contracttype]
 // #[derive(Clone, Debug, Eq, PartialEq)]
-// pub struct StrategyInvestment {
+// pub struct StrategyAllocation {
 //     pub strategy: Address,
 //     pub amount: i128,
 // }
 
 
-// return total invested funds but also a vec of StrategyInvestment
-pub fn fetch_invested_funds_for_asset(e: &Env, asset: &AssetStrategySet) -> (i128, Vec<StrategyInvestment>){
+// return total invested funds but also a vec of StrategyAllocation
+pub fn fetch_invested_funds_for_asset(e: &Env, asset: &AssetStrategySet) -> (i128, Vec<StrategyAllocation>){
     let mut invested_funds = 0;
-    let mut strategy_investments: Vec<StrategyInvestment> = Vec::new(e);
+    let mut strategy_allocations: Vec<StrategyAllocation> = Vec::new(e);
     for strategy in asset.strategies.iter() {
         let strategy_balance = fetch_invested_funds_for_strategy(e, &strategy.address);
         invested_funds += strategy_balance;
-        strategy_investments.push_back(StrategyInvestment {
+        strategy_allocations.push_back(StrategyAllocation {
             strategy: strategy.address.clone(),
             amount: strategy_balance,
         });
     }
-    (invested_funds, strategy_investments)
+    (invested_funds, strategy_allocations)
 }
 
 // Pub functions
@@ -118,14 +118,14 @@ pub fn fetch_current_invested_funds(e: &Env) -> Map<Address, i128> {
 //     pub total_amount: i128,
 //     pub idle_amount: i128,
 //     pub invested_amount: i128,
-//     pub strategy_investments: Vec<StrategyInvestment>,
+//     pub strategy_allocations: Vec<StrategyAllocation>,
 // }
 pub fn fetch_total_managed_funds(e: &Env) -> Map<Address, CurrentAssetInvestmentAllocation> {
     let assets = get_assets(e);
     let mut map: Map<Address, CurrentAssetInvestmentAllocation> = Map::new(e);
     for asset in assets {
         let idle_amount = fetch_idle_funds_for_asset(e, &asset.address);
-        let (invested_amount, strategy_investments) = fetch_invested_funds_for_asset(e, &asset);
+        let (invested_amount, strategy_allocations) = fetch_invested_funds_for_asset(e, &asset);
         let total_amount = idle_amount + invested_amount;
         map.set(
             asset.address.clone(),
@@ -134,7 +134,7 @@ pub fn fetch_total_managed_funds(e: &Env) -> Map<Address, CurrentAssetInvestment
                 total_amount,
                 idle_amount,
                 invested_amount,
-                strategy_investments,
+                strategy_allocations,
             },
         );
     }

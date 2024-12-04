@@ -1,6 +1,6 @@
 use soroban_sdk::{vec as sorobanvec, InvokeError, Map, String, Vec};
 
-use crate::test::defindex_vault::{AssetStrategySet, ContractError, CurrentAssetInvestmentAllocation, StrategyInvestment};
+use crate::test::defindex_vault::{AssetStrategySet, ContractError, CurrentAssetInvestmentAllocation, StrategyAllocation};
 use crate::test::{
     create_strategy_params_token0, create_strategy_params_token1, DeFindexVaultTest,
 };
@@ -317,16 +317,16 @@ fn one_asset_success() {
     //     pub total_amount: i128,
     //     pub idle_amount: i128,
     //     pub invested_amount: i128,
-    //     pub strategy_investments: Vec<StrategyInvestment>,
+    //     pub strategy_allocations: Vec<StrategyAllocation>,
     // }
-    // pub struct StrategyInvestment {
+    // pub struct StrategyAllocation {
     //     pub strategy: Address,
     //     pub amount: i128,
     // }
 
     // construct expected total manage funds
     let mut total_managed_funds_expected = Map::new(&test.env);
-    let strategy_investments_expected = sorobanvec![&test.env, StrategyInvestment {
+    let strategy_investments_expected = sorobanvec![&test.env, StrategyAllocation {
         strategy: test.strategy_client_token0.address.clone(),
         amount: 0, //funds has not been invested yet!
     }];
@@ -336,7 +336,7 @@ fn one_asset_success() {
             total_amount: amount,
             idle_amount: amount,
             invested_amount: 0i128,
-            strategy_investments: strategy_investments_expected,
+            strategy_allocations: strategy_investments_expected,
         }
     );
 
@@ -392,7 +392,7 @@ fn one_asset_success() {
     
     // check that fetch_total_managed_funds returns correct amount
     let mut total_managed_funds_expected = Map::new(&test.env);
-    let strategy_investments_expected = sorobanvec![&test.env, StrategyInvestment {
+    let strategy_investments_expected = sorobanvec![&test.env, StrategyAllocation {
         strategy: test.strategy_client_token0.address.clone(),
         amount: 0, // funds have not been invested yet!
     }];
@@ -402,7 +402,7 @@ fn one_asset_success() {
             total_amount: amount + amount2,
             idle_amount: amount + amount2,
             invested_amount: 0i128,
-            strategy_investments: strategy_investments_expected,
+            strategy_allocations: strategy_investments_expected,
         }
     );
     let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
@@ -558,11 +558,11 @@ fn several_assets_success() {
 
     // check total managed funds
     let mut total_managed_funds_expected = Map::new(&test.env);
-    let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyInvestment {
+    let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyAllocation {
         strategy: test.strategy_client_token0.address.clone(),
         amount: 0, // funds have not been invested yet!
     }];
-    let strategy_investments_expected_token_1 = sorobanvec![&test.env, StrategyInvestment {
+    let strategy_investments_expected_token_1 = sorobanvec![&test.env, StrategyAllocation {
         strategy: test.strategy_client_token1.address.clone(),
         amount: 0, // funds have not been invested yet!
     }];
@@ -572,7 +572,7 @@ fn several_assets_success() {
             total_amount: amount0,
             idle_amount: amount0,
             invested_amount: 0i128,
-            strategy_investments: strategy_investments_expected_token_0,
+            strategy_allocations: strategy_investments_expected_token_0,
         }
     );
     total_managed_funds_expected.set(test.token1.address.clone(), 
@@ -581,7 +581,7 @@ fn several_assets_success() {
             total_amount: amount1,
             idle_amount: amount1,
             invested_amount: 0i128,
-            strategy_investments: strategy_investments_expected_token_1,
+            strategy_allocations: strategy_investments_expected_token_1,
         }
     );
     let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
@@ -657,11 +657,11 @@ fn several_assets_success() {
     
     // check total managed funds
     let mut total_managed_funds_expected = Map::new(&test.env);
-    let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyInvestment {
+    let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyAllocation {
         strategy: test.strategy_client_token0.address.clone(),
         amount: 0, // funds have not been invested yet!
     }];
-    let strategy_investments_expected_token_1 = sorobanvec![&test.env, StrategyInvestment {
+    let strategy_investments_expected_token_1 = sorobanvec![&test.env, StrategyAllocation {
         strategy: test.strategy_client_token1.address.clone(),
         amount: 0, // funds have not been invested yet!
     }];
@@ -671,7 +671,7 @@ fn several_assets_success() {
             total_amount: 3*amount0,
             idle_amount: 3*amount0,
             invested_amount: 0i128,
-            strategy_investments: strategy_investments_expected_token_0,
+            strategy_allocations: strategy_investments_expected_token_0,
         }
     );
     total_managed_funds_expected.set(test.token1.address.clone(), 
@@ -680,7 +680,7 @@ fn several_assets_success() {
             total_amount: 3*amount1,
             idle_amount: 3*amount1,
             invested_amount: 0i128,
-            strategy_investments: strategy_investments_expected_token_1,
+            strategy_allocations: strategy_investments_expected_token_1,
         }
     );
     let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();

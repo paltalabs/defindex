@@ -3,17 +3,11 @@ use soroban_sdk::{contracttype, Address, String, Vec};
 // Investment Allocation in Strategies
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct StrategyInvestment {
+pub struct StrategyAllocation {
     pub strategy: Address,
     pub amount: i128,
 }
 
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct AssetInvestmentAllocation {
-    pub asset: Address,
-    pub strategy_investments: Vec<Option<StrategyInvestment>>,
-}
 // Current Asset Investment Allocation
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -22,9 +16,15 @@ pub struct CurrentAssetInvestmentAllocation {
     pub total_amount: i128,
     pub idle_amount: i128,
     pub invested_amount: i128,
-    pub strategy_investments: Vec<StrategyInvestment>,
+    pub strategy_allocations: Vec<StrategyAllocation>,
 }
 
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct AssetInvestmentAllocation {
+    pub asset: Address,
+    pub strategy_allocations: Vec<Option<StrategyAllocation>>,
+}
 //
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
