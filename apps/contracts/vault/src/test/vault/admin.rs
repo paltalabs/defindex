@@ -12,7 +12,7 @@ extern crate alloc;
 use alloc::vec;
 
 #[test]
-fn test_set_new_fee_receiver_by_fee_receiver() {
+fn set_new_fee_receiver_by_fee_receiver() {
     let test = DeFindexVaultTest::setup();
     let strategy_params_token0 = create_strategy_params_token0(&test);
     let strategy_params_token1 = create_strategy_params_token1(&test);
@@ -77,7 +77,7 @@ fn test_set_new_fee_receiver_by_fee_receiver() {
 }
 
 #[test]
-fn test_set_new_fee_receiver_by_manager() {
+fn set_new_fee_receiver_by_manager() {
     let test = DeFindexVaultTest::setup();
     let strategy_params_token0 = create_strategy_params_token0(&test);
     let strategy_params_token1 = create_strategy_params_token1(&test);
@@ -142,7 +142,7 @@ fn test_set_new_fee_receiver_by_manager() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #130)")] // Unauthorized
-fn test_set_new_fee_receiver_by_emergency_manager() {
+fn set_new_fee_receiver_by_emergency_manager() {
     let test = DeFindexVaultTest::setup();
     let strategy_params_token0 = create_strategy_params_token0(&test);
     let strategy_params_token1 = create_strategy_params_token1(&test);
@@ -184,7 +184,7 @@ fn test_set_new_fee_receiver_by_emergency_manager() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #130)")] // Unauthorized
-fn test_set_new_fee_receiver_invalid_sender() {
+fn set_new_fee_receiver_invalid_sender() {
     let test = DeFindexVaultTest::setup();
     let strategy_params_token0 = create_strategy_params_token0(&test);
     let strategy_params_token1 = create_strategy_params_token1(&test);
@@ -223,7 +223,7 @@ fn test_set_new_fee_receiver_invalid_sender() {
 }
 
 #[test]
-fn test_set_new_manager_by_manager() {
+fn set_new_manager_by_manager() {
     let test = DeFindexVaultTest::setup();
     let strategy_params_token0 = create_strategy_params_token0(&test);
     let strategy_params_token1 = create_strategy_params_token1(&test);

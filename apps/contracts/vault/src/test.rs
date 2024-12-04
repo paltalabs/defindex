@@ -167,13 +167,4 @@ impl<'a> DeFindexVaultTest<'a> {
     }
 }
 
-mod initialize;
-mod deposit;
-mod admin;
-mod withdraw;
-mod emergency_withdraw;
-mod rebalance;
-mod fees;
-mod get_asset_amounts_per_shares;
-mod invest;
-mod deposit_and_invest;
+mod vault;

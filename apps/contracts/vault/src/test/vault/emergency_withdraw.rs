@@ -10,7 +10,7 @@ use crate::test::{
 };
 
 #[test]
-fn test_emergency_withdraw_success() {
+fn withdraw_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
