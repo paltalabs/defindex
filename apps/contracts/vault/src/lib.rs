@@ -1,6 +1,6 @@
 #![no_std]
 use deposit::{generate_and_execute_investments, process_deposit};
-use soroban_sdk::{vec,
+use soroban_sdk::{
     contract, contractimpl, panic_with_error,
     token::{TokenClient, TokenInterface},
     Address, Env, Map, String, Vec,
@@ -44,9 +44,9 @@ use strategies::{
     get_strategy_struct, invest_in_strategy, pause_strategy, unpause_strategy,
     withdraw_from_strategy,
 };
-use token::{internal_mint, internal_burn, write_metadata, VaultToken};
+use token::{internal_burn, write_metadata, VaultToken};
 use utils::{
-    calculate_asset_amounts_per_vault_shares, calculate_deposit_amounts_and_shares_to_mint,
+    calculate_asset_amounts_per_vault_shares,
     calculate_withdrawal_amounts, check_initialized,
     check_nonnegative_amount,
 };

@@ -558,11 +558,11 @@ fn deposit_several_assets_success() {
 
     // check total managed funds
     let mut total_managed_funds_expected = Map::new(&test.env);
-    let mut strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyInvestment {
+    let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyInvestment {
         strategy: test.strategy_client_token0.address.clone(),
         amount: 0, // funds have not been invested yet!
     }];
-    let mut strategy_investments_expected_token_1 = sorobanvec![&test.env, StrategyInvestment {
+    let strategy_investments_expected_token_1 = sorobanvec![&test.env, StrategyInvestment {
         strategy: test.strategy_client_token1.address.clone(),
         amount: 0, // funds have not been invested yet!
     }];
@@ -657,11 +657,11 @@ fn deposit_several_assets_success() {
     
     // check total managed funds
     let mut total_managed_funds_expected = Map::new(&test.env);
-    let mut strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyInvestment {
+    let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyInvestment {
         strategy: test.strategy_client_token0.address.clone(),
         amount: 0, // funds have not been invested yet!
     }];
-    let mut strategy_investments_expected_token_1 = sorobanvec![&test.env, StrategyInvestment {
+    let strategy_investments_expected_token_1 = sorobanvec![&test.env, StrategyInvestment {
         strategy: test.strategy_client_token1.address.clone(),
         amount: 0, // funds have not been invested yet!
     }];
