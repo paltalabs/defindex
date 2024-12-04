@@ -1,6 +1,6 @@
 #![no_std]
 use deposit::{generate_and_execute_investments, process_deposit};
-use soroban_sdk::{
+use soroban_sdk::{vec,
     contract, contractimpl, panic_with_error,
     token::{TokenClient, TokenInterface},
     Address, Env, Map, String, Vec,
@@ -211,86 +211,6 @@ impl VaultTrait for DeFindexVault {
         collect_fees(&e)?;
 
         let assets = get_assets(&e);
-        let assets_length = assets.len();
-
-        // assets lenght should be equal to amounts_desired and amounts_min length
-        if assets_length != amounts_desired.len() || assets_length != amounts_min.len() {
-            panic_with_error!(&e, ContractError::WrongAmountsLength);
-        }
-
-        // for every amount desired, check non negative
-        for amount in amounts_desired.iter() {
-            check_nonnegative_amount(amount)?;
-        }
-        // for amount min is not necesary to check if it is negative
-
-        let total_supply = VaultToken::total_supply(e.clone());
-        let (amounts, shares_to_mint) = if assets_length == 1 {
-            let shares = if total_supply == 0 {
-                // If we have only one asset, and this is the first deposit, we will mint a share proportional to the amount desired
-                // TODO In this case we might also want to mint a MINIMUM LIQUIDITY to be locked forever in the contract
-                // this might be for security and practical reasons as well
-                // shares will be equal to the amount desired to deposit, just for simplicity
-                amounts_desired.get(0).unwrap() // here we have already check same lenght
-            } else {
-                // If we have only one asset, but we already have some shares minted
-                // we will mint a share proportional to the total managed funds 
-                // read whitepaper!
-                let total_managed_funds = fetch_total_managed_funds(&e);
-                // if checked mul gives error, return ArithmeticError
-                VaultToken::total_supply(e.clone()).checked_mul(amounts_desired.get(0)
-                .unwrap()).unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError))
-                .checked_div(
-                    total_managed_funds.get(assets.get(0).unwrap().address.clone())
-                    .unwrap().total_amount
-                ).unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError))
-            };
-            // TODO check that min amount is ok
-            (amounts_desired.clone(), shares)
-        } else {
-            if total_supply == 0 {
-                // for ths first supply, we will consider the amounts desired, and the shares to mint will just be the sum
-                // of the amounts desired
-                (amounts_desired.clone(), amounts_desired.iter().sum())
-            }
-            else {
-                // If Total Assets > 1
-                calculate_deposit_amounts_and_shares_to_mint(
-                    &e,
-                    &assets,
-                    &amounts_desired,
-                    &amounts_min,
-                )?
-            }
-        };
-
-        // for every asset
-        for (i, amount) in amounts.iter().enumerate() {
-            // if amount is less than minimum, return error InsufficientAmount
-            if amount < amounts_min.get(i as u32).unwrap() {
-                panic_with_error!(&e, ContractError::InsufficientAmount);
-            }
-            // its possible that some amounts are 0.
-            if amount > 0 {
-                let asset = assets.get(i as u32).unwrap();
-                let asset_client = TokenClient::new(&e, &asset.address);
-                // send the current amount to this contract. This will be held as idle funds.
-                asset_client.transfer(&from, &e.current_contract_address(), &amount);
-            }
-        }
-
-        // Now we mint the corresponding dfToken shares to the user
-        // If total_sypply==0, mint minimum liquidity to be locked forever in the contract. So we will never come again to total_supply==0
-        if total_supply == 0 {
-            if shares_to_mint < MINIMUM_LIQUIDITY {
-                panic_with_error!(&e, ContractError::InsufficientAmount);
-            }
-            internal_mint(e.clone(), e.current_contract_address(), MINIMUM_LIQUIDITY);
-            internal_mint(e.clone(), from.clone(), shares_to_mint.checked_sub(MINIMUM_LIQUIDITY).unwrap());
-        }
-        else {
-            internal_mint(e.clone(), from.clone(), shares_to_mint);
-        }
 
         let (amounts, shares_to_mint) =
             process_deposit(&e, &assets, &amounts_desired, &amounts_min, &from)?;
