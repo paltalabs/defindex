@@ -104,8 +104,8 @@ fn success() {
     assert_eq!(vault_positions.supply.get(0).unwrap(), starting_balance * 2);
 
     // user_4 deposit directly into pool
-    let merry_starting_balance = 200_0000000;
-    usdc_client.mint(&user_4, &merry_starting_balance);
+    let user_4_starting_balance = 200_0000000;
+    usdc_client.mint(&user_4, &user_4_starting_balance);
     pool_client.submit(
         &user_4,
         &user_4,
@@ -115,13 +115,13 @@ fn success() {
             Request {
                 request_type: 0,
                 address: usdc.address().clone(),
-                amount: merry_starting_balance,
+                amount: user_4_starting_balance,
             },
         ],
     );
 
     // admin borrow back to 50% util rate
-    let borrow_amount = (merry_starting_balance + starting_balance * 2) / 2;
+    let borrow_amount = (user_4_starting_balance + starting_balance * 2) / 2;
     pool_client.submit(
         &admin,
         &admin,
@@ -160,16 +160,16 @@ fn success() {
             Request {
                 request_type: 1,
                 address: usdc.address().clone(),
-                amount: merry_starting_balance * 2,
+                amount: user_4_starting_balance * 2,
             },
         ],
     );
-    let user_5_final_balance = usdc_client.balance(&user_4);
-    let user_5_profit = user_5_final_balance - merry_starting_balance;
+    let user_4_final_balance = usdc_client.balance(&user_4);
+    let user_4_profit = user_4_final_balance - user_4_starting_balance;
 
     // withdraw from blend strategy for user_2 and user_3
     // they are expected to receive half of the profit of user_4
-    let expected_user_4_profit = user_5_profit / 2;
+    let expected_user_4_profit = user_4_profit / 2;
     let withdraw_amount = starting_balance + expected_user_4_profit;
     // withdraw_amount = 100_0958904
 
