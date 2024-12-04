@@ -168,7 +168,7 @@ impl VaultTrait for DeFindexVault {
     /// Handles user deposits into the DeFindex Vault.
     ///
     /// This function processes a deposit by transferring each specified asset amount from the user's address to
-    /// the vault, allocating assets according to the vault's defined strategy ratios, and minting dfTokens that
+    /// the vault, allocating assets according to the vault's defined strategy ratios, and minting vault shares that
     /// represent the user's proportional share in the vault. The `amounts_desired` and `amounts_min` vectors should
     /// align with the vault's asset order to ensure correct allocation.
     ///
@@ -259,7 +259,9 @@ impl VaultTrait for DeFindexVault {
         // Calculate the withdrawal amounts for each asset based on the share amounts
         // Map<Address, i128> Maps asset address to the amount to withdraw
         // this already considers the idle funds and all the invested amounts in strategies
-        let asset_amounts = calculate_asset_amounts_per_vault_shares(&e, shares_amount)?;
+
+        let total_managed_funds = fetch_total_managed_funds(&e);
+        let asset_amounts = calculate_asset_amounts_per_vault_shares(&e, shares_amount, &total_managed_funds)?;
 
         // Burn the shares after calculating the withdrawal amounts (so total supply is correct
         // but before withdrawing to avoid reentrancy attacks)
@@ -271,7 +273,10 @@ impl VaultTrait for DeFindexVault {
         // Loop through each asset in order to handle the withdrawal and if necesary to deallocate invested funds
         for (asset_address, required_amount) in asset_amounts.iter() {
             // Check idle funds for this asset
-            let idle_balance = fetch_idle_funds_for_asset(&e, &asset_address);
+            let idle_balance = total_managed_funds
+                .get(asset_address.clone())
+                .unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength))
+                .idle_amount;
             
             // let amount_to_deallocate = if idle_balance >= required_amount {
             //     0
@@ -511,7 +516,8 @@ impl VaultTrait for DeFindexVault {
     /// * `Map<Address, i128>` - A map containing each asset address and its corresponding proportional amount.
     fn get_asset_amounts_per_shares(e: Env, vault_shares: i128) -> Result<Map<Address, i128>, ContractError> {
         extend_instance_ttl(&e);
-        Ok(calculate_asset_amounts_per_vault_shares(&e, vault_shares)?)
+        let total_managed_funds = fetch_total_managed_funds(&e);
+        Ok(calculate_asset_amounts_per_vault_shares(&e, vault_shares, &total_managed_funds)?)
     }
 
     fn get_fees(e: Env) -> (u32, u32) {

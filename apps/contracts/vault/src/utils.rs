@@ -84,12 +84,12 @@ pub fn calculate_withdrawal_amounts(
 pub fn calculate_asset_amounts_per_vault_shares(
     env: &Env,
     shares_amount: i128,
+    total_managed_funds: &Map<Address, CurrentAssetInvestmentAllocation>,
 ) -> Result<Map<Address, i128>, ContractError> {
     let mut asset_amounts: Map<Address, i128> = Map::new(env);
 
     // Fetch the total supply of vault shares and the total managed funds for each asset
     let total_shares_supply = VaultToken::total_supply(env.clone());
-    let total_managed_funds = fetch_total_managed_funds(env);
 
     // if shares amount over total supply, return error AmountOverTotalSupply
     if shares_amount > total_shares_supply {
