@@ -6,7 +6,6 @@ use soroban_sdk::{self, contracterror};
 pub enum StrategyError {
     // Initialization Errors
     NotInitialized = 401,
-    AlreadyInitialized = 402,
 
     // Validation Errors
     NegativeNotAllowed = 410,
