@@ -307,24 +307,6 @@ fn one_asset_success() {
     assert_eq!(vault_balance, amount);
     
     // check total manage funds
-
-    // fn fetch_total_managed_funds(e: &Env) -> Map<Address, CurrentAssetInvestmentAllocation> {
-    //     extend_instance_ttl(&e);
-    //     fetch_total_managed_funds(e)
-    // }
-    // pub struct CurrentAssetInvestmentAllocation {
-    //     pub asset: Address,
-    //     pub total_amount: i128,
-    //     pub idle_amount: i128,
-    //     pub invested_amount: i128,
-    //     pub strategy_allocations: Vec<StrategyAllocation>,
-    // }
-    // pub struct StrategyAllocation {
-    //     pub strategy: Address,
-    //     pub amount: i128,
-    // }
-
-    // construct expected total manage funds
     let mut total_managed_funds_expected = Map::new(&test.env);
     let strategy_investments_expected = sorobanvec![&test.env, StrategyAllocation {
         strategy_address: test.strategy_client_token0.address.clone(),

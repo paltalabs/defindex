@@ -57,7 +57,7 @@ fn test_withdraw_negative_amount() {
 
 // check that withdraw without balance after initialized returns error InsufficientBalance
 #[test]
-fn test_withdraw_insufficient_balance() {
+fn test_withdraw_0_total_supply() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -84,7 +84,7 @@ fn test_withdraw_insufficient_balance() {
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
     let result = test.defindex_contract.try_withdraw(&100i128, &users[0]);
-    assert_eq!(result, Err(Ok(ContractError::InsufficientBalance)));
+    assert_eq!(result, Err(Ok(ContractError::AmountOverTotalSupply)));
 }
 
 #[test]
@@ -185,7 +185,7 @@ fn withdraw_from_idle_success() {
         .try_withdraw(&amount_to_withdraw_more, &users[0]);
     
     assert_eq!(result, 
-        Err(Ok(ContractError::InsufficientBalance)));
+        Err(Ok(ContractError::AmountOverTotalSupply)));
 
 
     // // withdraw remaining balance

@@ -1,140 +1,189 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `FactoryTrait` trait in crate `defindex_factory`."><title>FactoryTrait in defindex_factory - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../static.files/rustdoc-081576b923113409.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="defindex_factory" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0 (129f3b996 2024-06-10)" data-channel="1.79.0" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../static.files/storage-e32f0c247825364d.js"></script><script defer src="sidebar-items.js"></script><script defer src="../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../defindex_factory/index.html">defindex_factory</a><span class="version">1.0.0</span></h2></div><h2 class="location"><a href="#">FactoryTrait</a></h2><div class="sidebar-elems"><section><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.admin">admin</a></li><li><a href="#tymethod.create_defindex_vault">create_defindex_vault</a></li><li><a href="#tymethod.defindex_receiver">defindex_receiver</a></li><li><a href="#tymethod.deployed_defindexes">deployed_defindexes</a></li><li><a href="#tymethod.fee_rate">fee_rate</a></li><li><a href="#tymethod.initialize">initialize</a></li><li><a href="#tymethod.set_defindex_receiver">set_defindex_receiver</a></li><li><a href="#tymethod.set_fee_rate">set_fee_rate</a></li><li><a href="#tymethod.set_new_admin">set_new_admin</a></li></ul><h3><a href="#object-safety">Object Safety</a></h3><h3><a href="#implementors">Implementors</a></h3></section><h2><a href="index.html">In crate defindex_factory</a></h2></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../defindex_factory/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Trait <a href="index.html">defindex_factory</a>::<wbr><a class="trait" href="#">FactoryTrait</a><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><span class="out-of-band"><a class="src" href="../src/defindex_factory/lib.rs.html#22-134">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><pre class="rust item-decl"><code>pub trait FactoryTrait {
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="API documentation for the Rust `FactoryTrait` trait in crate `defindex_factory`."><title>FactoryTrait in defindex_factory - Rust</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../static.files/rustdoc-492a78a4a87dcc01.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="defindex_factory" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0 (f6e511eec 2024-10-15)" data-channel="1.82.0" data-search-js="search-a99f1315e7cc5121.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../static.files/storage-118b08c4c78b968e.js"></script><script defer src="sidebar-items.js"></script><script defer src="../static.files/main-921df33f47b8780c.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc trait"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../defindex_factory/index.html">defindex_<wbr>factory</a><span class="version">0.1.0</span></h2></div><h2 class="location"><a href="#">Factory<wbr>Trait</a></h2><div class="sidebar-elems"><section><h3><a href="#required-methods">Required Methods</a></h3><ul class="block"><li><a href="#tymethod.admin">admin</a></li><li><a href="#tymethod.create_defindex_vault">create_defindex_vault</a></li><li><a href="#tymethod.create_defindex_vault_deposit">create_defindex_vault_deposit</a></li><li><a href="#tymethod.defindex_fee">defindex_fee</a></li><li><a href="#tymethod.defindex_receiver">defindex_receiver</a></li><li><a href="#tymethod.deployed_defindexes">deployed_defindexes</a></li><li><a href="#tymethod.initialize">initialize</a></li><li><a href="#tymethod.set_defindex_fee">set_defindex_fee</a></li><li><a href="#tymethod.set_defindex_receiver">set_defindex_receiver</a></li><li><a href="#tymethod.set_new_admin">set_new_admin</a></li></ul><h3><a href="#object-safety">Object Safety</a></h3><h3><a href="#implementors">Implementors</a></h3></section><h2><a href="index.html">In crate defindex_<wbr>factory</a></h2></div></nav><div class="sidebar-resizer"></div><main><div class="width-limiter"><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1>Trait <a href="index.html">defindex_factory</a>::<wbr><a class="trait" href="#">FactoryTrait</a><button id="copy-path" title="Copy item path to clipboard">Copy item path</button></h1><span class="out-of-band"><a class="src" href="../src/defindex_factory/lib.rs.html#23-169">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><pre class="rust item-decl"><code>pub trait FactoryTrait {
     // Required methods
     fn <a href="#tymethod.initialize" class="fn">initialize</a>(
         e: Env,
         admin: Address,
         defindex_receiver: Address,
-        fee_rate: <a class="primitive" href="https://doc.rust-lang.org/1.79.0/std/primitive.u32.html">u32</a>,
-        defindex_wasm_hash: BytesN&lt;32&gt;
-    ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.79.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.79.0/std/primitive.unit.html">()</a>, FactoryError&gt;;
+        defindex_fee: <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u32.html">u32</a>,
+        vault_wasm_hash: BytesN&lt;32&gt;,
+    ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a>, FactoryError&gt;;
 <span class="item-spacer"></span>    fn <a href="#tymethod.create_defindex_vault" class="fn">create_defindex_vault</a>(
         e: Env,
         emergency_manager: Address,
         fee_receiver: Address,
-        vault_share: <a class="primitive" href="https://doc.rust-lang.org/1.79.0/std/primitive.u32.html">u32</a>,
+        vault_fee: <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u32.html">u32</a>,
+        vault_name: String,
+        vault_symbol: String,
         manager: Address,
-        assets: Vec&lt;AssetAllocation&gt;,
-        salt: BytesN&lt;32&gt;
-    ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.79.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Address, FactoryError&gt;;
-<span class="item-spacer"></span>    fn <a href="#tymethod.set_new_admin" class="fn">set_new_admin</a>(e: Env, new_admin: Address) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.79.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.79.0/std/primitive.unit.html">()</a>, FactoryError&gt;;
+        assets: Vec&lt;AssetStrategySet&gt;,
+        salt: BytesN&lt;32&gt;,
+    ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Address, FactoryError&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.create_defindex_vault_deposit" class="fn">create_defindex_vault_deposit</a>(
+        e: Env,
+        caller: Address,
+        emergency_manager: Address,
+        fee_receiver: Address,
+        vault_fee: <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u32.html">u32</a>,
+        vault_name: String,
+        vault_symbol: String,
+        manager: Address,
+        assets: Vec&lt;AssetStrategySet&gt;,
+        amounts: Vec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;,
+        salt: BytesN&lt;32&gt;,
+    ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Address, FactoryError&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.set_new_admin" class="fn">set_new_admin</a>(e: Env, new_admin: Address) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a>, FactoryError&gt;;
 <span class="item-spacer"></span>    fn <a href="#tymethod.set_defindex_receiver" class="fn">set_defindex_receiver</a>(
         e: Env,
-        new_fee_receiver: Address
-    ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.79.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.79.0/std/primitive.unit.html">()</a>, FactoryError&gt;;
-<span class="item-spacer"></span>    fn <a href="#tymethod.set_fee_rate" class="fn">set_fee_rate</a>(e: Env, new_fee_rate: <a class="primitive" href="https://doc.rust-lang.org/1.79.0/std/primitive.u32.html">u32</a>) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.79.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.79.0/std/primitive.unit.html">()</a>, FactoryError&gt;;
-<span class="item-spacer"></span>    fn <a href="#tymethod.admin" class="fn">admin</a>(e: Env) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.79.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Address, FactoryError&gt;;
-<span class="item-spacer"></span>    fn <a href="#tymethod.defindex_receiver" class="fn">defindex_receiver</a>(e: Env) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.79.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Address, FactoryError&gt;;
-<span class="item-spacer"></span>    fn <a href="#tymethod.deployed_defindexes" class="fn">deployed_defindexes</a>(e: Env) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.79.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Map&lt;<a class="primitive" href="https://doc.rust-lang.org/1.79.0/std/primitive.u32.html">u32</a>, Address&gt;, FactoryError&gt;;
-<span class="item-spacer"></span>    fn <a href="#tymethod.fee_rate" class="fn">fee_rate</a>(e: Env) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.79.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.79.0/std/primitive.u32.html">u32</a>, FactoryError&gt;;
-}</code></pre><h2 id="required-methods" class="section-header">Required Methods<a href="#required-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="tymethod.initialize" class="method"><a class="src rightside" href="../src/defindex_factory/lib.rs.html#34-40">source</a><h4 class="code-header">fn <a href="#tymethod.initialize" class="fn">initialize</a>(
+        new_fee_receiver: Address,
+    ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a>, FactoryError&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.set_defindex_fee" class="fn">set_defindex_fee</a>(e: Env, new_fee_rate: <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u32.html">u32</a>) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a>, FactoryError&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.admin" class="fn">admin</a>(e: Env) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Address, FactoryError&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.defindex_receiver" class="fn">defindex_receiver</a>(e: Env) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Address, FactoryError&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.deployed_defindexes" class="fn">deployed_defindexes</a>(e: Env) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Map&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u32.html">u32</a>, Address&gt;, FactoryError&gt;;
+<span class="item-spacer"></span>    fn <a href="#tymethod.defindex_fee" class="fn">defindex_fee</a>(e: Env) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u32.html">u32</a>, FactoryError&gt;;
+}</code></pre><h2 id="required-methods" class="section-header">Required Methods<a href="#required-methods" class="anchor">§</a></h2><div class="methods"><details class="toggle method-toggle" open><summary><section id="tymethod.initialize" class="method"><a class="src rightside" href="../src/defindex_factory/lib.rs.html#35-41">source</a><h4 class="code-header">fn <a href="#tymethod.initialize" class="fn">initialize</a>(
     e: Env,
     admin: Address,
     defindex_receiver: Address,
-    fee_rate: <a class="primitive" href="https://doc.rust-lang.org/1.79.0/std/primitive.u32.html">u32</a>,
-    defindex_wasm_hash: BytesN&lt;32&gt;
-) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.79.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.79.0/std/primitive.unit.html">()</a>, FactoryError&gt;</h4></section></summary><div class="docblock"><p>Initializes the factory contract with the given parameters.</p>
+    defindex_fee: <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u32.html">u32</a>,
+    vault_wasm_hash: BytesN&lt;32&gt;,
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a>, FactoryError&gt;</h4></section></summary><div class="docblock"><p>Initializes the factory contract with the given parameters.</p>
 <h5 id="arguments"><a class="doc-anchor" href="#arguments">§</a>Arguments</h5>
 <ul>
 <li><code>e</code> - The environment in which the contract is running.</li>
 <li><code>admin</code> - The address of the contract administrator, who can manage settings.</li>
 <li><code>defindex_receiver</code> - The default address designated to receive a portion of fees.</li>
-<li><code>fee_rate</code> - The initial annual fee rate (in basis points).</li>
-<li><code>defindex_wasm_hash</code> - The hash of the DeFindex Vault’s WASM file for deploying new vaults.</li>
+<li><code>defindex_fee</code> - The initial annual fee rate (in basis points).</li>
+<li><code>vault_wasm_hash</code> - The hash of the DeFindex Vault’s WASM file for deploying new vaults.</li>
 </ul>
 <h5 id="returns"><a class="doc-anchor" href="#returns">§</a>Returns</h5>
 <ul>
 <li><code>Result&lt;(), FactoryError&gt;</code> - Returns Ok(()) if successful, otherwise an error.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.create_defindex_vault" class="method"><a class="src rightside" href="../src/defindex_factory/lib.rs.html#55-63">source</a><h4 class="code-header">fn <a href="#tymethod.create_defindex_vault" class="fn">create_defindex_vault</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.create_defindex_vault" class="method"><a class="src rightside" href="../src/defindex_factory/lib.rs.html#58-68">source</a><h4 class="code-header">fn <a href="#tymethod.create_defindex_vault" class="fn">create_defindex_vault</a>(
     e: Env,
     emergency_manager: Address,
     fee_receiver: Address,
-    vault_share: <a class="primitive" href="https://doc.rust-lang.org/1.79.0/std/primitive.u32.html">u32</a>,
+    vault_fee: <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u32.html">u32</a>,
+    vault_name: String,
+    vault_symbol: String,
     manager: Address,
-    assets: Vec&lt;AssetAllocation&gt;,
-    salt: BytesN&lt;32&gt;
-) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.79.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Address, FactoryError&gt;</h4></section></summary><div class="docblock"><p>Creates a new DeFindex Vault with specified parameters.</p>
+    assets: Vec&lt;AssetStrategySet&gt;,
+    salt: BytesN&lt;32&gt;,
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Address, FactoryError&gt;</h4></section></summary><div class="docblock"><p>Creates a new DeFindex Vault with specified parameters.</p>
 <h5 id="arguments-1"><a class="doc-anchor" href="#arguments-1">§</a>Arguments</h5>
 <ul>
 <li><code>e</code> - The environment in which the contract is running.</li>
 <li><code>emergency_manager</code> - The address assigned emergency control over the vault.</li>
 <li><code>fee_receiver</code> - The address designated to receive fees from the vault.</li>
-<li><code>vault_share</code> - The percentage share of fees allocated to the vault’s fee receiver.</li>
+<li><code>vault_fee</code> - The percentage share of fees allocated to the vault’s fee receiver.</li>
+<li><code>vault_name</code> - The name of the vault.</li>
+<li><code>vault_symbol</code> - The symbol of the vault.</li>
 <li><code>manager</code> - The address assigned as the vault manager.</li>
-<li><code>assets</code> - A vector of <code>AssetAllocation</code> structs that define the assets managed by the vault.</li>
+<li><code>assets</code> - A vector of <code>AssetStrategySet</code> structs that define the assets managed by the vault.</li>
 <li><code>salt</code> - A salt used for ensuring unique addresses for each deployed vault.</li>
 </ul>
 <h5 id="returns-1"><a class="doc-anchor" href="#returns-1">§</a>Returns</h5>
 <ul>
 <li><code>Result&lt;Address, FactoryError&gt;</code> - Returns the address of the new vault, or an error if unsuccessful.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.set_new_admin" class="method"><a class="src rightside" href="../src/defindex_factory/lib.rs.html#75">source</a><h4 class="code-header">fn <a href="#tymethod.set_new_admin" class="fn">set_new_admin</a>(e: Env, new_admin: Address) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.79.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.79.0/std/primitive.unit.html">()</a>, FactoryError&gt;</h4></section></summary><div class="docblock"><p>Sets a new admin address.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.create_defindex_vault_deposit" class="method"><a class="src rightside" href="../src/defindex_factory/lib.rs.html#86-98">source</a><h4 class="code-header">fn <a href="#tymethod.create_defindex_vault_deposit" class="fn">create_defindex_vault_deposit</a>(
+    e: Env,
+    caller: Address,
+    emergency_manager: Address,
+    fee_receiver: Address,
+    vault_fee: <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u32.html">u32</a>,
+    vault_name: String,
+    vault_symbol: String,
+    manager: Address,
+    assets: Vec&lt;AssetStrategySet&gt;,
+    amounts: Vec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;,
+    salt: BytesN&lt;32&gt;,
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Address, FactoryError&gt;</h4></section></summary><div class="docblock"><p>Creates a new DeFindex Vault with specified parameters and makes the first deposit to set ratios.</p>
 <h5 id="arguments-2"><a class="doc-anchor" href="#arguments-2">§</a>Arguments</h5>
 <ul>
 <li><code>e</code> - The environment in which the contract is running.</li>
-<li><code>new_admin</code> - The new administrator’s address.</li>
+<li><code>emergency_manager</code> - The address assigned emergency control over the vault.</li>
+<li><code>fee_receiver</code> - The address designated to receive fees from the vault.</li>
+<li><code>vault_fee</code> - The percentage share of fees allocated to the vault’s fee receiver.</li>
+<li><code>vault_name</code> - The name of the vault.</li>
+<li><code>vault_symbol</code> - The symbol of the vault.</li>
+<li><code>manager</code> - The address assigned as the vault manager.</li>
+<li><code>assets</code> - A vector of <code>AssetStrategySet</code> structs that define the assets managed by the vault.</li>
+<li><code>amounts</code> - A vector of <code>AssetAmounts</code> structs that define the initial deposit amounts.</li>
+<li><code>salt</code> - A salt used for ensuring unique addresses for each deployed vault.</li>
 </ul>
 <h5 id="returns-2"><a class="doc-anchor" href="#returns-2">§</a>Returns</h5>
 <ul>
-<li><code>Result&lt;(), FactoryError&gt;</code> - Returns Ok(()) if successful, or an error if not authorized.</li>
+<li><code>Result&lt;Address, FactoryError&gt;</code> - Returns the address of the new vault, or an error if unsuccessful.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.set_defindex_receiver" class="method"><a class="src rightside" href="../src/defindex_factory/lib.rs.html#85">source</a><h4 class="code-header">fn <a href="#tymethod.set_defindex_receiver" class="fn">set_defindex_receiver</a>(
-    e: Env,
-    new_fee_receiver: Address
-) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.79.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.79.0/std/primitive.unit.html">()</a>, FactoryError&gt;</h4></section></summary><div class="docblock"><p>Updates the default receiver address for the DeFindex portion of fees.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.set_new_admin" class="method"><a class="src rightside" href="../src/defindex_factory/lib.rs.html#110">source</a><h4 class="code-header">fn <a href="#tymethod.set_new_admin" class="fn">set_new_admin</a>(e: Env, new_admin: Address) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a>, FactoryError&gt;</h4></section></summary><div class="docblock"><p>Sets a new admin address.</p>
 <h5 id="arguments-3"><a class="doc-anchor" href="#arguments-3">§</a>Arguments</h5>
 <ul>
 <li><code>e</code> - The environment in which the contract is running.</li>
-<li><code>new_fee_receiver</code> - The address of the new fee receiver.</li>
+<li><code>new_admin</code> - The new administrator’s address.</li>
 </ul>
 <h5 id="returns-3"><a class="doc-anchor" href="#returns-3">§</a>Returns</h5>
 <ul>
 <li><code>Result&lt;(), FactoryError&gt;</code> - Returns Ok(()) if successful, or an error if not authorized.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.set_fee_rate" class="method"><a class="src rightside" href="../src/defindex_factory/lib.rs.html#95">source</a><h4 class="code-header">fn <a href="#tymethod.set_fee_rate" class="fn">set_fee_rate</a>(e: Env, new_fee_rate: <a class="primitive" href="https://doc.rust-lang.org/1.79.0/std/primitive.u32.html">u32</a>) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.79.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.79.0/std/primitive.unit.html">()</a>, FactoryError&gt;</h4></section></summary><div class="docblock"><p>Updates the default fee rate for new vaults.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.set_defindex_receiver" class="method"><a class="src rightside" href="../src/defindex_factory/lib.rs.html#120">source</a><h4 class="code-header">fn <a href="#tymethod.set_defindex_receiver" class="fn">set_defindex_receiver</a>(
+    e: Env,
+    new_fee_receiver: Address,
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a>, FactoryError&gt;</h4></section></summary><div class="docblock"><p>Updates the default receiver address for the DeFindex portion of fees.</p>
 <h5 id="arguments-4"><a class="doc-anchor" href="#arguments-4">§</a>Arguments</h5>
 <ul>
 <li><code>e</code> - The environment in which the contract is running.</li>
-<li><code>new_fee_rate</code> - The new annual fee rate in basis points.</li>
+<li><code>new_fee_receiver</code> - The address of the new fee receiver.</li>
 </ul>
 <h5 id="returns-4"><a class="doc-anchor" href="#returns-4">§</a>Returns</h5>
 <ul>
 <li><code>Result&lt;(), FactoryError&gt;</code> - Returns Ok(()) if successful, or an error if not authorized.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.admin" class="method"><a class="src rightside" href="../src/defindex_factory/lib.rs.html#106">source</a><h4 class="code-header">fn <a href="#tymethod.admin" class="fn">admin</a>(e: Env) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.79.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Address, FactoryError&gt;</h4></section></summary><div class="docblock"><p>Retrieves the current admin’s address.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.set_defindex_fee" class="method"><a class="src rightside" href="../src/defindex_factory/lib.rs.html#130">source</a><h4 class="code-header">fn <a href="#tymethod.set_defindex_fee" class="fn">set_defindex_fee</a>(e: Env, new_fee_rate: <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u32.html">u32</a>) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a>, FactoryError&gt;</h4></section></summary><div class="docblock"><p>Updates the default fee rate for new vaults.</p>
 <h5 id="arguments-5"><a class="doc-anchor" href="#arguments-5">§</a>Arguments</h5>
 <ul>
 <li><code>e</code> - The environment in which the contract is running.</li>
+<li><code>new_fee_rate</code> - The new annual fee rate in basis points.</li>
 </ul>
 <h5 id="returns-5"><a class="doc-anchor" href="#returns-5">§</a>Returns</h5>
 <ul>
-<li><code>Result&lt;Address, FactoryError&gt;</code> - Returns the admin’s address or an error if not found.</li>
+<li><code>Result&lt;(), FactoryError&gt;</code> - Returns Ok(()) if successful, or an error if not authorized.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.defindex_receiver" class="method"><a class="src rightside" href="../src/defindex_factory/lib.rs.html#115">source</a><h4 class="code-header">fn <a href="#tymethod.defindex_receiver" class="fn">defindex_receiver</a>(e: Env) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.79.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Address, FactoryError&gt;</h4></section></summary><div class="docblock"><p>Retrieves the current DeFindex receiver’s address.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.admin" class="method"><a class="src rightside" href="../src/defindex_factory/lib.rs.html#141">source</a><h4 class="code-header">fn <a href="#tymethod.admin" class="fn">admin</a>(e: Env) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Address, FactoryError&gt;</h4></section></summary><div class="docblock"><p>Retrieves the current admin’s address.</p>
 <h5 id="arguments-6"><a class="doc-anchor" href="#arguments-6">§</a>Arguments</h5>
 <ul>
 <li><code>e</code> - The environment in which the contract is running.</li>
 </ul>
 <h5 id="returns-6"><a class="doc-anchor" href="#returns-6">§</a>Returns</h5>
 <ul>
-<li><code>Result&lt;Address, FactoryError&gt;</code> - Returns the DeFindex receiver’s address or an error if not found.</li>
+<li><code>Result&lt;Address, FactoryError&gt;</code> - Returns the admin’s address or an error if not found.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.deployed_defindexes" class="method"><a class="src rightside" href="../src/defindex_factory/lib.rs.html#124">source</a><h4 class="code-header">fn <a href="#tymethod.deployed_defindexes" class="fn">deployed_defindexes</a>(e: Env) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.79.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Map&lt;<a class="primitive" href="https://doc.rust-lang.org/1.79.0/std/primitive.u32.html">u32</a>, Address&gt;, FactoryError&gt;</h4></section></summary><div class="docblock"><p>Retrieves a map of all deployed DeFindex vaults.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.defindex_receiver" class="method"><a class="src rightside" href="../src/defindex_factory/lib.rs.html#150">source</a><h4 class="code-header">fn <a href="#tymethod.defindex_receiver" class="fn">defindex_receiver</a>(e: Env) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Address, FactoryError&gt;</h4></section></summary><div class="docblock"><p>Retrieves the current DeFindex receiver’s address.</p>
 <h5 id="arguments-7"><a class="doc-anchor" href="#arguments-7">§</a>Arguments</h5>
 <ul>
 <li><code>e</code> - The environment in which the contract is running.</li>
 </ul>
 <h5 id="returns-7"><a class="doc-anchor" href="#returns-7">§</a>Returns</h5>
 <ul>
-<li><code>Result&lt;Map&lt;u32, Address&gt;, FactoryError&gt;</code> - Returns a map with vault identifiers and addresses or an error if retrieval fails.</li>
+<li><code>Result&lt;Address, FactoryError&gt;</code> - Returns the DeFindex receiver’s address or an error if not found.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.fee_rate" class="method"><a class="src rightside" href="../src/defindex_factory/lib.rs.html#133">source</a><h4 class="code-header">fn <a href="#tymethod.fee_rate" class="fn">fee_rate</a>(e: Env) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.79.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.79.0/std/primitive.u32.html">u32</a>, FactoryError&gt;</h4></section></summary><div class="docblock"><p>Retrieves the current fee rate.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.deployed_defindexes" class="method"><a class="src rightside" href="../src/defindex_factory/lib.rs.html#159">source</a><h4 class="code-header">fn <a href="#tymethod.deployed_defindexes" class="fn">deployed_defindexes</a>(e: Env) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Map&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u32.html">u32</a>, Address&gt;, FactoryError&gt;</h4></section></summary><div class="docblock"><p>Retrieves a map of all deployed DeFindex vaults.</p>
 <h5 id="arguments-8"><a class="doc-anchor" href="#arguments-8">§</a>Arguments</h5>
 <ul>
 <li><code>e</code> - The environment in which the contract is running.</li>
 </ul>
 <h5 id="returns-8"><a class="doc-anchor" href="#returns-8">§</a>Returns</h5>
 <ul>
+<li><code>Result&lt;Map&lt;u32, Address&gt;, FactoryError&gt;</code> - Returns a map with vault identifiers and addresses or an error if retrieval fails.</li>
+</ul>
+</div></details><details class="toggle method-toggle" open><summary><section id="tymethod.defindex_fee" class="method"><a class="src rightside" href="../src/defindex_factory/lib.rs.html#168">source</a><h4 class="code-header">fn <a href="#tymethod.defindex_fee" class="fn">defindex_fee</a>(e: Env) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u32.html">u32</a>, FactoryError&gt;</h4></section></summary><div class="docblock"><p>Retrieves the current fee rate.</p>
+<h5 id="arguments-9"><a class="doc-anchor" href="#arguments-9">§</a>Arguments</h5>
+<ul>
+<li><code>e</code> - The environment in which the contract is running.</li>
+</ul>
+<h5 id="returns-9"><a class="doc-anchor" href="#returns-9">§</a>Returns</h5>
+<ul>
 <li><code>Result&lt;u32, FactoryError&gt;</code> - Returns the fee rate in basis points or an error if not found.</li>
 </ul>
-</div></details></div><h2 id="object-safety" class="section-header">Object Safety<a href="#object-safety" class="anchor">§</a></h2><div class="object-safety-info">This trait is <b>not</b> <a href="https://doc.rust-lang.org/1.79.0/reference/items/traits.html#object-safety">object safe</a>.</div><h2 id="implementors" class="section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"></div><script src="../trait.impl/defindex_factory/trait.FactoryTrait.js" async></script></section></div></main></body></html>
+</div></details></div><h2 id="object-safety" class="section-header">Object Safety<a href="#object-safety" class="anchor">§</a></h2><div class="object-safety-info">This trait is <b>not</b> <a href="https://doc.rust-lang.org/1.82.0/reference/items/traits.html#object-safety">object safe</a>.</div><h2 id="implementors" class="section-header">Implementors<a href="#implementors" class="anchor">§</a></h2><div id="implementors-list"></div><script src="../trait.impl/defindex_factory/trait.FactoryTrait.js" async></script></section></div></main></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `defindex/src/storage.rs`."><title>storage.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-081576b923113409.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="defindex_vault" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0 (129f3b996 2024-06-10)" data-channel="1.79.0" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../defindex_vault/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `vault/src/storage.rs`."><title>storage.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-492a78a4a87dcc01.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="defindex_vault" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0 (f6e511eec 2024-10-15)" data-channel="1.82.0" data-search-js="search-a99f1315e7cc5121.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-921df33f47b8780c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -94,28 +94,65 @@
 <a href="#94" id="94">94</a>
 <a href="#95" id="95">95</a>
 <a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
+<a href="#103" id="103">103</a>
+<a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>soroban_sdk::{contracttype, Address, Env, Vec};
 
-<span class="kw">use </span><span class="kw">crate</span>::models::AssetAllocation;
+<span class="kw">use </span>common::models::AssetStrategySet;
+
+<span class="kw">const </span>DAY_IN_LEDGERS: u32 = <span class="number">17280</span>;
+<span class="kw">const </span>INSTANCE_BUMP_AMOUNT: u32 = <span class="number">30 </span>* DAY_IN_LEDGERS;
+<span class="kw">const </span>INSTANCE_LIFETIME_THRESHOLD: u32 = INSTANCE_BUMP_AMOUNT - DAY_IN_LEDGERS;
+
+<span class="kw">pub fn </span>extend_instance_ttl(e: <span class="kw-2">&amp;</span>Env) {
+    e.storage()
+        .instance()
+        .extend_ttl(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
+}
+
 
 <span class="attr">#[derive(Clone)]
 #[contracttype]
 </span><span class="kw">enum </span>DataKey {
-    AssetAllocation(u32),      <span class="comment">// AssetAllocation Addresse by index
-    </span>TotalAssets,     <span class="comment">// Total number of tokens
-    </span>DeFindexReceiver,
+    AssetStrategySet(u32), <span class="comment">// AssetStrategySet Addresse by index
+    </span>TotalAssets,          <span class="comment">// Total number of tokens
+    </span>DeFindexProtocolFeeReceiver,
     Factory,
     LastFeeAssessment,
-    VaultShare,
+    VaultFee,
 }
+
+
 
 <span class="comment">// Assets Management
-</span><span class="kw">pub fn </span>set_asset(e: <span class="kw-2">&amp;</span>Env, index: u32, asset: <span class="kw-2">&amp;</span>AssetAllocation) {
-    e.storage().instance().set(<span class="kw-2">&amp;</span>DataKey::AssetAllocation(index), asset);
+</span><span class="kw">pub fn </span>set_asset(e: <span class="kw-2">&amp;</span>Env, index: u32, asset: <span class="kw-2">&amp;</span>AssetStrategySet) {
+    e.storage()
+        .instance()
+        .set(<span class="kw-2">&amp;</span>DataKey::AssetStrategySet(index), asset);
 }
 
-<span class="kw">pub fn </span>get_asset(e: <span class="kw-2">&amp;</span>Env, index: u32) -&gt; AssetAllocation {
-    e.storage().instance().get(<span class="kw-2">&amp;</span>DataKey::AssetAllocation(index)).unwrap()
+<span class="kw">pub fn </span>get_asset(e: <span class="kw-2">&amp;</span>Env, index: u32) -&gt; AssetStrategySet {
+    e.storage()
+        .instance()
+        .get(<span class="kw-2">&amp;</span>DataKey::AssetStrategySet(index))
+        .unwrap()
 }
 
 <span class="kw">pub fn </span>set_total_assets(e: <span class="kw-2">&amp;</span>Env, n: u32) {
@@ -126,7 +163,7 @@
     e.storage().instance().get(<span class="kw-2">&amp;</span>DataKey::TotalAssets).unwrap()
 }
 
-<span class="kw">pub fn </span>get_assets(e: <span class="kw-2">&amp;</span>Env) -&gt; Vec&lt;AssetAllocation&gt; {
+<span class="kw">pub fn </span>get_assets(e: <span class="kw-2">&amp;</span>Env) -&gt; Vec&lt;AssetStrategySet&gt; {
     <span class="kw">let </span>total_assets = get_total_assets(e);
     <span class="kw">let </span><span class="kw-2">mut </span>assets = Vec::new(e);
     <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..total_assets {
@@ -136,31 +173,26 @@
 }
 
 <span class="comment">// DeFindex Fee Receiver
-</span><span class="kw">pub fn </span>set_defindex_receiver(e: <span class="kw-2">&amp;</span>Env, address: <span class="kw-2">&amp;</span>Address) {
+</span><span class="kw">pub fn </span>set_defindex_protocol_fee_receiver(e: <span class="kw-2">&amp;</span>Env, address: <span class="kw-2">&amp;</span>Address) {
     e.storage()
         .instance()
-        .set(<span class="kw-2">&amp;</span>DataKey::DeFindexReceiver, address);
+        .set(<span class="kw-2">&amp;</span>DataKey::DeFindexProtocolFeeReceiver, address);
 }
 
-<span class="kw">pub fn </span>get_defindex_receiver(e: <span class="kw-2">&amp;</span>Env) -&gt; Address {
+<span class="kw">pub fn </span>get_defindex_protocol_fee_receiver(e: <span class="kw-2">&amp;</span>Env) -&gt; Address {
     e.storage()
         .instance()
-        .get(<span class="kw-2">&amp;</span>DataKey::DeFindexReceiver)
+        .get(<span class="kw-2">&amp;</span>DataKey::DeFindexProtocolFeeReceiver)
         .unwrap()
 }
 
 <span class="comment">// DeFindex Factory
 </span><span class="kw">pub fn </span>set_factory(e: <span class="kw-2">&amp;</span>Env, address: <span class="kw-2">&amp;</span>Address) {
-    e.storage()
-        .instance()
-        .set(<span class="kw-2">&amp;</span>DataKey::Factory, address);
+    e.storage().instance().set(<span class="kw-2">&amp;</span>DataKey::Factory, address);
 }
 
 <span class="kw">pub fn </span>get_factory(e: <span class="kw-2">&amp;</span>Env) -&gt; Address {
-    e.storage()
-        .instance()
-        .get(<span class="kw-2">&amp;</span>DataKey::Factory)
-        .unwrap()
+    e.storage().instance().get(<span class="kw-2">&amp;</span>DataKey::Factory).unwrap()
 }
 
 <span class="comment">// Last Fee Assesment
@@ -174,20 +206,26 @@
     e.storage()
         .instance()
         .get(<span class="kw-2">&amp;</span>DataKey::LastFeeAssessment)
-        .unwrap()
+        .unwrap_or_else(|| {
+            <span class="kw">let </span>timestamp = <span class="kw-2">&amp;</span>e.ledger().timestamp();
+            e.storage()
+                .instance()
+                .set(<span class="kw-2">&amp;</span>DataKey::LastFeeAssessment, timestamp);
+            timestamp.clone()
+        })
 }
 
 <span class="comment">// Vault Share
-</span><span class="kw">pub fn </span>set_vault_share(e: <span class="kw-2">&amp;</span>Env, vault_share: <span class="kw-2">&amp;</span>u32) {
+</span><span class="kw">pub fn </span>set_vault_fee(e: <span class="kw-2">&amp;</span>Env, vault_fee: <span class="kw-2">&amp;</span>u32) {
     e.storage()
         .instance()
-        .set(<span class="kw-2">&amp;</span>DataKey::VaultShare, vault_share);
+        .set(<span class="kw-2">&amp;</span>DataKey::VaultFee, vault_fee);
 }
 
-<span class="kw">pub fn </span>get_vault_share(e: <span class="kw-2">&amp;</span>Env) -&gt; u32 {
+<span class="kw">pub fn </span>get_vault_fee(e: <span class="kw-2">&amp;</span>Env) -&gt; u32 {
     e.storage()
         .instance()
-        .get(<span class="kw-2">&amp;</span>DataKey::VaultShare)
+        .get(<span class="kw-2">&amp;</span>DataKey::VaultFee)
         .unwrap()
 }
 </code></pre></div></section></main></body></html>

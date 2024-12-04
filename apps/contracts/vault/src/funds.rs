@@ -6,8 +6,6 @@ use crate::models::{StrategyAllocation, CurrentAssetInvestmentAllocation};
 use crate::storage::get_assets;
 use crate::strategies::get_strategy_client;
 
-// Funds for AssetStrategySet
-
 /// Fetches the idle funds for a given asset. Idle funds refer to the balance of the asset
 /// that is currently not invested in any strategies.
 ///
@@ -35,14 +33,6 @@ pub fn fetch_invested_funds_for_strategy(e: &Env, strategy_address: &Address) ->
     strategy_client.balance(&e.current_contract_address())
 }
 
-// // Investment Allocation in Strategies
-// #[contracttype]
-// #[derive(Clone, Debug, Eq, PartialEq)]
-// pub struct StrategyAllocation {
-//     pub strategy: Address,
-//     pub amount: i128,
-// }
-
 
 // return total invested funds but also a vec of StrategyAllocation
 pub fn fetch_invested_funds_for_asset(e: &Env, asset: &AssetStrategySet) -> (i128, Vec<StrategyAllocation>){
@@ -59,7 +49,6 @@ pub fn fetch_invested_funds_for_asset(e: &Env, asset: &AssetStrategySet) -> (i12
     (invested_funds, strategy_allocations)
 }
 
-// Pub functions
 
 /// Fetches the current idle funds for all assets managed by the contract.
 /// It returns a map where the key is the asset's address and the value is the idle balance.
@@ -108,18 +97,6 @@ pub fn fetch_current_invested_funds(e: &Env) -> Map<Address, i128> {
 ///
 /// # Returns
 /// * A map where each entry represents an asset's address and its total managed balance.
-
-
-// // Current Asset Investment Allocation
-// #[contracttype]
-// #[derive(Clone, Debug, Eq, PartialEq)]
-// pub struct CurrentAssetInvestmentAllocation {
-//     pub asset: Address,
-//     pub total_amount: i128,
-//     pub idle_amount: i128,
-//     pub invested_amount: i128,
-//     pub strategy_allocations: Vec<StrategyAllocation>,
-// }
 pub fn fetch_total_managed_funds(e: &Env) -> Map<Address, CurrentAssetInvestmentAllocation> {
     let assets = get_assets(e);
     let mut map: Map<Address, CurrentAssetInvestmentAllocation> = Map::new(e);

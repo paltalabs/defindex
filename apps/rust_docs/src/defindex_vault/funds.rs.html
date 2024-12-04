@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `defindex/src/funds.rs`."><title>funds.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-081576b923113409.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="defindex_vault" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0 (129f3b996 2024-06-10)" data-channel="1.79.0" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../defindex_vault/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `vault/src/funds.rs`."><title>funds.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-492a78a4a87dcc01.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="defindex_vault" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0 (f6e511eec 2024-10-15)" data-channel="1.82.0" data-search-js="search-a99f1315e7cc5121.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-921df33f47b8780c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -110,35 +110,41 @@
 <a href="#110" id="110">110</a>
 <a href="#111" id="111">111</a>
 <a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>soroban_sdk::token::TokenClient;
-<span class="kw">use </span>soroban_sdk::{Address, Env, Map};
+<span class="kw">use </span>soroban_sdk::{Address, Env, Map, Vec};
 
-<span class="kw">use </span><span class="kw">crate</span>::models::AssetAllocation;
+<span class="kw">use </span>common::models::AssetStrategySet;
+<span class="kw">use </span><span class="kw">crate</span>::models::{StrategyAllocation, CurrentAssetInvestmentAllocation};
 <span class="kw">use </span><span class="kw">crate</span>::storage::get_assets;
 <span class="kw">use </span><span class="kw">crate</span>::strategies::get_strategy_client;
 
-<span class="comment">// Funds for AssetAllocation 
-
-</span><span class="doccomment">/// Fetches the idle funds for a given asset. Idle funds refer to the balance of the asset
+<span class="doccomment">/// Fetches the idle funds for a given asset. Idle funds refer to the balance of the asset
 /// that is currently not invested in any strategies.
-/// 
+///
 /// # Arguments
 /// * `e` - The current environment instance.
 /// * `asset` - The asset for which idle funds are being fetched.
-/// 
+///
 /// # Returns
 /// * The idle balance (i128) of the asset in the current contract address.
-</span><span class="kw">fn </span>fetch_idle_funds_for_asset(e: <span class="kw-2">&amp;</span>Env, asset: <span class="kw-2">&amp;</span>AssetAllocation) -&gt; i128 {
-    TokenClient::new(e, <span class="kw-2">&amp;</span>asset.address).balance(<span class="kw-2">&amp;</span>e.current_contract_address())
+</span><span class="kw">pub fn </span>fetch_idle_funds_for_asset(e: <span class="kw-2">&amp;</span>Env, asset: <span class="kw-2">&amp;</span>Address) -&gt; i128 {
+    TokenClient::new(e, <span class="kw-2">&amp;</span>asset).balance(<span class="kw-2">&amp;</span>e.current_contract_address())
 }
 
-<span class="doccomment">/// Fetches the total funds that are invested for a given asset. 
+<span class="doccomment">/// Fetches the total funds that are invested for a given asset.
 /// It iterates through all the strategies associated with the asset and sums their balances.
-/// 
+///
 /// # Arguments
 /// * `e` - The current environment instance.
 /// * `asset` - The asset for which invested funds are being fetched.
-/// 
+///
 /// # Returns
 /// * The total invested balance (i128) of the asset across all strategies.
 </span><span class="kw">pub fn </span>fetch_invested_funds_for_strategy(e: <span class="kw-2">&amp;</span>Env, strategy_address: <span class="kw-2">&amp;</span>Address) -&gt; i128 {
@@ -146,79 +152,87 @@
     strategy_client.balance(<span class="kw-2">&amp;</span>e.current_contract_address())
 }
 
-<span class="doccomment">/// Fetches the total funds that are invested for a given asset. 
-/// It iterates through all the strategies associated with the asset and sums their balances.
-/// 
-/// # Arguments
-/// * `e` - The current environment instance.
-/// * `asset` - The asset for which invested funds are being fetched.
-/// 
-/// # Returns
-/// * The total invested balance (i128) of the asset across all strategies.
-</span><span class="kw">pub fn </span>fetch_invested_funds_for_asset(e: <span class="kw-2">&amp;</span>Env, asset: <span class="kw-2">&amp;</span>AssetAllocation) -&gt; i128 {
+
+<span class="comment">// return total invested funds but also a vec of StrategyAllocation
+</span><span class="kw">pub fn </span>fetch_invested_funds_for_asset(e: <span class="kw-2">&amp;</span>Env, asset: <span class="kw-2">&amp;</span>AssetStrategySet) -&gt; (i128, Vec&lt;StrategyAllocation&gt;){
     <span class="kw">let </span><span class="kw-2">mut </span>invested_funds = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>strategy_allocations: Vec&lt;StrategyAllocation&gt; = Vec::new(e);
     <span class="kw">for </span>strategy <span class="kw">in </span>asset.strategies.iter() {
-        invested_funds += fetch_invested_funds_for_strategy(e, <span class="kw-2">&amp;</span>strategy.address);
+        <span class="kw">let </span>strategy_balance = fetch_invested_funds_for_strategy(e, <span class="kw-2">&amp;</span>strategy.address);
+        invested_funds += strategy_balance;
+        strategy_allocations.push_back(StrategyAllocation {
+            strategy_address: strategy.address.clone(),
+            amount: strategy_balance,
+        });
     }
-    invested_funds
+    (invested_funds, strategy_allocations)
 }
 
 
-<span class="comment">// Pub functions
-
-</span><span class="doccomment">/// Fetches the current idle funds for all assets managed by the contract. 
+<span class="doccomment">/// Fetches the current idle funds for all assets managed by the contract.
 /// It returns a map where the key is the asset's address and the value is the idle balance.
-/// 
+///
 /// # Arguments
 /// * `e` - The current environment instance.
-/// 
+///
 /// # Returns
 /// * A map where each entry represents an asset's address and its corresponding idle balance.
 </span><span class="kw">pub fn </span>fetch_current_idle_funds(e: <span class="kw-2">&amp;</span>Env) -&gt; Map&lt;Address, i128&gt; {
     <span class="kw">let </span>assets = get_assets(e);
     <span class="kw">let </span><span class="kw-2">mut </span>map: Map&lt;Address, i128&gt; = Map::new(e);
     <span class="kw">for </span>asset <span class="kw">in </span>assets {
-        map.set(asset.address.clone(), fetch_idle_funds_for_asset(e, <span class="kw-2">&amp;</span>asset));
+        map.set(asset.address.clone(), fetch_idle_funds_for_asset(e, <span class="kw-2">&amp;</span>asset.address));
     }
     map
 }
 
-<span class="doccomment">/// Fetches the current invested funds for all assets managed by the contract. 
+<span class="doccomment">/// Fetches the current invested funds for all assets managed by the contract.
 /// It returns a map where the key is the asset's address and the value is the invested balance.
-/// 
+///
 /// # Arguments
 /// * `e` - The current environment instance.
-/// 
+///
 /// # Returns
 /// * A map where each entry represents an asset's address and its corresponding invested balance.
 </span><span class="kw">pub fn </span>fetch_current_invested_funds(e: <span class="kw-2">&amp;</span>Env) -&gt; Map&lt;Address, i128&gt; {
     <span class="kw">let </span>assets = get_assets(e);
     <span class="kw">let </span><span class="kw-2">mut </span>map: Map&lt;Address, i128&gt; = Map::new(e);
     <span class="kw">for </span>asset <span class="kw">in </span>assets {
+        <span class="kw">let </span>(invested_funds, <span class="kw">_</span>) = fetch_invested_funds_for_asset(e, <span class="kw-2">&amp;</span>asset);
         map.set(
             asset.address.clone(),
-            fetch_invested_funds_for_asset(e, <span class="kw-2">&amp;</span>asset),
+            invested_funds
         );
     }
     map
 }
 
 <span class="doccomment">/// Fetches the total managed funds for all assets. This includes both idle and invested funds.
-/// It returns a map where the key is the asset's address and the value is the total managed balance 
+/// It returns a map where the key is the asset's address and the value is the total managed balance
 /// (idle + invested). With this map we can calculate the current managed funds ratio.
-/// 
+///
 /// # Arguments
 /// * `e` - The current environment instance.
-/// 
+///
 /// # Returns
 /// * A map where each entry represents an asset's address and its total managed balance.
-</span><span class="kw">pub fn </span>fetch_total_managed_funds(e: <span class="kw-2">&amp;</span>Env) -&gt; Map&lt;Address, i128&gt; {
+</span><span class="kw">pub fn </span>fetch_total_managed_funds(e: <span class="kw-2">&amp;</span>Env) -&gt; Map&lt;Address, CurrentAssetInvestmentAllocation&gt; {
     <span class="kw">let </span>assets = get_assets(e);
-    <span class="kw">let </span><span class="kw-2">mut </span>map: Map&lt;Address, i128&gt; = Map::new(e);
+    <span class="kw">let </span><span class="kw-2">mut </span>map: Map&lt;Address, CurrentAssetInvestmentAllocation&gt; = Map::new(e);
     <span class="kw">for </span>asset <span class="kw">in </span>assets {
-        <span class="kw">let </span>idle_funds = fetch_idle_funds_for_asset(e, <span class="kw-2">&amp;</span>asset);
-        <span class="kw">let </span>invested_funds = fetch_invested_funds_for_asset(e, <span class="kw-2">&amp;</span>asset);
-        map.set(asset.address.clone(), idle_funds + invested_funds);
+        <span class="kw">let </span>idle_amount = fetch_idle_funds_for_asset(e, <span class="kw-2">&amp;</span>asset.address);
+        <span class="kw">let </span>(invested_amount, strategy_allocations) = fetch_invested_funds_for_asset(e, <span class="kw-2">&amp;</span>asset);
+        <span class="kw">let </span>total_amount = idle_amount + invested_amount;
+        map.set(
+            asset.address.clone(),
+            CurrentAssetInvestmentAllocation {
+                asset: asset.address.clone(),
+                total_amount,
+                idle_amount,
+                invested_amount,
+                strategy_allocations,
+            },
+        );
     }
     map
 }
