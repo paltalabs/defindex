@@ -1,7 +1,7 @@
 use soroban_sdk::{Address, Env, Map, String, Vec};
 
 use crate::{
-    models::{Instruction, AssetInvestmentAllocation},
+    models::{Instruction, AssetInvestmentAllocation, CurrentAssetInvestmentAllocation},
     ContractError,
 };
 use common::models::AssetStrategySet;
@@ -171,7 +171,7 @@ pub trait VaultTrait {
     ///
     /// # Returns:
     /// * `Map<Address, i128>` - A map of asset addresses to their total managed amounts.
-    fn fetch_total_managed_funds(e: &Env) -> Map<Address, i128>;
+    fn fetch_total_managed_funds(e: &Env) -> Map<Address, CurrentAssetInvestmentAllocation>;
 
     /// Returns the current invested funds, representing the total assets allocated to strategies.
     ///
@@ -197,9 +197,23 @@ pub trait VaultTrait {
     /// * `Map<Address, i128>` - A map of asset addresses to their total idle amounts.
     fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128>;
 
+
+    // Calculates the corresponding amounts of each asset per a given number of vault shares.
+    /// This function extends the contract's time-to-live and calculates how much of each asset corresponds 
+    /// per the provided number of vault shares (`vault_shares`). It provides proportional allocations for each asset 
+    /// in the vault relative to the specified shares.
+    ///
+    /// # Arguments
+    /// * `e` - The current environment reference.
+    /// * `vault_shares` - The number of vault shares for which the corresponding asset amounts are calculated.
+    ///
+    /// # Returns
+    /// * `Map<Address, i128>` - A map containing each asset address and its corresponding proportional amount.
+    fn get_asset_amounts_per_shares(e: Env, vault_shares: i128) -> Result<Map<Address, i128>, ContractError>;
+    
     // TODO: DELETE THIS, USED FOR TESTING
     /// Temporary method for testing purposes.
-    fn get_asset_amounts_for_dftokens(e: Env, df_token: i128) -> Map<Address, i128>;
+    // fn get_asset_amounts_for_dftokens(e: Env, df_token: i128) -> Map<Address, i128>;
 
     fn get_fees(e: Env) -> (u32, u32);
 

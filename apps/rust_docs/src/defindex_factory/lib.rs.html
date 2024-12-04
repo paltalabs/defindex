@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `factory/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-081576b923113409.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="defindex_factory" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0 (129f3b996 2024-06-10)" data-channel="1.79.0" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../defindex_factory/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `factory/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-492a78a4a87dcc01.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="defindex_factory" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0 (f6e511eec 2024-10-15)" data-channel="1.82.0" data-search-js="search-a99f1315e7cc5121.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-921df33f47b8780c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -332,19 +332,134 @@
 <a href="#332" id="332">332</a>
 <a href="#333" id="333">333</a>
 <a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
+<a href="#410" id="410">410</a>
+<a href="#411" id="411">411</a>
+<a href="#412" id="412">412</a>
+<a href="#413" id="413">413</a>
+<a href="#414" id="414">414</a>
+<a href="#415" id="415">415</a>
+<a href="#416" id="416">416</a>
+<a href="#417" id="417">417</a>
+<a href="#418" id="418">418</a>
+<a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
+<a href="#422" id="422">422</a>
+<a href="#423" id="423">423</a>
+<a href="#424" id="424">424</a>
+<a href="#425" id="425">425</a>
+<a href="#426" id="426">426</a>
+<a href="#427" id="427">427</a>
+<a href="#428" id="428">428</a>
+<a href="#429" id="429">429</a>
+<a href="#430" id="430">430</a>
+<a href="#431" id="431">431</a>
+<a href="#432" id="432">432</a>
+<a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
+<a href="#435" id="435">435</a>
+<a href="#436" id="436">436</a>
+<a href="#437" id="437">437</a>
+<a href="#438" id="438">438</a>
+<a href="#439" id="439">439</a>
+<a href="#440" id="440">440</a>
+<a href="#441" id="441">441</a>
+<a href="#442" id="442">442</a>
+<a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
 </pre></div><pre class="rust"><code><span class="attr">#![no_std]
 
-</span><span class="kw">mod </span>defindex;
+</span><span class="kw">mod </span>vault;
 <span class="kw">mod </span>events;
 <span class="kw">mod </span>storage;
 <span class="kw">mod </span>error;
 
+<span class="kw">use </span>common::models::AssetStrategySet;
 <span class="kw">use </span>soroban_sdk::{
-    contract, contractimpl, Address, BytesN, Env, Map, Vec
+    contract, contractimpl, vec, Address, BytesN, Env, Map, String, Symbol, Val, Vec, IntoVal
 };
 <span class="kw">use </span>error::FactoryError;
-<span class="kw">use </span>defindex::{create_contract, AssetAllocation};
-<span class="kw">use </span>storage::{ add_new_defindex, extend_instance_ttl, get_admin, get_defi_wasm_hash, get_defindex_receiver, get_deployed_defindexes, get_fee_rate, has_admin, put_admin, put_defi_wasm_hash, put_defindex_receiver, put_fee_rate };
+<span class="kw">pub use </span>vault::create_contract;
+<span class="kw">use </span>storage::{ add_new_defindex, extend_instance_ttl, get_admin, get_vault_wasm_hash, get_defindex_receiver, get_deployed_defindexes, get_fee_rate, has_admin, put_admin, put_vault_wasm_hash, put_defindex_receiver, put_defindex_fee };
 
 <span class="kw">fn </span>check_initialized(e: <span class="kw-2">&amp;</span>Env) -&gt; <span class="prelude-ty">Result</span>&lt;(), FactoryError&gt; {
     <span class="kw">if </span>!has_admin(e) {
@@ -360,8 +475,8 @@
     /// * `e` - The environment in which the contract is running.
     /// * `admin` - The address of the contract administrator, who can manage settings.
     /// * `defindex_receiver` - The default address designated to receive a portion of fees.
-    /// * `fee_rate` - The initial annual fee rate (in basis points).
-    /// * `defindex_wasm_hash` - The hash of the DeFindex Vault's WASM file for deploying new vaults.
+    /// * `defindex_fee` - The initial annual fee rate (in basis points).
+    /// * `vault_wasm_hash` - The hash of the DeFindex Vault's WASM file for deploying new vaults.
     /// 
     /// # Returns
     /// * `Result&lt;(), FactoryError&gt;` - Returns Ok(()) if successful, otherwise an error.
@@ -369,8 +484,8 @@
         e: Env, 
         admin: Address,
         defindex_receiver: Address,
-        fee_rate: u32,
-        defindex_wasm_hash: BytesN&lt;<span class="number">32</span>&gt;
+        defindex_fee: u32,
+        vault_wasm_hash: BytesN&lt;<span class="number">32</span>&gt;
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), FactoryError&gt;;
 
     <span class="doccomment">/// Creates a new DeFindex Vault with specified parameters.
@@ -379,9 +494,11 @@
     /// * `e` - The environment in which the contract is running.
     /// * `emergency_manager` - The address assigned emergency control over the vault.
     /// * `fee_receiver` - The address designated to receive fees from the vault.
-    /// * `vault_share` - The percentage share of fees allocated to the vault's fee receiver.
+    /// * `vault_fee` - The percentage share of fees allocated to the vault's fee receiver.
+    /// * `vault_name` - The name of the vault.
+    /// * `vault_symbol` - The symbol of the vault.
     /// * `manager` - The address assigned as the vault manager.
-    /// * `assets` - A vector of `AssetAllocation` structs that define the assets managed by the vault.
+    /// * `assets` - A vector of `AssetStrategySet` structs that define the assets managed by the vault.
     /// * `salt` - A salt used for ensuring unique addresses for each deployed vault.
     ///
     /// # Returns
@@ -390,9 +507,41 @@
         e: Env, 
         emergency_manager: Address, 
         fee_receiver: Address, 
-        vault_share: u32,
+        vault_fee: u32,
+        vault_name: String,
+        vault_symbol: String,
         manager: Address,
-        assets: Vec&lt;AssetAllocation&gt;,
+        assets: Vec&lt;AssetStrategySet&gt;,
+        salt: BytesN&lt;<span class="number">32</span>&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Address, FactoryError&gt;;
+
+    <span class="doccomment">/// Creates a new DeFindex Vault with specified parameters and makes the first deposit to set ratios.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `emergency_manager` - The address assigned emergency control over the vault.
+    /// * `fee_receiver` - The address designated to receive fees from the vault.
+    /// * `vault_fee` - The percentage share of fees allocated to the vault's fee receiver.
+    /// * `vault_name` - The name of the vault.
+    /// * `vault_symbol` - The symbol of the vault.
+    /// * `manager` - The address assigned as the vault manager.
+    /// * `assets` - A vector of `AssetStrategySet` structs that define the assets managed by the vault.
+    /// * `amounts` - A vector of `AssetAmounts` structs that define the initial deposit amounts.
+    /// * `salt` - A salt used for ensuring unique addresses for each deployed vault.
+    ///
+    /// # Returns
+    /// * `Result&lt;Address, FactoryError&gt;` - Returns the address of the new vault, or an error if unsuccessful.
+    </span><span class="kw">fn </span>create_defindex_vault_deposit(
+        e: Env, 
+        caller: Address,
+        emergency_manager: Address, 
+        fee_receiver: Address, 
+        vault_fee: u32,
+        vault_name: String,
+        vault_symbol: String,
+        manager: Address,
+        assets: Vec&lt;AssetStrategySet&gt;,
+        amounts: Vec&lt;i128&gt;,
         salt: BytesN&lt;<span class="number">32</span>&gt;
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Address, FactoryError&gt;;
 
@@ -426,7 +575,7 @@
     ///
     /// # Returns
     /// * `Result&lt;(), FactoryError&gt;` - Returns Ok(()) if successful, or an error if not authorized.
-    </span><span class="kw">fn </span>set_fee_rate(e: Env, new_fee_rate: u32) -&gt; <span class="prelude-ty">Result</span>&lt;(), FactoryError&gt;;
+    </span><span class="kw">fn </span>set_defindex_fee(e: Env, new_fee_rate: u32) -&gt; <span class="prelude-ty">Result</span>&lt;(), FactoryError&gt;;
     
     <span class="comment">// --- Read Methods ---
 
@@ -464,7 +613,7 @@
     ///
     /// # Returns
     /// * `Result&lt;u32, FactoryError&gt;` - Returns the fee rate in basis points or an error if not found.
-    </span><span class="kw">fn </span>fee_rate(e: Env) -&gt; <span class="prelude-ty">Result</span>&lt;u32, FactoryError&gt;;
+    </span><span class="kw">fn </span>defindex_fee(e: Env) -&gt; <span class="prelude-ty">Result</span>&lt;u32, FactoryError&gt;;
 }
 
 <span class="attr">#[contract]
@@ -479,8 +628,8 @@
     /// * `e` - The environment in which the contract is running.
     /// * `admin` - The address of the contract administrator, who can manage settings.
     /// * `defindex_receiver` - The default address designated to receive a portion of fees.
-    /// * `fee_rate` - The initial annual fee rate (in basis points).
-    /// * `defindex_wasm_hash` - The hash of the DeFindex Vault's WASM file for deploying new vaults.
+    /// * `defindex_fee` - The initial annual fee rate (in basis points).
+    /// * `vault_wasm_hash` - The hash of the DeFindex Vault's WASM file for deploying new vaults.
     /// 
     /// # Returns
     /// * `Result&lt;(), FactoryError&gt;` - Returns Ok(()) if successful, otherwise an error.
@@ -488,8 +637,8 @@
         e: Env, 
         admin: Address, 
         defindex_receiver: Address,
-        fee_rate: u32,
-        defi_wasm_hash: BytesN&lt;<span class="number">32</span>&gt;
+        defindex_fee: u32,
+        vault_wasm_hash: BytesN&lt;<span class="number">32</span>&gt;
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), FactoryError&gt; {
         <span class="kw">if </span>has_admin(<span class="kw-2">&amp;</span>e) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(FactoryError::AlreadyInitialized);
@@ -497,10 +646,10 @@
 
         put_admin(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>admin);
         put_defindex_receiver(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>defindex_receiver);
-        put_defi_wasm_hash(<span class="kw-2">&amp;</span>e, defi_wasm_hash);
-        put_fee_rate(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>fee_rate);
+        put_vault_wasm_hash(<span class="kw-2">&amp;</span>e, vault_wasm_hash);
+        put_defindex_fee(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>defindex_fee);
 
-        events::emit_initialized(<span class="kw-2">&amp;</span>e, admin, defindex_receiver, fee_rate);
+        events::emit_initialized(<span class="kw-2">&amp;</span>e, admin, defindex_receiver, defindex_fee);
         extend_instance_ttl(<span class="kw-2">&amp;</span>e);
         <span class="prelude-val">Ok</span>(())
     }
@@ -511,9 +660,9 @@
     /// * `e` - The environment in which the contract is running.
     /// * `emergency_manager` - The address assigned emergency control over the vault.
     /// * `fee_receiver` - The address designated to receive fees from the vault.
-    /// * `vault_share` - The percentage share of fees allocated to the vault's fee receiver.
+    /// * `vault_fee` - The percentage share of fees allocated to the vault's fee receiver.
     /// * `manager` - The address assigned as the vault manager.
-    /// * `assets` - A vector of `AssetAllocation` structs that define the assets managed by the vault.
+    /// * `assets` - A vector of `AssetStrategySet` structs that define the assets managed by the vault.
     /// * `salt` - A salt used for ensuring unique addresses for each deployed vault.
     ///
     /// # Returns
@@ -522,32 +671,111 @@
         e: Env, 
         emergency_manager: Address, 
         fee_receiver: Address, 
-        vault_share: u32,
+        vault_fee: u32,
+        vault_name: String,
+        vault_symbol: String,
         manager: Address,
-        assets: Vec&lt;AssetAllocation&gt;,
+        assets: Vec&lt;AssetStrategySet&gt;,
         salt: BytesN&lt;<span class="number">32</span>&gt;
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Address, FactoryError&gt; {
         extend_instance_ttl(<span class="kw-2">&amp;</span>e);
 
         <span class="kw">let </span>current_contract = e.current_contract_address();
 
-        <span class="kw">let </span>defi_wasm_hash = get_defi_wasm_hash(<span class="kw-2">&amp;</span>e)<span class="question-mark">?</span>;
-        <span class="kw">let </span>defindex_address = create_contract(<span class="kw-2">&amp;</span>e, defi_wasm_hash, salt);
+        <span class="kw">let </span>vault_wasm_hash = get_vault_wasm_hash(<span class="kw-2">&amp;</span>e)<span class="question-mark">?</span>;
+        <span class="kw">let </span>defindex_address = create_contract(<span class="kw-2">&amp;</span>e, vault_wasm_hash, salt);
 
         <span class="kw">let </span>defindex_receiver = get_defindex_receiver(<span class="kw-2">&amp;</span>e);
 
-        defindex::Client::new(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>defindex_address).initialize(
-            <span class="kw-2">&amp;</span>assets,
-            <span class="kw-2">&amp;</span>manager,
-            <span class="kw-2">&amp;</span>emergency_manager,
-            <span class="kw-2">&amp;</span>fee_receiver,
-            <span class="kw-2">&amp;</span>vault_share,
-            <span class="kw-2">&amp;</span>defindex_receiver,
-            <span class="kw-2">&amp;</span>current_contract,
-        );
+        <span class="kw">let </span><span class="kw-2">mut </span>init_args: Vec&lt;Val&gt; = <span class="macro">vec!</span>[<span class="kw-2">&amp;</span>e];
+        init_args.push_back(assets.to_val());
+        init_args.push_back(manager.to_val());
+        init_args.push_back(emergency_manager.to_val());
+        init_args.push_back(fee_receiver.to_val());
+        init_args.push_back(vault_fee.into_val(<span class="kw-2">&amp;</span>e));
+        init_args.push_back(defindex_receiver.to_val());
+        init_args.push_back(current_contract.to_val());
+        init_args.push_back(vault_name.to_val());
+        init_args.push_back(vault_symbol.to_val());
+
+        e.invoke_contract::&lt;Val&gt;(<span class="kw-2">&amp;</span>defindex_address, <span class="kw-2">&amp;</span>Symbol::new(<span class="kw-2">&amp;</span>e, <span class="string">"initialize"</span>), init_args);
 
         add_new_defindex(<span class="kw-2">&amp;</span>e, defindex_address.clone());
-        events::emit_create_defindex_vault(<span class="kw-2">&amp;</span>e, emergency_manager, fee_receiver, manager, vault_share, assets);
+        events::emit_create_defindex_vault(<span class="kw-2">&amp;</span>e, emergency_manager, fee_receiver, manager, vault_fee, assets);
+        <span class="prelude-val">Ok</span>(defindex_address)
+    }
+
+    <span class="doccomment">/// Creates a new DeFindex Vault with specified parameters and makes the first deposit to set ratios.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `emergency_manager` - The address assigned emergency control over the vault.
+    /// * `fee_receiver` - The address designated to receive fees from the vault.
+    /// * `vault_fee` - The percentage share of fees allocated to the vault's fee receiver.
+    /// * `vault_name` - The name of the vault.
+    /// * `vault_symbol` - The symbol of the vault.
+    /// * `manager` - The address assigned as the vault manager.
+    /// * `assets` - A vector of `AssetStrategySet` structs that define the assets managed by the vault.
+    /// * `amounts` - A vector of `AssetAmounts` structs that define the initial deposit amounts.
+    /// * `salt` - A salt used for ensuring unique addresses for each deployed vault.
+    ///
+    /// # Returns
+    /// * `Result&lt;Address, FactoryError&gt;` - Returns the address of the new vault, or an error if unsuccessful.
+    </span><span class="kw">fn </span>create_defindex_vault_deposit(
+        e: Env, 
+        caller: Address,
+        emergency_manager: Address, 
+        fee_receiver: Address, 
+        vault_fee: u32,
+        vault_name: String,
+        vault_symbol: String,
+        manager: Address,
+        assets: Vec&lt;AssetStrategySet&gt;,
+        amounts: Vec&lt;i128&gt;,
+        salt: BytesN&lt;<span class="number">32</span>&gt;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Address, FactoryError&gt; {
+        extend_instance_ttl(<span class="kw-2">&amp;</span>e);
+        caller.require_auth();
+
+        <span class="kw">if </span>assets.len() != amounts.len() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(FactoryError::AssetLengthMismatch);
+        }
+
+        <span class="kw">let </span>current_contract = e.current_contract_address();
+
+        <span class="kw">let </span>vault_wasm_hash = get_vault_wasm_hash(<span class="kw-2">&amp;</span>e)<span class="question-mark">?</span>;
+        <span class="kw">let </span>defindex_address = create_contract(<span class="kw-2">&amp;</span>e, vault_wasm_hash, salt);
+
+        <span class="kw">let </span>defindex_receiver = get_defindex_receiver(<span class="kw-2">&amp;</span>e);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>init_args: Vec&lt;Val&gt; = <span class="macro">vec!</span>[<span class="kw-2">&amp;</span>e];
+        init_args.push_back(assets.to_val());
+        init_args.push_back(manager.to_val());
+        init_args.push_back(emergency_manager.to_val());
+        init_args.push_back(fee_receiver.to_val());
+        init_args.push_back(vault_fee.into_val(<span class="kw-2">&amp;</span>e));
+        init_args.push_back(defindex_receiver.to_val());
+        init_args.push_back(current_contract.to_val());
+        init_args.push_back(vault_name.to_val());
+        init_args.push_back(vault_symbol.to_val());
+
+        e.invoke_contract::&lt;Val&gt;(<span class="kw-2">&amp;</span>defindex_address, <span class="kw-2">&amp;</span>Symbol::new(<span class="kw-2">&amp;</span>e, <span class="string">"initialize"</span>), init_args);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>amounts_min = Vec::new(<span class="kw-2">&amp;</span>e);
+        <span class="kw">for _ in </span><span class="number">0</span>..amounts.len() {
+            amounts_min.push_back(<span class="number">0i128</span>);
+        }
+
+        <span class="kw">let </span><span class="kw-2">mut </span>deposit_args: Vec&lt;Val&gt; = <span class="macro">vec!</span>[<span class="kw-2">&amp;</span>e];
+        deposit_args.push_back(amounts.to_val());
+        deposit_args.push_back(amounts_min.to_val());
+        deposit_args.push_back(caller.to_val());
+        deposit_args.push_back(<span class="bool-val">false</span>.into_val(<span class="kw-2">&amp;</span>e));
+        
+        e.invoke_contract::&lt;Val&gt;(<span class="kw-2">&amp;</span>defindex_address, <span class="kw-2">&amp;</span>Symbol::new(<span class="kw-2">&amp;</span>e, <span class="string">"deposit"</span>), deposit_args);
+
+        add_new_defindex(<span class="kw-2">&amp;</span>e, defindex_address.clone());
+        events::emit_create_defindex_vault(<span class="kw-2">&amp;</span>e, emergency_manager, fee_receiver, manager, vault_fee, assets);
         <span class="prelude-val">Ok</span>(defindex_address)
     }
 
@@ -599,14 +827,14 @@
     ///
     /// # Returns
     /// * `Result&lt;(), FactoryError&gt;` - Returns Ok(()) if successful, or an error if not authorized.
-    </span><span class="kw">fn </span>set_fee_rate(e: Env, fee_rate: u32) -&gt; <span class="prelude-ty">Result</span>&lt;(), FactoryError&gt; {
+    </span><span class="kw">fn </span>set_defindex_fee(e: Env, defindex_fee: u32) -&gt; <span class="prelude-ty">Result</span>&lt;(), FactoryError&gt; {
         check_initialized(<span class="kw-2">&amp;</span>e)<span class="question-mark">?</span>;
         extend_instance_ttl(<span class="kw-2">&amp;</span>e);
         <span class="kw">let </span>admin = get_admin(<span class="kw-2">&amp;</span>e);
         admin.require_auth();
 
-        put_fee_rate(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>fee_rate);
-        events::emit_new_fee_rate(<span class="kw-2">&amp;</span>e, fee_rate);
+        put_defindex_fee(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>defindex_fee);
+        events::emit_new_defindex_fee(<span class="kw-2">&amp;</span>e, defindex_fee);
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -658,7 +886,7 @@
     ///
     /// # Returns
     /// * `Result&lt;u32, FactoryError&gt;` - Returns the fee rate in basis points or an error if not found.
-    </span><span class="kw">fn </span>fee_rate(e: Env) -&gt; <span class="prelude-ty">Result</span>&lt;u32, FactoryError&gt; {
+    </span><span class="kw">fn </span>defindex_fee(e: Env) -&gt; <span class="prelude-ty">Result</span>&lt;u32, FactoryError&gt; {
         check_initialized(<span class="kw-2">&amp;</span>e)<span class="question-mark">?</span>;
         extend_instance_ttl(<span class="kw-2">&amp;</span>e);
         <span class="prelude-val">Ok</span>(get_fee_rate(<span class="kw-2">&amp;</span>e))

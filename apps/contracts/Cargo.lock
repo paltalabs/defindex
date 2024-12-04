@@ -97,6 +97,9 @@ name = "blend_strategy"
 version = "0.1.0"
 dependencies = [
  "defindex-strategy-core",
+ "sep-40-oracle",
+ "sep-41-token",
+ "soroban-fixed-point-math",
  "soroban-sdk",
 ]
 
@@ -928,6 +931,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "61697e0a1c7e512e84a621326239844a24d8207b4669b41bc18b32ea5cbf988b"
 
 [[package]]
+name = "sep-40-oracle"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "019c355be5fa5dac942350fff686cfd97fb6cd5302cefb69fae3ac7ec15ac72d"
+dependencies = [
+ "soroban-sdk",
+]
+
+[[package]]
+name = "sep-41-token"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c181783c38f2ffd99cd97c66b5e2a8f7f2e8ebfb15441d58f74485d1e1cfa20"
+dependencies = [
+ "soroban-sdk",
+]
+
+[[package]]
 name = "serde"
 version = "1.0.192"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1112,6 +1133,15 @@ dependencies = [
  "serde_json",
  "stellar-xdr",
  "syn",
+]
+
+[[package]]
+name = "soroban-fixed-point-math"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a9d386a1ca0a148121b21331f9da68f33bf3dfb6de69646f719935d2dec3d49c"
+dependencies = [
+ "soroban-sdk",
 ]
 
 [[package]]

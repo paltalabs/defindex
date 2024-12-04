@@ -27,25 +27,27 @@ mod utils;
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use aggregator::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
 use fee::{collect_fees, fetch_defindex_fee};
-use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds}; //, fetch_idle_funds_for_asset};
+use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds}; 
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::check_and_execute_investments;
 use models::{
-    ActionType, AssetInvestmentAllocation, Instruction, OptionalSwapDetailsExactIn,
-    OptionalSwapDetailsExactOut,
+    Instruction, OptionalSwapDetailsExactIn,
+    OptionalSwapDetailsExactOut, CurrentAssetInvestmentAllocation,
+    ActionType, AssetInvestmentAllocation,
 };
 use storage::{
     extend_instance_ttl, get_assets, get_vault_fee, set_asset, set_defindex_protocol_fee_receiver,
     set_factory, set_total_assets, set_vault_fee,
 };
 use strategies::{
-    get_asset_allocation_from_address, get_strategy_asset, get_strategy_client,
+    get_strategy_asset, get_strategy_client,
     get_strategy_struct, invest_in_strategy, pause_strategy, unpause_strategy,
     withdraw_from_strategy,
 };
 use token::{internal_burn, write_metadata, VaultToken};
 use utils::{
-    calculate_asset_amounts_for_dftokens, calculate_withdrawal_amounts, check_initialized,
+    calculate_asset_amounts_per_vault_shares,
+    check_initialized,
     check_nonnegative_amount,
 };
 
@@ -166,7 +168,7 @@ impl VaultTrait for DeFindexVault {
     /// Handles user deposits into the DeFindex Vault.
     ///
     /// This function processes a deposit by transferring each specified asset amount from the user's address to
-    /// the vault, allocating assets according to the vault's defined strategy ratios, and minting dfTokens that
+    /// the vault, allocating assets according to the vault's defined strategy ratios, and minting vault shares that
     /// represent the user's proportional share in the vault. The `amounts_desired` and `amounts_min` vectors should
     /// align with the vault's asset order to ensure correct allocation.
     ///
@@ -235,91 +237,97 @@ impl VaultTrait for DeFindexVault {
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn withdraw(e: Env, shares_amount: i128, from: Address) -> Result<Vec<i128>, ContractError> {
+    fn withdraw(
+        e: Env,
+        withdraw_shares: i128,
+        from: Address,
+    ) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
-        check_nonnegative_amount(shares_amount)?;
+        check_nonnegative_amount(withdraw_shares)?;
         from.require_auth();
-
-        // fees assesment
+    
+        // Assess fees
         collect_fees(&e)?;
+    
+        // Calculate the withdrawal amounts for each asset based on the share amounts
+        let total_managed_funds = fetch_total_managed_funds(&e);
 
-        // Check if the user has enough dfTokens. // TODO, we can move this error into the internal_burn function
-        let df_user_balance = VaultToken::balance(e.clone(), from.clone());
-        if df_user_balance < shares_amount {
-            // return vec[df_user_balance, shares amount]
-            // let mut result: Vec<i128> = Vec::new(&e);
-            // result.push_back(df_user_balance);
-            // result.push_back(shares_amount);
-            // return Ok(result);
+        let asset_withdrawal_amounts = calculate_asset_amounts_per_vault_shares(
+            &e,
+            withdraw_shares,
+            &total_managed_funds,
+        )?;
+    
+        // Burn the shares after calculating the withdrawal amounts
+        // this will panic with error if the user does not have enough balance
+        internal_burn(e.clone(), from.clone(), withdraw_shares);
+    
+        // Loop through each asset to handle the withdrawal
+        let mut withdrawn_amounts: Vec<i128> = Vec::new(&e);
+        for (asset_address, requested_withdrawal_amount) in asset_withdrawal_amounts.iter() {
 
-            return Err(ContractError::InsufficientBalance);
-        }
+            let asset_allocation = total_managed_funds
+            .get(asset_address.clone())
+            .unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength));
 
-        // Calculate the withdrawal amounts for each asset based on the dfToken amount
-        let asset_amounts = calculate_asset_amounts_for_dftokens(&e, shares_amount);
-
-        // Burn the dfTokens after calculating the withdrawal amounts (so total supply is correct)
-        internal_burn(e.clone(), from.clone(), shares_amount);
-
-        // Create a map to store the total amounts to transfer for each asset address
-        let mut total_amounts_to_transfer: Map<Address, i128> = Map::new(&e);
-
-        // Get idle funds for each asset (Map<Address, i128>)
-        let idle_funds = fetch_current_idle_funds(&e);
-
-        // Loop through each asset and handle the withdrawal
-        for (asset_address, required_amount) in asset_amounts.iter() {
             // Check idle funds for this asset
-            let idle_balance = idle_funds.get(asset_address.clone()).unwrap_or(0);
-
-            let mut remaining_amount = required_amount;
-
-            // Withdraw as much as possible from idle funds first
-            if idle_balance > 0 {
-                if idle_balance >= required_amount {
-                    // Idle funds cover the full amount
-                    total_amounts_to_transfer.set(asset_address.clone(), required_amount);
-                    continue; // No need to withdraw from the strategy
-                } else {
-                    // Partial withdrawal from idle funds
-                    total_amounts_to_transfer.set(asset_address.clone(), idle_balance);
-                    remaining_amount = required_amount - idle_balance; // Update remaining amount
+            let idle_funds = asset_allocation.idle_amount;
+        
+            // Withdraw from idle funds first
+            if idle_funds >= requested_withdrawal_amount {
+                // Idle funds cover the full amount
+                TokenClient::new(&e, &asset_address).transfer(
+                    &e.current_contract_address(),
+                    &from,
+                    &requested_withdrawal_amount,
+                );
+                withdrawn_amounts.push_back(requested_withdrawal_amount);
+                continue;
+            } else {
+                let mut total_withdrawn_for_asset = 0;
+                // Partial withdrawal from idle funds
+                total_withdrawn_for_asset += idle_funds;
+                let remaining_withdrawal_amount = requested_withdrawal_amount - idle_funds;
+                
+                // Withdraw the remaining amount from strategies
+                let total_invested_amount = asset_allocation.invested_amount;
+                
+                for strategy_allocation in asset_allocation.strategy_allocations.iter() {
+                    // TODO: If strategy is paused, should we skip it? Otherwise, the calculation will go wrong.
+                    // if strategy.paused {
+                    //     continue;
+                    // }
+                    
+                    // Amount to unwind from strategy
+                    let strategy_withdrawal_share =
+                    (remaining_withdrawal_amount * strategy_allocation.amount) / total_invested_amount;
+                    
+                    if strategy_withdrawal_share > 0 {
+                        withdraw_from_strategy(&e, &strategy_allocation.strategy_address, &strategy_withdrawal_share)?;
+                        TokenClient::new(&e, &asset_address).transfer(
+                            &e.current_contract_address(),
+                            &from,
+                            &strategy_withdrawal_share,
+                        );
+                        total_withdrawn_for_asset += strategy_withdrawal_share;
+                    }
                 }
-            }
-
-            // Find the corresponding asset address for this strategy
-            let asset_allocation = get_asset_allocation_from_address(&e, asset_address.clone())?;
-            let withdrawal_amounts =
-                calculate_withdrawal_amounts(&e, remaining_amount, asset_allocation);
-
-            for (strategy_address, amount) in withdrawal_amounts.iter() {
-                // TODO: What if the withdraw method exceeds the instructions limit? since im trying to ithdraw from all strategies of all assets...
-                withdraw_from_strategy(&e, &strategy_address, &amount)?;
-
-                // Update the total amounts to transfer map
-                let current_amount = total_amounts_to_transfer
-                    .get(strategy_address.clone())
-                    .unwrap_or(0);
-                total_amounts_to_transfer.set(asset_address.clone(), current_amount + amount);
+                TokenClient::new(&e, &asset_address).transfer(
+                    &e.current_contract_address(),
+                    &from,
+                    &total_withdrawn_for_asset,
+                );
+                withdrawn_amounts.push_back(total_withdrawn_for_asset);
             }
         }
-
-        // Perform the transfers for the total amounts
-        let mut amounts_withdrawn: Vec<i128> = Vec::new(&e);
-        for (asset_address, total_amount) in total_amounts_to_transfer.iter() {
-            TokenClient::new(&e, &asset_address).transfer(
-                &e.current_contract_address(),
-                &from,
-                &total_amount,
-            );
-            amounts_withdrawn.push_back(total_amount);
-        }
-
-        events::emit_withdraw_event(&e, from, shares_amount, amounts_withdrawn.clone());
-
-        Ok(amounts_withdrawn)
+    
+        events::emit_withdraw_event(&e, from, withdraw_shares, withdrawn_amounts.clone());
+    
+        Ok(withdrawn_amounts)
     }
+
+    
 
     /// Executes an emergency withdrawal from a specific strategy.
     ///
@@ -454,7 +462,7 @@ impl VaultTrait for DeFindexVault {
     ///
     /// # Returns:
     /// * `Map<Address, i128>` - A map of asset addresses to their total managed amounts.
-    fn fetch_total_managed_funds(e: &Env) -> Map<Address, i128> {
+    fn fetch_total_managed_funds(e: &Env) -> Map<Address, CurrentAssetInvestmentAllocation> {
         extend_instance_ttl(&e);
         fetch_total_managed_funds(e)
     }
@@ -489,11 +497,21 @@ impl VaultTrait for DeFindexVault {
         fetch_current_idle_funds(e)
     }
 
-    // TODO: DELETE THIS, USED FOR TESTING
-    /// Temporary method for testing purposes.
-    fn get_asset_amounts_for_dftokens(e: Env, df_tokens: i128) -> Map<Address, i128> {
+    // Calculates the corresponding amounts of each asset per a given number of vault shares.
+    /// This function extends the contract's time-to-live and calculates how much of each asset corresponds 
+    /// per the provided number of vault shares (`vault_shares`). It provides proportional allocations for each asset 
+    /// in the vault relative to the specified shares.
+    ///
+    /// # Arguments
+    /// * `e` - The current environment reference.
+    /// * `vault_shares` - The number of vault shares for which the corresponding asset amounts are calculated.
+    ///
+    /// # Returns
+    /// * `Map<Address, i128>` - A map containing each asset address and its corresponding proportional amount.
+    fn get_asset_amounts_per_shares(e: Env, vault_shares: i128) -> Result<Map<Address, i128>, ContractError> {
         extend_instance_ttl(&e);
-        calculate_asset_amounts_for_dftokens(&e, df_tokens)
+        let total_managed_funds = fetch_total_managed_funds(&e);
+        Ok(calculate_asset_amounts_per_vault_shares(&e, vault_shares, &total_managed_funds)?)
     }
 
     fn get_fees(e: Env) -> (u32, u32) {

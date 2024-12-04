@@ -1,9 +1,9 @@
 use soroban_sdk::{panic_with_error, Address, Env, Map, Vec};
 
 use crate::{
+    models::{CurrentAssetInvestmentAllocation},
     access::{AccessControl, AccessControlTrait, RolesDataKey},
     funds::{
-        fetch_invested_funds_for_asset, fetch_invested_funds_for_strategy,
         fetch_total_managed_funds,
     },
     token::VaultToken,
@@ -38,49 +38,81 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
     }
 }
 
-/// From an amount, calculates how much to withdraw from each strategy;
-/// returns a map of strategy address to token amount
-pub fn calculate_withdrawal_amounts(
-    e: &Env,
-    amount: i128,
-    asset: AssetStrategySet,
-) -> Map<Address, i128> {
-    let mut withdrawal_amounts = Map::<Address, i128>::new(e);
+// /// From an amount, calculates how much to withdraw from each strategy;
+// /// returns a map of strategy address to token amount
+// pub fn calculate_withdrawal_amounts(
+//     e: &Env,
+//     amount: i128,
+//     asset: AssetStrategySet,
+// ) -> Map<Address, i128> {
+//     let mut withdrawal_amounts = Map::<Address, i128>::new(e);
 
-    let total_invested_in_strategies: i128 = fetch_invested_funds_for_asset(&e, &asset);
+//     let (total_invested_in_strategies, _) = fetch_invested_funds_for_asset(&e, &asset);
 
-    for strategy in asset.strategies.iter() {
-        // TODO: if strategy is paused but still holds assets on it shouldnt we withdraw them?
-        if strategy.paused {
-            continue;
-        }
+//     for strategy in asset.strategies.iter() {
+//         // TODO: if strategy is paused but still holds assets on it shouldnt we withdraw them?
+//         if strategy.paused {
+//             continue;
+//         }
 
-        let strategy_invested_funds = fetch_invested_funds_for_strategy(e, &strategy.address);
+//         let strategy_invested_funds = fetch_invested_funds_for_strategy(e, &strategy.address);
 
-        let strategy_share_of_withdrawal =
-            (amount * strategy_invested_funds) / total_invested_in_strategies;
+//         let strategy_share_of_withdrawal =
+//             (amount * strategy_invested_funds) / total_invested_in_strategies;
 
-        withdrawal_amounts.set(strategy.address.clone(), strategy_share_of_withdrawal);
+//         withdrawal_amounts.set(strategy.address.clone(), strategy_share_of_withdrawal);
+//     }
+
+//     withdrawal_amounts
+// }
+
+/// Calculates the corresponding amounts of each asset per given number of vault shares.
+/// This function takes the number of vault shares (`shares_amount`) and computes how much of each asset in the vault
+/// corresponds to those shares, based on the total managed funds and the total supply of vault shares.
+///
+/// # Arguments
+/// * `env` - Reference to the current environment.
+/// * `shares_amount` - The number of vault shares for which the equivalent asset amounts are being calculated.
+///
+/// # Returns
+/// * `Map<Address, i128>` - A map of asset addresses to their respective amounts, proportional to the `shares_amount`.
+///
+/// # Errors
+/// * Panics with `ContractError::ArithmeticError` if there are any issues with multiplication or division,
+///   such as overflow or division by zero.
+pub fn calculate_asset_amounts_per_vault_shares(
+    env: &Env,
+    shares_amount: i128,
+    total_managed_funds: &Map<Address, CurrentAssetInvestmentAllocation>,
+) -> Result<Map<Address, i128>, ContractError> {
+    let mut asset_amounts: Map<Address, i128> = Map::new(env);
+
+    // Fetch the total supply of vault shares and the total managed funds for each asset
+    let total_shares_supply = VaultToken::total_supply(env.clone());
+
+    // if shares amount over total supply, return error AmountOverTotalSupply
+    if shares_amount > total_shares_supply {
+        return Err(ContractError::AmountOverTotalSupply);
     }
 
-    withdrawal_amounts
-}
+    // Iterate over each asset and calculate the corresponding amount based on shares_amount
+    for (asset_address, current_asset_allocation) in total_managed_funds.iter() {
+        // Calculate the proportional asset amount per the given number of shares
+        let asset_amount = if total_shares_supply != 0 {
+            current_asset_allocation.total_amount
+                .checked_mul(shares_amount)
+                .ok_or(ContractError::ArithmeticError)?
+                .checked_div(total_shares_supply)
+                .ok_or(ContractError::ArithmeticError)?
+        } else {
+            return Err(ContractError::AmountOverTotalSupply);
+        };
 
-pub fn calculate_asset_amounts_for_dftokens(
-    env: &Env,
-    df_token_amount: i128,
-) -> Map<Address, i128> {
-    let mut asset_amounts: Map<Address, i128> = Map::new(&env);
-    let total_supply = VaultToken::total_supply(env.clone());
-    let total_managed_funds = fetch_total_managed_funds(&env);
-
-    // Iterate over each asset and calculate the corresponding amount based on df_token_amount
-    for (asset_address, amount) in total_managed_funds.iter() {
-        let asset_amount = (amount * df_token_amount) / total_supply;
+        // Set the calculated asset amount for the given asset address
         asset_amounts.set(asset_address.clone(), asset_amount);
     }
 
-    asset_amounts
+    return Ok(asset_amounts);
 }
 
 // pub fn calculate_dftokens_from_asset_amounts(
@@ -120,7 +152,7 @@ pub fn calculate_asset_amounts_for_dftokens(
 
 pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
     e: &Env,
-    total_managed_funds: &Map<Address, i128>,
+    total_managed_funds: &Map<Address, CurrentAssetInvestmentAllocation>,
     assets: &Vec<AssetStrategySet>,
     amounts_desired: &Vec<i128>,
     i: &u32,
@@ -130,7 +162,8 @@ pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
     // reserve (total manage funds) of the asset we are enforcing
     let reserve_target = total_managed_funds
         .get(assets.get(*i).unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength)).address)
-        .unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength));
+        .unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength))
+        .total_amount;
 
     // If reserve target is zero, we cannot calculate the optimal amounts
     if reserve_target == 0 {
@@ -145,7 +178,9 @@ pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
         if j == (*i as usize) {
             optimal_amounts.push_back(amount_desired_target);
         } else {
-            let reserve = total_managed_funds.get(asset.address).unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength));
+            let reserve = total_managed_funds
+                            .get(asset.address).unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength))
+                            .total_amount;
             let amount = reserve.checked_mul(amount_desired_target)
                 .unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError))
                 .checked_div(reserve_target)

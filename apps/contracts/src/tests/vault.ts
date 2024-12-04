@@ -42,7 +42,7 @@ export async function depositToVault(deployedVault: string, amount: number[], us
     const depositParams: xdr.ScVal[] = [
         xdr.ScVal.scvVec(amountsDesired.map((amount) => nativeToScVal(amount, { type: "i128" }))),
         xdr.ScVal.scvVec(amountsMin.map((min) => nativeToScVal(min, { type: "i128" }))),
-        (new Address(newUser.publicKey())).toScVal(),
+        new Address(newUser.publicKey()).toScVal(),
         xdr.ScVal.scvBool(investBool)
     ];
 

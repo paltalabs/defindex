@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `defindex/src/events.rs`."><title>events.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-081576b923113409.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="defindex_vault" data-themes="" data-resource-suffix="" data-rustdoc-version="1.79.0 (129f3b996 2024-06-10)" data-channel="1.79.0" data-search-js="search-bf21c90c8c1d92b1.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-e32f0c247825364d.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-09095024cf37855e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../defindex_vault/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Type ‘S’ or ‘/’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings">Settings</a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `vault/src/events.rs`."><title>events.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-492a78a4a87dcc01.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="defindex_vault" data-themes="" data-resource-suffix="" data-rustdoc-version="1.82.0 (f6e511eec 2024-10-15)" data-channel="1.82.0" data-search-js="search-a99f1315e7cc5121.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-921df33f47b8780c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -229,40 +229,35 @@
 <a href="#229" id="229">229</a>
 <a href="#230" id="230">230</a>
 <a href="#231" id="231">231</a>
-<a href="#232" id="232">232</a>
-<a href="#233" id="233">233</a>
-<a href="#234" id="234">234</a>
-<a href="#235" id="235">235</a>
-<a href="#236" id="236">236</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Definition of the Events used in the DeFindex Vault contract
-</span><span class="kw">use </span>soroban_sdk::{contracttype, symbol_short, Address, Env, Vec};
-<span class="kw">use </span><span class="kw">crate</span>::models::AssetAllocation;
+</span><span class="kw">use </span>common::models::AssetStrategySet;
+<span class="kw">use </span>soroban_sdk::{contracttype, symbol_short, Address, Env, Vec};
 
 <span class="comment">// INITIALIZED VAULT EVENT
 </span><span class="attr">#[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 </span><span class="kw">pub struct </span>InitializedVaultEvent {
     <span class="kw">pub </span>emergency_manager: Address,
-    <span class="kw">pub </span>fee_receiver: Address,
+    <span class="kw">pub </span>vault_fee_receiver: Address,
     <span class="kw">pub </span>manager: Address,
-    <span class="kw">pub </span>defindex_receiver: Address,
-    <span class="kw">pub </span>assets: Vec&lt;AssetAllocation&gt;,
+    <span class="kw">pub </span>defindex_protocol_receiver: Address,
+    <span class="kw">pub </span>assets: Vec&lt;AssetStrategySet&gt;,
 }
 
 <span class="doccomment">/// Publishes an `InitializedVaultEvent` to the event stream.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>emit_initialized_vault(
     e: <span class="kw-2">&amp;</span>Env,
     emergency_manager: Address,
-    fee_receiver: Address,
+    vault_fee_receiver: Address,
     manager: Address,
-    defindex_receiver: Address,
-    assets: Vec&lt;AssetAllocation&gt;,
+    defindex_protocol_receiver: Address,
+    assets: Vec&lt;AssetStrategySet&gt;,
 ) {
     <span class="kw">let </span>event = InitializedVaultEvent {
         emergency_manager,
-        fee_receiver,
+        vault_fee_receiver,
         manager,
-        defindex_receiver,
+        defindex_protocol_receiver,
         assets,
     };
 
@@ -414,9 +409,7 @@
 
 <span class="doccomment">/// Publishes a `ManagerChangedEvent` to the event stream.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>emit_manager_changed_event(e: <span class="kw-2">&amp;</span>Env, new_manager: Address) {
-    <span class="kw">let </span>event = ManagerChangedEvent {
-        new_manager,
-    };
+    <span class="kw">let </span>event = ManagerChangedEvent { new_manager };
 
     e.events()
         .publish((<span class="string">"DeFindexVault"</span>, <span class="macro">symbol_short!</span>(<span class="string">"nmanager"</span>)), event);
@@ -430,10 +423,7 @@
 }
 
 <span class="doccomment">/// Publishes an `EmergencyManagerChangedEvent` to the event stream.
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>emit_emergency_manager_changed_event(
-    e: <span class="kw-2">&amp;</span>Env,
-    new_emergency_manager: Address,
-) {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>emit_emergency_manager_changed_event(e: <span class="kw-2">&amp;</span>Env, new_emergency_manager: Address) {
     <span class="kw">let </span>event = EmergencyManagerChangedEvent {
         new_emergency_manager,
     };
@@ -446,7 +436,7 @@
 </span><span class="attr">#[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 </span><span class="kw">pub struct </span>FeesMintedEvent {
-    <span class="kw">pub </span>defindex_receiver: Address,
+    <span class="kw">pub </span>defindex_protocol_receiver: Address,
     <span class="kw">pub </span>defindex_shares: i128,
     <span class="kw">pub </span>vault_receiver: Address,
     <span class="kw">pub </span>vault_shares: i128,
@@ -455,13 +445,13 @@
 <span class="doccomment">/// Publishes an `EmergencyManagerChangedEvent` to the event stream.
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>emit_fees_minted_event(
     e: <span class="kw-2">&amp;</span>Env,
-    defindex_receiver: Address,
+    defindex_protocol_receiver: Address,
     defindex_shares: i128,
     vault_receiver: Address,
     vault_shares: i128,
 ) {
     <span class="kw">let </span>event = FeesMintedEvent {
-        defindex_receiver,
+        defindex_protocol_receiver,
         defindex_shares,
         vault_receiver,
         vault_shares,
@@ -469,4 +459,5 @@
 
     e.events()
         .publish((<span class="string">"DeFindexVault"</span>, <span class="macro">symbol_short!</span>(<span class="string">"mfees"</span>)), event);
-}</code></pre></div></section></main></body></html>
+}
+</code></pre></div></section></main></body></html>

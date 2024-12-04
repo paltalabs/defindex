@@ -2,7 +2,7 @@ use soroban_sdk::{vec as sorobanvec, InvokeError, String, Vec};
 
 use crate::test::{
     create_strategy_params_token0, defindex_vault::{
-        ActionType, AssetInvestmentAllocation, AssetStrategySet, Instruction, OptionalSwapDetailsExactIn, OptionalSwapDetailsExactOut, StrategyInvestment
+        ActionType, AssetInvestmentAllocation, AssetStrategySet, Instruction, OptionalSwapDetailsExactIn, OptionalSwapDetailsExactOut, StrategyAllocation
     }, DeFindexVaultTest
 };
 use crate::test::defindex_vault::ContractError;
@@ -56,10 +56,10 @@ fn multi_instructions() {
         &test.env,
         Some(AssetInvestmentAllocation {
             asset: test.token0.address.clone(),
-            strategy_investments: sorobanvec![
+            strategy_allocations: sorobanvec![
                 &test.env,
-                Some(StrategyInvestment {
-                    strategy: test.strategy_client_token0.address.clone(),
+                Some(StrategyAllocation {
+                    strategy_address: test.strategy_client_token0.address.clone(),
                     amount: amount,
                 }),
             ],
@@ -149,10 +149,10 @@ fn one_instruction() {
         &test.env,
         Some(AssetInvestmentAllocation {
             asset: test.token0.address.clone(),
-            strategy_investments: sorobanvec![
+            strategy_allocations: sorobanvec![
                 &test.env,
-                Some(StrategyInvestment {
-                    strategy: test.strategy_client_token0.address.clone(),
+                Some(StrategyAllocation {
+                    strategy_address: test.strategy_client_token0.address.clone(),
                     amount: amount,
                 }),
             ],
