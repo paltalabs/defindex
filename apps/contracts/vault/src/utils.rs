@@ -4,7 +4,6 @@ use crate::{
     models::{CurrentAssetInvestmentAllocation},
     access::{AccessControl, AccessControlTrait, RolesDataKey},
     funds::{
-        fetch_invested_funds_for_asset, fetch_invested_funds_for_strategy,
         fetch_total_managed_funds,
     },
     token::VaultToken,
@@ -39,33 +38,33 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
     }
 }
 
-/// From an amount, calculates how much to withdraw from each strategy;
-/// returns a map of strategy address to token amount
-pub fn calculate_withdrawal_amounts(
-    e: &Env,
-    amount: i128,
-    asset: AssetStrategySet,
-) -> Map<Address, i128> {
-    let mut withdrawal_amounts = Map::<Address, i128>::new(e);
+// /// From an amount, calculates how much to withdraw from each strategy;
+// /// returns a map of strategy address to token amount
+// pub fn calculate_withdrawal_amounts(
+//     e: &Env,
+//     amount: i128,
+//     asset: AssetStrategySet,
+// ) -> Map<Address, i128> {
+//     let mut withdrawal_amounts = Map::<Address, i128>::new(e);
 
-    let (total_invested_in_strategies, _) = fetch_invested_funds_for_asset(&e, &asset);
+//     let (total_invested_in_strategies, _) = fetch_invested_funds_for_asset(&e, &asset);
 
-    for strategy in asset.strategies.iter() {
-        // TODO: if strategy is paused but still holds assets on it shouldnt we withdraw them?
-        if strategy.paused {
-            continue;
-        }
+//     for strategy in asset.strategies.iter() {
+//         // TODO: if strategy is paused but still holds assets on it shouldnt we withdraw them?
+//         if strategy.paused {
+//             continue;
+//         }
 
-        let strategy_invested_funds = fetch_invested_funds_for_strategy(e, &strategy.address);
+//         let strategy_invested_funds = fetch_invested_funds_for_strategy(e, &strategy.address);
 
-        let strategy_share_of_withdrawal =
-            (amount * strategy_invested_funds) / total_invested_in_strategies;
+//         let strategy_share_of_withdrawal =
+//             (amount * strategy_invested_funds) / total_invested_in_strategies;
 
-        withdrawal_amounts.set(strategy.address.clone(), strategy_share_of_withdrawal);
-    }
+//         withdrawal_amounts.set(strategy.address.clone(), strategy_share_of_withdrawal);
+//     }
 
-    withdrawal_amounts
-}
+//     withdrawal_amounts
+// }
 
 /// Calculates the corresponding amounts of each asset per given number of vault shares.
 /// This function takes the number of vault shares (`shares_amount`) and computes how much of each asset in the vault

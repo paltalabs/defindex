@@ -27,7 +27,7 @@ mod utils;
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use aggregator::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
 use fee::{collect_fees, fetch_defindex_fee};
-use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds, fetch_idle_funds_for_asset}; 
+use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds}; 
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::check_and_execute_investments;
 use models::{
@@ -40,14 +40,14 @@ use storage::{
     set_factory, set_total_assets, set_vault_fee,
 };
 use strategies::{
-    get_asset_allocation_from_address, get_strategy_asset, get_strategy_client,
+    get_strategy_asset, get_strategy_client,
     get_strategy_struct, invest_in_strategy, pause_strategy, unpause_strategy,
     withdraw_from_strategy,
 };
 use token::{internal_burn, write_metadata, VaultToken};
 use utils::{
     calculate_asset_amounts_per_vault_shares,
-    calculate_withdrawal_amounts, check_initialized,
+    check_initialized,
     check_nonnegative_amount,
 };
 
@@ -238,102 +238,100 @@ impl VaultTrait for DeFindexVault {
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn withdraw(
-        e: Env, 
-        shares_amount: i128, 
-        from: Address) -> Result<Vec<i128>, ContractError> {
-
-        extend_instance_ttl(&e); 
+        e: Env,
+        shares_amount: i128,
+        from: Address,
+    ) -> Result<Vec<i128>, ContractError> {
+        extend_instance_ttl(&e);
         check_initialized(&e)?;
         check_nonnegative_amount(shares_amount)?;
         from.require_auth();
-
-        // fees assesment
+    
+        // Assess fees
         collect_fees(&e)?;
-
-        // Check if the user has enough dfTokens. // TODO, we can move this error into the internal_burn function
+    
+        // Check if the user has enough dfTokens.
         let df_user_balance = VaultToken::balance(e.clone(), from.clone());
         if df_user_balance < shares_amount {
             return Err(ContractError::InsufficientBalance);
         }
-
+    
         // Calculate the withdrawal amounts for each asset based on the share amounts
-        // Map<Address, i128> Maps asset address to the amount to withdraw
-        // this already considers the idle funds and all the invested amounts in strategies
-
         let total_managed_funds = fetch_total_managed_funds(&e);
-        let asset_amounts = calculate_asset_amounts_per_vault_shares(&e, shares_amount, &total_managed_funds)?;
 
-        // Burn the shares after calculating the withdrawal amounts (so total supply is correct
-        // but before withdrawing to avoid reentrancy attacks)
+        let asset_amounts = calculate_asset_amounts_per_vault_shares(
+            &e,
+            shares_amount,
+            &total_managed_funds,
+        )?;
+    
+        // Burn the shares after calculating the withdrawal amounts
         internal_burn(e.clone(), from.clone(), shares_amount);
-
-        // Create a map to store the total amounts to transfer for each asset address
-        let mut total_amounts_to_transfer: Map<Address, i128> = Map::new(&e);
-
-        // Loop through each asset in order to handle the withdrawal and if necesary to deallocate invested funds
+    
+        // Loop through each asset to handle the withdrawal
+        let mut amounts_withdrawn: Vec<i128> = Vec::new(&e);
         for (asset_address, required_amount) in asset_amounts.iter() {
+
+            let asset_investment_allocation = total_managed_funds
+            .get(asset_address.clone())
+            .unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength));
+
             // Check idle funds for this asset
-            let idle_balance = total_managed_funds
-                .get(asset_address.clone())
-                .unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength))
-                .idle_amount;
-            
-            // let amount_to_deallocate = if idle_balance >= required_amount {
-            //     0
-            // } else {
-            //     required_amount.checked_sub(idle_balance);
-            // }
-
-            // if amount_to_deallocate>0{
-            //     // deallocate from strategies
-            // }
-
-
-            let mut remaining_amount = required_amount;
-
-            // Withdraw as much as possible from idle funds first
+            let idle_balance = asset_investment_allocation.idle_amount;
+        
+            // Withdraw from idle funds first
             if idle_balance >= required_amount {
                 // Idle funds cover the full amount
-                total_amounts_to_transfer.set(asset_address.clone(), required_amount);
-                continue; // No need to withdraw from the strategy
+                TokenClient::new(&e, &asset_address).transfer(
+                    &e.current_contract_address(),
+                    &from,
+                    &required_amount,
+                );
+                amounts_withdrawn.push_back(required_amount);
+                continue;
             } else {
-                // Partial withdrawal from idle funds
-                total_amounts_to_transfer.set(asset_address.clone(), idle_balance);
-                remaining_amount = required_amount - idle_balance; // Update remaining amount
-            }
-
-            // Find the corresponding asset address for this strategy
-            let asset_allocation = get_asset_allocation_from_address(&e, asset_address.clone())?;
-            let withdrawal_amounts =
-                calculate_withdrawal_amounts(&e, remaining_amount, asset_allocation);
-
-            for (strategy_address, amount) in withdrawal_amounts.iter() {
-                // TODO: What if the withdraw method exceeds the instructions limit? since im trying to ithdraw from all strategies of all assets...
-                withdraw_from_strategy(&e, &strategy_address, &amount)?;
-
-                // Update the total amounts to transfer map
-                let current_amount = total_amounts_to_transfer
-                    .get(strategy_address.clone())
-                    .unwrap_or(0);
-                total_amounts_to_transfer.set(asset_address.clone(), current_amount + amount);
+                let mut amounts_withdrawn_asset = 0;
+                // // Partial withdrawal from idle funds
+                TokenClient::new(&e, &asset_address).transfer(
+                    &e.current_contract_address(),
+                    &from,
+                    &idle_balance,
+                );
+                amounts_withdrawn_asset += idle_balance;
+                let remaining_amount = required_amount - idle_balance;
+                
+                // Withdraw the remaining amount from strategies
+                let invested_amount = asset_investment_allocation.invested_amount;
+                
+                for strategy in asset_investment_allocation.strategy_investments.iter() {
+                    // TODO: If strategy is paused, shuold we skip it? Otherwise the calculation will go wrong.
+                    // if strategy.paused {
+                    //     continue;
+                    // }
+                    
+                    // amount to unwind from strategy
+                    let strategy_share_of_withdrawal =
+                    (remaining_amount * strategy.amount) / invested_amount;
+                    
+                    if strategy_share_of_withdrawal > 0 {
+                        withdraw_from_strategy(&e, &strategy.strategy, &strategy_share_of_withdrawal)?;
+                        TokenClient::new(&e, &asset_address).transfer(
+                            &e.current_contract_address(),
+                            &from,
+                            &strategy_share_of_withdrawal,
+                        );
+                        amounts_withdrawn_asset += strategy_share_of_withdrawal;
+                    }
+                }
+                amounts_withdrawn.push_back(amounts_withdrawn_asset);
             }
         }
-
-        // Perform the transfers for the total amounts
-        let mut amounts_withdrawn: Vec<i128> = Vec::new(&e);
-        for (asset_address, total_amount) in total_amounts_to_transfer.iter() {
-            TokenClient::new(&e, &asset_address).transfer(
-                &e.current_contract_address(),
-                &from,
-                &total_amount,
-            );
-            amounts_withdrawn.push_back(total_amount);
-        }
-
+    
         events::emit_withdraw_event(&e, from, shares_amount, amounts_withdrawn.clone());
-
+    
         Ok(amounts_withdrawn)
     }
+    
 
     /// Executes an emergency withdrawal from a specific strategy.
     ///
