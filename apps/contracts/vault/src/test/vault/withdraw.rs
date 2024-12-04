@@ -14,7 +14,7 @@ use crate::test::{
 
 
 #[test]
-fn test_withdraw_not_yet_initialized() {
+fn not_yet_initialized() {
     let test = DeFindexVaultTest::setup();
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
@@ -24,7 +24,7 @@ fn test_withdraw_not_yet_initialized() {
 
 // check that withdraw with negative amount after initialized returns error
 #[test]
-fn test_withdraw_negative_amount() {
+fn negative_amount() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -55,9 +55,9 @@ fn test_withdraw_negative_amount() {
 }
 
 
-// check that withdraw without balance after initialized returns error InsufficientBalance
+// check that withdraw without balance after initialized returns error AmountOverTotalSupply
 #[test]
-fn test_withdraw_0_total_supply() {
+fn zero_total_supply() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -85,6 +85,69 @@ fn test_withdraw_0_total_supply() {
 
     let result = test.defindex_contract.try_withdraw(&100i128, &users[0]);
     assert_eq!(result, Err(Ok(ContractError::AmountOverTotalSupply)));
+}
+
+// check that withdraw with not enough balance returns error InsufficientBalance
+#[test]
+fn not_enough_balance() {
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token0.address.clone(),
+            strategies: strategy_params_token0.clone()
+        }
+    ];
+
+    test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
+        &test.emergency_manager,
+        &test.vault_fee_receiver,
+        &2000u32,
+        &test.defindex_protocol_receiver,
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
+    );
+
+    // We need to generate 2 users, to have more total supply than the amount to withdraw
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
+
+    let amount_to_deposit = 567890i128;
+    test.token0_admin_client.mint(&users[0], &amount_to_deposit);
+    test.token0_admin_client.mint(&users[1], &amount_to_deposit);
+    
+    assert_eq!(test.token0.balance(&users[0]), amount_to_deposit);
+    assert_eq!(test.token0.balance(&users[1]), amount_to_deposit);
+
+    // first the user deposits
+    test.defindex_contract.deposit(
+        &sorobanvec![&test.env, amount_to_deposit],
+        &sorobanvec![&test.env, amount_to_deposit],
+        &users[0],
+        &false
+    );
+
+    test.defindex_contract.deposit(
+        &sorobanvec![&test.env, amount_to_deposit],
+        &sorobanvec![&test.env, amount_to_deposit],
+        &users[1],
+        &false
+    );
+
+    // check that the every user has vault shares
+    assert_eq!(test.defindex_contract.balance(&users[0]), amount_to_deposit - 1000);
+    assert_eq!(test.defindex_contract.balance(&users[1]), amount_to_deposit);
+    // check that total supply of vault shares is indeed amount_to_deposit*2
+    assert_eq!(test.defindex_contract.total_supply(), amount_to_deposit*2);
+    
+    // now user 0 tries to withdraw amount_to_deposit - 1000 +1 (more that it has)
+
+    let result = test.defindex_contract.try_withdraw(&(amount_to_deposit - 1000 +1), &users[0]);
+    assert_eq!(result, Err(Ok(ContractError::InsufficientBalance)));
 }
 
 #[test]
@@ -279,6 +342,6 @@ fn withdraw_from_strategy_success() {
 
 // test withdraw without mock all auths
 #[test]
-fn test_withdraw_from_strategy_success_no_mock_all_auths() {
+fn from_strategy_success_no_mock_all_auths() {
     todo!();
 }
