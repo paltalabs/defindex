@@ -21,6 +21,13 @@ fn check_initialized(e: &Env) -> Result<(), FactoryError> {
 }
 
 pub trait FactoryTrait {
+    fn __constructor(
+        e: Env, 
+        admin: Address,
+        defindex_receiver: Address,
+        defindex_fee: u32,
+        vault_wasm_hash: BytesN<32>
+    );
     /// Initializes the factory contract with the given parameters.
     /// 
     /// # Arguments
@@ -32,13 +39,13 @@ pub trait FactoryTrait {
     /// 
     /// # Returns
     /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, otherwise an error.
-    fn initialize(
-        e: Env, 
-        admin: Address,
-        defindex_receiver: Address,
-        defindex_fee: u32,
-        vault_wasm_hash: BytesN<32>
-    ) -> Result<(), FactoryError>;
+    // fn initialize(
+    //     e: Env, 
+    //     admin: Address,
+    //     defindex_receiver: Address,
+    //     defindex_fee: u32,
+    //     vault_wasm_hash: BytesN<32>
+    // ) -> Result<(), FactoryError>;
 
     /// Creates a new DeFindex Vault with specified parameters.
     ///
@@ -174,6 +181,21 @@ struct DeFindexFactory;
 #[contractimpl]
 impl FactoryTrait for DeFindexFactory {
 
+    fn __constructor(
+        e: Env, 
+        admin: Address,
+        defindex_receiver: Address,
+        defindex_fee: u32,
+        vault_wasm_hash: BytesN<32>
+    ) {
+        put_admin(&e, &admin);
+        put_defindex_receiver(&e, &defindex_receiver);
+        put_vault_wasm_hash(&e, vault_wasm_hash);
+        put_defindex_fee(&e, &defindex_fee);
+
+        extend_instance_ttl(&e);
+    }
+
     /// Initializes the factory contract with the given parameters.
     /// 
     /// # Arguments
@@ -185,26 +207,26 @@ impl FactoryTrait for DeFindexFactory {
     /// 
     /// # Returns
     /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, otherwise an error.
-    fn initialize(
-        e: Env, 
-        admin: Address, 
-        defindex_receiver: Address,
-        defindex_fee: u32,
-        vault_wasm_hash: BytesN<32>
-    ) -> Result<(), FactoryError> {
-        if has_admin(&e) {
-            return Err(FactoryError::AlreadyInitialized);
-        }
+    // fn initialize(
+    //     e: Env, 
+    //     admin: Address, 
+    //     defindex_receiver: Address,
+    //     defindex_fee: u32,
+    //     vault_wasm_hash: BytesN<32>
+    // ) -> Result<(), FactoryError> {
+    //     if has_admin(&e) {
+    //         return Err(FactoryError::AlreadyInitialized);
+    //     }
 
-        put_admin(&e, &admin);
-        put_defindex_receiver(&e, &defindex_receiver);
-        put_vault_wasm_hash(&e, vault_wasm_hash);
-        put_defindex_fee(&e, &defindex_fee);
+    //     put_admin(&e, &admin);
+    //     put_defindex_receiver(&e, &defindex_receiver);
+    //     put_vault_wasm_hash(&e, vault_wasm_hash);
+    //     put_defindex_fee(&e, &defindex_fee);
 
-        events::emit_initialized(&e, admin, defindex_receiver, defindex_fee);
-        extend_instance_ttl(&e);
-        Ok(())
-    }
+    //     events::emit_initialized(&e, admin, defindex_receiver, defindex_fee);
+    //     extend_instance_ttl(&e);
+    //     Ok(())
+    // }
 
     /// Creates a new DeFindex Vault with specified parameters.
     ///

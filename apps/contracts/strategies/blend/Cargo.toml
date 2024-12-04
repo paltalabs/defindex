@@ -13,7 +13,6 @@ crate-type = ["cdylib"]
 [dependencies] 
 soroban-sdk = { workspace = true }
 defindex-strategy-core = { workspace = true }
-soroban-fixed-point-math = "1.2.0"
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
