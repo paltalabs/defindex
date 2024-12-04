@@ -290,14 +290,9 @@ impl VaultTrait for DeFindexVault {
                 amounts_withdrawn.push_back(required_amount);
                 continue;
             } else {
-                let mut amounts_withdrawn_asset = 0;
+                let mut amounts_to_withdraw_asset = 0;
                 // // Partial withdrawal from idle funds
-                TokenClient::new(&e, &asset_address).transfer(
-                    &e.current_contract_address(),
-                    &from,
-                    &idle_balance,
-                );
-                amounts_withdrawn_asset += idle_balance;
+                amounts_to_withdraw_asset += idle_balance;
                 let remaining_amount = required_amount - idle_balance;
                 
                 // Withdraw the remaining amount from strategies
@@ -320,10 +315,15 @@ impl VaultTrait for DeFindexVault {
                             &from,
                             &strategy_share_of_withdrawal,
                         );
-                        amounts_withdrawn_asset += strategy_share_of_withdrawal;
+                        amounts_to_withdraw_asset += strategy_share_of_withdrawal;
                     }
                 }
-                amounts_withdrawn.push_back(amounts_withdrawn_asset);
+                TokenClient::new(&e, &asset_address).transfer(
+                    &e.current_contract_address(),
+                    &from,
+                    &amounts_to_withdraw_asset,
+                );
+                amounts_withdrawn.push_back(amounts_to_withdraw_asset);
             }
         }
     
