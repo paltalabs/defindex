@@ -465,107 +465,60 @@ fn from_idle_two_assets_success() {
             paused: false,
         }],
     }];
-    // assert_eq!(test.defindex_contract.get_assets(), expected_asset_vec);
-    // let expected_result = sorobanvec![&test.env, 45070, 78385];
-    // assert_eq!(result, expected_result);
+    assert_eq!(test.defindex_contract.get_assets(), expected_asset_vec);
+    let expected_result = sorobanvec![&test.env, 45070, 78385];
+    assert_eq!(result, expected_result);
 
     // Token balance of user
     assert_eq!(test.token0.balance(&users[0]), amount - amount_to_deposit_0 + 45070);
     assert_eq!(test.token1.balance(&users[0]), amount - amount_to_deposit_1 + 78385);
 
-    // // Token balance of vault (still idle)
+    // Token balance of vault (still idle)
 
-    // assert_eq!(test.token0.balance(&test.defindex_contract.address), amount_to_deposit_0 - 45070);
-    // assert_eq!(test.token1.balance(&test.defindex_contract.address), amount_to_deposit_1 - 78385);
+    assert_eq!(test.token0.balance(&test.defindex_contract.address), amount_to_deposit_0 - 45070);
+    assert_eq!(test.token1.balance(&test.defindex_contract.address), amount_to_deposit_1 - 78385);
 
-    // // Token balance of hodl strategy should be 0 (all in idle)
-    // assert_eq!(test.token0.balance(&test.strategy_client_token0.address), 0);
-    // assert_eq!(test.token1.balance(&test.strategy_client_token1.address), 0);
+    // Token balance of hodl strategy should be 0 (all in idle)
+    assert_eq!(test.token0.balance(&test.strategy_client_token0.address), 0);
+    assert_eq!(test.token1.balance(&test.strategy_client_token1.address), 0);
 
-    // // Df balance of user should be equal to amount_to_deposit_0+amount_to_deposit_1 - 1000 - 123456
-    // // 567890+987654-1000 -123456 = 1434088
-    // let df_balance = test.defindex_contract.balance(&users[0]);
-    // assert_eq!(df_balance, 1431088 );
+    // Df balance of user should be equal to amount_to_deposit_0+amount_to_deposit_1 - 1000 - 123456
+    // 567890+987654-1000 -123456 = 1434088
+    let df_balance = test.defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, 1431088 );
 
-//     // Token balance of user should be amount - amount_to_deposit + amount_to_withdraw
-//     let user_balance = test.token0.balance(&users[0]);
-//     assert_eq!(
-//         user_balance,
-//         amount - amount_to_deposit + amount_to_withdraw
-//     );
+    // check total manage funds
+    let mut total_managed_funds_expected = Map::new(&test.env);
+    total_managed_funds_expected.set(test.token0.address.clone(), 
+        CurrentAssetInvestmentAllocation {
+            asset: test.token0.address.clone(),
+            total_amount: 567890i128 - 45070,
+            idle_amount: 567890i128 - 45070,
+            invested_amount: 0i128,
+            strategy_allocations: sorobanvec![&test.env, 
+            StrategyAllocation {
+                strategy_address: test.strategy_client_token0.address.clone(),
+                amount: 0, //funds has not been invested yet!
+            }],
+        }
+    );
 
-//     // Token balance of vault should be amount_to_deposit - amount_to_withdraw
-//     let vault_balance = test.token0.balance(&test.defindex_contract.address);
-//     assert_eq!(vault_balance, amount_to_deposit - amount_to_withdraw);
+    total_managed_funds_expected.set(test.token1.address.clone(), 
+        CurrentAssetInvestmentAllocation {
+            asset: test.token1.address.clone(),
+            total_amount: 987654i128 - 78385,
+            idle_amount: 987654i128 - 78385,
+            invested_amount: 0i128,
+            strategy_allocations: sorobanvec![&test.env, 
+            StrategyAllocation {
+                strategy_address: test.strategy_client_token1.address.clone(),
+                amount: 0, //funds has not been invested yet!
+            }],
+        }
+    );
 
-//     // Token balance of hodl strategy should be 0 (all in idle)
-//     let strategy_balance = test.token0.balance(&test.strategy_client_token0.address);
-//     assert_eq!(strategy_balance, 0);
-
-//     // Df balance of user should be equal to deposited amount - amount_to_withdraw - 1000 
-//     let df_balance = test.defindex_contract.balance(&users[0]);
-//     assert_eq!(df_balance, amount_to_deposit - amount_to_withdraw - 1000);
-
-//     // check total manage funds
-//     let mut total_managed_funds_expected = Map::new(&test.env);
-//     let strategy_investments_expected = sorobanvec![&test.env, StrategyAllocation {
-//         strategy_address: test.strategy_client_token0.address.clone(),
-//         amount: 0, //funds has not been invested yet!
-//     }];
-//     total_managed_funds_expected.set(test.token0.address.clone(), 
-//         CurrentAssetInvestmentAllocation {
-//             asset: test.token0.address.clone(),
-//             total_amount: amount_to_deposit - amount_to_withdraw,
-//             idle_amount: amount_to_deposit - amount_to_withdraw,
-//             invested_amount: 0i128,
-//             strategy_allocations: strategy_investments_expected,
-//         }
-//     );
-
-//     let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
-//     assert_eq!(total_managed_funds, total_managed_funds_expected);
-
-
-//     // user tries to withdraw more than deposited amount
-//     let amount_to_withdraw_more = amount_to_deposit + 1;
-//     let result = test
-//         .defindex_contract
-//         .try_withdraw(&amount_to_withdraw_more, &users[0]);
-    
-//     assert_eq!(result, 
-//         Err(Ok(ContractError::AmountOverTotalSupply)));
-
-
-//     // // withdraw remaining balance
-//    let result= test.defindex_contract
-//         .withdraw(&(amount_to_deposit - amount_to_withdraw - 1000), &users[0]);
-
-//     assert_eq!(result, sorobanvec![&test.env, amount_to_deposit - amount_to_withdraw - 1000]);
-
-//     let df_balance = test.defindex_contract.balance(&users[0]);
-//     assert_eq!(df_balance, 0i128);
-
-//     let user_balance = test.token0.balance(&users[0]);
-//     assert_eq!(user_balance, amount - 1000);
-
-//     // check total manage funds
-//     let mut total_managed_funds_expected = Map::new(&test.env);
-//     let strategy_investments_expected = sorobanvec![&test.env, StrategyAllocation {
-//         strategy_address: test.strategy_client_token0.address.clone(),
-//         amount: 0, //funds has not been invested yet!
-//     }];
-//     total_managed_funds_expected.set(test.token0.address.clone(), 
-//         CurrentAssetInvestmentAllocation {
-//             asset: test.token0.address.clone(),
-//             total_amount: 1000,
-//             idle_amount: 1000,
-//             invested_amount: 0i128,
-//             strategy_allocations: strategy_investments_expected,
-//         }
-//     );
-
-//     let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
-//     assert_eq!(total_managed_funds, total_managed_funds_expected);
+    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
+    assert_eq!(total_managed_funds, total_managed_funds_expected);
 
 }
 

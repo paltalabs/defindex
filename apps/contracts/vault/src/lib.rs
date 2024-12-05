@@ -2,7 +2,7 @@
 use deposit::{generate_and_execute_investments, process_deposit};
 use soroban_sdk::{
     contract, contractimpl, panic_with_error,
-    token::{TokenClient, TokenInterface},
+    token::{TokenClient},
     Address, Env, Map, String, Vec,
 };
 use soroban_token_sdk::metadata::TokenMetadata;
@@ -44,7 +44,7 @@ use strategies::{
     get_strategy_struct, invest_in_strategy, pause_strategy, unpause_strategy,
     unwind_from_strategy,
 };
-use token::{internal_burn, write_metadata, VaultToken};
+use token::{internal_burn, write_metadata};
 use utils::{
     calculate_asset_amounts_per_vault_shares,
     check_initialized,
@@ -273,7 +273,6 @@ impl VaultTrait for DeFindexVault {
         collect_fees(&e)?;
     
         // Calculate the withdrawal amounts for each asset based on the share amounts
-        let assets = get_assets(&e); // TODO:
         let total_managed_funds = fetch_total_managed_funds(&e);
 
         let asset_withdrawal_amounts = calculate_asset_amounts_per_vault_shares(
