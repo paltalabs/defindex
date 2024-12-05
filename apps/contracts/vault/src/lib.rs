@@ -258,7 +258,7 @@ impl VaultTrait for DeFindexVault {
     /// ## TODOs:
     /// - Implement minimum amounts for withdrawals to ensure compliance with potential restrictions.
     /// - Replace the returned vector with the original `asset_withdrawal_amounts` map for better structure.
-
+    /// - avoid the usage of a Map, choose between using map or vector
     fn withdraw(
         e: Env,
         withdraw_shares: i128,
@@ -273,6 +273,7 @@ impl VaultTrait for DeFindexVault {
         collect_fees(&e)?;
     
         // Calculate the withdrawal amounts for each asset based on the share amounts
+        let assets = get_assets(&e); // TODO:
         let total_managed_funds = fetch_total_managed_funds(&e);
 
         let asset_withdrawal_amounts = calculate_asset_amounts_per_vault_shares(
@@ -285,66 +286,65 @@ impl VaultTrait for DeFindexVault {
         // This will panic with error if the user does not have enough balance
         internal_burn(e.clone(), from.clone(), withdraw_shares);
     
+        let assets = get_assets(&e); // Use assets for iteration order
         // Loop through each asset to handle the withdrawal
         let mut withdrawn_amounts: Vec<i128> = Vec::new(&e);
-        for (asset_address, requested_withdrawal_amount) in asset_withdrawal_amounts.iter() {
 
-            let asset_allocation = total_managed_funds
-            .get(asset_address.clone())
-            .unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength));
+        for asset in assets.iter() { // Use assets instead of asset_withdrawal_amounts
+            let asset_address = &asset.address;
 
-            // Check idle funds for this asset
-            let idle_funds = asset_allocation.idle_amount;
-        
-            // Withdraw from idle funds first
-            if idle_funds >= requested_withdrawal_amount {
-                // Idle funds cover the full amount
-                TokenClient::new(&e, &asset_address).transfer(
-                    &e.current_contract_address(),
-                    &from,
-                    &requested_withdrawal_amount,
-                );
-                withdrawn_amounts.push_back(requested_withdrawal_amount);
-            } else {
-                let mut cumulative_amount_for_asset = idle_funds;
-                let remaining_amount_to_unwind = requested_withdrawal_amount
-                    .checked_sub(idle_funds)
-                    .unwrap();
-                
-                    
-                // Withdraw the remaining amount from invested funds in Strategies
-                let total_invested_amount = asset_allocation.invested_amount;
+            if let Some(requested_withdrawal_amount) = asset_withdrawal_amounts.get(asset_address.clone()) {
+                let asset_allocation = total_managed_funds
+                    .get(asset_address.clone())
+                    .unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength));
 
-                for (i, strategy_allocation) in asset_allocation.strategy_allocations.iter().enumerate() {
-                    // TODO: If strategy is paused, should we skip it? Otherwise, the calculation will go wrong.
-                    // if strategy.paused {
-                    //     continue;
-                    // }
-                    
-                    // Amount to unwind from strategy. If this is the last strategy, we will take the remaining amount
-                    // due to possible rounding errors.
-                    let strategy_amount_to_unwind:i128 = if  i == (asset_allocation.strategy_allocations.len() as usize) - 1{
-                        remaining_amount_to_unwind.checked_sub(cumulative_amount_for_asset).unwrap()
-                    } else {
-                        remaining_amount_to_unwind
-                        .checked_mul(strategy_allocation.amount)
-                        .and_then(|result| result.checked_div(total_invested_amount))
-                        .ok_or_else(|| ContractError::ArithmeticError)?
-                    };
-    
-                    if strategy_amount_to_unwind > 0 {
-                        unwind_from_strategy(&e, &strategy_allocation.strategy_address, &strategy_amount_to_unwind)?;
-                        cumulative_amount_for_asset += strategy_amount_to_unwind;
+                let idle_funds = asset_allocation.idle_amount;
+
+                if idle_funds >= requested_withdrawal_amount {
+                    TokenClient::new(&e, asset_address).transfer(
+                        &e.current_contract_address(),
+                        &from,
+                        &requested_withdrawal_amount,
+                    );
+                    withdrawn_amounts.push_back(requested_withdrawal_amount);
+                } else {
+                    let mut cumulative_amount_for_asset = idle_funds;
+                    let remaining_amount_to_unwind = requested_withdrawal_amount
+                        .checked_sub(idle_funds)
+                        .unwrap();
+
+                    let total_invested_amount = asset_allocation.invested_amount;
+
+                    for (i, strategy_allocation) in asset_allocation.strategy_allocations.iter().enumerate() {
+                        let strategy_amount_to_unwind: i128 = if i == (asset_allocation.strategy_allocations.len() as usize) - 1 {
+                            remaining_amount_to_unwind
+                                .checked_sub(cumulative_amount_for_asset)
+                                .unwrap()
+                        } else {
+                            remaining_amount_to_unwind
+                                .checked_mul(strategy_allocation.amount)
+                                .and_then(|result| result.checked_div(total_invested_amount))
+                                .unwrap_or(0)
+                        };
+
+                        if strategy_amount_to_unwind > 0 {
+                            unwind_from_strategy(&e, &strategy_allocation.strategy_address, &strategy_amount_to_unwind)?;
+                            cumulative_amount_for_asset += strategy_amount_to_unwind;
+                        }
                     }
+
+                    TokenClient::new(&e, asset_address).transfer(
+                        &e.current_contract_address(),
+                        &from,
+                        &cumulative_amount_for_asset,
+                    );
+                    withdrawn_amounts.push_back(cumulative_amount_for_asset);
                 }
-                TokenClient::new(&e, &asset_address).transfer(
-                    &e.current_contract_address(),
-                    &from,
-                    &cumulative_amount_for_asset,
-                );
-                withdrawn_amounts.push_back(cumulative_amount_for_asset);
+            } else {
+                withdrawn_amounts.push_back(0); // No withdrawal for this asset
             }
         }
+
         
         // TODO: Add minimuim amounts for withdrawn_amounts
         // TODO: Return the asset_withdrawal_amounts Map instead of a vec
