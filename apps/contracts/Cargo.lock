@@ -229,6 +229,7 @@ dependencies = [
  "defindex-strategy-core",
  "sep-40-oracle",
  "sep-41-token",
+ "soroban-fixed-point-math",
  "soroban-sdk 22.0.0-rc.3.2",
 ]
 
@@ -1382,6 +1383,15 @@ dependencies = [
  "serde_json",
  "stellar-xdr 22.0.0-rc.1.1",
  "syn 2.0.39",
+]
+
+[[package]]
+name = "soroban-fixed-point-math"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a9d386a1ca0a148121b21331f9da68f33bf3dfb6de69646f719935d2dec3d49c"
+dependencies = [
+ "soroban-sdk 21.7.7",
 ]
 
 [[package]]

@@ -9,7 +9,6 @@ mod constants;
 mod reserves;
 mod soroswap;
 mod storage;
-mod utils;
 
 use storage::{extend_instance_ttl, has_config, Config};
 

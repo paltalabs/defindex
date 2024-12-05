@@ -1,5 +1,5 @@
 use defindex_strategy_core::StrategyError;
-use crate::utils::FixedPoint;
+use soroban_fixed_point_math::{i128, FixedPoint};
 use soroban_sdk::{contracttype, panic_with_error, Address, Env};
 
 use crate::{constants::SCALAR_9, storage};
