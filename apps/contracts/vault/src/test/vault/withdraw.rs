@@ -153,7 +153,7 @@ fn not_enough_balance() {
 }
 
 #[test]
-fn from_idle_one_strategy_success() { 
+fn from_idle_one_asset_one_strategy_success() { 
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -522,8 +522,9 @@ fn from_idle_two_assets_success() {
 
 }
 
+
 #[test]
-fn withdraw_from_strategy_success() {
+fn from_strategy_one_asset_one_strategy_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);
@@ -597,6 +598,247 @@ fn withdraw_from_strategy_success() {
     assert_eq!(user_balance, amount - 1000);
 }
  
+
+#[test]
+fn from_strategies_one_asset_two_strategies_success() {
+    todo!();
+    // let test = DeFindexVaultTest::setup();
+    // test.env.mock_all_auths();
+    // let assets: Vec<AssetStrategySet> = sorobanvec![
+    //     &test.env,
+    //     AssetStrategySet {
+    //         address: test.token0.address.clone(),
+    //         strategies: sorobanvec![
+    //             &test.env, 
+    //             Strategy {
+    //                 name: String::from_str(&test.env, "Strategy 1"),
+    //                 address: test.strategy_client_token0.address.clone(),
+    //                 paused: false,
+    //             }
+    //         ]
+    //     }
+    // ];
+
+    // test.defindex_contract.initialize(
+    //     &assets,
+    //     &test.manager,
+    //     &test.emergency_manager,
+    //     &test.vault_fee_receiver,
+    //     &2000u32,
+    //     &test.defindex_protocol_receiver,
+    //     &test.defindex_factory,
+    //     &String::from_str(&test.env, "dfToken"),
+    //     &String::from_str(&test.env, "DFT"),
+    // );
+    // let amount = 1234567890000000i128;
+
+    // let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+
+    // test.token0_admin_client.mint(&users[0], &amount);
+    // assert_eq!(test.token0.balance(&users[0]), amount);
+
+    // let df_balance = test.defindex_contract.balance(&users[0]);
+    // assert_eq!(df_balance, 0i128);
+
+    // // Deposit 
+    // let amount_to_deposit = 987654321i128;
+    
+    // test.defindex_contract.deposit(
+    //     &sorobanvec![&test.env, amount_to_deposit],
+    //     &sorobanvec![&test.env, amount_to_deposit],
+    //     &users[0],
+    //     &false
+    // );
+
+    // FIX invest in 2 stretegies for the same asset
+    
+}
+
+
+#[test]
+fn from_strategies_two_asset_each_one_strategy_success() {
+    // We will have two assets, each asset with one strategy
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token1 = create_strategy_params_token1(&test);
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token0.address.clone(),
+            strategies: strategy_params_token0.clone()
+        },
+        AssetStrategySet {
+            address: test.token1.address.clone(),
+            strategies: strategy_params_token1.clone()
+        }
+    ];
+    // initialize
+    test.defindex_contract.initialize(
+        &assets,
+        &test.manager,
+        &test.emergency_manager,
+        &test.vault_fee_receiver,
+        &2000u32,
+        &test.defindex_protocol_receiver,
+        &test.defindex_factory,
+        &String::from_str(&test.env, "dfToken"),
+        &String::from_str(&test.env, "DFT"),
+    );
+    // mint 
+    let amount = 987654321i128;
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+    test.token0_admin_client.mint(&users[0], &amount);
+    test.token1_admin_client.mint(&users[0], &amount);
+    assert_eq!(test.token0.balance(&users[0]), amount);
+    assert_eq!(test.token1.balance(&users[0]), amount);
+
+    // deposit
+    let amount_to_deposit_0 = 123456789i128;
+    let amount_to_deposit_1 = 234567890i128;
+
+    let deposit_result = test.defindex_contract.deposit(
+        &sorobanvec![&test.env, amount_to_deposit_0, amount_to_deposit_1],
+        &sorobanvec![&test.env, amount_to_deposit_0, amount_to_deposit_1],
+        &users[0],
+        &false
+    );
+
+    // check deposit result. Ok((amounts, shares_to_mint))
+    // shares to mint = 123456789 + 234567890 = 358024679
+
+    assert_eq!(deposit_result, (sorobanvec![&test.env, amount_to_deposit_0, amount_to_deposit_1], 358024679));
+
+
+    // check balances
+    assert_eq!(test.token0.balance(&users[0]), amount - amount_to_deposit_0);
+    assert_eq!(test.token1.balance(&users[0]), amount - amount_to_deposit_1);
+
+    // check vault balances
+    assert_eq!(test.token0.balance(&test.defindex_contract.address), amount_to_deposit_0);
+    assert_eq!(test.token1.balance(&test.defindex_contract.address), amount_to_deposit_1);
+
+    // check strategy balances
+    assert_eq!(test.token0.balance(&test.strategy_client_token0.address), 0);
+    assert_eq!(test.token1.balance(&test.strategy_client_token1.address), 0);
+
+    // invest in strategies. We will invest 100% of the idle funds
+    let investments = sorobanvec![
+        &test.env,
+        Some(AssetInvestmentAllocation {
+            asset: test.token0.address.clone(),
+            strategy_allocations: sorobanvec![
+                &test.env,
+                Some(StrategyAllocation {
+                    strategy_address: test.strategy_client_token0.address.clone(),
+                    amount: amount_to_deposit_0,
+                }),
+            ],
+        }),
+        Some(AssetInvestmentAllocation {
+            asset: test.token1.address.clone(),
+            strategy_allocations: sorobanvec![
+                &test.env,
+                Some(StrategyAllocation {
+                    strategy_address: test.strategy_client_token1.address.clone(),
+                    amount: amount_to_deposit_1,
+                }),
+            ],
+        }),
+    ];
+
+    test.defindex_contract.invest(&investments);
+
+    // check vault balances
+    assert_eq!(test.token0.balance(&test.defindex_contract.address), 0);
+    assert_eq!(test.token1.balance(&test.defindex_contract.address), 0);
+
+    // check strategy balances
+    assert_eq!(test.token0.balance(&test.strategy_client_token0.address), amount_to_deposit_0);
+    assert_eq!(test.token1.balance(&test.strategy_client_token1.address), amount_to_deposit_1);
+
+    //check user vault shares
+    let df_balance = test.defindex_contract.balance(&users[0]);
+    // vault shares should be amount_to_deposit_0 + amount_to_deposit_1 - 1000
+    // 123456789 + 234567890 - 1000 = 358023679
+    // but total vault shares are 358023679 + 1000 = 358024679
+    assert_eq!(df_balance, 358023679);
+
+    // User wants to withdraw 35353535 shares
+    // from asset 0: total_funds_0 * withdraw_shares / total_shares
+    // from asset 1: total_funds_1 * withdraw_shares / total_shares
+    // user will get asset 0: 123456789 * 35353535 / 358024679 =  12190874.447789436 = 12190874
+    // user will get asset 1: 234567890 * 35353535 / 358024679 = 23162660.552210564 = 23162660
+
+    let amount_to_withdraw = 35353535i128;
+    let result = test.defindex_contract.withdraw(&amount_to_withdraw, &users[0]);
+
+    // check expected result
+    let expected_result = sorobanvec![&test.env, 12190874, 23162660];
+    assert_eq!(result, expected_result);
+
+    // check user balances
+    assert_eq!(test.token0.balance(&users[0]), amount - amount_to_deposit_0 + 12190874);
+    assert_eq!(test.token1.balance(&users[0]), amount - amount_to_deposit_1 + 23162660);
+
+    // check vault balances
+    assert_eq!(test.token0.balance(&test.defindex_contract.address), 0);
+    assert_eq!(test.token1.balance(&test.defindex_contract.address), 0);
+
+    // check strategy balances
+    assert_eq!(test.token0.balance(&test.strategy_client_token0.address), amount_to_deposit_0 - 12190874);
+    assert_eq!(test.token1.balance(&test.strategy_client_token1.address), amount_to_deposit_1 - 23162660);
+
+    // check user vault shares // should be 358023679−35353535 = 322670144
+    let df_balance = test.defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, 322670144);
+
+    // now we deposit again to have a lot in idle funds
+    // because the vault has 123456789 - 12190874 = 111,265,915 of token 0
+    // and 234567890 - 23162660 = 211,405,230 of token 1
+    // this proportion should be maintained
+
+    // if user wants to deposit again 2,222,222 of token 0, it should invest from token 1:
+    // 2222222 * 211405230   / 111265915   =  4222221.630236537 = 4222221
+
+    let amount_to_deposit_0 = 2222222i128;
+    let amount_to_deposit_1 = 4222221i128;
+
+    let (amounts, shares_minted) = test.defindex_contract.deposit(
+        &sorobanvec![&test.env, amount_to_deposit_0, amount_to_deposit_1+100],
+        &sorobanvec![&test.env, amount_to_deposit_0, amount_to_deposit_1-100],
+        &users[0],
+        &false
+    );
+
+    // // expected amounts
+    // let expected_amounts = sorobanvec![&test.env, 2222222, 4222221];
+    // assert_eq!(amounts, expected_amounts);
+
+    // // expected shares minted
+    // // total_supplly * amount_desired_target / reserve_target
+    // // 358024679 * 2222222 / 111265915 = 7160000
+    // assert_eq!(shares_minted, 7160000);
+
+    // // check user balances
+    // assert_eq!(test.token0.balance(&users[0]), amount - amount_to_deposit_0 + 12190874 - 2222222);
+    // assert_eq!(test.token1.balance(&users[0]), amount - amount_to_deposit_1 + 23162660 - 4222221);
+
+    // // check vault balance
+    // assert_eq!(test.token0.balance(&test.defindex_contract.address), 2222222);
+    // assert_eq!(test.token1.balance(&test.defindex_contract.address), 4222221);
+
+    // // check strategies balance
+    // assert_eq!(test.token0.balance(&test.strategy_client_token0.address), amount_to_deposit_0 - 12190874 + 2222222);
+    // assert_eq!(test.token1.balance(&test.strategy_client_token1.address), amount_to_deposit_1 - 23162660 + 4222221);
+
+    // // user withdraws only from idle funds 716000 (10%) of what just deposited
+    // //  this should only affect idle funds
+
+
+
+}
+
 
 // test withdraw without mock all auths
 #[test]
