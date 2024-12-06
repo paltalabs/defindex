@@ -25,9 +25,10 @@ mod hodl_strategy {
 use hodl_strategy::StrategyContractClient;
 
 fn create_strategy_contract<'a>(e: &Env, asset: &Address, init_args: &Vec<Val>) -> StrategyContractClient<'a> {
-    let address = &e.register_contract_wasm(None, hodl_strategy::WASM);
+    let args = (asset.clone(), init_args.clone());
+
+    let address = &e.register(hodl_strategy::WASM, args);
     let strategy = StrategyContractClient::new(e, address); 
-    strategy.initialize(asset, init_args);
     strategy
 }  
 

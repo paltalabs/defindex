@@ -257,7 +257,7 @@ impl FactoryTrait for DeFindexFactory {
         let current_contract = e.current_contract_address();
 
         let vault_wasm_hash = get_vault_wasm_hash(&e)?;
-        let defindex_address = create_contract(&e, vault_wasm_hash, salt);
+        
 
         let defindex_receiver = get_defindex_receiver(&e);
 
@@ -272,7 +272,8 @@ impl FactoryTrait for DeFindexFactory {
         init_args.push_back(vault_name.to_val());
         init_args.push_back(vault_symbol.to_val());
 
-        e.invoke_contract::<Val>(&defindex_address, &Symbol::new(&e, "initialize"), init_args);
+        // e.invoke_contract::<Val>(&defindex_address, &Symbol::new(&e, "initialize"), init_args);
+        let defindex_address = create_contract(&e, vault_wasm_hash, init_args, salt);
 
         add_new_defindex(&e, defindex_address.clone());
         events::emit_create_defindex_vault(&e, emergency_manager, fee_receiver, manager, vault_fee, assets);
@@ -318,7 +319,6 @@ impl FactoryTrait for DeFindexFactory {
         let current_contract = e.current_contract_address();
 
         let vault_wasm_hash = get_vault_wasm_hash(&e)?;
-        let defindex_address = create_contract(&e, vault_wasm_hash, salt);
 
         let defindex_receiver = get_defindex_receiver(&e);
 
@@ -333,7 +333,7 @@ impl FactoryTrait for DeFindexFactory {
         init_args.push_back(vault_name.to_val());
         init_args.push_back(vault_symbol.to_val());
 
-        e.invoke_contract::<Val>(&defindex_address, &Symbol::new(&e, "initialize"), init_args);
+        let defindex_address = create_contract(&e, vault_wasm_hash, init_args, salt);
 
         let mut amounts_min = Vec::new(&e);
         for _ in 0..amounts.len() {
