@@ -706,6 +706,7 @@ fn from_strategies_two_asset_each_one_strategy_success() {
 
     // check deposit result. Ok((amounts, shares_to_mint))
     // shares to mint = 123456789 + 234567890 = 358024679
+    assert_eq!(test.defindex_contract.total_supply(), 358024679);
 
     assert_eq!(deposit_result, (sorobanvec![&test.env, amount_to_deposit_0, amount_to_deposit_1], 358024679));
 
@@ -773,6 +774,8 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     let amount_to_withdraw = 35353535i128;
     let result = test.defindex_contract.withdraw(&amount_to_withdraw, &users[0]);
 
+    assert_eq!(test.defindex_contract.total_supply(), 322671144); //358024679- 35353535
+
     // check expected result
     let expected_result = sorobanvec![&test.env, 12190874, 23162660];
     assert_eq!(result, expected_result);
@@ -801,42 +804,128 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     // if user wants to deposit again 2,222,222 of token 0, it should invest from token 1:
     // 2222222 * 211405230   / 111265915   =  4222221.630236537 = 4222221
 
-    let amount_to_deposit_0 = 2222222i128;
-    let amount_to_deposit_1 = 4222221i128;
+    let amount_to_deposit_0_new = 2222222i128;
+    let amount_to_deposit_1_new = 4222221i128;
 
     let (amounts, shares_minted) = test.defindex_contract.deposit(
-        &sorobanvec![&test.env, amount_to_deposit_0, amount_to_deposit_1+100],
-        &sorobanvec![&test.env, amount_to_deposit_0, amount_to_deposit_1-100],
+        &sorobanvec![&test.env, amount_to_deposit_0_new, amount_to_deposit_1_new+100],
+        &sorobanvec![&test.env, amount_to_deposit_0_new, amount_to_deposit_1_new-100],
         &users[0],
         &false
     );
 
-    // // expected amounts
-    // let expected_amounts = sorobanvec![&test.env, 2222222, 4222221];
-    // assert_eq!(amounts, expected_amounts);
+    // expected amounts
+    let expected_amounts = sorobanvec![&test.env, 2222222, 4222221];
+    assert_eq!(amounts, expected_amounts);
 
-    // // expected shares minted
-    // // total_supplly * amount_desired_target / reserve_target
-    // // 358024679 * 2222222 / 111265915 = 7160000
-    // assert_eq!(shares_minted, 7160000);
+    // expected shares minted
+    // total supply was 123456789+234567890 = 358024679
+    // then we withdaw 35353535
+    // total supply is 358024679 - 35353535 = 322671144
+    // new shares to mint = total_supplly * amount_desired_target / reserve_target
+    // 322671144 * 2222222 / 111265915 = 6444443.610264365 = 6444443
+    assert_eq!(shares_minted, 6444443);
 
-    // // check user balances
-    // assert_eq!(test.token0.balance(&users[0]), amount - amount_to_deposit_0 + 12190874 - 2222222);
-    // assert_eq!(test.token1.balance(&users[0]), amount - amount_to_deposit_1 + 23162660 - 4222221);
+    assert_eq!(test.defindex_contract.total_supply(), 329115587); //358024679- 35353535 + 6444443
+    
 
-    // // check vault balance
-    // assert_eq!(test.token0.balance(&test.defindex_contract.address), 2222222);
-    // assert_eq!(test.token1.balance(&test.defindex_contract.address), 4222221);
+    // check user balances
+    assert_eq!(test.token0.balance(&users[0]), amount - amount_to_deposit_0 + 12190874 - 2222222);
+    assert_eq!(test.token1.balance(&users[0]), amount - amount_to_deposit_1 + 23162660 - 4222221);
 
-    // // check strategies balance
-    // assert_eq!(test.token0.balance(&test.strategy_client_token0.address), amount_to_deposit_0 - 12190874 + 2222222);
-    // assert_eq!(test.token1.balance(&test.strategy_client_token1.address), amount_to_deposit_1 - 23162660 + 4222221);
+    // check vault balance
+    assert_eq!(test.token0.balance(&test.defindex_contract.address), 2222222);
+    assert_eq!(test.token1.balance(&test.defindex_contract.address), 4222221);
 
-    // // user withdraws only from idle funds 716000 (10%) of what just deposited
-    // //  this should only affect idle funds
+    // check strategies balance
+    assert_eq!(test.token0.balance(&test.strategy_client_token0.address), amount_to_deposit_0 - 12190874);
+    assert_eq!(test.token1.balance(&test.strategy_client_token1.address), amount_to_deposit_1 - 23162660);
+
+    // user withdraws only from idle funds 644444 (10% of what just deposited)
+    //  this should only affect idle funds
+
+    let amount_to_withdraw = 644444i128;
+    let result = test.defindex_contract.withdraw(&amount_to_withdraw, &users[0]);
+
+    assert_eq!(test.defindex_contract.total_supply(), 328471143); //358024679- 35353535 + 6444443 - 644444
+ 
+
+    // the new totqal supply was 322671144+6444443 = 329115587
+    // the total managed funds for asset 0 was 2222222 (idle) + amount_to_deposit_0 - 12190874
+    // = 2222222 + 123456789 - 12190874 = 113488137
+
+    // the total managed funds for asset 1 was 4222221 (idle) + amount_to_deposit_1 - 23162660
+    // = 4222221 + 234567890 - 23162660 = 215627451
+
+    // the expected amount to withdraw for asset 0 was total_funds_0 * withdraw_shares / total_shares
+    // = 113488137 * 644444 / 329115587 = 222222.075920178 = 222222
+
+    // the expected amount to withdraw for asset 1 was total_funds_1 * withdraw_shares / total_shares
+    // = 215627451 * 644444 / 329115587 = 422221.92603793 = 422221
+
+    let expected_result = sorobanvec![&test.env, 222222, 422221];
+    assert_eq!(result, expected_result);
+
+    // check balances
+    assert_eq!(test.token0.balance(&users[0]), amount - amount_to_deposit_0 + 12190874 - 2222222 + 222222);
+    assert_eq!(test.token1.balance(&users[0]), amount - amount_to_deposit_1 + 23162660 - 4222221 + 422221);
+
+    // check vault balance
+    assert_eq!(test.token0.balance(&test.defindex_contract.address), 2222222 - 222222);
+    assert_eq!(test.token1.balance(&test.defindex_contract.address), 4222221 - 422221);
+
+    // check strategies balance
+
+    assert_eq!(test.token0.balance(&test.strategy_client_token0.address), amount_to_deposit_0 - 12190874);
+    assert_eq!(test.token1.balance(&test.strategy_client_token1.address), amount_to_deposit_1 - 23162660);
+
+    assert_eq!(test.defindex_contract.total_supply(), 328471143); //358024679- 35353535 + 6444443 - 644444
+
+    // check df tokens balance of user
+    assert_eq!(test.defindex_contract.balance(&users[0]), 328470143);
+
+    // // Now we will wihdraw the total remineder amount of vault shares of the user
+    // // 328471143 - 1000 = 328470143
+    let result = test.defindex_contract.withdraw(&328470143, &users[0]);
+    
+    
+    // from the total supply 328471143, the user will take 328470143 (almost all)
+    // for asset 0 this means
+    // 2222222 - 222222 (idle) + amount_to_deposit_0 - 12190874
+    // 2000000 + 123456789 - 12190874 = 113265915
+
+    // for asset 1 this means
+    // 4222221 - 422221 (idle) + amount_to_deposit_1 - 23162660
+    // 3800000 + 234567890 - 23162660 = 215205230
 
 
+    // amounts to withdraw
+    // for asset 0: total_funds_0 * withdraw_shares / total_shares
+    // 113265915 * 328470143 / 328471143 = 113265570.17240277 = 113265570
 
+    // for asset 1: total_funds_1 * withdraw_shares / total_shares
+    // 215205230 * 328470143 / 328471143 = 215204574.827591141 = 215204574
+
+    let expected_result = sorobanvec![&test.env, 113265570, 215204574];
+    assert_eq!(result, expected_result);
+
+    assert_eq!(test.defindex_contract.balance(&users[0]), 0);
+    assert_eq!(test.defindex_contract.balance(&test.defindex_contract.address), 1000);
+
+    // CHECK IDLE BALANCES
+    // check vault balance
+    assert_eq!(test.token0.balance(&test.defindex_contract.address), 0);
+    assert_eq!(test.token1.balance(&test.defindex_contract.address), 0);
+    
+
+    // check strategies balance, they will hold the rest
+    // for asset 0: total_funds_0 * 1000 / total_shares
+    // 113265915 - 113265570 = 345
+
+    // for asset 1: total_funds_1 * withdraw_shares / total_shares
+    // 215205230- 215204574 = 656
+    assert_eq!(test.token0.balance(&test.strategy_client_token0.address), 345);
+    assert_eq!(test.token1.balance(&test.strategy_client_token1.address), 656);
 }
 
 

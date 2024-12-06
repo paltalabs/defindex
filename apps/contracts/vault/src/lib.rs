@@ -316,7 +316,7 @@ impl VaultTrait for DeFindexVault {
 
                     for (i, strategy_allocation) in asset_allocation.strategy_allocations.iter().enumerate() {
                         let strategy_amount_to_unwind: i128 = if i == (asset_allocation.strategy_allocations.len() as usize) - 1 {
-                            remaining_amount_to_unwind
+                            requested_withdrawal_amount
                                 .checked_sub(cumulative_amount_for_asset)
                                 .unwrap()
                         } else {
