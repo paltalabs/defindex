@@ -25,8 +25,11 @@ mod blend_comet {
     soroban_sdk::contractimport!(file = "../external_wasms/blend/comet.wasm");
 }
 
-pub(crate) fn register_blend_strategy(e: &Env) -> Address {
-    e.register_contract(None, BlendStrategy {})
+pub(crate) fn register_blend_strategy(e: &Env, asset: &Address, blend_pool: &Address, reserve_id: &u32, blend_token: &Address, soroswap_router: &Address) -> Address {
+    let init_args: Vec<Val>= vec![e, blend_pool.into_val(e), reserve_id.into_val(e), blend_token.into_val(e), soroswap_router.into_val(e)];
+
+    let args = (asset, init_args);
+    e.register(BlendStrategy, args)
 }
 
 pub struct BlendFixture<'a> {
@@ -44,7 +47,7 @@ pub(crate) fn create_blend_pool(
     xlm: &MockTokenClient,
 ) -> Address {
     // Mint usdc to admin
-    usdc.mint(&admin, &200_000_0000000);
+    usdc.mint(admin, &200_000_0000000);
     // Mint xlm to admin
     xlm.mint(&admin, &200_000_0000000);
 

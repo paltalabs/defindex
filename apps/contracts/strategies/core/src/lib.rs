@@ -29,11 +29,11 @@ pub trait DeFindexStrategyTrait {
     /// # Returns
     /// - `Ok(())` if the strategy is successfully initialized.
     /// - `Err(StrategyError)` if an error occurs during initialization.
-    fn initialize(
+    fn __constructor(
         env: Env,
         asset: Address,
         init_args: Vec<Val>,
-    ) -> Result<(), StrategyError>;
+    );
 
     /// Returns the underlying asset address managed by the strategy.
     ///

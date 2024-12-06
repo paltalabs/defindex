@@ -2,7 +2,7 @@ use soroban_sdk::{vec as sorobanvec, String, Vec, Map};
 
 use crate::test::defindex_vault::{AssetStrategySet, StrategyAllocation, CurrentAssetInvestmentAllocation};
 use crate::test::{
-    create_strategy_params_token0, create_strategy_params_token1, DeFindexVaultTest,
+    create_defindex_vault, create_strategy_params_token0, create_strategy_params_token1, DeFindexVaultTest
 };
 
 // test deposit one asset success 
@@ -21,16 +21,17 @@ fn one_asset_success() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount = 123456789i128;
 
@@ -41,11 +42,11 @@ fn one_asset_success() {
     let user_balance = test.token0.balance(&users[0]);
     assert_eq!(user_balance, amount);
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
     // deposit AND INVEST
-    test.defindex_contract.deposit(
+    defindex_contract.deposit(
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
@@ -53,13 +54,13 @@ fn one_asset_success() {
     );
 
     // check balances after deposit
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount - 1000);
     
     let user_balance = test.token0.balance(&users[0]);
     assert_eq!(user_balance, 0i128);
 
-    let vault_balance = test.token0.balance(&test.defindex_contract.address);
+    let vault_balance = test.token0.balance(&defindex_contract.address);
     assert_eq!(vault_balance, 0);
 
     // check total managed funds
@@ -78,7 +79,7 @@ fn one_asset_success() {
         strategy_allocations: strategy_investments_expected_token_0,
     });
 
-    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
+    let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
 
     
@@ -87,14 +88,14 @@ fn one_asset_success() {
     // check current idle funds, 
     let mut expected_idle_map = Map::new(&test.env);
     expected_idle_map.set(test.token0.address.clone(), 0);
-    let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
+    let current_idle_funds = defindex_contract.fetch_current_idle_funds();
     assert_eq!(current_idle_funds, expected_idle_map);
     
     // check that current invested funds is now 0, funds still in idle funds
     //map shuould be map
     let mut expected_invested_map = Map::new(&test.env);
     expected_invested_map.set(test.token0.address.clone(), amount);
-    let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
+    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
     assert_eq!(current_invested_funds, expected_invested_map);
 
     // Now user deposits for the second time
@@ -104,7 +105,7 @@ fn one_asset_success() {
     assert_eq!(user_balance, amount2);
 
     // deposit AND INVEST
-    test.defindex_contract.deposit(
+    defindex_contract.deposit(
         &sorobanvec![&test.env, amount2],
         &sorobanvec![&test.env, amount2],
         &users[0],
@@ -113,14 +114,14 @@ fn one_asset_success() {
 
     
     // check balances after deposit
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount + amount2 - 1000);
     
     let user_balance = test.token0.balance(&users[0]);
     assert_eq!(user_balance, 0i128);
     
     // check that the assets are not in the vault
-    let vault_balance = test.token0.balance(&test.defindex_contract.address);
+    let vault_balance = test.token0.balance(&defindex_contract.address);
     assert_eq!(vault_balance, 0);
     
     // check that fetch_total_managed_funds returns correct amount
@@ -139,19 +140,19 @@ fn one_asset_success() {
         strategy_allocations: strategy_investments_expected_token_0,
     });
 
-    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
+    let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
     
     // check current idle funds
     let mut expected_idle_map = Map::new(&test.env);
     expected_idle_map.set(test.token0.address.clone(), 0);
-    let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
+    let current_idle_funds = defindex_contract.fetch_current_idle_funds();
     assert_eq!(current_idle_funds, expected_idle_map);
     
     // check that current invested funds is now 0, funds still in idle funds
     let mut expected_invested_map = Map::new(&test.env);
     expected_invested_map.set(test.token0.address.clone(), amount + amount2);
-    let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
+    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
     assert_eq!(current_invested_funds, expected_invested_map);
 }
 
@@ -176,16 +177,17 @@ fn several_assets_success() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount0 = 123456789i128;
     let amount1 = 987654321i128;
@@ -200,11 +202,11 @@ fn several_assets_success() {
     let user_balance1 = test.token1.balance(&users[0]);
     assert_eq!(user_balance1, amount1);
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
     // deposit
-    let deposit_result=test.defindex_contract.deposit(
+    let deposit_result=defindex_contract.deposit(
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0, amount1],
         &users[0],
@@ -215,12 +217,12 @@ fn several_assets_success() {
     assert_eq!(deposit_result, (sorobanvec![&test.env, amount0, amount1], amount0 + amount1));
 
     // check balances after deposit
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     // For first deposit, a minimum amount LIQUIDITY OF 1000 is being locked in the contract
     assert_eq!(df_balance, amount0 + amount1 - 1000);
 
     // check that the vault holds 1000 shares
-    let vault_df_shares = test.defindex_contract.balance(&test.defindex_contract.address);
+    let vault_df_shares = defindex_contract.balance(&defindex_contract.address);
     assert_eq!(vault_df_shares, 1000i128);
     
     let user_balance0 = test.token0.balance(&users[0]);
@@ -229,10 +231,10 @@ fn several_assets_success() {
     assert_eq!(user_balance1,0i128);
 
     // check vault balance of asset 0
-    let vault_balance0 = test.token0.balance(&test.defindex_contract.address);
+    let vault_balance0 = test.token0.balance(&defindex_contract.address);
     assert_eq!(vault_balance0, 0);
     // check vault balance of asset 1
-    let vault_balance1 = test.token1.balance(&test.defindex_contract.address);
+    let vault_balance1 = test.token1.balance(&defindex_contract.address);
     assert_eq!(vault_balance1, 0);
 
     // check that fetch_total_managed_funds returns correct amount
@@ -262,21 +264,21 @@ fn several_assets_success() {
         strategy_allocations: strategy_investments_expected_token_1,
     });
 
-    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
+    let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
     
     // check current idle funds
     let mut expected_idle_map = Map::new(&test.env);
     expected_idle_map.set(test.token0.address.clone(), 0);
     expected_idle_map.set(test.token1.address.clone(), 0);
-    let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
+    let current_idle_funds = defindex_contract.fetch_current_idle_funds();
     assert_eq!(current_idle_funds, expected_idle_map);
     
     // check that current invested funds is now correct, funds should be invested
     let mut expected_invested_map = Map::new(&test.env);
     expected_invested_map.set(test.token0.address.clone(), amount0);
     expected_invested_map.set(test.token1.address.clone(), amount1);
-    let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
+    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
     assert_eq!(current_invested_funds, expected_invested_map);
 
     // new user wants to do a deposit with more assets 0 than the proportion, but with minium amount 0
@@ -296,7 +298,7 @@ fn several_assets_success() {
 
 
     // user 1 deposits
-    let deposit_result=test.defindex_contract.deposit(
+    let deposit_result=defindex_contract.deposit(
         &sorobanvec![&test.env, amount0_new, amount1_new],
         &sorobanvec![&test.env, 0i128, 0i128],
         &users[1],
@@ -310,7 +312,7 @@ fn several_assets_success() {
 
 
     // check balances after deposit
-    let df_balance = test.defindex_contract.balance(&users[1]);
+    let df_balance = defindex_contract.balance(&users[1]);
     assert_eq!(df_balance, 2*(amount0 + amount1));
 
     let user_balance0 = test.token0.balance(&users[1]);
@@ -320,10 +322,10 @@ fn several_assets_success() {
     assert_eq!(user_balance1, amount1_new - 2*amount1);
 
     // check vault balance of asset 0
-    let vault_balance0 = test.token0.balance(&test.defindex_contract.address);
+    let vault_balance0 = test.token0.balance(&defindex_contract.address);
     assert_eq!(vault_balance0, 0);
     // check vault balance of asset 1
-    let vault_balance1 = test.token1.balance(&test.defindex_contract.address);
+    let vault_balance1 = test.token1.balance(&defindex_contract.address);
     assert_eq!(vault_balance1, 0);
 
     
@@ -353,21 +355,21 @@ fn several_assets_success() {
         invested_amount: amount1*3,
         strategy_allocations: strategy_investments_expected_token_1,
     });
-    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
+    let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
     
     // check current idle funds
     let mut expected_idle_map = Map::new(&test.env);
     expected_idle_map.set(test.token0.address.clone(), 0);
     expected_idle_map.set(test.token1.address.clone(), 0);
-    let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
+    let current_idle_funds = defindex_contract.fetch_current_idle_funds();
     assert_eq!(current_idle_funds, expected_idle_map);
     
     // check that current invested funds is now 0, funds still in idle funds
     let mut expected_invested_map = Map::new(&test.env);
     expected_invested_map.set(test.token0.address.clone(), 3*amount0);
     expected_invested_map.set(test.token1.address.clone(), 3*amount1);
-    let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
+    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
     assert_eq!(current_invested_funds, expected_invested_map);
 
     // we will repeat one more time, now enforcing the first asset
@@ -385,7 +387,7 @@ fn several_assets_success() {
     assert_eq!(user_balance1, amount1_new);
 
     // user 1 deposits
-    let deposit_result=test.defindex_contract.deposit(
+    let deposit_result=defindex_contract.deposit(
         &sorobanvec![&test.env, amount0_new, amount1_new],
         &sorobanvec![&test.env, 0i128, 0i128],
         &users[1],

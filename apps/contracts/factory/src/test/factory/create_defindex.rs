@@ -6,8 +6,6 @@ use crate::test::{create_asset_params, DeFindexFactoryTest};
 fn create_success() {
   let test = DeFindexFactoryTest::setup();
 
-  test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &100u32, &test.defindex_wasm_hash);
-
   let asset_params = create_asset_params(&test);
 
   let salt = BytesN::from_array(&test.env, &[0; 32]);
@@ -31,8 +29,6 @@ fn create_success() {
 fn create_and_deposit_success() {
   let test = DeFindexFactoryTest::setup();
   test.env.mock_all_auths();
-
-  test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &100u32, &test.defindex_wasm_hash);
 
   let asset_params = create_asset_params(&test);
   let salt = BytesN::from_array(&test.env, &[0; 32]);

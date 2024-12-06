@@ -4,17 +4,22 @@ use crate::{FixAprStrategy, FixAprStrategyClient, StrategyError};
 
 use soroban_sdk::token::TokenClient;
 
+use soroban_sdk::{vec, Val, Vec};
 use soroban_sdk::{
     Env, 
     Address, 
     testutils::Address as _,
+    IntoVal,
 };
 
 use std::vec as stdvec;
 
 // Base Strategy Contract
-fn create_fixapr_strategy<'a>(e: &Env) -> FixAprStrategyClient<'a> {
-    FixAprStrategyClient::new(e, &e.register_contract(None, FixAprStrategy {}))
+pub fn create_fixapr_strategy<'a>(e: &Env, asset: &Address, apr_bps: u32, caller: &Address, amount: i128) -> FixAprStrategyClient<'a> {
+    let init_args: Vec<Val>= vec![e, apr_bps.into_val(e), caller.clone().into_val(e), amount.into_val(e)];
+
+    let args = (asset, init_args);
+    FixAprStrategyClient::new(e, &e.register(FixAprStrategy, args))
 }
 
 // Create Test Token
@@ -24,7 +29,6 @@ pub(crate) fn create_token_contract<'a>(e: &Env, admin: &Address) -> TokenClient
 
 pub struct FixAprStrategyTest<'a> {
     env: Env,
-    strategy: FixAprStrategyClient<'a>,
     token: TokenClient<'a>,
     strategy_admin: Address,
 }
@@ -35,7 +39,6 @@ impl<'a> FixAprStrategyTest<'a> {
         let env = Env::default();
         env.mock_all_auths();
 
-        let strategy = create_fixapr_strategy(&env);
         let admin = Address::generate(&env);
         let token = create_token_contract(&env, &admin);
 
@@ -43,7 +46,6 @@ impl<'a> FixAprStrategyTest<'a> {
 
         FixAprStrategyTest {
             env,
-            strategy,
             token,
             strategy_admin
         }

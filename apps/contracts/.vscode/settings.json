@@ -1,0 +1,8 @@
+{
+    "rust-analyzer.check.overrideCommand": [
+        "cargo",
+        "scout-audit",
+        "--",
+        "--message-format=json"
+    ]
+}

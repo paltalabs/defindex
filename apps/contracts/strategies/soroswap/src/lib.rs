@@ -2,17 +2,12 @@
 use soroban_sdk::{
     auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation}, contract, contractimpl, vec, Address, Env, IntoVal, String, Symbol, Val, Vec};
 
-mod event;
 mod storage;
 mod soroswap_router;
 mod soroswap_pair;
 
 use storage::{
-    extend_instance_ttl, 
-    set_initialized, 
-    is_initialized, 
-    set_soroswap_router_address, 
-    get_soroswap_router_address,
+    extend_instance_ttl, get_soroswap_router_address, has_soroswap_router_address, set_soroswap_router_address
 };
 use soroswap_router::SoroswapRouterClient;
 use soroswap_pair::SoroswapPairClient;
@@ -27,7 +22,7 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
 }
 
 fn check_initialized(e: &Env) -> Result<(), StrategyError> {
-    if is_initialized(e) {
+    if has_soroswap_router_address(e) {
         Ok(())
     } else {
         Err(StrategyError::NotInitialized)
@@ -39,23 +34,14 @@ struct SoroswapAdapter;
 
 #[contractimpl]
 impl DeFindexStrategyTrait for SoroswapAdapter {
-    fn initialize(
+    fn __constructor(
         e: Env,
         _asset: Address,
         init_args: Vec<Val>,
-    ) -> Result<(), StrategyError> {
-        if is_initialized(&e) {
-            return Err(StrategyError::AlreadyInitialized);
-        }
-
-        let protocol_address = init_args.get(0).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
+    ) {
+        let protocol_address = init_args.get(0).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
     
-        set_initialized(&e);
         set_soroswap_router_address(&e, protocol_address);
-
-        event::initialized(&e, true);
-        extend_instance_ttl(&e);
-        Ok(())
     }
 
     fn asset(e: Env) -> Result<Address, StrategyError> {

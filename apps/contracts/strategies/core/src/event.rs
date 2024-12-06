@@ -3,28 +3,6 @@
 //! to ensure compliance with the expected event interface.
 use soroban_sdk::{contracttype, symbol_short, Address, Env, String};
 
-// INITIALIZED
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct InitializedEvent {
-    pub asset: Address
-}
-
-/// Publishes an `InitializedEvent` to the event stream.
-/// 
-/// # Arguments
-/// 
-/// * `e` - An instance of the `Env` struct.
-/// * `strategy_name` - The name of the strategy.
-/// * `asset` - The address of the asset that the strategy is initialized with.
-pub fn emit_initialize(e: &Env, strategy_name: String, asset: Address) {
-    
-    let event: InitializedEvent = InitializedEvent {
-        asset
-    };
-    e.events().publish((strategy_name, symbol_short!("init")), event);
-}
-
 // DEPOSIT EVENT
 #[contracttype] 
 #[derive(Clone, Debug, Eq, PartialEq)]

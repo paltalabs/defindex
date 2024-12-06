@@ -41,19 +41,15 @@ struct FixAprStrategy;
 
 #[contractimpl]
 impl DeFindexStrategyTrait for FixAprStrategy {
-    fn initialize(
+    fn __constructor(
         e: Env,
         asset: Address,
         init_args: Vec<Val>,
-    ) -> Result<(), StrategyError> {
-        if is_initialized(&e) {
-            return Err(StrategyError::AlreadyInitialized);
-        }
-
+    ) {
         // Extract APR from `init_args`, assumed to be the first argument
-        let apr_bps: u32 = init_args.get(0).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
-        let caller: Address = init_args.get(1).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
-        let amount: i128 = init_args.get(2).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
+        let apr_bps: u32 = init_args.get(0).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
+        let caller: Address = init_args.get(1).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
+        let amount: i128 = init_args.get(2).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
         
         set_initialized(&e);
         set_underlying_asset(&e, &asset);
@@ -62,10 +58,6 @@ impl DeFindexStrategyTrait for FixAprStrategy {
         // Should transfer tokens from the caller to the contract
         caller.require_auth();
         TokenClient::new(&e, &asset).transfer(&caller, &e.current_contract_address(), &amount);
-
-        event::emit_initialize(&e, String::from_str(&e, STRATEGY_NAME), asset);
-        extend_instance_ttl(&e);
-        Ok(())
     }
 
     fn asset(e: Env) -> Result<Address, StrategyError> {

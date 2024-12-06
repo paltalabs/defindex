@@ -1,13 +1,12 @@
 #![no_std]
 
-mod event;
 mod storage;
 mod soroswap_router;
 mod xycloans_pool;
 
 use soroban_sdk::{contract, contractimpl, Address, Env, IntoVal, Val, Vec};
 use storage::{
-    extend_instance_ttl, get_pool_token, get_token_in, get_xycloans_pool_address, is_initialized, set_initialized, set_soroswap_router_address, set_pool_token, set_token_in, set_xycloans_pool_address, set_soroswap_factory_address, get_soroswap_factory_address
+    extend_instance_ttl, get_pool_token, get_token_in, get_xycloans_pool_address, set_soroswap_router_address, set_pool_token, set_token_in, set_xycloans_pool_address, set_soroswap_factory_address, get_soroswap_factory_address
 };
 use soroswap_router::{get_amount_out, get_reserves, swap};
 use xycloans_pool::XycloansPoolClient;
@@ -21,49 +20,32 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
     }
 }
 
-fn check_initialized(e: &Env) -> Result<(), StrategyError> {
-    if is_initialized(e) {
-        Ok(())
-    } else {
-        Err(StrategyError::NotInitialized)
-    }
-}
+// TODO: Needs check initialized
 
 #[contract]
 struct XycloansAdapter;
 
 #[contractimpl]
 impl DeFindexStrategyTrait for XycloansAdapter {
-    fn initialize(
+    fn __constructor(
         e: Env,
         _asset: Address,
         init_args: Vec<Val>,
-    ) -> Result<(), StrategyError> {
-
-        if is_initialized(&e) {
-            return Err(StrategyError::AlreadyInitialized);
-        }
-
-        let soroswap_router_address = init_args.get(0).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
-        let soroswap_factory_address = init_args.get(1).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
-        let xycloans_pool_address = init_args.get(2).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
-        let pool_token = init_args.get(3).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
-        let token_in = init_args.get(4).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
+    ) {
+        let soroswap_router_address = init_args.get(0).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
+        let soroswap_factory_address = init_args.get(1).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
+        let xycloans_pool_address = init_args.get(2).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
+        let pool_token = init_args.get(3).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
+        let token_in = init_args.get(4).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
     
-        set_initialized(&e);
         set_soroswap_router_address(&e, soroswap_router_address);
         set_soroswap_factory_address(&e, soroswap_factory_address);
         set_xycloans_pool_address(&e, xycloans_pool_address);
         set_pool_token(&e, pool_token);
         set_token_in(&e, token_in);
-
-        event::initialized(&e, true);
-        extend_instance_ttl(&e);
-        Ok(())
     }
 
     fn asset(e: Env) -> Result<Address, StrategyError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
 
         Ok(get_token_in(&e))
@@ -74,7 +56,6 @@ impl DeFindexStrategyTrait for XycloansAdapter {
         amount: i128,
         from: Address,
     ) -> Result<(), StrategyError> {
-        check_initialized(&e)?;
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
         from.require_auth();
@@ -93,7 +74,6 @@ impl DeFindexStrategyTrait for XycloansAdapter {
     }
 
     fn harvest(e: Env, _from: Address) -> Result<(), StrategyError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
 
         Ok(())
@@ -105,7 +85,6 @@ impl DeFindexStrategyTrait for XycloansAdapter {
         from: Address,
     ) -> Result<i128, StrategyError> {
         from.require_auth();
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
 
         let xycloans_address = get_xycloans_pool_address(&e);
@@ -133,7 +112,6 @@ impl DeFindexStrategyTrait for XycloansAdapter {
         e: Env,
         from: Address,
     ) -> Result<i128, StrategyError> {
-        check_initialized(&e)?;
 
         let xycloans_address = get_xycloans_pool_address(&e);
         let xycloans_pool_client = XycloansPoolClient::new(&e, &xycloans_address);
@@ -166,5 +144,3 @@ impl DeFindexStrategyTrait for XycloansAdapter {
         Ok(amount_out)
     }
 }
-
-// mod test; // TODO: Uncomment when working on this vault/tests

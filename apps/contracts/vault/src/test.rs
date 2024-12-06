@@ -29,10 +29,22 @@ pub mod defindex_vault {
     );
     pub type DeFindexVaultClient<'a> = Client<'a>;
 }
-use defindex_vault::{DeFindexVaultClient, Strategy};
+use defindex_vault::{AssetStrategySet, DeFindexVaultClient, Strategy};
 
-fn create_defindex_vault<'a>(e: &Env) -> DeFindexVaultClient<'a> {
-    let address = &e.register_contract_wasm(None, defindex_vault::WASM);
+pub fn create_defindex_vault<'a>(
+    e: &Env,
+    assets: Vec<AssetStrategySet>,
+    manager: Address,
+    emergency_manager: Address,
+    vault_fee_receiver: Address,
+    vault_fee: u32,
+    defindex_protocol_receiver: Address,
+    factory: Address,
+    vault_name: String,
+    vault_symbol: String,
+) -> DeFindexVaultClient<'a> {
+    let args = (assets, manager, emergency_manager, vault_fee_receiver, vault_fee, defindex_protocol_receiver, factory, vault_name, vault_symbol);
+    let address = &e.register(defindex_vault::WASM, args);
     let client = DeFindexVaultClient::new(e, address);
     client
 }
@@ -93,7 +105,6 @@ pub(crate) fn create_strategy_params_token1(test: &DeFindexVaultTest) -> Vec<Str
 pub struct DeFindexVaultTest<'a> {
     env: Env,
     defindex_factory: Address,
-    defindex_contract: DeFindexVaultClient<'a>,
     token0_admin_client: SorobanTokenAdminClient<'a>,
     token0: SorobanTokenClient<'a>,
     token0_admin: Address,
@@ -115,8 +126,6 @@ impl<'a> DeFindexVaultTest<'a> {
 
         // Mockup, should be the factory contract
         let defindex_factory = Address::generate(&env);
-
-        let defindex_contract = create_defindex_vault(&env);
 
         let emergency_manager = Address::generate(&env);
         let vault_fee_receiver = Address::generate(&env);
@@ -142,7 +151,6 @@ impl<'a> DeFindexVaultTest<'a> {
         DeFindexVaultTest {
             env,
             defindex_factory,
-            defindex_contract,
             token0_admin_client,
             token0,
             token0_admin,
