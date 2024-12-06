@@ -13,14 +13,15 @@ Even if we would provide the best user experience, every Vault only accepts the 
 To understand better why we decide this please check the [Why we can`t swap on deposit](../10-apendix/01-why-we-cant-swap-on-deposit-or-withdraw.md) section.
 
 ## IDLE funds.
-- Security: Enables emergency withdrawal
-- Performance: Separate high CPU instructions limits tx.
-- Transaction Cost: Enable small investment that wont  be affected by costly txs.
+IDLE funds are funds that are not being used for any strategy. But they are protected by being held inside the DeFindex Smart Contracts.
+- Security: Enables emergency withdrawal. This means that if a DeFi protocol gets too risky, the users won't lose their funds because they can be withdrawn from the DeFi protocol to the DeFindex Smart Contracts.
+- Performance: Enable multi transaction movements.
+- Transaction Cost: Enable small transactions that wont be affected by costly txs.
 
 ## Emergency Withdrawal
-- Secutiry. We have roles.
+- It allows the Emergency Manager to rescue funds in case of an emergency. These are held in the DeFindex Smart Contracts. Thus, the users won't lose their funds and they will be able to withdraw them anytime.
 
 ## Roles
-- Manager
-- Emergency Manager
-- Fee Receiver
+- Manager: Can change the Emergency Manager and the Fee Receiver. Rebalance between strategies to optimize the performance and minimize the risk.
+- Emergency Manager: Can rescue funds in case of an emergency.
+- Fee Receiver: Receives the fees that the protocol pays to incentivize good management.
