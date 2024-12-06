@@ -1,0 +1,20 @@
+[book]
+authors = ["Francisco Catrileo", "Joaquin Soza", "Esteban Iglesias"]
+language = "en"
+multilingual = false
+src = "."
+title = "DeFindex Whitepaper"
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/yourusername/yourrepo"
+mathjax-support = true
+
+[preprocessor.katex]
+after = ["links"]
+
+[output.pdf]
+optional = true
+pdf.links = false
+no-links = true
