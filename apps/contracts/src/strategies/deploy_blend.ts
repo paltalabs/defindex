@@ -9,6 +9,11 @@ import {
 import { config } from "../utils/env_config.js";
 
 export async function deployBlendStrategy(addressBook: AddressBook) {
+  if (network == "standalone") {
+    console.log("Blend Strategy can only be tested in testnet or mainnet");
+    console.log("Since it requires Blend protocol to be deployed");
+    return;
+  };
   if (network != "mainnet") await airdropAccount(loadedConfig.admin);
   let account = await loadedConfig.horizonRpc.loadAccount(
     loadedConfig.admin.publicKey()
