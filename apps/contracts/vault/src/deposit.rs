@@ -57,7 +57,7 @@ pub fn process_deposit(
     }
 
     // Mint shares
-    mint_shares(e, total_supply, shares_to_mint, from.clone())?;
+    mint_shares(e, &total_supply, shares_to_mint, from.clone())?;
 
     Ok((amounts, shares_to_mint))
 }
@@ -88,11 +88,11 @@ fn calculate_single_asset_shares(
 /// Mint vault shares.
 fn mint_shares(
     e: &Env,
-    total_supply: i128,
+    total_supply: &i128,
     shares_to_mint: i128,
     from: Address,
 ) -> Result<(), ContractError> {
-    if total_supply == 0 {
+    if *total_supply == 0 {
         if shares_to_mint < MINIMUM_LIQUIDITY {
             panic_with_error!(&e, ContractError::InsufficientAmount);
         }

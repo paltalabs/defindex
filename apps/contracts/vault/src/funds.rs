@@ -47,7 +47,7 @@ pub fn fetch_invested_funds_for_asset(e: &Env, asset: &AssetStrategySet) -> (i12
         });
     }
     (invested_funds, strategy_allocations)
-}
+} 
 
 
 /// Fetches the current idle funds for all assets managed by the contract.

@@ -178,3 +178,9 @@ fn emergency_withdraw_not_yet_initialized() {
         .try_emergency_withdraw(&strategy_params_token1.first().unwrap().address, &users[0]);
     assert_eq!(result, Err(Ok(ContractError::NotInitialized)));
 }
+
+// test initialzie with one asset and several strategies for the same asset
+#[test]
+fn with_one_asset_and_several_strategies() {
+    todo!();
+}
