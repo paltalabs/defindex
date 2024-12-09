@@ -2,11 +2,11 @@
 extern crate std;
 
 use crate::{
-    blend_pool::{self, BlendPoolClient, Request, ReserveConfig, ReserveEmissionMetadata}, storage::DAY_IN_LEDGERS, BlendStrategy, BlendStrategyClient
+    blend_pool::{self, BlendPoolClient, Request, ReserveConfig, ReserveEmissionMetadata}, storage::DAY_IN_LEDGERS, BlendStrategy
 };
 use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::{
-    testutils::{Address as _, BytesN as _, Ledger as _, LedgerInfo}, token::StellarAssetClient, vec, Address, BytesN, Env, IntoVal, String, Symbol, Val, Vec
+    testutils::{BytesN as _, Ledger as _, LedgerInfo}, token::StellarAssetClient, vec, Address, BytesN, Env, IntoVal, String, Symbol, Val, Vec
 };
 
 mod blend_factory_pool {
@@ -25,8 +25,11 @@ mod blend_comet {
     soroban_sdk::contractimport!(file = "../external_wasms/blend/comet.wasm");
 }
 
-pub(crate) fn register_blend_strategy(e: &Env) -> Address {
-    e.register_contract(None, BlendStrategy {})
+pub(crate) fn register_blend_strategy(e: &Env, asset: &Address, blend_pool: &Address, reserve_id: &u32, blend_token: &Address, soroswap_router: &Address) -> Address {
+    let init_args: Vec<Val>= vec![e, blend_pool.into_val(e), reserve_id.into_val(e), blend_token.into_val(e), soroswap_router.into_val(e)];
+
+    let args = (asset, init_args);
+    e.register(BlendStrategy, args)
 }
 
 pub struct BlendFixture<'a> {
@@ -44,7 +47,7 @@ pub(crate) fn create_blend_pool(
     xlm: &MockTokenClient,
 ) -> Address {
     // Mint usdc to admin
-    usdc.mint(&admin, &200_000_0000000);
+    usdc.mint(admin, &200_000_0000000);
     // Mint xlm to admin
     xlm.mint(&admin, &200_000_0000000);
 
@@ -157,17 +160,8 @@ pub(crate) fn create_blend_pool(
 
 /// Create a Blend Strategy
 pub(crate) fn create_blend_strategy(e: &Env, underlying_asset: &Address, blend_pool: &Address, reserve_id: &u32, blend_token: &Address, soroswap_router: &Address) -> Address {
-    let address = register_blend_strategy(e);
-    let client = BlendStrategyClient::new(e, &address);
-
-    let init_args: Vec<Val> = vec![e,
-        blend_pool.into_val(e),
-        reserve_id.into_val(e),
-        blend_token.into_val(e),
-        soroswap_router.into_val(e),
-    ];
-
-    client.initialize(&underlying_asset, &init_args);
+    let address = register_blend_strategy(e, underlying_asset, blend_pool, reserve_id, blend_token, soroswap_router);
+    
     address
 }
 
@@ -189,7 +183,7 @@ impl EnvTestUtils for Env {
     fn jump(&self, ledgers: u32) {
         self.ledger().set(LedgerInfo {
             timestamp: self.ledger().timestamp().saturating_add(ledgers as u64 * 5),
-            protocol_version: 21,
+            protocol_version: 22,
             sequence_number: self.ledger().sequence().saturating_add(ledgers),
             network_id: Default::default(),
             base_reserve: 10,
@@ -215,7 +209,7 @@ impl EnvTestUtils for Env {
     fn set_default_info(&self) {
         self.ledger().set(LedgerInfo {
             timestamp: 1441065600, // Sept 1st, 2015 12:00:00 AM UTC
-            protocol_version: 21,
+            protocol_version: 22,
             sequence_number: 100,
             network_id: Default::default(),
             base_reserve: 10,
@@ -257,8 +251,7 @@ impl EnvTestUtils for Env {
 use sep_40_oracle::testutils::{Asset, MockPriceOracleClient, MockPriceOracleWASM};
 
 pub fn create_mock_oracle<'a>(e: &Env) -> (Address, MockPriceOracleClient<'a>) {
-    let contract_id = Address::generate(e);
-    e.register_contract_wasm(&contract_id, MockPriceOracleWASM);
+    let contract_id = e.register(MockPriceOracleWASM, ());
     (
         contract_id.clone(),
         MockPriceOracleClient::new(e, &contract_id),
@@ -284,10 +277,10 @@ impl<'a> BlendFixture<'a> {
         usdc: &Address,
     ) -> BlendFixture<'a> {
         env.budget().reset_unlimited();
-        let backstop = env.register_contract_wasm(None, blend_backstop::WASM);
-        let emitter = env.register_contract_wasm(None, blend_emitter::WASM);
-        let comet = env.register_contract_wasm(None, blend_comet::WASM);
-        let pool_factory = env.register_contract_wasm(None, blend_factory_pool::WASM);
+        let backstop = env.register(blend_backstop::WASM, ());
+        let emitter = env.register(blend_emitter::WASM, ());
+        let comet = env.register(blend_comet::WASM, ());
+        let pool_factory = env.register(blend_factory_pool::WASM, ());
         let blnd_client = StellarAssetClient::new(env, &blnd);
         let usdc_client = StellarAssetClient::new(env, &usdc);
         blnd_client

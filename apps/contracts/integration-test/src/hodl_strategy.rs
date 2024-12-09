@@ -5,11 +5,11 @@ mod hodl_strategy {
 }
 
 pub use hodl_strategy::HodlStrategyClient;
-use soroban_sdk::{Address, Env, Val, Vec};
+use soroban_sdk::{Address, Env, Val, Vec, vec};
 
-pub fn create_hodl_strategy_contract<'a>(e: &Env, asset: &Address, init_args: &Vec<Val>) -> HodlStrategyClient<'a> {
-    let address = &e.register_contract_wasm(None, hodl_strategy::WASM);
-    let strategy = HodlStrategyClient::new(e, address); 
-    strategy.initialize(asset, init_args);
-    strategy
+pub fn create_hodl_strategy_contract<'a>(e: &Env, asset: &Address) -> HodlStrategyClient<'a> {
+    let init_args: Vec<Val>= vec![e];
+    let args = (asset.clone(), init_args);
+
+    HodlStrategyClient::new(e, &e.register(hodl_strategy::WASM, args))
 }

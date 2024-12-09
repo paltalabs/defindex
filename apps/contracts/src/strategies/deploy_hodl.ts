@@ -1,10 +1,9 @@
-import { Address, Asset, Networks, xdr } from "@stellar/stellar-sdk";
+import { Address, Asset, xdr } from "@stellar/stellar-sdk";
 import { AddressBook } from "../utils/address_book.js";
 import {
   airdropAccount,
   deployContract,
-  installContract,
-  invokeContract,
+  installContract
 } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
 
@@ -21,41 +20,20 @@ export async function deployContracts(addressBook: AddressBook) {
   console.log("Deploying Hodl Strategy");
   console.log("-------------------------------------------------------");
   await installContract("hodl_strategy", addressBook, loadedConfig.admin);
+
+  const xlmAddress = new Address(Asset.native().contractId(loadedConfig.passphrase));
+  const xlmScVal = xlmAddress.toScVal();
+
+  // const soroswapUSDC = new Address("CAAFIHB4I7WQMJMKC22CZVQNNX7EONWSOMT6SUXK6I3G3F6J4XFRWNDI");
+  // const usdcScVal = soroswapUSDC.toScVal();
+
+  const emptyVecScVal = xdr.ScVal.scvVec([]);
+
   await deployContract(
     "hodl_strategy",
     "hodl_strategy",
     addressBook,
-    loadedConfig.admin
-  );
-
-  const xlm = Asset.native();
-  let xlmContractId: string;
-  switch (network) {
-    case "testnet":
-      xlmContractId = xlm.contractId(Networks.TESTNET);
-      break;
-    case "mainnet":
-      xlmContractId = xlm.contractId(Networks.PUBLIC);
-      break;
-    default:
-      console.log("Invalid network:", network, "It should be either testnet or mainnet");
-      return;
-      break;
-  }
-  const xlmAddress = new Address(xlmContractId);
-  const xlmScVal = xlmAddress.toScVal();
-
-  const soroswapUSDC = new Address("CAAFIHB4I7WQMJMKC22CZVQNNX7EONWSOMT6SUXK6I3G3F6J4XFRWNDI");
-  const usdcScVal = soroswapUSDC.toScVal();
-
-  const emptyVecScVal = xdr.ScVal.scvVec([]);
-
-  console.log("Initializing DeFindex HODL Strategy");
-  await invokeContract(
-    "hodl_strategy",
-    addressBook,
-    "initialize",
-    [usdcScVal, emptyVecScVal],
+    [xlmScVal, emptyVecScVal],
     loadedConfig.admin
   );
 }

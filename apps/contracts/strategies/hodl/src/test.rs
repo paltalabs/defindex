@@ -3,6 +3,7 @@ use crate::{HodlStrategy, HodlStrategyClient, StrategyError};
 
 use soroban_sdk::token::{TokenClient, StellarAssetClient};
 
+use soroban_sdk::{vec, Val, Vec};
 use soroban_sdk::{
     Env, 
     Address, 
@@ -10,8 +11,11 @@ use soroban_sdk::{
 };
 
 // Base Strategy Contract
-fn create_hodl_strategy<'a>(e: &Env) -> HodlStrategyClient<'a> {
-    HodlStrategyClient::new(e, &e.register_contract(None, HodlStrategy {}))
+pub fn create_hodl_strategy<'a>(e: &Env, asset: &Address) -> HodlStrategyClient<'a> {
+    let init_args: Vec<Val>= vec![e];
+
+    let args = (asset, init_args);
+    HodlStrategyClient::new(e, &e.register(HodlStrategy, args))
 }
 
 // Create Test Token
@@ -21,7 +25,6 @@ pub(crate) fn create_token_contract<'a>(e: &Env, admin: &Address) -> TokenClient
 
 pub struct HodlStrategyTest<'a> {
     env: Env,
-    strategy: HodlStrategyClient<'a>,
     token: TokenClient<'a>,
     user: Address,
 }
@@ -32,7 +35,6 @@ impl<'a> HodlStrategyTest<'a> {
         let env = Env::default();
         env.mock_all_auths();
 
-        let strategy = create_hodl_strategy(&env);
         let admin = Address::generate(&env);
         let token = create_token_contract(&env, &admin);
         let user = Address::generate(&env);
@@ -42,7 +44,6 @@ impl<'a> HodlStrategyTest<'a> {
 
         HodlStrategyTest {
             env,
-            strategy,
             token,
             user
         }

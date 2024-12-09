@@ -1,6 +1,6 @@
 services:
   defindex-soroban:
-    image: esteblock/soroban-preview:21.0.0_node_20@sha256:d8546f6a3bf75b9fa4a481af6be872e3e69f59896948c537912f2bb0df3cd0d9
+    image: esteblock/soroban-preview:22.0.1
     container_name: defindex-soroban
     volumes:
       - .:/workspace
@@ -14,13 +14,13 @@ services:
       - "3050:3050"
 
   stellar:
-    image: stellar/quickstart:v426-latest-amd64@sha256:274395daab6fa8033b9213f152d56699358917fb01d7c7e95392a37fc00c9d01
+    image: stellar/quickstart
     container_name: stellar
     networks:
       - defindex-network
     ports:
       - "8000:8000"
-    command: --local --enable-soroban-rpc --enable-soroban-diagnostic-events
+    command: --local --protocol-version 22
     stdin_open: true
     tty: true
 

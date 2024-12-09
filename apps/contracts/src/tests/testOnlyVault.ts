@@ -8,12 +8,11 @@ import {
 } from "@stellar/stellar-sdk";
 import { randomBytes } from "crypto";
 import { AddressBook } from "../utils/address_book.js";
-import { airdropAccount, invokeContract, invokeCustomContract } from "../utils/contract.js";
+import { airdropAccount, invokeContract } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
-import { depositToVault} from "./vault.js";
-import { checkUserBalance } from "./strategy.js";
+import { depositToVault } from "./vault.js";
 
-const soroswapUSDC = new Address("CAAFIHB4I7WQMJMKC22CZVQNNX7EONWSOMT6SUXK6I3G3F6J4XFRWNDI");
+// const soroswapUSDC = new Address("CAAFIHB4I7WQMJMKC22CZVQNNX7EONWSOMT6SUXK6I3G3F6J4XFRWNDI");
 
 const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
@@ -48,7 +47,7 @@ export async function deployVault(addressBook: AddressBook) {
 
   const assets = [
     {
-      address: soroswapUSDC,
+      address: new Address(xlm.contractId(loadedConfig.passphrase)),
       strategies: [
         {
           name: "Hodl Strategy",
@@ -111,19 +110,15 @@ export async function deployVault(addressBook: AddressBook) {
   console.log('🚀 « DeFindex Vault created with address:', scValToNative(result.returnValue));
   return scValToNative(result.returnValue);
 }
+if (network == "standalone") {
+  console.log("This can only be tested in testnet or mainnet");
+  console.log("Since it requires a custom token, we are currently using soroswap USDC");
+  console.log("TODO: Create our own token for standalone testing");
+  process.exit();
+};
+
 const testUser = Keypair.random();
 if (network !== "mainnet") await airdropAccount(testUser);
-const initialAmount = 10000_0_000_000;
 
-const mintToken = async () => {
-  await invokeCustomContract(
-    soroswapUSDC.toString(),
-    "mint",
-    [new Address(testUser.publicKey()).toScVal(), nativeToScVal(initialAmount, { type: "i128" })],
-    loadedConfig.getUser("SOROSWAP_MINT_SECRET_KEY")
-  )
-}
-
-await mintToken();
 const vaultAddress = await deployVault(addressBook);
 await depositToVault(vaultAddress, [986754321], testUser);

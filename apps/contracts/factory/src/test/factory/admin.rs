@@ -9,8 +9,6 @@ fn set_new_admin_by_admin() {
 
     let test = DeFindexFactoryTest::setup();
 
-    test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &100u32, &test.defindex_wasm_hash);
-
     let users = DeFindexFactoryTest::generate_random_users(&test.env, 1);
     test.factory_contract
     .mock_auths(&[
@@ -49,8 +47,6 @@ fn set_new_admin_by_admin() {
 fn set_new_admin_by_unauthorized() {
     let test = DeFindexFactoryTest::setup();
 
-    test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &100u32, &test.defindex_wasm_hash);
-
     let users = DeFindexFactoryTest::generate_random_users(&test.env, 1);
     test.factory_contract
     .mock_auths(&[
@@ -71,8 +67,6 @@ fn set_new_admin_by_unauthorized() {
 #[test]
 fn set_defindex_receiver_by_admin() {
     let test = DeFindexFactoryTest::setup();
-
-    test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &100u32, &test.defindex_wasm_hash);
 
     let users = DeFindexFactoryTest::generate_random_users(&test.env, 1);
     test.factory_contract
@@ -111,8 +105,6 @@ fn set_defindex_receiver_by_admin() {
 #[should_panic(expected = "HostError: Error(Auth, InvalidAction)")] // Unauthorized
 fn set_fee_receiver_by_unauthorized() {
     let test = DeFindexFactoryTest::setup();
-
-    test.factory_contract.initialize(&test.admin, &test.defindex_receiver, &100u32, &test.defindex_wasm_hash);
 
     let users = DeFindexFactoryTest::generate_random_users(&test.env, 1);
     test.factory_contract

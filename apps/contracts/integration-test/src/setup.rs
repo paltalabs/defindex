@@ -1,6 +1,6 @@
 use soroban_sdk::token::{StellarAssetClient, TokenClient};
-use soroban_sdk::{BytesN, Val, IntoVal};
-use soroban_sdk::{testutils::Address as _, vec as sorobanvec, Address, String, Vec};
+use soroban_sdk::BytesN;
+use soroban_sdk::{testutils::Address as _, vec as sorobanvec, Address, String};
 
 use crate::fixed_strategy::{create_fixed_strategy_contract, FixedStrategyClient};
 use crate::hodl_strategy::{create_hodl_strategy_contract, HodlStrategyClient};
@@ -30,7 +30,7 @@ pub fn create_vault_one_asset_hodl_strategy<'a>() -> VaultOneAseetHodlStrategy<'
     let token_admin = Address::generate(&setup.env);
     let (token, token_admin_client) = create_token(&setup.env, &token_admin);
 
-    let strategy_contract = create_hodl_strategy_contract(&setup.env, &token.address, &sorobanvec![&setup.env]);
+    let strategy_contract = create_hodl_strategy_contract(&setup.env, &token.address);
 
     let emergency_manager = Address::generate(&setup.env);
     let fee_receiver = Address::generate(&setup.env);
@@ -102,17 +102,8 @@ pub fn create_vault_one_asset_fixed_strategy<'a>() -> VaultOneAseetFixedStrategy
     let token_admin = Address::generate(&setup.env);
     let (token, token_admin_client) = create_token(&setup.env, &token_admin);
 
-    let strategy_admin = Address::generate(&setup.env);
-    let starting_amount = 100_000_000_000_0_000_000i128;
-    token_admin_client.mock_all_auths().mint(&strategy_admin, &starting_amount);
-
-    let init_fn_args: Vec<Val> = sorobanvec![&setup.env,
-        1000u32.into_val(&setup.env),
-        strategy_admin.into_val(&setup.env),
-        starting_amount.into_val(&setup.env),
-    ];
-
-    let strategy_contract = create_fixed_strategy_contract(&setup.env, &token.address, &init_fn_args);
+    setup.env.mock_all_auths();
+    let strategy_contract = create_fixed_strategy_contract(&setup.env, &token.address, 1000u32, &token_admin_client);
 
     let emergency_manager = Address::generate(&setup.env);
     let fee_receiver = Address::generate(&setup.env);

@@ -1,8 +1,8 @@
-use crate::{setup::create_vault_one_asset_hodl_strategy, test::{IntegrationTest, ONE_YEAR_IN_SECONDS}, vault::{defindex_vault_contract::{AssetInvestmentAllocation, StrategyInvestment}, VaultContractError, MINIMUM_LIQUIDITY}};
+use crate::{setup::create_vault_one_asset_hodl_strategy, test::{IntegrationTest, ONE_YEAR_IN_SECONDS}, vault::{defindex_vault_contract::{AssetInvestmentAllocation, StrategyAllocation}, VaultContractError, MINIMUM_LIQUIDITY}};
 use soroban_sdk::{testutils::{Ledger, MockAuth, MockAuthInvoke, Address as _}, vec as svec, Address, IntoVal, Vec};
 
 #[test]
-fn test_invest_success() {
+fn invest_success() {
     let enviroment = create_vault_one_asset_hodl_strategy();
     let setup = enviroment.setup;
 
@@ -33,7 +33,8 @@ fn test_invest_success() {
             args: (
                 Vec::from_array(&setup.env,[deposit_amount]),
                 Vec::from_array(&setup.env,[deposit_amount]),
-                user.clone()
+                user.clone(),
+                false
             ).into_val(&setup.env),
             sub_invokes: &[
                 MockAuthInvoke {
@@ -59,11 +60,11 @@ fn test_invest_success() {
         &setup.env,
         Some(AssetInvestmentAllocation {
             asset: enviroment.token.address.clone(),
-            strategy_investments: svec![
+            strategy_allocations: svec![
                 &setup.env,
-                Some(StrategyInvestment {
-                    strategy: enviroment.strategy_contract.address.clone(),
+                Some(StrategyAllocation {
                     amount: deposit_amount,
+                    strategy_address: enviroment.strategy_contract.address.clone(),
                 }),
             ],
         }),
@@ -80,11 +81,11 @@ fn test_invest_success() {
                     Some(
                         AssetInvestmentAllocation {
                             asset: enviroment.token.address.clone(),
-                            strategy_investments:
+                            strategy_allocations:
                                 svec![&setup.env,
-                                    Some(StrategyInvestment {
-                                        strategy: enviroment.strategy_contract.address.clone(),
+                                    Some(StrategyAllocation {
                                         amount: deposit_amount,
+                                        strategy_address: enviroment.strategy_contract.address.clone(),
                                     })
                                 ]
                         }
@@ -106,7 +107,7 @@ fn test_invest_success() {
 }
 
 #[test]
-fn test_invest_exceeding_investing_lenght() {
+fn invest_exceeding_investing_lenght() {
     let enviroment = create_vault_one_asset_hodl_strategy();
     let setup = enviroment.setup;
 
@@ -137,7 +138,8 @@ fn test_invest_exceeding_investing_lenght() {
             args: (
                 Vec::from_array(&setup.env,[deposit_amount]),
                 Vec::from_array(&setup.env,[deposit_amount]),
-                user.clone()
+                user.clone(),
+                false
             ).into_val(&setup.env),
             sub_invokes: &[
                 MockAuthInvoke {
@@ -165,21 +167,21 @@ fn test_invest_exceeding_investing_lenght() {
         &setup.env,
         Some(AssetInvestmentAllocation {
             asset: enviroment.token.address.clone(),
-            strategy_investments: svec![
+            strategy_allocations: svec![
                 &setup.env,
-                Some(StrategyInvestment {
-                    strategy: enviroment.strategy_contract.address.clone(),
+                Some(StrategyAllocation {
                     amount: deposit_amount,
+                    strategy_address: enviroment.strategy_contract.address.clone(),
                 }),
             ],
         }),
         Some(AssetInvestmentAllocation {
             asset: asset_address_2.clone(),
-            strategy_investments: svec![
+            strategy_allocations: svec![
                 &setup.env,
-                Some(StrategyInvestment {
-                    strategy: strategy_address_2.clone(),
+                Some(StrategyAllocation {
                     amount: deposit_amount,
+                    strategy_address: strategy_address_2.clone(),
                 }),
             ],
         }),
@@ -196,11 +198,11 @@ fn test_invest_exceeding_investing_lenght() {
                     Some(
                         AssetInvestmentAllocation {
                             asset: enviroment.token.address.clone(),
-                            strategy_investments:
+                            strategy_allocations:
                                 svec![&setup.env,
-                                    Some(StrategyInvestment {
-                                        strategy: enviroment.strategy_contract.address.clone(),
+                                    Some(StrategyAllocation {
                                         amount: deposit_amount,
+                                        strategy_address: enviroment.strategy_contract.address.clone(),
                                     })
                                 ]
                         }
@@ -208,11 +210,11 @@ fn test_invest_exceeding_investing_lenght() {
                     Some(
                         AssetInvestmentAllocation {
                             asset: asset_address_2.clone(),
-                            strategy_investments:
+                            strategy_allocations:
                                 svec![&setup.env,
-                                    Some(StrategyInvestment {
-                                        strategy: strategy_address_2.clone(),
+                                    Some(StrategyAllocation {
                                         amount: deposit_amount,
+                                        strategy_address: strategy_address_2.clone(),
                                     })
                                 ]
                         }
@@ -229,7 +231,7 @@ fn test_invest_exceeding_investing_lenght() {
 
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #10)")]
-fn test_invest_insufficient_balance() {
+fn invest_insufficient_balance() {
     let enviroment = create_vault_one_asset_hodl_strategy();
     let setup = enviroment.setup;
 
@@ -260,7 +262,8 @@ fn test_invest_insufficient_balance() {
             args: (
                 Vec::from_array(&setup.env,[deposit_amount]),
                 Vec::from_array(&setup.env,[deposit_amount]),
-                user.clone()
+                user.clone(),
+                false
             ).into_val(&setup.env),
             sub_invokes: &[
                 MockAuthInvoke {
@@ -280,7 +283,7 @@ fn test_invest_insufficient_balance() {
 }
 
 #[test]
-fn test_invest_multiple_users() {
+fn invest_multiple_users() {
     let enviroment = create_vault_one_asset_hodl_strategy();
     let setup = enviroment.setup;
 
@@ -324,7 +327,8 @@ fn test_invest_multiple_users() {
             args: (
                 Vec::from_array(&setup.env,[deposit_amount]),
                 Vec::from_array(&setup.env,[deposit_amount]),
-                user1.clone()
+                user1.clone(),
+                false
             ).into_val(&setup.env),
             sub_invokes: &[
                 MockAuthInvoke {
@@ -351,7 +355,8 @@ fn test_invest_multiple_users() {
             args: (
                 Vec::from_array(&setup.env,[deposit_amount]),
                 Vec::from_array(&setup.env,[deposit_amount]),
-                user2.clone()
+                user2.clone(),
+                false
             ).into_val(&setup.env),
             sub_invokes: &[
                 MockAuthInvoke {
@@ -379,11 +384,11 @@ fn test_invest_multiple_users() {
         &setup.env,
         Some(AssetInvestmentAllocation {
             asset: enviroment.token.address.clone(),
-            strategy_investments: svec![
+            strategy_allocations: svec![
                 &setup.env,
-                Some(StrategyInvestment {
-                    strategy: enviroment.strategy_contract.address.clone(),
+                Some(StrategyAllocation {
                     amount: deposit_amount*2,
+                    strategy_address: enviroment.strategy_contract.address.clone(),
                 }),
             ],
         }),
@@ -400,11 +405,11 @@ fn test_invest_multiple_users() {
                     Some(
                         AssetInvestmentAllocation {
                             asset: enviroment.token.address.clone(),
-                            strategy_investments:
+                            strategy_allocations:
                                 svec![&setup.env,
-                                    Some(StrategyInvestment {
-                                        strategy: enviroment.strategy_contract.address.clone(),
+                                    Some(StrategyAllocation {
                                         amount: deposit_amount*2,
+                                        strategy_address: enviroment.strategy_contract.address.clone(),
                                     })
                                 ]
                         }

@@ -53,6 +53,6 @@ impl<'a> IntegrationTest<'a> {
     }
 }
 
-#[cfg(test)]
+// #[cfg(test)]
 mod vault_one_hodl_strategy;
 mod vault_one_fixed_strategy;
