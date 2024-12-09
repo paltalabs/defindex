@@ -3,8 +3,7 @@ import { AddressBook } from "../utils/address_book.js";
 import {
   airdropAccount,
   deployContract,
-  installContract,
-  invokeContract,
+  installContract
 } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
 
@@ -26,12 +25,6 @@ export async function deployBlendStrategy(addressBook: AddressBook) {
   console.log("Deploying Blend Strategy");
   console.log("-------------------------------------------------------");
   await installContract("blend_strategy", addressBook, loadedConfig.admin);
-  await deployContract(
-    "blend_strategy",
-    "blend_strategy",
-    addressBook,
-    loadedConfig.admin
-  );
 
   const xlm = Asset.native();
   let xlmContractId: string;
@@ -62,11 +55,10 @@ export async function deployBlendStrategy(addressBook: AddressBook) {
     initArgs
   ];
 
-  console.log("Initializing Blend Strategy");
-  await invokeContract(
+  await deployContract(
+    "blend_strategy",
     "blend_strategy",
     addressBook,
-    "initialize",
     args,
     loadedConfig.admin
   );

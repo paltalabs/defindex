@@ -8,13 +8,22 @@ import {
 } from "@stellar/stellar-sdk";
 import { randomBytes } from "crypto";
 import { AddressBook } from "../utils/address_book.js";
-import { airdropAccount, invokeContract, invokeCustomContract } from "../utils/contract.js";
+import { airdropAccount, invokeContract } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
-import { ActionType, AssetInvestmentAllocation, depositToVault, Instruction, investVault, rebalanceVault, fetchParsedCurrentIdleFunds, fetchCurrentInvestedFunds } from "./vault.js";
 import { checkUserBalance } from "./strategy.js";
+import { ActionType, AssetInvestmentAllocation, depositToVault, fetchCurrentInvestedFunds, fetchParsedCurrentIdleFunds, Instruction, investVault, rebalanceVault } from "./vault.js";
 
-const soroswapUSDC = new Address("CAAFIHB4I7WQMJMKC22CZVQNNX7EONWSOMT6SUXK6I3G3F6J4XFRWNDI");
-  
+// const soroswapUSDC = new Address("CAAFIHB4I7WQMJMKC22CZVQNNX7EONWSOMT6SUXK6I3G3F6J4XFRWNDI");
+const network = process.argv[2];
+const addressBook = AddressBook.loadFromFile(network);
+const hodl_strategy = addressBook.getContractId("hodl_strategy");
+const fixed_apr_strategy = addressBook.getContractId("fixed_apr_strategy");
+const xlm: Asset = Asset.native()
+
+const loadedConfig = config(network);
+const xlmAddress = new Address(Asset.native().contractId(loadedConfig.passphrase));
+const xlmScVal = xlmAddress.toScVal();
+
 export async function deployVaultTwoStrategies(addressBook: AddressBook) {
   if (network !== "mainnet") await airdropAccount(loadedConfig.admin);
   let account = await loadedConfig.horizonRpc.loadAccount(
@@ -40,7 +49,7 @@ export async function deployVaultTwoStrategies(addressBook: AddressBook) {
 
   const assets = [
     {
-      address: soroswapUSDC,
+      address: xlmAddress,
       strategies: [
         {
           name: "Hodl Strategy",
@@ -109,14 +118,6 @@ export async function deployVaultTwoStrategies(addressBook: AddressBook) {
   return scValToNative(result.returnValue);
 }
 
-const network = process.argv[2];
-const addressBook = AddressBook.loadFromFile(network);
-const hodl_strategy = addressBook.getContractId("hodl_strategy");
-const fixed_apr_strategy = addressBook.getContractId("fixed_apr_strategy");
-const xlm: Asset = Asset.native()
-
-const loadedConfig = config(network);
-
 // Step 0: Deploy the vault
 const deployedVault = await deployVaultTwoStrategies(addressBook);
 console.log(" -- ")
@@ -127,18 +128,18 @@ console.log(" -- ")
 
 const testUser = Keypair.random();
 if (network !== "mainnet") await airdropAccount(testUser);
-const initialAmount = 10000_0_000_000;
+const initialAmount = 9000_0_000_000;
 
-const mintToken = async () => {
-  await invokeCustomContract(
-    soroswapUSDC.toString(),
-    "mint",
-    [new Address(testUser.publicKey()).toScVal(), nativeToScVal(initialAmount, { type: "i128" })],
-    loadedConfig.getUser("SOROSWAP_MINT_SECRET_KEY")
-  )
-}
+// const mintToken = async () => {
+//   await invokeCustomContract(
+//     xlmAddress.toString(),
+//     "mint",
+//     [new Address(testUser.publicKey()).toScVal(), nativeToScVal(initialAmount, { type: "i128" })],
+//     loadedConfig.getUser("SOROSWAP_MINT_SECRET_KEY")
+//   )
+// }
 
-await mintToken();
+// await mintToken();
 // Step 1: Deposit to vault and capture initial balances
 const { user, balanceBefore: depositBalanceBefore, result: depositResult, balanceAfter: depositBalanceAfter, status: depositStatus } 
   = await depositToVault(deployedVault, [initialAmount], testUser);
@@ -158,7 +159,7 @@ const fixedBalanceBeforeInvest = await checkUserBalance(fixed_apr_strategy, depl
 // Step 2: Invest in vault idle funds
 const investParams: AssetInvestmentAllocation[] = [
   {
-    asset: soroswapUSDC,
+    asset: xlmAddress,
     strategy_investments: [
       {
         amount: BigInt(1500_0_000_000),
