@@ -42,7 +42,7 @@ fn negative_amount() {
 
 // check that withdraw without balance after initialized returns error InsufficientBalance
 #[test]
-fn total_supply_0() {
+fn zero_total_supply() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token0 = create_strategy_params_token0(&test);

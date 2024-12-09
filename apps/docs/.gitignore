@@ -1,2 +1,3 @@
 # we want to be able to compile the book locally and not push that to the repo
 _book/
+book/
