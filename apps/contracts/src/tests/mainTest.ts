@@ -24,6 +24,8 @@ import {
 } from "./vault.js";
 import { checkUserBalance } from "./strategy.js";
 import { exit } from "process";
+import { testBlendVault } from "./blend/test_vault.js";
+import { testBlendStrategy } from "./blend/test_strategy.js";
 //import { testBlendStrategy } from "./blend/test_strategy.js";
 //import { testBlendVault } from "./blend/test_vault.js";
 
@@ -387,8 +389,8 @@ switch (tests) {
       await prepareEnvironment();
       const oneStrategy = await testVaultOneStrategy();
       const twoStrategies = await testVaultTwoStrategies();
-      //const blendStrategy = await testBlendStrategy();
-      //const blendVault = await testBlendVault();
+      const blendStrategy = await testBlendStrategy();
+      const blendVault = await testBlendVault();
       console.log(green, '---------------------------------------')
       console.log(green, 'All tests passed successfully');
       console.log(green, '---------------------------------------')
@@ -405,12 +407,12 @@ switch (tests) {
       console.log('')
       console.log(green, '---------------------------------------')
       console.log(green, 'Blend strategy test status')
-      //console.table(blendStrategy);
+      console.table(blendStrategy);
       console.log(green, '---------------------------------------')
       console.log('')
       console.log(green, '---------------------------------------')
       console.log(green, 'Blend vault test status')
-      //console.table(blendVault);
+      console.table(blendVault);
       console.log(green, '---------------------------------------')
       exit(0);
     } catch (error) {
@@ -440,8 +442,10 @@ switch (tests) {
   case '-bs':
     console.log(yellow, 'Testing blend strategy');
     try {
-      await prepareEnvironment();
-      //await testBlendStrategy();
+      const blendStrategy = await testBlendStrategy();
+      console.log(green, 'Blend strategy test status')
+      console.table(blendStrategy);
+      console.log(green, '---------------------------------------')
       exit(0);
     } catch (error) {
       console.log(red, 'Tests failed:', error);
@@ -450,8 +454,10 @@ switch (tests) {
   case '-bv':
     console.log(yellow, 'Testing blend vault');
     try {
-      await prepareEnvironment();
-      //await testBlendVault();
+      const blendVault = await testBlendStrategy();
+      console.log(green, 'Blend vault test status')
+      console.table(blendVault);
+      console.log(green, '---------------------------------------')
       exit(0);
     } catch (error) {
       console.log(red, 'Tests failed:', error);
