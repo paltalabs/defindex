@@ -2,7 +2,7 @@
 use deposit::{generate_and_execute_investments, process_deposit};
 use soroban_sdk::{
     contract, contractimpl, panic_with_error,
-    token::{TokenClient, TokenInterface},
+    token::{TokenClient},
     Address, Env, Map, String, Vec,
 };
 use soroban_token_sdk::metadata::TokenMetadata;
@@ -42,9 +42,9 @@ use storage::{
 use strategies::{
     get_strategy_asset, get_strategy_client,
     get_strategy_struct, invest_in_strategy, pause_strategy, unpause_strategy,
-    withdraw_from_strategy,
+    unwind_from_strategy,
 };
-use token::{internal_burn, write_metadata, VaultToken};
+use token::{internal_burn, write_metadata};
 use utils::{
     calculate_asset_amounts_per_vault_shares,
     check_initialized,
@@ -224,19 +224,41 @@ impl VaultTrait for DeFindexVault {
         Ok((amounts, shares_to_mint))
     }
 
-    /// Withdraws assets from the DeFindex Vault by burning Vault Share tokens.
+    /// Handles the withdrawal process for a specified number of vault shares.
     ///
-    /// This function calculates the amount of assets to withdraw based on the number of Vault Share tokens being burned,
-    /// then transfers the appropriate assets back to the user, pulling from both idle funds and strategies
-    /// as needed.
+    /// This function performs the following steps:
+    /// 1. Validates the environment and the inputs:
+    ///    - Ensures the contract is initialized.
+    ///    - Checks that the withdrawal amount (`withdraw_shares`) is non-negative.
+    ///    - Verifies the authorization of the `from` address.
+    /// 2. Collects applicable fees.
+    /// 3. Calculates the proportionate withdrawal amounts for each asset based on the number of shares.
+    /// 4. Burns the specified shares from the user's account.
+    /// 5. Processes the withdrawal for each asset:
+    ///    - First attempts to cover the withdrawal amount using idle funds.
+    ///    - If idle funds are insufficient, unwinds investments from the associated strategies
+    ///      to cover the remaining amount, accounting for rounding errors in the last strategy.
+    /// 6. Transfers the withdrawn funds to the user's address (`from`).
+    /// 7. Emits an event to record the withdrawal details.
     ///
-    /// # Arguments:
-    /// * `e` - The environment.
-    /// * `shares_amount` - The amount of Vault Share tokens to burn for the withdrawal.
-    /// * `from` - The address of the user requesting the withdrawal.
+    /// ## Parameters:
+    /// - `e`: The contract environment (`Env`).
+    /// - `withdraw_shares`: The number of vault shares to withdraw.
+    /// - `from`: The address initiating the withdrawal.
     ///
-    /// # Returns:
-    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
+    /// ## Returns:
+    /// - A `Result` containing a vector of withdrawn amounts for each asset (`Vec<i128>`),
+    ///   or a `ContractError` if the withdrawal fails.
+    ///
+    /// ## Errors:
+    /// - `ContractError::AmountOverTotalSupply`: If the specified shares exceed the total supply.
+    /// - `ContractError::ArithmeticError`: If any arithmetic operation fails during calculations.
+    /// - `ContractError::WrongAmountsLength`: If there is a mismatch in asset allocation data.
+    ///
+    /// ## TODOs:
+    /// - Implement minimum amounts for withdrawals to ensure compliance with potential restrictions.
+    /// - Replace the returned vector with the original `asset_withdrawal_amounts` map for better structure.
+    /// - avoid the usage of a Map, choose between using map or vector
     fn withdraw(
         e: Env,
         withdraw_shares: i128,
@@ -260,68 +282,71 @@ impl VaultTrait for DeFindexVault {
         )?;
     
         // Burn the shares after calculating the withdrawal amounts
-        // this will panic with error if the user does not have enough balance
+        // This will panic with error if the user does not have enough balance
         internal_burn(e.clone(), from.clone(), withdraw_shares);
     
+        let assets = get_assets(&e); // Use assets for iteration order
         // Loop through each asset to handle the withdrawal
         let mut withdrawn_amounts: Vec<i128> = Vec::new(&e);
-        for (asset_address, requested_withdrawal_amount) in asset_withdrawal_amounts.iter() {
 
-            let asset_allocation = total_managed_funds
-            .get(asset_address.clone())
-            .unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength));
+        for asset in assets.iter() { // Use assets instead of asset_withdrawal_amounts
+            let asset_address = &asset.address;
 
-            // Check idle funds for this asset
-            let idle_funds = asset_allocation.idle_amount;
-        
-            // Withdraw from idle funds first
-            if idle_funds >= requested_withdrawal_amount {
-                // Idle funds cover the full amount
-                TokenClient::new(&e, &asset_address).transfer(
-                    &e.current_contract_address(),
-                    &from,
-                    &requested_withdrawal_amount,
-                );
-                withdrawn_amounts.push_back(requested_withdrawal_amount);
-                continue;
-            } else {
-                let mut total_withdrawn_for_asset = 0;
-                // Partial withdrawal from idle funds
-                total_withdrawn_for_asset += idle_funds;
-                let remaining_withdrawal_amount = requested_withdrawal_amount - idle_funds;
-                
-                // Withdraw the remaining amount from strategies
-                let total_invested_amount = asset_allocation.invested_amount;
-                
-                for strategy_allocation in asset_allocation.strategy_allocations.iter() {
-                    // TODO: If strategy is paused, should we skip it? Otherwise, the calculation will go wrong.
-                    // if strategy.paused {
-                    //     continue;
-                    // }
-                    
-                    // Amount to unwind from strategy
-                    let strategy_withdrawal_share =
-                    (remaining_withdrawal_amount * strategy_allocation.amount) / total_invested_amount;
-                    
-                    if strategy_withdrawal_share > 0 {
-                        withdraw_from_strategy(&e, &strategy_allocation.strategy_address, &strategy_withdrawal_share)?;
-                        TokenClient::new(&e, &asset_address).transfer(
-                            &e.current_contract_address(),
-                            &from,
-                            &strategy_withdrawal_share,
-                        );
-                        total_withdrawn_for_asset += strategy_withdrawal_share;
+            if let Some(requested_withdrawal_amount) = asset_withdrawal_amounts.get(asset_address.clone()) {
+                let asset_allocation = total_managed_funds
+                    .get(asset_address.clone())
+                    .unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength));
+
+                let idle_funds = asset_allocation.idle_amount;
+
+                if idle_funds >= requested_withdrawal_amount {
+                    TokenClient::new(&e, asset_address).transfer(
+                        &e.current_contract_address(),
+                        &from,
+                        &requested_withdrawal_amount,
+                    );
+                    withdrawn_amounts.push_back(requested_withdrawal_amount);
+                } else {
+                    let mut cumulative_amount_for_asset = idle_funds;
+                    let remaining_amount_to_unwind = requested_withdrawal_amount
+                        .checked_sub(idle_funds)
+                        .unwrap();
+
+                    let total_invested_amount = asset_allocation.invested_amount;
+
+                    for (i, strategy_allocation) in asset_allocation.strategy_allocations.iter().enumerate() {
+                        let strategy_amount_to_unwind: i128 = if i == (asset_allocation.strategy_allocations.len() as usize) - 1 {
+                            requested_withdrawal_amount
+                                .checked_sub(cumulative_amount_for_asset)
+                                .unwrap()
+                        } else {
+                            remaining_amount_to_unwind
+                                .checked_mul(strategy_allocation.amount)
+                                .and_then(|result| result.checked_div(total_invested_amount))
+                                .unwrap_or(0)
+                        };
+
+                        if strategy_amount_to_unwind > 0 {
+                            unwind_from_strategy(&e, &strategy_allocation.strategy_address, &strategy_amount_to_unwind)?;
+                            cumulative_amount_for_asset += strategy_amount_to_unwind;
+                        }
                     }
+
+                    TokenClient::new(&e, asset_address).transfer(
+                        &e.current_contract_address(),
+                        &from,
+                        &cumulative_amount_for_asset,
+                    );
+                    withdrawn_amounts.push_back(cumulative_amount_for_asset);
                 }
-                TokenClient::new(&e, &asset_address).transfer(
-                    &e.current_contract_address(),
-                    &from,
-                    &total_withdrawn_for_asset,
-                );
-                withdrawn_amounts.push_back(total_withdrawn_for_asset);
+            } else {
+                withdrawn_amounts.push_back(0); // No withdrawal for this asset
             }
         }
-    
+
+        
+        // TODO: Add minimuim amounts for withdrawn_amounts
+        // TODO: Return the asset_withdrawal_amounts Map instead of a vec
         events::emit_withdraw_event(&e, from, withdraw_shares, withdrawn_amounts.clone());
     
         Ok(withdrawn_amounts)
@@ -700,7 +725,7 @@ impl VaultManagementTrait for DeFindexVault {
             match instruction.action {
                 ActionType::Withdraw => match (&instruction.strategy, &instruction.amount) {
                     (Some(strategy_address), Some(amount)) => {
-                        withdraw_from_strategy(&e, strategy_address, amount)?;
+                        unwind_from_strategy(&e, strategy_address, amount)?;
                     }
                     _ => return Err(ContractError::MissingInstructionData),
                 },
