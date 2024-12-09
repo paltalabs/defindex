@@ -380,7 +380,7 @@ export async function investVault(
                     val: entry.asset.toScVal(), // Convert asset address to ScVal
                 }),
                 new xdr.ScMapEntry({
-                    key: xdr.ScVal.scvSymbol("strategy_investments"),
+                    key: xdr.ScVal.scvSymbol("strategy_allocations"),
                     val: xdr.ScVal.scvVec(
                         entry.strategy_investments.map((investment) =>
                             xdr.ScVal.scvMap([
@@ -389,7 +389,7 @@ export async function investVault(
                                     val: nativeToScVal(BigInt(investment.amount), { type: "i128" }), // Ensure i128 conversion
                                 }),
                                 new xdr.ScMapEntry({
-                                    key: xdr.ScVal.scvSymbol("strategy"),
+                                    key: xdr.ScVal.scvSymbol("strategy_address"),
                                     val: investment.strategy.toScVal(), // Convert strategy address
                                 }),
                             ])
