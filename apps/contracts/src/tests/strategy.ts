@@ -22,7 +22,7 @@ import { invokeCustomContract } from "../utils/contract.js";
 export async function checkUserBalance(contractAddress: string, userPublicKey: string, source?: Keypair): Promise<number> {
     const userAddress = new Address(userPublicKey).toScVal();
     const methodName = "balance";
-
+    console.log(`Checking balance for user ${userPublicKey}...`);
     try {
         // Call the `balance` method from the contract
         const result = await invokeCustomContract(
@@ -34,7 +34,6 @@ export async function checkUserBalance(contractAddress: string, userPublicKey: s
         );
 
         // Convert the result to a native JavaScript number
-        console.log(result.result.retval)
         const balance = scValToNative(result.result.retval) as number;
         console.log(`Balance for user ${userPublicKey}:`, balance);
 
