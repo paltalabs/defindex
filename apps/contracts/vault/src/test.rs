@@ -3,6 +3,7 @@ extern crate std;
 use soroban_sdk::token::{
     StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient,
 };
+use soroban_sdk::Val;
 use soroban_sdk::{testutils::Address as _, vec as sorobanvec, Address, Env, String, Vec};
 use std::vec;
 
@@ -15,11 +16,10 @@ pub mod hodl_strategy {
 }
 use hodl_strategy::HodlStrategyClient;
 
-fn create_hodl_strategy<'a>(e: &Env, asset: &Address) -> HodlStrategyClient<'a> {
-    let contract_address = &e.register_contract_wasm(None, hodl_strategy::WASM);
-    let hodl_strategy = HodlStrategyClient::new(e, contract_address);
-    hodl_strategy.initialize(&asset, &sorobanvec![&e]);
-    hodl_strategy
+pub fn create_hodl_strategy<'a>(e: &Env, asset: &Address) -> HodlStrategyClient<'a> {
+    let init_args: Vec<Val>= sorobanvec![e];
+    let args = (asset, init_args);
+    HodlStrategyClient::new(e, &e.register(hodl_strategy::WASM, args))
 }
 
 // DeFindex Vault Contract

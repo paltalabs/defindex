@@ -7,11 +7,8 @@ use soroban_sdk::token::StellarAssetClient;
 #[test]
 fn deposit_with_negative_amount() {
     let test = FixAprStrategyTest::setup();
-    //MINT 100M to the strategy
-    let starting_amount = 100_000_000_000_0_000_000i128;
-    StellarAssetClient::new(&test.env, &test.token.address).mint(&test.strategy_admin, &starting_amount);
 
-    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.strategy_admin, starting_amount);
+    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
 
     let users = FixAprStrategyTest::generate_random_users(&test.env, 1);
 
@@ -25,11 +22,8 @@ fn deposit_with_negative_amount() {
 #[test]
 fn deposit_with_zero_amount() {
     let test = FixAprStrategyTest::setup();
-    // MINT 100M to the strategy
-    let starting_amount = 100_000_000_000_0_000_000i128;
-    StellarAssetClient::new(&test.env, &test.token.address).mint(&test.strategy_admin, &starting_amount);
 
-    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.strategy_admin, starting_amount);
+    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
 
     let users = FixAprStrategyTest::generate_random_users(&test.env, 1);
 
@@ -42,11 +36,8 @@ fn deposit_with_zero_amount() {
 #[test]
 fn deposit() {
     let test = FixAprStrategyTest::setup();
-    // MINT 100M to the strategy
-    let starting_amount = 100_000_000_000_0_000_000i128;
-    StellarAssetClient::new(&test.env, &test.token.address).mint(&test.strategy_admin, &starting_amount);
-
-    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.strategy_admin, starting_amount);
+    
+    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
 
     let users = FixAprStrategyTest::generate_random_users(&test.env, 1);
 
@@ -63,11 +54,8 @@ fn deposit() {
 #[should_panic(expected = "HostError: Error(Contract, #10)")] // Unauthorized
 fn deposit_with_exceeding_balance() {
     let test = FixAprStrategyTest::setup();
-    // MINT 100M to the strategy
-    let starting_amount = 100_000_000_000_0_000_000i128;
-    StellarAssetClient::new(&test.env, &test.token.address).mint(&test.strategy_admin, &starting_amount);
 
-    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.strategy_admin, starting_amount);
+    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
 
     let users = FixAprStrategyTest::generate_random_users(&test.env, 1);
 

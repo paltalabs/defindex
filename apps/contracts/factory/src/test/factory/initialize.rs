@@ -1,7 +1,4 @@
-use soroban_sdk::{BytesN, String};
-
-use crate::error::FactoryError;
-use crate::test::{create_asset_params, DeFindexFactoryTest};
+use crate::test::DeFindexFactoryTest;
 
 #[test]
 fn get_storage() {

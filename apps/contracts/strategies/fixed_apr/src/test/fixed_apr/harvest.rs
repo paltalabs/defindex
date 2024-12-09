@@ -6,14 +6,8 @@ use crate::{calculate_yield, test::{create_fixapr_strategy, FixAprStrategyTest}}
 fn test_harvest_yields_multiple_users() {
     let test = FixAprStrategyTest::setup();
 
-    //MINT 100M to the strategy
-    let starting_amount = 100_000_000_000_0_000_000i128;
-    StellarAssetClient::new(&test.env, &test.token.address).mint(&test.strategy_admin, &starting_amount);
-
     let apr = 1000u32;
-    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.strategy_admin, starting_amount);
-
-    assert_eq!(test.token.balance(&strategy.address), starting_amount);
+    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
 
     let users = FixAprStrategyTest::generate_random_users(&test.env, 4);
 

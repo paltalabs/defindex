@@ -48,16 +48,10 @@ impl DeFindexStrategyTrait for FixAprStrategy {
     ) {
         // Extract APR from `init_args`, assumed to be the first argument
         let apr_bps: u32 = init_args.get(0).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
-        let caller: Address = init_args.get(1).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
-        let amount: i128 = init_args.get(2).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
         
         set_initialized(&e);
         set_underlying_asset(&e, &asset);
         set_apr(&e, apr_bps);
-
-        // Should transfer tokens from the caller to the contract
-        caller.require_auth();
-        TokenClient::new(&e, &asset).transfer(&caller, &e.current_contract_address(), &amount);
     }
 
     fn asset(e: Env) -> Result<Address, StrategyError> {

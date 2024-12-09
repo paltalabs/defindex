@@ -1,3 +1,3 @@
-// mod admin;
+mod admin;
 mod create_defindex;
 mod initialize;

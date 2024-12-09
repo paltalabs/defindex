@@ -160,17 +160,8 @@ pub(crate) fn create_blend_pool(
 
 /// Create a Blend Strategy
 pub(crate) fn create_blend_strategy(e: &Env, underlying_asset: &Address, blend_pool: &Address, reserve_id: &u32, blend_token: &Address, soroswap_router: &Address) -> Address {
-    let address = register_blend_strategy(e);
-    let client = BlendStrategyClient::new(e, &address);
-
-    let init_args: Vec<Val> = vec![e,
-        blend_pool.into_val(e),
-        reserve_id.into_val(e),
-        blend_token.into_val(e),
-        soroswap_router.into_val(e),
-    ];
-
-    client.initialize(&underlying_asset, &init_args);
+    let address = register_blend_strategy(e, underlying_asset, blend_pool, reserve_id, blend_token, soroswap_router);
+    
     address
 }
 
@@ -192,7 +183,7 @@ impl EnvTestUtils for Env {
     fn jump(&self, ledgers: u32) {
         self.ledger().set(LedgerInfo {
             timestamp: self.ledger().timestamp().saturating_add(ledgers as u64 * 5),
-            protocol_version: 21,
+            protocol_version: 22,
             sequence_number: self.ledger().sequence().saturating_add(ledgers),
             network_id: Default::default(),
             base_reserve: 10,
@@ -218,7 +209,7 @@ impl EnvTestUtils for Env {
     fn set_default_info(&self) {
         self.ledger().set(LedgerInfo {
             timestamp: 1441065600, // Sept 1st, 2015 12:00:00 AM UTC
-            protocol_version: 21,
+            protocol_version: 22,
             sequence_number: 100,
             network_id: Default::default(),
             base_reserve: 10,

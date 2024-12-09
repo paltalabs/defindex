@@ -21,13 +21,6 @@ fn check_initialized(e: &Env) -> Result<(), FactoryError> {
 }
 
 pub trait FactoryTrait {
-    fn __constructor(
-        e: Env, 
-        admin: Address,
-        defindex_receiver: Address,
-        defindex_fee: u32,
-        vault_wasm_hash: BytesN<32>
-    );
     /// Initializes the factory contract with the given parameters.
     /// 
     /// # Arguments
@@ -39,13 +32,13 @@ pub trait FactoryTrait {
     /// 
     /// # Returns
     /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, otherwise an error.
-    // fn initialize(
-    //     e: Env, 
-    //     admin: Address,
-    //     defindex_receiver: Address,
-    //     defindex_fee: u32,
-    //     vault_wasm_hash: BytesN<32>
-    // ) -> Result<(), FactoryError>;
+    fn __constructor(
+        e: Env, 
+        admin: Address,
+        defindex_receiver: Address,
+        defindex_fee: u32,
+        vault_wasm_hash: BytesN<32>
+    );
 
     /// Creates a new DeFindex Vault with specified parameters.
     ///

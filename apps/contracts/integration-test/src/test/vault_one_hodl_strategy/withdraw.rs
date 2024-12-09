@@ -1,4 +1,4 @@
-use crate::{setup::{create_vault_one_asset_hodl_strategy, VAULT_FEE}, test::{IntegrationTest, DEFINDEX_FEE, ONE_YEAR_IN_SECONDS}, vault::{defindex_vault_contract::{AssetInvestmentAllocation, StrategyInvestment}, VaultContractError, MINIMUM_LIQUIDITY}};
+use crate::{setup::{create_vault_one_asset_hodl_strategy, VAULT_FEE}, test::{IntegrationTest, DEFINDEX_FEE, ONE_YEAR_IN_SECONDS}, vault::{defindex_vault_contract::{AssetInvestmentAllocation, StrategyAllocation}, VaultContractError, MINIMUM_LIQUIDITY}};
 use soroban_sdk::{testutils::{Ledger, MockAuth, MockAuthInvoke}, vec as svec, IntoVal, Vec};
 
 #[test]
@@ -305,11 +305,11 @@ fn test_withdraw_after_invest() {
         &setup.env,
         Some(AssetInvestmentAllocation {
             asset: enviroment.token.address.clone(),
-            strategy_investments: svec![
+            strategy_allocations: svec![
                 &setup.env,
-                Some(StrategyInvestment {
-                    strategy: enviroment.strategy_contract.address.clone(),
+                Some(StrategyAllocation {
                     amount: deposit_amount,
+                    strategy_address: enviroment.strategy_contract.address.clone(),
                 }),
             ],
         }),
@@ -326,11 +326,11 @@ fn test_withdraw_after_invest() {
                     Some(
                         AssetInvestmentAllocation {
                             asset: enviroment.token.address.clone(),
-                            strategy_investments:
+                            strategy_allocations:
                                 svec![&setup.env,
-                                    Some(StrategyInvestment {
-                                        strategy: enviroment.strategy_contract.address.clone(),
+                                    Some(StrategyAllocation {
                                         amount: deposit_amount,
+                                        strategy_address: enviroment.strategy_contract.address.clone(),
                                     })
                                 ]
                         }
@@ -626,11 +626,11 @@ fn test_withdraw_after_invest_multiple_users() {
         &setup.env,
         Some(AssetInvestmentAllocation {
             asset: enviroment.token.address.clone(),
-            strategy_investments: svec![
+            strategy_allocations: svec![
                 &setup.env,
-                Some(StrategyInvestment {
-                    strategy: enviroment.strategy_contract.address.clone(),
+                Some(StrategyAllocation {
                     amount: deposit_amount * 2,
+                    strategy_address: enviroment.strategy_contract.address.clone(),
                 }),
             ],
         }),
@@ -647,11 +647,11 @@ fn test_withdraw_after_invest_multiple_users() {
                     Some(
                         AssetInvestmentAllocation {
                             asset: enviroment.token.address.clone(),
-                            strategy_investments:
+                            strategy_allocations:
                                 svec![&setup.env,
-                                    Some(StrategyInvestment {
-                                        strategy: enviroment.strategy_contract.address.clone(),
+                                    Some(StrategyAllocation {
                                         amount: deposit_amount * 2,
+                                        strategy_address: enviroment.strategy_contract.address.clone(),
                                     })
                                 ]
                         }
