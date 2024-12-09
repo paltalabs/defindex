@@ -400,6 +400,15 @@ fn several_assets_success() {
 
 }
 
+#[test] 
+fn one_asset_several_strategies() {
+    /*
+        What happens when no previous investment has been done?
+    
+    */
+    todo!();
+}
+
 
 
 #[test] 

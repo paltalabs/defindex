@@ -100,3 +100,9 @@ fn initialize_with_empty_asset_allocation() {
         String::from_str(&test.env, "DFT"),
     );
 }
+
+// test initialzie with one asset and several strategies for the same asset
+#[test]
+fn with_one_asset_and_several_strategies() {
+    todo!();
+}
