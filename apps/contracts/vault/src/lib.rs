@@ -44,7 +44,7 @@ use strategies::{
     get_strategy_struct, invest_in_strategy, pause_strategy, unpause_strategy,
     withdraw_from_strategy,
 };
-use token::{internal_burn, write_metadata, VaultToken};
+use token::{internal_burn, write_metadata};
 use utils::{
     calculate_asset_amounts_per_vault_shares,
     check_initialized,
