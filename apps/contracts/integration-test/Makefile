@@ -1,9 +1,12 @@
-default: test
+default: build
 
 all: test
 
-test: 
+test:
 	cargo test
+
+build:
+	@echo "No need to build integration tests"
 
 fmt:
 	cargo fmt --all --check
