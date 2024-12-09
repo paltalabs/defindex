@@ -2,21 +2,10 @@ use soroban_sdk::{vec as sorobanvec, String, Vec};
 
 // use super::hodl_strategy::StrategyError;
 use crate::test::{
-    create_strategy_params_token0,
-    defindex_vault::{
+    create_defindex_vault, create_strategy_params_token0, defindex_vault::{
         AssetInvestmentAllocation, AssetStrategySet, ContractError, StrategyAllocation,
-    },
-    DeFindexVaultTest,
+    }, DeFindexVaultTest
 };
-
-#[test]
-fn not_yet_initialized() {
-    let test = DeFindexVaultTest::setup();
-    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
-
-    let result = test.defindex_contract.try_withdraw(&100i128, &users[0]);
-    assert_eq!(result, Err(Ok(ContractError::NotInitialized)));
-}
 
 // check that withdraw with negative amount after initialized returns error
 #[test]
@@ -32,21 +21,22 @@ fn negative_amount() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
-    let result = test.defindex_contract.try_withdraw(&-100i128, &users[0]);
+    let result = defindex_contract.try_withdraw(&-100i128, &users[0]);
     assert_eq!(result, Err(Ok(ContractError::NegativeNotAllowed)));
 }
 
@@ -64,21 +54,22 @@ fn zero_total_supply() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
-    let result = test.defindex_contract.try_withdraw(&100i128, &users[0]);
+    let result = defindex_contract.try_withdraw(&100i128, &users[0]);
     assert_eq!(result, Err(Ok(ContractError::AmountOverTotalSupply)));
 }
 
@@ -95,16 +86,17 @@ fn withdraw_from_idle_success() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount = 1234567890i128;
 
@@ -115,12 +107,12 @@ fn withdraw_from_idle_success() {
     assert_eq!(user_balance, amount);
     // here youll need to create a client for a token with the same address
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
     // Deposit
     let amount_to_deposit = 567890i128;
-    test.defindex_contract.deposit(
+    defindex_contract.deposit(
         &sorobanvec![&test.env, amount_to_deposit],
         &sorobanvec![&test.env, amount_to_deposit],
         &users[0],
@@ -136,7 +128,7 @@ fn withdraw_from_idle_success() {
     // Token balance of vault should be amount_to_deposit
     // Because balances are still in indle, balances are not in strategy, but in idle
 
-    let vault_balance = test.token0.balance(&test.defindex_contract.address);
+    let vault_balance = test.token0.balance(&defindex_contract.address);
     assert_eq!(vault_balance, amount_to_deposit);
 
     // Token balance of hodl strategy should be 0 (all in idle)
@@ -144,12 +136,12 @@ fn withdraw_from_idle_success() {
     assert_eq!(strategy_balance, 0);
 
     // Df balance of user should be equal to deposited amount
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount_to_deposit - 1000); // 1000  gets locked in the vault forever
 
     // user decides to withdraw a portion of deposited amount
     let amount_to_withdraw = 123456i128;
-    test.defindex_contract
+    defindex_contract
         .withdraw(&amount_to_withdraw, &users[0]);
 
     // Check Balances after withdraw
@@ -162,7 +154,7 @@ fn withdraw_from_idle_success() {
     );
 
     // Token balance of vault should be amount_to_deposit - amount_to_withdraw
-    let vault_balance = test.token0.balance(&test.defindex_contract.address);
+    let vault_balance = test.token0.balance(&defindex_contract.address);
     assert_eq!(vault_balance, amount_to_deposit - amount_to_withdraw);
 
     // Token balance of hodl strategy should be 0 (all in idle)
@@ -170,20 +162,18 @@ fn withdraw_from_idle_success() {
     assert_eq!(strategy_balance, 0);
 
     // Df balance of user should be equal to deposited amount - amount_to_withdraw - 1000
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount_to_deposit - amount_to_withdraw - 1000);
 
     // user tries to withdraw more than deposited amount
     let amount_to_withdraw_more = amount_to_deposit + 1;
-    let result = test
-        .defindex_contract
+    let result = defindex_contract
         .try_withdraw(&amount_to_withdraw_more, &users[0]);
 
     assert_eq!(result, Err(Ok(ContractError::AmountOverTotalSupply)));
 
     // // withdraw remaining balance
-    let result = test
-        .defindex_contract
+    let result = defindex_contract
         .withdraw(&(amount_to_deposit - amount_to_withdraw - 1000), &users[0]);
 
     assert_eq!(
@@ -191,7 +181,7 @@ fn withdraw_from_idle_success() {
         sorobanvec![&test.env, amount_to_deposit - amount_to_withdraw - 1000]
     );
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
     let user_balance = test.token0.balance(&users[0]);
@@ -211,16 +201,17 @@ fn withdraw_from_strategy_success() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount = 1000i128;
 
@@ -231,17 +222,17 @@ fn withdraw_from_strategy_success() {
     assert_eq!(user_balance, amount);
     // here youll need to create a client for a token with the same address
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
-    test.defindex_contract.deposit(
+    defindex_contract.deposit(
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
         &false,
     );
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount - 1000);
 
     let investments = sorobanvec![
@@ -258,14 +249,14 @@ fn withdraw_from_strategy_success() {
         }),
     ];
 
-    test.defindex_contract.invest(&investments);
+    defindex_contract.invest(&investments);
 
-    let vault_balance = test.token0.balance(&test.defindex_contract.address);
+    let vault_balance = test.token0.balance(&defindex_contract.address);
     assert_eq!(vault_balance, 0);
 
-    test.defindex_contract.withdraw(&df_balance, &users[0]);
+    defindex_contract.withdraw(&df_balance, &users[0]);
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
     let user_balance = test.token0.balance(&users[0]);

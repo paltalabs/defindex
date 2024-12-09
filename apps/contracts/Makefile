@@ -1,4 +1,4 @@
-SUBDIRS = strategies vault factory
+SUBDIRS = strategies vault factory integration-test
 
 default: build
 

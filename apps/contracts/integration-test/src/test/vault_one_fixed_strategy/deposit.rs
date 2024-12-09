@@ -33,7 +33,8 @@ fn fixed_apr_deposit_success() {
             args: (
                 Vec::from_array(&setup.env,[deposit_amount]),
                 Vec::from_array(&setup.env,[deposit_amount]),
-                user.clone()
+                user.clone(),
+                false
             ).into_val(&setup.env),
             sub_invokes: &[
                 MockAuthInvoke {
@@ -97,7 +98,8 @@ fn fixed_apr_deposit_insufficient_balance() {
             args: (
                 Vec::from_array(&setup.env,[deposit_amount]),
                 Vec::from_array(&setup.env,[deposit_amount]),
-                user.clone()
+                user.clone(),
+                false
             ).into_val(&setup.env),
             sub_invokes: &[
                 MockAuthInvoke {
@@ -161,7 +163,8 @@ fn fixed_apr_deposit_multiple_users() {
             args: (
                 Vec::from_array(&setup.env,[deposit_amount]),
                 Vec::from_array(&setup.env,[deposit_amount]),
-                user1.clone()
+                user1.clone(),
+                false
             ).into_val(&setup.env),
             sub_invokes: &[
                 MockAuthInvoke {
@@ -188,7 +191,8 @@ fn fixed_apr_deposit_multiple_users() {
             args: (
                 Vec::from_array(&setup.env,[deposit_amount]),
                 Vec::from_array(&setup.env,[deposit_amount]),
-                user2.clone()
+                user2.clone(),
+                false
             ).into_val(&setup.env),
             sub_invokes: &[
                 MockAuthInvoke {
