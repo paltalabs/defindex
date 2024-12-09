@@ -170,3 +170,22 @@ yarn build
 # Publish to npm
 npm publish --access public
 ```
+
+## 📄 Whitepaper
+
+To generate a pdf version of the whitepaper, you need to install mdbook:
+```sh
+cargo install mdbook
+# Install mdbook-pdf
+cargo install mdbook-pdf
+
+# Install mdbook-katex
+cargo install mdbook-katex
+```
+
+ Then, run the following command:
+```sh
+cd apps/docs/10-whitepaper
+mdbook build
+
+```
