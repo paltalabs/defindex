@@ -2,11 +2,11 @@
 extern crate std;
 
 use crate::{
-    blend_pool::{self, BlendPoolClient, Request, ReserveConfig, ReserveEmissionMetadata}, storage::DAY_IN_LEDGERS, BlendStrategy, BlendStrategyClient
+    blend_pool::{self, BlendPoolClient, Request, ReserveConfig, ReserveEmissionMetadata}, storage::DAY_IN_LEDGERS, BlendStrategy
 };
 use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::{
-    testutils::{Address as _, BytesN as _, Ledger as _, LedgerInfo}, token::StellarAssetClient, vec, Address, BytesN, Env, IntoVal, String, Symbol, Val, Vec
+    testutils::{BytesN as _, Ledger as _, LedgerInfo}, token::StellarAssetClient, vec, Address, BytesN, Env, IntoVal, String, Symbol, Val, Vec
 };
 
 mod blend_factory_pool {
@@ -251,8 +251,7 @@ impl EnvTestUtils for Env {
 use sep_40_oracle::testutils::{Asset, MockPriceOracleClient, MockPriceOracleWASM};
 
 pub fn create_mock_oracle<'a>(e: &Env) -> (Address, MockPriceOracleClient<'a>) {
-    let contract_id = Address::generate(e);
-    e.register_contract_wasm(&contract_id, MockPriceOracleWASM);
+    let contract_id = e.register(MockPriceOracleWASM, ());
     (
         contract_id.clone(),
         MockPriceOracleClient::new(e, &contract_id),
@@ -278,10 +277,10 @@ impl<'a> BlendFixture<'a> {
         usdc: &Address,
     ) -> BlendFixture<'a> {
         env.budget().reset_unlimited();
-        let backstop = env.register_contract_wasm(None, blend_backstop::WASM);
-        let emitter = env.register_contract_wasm(None, blend_emitter::WASM);
-        let comet = env.register_contract_wasm(None, blend_comet::WASM);
-        let pool_factory = env.register_contract_wasm(None, blend_factory_pool::WASM);
+        let backstop = env.register(blend_backstop::WASM, ());
+        let emitter = env.register(blend_emitter::WASM, ());
+        let comet = env.register(blend_comet::WASM, ());
+        let pool_factory = env.register(blend_factory_pool::WASM, ());
         let blnd_client = StellarAssetClient::new(env, &blnd);
         let usdc_client = StellarAssetClient::new(env, &usdc);
         blnd_client
