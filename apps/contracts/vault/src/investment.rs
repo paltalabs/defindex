@@ -112,48 +112,57 @@ pub fn generate_and_execute_investments(
         
         let current_asset_allocation = total_managed_funds.get(asset.address.clone()).unwrap();
         let asset_invested_funds = current_asset_allocation.invested_amount;
-            // We only consider assets that have a non zero allocation
-            // if the amount already invested in the asset is 0,
-            // this means that there is no previous investment in the asset, so we can just
-            // invest, and we need to wait for the manager to execute a manual investment of the idle assets
-            // on the strategies.        
-            if amount >0 && asset_invested_funds >0  {
-                // here the asset will be distributed amont the different strategies considering the current raio
-                // of investment in each strategy.
-                let mut strategy_allocations = Vec::new(&e);
-                let mut remaining_amount = amount;
-        
-                for (j, strategy) in asset.strategies.iter().enumerate() {
+
+        // We only consider assets that have a non zero allocation
+        // if the amount already invested in the asset is 0,
+        // this means that there is no previous investment in the asset, so we can just
+        // invest, and we need to wait for the manager to execute a manual investment of the idle assets
+        // on the strategies.        
+        if amount >0 && asset_invested_funds >0  {
+            // here the asset will be distributed amont the different strategies considering the current raio
+            // of investment in each strategy.
+            let mut strategy_allocations = Vec::new(&e);
+            let mut remaining_amount = amount;
+    
+            for (j, strategy) in asset.strategies.iter().enumerate() {
+    
+                let mut invest_amount = if j == asset.strategies.len() as usize - 1 {
+                    remaining_amount
+                } else {
                     let strategy_invested_funds = current_asset_allocation
-                        .strategy_allocations
-                        .get(j as u32)
-                        .unwrap()
-                        .amount;
-        
-                    let mut invest_amount = if j == asset.strategies.len() as usize - 1 {
-                        remaining_amount
+                    .strategy_allocations
+                    .get(j as u32)
+                    .unwrap()
+                    .amount;
+
+                    (amount * strategy_invested_funds) / asset_invested_funds
+                };
+    
+                remaining_amount -= invest_amount;
+                
+                strategy_allocations.push_back(
+                    if invest_amount > 0 {
+                        Some(StrategyAllocation {
+                            strategy_address: strategy.address.clone(),
+                            amount: invest_amount,
+                        })
                     } else {
-                        (amount * strategy_invested_funds) / asset_invested_funds
-                    };
-        
-                    remaining_amount -= invest_amount;
-        
-                    strategy_allocations.push_back(Some(StrategyAllocation {
-                        strategy_address: strategy.address.clone(),
-                        amount: invest_amount,
-                    }));
-                }
-        
-                asset_investments.push_back(Some(AssetInvestmentAllocation {
-                    asset: asset.address.clone(),
-                    strategy_allocations,
-                }));
-                
+                        None
+                    }
+                );
                 
             }
-            else {
-                asset_investments.push_back(None); // No investment for this asset
-            }
+    
+            asset_investments.push_back(Some(AssetInvestmentAllocation {
+                asset: asset.address.clone(),
+                strategy_allocations,
+            }));
+            
+            
+        }
+        else {
+            asset_investments.push_back(None); // No investments to be executed for this asset
+        }
     
     }
 
