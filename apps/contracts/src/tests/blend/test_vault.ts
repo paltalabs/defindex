@@ -175,6 +175,7 @@ export async function testBlendVault(user?: Keypair) {
     console.log(green, '---------------------- Invested in strategy ----------------------')
     console.log(green, 'Invested: ', investResult, ' in the strategy')
     console.log(green, '------------------------------------------------------------------')
+    return true
   } catch (error) {
     console.log('❌ Error Investing the Vault:', error);
     exit("Error Investing");
@@ -206,4 +207,4 @@ export async function testBlendVault(user?: Keypair) {
     
   // }
 }
-await testBlendVault();
+//await testBlendVault();
