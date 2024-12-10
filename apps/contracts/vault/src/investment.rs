@@ -46,9 +46,9 @@ use common::models::AssetStrategySet;
 /// - It allows the caller to update investment ratios freely, without verifying the current state of investments 
 ///   or strategies.
 pub fn check_and_execute_investments(
-    e: Env, 
-    assets: Vec<AssetStrategySet>,
-    asset_investments: Vec<Option<AssetInvestmentAllocation>>
+    e: &Env, 
+    assets: &Vec<AssetStrategySet>,
+    asset_investments: &Vec<Option<AssetInvestmentAllocation>>
 ) -> Result<(), ContractError> {
 
     // Iterate over each asset investment allocation
@@ -99,12 +99,12 @@ pub fn check_and_execute_investments(
 
  
 */
-pub fn generate_and_execute_investments(
+pub fn generate_investment_allocations(
     e: &Env,
     assets: &Vec<AssetStrategySet>,
     total_managed_funds: &Map<Address, CurrentAssetInvestmentAllocation>,
     amounts: &Vec<i128>,
-) -> Result<(), ContractError> {
+) -> Result<Vec<Option<AssetInvestmentAllocation>>, ContractError> {
     let mut asset_investments = Vec::new(&e);
 
     for (i, amount) in amounts.iter().enumerate() {
@@ -123,23 +123,28 @@ pub fn generate_and_execute_investments(
             // of investment in each strategy.
             let mut strategy_allocations = Vec::new(&e);
             let mut remaining_amount = amount;
-    
+
             for (j, strategy) in asset.strategies.iter().enumerate() {
-    
-                let mut invest_amount = if j == asset.strategies.len() as usize - 1 {
+                // Determine the investment amount for the strategy
+                let invest_amount = if j == asset.strategies.len() as usize - 1 {
                     remaining_amount
                 } else {
                     let strategy_invested_funds = current_asset_allocation
-                    .strategy_allocations
-                    .get(j as u32)
-                    .unwrap()
-                    .amount;
+                        .strategy_allocations
+                        .get(j as u32)
+                        .unwrap()
+                        .amount;
 
-                    (amount * strategy_invested_funds) / asset_invested_funds
+                    amount
+                        .checked_mul(strategy_invested_funds)
+                        .and_then(|v| v.checked_div(asset_invested_funds))
+                        .unwrap()
                 };
-    
+
+                // Update the remaining amount
                 remaining_amount -= invest_amount;
-                
+
+                // Add the strategy allocation
                 strategy_allocations.push_back(
                     if invest_amount > 0 {
                         Some(StrategyAllocation {
@@ -148,15 +153,16 @@ pub fn generate_and_execute_investments(
                         })
                     } else {
                         None
-                    }
+                    },
                 );
-                
             }
-    
+
+            // Add the asset investment allocation
             asset_investments.push_back(Some(AssetInvestmentAllocation {
                 asset: asset.address.clone(),
                 strategy_allocations,
             }));
+
             
             
         }
@@ -165,7 +171,5 @@ pub fn generate_and_execute_investments(
         }
     
     }
-
-    check_and_execute_investments(e.clone(), assets.clone(), asset_investments)?;
-    Ok(())
+    Ok(asset_investments)
 }

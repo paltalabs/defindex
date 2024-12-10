@@ -29,7 +29,7 @@ use deposit::{process_deposit};
 use fee::{collect_fees, fetch_defindex_fee};
 use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds}; 
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
-use investment::{check_and_execute_investments, generate_and_execute_investments};
+use investment::{check_and_execute_investments, generate_investment_allocations};
 use models::{
     Instruction, OptionalSwapDetailsExactIn,
     OptionalSwapDetailsExactOut, CurrentAssetInvestmentAllocation,
@@ -225,13 +225,13 @@ impl VaultTrait for DeFindexVault {
         events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone());
 
         if invest {
-            // Generate investment allocations and execute them
-            generate_and_execute_investments(
+            let asset_investments = generate_investment_allocations(
                 &e,
                 &assets,
                 &total_managed_funds,
                 &amounts,
             )?;
+            check_and_execute_investments(&e, &assets, &asset_investments)?;
         }
 
         Ok((amounts, shares_to_mint))
@@ -710,7 +710,10 @@ impl VaultManagementTrait for DeFindexVault {
         }
 
         // Check and execute investments for each asset allocation
-        check_and_execute_investments(e, assets, asset_investments)?;
+        check_and_execute_investments(
+            &e, 
+            &assets, 
+            &asset_investments)?;
 
         Ok(())
     }
