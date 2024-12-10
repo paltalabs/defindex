@@ -11,35 +11,43 @@ use crate::{
 };
 use common::models::AssetStrategySet;
 
-/// Checks and executes the investments for each asset based on provided allocations.
-/// The function iterates through the specified assets and asset investments to ensure validity 
-/// and executes investments accordingly.
+/// Executes investment allocations for a set of assets based on the provided investment strategies.
+/// 
+/// This function ensures that the specified assets and strategies match the contract's known configuration, 
+/// then validates and processes the investment allocations for each asset and its strategies. It assumes 
+/// that the caller is responsible for ensuring the correctness of investment ratios and does not check the 
+/// current state of the strategies or existing investments.
 ///
 /// # Arguments
 /// * `e` - The current environment reference.
-/// * `assets` - A vector of `AssetStrategySet` that holds information about assets and their associated strategies.
+/// * `assets` - A vector of `AssetStrategySet` representing the assets and their associated strategies 
+///   managed by this vault.
 /// * `asset_investments` - A vector of optional investment allocations for each asset.
-///s
-/// # Returns
-/// * `Result<(), ContractError>` - Returns `Ok(())` if all investments are successful or an appropriate `ContractError` if any issue is encountered.
 ///
-/// # Function Flow
-/// 1. **Iterate Over Asset Investments**: Loops through each asset investment allocation.
+/// # Returns
+/// * `Result<(), ContractError>` - Returns `Ok(())` if all investments are successful, or an appropriate 
+///   `ContractError` if validation or execution fails.
+///
+/// # Function Details
+/// 1. **Iterates Over Asset Investments**: Loops through each asset's investment allocation, processing only 
+///    defined allocations.
 /// 2. **Validation**:
-///    - **Asset Address Check**: Ensures that the asset's address matches the expected address in the allocation.
-///    - **Strategy Length Check**: Verifies that the number of strategies matches between the asset and the corresponding allocation.
-///    - **Note**: The total intended investment check has been removed as the subsequent operations inherently perform the same validation.
-/// 3. **Process Strategy Investments**:
-///    - For each strategy within an asset:
-///      - **Non-Negative Amount Check**: Validates that the investment amount is non-negative.
-///      - **Strategy Active Check**: Ensures that the strategy is not paused before proceeding with the investment.
-///      - **Execute Investment**: Calls the `invest_in_strategy` fuction if all checks pass.
+///    - Confirms that the asset's address matches the expected address in the allocation.
+///    - Checks that the number of strategies in the asset matches the provided allocation.
+/// 3. **Processes Strategy Investments**:
+///    - Ensures that investment amounts are non-negative.
+///    - Verifies that strategies are active before investing.
+///    - Executes the investment for valid allocations by calling `invest_in_strategy`.
 ///
 /// # Errors
-/// * Returns `ContractError::WrongAssetAddress` if an asset's address does not match the expected address.
-/// * Returns `ContractError::WrongStrategiesLength` if the number of strategies in the asset and allocation do not match.
-/// * Returns `ContractError::StrategyPaused` if an investment targets a paused strategy.
+/// * `ContractError::WrongAssetAddress` - If the asset's address does not match the allocation.
+/// * `ContractError::WrongStrategiesLength` - If the number of strategies in the asset and allocation do not match.
+/// * `ContractError::StrategyPaused` - If an allocation targets a paused strategy.
 ///
+/// # Notes
+/// - The function relies on the assets being ordered consistently with the investment allocations.
+/// - It allows the caller to update investment ratios freely, without verifying the current state of investments 
+///   or strategies.
 pub fn check_and_execute_investments(
     e: Env, 
     assets: Vec<AssetStrategySet>,
