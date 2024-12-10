@@ -84,7 +84,7 @@ async function prepareEnvironment() {
     await airdropAccount(emergencyManager);
     await airdropAccount(feeReceiver);
     await airdropAccount(manager);
-    await mintToken(testUser, initialAmount);
+    await airdropAccount(testUser);
   }
 }
 
@@ -530,12 +530,12 @@ switch (tests) {
       const twoStrategies = await testVaultTwoStrategies();
       const blendStrategy = await testBlendStrategy();
       const blendVault = await testBlendVault();
-      console.log(green, '----------------------------------------------------------------------------------------------------------------------------------------------')
-      console.log(green, 'All tests passed successfully');
-      console.log(green, '----------------------------------------------------------------------------------------------------------------------------------------------')
-      console.log('')
-      console.log(green, '----------------------------------------------------------------------------------------------------------------------------------------------')
-      console.log(green, 'One strategy results')
+      console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------")
+      console.log(green, "All tests passed successfully");
+      console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------")
+      console.log("")
+      console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------")
+      console.log(green, "One strategy results")
       console.table(oneStrategy);
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log("");
