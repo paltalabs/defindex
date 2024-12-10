@@ -91,14 +91,40 @@ pub fn check_and_execute_investments(
     Ok(())
 }
 
-/*
- The next function is called after a deposit has been done, where the amouns have already been 
- calculaed to be in the correct proportion on how much to invest in every asset.
- However, no proportion has been calculated on how to invest on each strategy for each asse.
- This function handles this, given the current state of the strategies.
+/// Generates investment allocations for a set of assets and their associated strategies.
+/// 
+/// This function calculates the distribution of funds across strategies for each asset based 
+/// on the current state of strategy investments. The allocations are returned as a vector, 
+/// where each entry corresponds to an asset's investment allocation or `None` if no allocation 
+/// is required.
+///
+/// # Arguments
+/// - `e` - Reference to the current environment.
+/// - `assets` - A vector of `AssetStrategySet` objects representing the assets and their strategies.
+/// - `total_managed_funds` - A map containing the current allocation of funds across all strategies for each asset.
+/// - `amounts` - A vector of amounts representing the funds to be allocated for each asset.
+///
+/// # Returns
+/// - `Ok(Vec<Option<AssetInvestmentAllocation>>)` - A vector of investment allocations where each entry 
+///   represents an asset's strategy allocations. If an asset does not require allocation, its entry is `None`.
+/// - `Err(ContractError)` - If any errors occur during the allocation process, such as invalid data or calculations.
+///
+/// # Function Flow
+/// 1. **Iterate Over Assets**: For each asset in the provided list:
+///    - Skip assets with zero amounts or no prior investments.
+///    - Calculate the allocation of funds across strategies proportionally based on the current state.
+/// 2. **Proportional Distribution**:
+///    - For each strategy within an asset, determine the proportional investment based on its existing allocation.
+///    - Ensure that all amounts are correctly calculated without overflows or division errors.
+/// 3. **Prepare Allocation**:
+///    - Append the calculated strategy allocations to the resulting vector.
+///    - Include `None` for assets with no required allocations.
+/// 4. **Return Results**: Return the vector containing the investment allocations.
+///
+/// # Notes
+/// - This function does not execute the investments; it only prepares the allocations.
+/// - It assumes that the provided `total_managed_funds` contains valid and complete data.
 
- 
-*/
 pub fn generate_investment_allocations(
     e: &Env,
     assets: &Vec<AssetStrategySet>,

@@ -233,8 +233,8 @@ impl VaultTrait for DeFindexVault {
             )?;
             check_and_execute_investments(&e, &assets, &asset_investments)?;
         }
-
         Ok((amounts, shares_to_mint))
+
     }
 
     /// Handles the withdrawal process for a specified number of vault shares.
