@@ -70,7 +70,7 @@ pub(crate) fn get_token_admin_client<'a>(
 
 pub(crate) fn create_strategy_params_token0(test: &DeFindexVaultTest) -> Vec<Strategy> {
     sorobanvec![
-        &test.env,
+        &test.env, 
         Strategy {
             name: String::from_str(&test.env, "Strategy 1"),
             address: test.strategy_client_token0.address.clone(),

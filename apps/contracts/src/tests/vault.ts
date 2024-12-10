@@ -1,3 +1,170 @@
+
+import {
+    Address,
+    Keypair,
+    nativeToScVal,
+    scValToNative,
+    xdr
+} from "@stellar/stellar-sdk";
+import { i128, u32, u64 } from "@stellar/stellar-sdk/contract";
+import { airdropAccount, invokeContract, invokeCustomContract } from "../utils/contract.js";
+import { randomBytes } from "crypto";
+import { AddressBook } from "../utils/address_book.js";
+import { config } from "../utils/env_config.js";
+
+const network = process.argv[2];
+const loadedConfig = config(network);
+export const admin = loadedConfig.admin;
+export const emergencyManager = loadedConfig.getUser("DEFINDEX_EMERGENCY_MANAGER_SECRET_KEY");
+export const feeReceiver = loadedConfig.getUser("DEFINDEX_FEE_RECEIVER_SECRET_KEY");
+export const manager = loadedConfig.getUser("DEFINDEX_MANAGER_SECRET_KEY");
+
+export interface CreateVaultParams {
+    address: Address;
+    strategies: Array<{
+      name: string;
+      address: string;
+      paused: boolean;
+    }>;
+  }
+
+
+/**
+ * Mints a specified amount of tokens for a given user.
+ *
+ * @param user - The Keypair of the user for whom the tokens will be minted.
+ * @param amount - The amount of tokens to mint.
+ * @returns A promise that resolves when the minting operation is complete.
+ */
+export async function mintToken( user: Keypair, amount: number) {
+    const soroswapUSDC = new Address("CAAFIHB4I7WQMJMKC22CZVQNNX7EONWSOMT6SUXK6I3G3F6J4XFRWNDI");
+    await invokeCustomContract(
+      soroswapUSDC.toString(),
+      "mint",
+      [new Address(user.publicKey()).toScVal(), nativeToScVal(amount, { type: "i128" })],
+      loadedConfig.getUser("SOROSWAP_MINT_SECRET_KEY")
+    )
+  }
+  
+/**
+ * Generates the parameters required to create a DeFindex vault.
+ *
+ * @param {Keypair} emergencyManager - The keypair of the emergency manager.
+ * @param {Keypair} feeReceiver - The keypair of the fee receiver.
+ * @param {Keypair} manager - The keypair of the manager.
+ * @param {string} vaultName - The name of the vault.
+ * @param {string} vaultSymbol - The symbol of the vault.
+ * @param {xdr.ScVal[]} assetAllocations - The asset allocations for the vault.
+ * @returns {xdr.ScVal[]} An array of ScVal objects representing the parameters.
+ */
+function getCreateDeFindexParams(
+    emergencyManager: Keypair,
+    feeReceiver: Keypair,
+    manager: Keypair,
+    vaultName: string,
+    vaultSymbol: string,
+    assetAllocations: xdr.ScVal[]
+  ): xdr.ScVal[] {
+    return [
+      new Address(emergencyManager.publicKey()).toScVal(),
+      new Address(feeReceiver.publicKey()).toScVal(),
+      nativeToScVal(100, { type: "u32" }),
+      nativeToScVal(vaultName ?? 'TestVault', { type: "string" }),
+      nativeToScVal(vaultSymbol ?? 'TSTV', { type: "string" }),
+      new Address(manager.publicKey()).toScVal(),
+      xdr.ScVal.scvVec(assetAllocations),
+      nativeToScVal(randomBytes(32)),
+    ];
+  }
+
+  /**
+ * Converts an array of asset allocation parameters into an array of xdr.ScVal objects.
+ *
+ * @param {CreateVaultParams[]} assets - An array of asset allocation parameters.
+ * Each asset contains an address and an array of strategies.
+ * @returns {xdr.ScVal[]} An array of xdr.ScVal objects representing the asset allocations.
+ *
+ * Each asset is converted into an xdr.ScVal map with the following structure:
+ * - `address`: The address of the asset, converted to an xdr.ScVal.
+ * - `strategies`: An array of strategies, each converted to an xdr.ScVal map with the following structure:
+ *   - `address`: The address of the strategy, converted to an xdr.ScVal.
+ *   - `name`: The name of the strategy, converted to an xdr.ScVal.
+ *   - `paused`: A boolean indicating if the strategy is paused, converted to an xdr.ScVal.
+ */
+function getAssetAllocations(assets: CreateVaultParams[]): xdr.ScVal[] {
+    return assets.map((asset) => {
+      return xdr.ScVal.scvMap([
+        new xdr.ScMapEntry({
+          key: xdr.ScVal.scvSymbol("address"),
+          val: asset.address.toScVal(),
+        }),
+        new xdr.ScMapEntry({
+          key: xdr.ScVal.scvSymbol("strategies"),
+          val: xdr.ScVal.scvVec(
+            asset.strategies.map((strategy) =>
+              xdr.ScVal.scvMap([
+                new xdr.ScMapEntry({
+                  key: xdr.ScVal.scvSymbol("address"),
+                  val: new Address(strategy.address).toScVal(),
+                }),
+                new xdr.ScMapEntry({
+                  key: xdr.ScVal.scvSymbol("name"),
+                  val: nativeToScVal(strategy.name, { type: "string" }),
+                }),
+                new xdr.ScMapEntry({
+                  key: xdr.ScVal.scvSymbol("paused"),
+                  val: nativeToScVal(strategy.paused, { type: "bool" }),
+                }),
+              ])
+            )
+          ),
+        }),
+      ]);
+    });
+  }
+  
+  
+  /**
+   * Deploys a new DeFindex Vault.
+   *
+   * @param addressBook - The address book containing necessary addresses.
+   * @param createVaultParams - An array of parameters required to create the vault.
+   * @param vaultName - The name of the vault to be created.
+   * @param vaultSymbol - The symbol of the vault to be created.
+   * @returns A promise that resolves to the address of the newly created vault.
+   *
+   * @throws Will throw an error if the contract invocation fails.
+   */
+  export async function deployVault(addressBook: AddressBook, createVaultParams: CreateVaultParams[], vaultName: string, vaultSymbol: string): Promise<string> {
+  
+    const assets: CreateVaultParams[] = createVaultParams;
+    const assetAllocations = getAssetAllocations(assets);
+  
+    const createDeFindexParams: xdr.ScVal[] = getCreateDeFindexParams(
+      emergencyManager,
+      feeReceiver, 
+      manager, 
+      vaultName, 
+      vaultSymbol, 
+      assetAllocations
+    );
+    try {
+  
+      const result = await invokeContract(
+        'defindex_factory',
+        addressBook,
+        'create_defindex_vault',
+        createDeFindexParams,
+        loadedConfig.admin
+      );
+      console.log('🚀 « DeFindex Vault created with address:', scValToNative(result.returnValue));
+      return scValToNative(result.returnValue);
+    } catch (error) {
+      console.error('Error deploying vault:', error);
+      throw error;
+    }
+  }
+
 /**
  * Description: Deposits a specified amount to the vault for a user and returns the user details along with pre- and post-deposit balances.
  *
@@ -8,19 +175,6 @@
  * @example
  * const { user, balanceBefore, result, balanceAfter } = await depositToVault("CCE7MLKC7R6TIQA37A7EHWEUC3AIXIH5DSOQUSVAARCWDD7257HS4RUG", user);
  */
-
-import {
-    Address,
-    Keypair,
-    nativeToScVal,
-    scValToNative,
-    xdr
-} from "@stellar/stellar-sdk";
-import { i128, u32, u64 } from "@stellar/stellar-sdk/contract";
-import { airdropAccount, invokeCustomContract } from "../utils/contract.js";
-
-const network = process.argv[2];
-
 export async function depositToVault(deployedVault: string, amount: number[], user?: Keypair, invest?: boolean) {
     // Create and fund a new user account if not provided
     const newUser = user ? user : Keypair.random();
@@ -226,7 +380,7 @@ export async function investVault(
                     val: entry.asset.toScVal(), // Convert asset address to ScVal
                 }),
                 new xdr.ScMapEntry({
-                    key: xdr.ScVal.scvSymbol("strategy_investments"),
+                    key: xdr.ScVal.scvSymbol("strategy_allocations"),
                     val: xdr.ScVal.scvVec(
                         entry.strategy_investments.map((investment) =>
                             xdr.ScVal.scvMap([
@@ -235,7 +389,7 @@ export async function investVault(
                                     val: nativeToScVal(BigInt(investment.amount), { type: "i128" }), // Ensure i128 conversion
                                 }),
                                 new xdr.ScMapEntry({
-                                    key: xdr.ScVal.scvSymbol("strategy"),
+                                    key: xdr.ScVal.scvSymbol("strategy_address"),
                                     val: investment.strategy.toScVal(), // Convert strategy address
                                 }),
                             ])

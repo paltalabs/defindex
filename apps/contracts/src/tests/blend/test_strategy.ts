@@ -117,9 +117,11 @@ export async function testBlendStrategy(user?: Keypair) {
       console.log(green, '------------ BLND Harvested from the vault ------------')
       console.log(green, 'harvestResult', harvestResultValue)
       console.log(green, '----------------------------------------------------')
+      return true
     }catch(e){
       console.log('error', e)
+      return false
     }
 }
 
-await testBlendStrategy();
+//await testBlendStrategy();
