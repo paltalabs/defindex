@@ -2,6 +2,7 @@
 use crate::blend_pool::{BlendPoolClient, Request};
 use crate::constants::MIN_DUST;
 use crate::storage::DAY_IN_LEDGERS;
+use crate::test::blend::soroswap_setup::create_soroswap_pool;
 use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils};
 use crate::BlendStrategyClient;
 use defindex_strategy_core::StrategyError;
@@ -25,9 +26,18 @@ fn success() {
     let blnd = e.register_stellar_asset_contract_v2(admin.clone());
     let usdc = e.register_stellar_asset_contract_v2(admin.clone());
     let xlm = e.register_stellar_asset_contract_v2(admin.clone());
-    let _blnd_client = MockTokenClient::new(&e, &blnd.address());
+    let blnd_client = MockTokenClient::new(&e, &blnd.address());
     let usdc_client = MockTokenClient::new(&e, &usdc.address());
     let xlm_client = MockTokenClient::new(&e, &xlm.address());
+
+    // Setting up soroswap pool
+    let pool_admin = Address::generate(&e);
+    let amount_a = 100000000_0_000_000;
+    let amount_b = 50000000_0_000_000;
+    blnd_client.mint(&pool_admin, &amount_a);
+    usdc_client.mint(&pool_admin, &amount_b);
+    let soroswap_router = create_soroswap_pool(&e, &pool_admin, &blnd.address(), &usdc.address(), &amount_a, &amount_b);
+    // End of setting up soroswap pool
 
     let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
 
@@ -36,7 +46,7 @@ fn success() {
     // emits to each reserve token evently, and starts emissions
     let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
     let pool_client = BlendPoolClient::new(&e, &pool);
-    let strategy = create_blend_strategy(&e, &usdc.address(), &pool, &0u32, &blnd.address(), &Address::generate(&e));
+    let strategy = create_blend_strategy(&e, &usdc.address(), &pool, &0u32, &blnd.address(), &soroswap_router.address);
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
 
     /*
@@ -51,7 +61,7 @@ fn success() {
     usdc_client.mint(&user_2, &starting_balance);
     usdc_client.mint(&user_3, &starting_balance);
 
-    let user_3_balance = usdc_client.balance(&user_2);
+    let user_3_balance = usdc_client.balance(&user_3);
     assert_eq!(user_3_balance, starting_balance);
 
 
@@ -219,8 +229,13 @@ fn success() {
      */
 
     // harvest
-    // strategy_client.harvest(&usdc, &user_2, &expected_fees);
+    let blnd_strategy_balance = blnd_client.balance(&strategy);
+    assert_eq!(blnd_strategy_balance, 0);
 
+    strategy_client.harvest(&user_2);
+
+    let blnd_strategy_balance = blnd_client.balance(&strategy);
+    assert_eq!(blnd_strategy_balance, 0);
     // -> verify harvest
     
 }
