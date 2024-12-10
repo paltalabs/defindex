@@ -210,10 +210,18 @@ impl VaultTrait for DeFindexVault {
         // If this was not done before, last_fee_assesment will set to be current timestamp and this will return without action
         collect_fees(&e)?;
 
+        let total_managed_funds = fetch_total_managed_funds(&e);
+
         let assets = get_assets(&e);
 
         let (amounts, shares_to_mint) =
-            process_deposit(&e, &assets, &amounts_desired, &amounts_min, &from)?;
+            process_deposit(
+                &e, 
+                &assets, 
+                &total_managed_funds,
+                &amounts_desired, 
+                &amounts_min, 
+                &from)?;
         events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone());
 
         if invest {
