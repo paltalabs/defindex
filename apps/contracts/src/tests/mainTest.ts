@@ -381,7 +381,7 @@ switch (tests) {
     console.log(green, 'Usage: yarn test <network> <test>');
     console.log(yellow, '   Options:');
     console.log(yellow, '       Network: mainnet (not avaliable yet) | testnet');
-    console.log(yellow, '       Tests: -a (all tests) | -os (one strategy tests)| -ts (two strategy tests)');
+    console.log(yellow, '       Tests: -a (all tests) | -os (one strategy tests)| -ts (two strategy tests) | -bs (blend strategy tests) | -bv (blend vault tests)');
     exit(0);
   case '-a':
     console.log(yellow, 'Running all tests');
@@ -391,29 +391,29 @@ switch (tests) {
       const twoStrategies = await testVaultTwoStrategies();
       const blendStrategy = await testBlendStrategy();
       const blendVault = await testBlendVault();
-      console.log(green, '---------------------------------------')
+      console.log(green, '----------------------------------------------------------------------------------------------------------------------------------------------')
       console.log(green, 'All tests passed successfully');
-      console.log(green, '---------------------------------------')
+      console.log(green, '----------------------------------------------------------------------------------------------------------------------------------------------')
       console.log('')
-      console.log(green, '---------------------------------------')
+      console.log(green, '----------------------------------------------------------------------------------------------------------------------------------------------')
       console.log(green, 'One strategy results')
       console.table(oneStrategy);
-      console.log(green, '---------------------------------------')
+      console.log(green, '----------------------------------------------------------------------------------------------------------------------------------------------')
       console.log('')
-      console.log(green, '---------------------------------------')
+      console.log(green, '----------------------------------------------------------------------------------------------------------------------------------------------')
       console.log(green, 'Two strategies results')
       console.table(twoStrategies);
-      console.log(green, '---------------------------------------')
+      console.log(green, '----------------------------------------------------------------------------------------------------------------------------------------------')
       console.log('')
-      console.log(green, '---------------------------------------')
+      console.log(green, '----------------------------------------------------------------------------------------------------------------------------------------------')
       console.log(green, 'Blend strategy test status')
       console.table(blendStrategy);
-      console.log(green, '---------------------------------------')
+      console.log(green, '----------------------------------------------------------------------------------------------------------------------------------------------')
       console.log('')
-      console.log(green, '---------------------------------------')
+      console.log(green, '----------------------------------------------------------------------------------------------------------------------------------------------')
       console.log(green, 'Blend vault test status')
       console.table(blendVault);
-      console.log(green, '---------------------------------------')
+      console.log(green, '----------------------------------------------------------------------------------------------------------------------------------------------')
       exit(0);
     } catch (error) {
       console.log(red, 'Tests failed:', error);

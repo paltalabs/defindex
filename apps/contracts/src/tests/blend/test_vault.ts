@@ -111,6 +111,11 @@ export async function testBlendVault(user?: Keypair) {
   const initialAmount = 100_0_000_000;
   let blendVaultAddress: string = "";
 
+  let createStatus: boolean;
+  let depositStatus: boolean;
+  let investStatus: boolean;
+
+  // Create vault
   try {
     console.log(purple, '--------------------------------------------------------------')
     console.log(purple, '----------------------- Creating vault -----------------------')
@@ -128,13 +133,15 @@ export async function testBlendVault(user?: Keypair) {
     console.log(green, '----------------------- Vault created -------------------------')
     console.log(green, 'createResult', blendVaultAddress)
     console.log(green, '---------------------------------------------------------------')
+    createStatus = true;
   } catch(e){
     console.log('❌ Error Creating the vault', e)
+    createStatus = false;
     exit("Error Creating");
   }
 
+  // Deposit assets to the vault
   try {    
-    // Deposit assets to the vault
     console.log(purple, '---------------------------------------------------------------------------')
     console.log(purple, '----------------------- Depositing XLM to the vault -----------------------')
     console.log(purple, '---------------------------------------------------------------------------')
@@ -146,13 +153,15 @@ export async function testBlendVault(user?: Keypair) {
     console.log(green, 'depositResult', depositResult)
     console.log(green, 'Deposit balance after: ', depositBalanceAfter)
     console.log(green, '----------------------------------------------------')
+    depositStatus = true;
   } catch (error) {
+    depositStatus = false;
     console.log('❌ Error depositing into the vault:', error);
     exit("Error Depositing");
   }
 
+  // Invest in strategy
   try {
-    // Invest in strategy
     console.log(purple, '---------------------------------------------------------------------------')
     console.log(purple, '-------------------------- Investing in strategy --------------------------')
     console.log(purple, '---------------------------------------------------------------------------')
@@ -175,12 +184,18 @@ export async function testBlendVault(user?: Keypair) {
     console.log(green, '---------------------- Invested in strategy ----------------------')
     console.log(green, 'Invested: ', investResult, ' in the strategy')
     console.log(green, '------------------------------------------------------------------')
-    return true
+    investStatus = true;
   } catch (error) {
     console.log('❌ Error Investing the Vault:', error);
+    investStatus = false;
     exit("Error Investing");
   }
-
+  return { status:{
+      createStatus: createStatus,
+      depositStatus: depositStatus, 
+      investStatus: investStatus 
+    }
+  }
   // try { 
   //   // Withdraw assets from the vault
   //   console.log(purple, '------------------------------------------------------------------------------')
