@@ -889,3 +889,9 @@ fn without_mock_all_auths() {
     
 
 }
+
+#[test]
+fn one_asset_several_strategies() { 
+
+}
+

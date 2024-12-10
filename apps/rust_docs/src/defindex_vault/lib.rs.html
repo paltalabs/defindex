@@ -748,11 +748,61 @@
 <a href="#748" id="748">748</a>
 <a href="#749" id="749">749</a>
 <a href="#750" id="750">750</a>
+<a href="#751" id="751">751</a>
+<a href="#752" id="752">752</a>
+<a href="#753" id="753">753</a>
+<a href="#754" id="754">754</a>
+<a href="#755" id="755">755</a>
+<a href="#756" id="756">756</a>
+<a href="#757" id="757">757</a>
+<a href="#758" id="758">758</a>
+<a href="#759" id="759">759</a>
+<a href="#760" id="760">760</a>
+<a href="#761" id="761">761</a>
+<a href="#762" id="762">762</a>
+<a href="#763" id="763">763</a>
+<a href="#764" id="764">764</a>
+<a href="#765" id="765">765</a>
+<a href="#766" id="766">766</a>
+<a href="#767" id="767">767</a>
+<a href="#768" id="768">768</a>
+<a href="#769" id="769">769</a>
+<a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
+<a href="#782" id="782">782</a>
+<a href="#783" id="783">783</a>
+<a href="#784" id="784">784</a>
+<a href="#785" id="785">785</a>
+<a href="#786" id="786">786</a>
+<a href="#787" id="787">787</a>
+<a href="#788" id="788">788</a>
+<a href="#789" id="789">789</a>
+<a href="#790" id="790">790</a>
+<a href="#791" id="791">791</a>
+<a href="#792" id="792">792</a>
+<a href="#793" id="793">793</a>
+<a href="#794" id="794">794</a>
+<a href="#795" id="795">795</a>
+<a href="#796" id="796">796</a>
+<a href="#797" id="797">797</a>
+<a href="#798" id="798">798</a>
+<a href="#799" id="799">799</a>
+<a href="#800" id="800">800</a>
+<a href="#801" id="801">801</a>
 </pre></div><pre class="rust"><code><span class="attr">#![no_std]
-</span><span class="kw">use </span>deposit::{generate_and_execute_investments, process_deposit};
-<span class="kw">use </span>soroban_sdk::{
+</span><span class="kw">use </span>soroban_sdk::{
     contract, contractimpl, panic_with_error,
-    token::{TokenClient, TokenInterface},
+    token::{TokenClient},
     Address, Env, Map, String, Vec,
 };
 <span class="kw">use </span>soroban_token_sdk::metadata::TokenMetadata;
@@ -776,10 +826,11 @@
 
 <span class="kw">use </span>access::{AccessControl, AccessControlTrait, RolesDataKey};
 <span class="kw">use </span>aggregator::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
+<span class="kw">use </span>deposit::{process_deposit};
 <span class="kw">use </span>fee::{collect_fees, fetch_defindex_fee};
 <span class="kw">use </span>funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds}; 
 <span class="kw">use </span>interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
-<span class="kw">use </span>investment::check_and_execute_investments;
+<span class="kw">use </span>investment::{check_and_execute_investments, generate_investment_allocations};
 <span class="kw">use </span>models::{
     Instruction, OptionalSwapDetailsExactIn,
     OptionalSwapDetailsExactOut, CurrentAssetInvestmentAllocation,
@@ -792,9 +843,9 @@
 <span class="kw">use </span>strategies::{
     get_strategy_asset, get_strategy_client,
     get_strategy_struct, invest_in_strategy, pause_strategy, unpause_strategy,
-    withdraw_from_strategy,
+    unwind_from_strategy,
 };
-<span class="kw">use </span>token::{internal_burn, write_metadata, VaultToken};
+<span class="kw">use </span>token::{internal_burn, write_metadata};
 <span class="kw">use </span>utils::{
     calculate_asset_amounts_per_vault_shares,
     check_initialized,
@@ -915,18 +966,21 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Handles user deposits into the DeFindex Vault.
+    <span class="doccomment">/// Handles user deposits into the DeFindex Vault and optionally allocates investments automatically.
     ///
     /// This function processes a deposit by transferring each specified asset amount from the user's address to
     /// the vault, allocating assets according to the vault's defined strategy ratios, and minting vault shares that
-    /// represent the user's proportional share in the vault. The `amounts_desired` and `amounts_min` vectors should
-    /// align with the vault's asset order to ensure correct allocation.
+    /// represent the user's proportional share in the vault. Additionally, if the `invest` parameter is set to `true`,
+    /// the function will immediately generate and execute investment allocations based on the vault's strategy configuration.
     ///
     /// # Parameters
     /// * `e` - The current environment reference (`Env`), for access to the contract state and utilities.
     /// * `amounts_desired` - A vector specifying the user's intended deposit amounts for each asset.
     /// * `amounts_min` - A vector of minimum deposit amounts required for the transaction to proceed.
     /// * `from` - The address of the user making the deposit.
+    /// * `invest` - A boolean flag indicating whether to immediately invest the deposited funds into the vault's strategies:
+    ///     - `true`: Generate and execute investments after the deposit.
+    ///     - `false`: Leave the deposited funds as idle assets in the vault.
     ///
     /// # Returns
     /// * `Result&lt;(Vec&lt;i128&gt;, i128), ContractError&gt;` - Returns the actual deposited `amounts` and `shares_to_mint` if successful,
@@ -937,14 +991,21 @@
     /// 2. **Validation**: Checks that the lengths of `amounts_desired` and `amounts_min` match the vault's assets.
     /// 3. **Share Calculation**: Calculates `shares_to_mint` based on the vault's total managed funds and the deposit amount.
     /// 4. **Asset Transfer**: Transfers each specified amount from the user’s address to the vault as idle funds.
-    /// 5. **Vault shares Minting**: Mints vault shares for the user to represent their ownership in the vault.
+    /// 5. **Vault Shares Minting**: Mints vault shares for the user to represent their ownership in the vault.
+    /// 6. **Investment Execution**: If `invest` is `true`, generates and executes the investment allocations for the deposited funds.
+    ///     - Allocates funds across strategies proportionally to their current state.
+    ///     - Executes the investment to transition idle funds into the vault's strategies.
     ///
     /// # Notes
     /// - For the first deposit, if the vault has only one asset, shares are calculated directly based on the deposit amount.
     /// - For multiple assets, the function delegates to `calculate_deposit_amounts_and_shares_to_mint`
     ///   for precise share computation.
     /// - An event is emitted to log the deposit, including the actual deposited amounts and minted shares.
+    /// - If `invest` is `false`, deposited funds remain idle, allowing for manual investment at a later time.
     ///
+    /// # Errors
+    /// - Returns a `ContractError` if any validation or execution step fails.
+
     </span><span class="kw">fn </span>deposit(
         e: Env,
         amounts_desired: Vec&lt;i128&gt;,
@@ -960,33 +1021,68 @@
         // If this was not done before, last_fee_assesment will set to be current timestamp and this will return without action
         </span>collect_fees(<span class="kw-2">&amp;</span>e)<span class="question-mark">?</span>;
 
+        <span class="kw">let </span>total_managed_funds = fetch_total_managed_funds(<span class="kw-2">&amp;</span>e);
+
         <span class="kw">let </span>assets = get_assets(<span class="kw-2">&amp;</span>e);
 
         <span class="kw">let </span>(amounts, shares_to_mint) =
-            process_deposit(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>assets, <span class="kw-2">&amp;</span>amounts_desired, <span class="kw-2">&amp;</span>amounts_min, <span class="kw-2">&amp;</span>from)<span class="question-mark">?</span>;
+            process_deposit(
+                <span class="kw-2">&amp;</span>e, 
+                <span class="kw-2">&amp;</span>assets, 
+                <span class="kw-2">&amp;</span>total_managed_funds,
+                <span class="kw-2">&amp;</span>amounts_desired, 
+                <span class="kw-2">&amp;</span>amounts_min, 
+                <span class="kw-2">&amp;</span>from)<span class="question-mark">?</span>;
         events::emit_deposit_event(<span class="kw-2">&amp;</span>e, from, amounts.clone(), shares_to_mint.clone());
 
         <span class="kw">if </span>invest {
-            <span class="comment">// Generate investment allocations and execute them
-            </span>generate_and_execute_investments(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>amounts, <span class="kw-2">&amp;</span>assets)<span class="question-mark">?</span>;
+            <span class="kw">let </span>asset_investments = generate_investment_allocations(
+                <span class="kw-2">&amp;</span>e,
+                <span class="kw-2">&amp;</span>assets,
+                <span class="kw-2">&amp;</span>total_managed_funds,
+                <span class="kw-2">&amp;</span>amounts,
+            )<span class="question-mark">?</span>;
+            check_and_execute_investments(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>assets, <span class="kw-2">&amp;</span>asset_investments)<span class="question-mark">?</span>;
         }
-
         <span class="prelude-val">Ok</span>((amounts, shares_to_mint))
+
     }
 
-    <span class="doccomment">/// Withdraws assets from the DeFindex Vault by burning Vault Share tokens.
+    <span class="doccomment">/// Handles the withdrawal process for a specified number of vault shares.
     ///
-    /// This function calculates the amount of assets to withdraw based on the number of Vault Share tokens being burned,
-    /// then transfers the appropriate assets back to the user, pulling from both idle funds and strategies
-    /// as needed.
+    /// This function performs the following steps:
+    /// 1. Validates the environment and the inputs:
+    ///    - Ensures the contract is initialized.
+    ///    - Checks that the withdrawal amount (`withdraw_shares`) is non-negative.
+    ///    - Verifies the authorization of the `from` address.
+    /// 2. Collects applicable fees.
+    /// 3. Calculates the proportionate withdrawal amounts for each asset based on the number of shares.
+    /// 4. Burns the specified shares from the user's account.
+    /// 5. Processes the withdrawal for each asset:
+    ///    - First attempts to cover the withdrawal amount using idle funds.
+    ///    - If idle funds are insufficient, unwinds investments from the associated strategies
+    ///      to cover the remaining amount, accounting for rounding errors in the last strategy.
+    /// 6. Transfers the withdrawn funds to the user's address (`from`).
+    /// 7. Emits an event to record the withdrawal details.
     ///
-    /// # Arguments:
-    /// * `e` - The environment.
-    /// * `shares_amount` - The amount of Vault Share tokens to burn for the withdrawal.
-    /// * `from` - The address of the user requesting the withdrawal.
+    /// ## Parameters:
+    /// - `e`: The contract environment (`Env`).
+    /// - `withdraw_shares`: The number of vault shares to withdraw.
+    /// - `from`: The address initiating the withdrawal.
     ///
-    /// # Returns:
-    /// * `Result&lt;(), ContractError&gt;` - Ok if successful, otherwise returns a ContractError.
+    /// ## Returns:
+    /// - A `Result` containing a vector of withdrawn amounts for each asset (`Vec&lt;i128&gt;`),
+    ///   or a `ContractError` if the withdrawal fails.
+    ///
+    /// ## Errors:
+    /// - `ContractError::AmountOverTotalSupply`: If the specified shares exceed the total supply.
+    /// - `ContractError::ArithmeticError`: If any arithmetic operation fails during calculations.
+    /// - `ContractError::WrongAmountsLength`: If there is a mismatch in asset allocation data.
+    ///
+    /// ## TODOs:
+    /// - Implement minimum amounts for withdrawals to ensure compliance with potential restrictions.
+    /// - Replace the returned vector with the original `asset_withdrawal_amounts` map for better structure.
+    /// - avoid the usage of a Map, choose between using map or vector
     </span><span class="kw">fn </span>withdraw(
         e: Env,
         withdraw_shares: i128,
@@ -1010,69 +1106,72 @@
         )<span class="question-mark">?</span>;
     
         <span class="comment">// Burn the shares after calculating the withdrawal amounts
-        // this will panic with error if the user does not have enough balance
+        // This will panic with error if the user does not have enough balance
         </span>internal_burn(e.clone(), from.clone(), withdraw_shares);
     
-        <span class="comment">// Loop through each asset to handle the withdrawal
+        <span class="kw">let </span>assets = get_assets(<span class="kw-2">&amp;</span>e); <span class="comment">// Use assets for iteration order
+        // Loop through each asset to handle the withdrawal
         </span><span class="kw">let </span><span class="kw-2">mut </span>withdrawn_amounts: Vec&lt;i128&gt; = Vec::new(<span class="kw-2">&amp;</span>e);
-        <span class="kw">for </span>(asset_address, requested_withdrawal_amount) <span class="kw">in </span>asset_withdrawal_amounts.iter() {
 
-            <span class="kw">let </span>asset_allocation = total_managed_funds
-            .get(asset_address.clone())
-            .unwrap_or_else(|| <span class="macro">panic_with_error!</span>(<span class="kw-2">&amp;</span>e, ContractError::WrongAmountsLength));
+        <span class="kw">for </span>asset <span class="kw">in </span>assets.iter() { <span class="comment">// Use assets instead of asset_withdrawal_amounts
+            </span><span class="kw">let </span>asset_address = <span class="kw-2">&amp;</span>asset.address;
 
-            <span class="comment">// Check idle funds for this asset
-            </span><span class="kw">let </span>idle_funds = asset_allocation.idle_amount;
-        
-            <span class="comment">// Withdraw from idle funds first
-            </span><span class="kw">if </span>idle_funds &gt;= requested_withdrawal_amount {
-                <span class="comment">// Idle funds cover the full amount
-                </span>TokenClient::new(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>asset_address).transfer(
-                    <span class="kw-2">&amp;</span>e.current_contract_address(),
-                    <span class="kw-2">&amp;</span>from,
-                    <span class="kw-2">&amp;</span>requested_withdrawal_amount,
-                );
-                withdrawn_amounts.push_back(requested_withdrawal_amount);
-                <span class="kw">continue</span>;
-            } <span class="kw">else </span>{
-                <span class="kw">let </span><span class="kw-2">mut </span>total_withdrawn_for_asset = <span class="number">0</span>;
-                <span class="comment">// Partial withdrawal from idle funds
-                </span>total_withdrawn_for_asset += idle_funds;
-                <span class="kw">let </span>remaining_withdrawal_amount = requested_withdrawal_amount - idle_funds;
-                
-                <span class="comment">// Withdraw the remaining amount from strategies
-                </span><span class="kw">let </span>total_invested_amount = asset_allocation.invested_amount;
-                
-                <span class="kw">for </span>strategy_allocation <span class="kw">in </span>asset_allocation.strategy_allocations.iter() {
-                    <span class="comment">// TODO: If strategy is paused, should we skip it? Otherwise, the calculation will go wrong.
-                    // if strategy.paused {
-                    //     continue;
-                    // }
-                    
-                    // Amount to unwind from strategy
-                    </span><span class="kw">let </span>strategy_withdrawal_share =
-                    (remaining_withdrawal_amount * strategy_allocation.amount) / total_invested_amount;
-                    
-                    <span class="kw">if </span>strategy_withdrawal_share &gt; <span class="number">0 </span>{
-                        withdraw_from_strategy(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>strategy_allocation.strategy_address, <span class="kw-2">&amp;</span>strategy_withdrawal_share)<span class="question-mark">?</span>;
-                        TokenClient::new(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>asset_address).transfer(
-                            <span class="kw-2">&amp;</span>e.current_contract_address(),
-                            <span class="kw-2">&amp;</span>from,
-                            <span class="kw-2">&amp;</span>strategy_withdrawal_share,
-                        );
-                        total_withdrawn_for_asset += strategy_withdrawal_share;
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(requested_withdrawal_amount) = asset_withdrawal_amounts.get(asset_address.clone()) {
+                <span class="kw">let </span>asset_allocation = total_managed_funds
+                    .get(asset_address.clone())
+                    .unwrap_or_else(|| <span class="macro">panic_with_error!</span>(<span class="kw-2">&amp;</span>e, ContractError::WrongAmountsLength));
+
+                <span class="kw">let </span>idle_funds = asset_allocation.idle_amount;
+
+                <span class="kw">if </span>idle_funds &gt;= requested_withdrawal_amount {
+                    TokenClient::new(<span class="kw-2">&amp;</span>e, asset_address).transfer(
+                        <span class="kw-2">&amp;</span>e.current_contract_address(),
+                        <span class="kw-2">&amp;</span>from,
+                        <span class="kw-2">&amp;</span>requested_withdrawal_amount,
+                    );
+                    withdrawn_amounts.push_back(requested_withdrawal_amount);
+                } <span class="kw">else </span>{
+                    <span class="kw">let </span><span class="kw-2">mut </span>cumulative_amount_for_asset = idle_funds;
+                    <span class="kw">let </span>remaining_amount_to_unwind = requested_withdrawal_amount
+                        .checked_sub(idle_funds)
+                        .unwrap();
+
+                    <span class="kw">let </span>total_invested_amount = asset_allocation.invested_amount;
+
+                    <span class="kw">for </span>(i, strategy_allocation) <span class="kw">in </span>asset_allocation.strategy_allocations.iter().enumerate() {
+                        <span class="kw">let </span>strategy_amount_to_unwind: i128 = <span class="kw">if </span>i == (asset_allocation.strategy_allocations.len() <span class="kw">as </span>usize) - <span class="number">1 </span>{
+                            requested_withdrawal_amount
+                                .checked_sub(cumulative_amount_for_asset)
+                                .unwrap()
+                        } <span class="kw">else </span>{
+                            remaining_amount_to_unwind
+                                .checked_mul(strategy_allocation.amount)
+                                .and_then(|result| result.checked_div(total_invested_amount))
+                                .unwrap_or(<span class="number">0</span>)
+                        };
+
+                        <span class="kw">if </span>strategy_amount_to_unwind &gt; <span class="number">0 </span>{
+                            unwind_from_strategy(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>strategy_allocation.strategy_address, <span class="kw-2">&amp;</span>strategy_amount_to_unwind)<span class="question-mark">?</span>;
+                            cumulative_amount_for_asset += strategy_amount_to_unwind;
+                        }
                     }
+
+                    TokenClient::new(<span class="kw-2">&amp;</span>e, asset_address).transfer(
+                        <span class="kw-2">&amp;</span>e.current_contract_address(),
+                        <span class="kw-2">&amp;</span>from,
+                        <span class="kw-2">&amp;</span>cumulative_amount_for_asset,
+                    );
+                    withdrawn_amounts.push_back(cumulative_amount_for_asset);
                 }
-                TokenClient::new(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>asset_address).transfer(
-                    <span class="kw-2">&amp;</span>e.current_contract_address(),
-                    <span class="kw-2">&amp;</span>from,
-                    <span class="kw-2">&amp;</span>total_withdrawn_for_asset,
-                );
-                withdrawn_amounts.push_back(total_withdrawn_for_asset);
-            }
+            } <span class="kw">else </span>{
+                withdrawn_amounts.push_back(<span class="number">0</span>); <span class="comment">// No withdrawal for this asset
+            </span>}
         }
-    
-        events::emit_withdraw_event(<span class="kw-2">&amp;</span>e, from, withdraw_shares, withdrawn_amounts.clone());
+
+        
+        <span class="comment">// TODO: Add minimuim amounts for withdrawn_amounts
+        // TODO: Return the asset_withdrawal_amounts Map instead of a vec
+        </span>events::emit_withdraw_event(<span class="kw-2">&amp;</span>e, from, withdraw_shares, withdrawn_amounts.clone());
     
         <span class="prelude-val">Ok</span>(withdrawn_amounts)
     }
@@ -1422,7 +1521,10 @@
         }
 
         <span class="comment">// Check and execute investments for each asset allocation
-        </span>check_and_execute_investments(e, assets, asset_investments)<span class="question-mark">?</span>;
+        </span>check_and_execute_investments(
+            <span class="kw-2">&amp;</span>e, 
+            <span class="kw-2">&amp;</span>assets, 
+            <span class="kw-2">&amp;</span>asset_investments)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -1450,7 +1552,7 @@
             <span class="kw">match </span>instruction.action {
                 ActionType::Withdraw =&gt; <span class="kw">match </span>(<span class="kw-2">&amp;</span>instruction.strategy, <span class="kw-2">&amp;</span>instruction.amount) {
                     (<span class="prelude-val">Some</span>(strategy_address), <span class="prelude-val">Some</span>(amount)) =&gt; {
-                        withdraw_from_strategy(<span class="kw-2">&amp;</span>e, strategy_address, amount)<span class="question-mark">?</span>;
+                        unwind_from_strategy(<span class="kw-2">&amp;</span>e, strategy_address, amount)<span class="question-mark">?</span>;
                     }
                     <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ContractError::MissingInstructionData),
                 },

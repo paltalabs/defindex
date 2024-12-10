@@ -112,67 +112,22 @@
 <a href="#112" id="112">112</a>
 <a href="#113" id="113">113</a>
 <a href="#114" id="114">114</a>
-<a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a>
-<a href="#129" id="129">129</a>
-<a href="#130" id="130">130</a>
-<a href="#131" id="131">131</a>
-<a href="#132" id="132">132</a>
-<a href="#133" id="133">133</a>
-<a href="#134" id="134">134</a>
-<a href="#135" id="135">135</a>
-<a href="#136" id="136">136</a>
-<a href="#137" id="137">137</a>
-<a href="#138" id="138">138</a>
-<a href="#139" id="139">139</a>
-<a href="#140" id="140">140</a>
-<a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a>
-<a href="#143" id="143">143</a>
-<a href="#144" id="144">144</a>
-<a href="#145" id="145">145</a>
-<a href="#146" id="146">146</a>
-<a href="#147" id="147">147</a>
-<a href="#148" id="148">148</a>
-<a href="#149" id="149">149</a>
-<a href="#150" id="150">150</a>
-<a href="#151" id="151">151</a>
-<a href="#152" id="152">152</a>
-<a href="#153" id="153">153</a>
-<a href="#154" id="154">154</a>
-<a href="#155" id="155">155</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>common::models::AssetStrategySet;
-<span class="kw">use </span>soroban_sdk::{panic_with_error, token::TokenClient, Address, Env, Vec};
+<span class="kw">use </span>soroban_sdk::{panic_with_error, token::TokenClient, Address, Env, Vec, Map};
 
 <span class="kw">use crate</span>::{
-    funds::{
-        fetch_invested_funds_for_asset, fetch_invested_funds_for_strategy,
-        fetch_total_managed_funds,
-    },
-    investment::check_and_execute_investments,
-    models::{AssetInvestmentAllocation, StrategyAllocation},
     storage::get_assets,
     token::{internal_mint, VaultToken},
     utils::{calculate_deposit_amounts_and_shares_to_mint, check_nonnegative_amount},
     ContractError, MINIMUM_LIQUIDITY,
+    models::{CurrentAssetInvestmentAllocation},
 };
 
 <span class="doccomment">/// Common logic for processing deposits.
 </span><span class="kw">pub fn </span>process_deposit(
     e: <span class="kw-2">&amp;</span>Env,
     assets: <span class="kw-2">&amp;</span>Vec&lt;AssetStrategySet&gt;,
+    total_managed_funds: <span class="kw-2">&amp;</span>Map&lt;Address, CurrentAssetInvestmentAllocation&gt;,
     amounts_desired: <span class="kw-2">&amp;</span>Vec&lt;i128&gt;,
     amounts_min: <span class="kw-2">&amp;</span>Vec&lt;i128&gt;,
     from: <span class="kw-2">&amp;</span>Address,
@@ -190,12 +145,21 @@
 
     <span class="kw">let </span>total_supply = VaultToken::total_supply(e.clone());
     <span class="kw">let </span>(amounts, shares_to_mint) = <span class="kw">if </span>assets_length == <span class="number">1 </span>{
-        calculate_single_asset_shares(e, amounts_desired, total_supply)<span class="question-mark">?
+        calculate_single_asset_shares(
+            e, 
+            amounts_desired, 
+            <span class="kw-2">&amp;</span>total_managed_funds,
+            total_supply)<span class="question-mark">?
     </span>} <span class="kw">else </span>{
         <span class="kw">if </span>total_supply == <span class="number">0 </span>{
             (amounts_desired.clone(), amounts_desired.iter().sum())
         } <span class="kw">else </span>{
-            calculate_deposit_amounts_and_shares_to_mint(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>assets, amounts_desired, amounts_min)<span class="question-mark">?
+            calculate_deposit_amounts_and_shares_to_mint(
+                <span class="kw-2">&amp;</span>e, 
+                <span class="kw-2">&amp;</span>assets, 
+                <span class="kw-2">&amp;</span>total_managed_funds,
+                amounts_desired, 
+                amounts_min)<span class="question-mark">?
         </span>}
     };
 
@@ -212,7 +176,7 @@
     }
 
     <span class="comment">// Mint shares
-    </span>mint_shares(e, total_supply, shares_to_mint, from.clone())<span class="question-mark">?</span>;
+    </span>mint_shares(e, <span class="kw-2">&amp;</span>total_supply, shares_to_mint, from.clone())<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>((amounts, shares_to_mint))
 }
@@ -221,12 +185,12 @@
 </span><span class="kw">fn </span>calculate_single_asset_shares(
     e: <span class="kw-2">&amp;</span>Env,
     amounts_desired: <span class="kw-2">&amp;</span>Vec&lt;i128&gt;,
+    total_managed_funds: <span class="kw-2">&amp;</span>Map&lt;Address, CurrentAssetInvestmentAllocation&gt;,
     total_supply: i128,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(Vec&lt;i128&gt;, i128), ContractError&gt; {
     <span class="kw">let </span>shares = <span class="kw">if </span>total_supply == <span class="number">0 </span>{
         amounts_desired.get(<span class="number">0</span>).unwrap()
     } <span class="kw">else </span>{
-        <span class="kw">let </span>total_managed_funds = fetch_total_managed_funds(<span class="kw-2">&amp;</span>e);
         VaultToken::total_supply(e.clone())
             .checked_mul(amounts_desired.get(<span class="number">0</span>).unwrap())
             .unwrap_or_else(|| <span class="macro">panic_with_error!</span>(<span class="kw-2">&amp;</span>e, ContractError::ArithmeticError))
@@ -243,11 +207,11 @@
 <span class="doccomment">/// Mint vault shares.
 </span><span class="kw">fn </span>mint_shares(
     e: <span class="kw-2">&amp;</span>Env,
-    total_supply: i128,
+    total_supply: <span class="kw-2">&amp;</span>i128,
     shares_to_mint: i128,
     from: Address,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContractError&gt; {
-    <span class="kw">if </span>total_supply == <span class="number">0 </span>{
+    <span class="kw">if </span><span class="kw-2">*</span>total_supply == <span class="number">0 </span>{
         <span class="kw">if </span>shares_to_mint &lt; MINIMUM_LIQUIDITY {
             <span class="macro">panic_with_error!</span>(<span class="kw-2">&amp;</span>e, ContractError::InsufficientAmount);
         }
@@ -261,51 +225,4 @@
         internal_mint(e.clone(), from, shares_to_mint);
     }
     <span class="prelude-val">Ok</span>(())
-}
-
-<span class="doccomment">/// Generate investment allocations and execute them.
-</span><span class="kw">pub fn </span>generate_and_execute_investments(
-    e: <span class="kw-2">&amp;</span>Env,
-    amounts: <span class="kw-2">&amp;</span>Vec&lt;i128&gt;,
-    assets: <span class="kw-2">&amp;</span>Vec&lt;AssetStrategySet&gt;,
-) -&gt; <span class="prelude-ty">Result</span>&lt;(), ContractError&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>asset_investments = Vec::new(<span class="kw-2">&amp;</span>e);
-
-    <span class="kw">for </span>(i, amount) <span class="kw">in </span>amounts.iter().enumerate() {
-        <span class="kw">let </span>asset = assets.get(i <span class="kw">as </span>u32).unwrap();
-        <span class="kw">let </span>(asset_invested_funds, <span class="kw">_</span>) = fetch_invested_funds_for_asset(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>asset);
-
-        <span class="kw">let </span><span class="kw-2">mut </span>strategy_allocations = Vec::new(<span class="kw-2">&amp;</span>e);
-        <span class="kw">let </span><span class="kw-2">mut </span>remaining_amount = amount;
-
-        <span class="kw">for </span>(j, strategy) <span class="kw">in </span>asset.strategies.iter().enumerate() {
-            <span class="kw">let </span>strategy_invested_funds = fetch_invested_funds_for_strategy(<span class="kw-2">&amp;</span>e, <span class="kw-2">&amp;</span>strategy.address);
-
-            <span class="kw">let </span><span class="kw-2">mut </span>invest_amount = <span class="kw">if </span>asset_invested_funds &gt; <span class="number">0 </span>{
-                (amount * strategy_invested_funds) / asset_invested_funds
-            } <span class="kw">else </span>{
-                <span class="number">0
-            </span>};
-
-            <span class="kw">if </span>j == asset.strategies.len() <span class="kw">as </span>usize - <span class="number">1 </span>{
-                invest_amount = remaining_amount;
-            }
-
-            remaining_amount -= invest_amount;
-
-            strategy_allocations.push_back(<span class="prelude-val">Some</span>(StrategyAllocation {
-                strategy_address: strategy.address.clone(),
-                amount: invest_amount,
-            }));
-        }
-
-        asset_investments.push_back(<span class="prelude-val">Some</span>(AssetInvestmentAllocation {
-            asset: asset.address.clone(),
-            strategy_allocations,
-        }));
-    }
-
-    check_and_execute_investments(e.clone(), assets.clone(), asset_investments)<span class="question-mark">?</span>;
-    <span class="prelude-val">Ok</span>(())
-}
-</code></pre></div></section></main></body></html>
+}</code></pre></div></section></main></body></html>

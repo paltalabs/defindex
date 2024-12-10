@@ -271,18 +271,11 @@
 <a href="#271" id="271">271</a>
 <a href="#272" id="272">272</a>
 <a href="#273" id="273">273</a>
-<a href="#274" id="274">274</a>
-<a href="#275" id="275">275</a>
-<a href="#276" id="276">276</a>
-<a href="#277" id="277">277</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>soroban_sdk::{panic_with_error, Address, Env, Map, Vec};
 
 <span class="kw">use crate</span>::{
     models::{CurrentAssetInvestmentAllocation},
     access::{AccessControl, AccessControlTrait, RolesDataKey},
-    funds::{
-        fetch_total_managed_funds,
-    },
     token::VaultToken,
     ContractError,
 };
@@ -332,7 +325,7 @@
 //             continue;
 //         }
 
-//         let strategy_invested_funds = fetch_invested_funds_for_strategy(e, &amp;strategy.address);
+//         let strategy_invested_funds = fetch_strategy_invested_funds(e, &amp;strategy.address);
 
 //         let strategy_share_of_withdrawal =
 //             (amount * strategy_invested_funds) / total_invested_in_strategies;
@@ -504,11 +497,10 @@
 </span><span class="kw">pub fn </span>calculate_deposit_amounts_and_shares_to_mint(
     e: <span class="kw-2">&amp;</span>Env,
     assets: <span class="kw-2">&amp;</span>Vec&lt;AssetStrategySet&gt;,
+    total_managed_funds: <span class="kw-2">&amp;</span>Map&lt;Address, CurrentAssetInvestmentAllocation&gt;,
     amounts_desired: <span class="kw-2">&amp;</span>Vec&lt;i128&gt;,
     amounts_min: <span class="kw-2">&amp;</span>Vec&lt;i128&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(Vec&lt;i128&gt;, i128), ContractError&gt; {
-    <span class="comment">// Retrieve the total managed funds for each asset as a Map&lt;Address, i128&gt;.
-    </span><span class="kw">let </span>total_managed_funds = fetch_total_managed_funds(e);
 
     <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..assets.len() {
         <span class="comment">// Calculate the optimal amounts and shares to mint for asset `i`.
