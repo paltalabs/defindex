@@ -1,0 +1,22 @@
+[package]
+name = "mock-sep-40-oracle"
+version = "0.3.0"
+authors = ["Script3 <support@script3.io>"]
+license = "MIT"
+edition = "2021"
+publish = false
+rust-version = "1.79.0"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+doctest = false
+
+[features]
+testutils = ["soroban-sdk/testutils"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+sep-40-oracle = { path = "../sep-40" }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
