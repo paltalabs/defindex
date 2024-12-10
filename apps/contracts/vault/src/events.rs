@@ -1,38 +1,5 @@
 //! Definition of the Events used in the DeFindex Vault contract
-use common::models::AssetStrategySet;
 use soroban_sdk::{contracttype, symbol_short, Address, Env, Vec};
-
-// INITIALIZED VAULT EVENT
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct InitializedVaultEvent {
-    pub emergency_manager: Address,
-    pub vault_fee_receiver: Address,
-    pub manager: Address,
-    pub defindex_protocol_receiver: Address,
-    pub assets: Vec<AssetStrategySet>,
-}
-
-/// Publishes an `InitializedVaultEvent` to the event stream.
-pub(crate) fn emit_initialized_vault(
-    e: &Env,
-    emergency_manager: Address,
-    vault_fee_receiver: Address,
-    manager: Address,
-    defindex_protocol_receiver: Address,
-    assets: Vec<AssetStrategySet>,
-) {
-    let event = InitializedVaultEvent {
-        emergency_manager,
-        vault_fee_receiver,
-        manager,
-        defindex_protocol_receiver,
-        assets,
-    };
-
-    e.events()
-        .publish(("DeFindexVault", symbol_short!("init")), event);
-}
 
 // DEPOSIT EVENT
 #[contracttype]

@@ -31,8 +31,8 @@ pub trait VaultTrait {
     /// - `ContractError::AlreadyInitialized`: If the vault has already been initialized.
     /// - `ContractError::StrategyDoesNotSupportAsset`: If a strategy within an asset does not support the asset’s contract.
     ///
-    fn initialize(
-        e: Env,
+    fn __constructor(
+        e: Env, 
         assets: Vec<AssetStrategySet>,
         manager: Address,
         emergency_manager: Address,
@@ -42,7 +42,7 @@ pub trait VaultTrait {
         factory: Address,
         vault_name: String,
         vault_symbol: String,
-    ) -> Result<(), ContractError>;
+    );
 
     /// Handles user deposits into the DeFindex Vault.
     ///

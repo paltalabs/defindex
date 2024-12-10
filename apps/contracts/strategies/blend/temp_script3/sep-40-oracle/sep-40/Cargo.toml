@@ -1,0 +1,24 @@
+[package]
+name = "sep-40-oracle"
+version = "1.1.0"
+description = "SEP-0040 Price Feed Oracle trait, client, and mock implementation"
+authors = ["Script3 <support@script3.io>"]
+repository = "https://github.com/script3/sep-40-oracle"
+license = "MIT"
+edition = "2021"
+readme = "README.md"
+keywords = ["no_std", "wasm", "soroban"]
+rust-version = "1.79.0"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+doctest = false
+
+[features]
+testutils = ["soroban-sdk/testutils"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }

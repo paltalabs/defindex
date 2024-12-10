@@ -15,7 +15,6 @@ pub struct Config {
 #[contracttype]
 
 pub enum DataKey {
-    Initialized,
     Config,
     Reserves,
     VaultPos(Address) // Vaults Positions
@@ -33,14 +32,6 @@ pub fn extend_instance_ttl(e: &Env) {
         .extend_ttl(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
 }
 
-pub fn set_initialized(e: &Env) {
-    e.storage().instance().set(&DataKey::Initialized, &true);
-}
-
-pub fn is_initialized(e: &Env) -> bool {
-    e.storage().instance().has(&DataKey::Initialized)
-}
-
 // Config
 pub fn set_config(e: &Env, config: Config) {
     e.storage().instance().set(&DataKey::Config, &config);
@@ -48,6 +39,10 @@ pub fn set_config(e: &Env, config: Config) {
 
 pub fn get_config(e: &Env) -> Config {
     e.storage().instance().get(&DataKey::Config).unwrap()
+}
+
+pub fn has_config(e: &Env) -> bool {
+    e.storage().instance().has(&DataKey::Config)
 }
 
 // Vault Position

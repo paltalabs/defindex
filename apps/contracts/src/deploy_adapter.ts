@@ -1,10 +1,9 @@
-import { Address, nativeToScVal, xdr } from "@stellar/stellar-sdk";
+import { Address, xdr } from "@stellar/stellar-sdk";
 import { AddressBook } from "./utils/address_book.js";
 import {
   airdropAccount,
   deployContract,
-  installContract,
-  invokeContract,
+  installContract
 } from "./utils/contract.js";
 import { config } from "./utils/env_config.js";
 
@@ -21,12 +20,6 @@ export async function deployContracts(addressBook: AddressBook) {
   console.log("Deploying Soroswap Adapter");
   console.log("-------------------------------------------------------");
   await installContract("soroswap_adapter", addressBook, loadedConfig.admin);
-  await deployContract(
-    "soroswap_adapter",
-    "soroswap_adapter",
-    addressBook,
-    loadedConfig.admin
-  );
 
   const routerAddress =
     "CBHNQTKJD76Q55TINIT3PPP3BKLIKIQEXPTQ32GUUU7I3CHBD5JECZLW";
@@ -34,11 +27,10 @@ export async function deployContracts(addressBook: AddressBook) {
     new Address(routerAddress).toScVal(),
   ];
 
-  console.log("Initializing Soroswap Adapter");
-  await invokeContract(
+  await deployContract(
+    "soroswap_adapter",
     "soroswap_adapter",
     addressBook,
-    "initialize",
     soroswapAdapterInitParams,
     loadedConfig.admin
   );

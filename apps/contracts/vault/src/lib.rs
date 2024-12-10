@@ -2,7 +2,7 @@
 use deposit::{generate_and_execute_investments, process_deposit};
 use soroban_sdk::{
     contract, contractimpl, panic_with_error,
-    token::{TokenClient},
+    token::TokenClient,
     Address, Env, Map, String, Vec,
 };
 use soroban_token_sdk::metadata::TokenMetadata;
@@ -87,7 +87,7 @@ impl VaultTrait for DeFindexVault {
     /// - `ContractError::AlreadyInitialized`: If the vault has already been initialized.
     /// - `ContractError::StrategyDoesNotSupportAsset`: If a strategy within an asset does not support the asset’s contract.
     ///
-    fn initialize(
+    fn __constructor(
         e: Env,
         assets: Vec<AssetStrategySet>,
         manager: Address,
@@ -98,13 +98,8 @@ impl VaultTrait for DeFindexVault {
         factory: Address,
         vault_name: String,
         vault_symbol: String,
-    ) -> Result<(), ContractError> {
-        extend_instance_ttl(&e);
-
+    ) {
         let access_control = AccessControl::new(&e);
-        if access_control.has_role(&RolesDataKey::Manager) {
-            panic_with_error!(&e, ContractError::AlreadyInitialized);
-        }
 
         access_control.set_role(&RolesDataKey::EmergencyManager, &emergency_manager);
         access_control.set_role(&RolesDataKey::VaultFeeReceiver, &vault_fee_receiver);
@@ -152,17 +147,6 @@ impl VaultTrait for DeFindexVault {
                 symbol: vault_symbol,
             },
         );
-
-        events::emit_initialized_vault(
-            &e,
-            emergency_manager,
-            vault_fee_receiver,
-            manager,
-            defindex_protocol_receiver,
-            assets,
-        );
-
-        Ok(())
     }
 
     /// Handles user deposits into the DeFindex Vault.
