@@ -55,7 +55,7 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
 //             continue;
 //         }
 
-//         let strategy_invested_funds = fetch_invested_funds_for_strategy(e, &strategy.address);
+//         let strategy_invested_funds = fetch_strategy_invested_funds(e, &strategy.address);
 
 //         let strategy_share_of_withdrawal =
 //             (amount * strategy_invested_funds) / total_invested_in_strategies;

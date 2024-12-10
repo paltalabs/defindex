@@ -6,7 +6,7 @@ use crate::{
     utils::{check_nonnegative_amount},
     ContractError,
     funds::{
-        fetch_invested_funds_for_asset, fetch_invested_funds_for_strategy,
+        fetch_invested_funds_for_asset, fetch_strategy_invested_funds,
     },
 };
 use common::models::AssetStrategySet;
@@ -61,19 +61,6 @@ pub fn check_and_execute_investments(
                 panic_with_error!(&e, ContractError::WrongStrategiesLength);
             }
 
-            // NOTE: We can avoid this check as it if total idle funds exceed funds to invest, this will fail
-            // when trying to transfer
-
-            // // Calculate total intended investment for this asset
-            // let total_asset_investment: i128 = asset_investment.investments.iter()
-            //     .filter_map(|strategy| strategy.as_ref().map(|s| s.amount.unwrap_or(0)))
-            //     .sum();
-
-            // // Verify total intended investment does not exceed idle funds for this asset
-            // if total_asset_investment > fetch_idle_funds_for_asset(&e, &asset_investment.asset) {
-            //     panic_with_error!(&e, ContractError::InsufficientIdleFunds);
-            // }
-
             // Process each defined strategy investment for the current asset
             for (j, strategy_investment_opt) in asset_investment.strategy_allocations.iter().enumerate() {
                 if let Some(strategy_investment) = strategy_investment_opt {
@@ -115,7 +102,7 @@ pub fn generate_and_execute_investments(
         let mut remaining_amount = amount;
 
         for (j, strategy) in asset.strategies.iter().enumerate() {
-            let strategy_invested_funds = fetch_invested_funds_for_strategy(&e, &strategy.address);
+            let strategy_invested_funds = fetch_strategy_invested_funds(&e, &strategy.address);
 
             let mut invest_amount = if asset_invested_funds > 0 {
                 (amount * strategy_invested_funds) / asset_invested_funds
