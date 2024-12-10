@@ -226,7 +226,12 @@ impl VaultTrait for DeFindexVault {
 
         if invest {
             // Generate investment allocations and execute them
-            generate_and_execute_investments(&e, &amounts, &assets)?;
+            generate_and_execute_investments(
+                &e,
+                &assets,
+                &total_managed_funds,
+                &amounts,
+            )?;
         }
 
         Ok((amounts, shares_to_mint))
