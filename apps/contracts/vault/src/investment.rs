@@ -1,10 +1,13 @@
 use soroban_sdk::{Env, Vec, panic_with_error};
 
 use crate::{
-    models::AssetInvestmentAllocation,
+    models::{AssetInvestmentAllocation, StrategyAllocation},
     strategies::invest_in_strategy,
     utils::{check_nonnegative_amount},
     ContractError,
+    funds::{
+        fetch_invested_funds_for_asset, fetch_invested_funds_for_strategy,
+    },
 };
 use common::models::AssetStrategySet;
 
@@ -93,5 +96,51 @@ pub fn check_and_execute_investments(
             }
         }
     }
+    Ok(())
+}
+
+/// Generate investment allocations and execute them.
+pub fn generate_and_execute_investments(
+    e: &Env,
+    amounts: &Vec<i128>,
+    assets: &Vec<AssetStrategySet>,
+) -> Result<(), ContractError> {
+    let mut asset_investments = Vec::new(&e);
+
+    for (i, amount) in amounts.iter().enumerate() {
+        let asset = assets.get(i as u32).unwrap();
+        let (asset_invested_funds, _) = fetch_invested_funds_for_asset(&e, &asset);
+
+        let mut strategy_allocations = Vec::new(&e);
+        let mut remaining_amount = amount;
+
+        for (j, strategy) in asset.strategies.iter().enumerate() {
+            let strategy_invested_funds = fetch_invested_funds_for_strategy(&e, &strategy.address);
+
+            let mut invest_amount = if asset_invested_funds > 0 {
+                (amount * strategy_invested_funds) / asset_invested_funds
+            } else {
+                0
+            };
+
+            if j == asset.strategies.len() as usize - 1 {
+                invest_amount = remaining_amount;
+            }
+
+            remaining_amount -= invest_amount;
+
+            strategy_allocations.push_back(Some(StrategyAllocation {
+                strategy_address: strategy.address.clone(),
+                amount: invest_amount,
+            }));
+        }
+
+        asset_investments.push_back(Some(AssetInvestmentAllocation {
+            asset: asset.address.clone(),
+            strategy_allocations,
+        }));
+    }
+
+    check_and_execute_investments(e.clone(), assets.clone(), asset_investments)?;
     Ok(())
 }

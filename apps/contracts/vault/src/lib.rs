@@ -1,5 +1,4 @@
 #![no_std]
-use deposit::{generate_and_execute_investments, process_deposit};
 use soroban_sdk::{
     contract, contractimpl, panic_with_error,
     token::{TokenClient},
@@ -26,10 +25,11 @@ mod utils;
 
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use aggregator::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
+use deposit::{process_deposit};
 use fee::{collect_fees, fetch_defindex_fee};
 use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds}; 
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
-use investment::check_and_execute_investments;
+use investment::{check_and_execute_investments, generate_and_execute_investments};
 use models::{
     Instruction, OptionalSwapDetailsExactIn,
     OptionalSwapDetailsExactOut, CurrentAssetInvestmentAllocation,
