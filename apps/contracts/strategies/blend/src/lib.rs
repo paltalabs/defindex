@@ -10,7 +10,7 @@ mod reserves;
 mod soroswap;
 mod storage;
 
-use storage::{extend_instance_ttl, is_initialized, set_initialized, Config};
+use storage::{extend_instance_ttl, has_config, Config};
 
 pub use defindex_strategy_core::{
     DeFindexStrategyTrait, 
@@ -26,7 +26,7 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
 }
 
 fn check_initialized(e: &Env) -> Result<(), StrategyError> {
-    if is_initialized(e) {
+    if has_config(e) {
         Ok(())
     } else {
         Err(StrategyError::NotInitialized)
@@ -40,21 +40,15 @@ struct BlendStrategy;
 
 #[contractimpl]
 impl DeFindexStrategyTrait for BlendStrategy {
-    fn initialize(
+    fn __constructor(
         e: Env,
         asset: Address,
         init_args: Vec<Val>,
-    ) -> Result<(), StrategyError> {
-        if is_initialized(&e) {
-            return Err(StrategyError::AlreadyInitialized);
-        }
-
-        let blend_pool_address: Address = init_args.get(0).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
-        let reserve_id: u32 = init_args.get(1).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
-        let blend_token: Address = init_args.get(2).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
-        let soroswap_router: Address = init_args.get(3).ok_or(StrategyError::InvalidArgument)?.into_val(&e);
-
-        set_initialized(&e);
+    ) {
+        let blend_pool_address: Address = init_args.get(0).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
+        let reserve_id: u32 = init_args.get(1).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
+        let blend_token: Address = init_args.get(2).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
+        let soroswap_router: Address = init_args.get(3).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
 
         let config = Config {
             asset: asset.clone(),
@@ -65,10 +59,6 @@ impl DeFindexStrategyTrait for BlendStrategy {
         };
         
         storage::set_config(&e, config);
-        
-        event::emit_initialize(&e, String::from_str(&e, STARETEGY_NAME), asset);
-        extend_instance_ttl(&e);
-        Ok(())
     }
 
     fn asset(e: Env) -> Result<Address, StrategyError> {

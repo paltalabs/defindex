@@ -4,7 +4,6 @@ use soroban_sdk::{contracttype, Env, Address};
 #[contracttype]
 
 enum DataKey {
-    Initialized,
     SoroswapRouterAddress,
 }
 
@@ -18,12 +17,8 @@ pub fn extend_instance_ttl(e: &Env) {
         .extend_ttl(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
 }
 
-pub fn set_initialized(e: &Env) {
-    e.storage().instance().set(&DataKey::Initialized, &true);
-}
-
-pub fn is_initialized(e: &Env) -> bool {
-    e.storage().instance().has(&DataKey::Initialized)
+pub fn has_soroswap_router_address(e: &Env) -> bool {
+    e.storage().instance().has(&DataKey::SoroswapRouterAddress)
 }
 
 // Soroswap Router Address

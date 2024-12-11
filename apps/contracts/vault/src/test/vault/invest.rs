@@ -12,32 +12,8 @@ use crate::test::defindex_vault::{
     Strategy,
     ContractError};
 use crate::test::{
-    create_strategy_params_token0, create_strategy_params_token1, DeFindexVaultTest,
+    create_defindex_vault, create_strategy_params_token0, create_strategy_params_token1, DeFindexVaultTest
 };
-
-// check that invest can only be called after initialized
-#[test]
-fn not_yet_initialized() {
-    let test = DeFindexVaultTest::setup();
-
-    let asset_investments = vec![
-        &test.env,
-        Some(AssetInvestmentAllocation {
-        asset: test.token0.address.clone(),
-        strategy_allocations: vec![
-            &test.env,
-            Some(StrategyAllocation {
-            strategy_address: test.strategy_client_token0.address.clone(),
-            amount: 100,
-        })],
-    })];
-
-    let result = test.defindex_contract.try_invest(
-        &asset_investments,
-    );
-
-    assert_eq!(result, Err(Ok(ContractError::NotInitialized)));
-}
 
 
 // try to invest with a wrong AssetInvestmentAllocation length
@@ -60,16 +36,17 @@ fn wrong_asset_investment_length() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
 
     // now will try to invest with less lengh (only one instead of 2)
@@ -88,7 +65,7 @@ fn wrong_asset_investment_length() {
 
     test.env.mock_all_auths(); // TODO, Mock only Manager
 
-    let result = test.defindex_contract.try_invest(
+    let result = defindex_contract.try_invest(
         &asset_investments,
     );
 
@@ -112,7 +89,7 @@ fn wrong_asset_investment_length() {
 
     test.env.mock_all_auths(); // TODO, Mock only Manager
 
-    let result = test.defindex_contract.try_invest(
+    let result = defindex_contract.try_invest(
         &asset_investments,
     );
 
@@ -151,16 +128,17 @@ fn wrong_strategy_length() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
 
     // now will try to invest with more strategy length for asset 0
@@ -184,7 +162,7 @@ fn wrong_strategy_length() {
 
     test.env.mock_all_auths(); // TODO, Mock only Manager
 
-    let result = test.defindex_contract.try_invest(
+    let result = defindex_contract.try_invest(
         &asset_investments,
     );
 
@@ -214,7 +192,7 @@ fn wrong_strategy_length() {
 
     test.env.mock_all_auths(); // TODO, Mock only Manager
 
-    let result = test.defindex_contract.try_invest(
+    let result = defindex_contract.try_invest(
         &asset_investments,
     );
 
@@ -243,16 +221,17 @@ fn wrong_asset_address() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
 
     // now will try to invest with wrong asset address
@@ -273,7 +252,7 @@ fn wrong_asset_address() {
 
     test.env.mock_all_auths(); // TODO, Mock only Manager
 
-    let result = test.defindex_contract.try_invest(
+    let result = defindex_contract.try_invest(
         &asset_investments,
     );
 
@@ -300,16 +279,17 @@ fn negative_amount() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
 
     // now will try to invest with negative amount
@@ -330,7 +310,7 @@ fn negative_amount() {
 
     test.env.mock_all_auths(); // TODO, Mock only Manager
 
-    let result = test.defindex_contract.try_invest(
+    let result = defindex_contract.try_invest(
         &asset_investments,
     );
 
@@ -357,16 +337,17 @@ fn paused_strategy() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
 
     // now will try to invest with some amount 
@@ -385,7 +366,7 @@ fn paused_strategy() {
     
     test.env.mock_all_auths(); // TODO, Mock only Manager
 
-    let result = test.defindex_contract.try_invest(
+    let result = defindex_contract.try_invest(
         &asset_investments,
     );
 
@@ -413,16 +394,17 @@ fn in_strategy() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -443,7 +425,7 @@ fn in_strategy() {
     assert_eq!(user_amount_1, amount_1);
     
 
-    test.defindex_contract.deposit(
+    defindex_contract.deposit(
         &sorobanvec![&test.env, amount_0, amount_1], // asset 0
         &sorobanvec![&test.env, amount_0, amount_1], // asset 1 
         &users[0],
@@ -452,12 +434,12 @@ fn in_strategy() {
 
 
     // check balances after deposit
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount_0 + amount_1 - 1000);
 
     // check that all the assets are in the vault
-    let vault_balance_0 = test.token0.balance(&test.defindex_contract.address);
-    let vault_balance_1 = test.token1.balance(&test.defindex_contract.address);
+    let vault_balance_0 = test.token0.balance(&defindex_contract.address);
+    let vault_balance_1 = test.token1.balance(&defindex_contract.address);
     assert_eq!(vault_balance_0, amount_0);
     assert_eq!(vault_balance_1, amount_1);
     
@@ -488,7 +470,7 @@ fn in_strategy() {
         strategy_allocations: strategy_investments_expected_token_1,
     });
     
-    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
+    let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
 
     
@@ -497,14 +479,14 @@ fn in_strategy() {
     let mut expected_map = Map::new(&test.env);
     expected_map.set(test.token0.address.clone(), amount_0);
     expected_map.set(test.token1.address.clone(), amount_1);
-    let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
+    let current_idle_funds = defindex_contract.fetch_current_idle_funds();
     assert_eq!(current_idle_funds, expected_map);
 
     // check that current invested funds is now 0, funds still in idle funds
     let mut expected_map = Map::new(&test.env);
     expected_map.set(test.token0.address.clone(), 0i128);
     expected_map.set(test.token1.address.clone(), 0i128);
-    let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
+    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
     assert_eq!(current_invested_funds, expected_map);
 
 
@@ -532,13 +514,13 @@ fn in_strategy() {
         ],
     })];
 
-    test.defindex_contract.invest(
+    defindex_contract.invest(
         &asset_investments,
     );
 
     // now only amunt_0 - 100 should be in the vault as idle funds
-    let vault_balance_0 = test.token0.balance(&test.defindex_contract.address);
-    let vault_balance_1 = test.token1.balance(&test.defindex_contract.address);
+    let vault_balance_0 = test.token0.balance(&defindex_contract.address);
+    let vault_balance_1 = test.token1.balance(&defindex_contract.address);
     assert_eq!(vault_balance_0, amount_0 - 100);
     assert_eq!(vault_balance_1, amount_1 - 200);
 
@@ -569,7 +551,7 @@ fn in_strategy() {
         strategy_allocations: strategy_investments_expected_token_1,
     });
 
-    let total_managed_funds = test.defindex_contract.fetch_total_managed_funds();
+    let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
 
     // check current idle funds, for token0 should be amount 0 - 100
@@ -577,7 +559,7 @@ fn in_strategy() {
     expected_map.set(test.token0.address.clone(), amount_0 - 100);
     expected_map.set(test.token1.address.clone(), amount_1 - 200);
 
-    let current_idle_funds = test.defindex_contract.fetch_current_idle_funds();
+    let current_idle_funds = defindex_contract.fetch_current_idle_funds();
     assert_eq!(current_idle_funds, expected_map);
 
     // check that current invested funds is now 100 and 200
@@ -585,18 +567,18 @@ fn in_strategy() {
     expected_map.set(test.token0.address.clone(), 100i128);
     expected_map.set(test.token1.address.clone(), 200i128);
 
-    let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
+    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
     assert_eq!(current_invested_funds, expected_map);
 
     // check that 100 and 200 are invested in the strategies
-    let strategy_0_balance = test.strategy_client_token0.balance(&test.defindex_contract.address);
-    let strategy_1_balance = test.strategy_client_token1.balance(&test.defindex_contract.address);
+    let strategy_0_balance = test.strategy_client_token0.balance(&defindex_contract.address);
+    let strategy_1_balance = test.strategy_client_token1.balance(&defindex_contract.address);
     assert_eq!(strategy_0_balance, 100);
     assert_eq!(strategy_1_balance, 200);
 
     // if we ask strategy.balance(vault) they should be 100 and 200
-    let strategy_0_balance = test.strategy_client_token0.balance(&test.defindex_contract.address);
-    let strategy_1_balance = test.strategy_client_token1.balance(&test.defindex_contract.address);
+    let strategy_0_balance = test.strategy_client_token0.balance(&defindex_contract.address);
+    let strategy_1_balance = test.strategy_client_token1.balance(&defindex_contract.address);
     assert_eq!(strategy_0_balance, 100);
     assert_eq!(strategy_1_balance, 200);
 
@@ -626,16 +608,17 @@ fn more_than_idle_funds() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -656,7 +639,7 @@ fn more_than_idle_funds() {
     assert_eq!(user_amount_1, amount_1);
     
 
-    test.defindex_contract.deposit(
+    defindex_contract.deposit(
         &sorobanvec![&test.env, amount_0, amount_1], // asset 0
         &sorobanvec![&test.env, amount_0, amount_1], // asset 1 
         &users[0],
@@ -664,8 +647,8 @@ fn more_than_idle_funds() {
     );
 
     // check vault balances
-    let vault_balance_0 = test.token0.balance(&test.defindex_contract.address);
-    let vault_balance_1 = test.token1.balance(&test.defindex_contract.address);
+    let vault_balance_0 = test.token0.balance(&defindex_contract.address);
+    let vault_balance_1 = test.token1.balance(&defindex_contract.address);
     assert_eq!(vault_balance_0, amount_0);
 
     // try to invest vault_balance_0 + 1 for asset 0
@@ -694,7 +677,7 @@ fn more_than_idle_funds() {
 
     test.env.mock_all_auths(); // TODO, Mock only Manager
 
-    test.defindex_contract.invest(
+    defindex_contract.invest(
         &asset_investments,
     );
 }
@@ -719,16 +702,17 @@ fn without_mock_all_auths() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -768,10 +752,10 @@ fn without_mock_all_auths() {
 
     // mock deposit auth from user and deposit
 
-    test.defindex_contract.mock_auths(&[MockAuth {
+    defindex_contract.mock_auths(&[MockAuth {
         address: &users[0].clone(),
         invoke: &MockAuthInvoke {
-            contract: &test.defindex_contract.address.clone(),
+            contract: &defindex_contract.address.clone(),
             fn_name: "deposit",
             args: (
                 Vec::from_array(&test.env,[amount_0, amount_1]),
@@ -786,7 +770,7 @@ fn without_mock_all_auths() {
                     fn_name: "transfer",
                     args: (
                         users[0].clone(), 
-                        test.defindex_contract.address.clone(),
+                        defindex_contract.address.clone(),
                         amount_0
                      ).into_val(&test.env),
                     sub_invokes: &[]
@@ -796,7 +780,7 @@ fn without_mock_all_auths() {
                     fn_name: "transfer",
                     args: (
                         users[0].clone(), 
-                        test.defindex_contract.address.clone(),
+                        defindex_contract.address.clone(),
                         amount_1
                      ).into_val(&test.env),
                     sub_invokes: &[]
@@ -812,16 +796,16 @@ fn without_mock_all_auths() {
     // TODO check that the blockchain saw this authorizations
 
     // check vault balances
-    let vault_balance_0 = test.token0.balance(&test.defindex_contract.address);
-    let vault_balance_1 = test.token1.balance(&test.defindex_contract.address);
+    let vault_balance_0 = test.token0.balance(&defindex_contract.address);
+    let vault_balance_1 = test.token1.balance(&defindex_contract.address);
     assert_eq!(vault_balance_0, amount_0);
     assert_eq!(vault_balance_1, amount_1);
 
     // mock auth from manager to invest and invest
-    test.defindex_contract.mock_auths(&[MockAuth {
+    defindex_contract.mock_auths(&[MockAuth {
         address: &test.manager.clone(),
         invoke: &MockAuthInvoke {
-            contract: &test.defindex_contract.address.clone(),
+            contract: &defindex_contract.address.clone(),
             fn_name: "invest",
             args: (
                 Vec::from_array(&test.env,[
@@ -875,13 +859,13 @@ fn without_mock_all_auths() {
     );
 
     // check that now vault has amount0 -100 in token 0, and amount1 -200 in token 1
-    let vault_balance_0 = test.token0.balance(&test.defindex_contract.address);
-    let vault_balance_1 = test.token1.balance(&test.defindex_contract.address);
+    let vault_balance_0 = test.token0.balance(&defindex_contract.address);
+    let vault_balance_1 = test.token1.balance(&defindex_contract.address);
     assert_eq!(vault_balance_0, amount_0 - 100);
     assert_eq!(vault_balance_1, amount_1 - 200);
 
     // check invested funds
-    let current_invested_funds = test.defindex_contract.fetch_current_invested_funds();
+    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
     let mut expected_map = Map::new(&test.env);
     expected_map.set(test.token0.address.clone(), 100i128);
     expected_map.set(test.token1.address.clone(), 200i128);

@@ -3,8 +3,7 @@ import { AddressBook } from "./utils/address_book.js";
 import {
   airdropAccount,
   deployContract,
-  installContract,
-  invokeContract,
+  installContract
 } from "./utils/contract.js";
 import { config } from "./utils/env_config.js";
 
@@ -22,16 +21,10 @@ export async function deployContracts(addressBook: AddressBook) {
   console.log("-------------------------------------------------------");
   await installContract("defindex_vault", addressBook, loadedConfig.admin);
   await installContract("defindex_factory", addressBook, loadedConfig.admin);
-  await deployContract(
-    "defindex_factory",
-    "defindex_factory",
-    addressBook,
-    loadedConfig.admin
-  );
 
   const defindexReceiver = loadedConfig.getUser("DEFINDEX_RECEIVER_SECRET_KEY");
   if (network != "mainnet") await airdropAccount(defindexReceiver);
-  
+
   const factoryInitParams: xdr.ScVal[] = [
     new Address(loadedConfig.admin.publicKey()).toScVal(),
     new Address(defindexReceiver.publicKey()).toScVal(),
@@ -39,11 +32,10 @@ export async function deployContracts(addressBook: AddressBook) {
     nativeToScVal(Buffer.from(addressBook.getWasmHash("defindex_vault"), "hex")),
   ];
 
-  console.log("Initializing DeFindex Factory");
-  await invokeContract(
+  await deployContract(
+    "defindex_factory",
     "defindex_factory",
     addressBook,
-    "initialize",
     factoryInitParams,
     loadedConfig.admin
   );

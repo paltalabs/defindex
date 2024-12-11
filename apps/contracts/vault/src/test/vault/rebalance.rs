@@ -1,7 +1,7 @@
 use soroban_sdk::{vec as sorobanvec, InvokeError, String, Vec};
 
 use crate::test::{
-    create_strategy_params_token0, defindex_vault::{
+    create_defindex_vault, create_strategy_params_token0, defindex_vault::{
         ActionType, AssetInvestmentAllocation, AssetStrategySet, Instruction, OptionalSwapDetailsExactIn, OptionalSwapDetailsExactOut, StrategyAllocation
     }, DeFindexVaultTest
 };
@@ -20,16 +20,17 @@ fn multi_instructions() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "dfToken"),
-        &String::from_str(&test.env, "DFT"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount = 987654321i128;
 
@@ -39,17 +40,17 @@ fn multi_instructions() {
     let user_balance = test.token0.balance(&users[0]);
     assert_eq!(user_balance, amount);
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
-    test.defindex_contract.deposit(
+    defindex_contract.deposit(
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
         &false
     );
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount - 1000);
 
     let investments = sorobanvec![
@@ -66,9 +67,9 @@ fn multi_instructions() {
         }),
     ];
 
-    test.defindex_contract.invest(&investments);
+    defindex_contract.invest(&investments);
 
-    let vault_balance = test.token0.balance(&test.defindex_contract.address);
+    let vault_balance = test.token0.balance(&defindex_contract.address);
     assert_eq!(vault_balance, 0);
 
     // REBALANCE
@@ -94,9 +95,9 @@ fn multi_instructions() {
         }
     ];
 
-    test.defindex_contract.rebalance(&instructions);
+    defindex_contract.rebalance(&instructions);
 
-    let vault_balance = test.token0.balance(&test.defindex_contract.address);
+    let vault_balance = test.token0.balance(&defindex_contract.address);
     assert_eq!(vault_balance, instruction_amount_1);
 }
 
@@ -113,16 +114,17 @@ fn one_instruction() {
         }
     ];
 
-    test.defindex_contract.initialize(
-        &assets,
-        &test.manager,
-        &test.emergency_manager,
-        &test.vault_fee_receiver,
-        &2000u32,
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "TestVault"),
-        &String::from_str(&test.env, "TSTV"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount = 987654321i128;
 
@@ -132,17 +134,17 @@ fn one_instruction() {
     let user_balance = test.token0.balance(&users[0]);
     assert_eq!(user_balance, amount);
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
-    test.defindex_contract.deposit(
+    defindex_contract.deposit(
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
         &false
     );
 
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount - 1000);
 
     let investments = sorobanvec![
@@ -159,9 +161,9 @@ fn one_instruction() {
         }),
     ];
 
-    test.defindex_contract.invest(&investments);
+    defindex_contract.invest(&investments);
 
-    let vault_balance = test.token0.balance(&test.defindex_contract.address);
+    let vault_balance = test.token0.balance(&defindex_contract.address);
     assert_eq!(vault_balance, 0);
 
     // REBALANCE
@@ -179,9 +181,9 @@ fn one_instruction() {
         },
     ];
 
-    test.defindex_contract.rebalance(&instructions);
+    defindex_contract.rebalance(&instructions);
 
-    let vault_balance = test.token0.balance(&test.defindex_contract.address);
+    let vault_balance = test.token0.balance(&defindex_contract.address);
     assert_eq!(vault_balance, instruction_amount_0);
 }
 
@@ -198,30 +200,31 @@ fn empty_instructions(){
             strategies: strategy_params_token0.clone()
         }
     ];
-    test.defindex_contract.initialize(
-        &assets, 
-        &test.manager, 
-        &test.emergency_manager, 
-        &test.vault_fee_receiver, 
-        &100u32, 
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "testVault"),
-        &String::from_str(&test.env, "TSTV"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount: i128 = 987654321;
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
     test.token0_admin_client.mint(&users[0], &amount);
-    let vault_balance = test.defindex_contract.balance(&users[0]);
+    let vault_balance = defindex_contract.balance(&users[0]);
     assert_eq!(vault_balance, 0i128);
 
-    test.defindex_contract.deposit(
+    defindex_contract.deposit(
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
         &false
     );
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount - 1000);
 
     let instructions = sorobanvec![
@@ -234,7 +237,7 @@ fn empty_instructions(){
             swap_details_exact_out: OptionalSwapDetailsExactOut::None,
         },
     ];
-    let rebalance = test.defindex_contract.try_rebalance(&instructions);
+    let rebalance = defindex_contract.try_rebalance(&instructions);
     assert_eq!(rebalance, Err(Ok(ContractError::MissingInstructionData)));
 
     let no_strategy_instructions = sorobanvec![
@@ -247,7 +250,7 @@ fn empty_instructions(){
             swap_details_exact_out: OptionalSwapDetailsExactOut::None,
         },
     ];
-    let rebalance = test.defindex_contract.try_rebalance(&no_strategy_instructions);
+    let rebalance = defindex_contract.try_rebalance(&no_strategy_instructions);
     assert_eq!(rebalance, Err(Ok(ContractError::MissingInstructionData)));
 
     let no_amount_instructions = sorobanvec![
@@ -260,7 +263,7 @@ fn empty_instructions(){
             swap_details_exact_out: OptionalSwapDetailsExactOut::None,
         },
     ];
-    let rebalance = test.defindex_contract.try_rebalance(&no_amount_instructions);
+    let rebalance = defindex_contract.try_rebalance(&no_amount_instructions);
     assert_eq!(rebalance, Err(Ok(ContractError::MissingInstructionData)));
 }
 
@@ -277,33 +280,34 @@ fn no_instructions(){
             strategies: strategy_params_token0.clone()
         }
     ];
-    test.defindex_contract.initialize(
-        &assets, 
-        &test.manager, 
-        &test.emergency_manager, 
-        &test.vault_fee_receiver, 
-        &100u32, 
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "testVault"),
-        &String::from_str(&test.env, "TSTV"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount: i128 = 987654321;
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
     test.token0_admin_client.mint(&users[0], &amount);
-    let vault_balance = test.defindex_contract.balance(&users[0]);
+    let vault_balance = defindex_contract.balance(&users[0]);
     assert_eq!(vault_balance, 0i128);
 
-    test.defindex_contract.deposit(
+    defindex_contract.deposit(
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
         &false
     );
-    let df_balance = test.defindex_contract.balance(&users[0]);
+    let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount - 1000);
 
-    let rebalance = test.defindex_contract.try_rebalance(&sorobanvec![&test.env]);
+    let rebalance = defindex_contract.try_rebalance(&sorobanvec![&test.env]);
     assert_eq!(rebalance, Err(Ok(ContractError::NoInstructions)));
 }
 
@@ -320,23 +324,24 @@ fn insufficient_balance(){
             strategies: strategy_params_token0.clone()
         }
     ];
-    test.defindex_contract.initialize(
-        &assets, 
-        &test.manager, 
-        &test.emergency_manager, 
-        &test.vault_fee_receiver, 
-        &10u32, 
-        &test.defindex_protocol_receiver,
-        &test.defindex_factory,
-        &String::from_str(&test.env, "testVault"),
-        &String::from_str(&test.env, "TSTV"),
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
     );
     let amount: i128 = 987654321;
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
     test.token0_admin_client.mint(&users[0], &amount);
     
     //Balance should be 0
-    let vault_balance = test.defindex_contract.balance(&users[0]);
+    let vault_balance = defindex_contract.balance(&users[0]);
     assert_eq!(vault_balance, 0i128);
 
     //Withdraw with no funds
@@ -351,7 +356,7 @@ fn insufficient_balance(){
         },
     ];
 
-    let withdraw_no_funds = test.defindex_contract.try_rebalance(&withdraw_no_funds_instructions);
+    let withdraw_no_funds = defindex_contract.try_rebalance(&withdraw_no_funds_instructions);
     assert_eq!(withdraw_no_funds, Err(Ok(ContractError::StrategyWithdrawError))); //Contract should respond 'Insuficient balance'?
 
     //Invest with no funds
@@ -365,7 +370,7 @@ fn insufficient_balance(){
             swap_details_exact_out: OptionalSwapDetailsExactOut::None,
         },
     ];
-    let invest_no_funds = test.defindex_contract.try_rebalance(&invest_no_funds_instructions);
+    let invest_no_funds = defindex_contract.try_rebalance(&invest_no_funds_instructions);
 
     //Contract should fail with error #10 no balance or panic the test
     if invest_no_funds != Err(Err(InvokeError::Contract(10))) {
@@ -373,13 +378,13 @@ fn insufficient_balance(){
     }
 
     //Deposit 987654321 stroops
-    test.defindex_contract.deposit(
+    defindex_contract.deposit(
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
         &false
     );
-    let df_balance: i128 = test.defindex_contract.balance(&users[0]);
+    let df_balance: i128 = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount - 1000);
 
     //Withdraw more than available
@@ -393,7 +398,7 @@ fn insufficient_balance(){
             swap_details_exact_out: OptionalSwapDetailsExactOut::None,
         },
     ];
-    let rebalance = test.defindex_contract.try_rebalance(&withdraw_instructions);
+    let rebalance = defindex_contract.try_rebalance(&withdraw_instructions);
     assert_eq!(rebalance, Err(Ok(ContractError::StrategyWithdrawError)));
 
     let invest_instructions = sorobanvec!(
@@ -408,7 +413,7 @@ fn insufficient_balance(){
     );
 
     //Contract should fail with error #10 no balance
-    let rebalance = test.defindex_contract.try_rebalance(&invest_instructions);
+    let rebalance = defindex_contract.try_rebalance(&invest_instructions);
     if rebalance == Err(Err(InvokeError::Contract(10))) {
         return;
     } else {

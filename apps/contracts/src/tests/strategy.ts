@@ -1,9 +1,9 @@
 import {
     Address,
-    scValToNative,
-    xdr,
     Keypair,
     nativeToScVal,
+    scValToNative,
+    xdr
 } from "@stellar/stellar-sdk";
 import { invokeCustomContract } from "../utils/contract.js";
 
@@ -59,7 +59,7 @@ export async function depositToStrategy(deployedStrategy: string, user: Keypair,
 
     const depositParams: xdr.ScVal[] = [
         nativeToScVal(depositAmount, { type: "i128" }),
-        (new Address(user.publicKey())).toScVal()
+        new Address(user.publicKey()).toScVal()
     ];
 
     try {
