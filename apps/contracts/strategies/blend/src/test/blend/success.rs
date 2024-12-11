@@ -208,16 +208,12 @@ fn success() {
         )
     );
 
-    strategy_client.withdraw(&withdraw_amount, &user_3);
-
     // -> verify withdraw
     assert_eq!(usdc_client.balance(&user_2), withdraw_amount);
-    assert_eq!(usdc_client.balance(&user_3), withdraw_amount);
     assert_eq!(strategy_client.balance(&user_2), 0);
-    assert_eq!(strategy_client.balance(&user_3), 0);
 
     // -> verify withdraw from empty vault fails
-    let result = strategy_client.try_withdraw(&MIN_DUST, &user_3);
+    let result = strategy_client.try_withdraw(&MIN_DUST, &user_2);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
 
     // TODO: Finish harvest testings, pending soroswap router setup with a blend token pair with the underlying asset
@@ -232,10 +228,14 @@ fn success() {
     let blnd_strategy_balance = blnd_client.balance(&strategy);
     assert_eq!(blnd_strategy_balance, 0);
 
-    strategy_client.harvest(&user_2);
+    strategy_client.harvest(&user_3);
 
     let blnd_strategy_balance = blnd_client.balance(&strategy);
     assert_eq!(blnd_strategy_balance, 0);
-    // -> verify harvest
-    
+
+    let usdc_strategy_balance = usdc_client.balance(&strategy);
+    assert_eq!(usdc_strategy_balance, 0);
+
+    let user_3_strategy_balance = strategy_client.balance(&user_3);
+    assert_eq!(user_3_strategy_balance, 1226627059);    
 }

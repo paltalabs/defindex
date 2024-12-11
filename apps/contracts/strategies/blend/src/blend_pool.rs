@@ -112,7 +112,7 @@ pub fn withdraw(e: &Env, from: &Address, amount: &i128, config: &Config) -> (i12
 pub fn claim(e: &Env, from: &Address, config: &Config) -> i128 {
     let pool_client = BlendPoolClient::new(e, &config.pool);
 
-    // TODO: Check reserve_token_ids and how to get the correct one
+    // TODO: Hardcoded reserve_token_ids for now
     pool_client.claim(from, &vec![&e, 0u32, 1u32, 2u32, 3u32], from)
 }
 
