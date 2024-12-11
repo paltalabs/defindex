@@ -129,11 +129,12 @@ export async function testBlendStrategy(user?: Keypair) {
       console.log('error', e)
     }
 
-    return { status:{
-      depositStatus: depositStatus, 
-      withdrawStatus: withdrawStatus, 
-      harvestStatus: harvestStatus
-    }
+    return { 
+      status:{
+        depositStatus: depositStatus ?  '✅ Success' : '❌ Failed', 
+        withdrawStatus: withdrawStatus ?  '✅ Success' : '❌ Failed',
+        harvestStatus: harvestStatus ?  '✅ Success' : '❌ Failed',
+      }
     }
 }
 

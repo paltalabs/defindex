@@ -187,10 +187,11 @@ export async function testBlendVault(user?: Keypair) {
     console.log('❌ Error Investing the Vault:', error);
     investStatus = false;
   }
-  return { status:{
-      createStatus: createStatus,
-      depositStatus: depositStatus, 
-      investStatus: investStatus 
+  return { 
+    status:{
+      createStatus: createStatus ? '✅ Success' : '❌ Failed',
+      depositStatus: depositStatus ? '✅ Success' : '❌ Failed', 
+      investStatus: investStatus ? '✅ Success' : '❌ Failed' 
     }
   }
   // try { 
