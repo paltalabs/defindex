@@ -24,8 +24,6 @@ import { exit } from "process";
 import { testBlendVault } from "./blend/test_vault.js";
 import { testBlendStrategy } from "./blend/test_strategy.js";
 import { config } from "../utils/env_config.js";
-//import { testBlendStrategy } from "./blend/test_strategy.js";
-//import { testBlendVault } from "./blend/test_vault.js";
 
 const args = process.argv.slice(2);
 const network = args[0];
