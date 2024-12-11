@@ -1,5 +1,4 @@
 #![no_std]
-use deposit::{generate_and_execute_investments, process_deposit};
 use soroban_sdk::{
     contract, contractimpl, panic_with_error,
     token::{TokenClient},
@@ -26,10 +25,11 @@ mod utils;
 
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use aggregator::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
+use deposit::{process_deposit};
 use fee::{collect_fees, fetch_defindex_fee};
 use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds}; 
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
-use investment::check_and_execute_investments;
+use investment::{check_and_execute_investments, generate_investment_allocations};
 use models::{
     Instruction, OptionalSwapDetailsExactIn,
     OptionalSwapDetailsExactOut, CurrentAssetInvestmentAllocation,
@@ -165,18 +165,21 @@ impl VaultTrait for DeFindexVault {
         Ok(())
     }
 
-    /// Handles user deposits into the DeFindex Vault.
+    /// Handles user deposits into the DeFindex Vault and optionally allocates investments automatically.
     ///
     /// This function processes a deposit by transferring each specified asset amount from the user's address to
     /// the vault, allocating assets according to the vault's defined strategy ratios, and minting vault shares that
-    /// represent the user's proportional share in the vault. The `amounts_desired` and `amounts_min` vectors should
-    /// align with the vault's asset order to ensure correct allocation.
+    /// represent the user's proportional share in the vault. Additionally, if the `invest` parameter is set to `true`,
+    /// the function will immediately generate and execute investment allocations based on the vault's strategy configuration.
     ///
     /// # Parameters
     /// * `e` - The current environment reference (`Env`), for access to the contract state and utilities.
     /// * `amounts_desired` - A vector specifying the user's intended deposit amounts for each asset.
     /// * `amounts_min` - A vector of minimum deposit amounts required for the transaction to proceed.
     /// * `from` - The address of the user making the deposit.
+    /// * `invest` - A boolean flag indicating whether to immediately invest the deposited funds into the vault's strategies:
+    ///     - `true`: Generate and execute investments after the deposit.
+    ///     - `false`: Leave the deposited funds as idle assets in the vault.
     ///
     /// # Returns
     /// * `Result<(Vec<i128>, i128), ContractError>` - Returns the actual deposited `amounts` and `shares_to_mint` if successful,
@@ -187,14 +190,21 @@ impl VaultTrait for DeFindexVault {
     /// 2. **Validation**: Checks that the lengths of `amounts_desired` and `amounts_min` match the vault's assets.
     /// 3. **Share Calculation**: Calculates `shares_to_mint` based on the vault's total managed funds and the deposit amount.
     /// 4. **Asset Transfer**: Transfers each specified amount from the user’s address to the vault as idle funds.
-    /// 5. **Vault shares Minting**: Mints vault shares for the user to represent their ownership in the vault.
+    /// 5. **Vault Shares Minting**: Mints vault shares for the user to represent their ownership in the vault.
+    /// 6. **Investment Execution**: If `invest` is `true`, generates and executes the investment allocations for the deposited funds.
+    ///     - Allocates funds across strategies proportionally to their current state.
+    ///     - Executes the investment to transition idle funds into the vault's strategies.
     ///
     /// # Notes
     /// - For the first deposit, if the vault has only one asset, shares are calculated directly based on the deposit amount.
     /// - For multiple assets, the function delegates to `calculate_deposit_amounts_and_shares_to_mint`
     ///   for precise share computation.
     /// - An event is emitted to log the deposit, including the actual deposited amounts and minted shares.
+    /// - If `invest` is `false`, deposited funds remain idle, allowing for manual investment at a later time.
     ///
+    /// # Errors
+    /// - Returns a `ContractError` if any validation or execution step fails.
+
     fn deposit(
         e: Env,
         amounts_desired: Vec<i128>,
@@ -210,18 +220,31 @@ impl VaultTrait for DeFindexVault {
         // If this was not done before, last_fee_assesment will set to be current timestamp and this will return without action
         collect_fees(&e)?;
 
+        let total_managed_funds = fetch_total_managed_funds(&e);
+
         let assets = get_assets(&e);
 
         let (amounts, shares_to_mint) =
-            process_deposit(&e, &assets, &amounts_desired, &amounts_min, &from)?;
+            process_deposit(
+                &e, 
+                &assets, 
+                &total_managed_funds,
+                &amounts_desired, 
+                &amounts_min, 
+                &from)?;
         events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone());
 
         if invest {
-            // Generate investment allocations and execute them
-            generate_and_execute_investments(&e, &amounts, &assets)?;
+            let asset_investments = generate_investment_allocations(
+                &e,
+                &assets,
+                &total_managed_funds,
+                &amounts,
+            )?;
+            check_and_execute_investments(&e, &assets, &asset_investments)?;
         }
-
         Ok((amounts, shares_to_mint))
+
     }
 
     /// Handles the withdrawal process for a specified number of vault shares.
@@ -697,7 +720,10 @@ impl VaultManagementTrait for DeFindexVault {
         }
 
         // Check and execute investments for each asset allocation
-        check_and_execute_investments(e, assets, asset_investments)?;
+        check_and_execute_investments(
+            &e, 
+            &assets, 
+            &asset_investments)?;
 
         Ok(())
     }
