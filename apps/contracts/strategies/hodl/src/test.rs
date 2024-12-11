@@ -27,6 +27,7 @@ pub struct HodlStrategyTest<'a> {
     env: Env,
     token: TokenClient<'a>,
     user: Address,
+    user1: Address,
 }
 
 impl<'a> HodlStrategyTest<'a> {
@@ -38,14 +39,18 @@ impl<'a> HodlStrategyTest<'a> {
         let admin = Address::generate(&env);
         let token = create_token_contract(&env, &admin);
         let user = Address::generate(&env);
+        let user1 = Address::generate(&env);
 
         // Mint 1,000,000,000 to user
         StellarAssetClient::new(&env, &token.address).mint(&user, &1_000_000_000);
+        // Mint 1,000,000,000 to user1
+        StellarAssetClient::new(&env, &token.address).mint(&user1, &1_000_000_000);
 
         HodlStrategyTest {
             env,
             token,
-            user
+            user,
+            user1,
         }
     }
     
