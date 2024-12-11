@@ -1,6 +1,6 @@
 
 # DeFindex Vault Contract
-This contract serves as the core of the DeFindex platform, responsible for managing assets, executing strategies, and ensuring proper asset rebalancing. It operates with four primary roles: **Deployer**, **Fee Receiver**, **Manager**, and **Emergency Manager**. Additionally, the contract functions as a token referred to as the *dfToken* that represents the shares of the vault.
+This contract serves as the core of the DeFindex platform, responsible for managing assets, executing strategies, and ensuring proper asset rebalancing. It operates with four primary roles: **Deployer**, **Fee Receiver**, **Manager**, **rebalancer** and **Emergency Manager**. Additionally, the contract functions as a token referred to as the *dfToken* that represents the shares of the vault.
 
 While anyone can invest in a DeFindex, only the Manager and Emergency Manager have the authority to move funds between strategies or even outside strategies and into the Vault itself (see idle assets and emergency withdrawal).
 
@@ -14,13 +14,15 @@ Because Strategies are the only one that know exactly the current balance of the
 Or if the Vault executes Strategies at its own name (auth), it should execute a speficic `get_assets_balance` function in the strategy contract to know exactely how many assets it has at a specific moment.
 
 ## Initialization
-The DeFindex Vault contract is structured with specific roles and strategies for managing assets effectively. The key roles include the **Fee Receiver**, **Manager**, and **Emergency Manager**, each responsible for different tasks in managing the Vault. Additionally, a predefined set of strategies determines how assets will be allocated within the Vault. A management fee is also established at the time of initialization, which can later be adjusted by the Fee Receiver. Further details on fee handling are explained later in the document.
+The DeFindex Vault contract is structured with specific roles and strategies for managing assets effectively. The key roles include the **Fee Receiver**, **Manager**, **rebalancer** and **Emergency Manager**, each responsible for different tasks in managing the Vault. Additionally, a predefined set of strategies determines how assets will be allocated within the Vault. A performance fee is also established at the time of initialization, which can later be adjusted by the Fee Receiver or the Manager. Further details on fee handling are explained later in the document.
 
 The allocation ratios for these strategies are not set during the deployment but are defined during the first deposit made into the Vault. For example, imagine a scenario where the Vault is set up to allocate 20% of its assets to a USDC lending pool (like Blend), 30% to another USDC lending pool (such as YieldBlox), and 50% to a USDC-XLM liquidity pool on an Automated Market Maker (AMM) platform (like Soroswap). 
 
 To establish this allocation, the deployer must make a first deposit into the Vault, even if the amount is small. This initial deposit sets the ratio for all future deposits. The deployer is required to hold USDC and the liquidity pool tokens, such as LP-USDC-XLM, to start this process. However, a **zapper contract** simplifies this by automating asset conversion and liquidity pooling. The zapper takes the deployer’s USDC, swaps 25% of it into XLM, and then uses both USDC and XLM to add liquidity to the Soroswap pool. This process generates LP tokens, which is required to complete the first deposit, ensuring the allocation ratios are correctly set. It's worth noting that the first deposit is made within the same transaction that creates and initializes the vault, so the deployer must have at least a minimal amount of assets ready when creating a vault.
 
 Once the contract is initialized and the first deposit is made, the **Manager** has the authority to adjust the allocation ratios over time. For example, if market conditions change or certain strategies perform better, the Manager can rebalance the allocations between the strategies to optimize performance. However, the Manager is limited to reallocating funds only between the existing strategies. They cannot introduce new strategies, which ensures the safety of user funds by minimizing potential security risks.
+
+The **rebalancer** can only move funds between strategies and nothing else. This allow to have a keeper or bot constantly checking for the best yields and less risk. One does not want a bot to have the authority to change other roles.
 
 This restriction on adding new strategies is a deliberate security feature. Allowing new strategies could increase the attack surface, potentially exposing the Vault to more vulnerabilities. By keeping the strategies fixed, the contract provides a stable and secure environment for users’ assets while still allowing flexibility in reallocating funds between existing strategies.
 
@@ -155,14 +157,14 @@ Fees are charged on a per-strategy basis, meaning each strategy independently ca
 #### Detailed Workflow
 
 1. **Fee Structure Example**:
-   - Protocol Fee Receiver: 5%
-   - Vault Fee Receiver: 15%
+   - Protocol Fee Receiver: 25%
+   - Vault Fee Receiver: 20%
 
 2. **Execution Example**:
    - A user deposits 100 USDC into a vault with one strategy.
    - The strategy earns 10 USDC in gains.
    - The vault collects 20% of the gains as fees (2 USDC).
-   - Fees are distributed between the protocol (0.5 USDC) and the manager (1.5 USDC).
+   - From the fees collected, 25% is going to the Protocol (0.5 USDC), and the rest is going to the Vault Fee Receiver.
    - The total assets of the vault become \(100 + 10 - 2 = 108\) USDC.
 
 #### Strategy Gains Tracking
@@ -196,13 +198,11 @@ Once gains are tracked, fees can be inspected and/or locked for future distribut
 The locking process is done by the manager calling the `lock_fees()` function.
 
 ```rust
-fn lock_fees() {
+fn lock_fees(new_fee_bps: Option<i128>) {
     for strategy in strategies {
         if gains_or_losses > 0 {
-            let protocol_fee = gains_or_losses * protocol_fee_receiver / MAX_BPS;
-            let vault_fee = gains_or_losses * vault_fee_receiver / MAX_BPS;
-            lock_fee(strategy.asset, protocol_fee_receiver, protocol_fee);
-            lock_fee(strategy.asset, vault_fee_receiver, vault_fee);
+            let total_fee = gains_or_losses * new_fee_bps.unwrap_or(vault_fee_bps) / MAX_BPS;
+            lock_fee(strategy.asset, total_fee);
             reset_gains_or_losses(strategy);
         }
     }
@@ -210,6 +210,17 @@ fn lock_fees() {
 ```
 
 When locking the fees, it is applied the current ratio to all the gains, and then they are reset to 0. If there is not gains, there is no fee to lock, and gains_or_losses can't be reset to 0.
+Also, this is run everytime a `withdraw` call occurs.
+
+If, for some reason the yield generated by a strategy is too little, we can call the function `release_fee()` to make some of the fees go to the gain_or_losses.
+**Pseudocode for release_fees**
+```rust
+fn release_fees(strategy: Address, amount: i128) {
+    release_fee(strategy.asset, amount)
+    let previous_gains_or_losses = get_gains_or_losses(strategy);
+    store_gains_or_losses(strategy, current_gains_or_losses + amount);
+}
+```
 
 Then, the fees are distributed to the protocol and manager, whenever a person calls the `distribute_fees()` function.
 
@@ -219,8 +230,8 @@ fn distribute_fees() {
     for strategy in strategies {
         let locked_fees = get_locked_fees(strategy);
         if locked_fees > 0 {
-            transfer_from_strategy(strategy.asset, protocol_fee_receiver, locked_fees * protocol_fee_receiver / MAX_BPS);
-            transfer_from_strategy(strategy.asset, vault_fee_receiver, locked_fees * vault_fee_receiver / MAX_BPS);
+            transfer_from_strategy(strategy.asset, protocol_fee_receiver, locked_fees * protocol_fee_bps / MAX_BPS);
+            transfer_from_strategy(strategy.asset, vault_fee_receiver, locked_fees * (MAX_BPS - protocol_fee_bps) / MAX_BPS);
             reset_locked_fees(strategy);
         }
     }

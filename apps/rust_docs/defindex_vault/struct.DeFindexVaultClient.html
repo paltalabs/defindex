@@ -81,17 +81,23 @@ any setup fails (e.g., strategy mismatch with asset).</li>
     amounts_min: &amp;Vec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;,
     from: &amp;Address,
     invest: &amp;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.bool.html">bool</a>,
-) -&gt; (Vec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;, <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>)</h4></section></summary><div class="docblock"><p>Handles user deposits into the DeFindex Vault.</p>
+) -&gt; (Vec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;, <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>)</h4></section></summary><div class="docblock"><p>Handles user deposits into the DeFindex Vault and optionally allocates investments automatically.</p>
 <p>This function processes a deposit by transferring each specified asset amount from the user’s address to
 the vault, allocating assets according to the vault’s defined strategy ratios, and minting vault shares that
-represent the user’s proportional share in the vault. The <code>amounts_desired</code> and <code>amounts_min</code> vectors should
-align with the vault’s asset order to ensure correct allocation.</p>
+represent the user’s proportional share in the vault. Additionally, if the <code>invest</code> parameter is set to <code>true</code>,
+the function will immediately generate and execute investment allocations based on the vault’s strategy configuration.</p>
 <h5 id="parameters"><a class="doc-anchor" href="#parameters">§</a>Parameters</h5>
 <ul>
 <li><code>e</code> - The current environment reference (<code>Env</code>), for access to the contract state and utilities.</li>
 <li><code>amounts_desired</code> - A vector specifying the user’s intended deposit amounts for each asset.</li>
 <li><code>amounts_min</code> - A vector of minimum deposit amounts required for the transaction to proceed.</li>
 <li><code>from</code> - The address of the user making the deposit.</li>
+<li><code>invest</code> - A boolean flag indicating whether to immediately invest the deposited funds into the vault’s strategies:
+<ul>
+<li><code>true</code>: Generate and execute investments after the deposit.</li>
+<li><code>false</code>: Leave the deposited funds as idle assets in the vault.</li>
+</ul>
+</li>
 </ul>
 <h5 id="returns-2"><a class="doc-anchor" href="#returns-2">§</a>Returns</h5>
 <ul>
@@ -104,7 +110,13 @@ otherwise a <code>ContractError</code>.</li>
 <li><strong>Validation</strong>: Checks that the lengths of <code>amounts_desired</code> and <code>amounts_min</code> match the vault’s assets.</li>
 <li><strong>Share Calculation</strong>: Calculates <code>shares_to_mint</code> based on the vault’s total managed funds and the deposit amount.</li>
 <li><strong>Asset Transfer</strong>: Transfers each specified amount from the user’s address to the vault as idle funds.</li>
-<li><strong>Vault shares Minting</strong>: Mints vault shares for the user to represent their ownership in the vault.</li>
+<li><strong>Vault Shares Minting</strong>: Mints vault shares for the user to represent their ownership in the vault.</li>
+<li><strong>Investment Execution</strong>: If <code>invest</code> is <code>true</code>, generates and executes the investment allocations for the deposited funds.
+<ul>
+<li>Allocates funds across strategies proportionally to their current state.</li>
+<li>Executes the investment to transition idle funds into the vault’s strategies.</li>
+</ul>
+</li>
 </ol>
 <h5 id="notes"><a class="doc-anchor" href="#notes">§</a>Notes</h5>
 <ul>
@@ -112,6 +124,11 @@ otherwise a <code>ContractError</code>.</li>
 <li>For multiple assets, the function delegates to <code>calculate_deposit_amounts_and_shares_to_mint</code>
 for precise share computation.</li>
 <li>An event is emitted to log the deposit, including the actual deposited amounts and minted shares.</li>
+<li>If <code>invest</code> is <code>false</code>, deposited funds remain idle, allowing for manual investment at a later time.</li>
+</ul>
+<h5 id="errors-2"><a class="doc-anchor" href="#errors-2">§</a>Errors</h5>
+<ul>
+<li>Returns a <code>ContractError</code> if any validation or execution step fails.</li>
 </ul>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.try_deposit" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub fn <a href="#method.try_deposit" class="fn">try_deposit</a>(
     &amp;self,
@@ -119,17 +136,23 @@ for precise share computation.</li>
     amounts_min: &amp;Vec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;,
     from: &amp;Address,
     invest: &amp;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.bool.html">bool</a>,
-) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;(Vec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;, <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>), &lt;(Vec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;, <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>) as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="enum.ContractError.html" title="enum defindex_vault::ContractError">ContractError</a>, InvokeError&gt;&gt;</h4></section></summary><div class="docblock"><p>Handles user deposits into the DeFindex Vault.</p>
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;(Vec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;, <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>), &lt;(Vec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;, <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>) as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="enum.ContractError.html" title="enum defindex_vault::ContractError">ContractError</a>, InvokeError&gt;&gt;</h4></section></summary><div class="docblock"><p>Handles user deposits into the DeFindex Vault and optionally allocates investments automatically.</p>
 <p>This function processes a deposit by transferring each specified asset amount from the user’s address to
 the vault, allocating assets according to the vault’s defined strategy ratios, and minting vault shares that
-represent the user’s proportional share in the vault. The <code>amounts_desired</code> and <code>amounts_min</code> vectors should
-align with the vault’s asset order to ensure correct allocation.</p>
+represent the user’s proportional share in the vault. Additionally, if the <code>invest</code> parameter is set to <code>true</code>,
+the function will immediately generate and execute investment allocations based on the vault’s strategy configuration.</p>
 <h5 id="parameters-1"><a class="doc-anchor" href="#parameters-1">§</a>Parameters</h5>
 <ul>
 <li><code>e</code> - The current environment reference (<code>Env</code>), for access to the contract state and utilities.</li>
 <li><code>amounts_desired</code> - A vector specifying the user’s intended deposit amounts for each asset.</li>
 <li><code>amounts_min</code> - A vector of minimum deposit amounts required for the transaction to proceed.</li>
 <li><code>from</code> - The address of the user making the deposit.</li>
+<li><code>invest</code> - A boolean flag indicating whether to immediately invest the deposited funds into the vault’s strategies:
+<ul>
+<li><code>true</code>: Generate and execute investments after the deposit.</li>
+<li><code>false</code>: Leave the deposited funds as idle assets in the vault.</li>
+</ul>
+</li>
 </ul>
 <h5 id="returns-3"><a class="doc-anchor" href="#returns-3">§</a>Returns</h5>
 <ul>
@@ -142,7 +165,13 @@ otherwise a <code>ContractError</code>.</li>
 <li><strong>Validation</strong>: Checks that the lengths of <code>amounts_desired</code> and <code>amounts_min</code> match the vault’s assets.</li>
 <li><strong>Share Calculation</strong>: Calculates <code>shares_to_mint</code> based on the vault’s total managed funds and the deposit amount.</li>
 <li><strong>Asset Transfer</strong>: Transfers each specified amount from the user’s address to the vault as idle funds.</li>
-<li><strong>Vault shares Minting</strong>: Mints vault shares for the user to represent their ownership in the vault.</li>
+<li><strong>Vault Shares Minting</strong>: Mints vault shares for the user to represent their ownership in the vault.</li>
+<li><strong>Investment Execution</strong>: If <code>invest</code> is <code>true</code>, generates and executes the investment allocations for the deposited funds.
+<ul>
+<li>Allocates funds across strategies proportionally to their current state.</li>
+<li>Executes the investment to transition idle funds into the vault’s strategies.</li>
+</ul>
+</li>
 </ol>
 <h5 id="notes-1"><a class="doc-anchor" href="#notes-1">§</a>Notes</h5>
 <ul>
@@ -150,44 +179,113 @@ otherwise a <code>ContractError</code>.</li>
 <li>For multiple assets, the function delegates to <code>calculate_deposit_amounts_and_shares_to_mint</code>
 for precise share computation.</li>
 <li>An event is emitted to log the deposit, including the actual deposited amounts and minted shares.</li>
+<li>If <code>invest</code> is <code>false</code>, deposited funds remain idle, allowing for manual investment at a later time.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.withdraw" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub fn <a href="#method.withdraw" class="fn">withdraw</a>(&amp;self, withdraw_shares: &amp;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>, from: &amp;Address) -&gt; Vec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;</h4></section></summary><div class="docblock"><p>Withdraws assets from the DeFindex Vault by burning Vault Share tokens.</p>
-<p>This function calculates the amount of assets to withdraw based on the number of Vault Share tokens being burned,
-then transfers the appropriate assets back to the user, pulling from both idle funds and strategies
-as needed.</p>
-<h5 id="arguments-2"><a class="doc-anchor" href="#arguments-2">§</a>Arguments:</h5>
+<h5 id="errors-3"><a class="doc-anchor" href="#errors-3">§</a>Errors</h5>
 <ul>
-<li><code>e</code> - The environment.</li>
-<li><code>shares_amount</code> - The amount of Vault Share tokens to burn for the withdrawal.</li>
-<li><code>from</code> - The address of the user requesting the withdrawal.</li>
+<li>Returns a <code>ContractError</code> if any validation or execution step fails.</li>
 </ul>
-<h5 id="returns-4"><a class="doc-anchor" href="#returns-4">§</a>Returns:</h5>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.withdraw" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub fn <a href="#method.withdraw" class="fn">withdraw</a>(&amp;self, withdraw_shares: &amp;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>, from: &amp;Address) -&gt; Vec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;</h4></section></summary><div class="docblock"><p>Handles the withdrawal process for a specified number of vault shares.</p>
+<p>This function performs the following steps:</p>
+<ol>
+<li>Validates the environment and the inputs:
 <ul>
-<li><code>Result&lt;(), ContractError&gt;</code> - Ok if successful, otherwise returns a ContractError.</li>
+<li>Ensures the contract is initialized.</li>
+<li>Checks that the withdrawal amount (<code>withdraw_shares</code>) is non-negative.</li>
+<li>Verifies the authorization of the <code>from</code> address.</li>
+</ul>
+</li>
+<li>Collects applicable fees.</li>
+<li>Calculates the proportionate withdrawal amounts for each asset based on the number of shares.</li>
+<li>Burns the specified shares from the user’s account.</li>
+<li>Processes the withdrawal for each asset:
+<ul>
+<li>First attempts to cover the withdrawal amount using idle funds.</li>
+<li>If idle funds are insufficient, unwinds investments from the associated strategies
+to cover the remaining amount, accounting for rounding errors in the last strategy.</li>
+</ul>
+</li>
+<li>Transfers the withdrawn funds to the user’s address (<code>from</code>).</li>
+<li>Emits an event to record the withdrawal details.</li>
+</ol>
+<h6 id="parameters-2"><a class="doc-anchor" href="#parameters-2">§</a>Parameters:</h6>
+<ul>
+<li><code>e</code>: The contract environment (<code>Env</code>).</li>
+<li><code>withdraw_shares</code>: The number of vault shares to withdraw.</li>
+<li><code>from</code>: The address initiating the withdrawal.</li>
+</ul>
+<h6 id="returns-4"><a class="doc-anchor" href="#returns-4">§</a>Returns:</h6>
+<ul>
+<li>A <code>Result</code> containing a vector of withdrawn amounts for each asset (<code>Vec&lt;i128&gt;</code>),
+or a <code>ContractError</code> if the withdrawal fails.</li>
+</ul>
+<h6 id="errors-4"><a class="doc-anchor" href="#errors-4">§</a>Errors:</h6>
+<ul>
+<li><code>ContractError::AmountOverTotalSupply</code>: If the specified shares exceed the total supply.</li>
+<li><code>ContractError::ArithmeticError</code>: If any arithmetic operation fails during calculations.</li>
+<li><code>ContractError::WrongAmountsLength</code>: If there is a mismatch in asset allocation data.</li>
+</ul>
+<h6 id="todos"><a class="doc-anchor" href="#todos">§</a>TODOs:</h6>
+<ul>
+<li>Implement minimum amounts for withdrawals to ensure compliance with potential restrictions.</li>
+<li>Replace the returned vector with the original <code>asset_withdrawal_amounts</code> map for better structure.</li>
+<li>avoid the usage of a Map, choose between using map or vector</li>
 </ul>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.try_withdraw" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub fn <a href="#method.try_withdraw" class="fn">try_withdraw</a>(
     &amp;self,
     withdraw_shares: &amp;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>,
     from: &amp;Address,
-) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Vec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;, &lt;Vec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt; as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="enum.ContractError.html" title="enum defindex_vault::ContractError">ContractError</a>, InvokeError&gt;&gt;</h4></section></summary><div class="docblock"><p>Withdraws assets from the DeFindex Vault by burning Vault Share tokens.</p>
-<p>This function calculates the amount of assets to withdraw based on the number of Vault Share tokens being burned,
-then transfers the appropriate assets back to the user, pulling from both idle funds and strategies
-as needed.</p>
-<h5 id="arguments-3"><a class="doc-anchor" href="#arguments-3">§</a>Arguments:</h5>
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Vec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;, &lt;Vec&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt; as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="enum.ContractError.html" title="enum defindex_vault::ContractError">ContractError</a>, InvokeError&gt;&gt;</h4></section></summary><div class="docblock"><p>Handles the withdrawal process for a specified number of vault shares.</p>
+<p>This function performs the following steps:</p>
+<ol>
+<li>Validates the environment and the inputs:
 <ul>
-<li><code>e</code> - The environment.</li>
-<li><code>shares_amount</code> - The amount of Vault Share tokens to burn for the withdrawal.</li>
-<li><code>from</code> - The address of the user requesting the withdrawal.</li>
+<li>Ensures the contract is initialized.</li>
+<li>Checks that the withdrawal amount (<code>withdraw_shares</code>) is non-negative.</li>
+<li>Verifies the authorization of the <code>from</code> address.</li>
 </ul>
-<h5 id="returns-5"><a class="doc-anchor" href="#returns-5">§</a>Returns:</h5>
+</li>
+<li>Collects applicable fees.</li>
+<li>Calculates the proportionate withdrawal amounts for each asset based on the number of shares.</li>
+<li>Burns the specified shares from the user’s account.</li>
+<li>Processes the withdrawal for each asset:
 <ul>
-<li><code>Result&lt;(), ContractError&gt;</code> - Ok if successful, otherwise returns a ContractError.</li>
+<li>First attempts to cover the withdrawal amount using idle funds.</li>
+<li>If idle funds are insufficient, unwinds investments from the associated strategies
+to cover the remaining amount, accounting for rounding errors in the last strategy.</li>
+</ul>
+</li>
+<li>Transfers the withdrawn funds to the user’s address (<code>from</code>).</li>
+<li>Emits an event to record the withdrawal details.</li>
+</ol>
+<h6 id="parameters-3"><a class="doc-anchor" href="#parameters-3">§</a>Parameters:</h6>
+<ul>
+<li><code>e</code>: The contract environment (<code>Env</code>).</li>
+<li><code>withdraw_shares</code>: The number of vault shares to withdraw.</li>
+<li><code>from</code>: The address initiating the withdrawal.</li>
+</ul>
+<h6 id="returns-5"><a class="doc-anchor" href="#returns-5">§</a>Returns:</h6>
+<ul>
+<li>A <code>Result</code> containing a vector of withdrawn amounts for each asset (<code>Vec&lt;i128&gt;</code>),
+or a <code>ContractError</code> if the withdrawal fails.</li>
+</ul>
+<h6 id="errors-5"><a class="doc-anchor" href="#errors-5">§</a>Errors:</h6>
+<ul>
+<li><code>ContractError::AmountOverTotalSupply</code>: If the specified shares exceed the total supply.</li>
+<li><code>ContractError::ArithmeticError</code>: If any arithmetic operation fails during calculations.</li>
+<li><code>ContractError::WrongAmountsLength</code>: If there is a mismatch in asset allocation data.</li>
+</ul>
+<h6 id="todos-1"><a class="doc-anchor" href="#todos-1">§</a>TODOs:</h6>
+<ul>
+<li>Implement minimum amounts for withdrawals to ensure compliance with potential restrictions.</li>
+<li>Replace the returned vector with the original <code>asset_withdrawal_amounts</code> map for better structure.</li>
+<li>avoid the usage of a Map, choose between using map or vector</li>
 </ul>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.emergency_withdraw" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub fn <a href="#method.emergency_withdraw" class="fn">emergency_withdraw</a>(&amp;self, strategy_address: &amp;Address, caller: &amp;Address)</h4></section></summary><div class="docblock"><p>Executes an emergency withdrawal from a specific strategy.</p>
 <p>This function allows the emergency manager or manager to withdraw all assets from a particular strategy
 and store them as idle funds within the vault. It also pauses the strategy to prevent further use until
 unpaused.</p>
-<h5 id="arguments-4"><a class="doc-anchor" href="#arguments-4">§</a>Arguments:</h5>
+<h5 id="arguments-2"><a class="doc-anchor" href="#arguments-2">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>strategy_address</code> - The address of the strategy to withdraw from.</li>
@@ -205,7 +303,7 @@ unpaused.</p>
 <p>This function allows the emergency manager or manager to withdraw all assets from a particular strategy
 and store them as idle funds within the vault. It also pauses the strategy to prevent further use until
 unpaused.</p>
-<h5 id="arguments-5"><a class="doc-anchor" href="#arguments-5">§</a>Arguments:</h5>
+<h5 id="arguments-3"><a class="doc-anchor" href="#arguments-3">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>strategy_address</code> - The address of the strategy to withdraw from.</li>
@@ -218,7 +316,7 @@ unpaused.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.pause_strategy" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub fn <a href="#method.pause_strategy" class="fn">pause_strategy</a>(&amp;self, strategy_address: &amp;Address, caller: &amp;Address)</h4></section></summary><div class="docblock"><p>Pauses a strategy to prevent it from being used in the vault.</p>
 <p>This function pauses a strategy by setting its <code>paused</code> field to <code>true</code>. Only the manager or emergency
 manager can pause a strategy.</p>
-<h5 id="arguments-6"><a class="doc-anchor" href="#arguments-6">§</a>Arguments:</h5>
+<h5 id="arguments-4"><a class="doc-anchor" href="#arguments-4">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>strategy_address</code> - The address of the strategy to pause.</li>
@@ -235,7 +333,7 @@ manager can pause a strategy.</p>
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a>, &lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a> as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="enum.ContractError.html" title="enum defindex_vault::ContractError">ContractError</a>, InvokeError&gt;&gt;</h4></section></summary><div class="docblock"><p>Pauses a strategy to prevent it from being used in the vault.</p>
 <p>This function pauses a strategy by setting its <code>paused</code> field to <code>true</code>. Only the manager or emergency
 manager can pause a strategy.</p>
-<h5 id="arguments-7"><a class="doc-anchor" href="#arguments-7">§</a>Arguments:</h5>
+<h5 id="arguments-5"><a class="doc-anchor" href="#arguments-5">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>strategy_address</code> - The address of the strategy to pause.</li>
@@ -248,7 +346,7 @@ manager can pause a strategy.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.unpause_strategy" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub fn <a href="#method.unpause_strategy" class="fn">unpause_strategy</a>(&amp;self, strategy_address: &amp;Address, caller: &amp;Address)</h4></section></summary><div class="docblock"><p>Unpauses a previously paused strategy.</p>
 <p>This function unpauses a strategy by setting its <code>paused</code> field to <code>false</code>, allowing it to be used
 again in the vault.</p>
-<h5 id="arguments-8"><a class="doc-anchor" href="#arguments-8">§</a>Arguments:</h5>
+<h5 id="arguments-6"><a class="doc-anchor" href="#arguments-6">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>strategy_address</code> - The address of the strategy to unpause.</li>
@@ -265,7 +363,7 @@ again in the vault.</p>
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a>, &lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a> as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="enum.ContractError.html" title="enum defindex_vault::ContractError">ContractError</a>, InvokeError&gt;&gt;</h4></section></summary><div class="docblock"><p>Unpauses a previously paused strategy.</p>
 <p>This function unpauses a strategy by setting its <code>paused</code> field to <code>false</code>, allowing it to be used
 again in the vault.</p>
-<h5 id="arguments-9"><a class="doc-anchor" href="#arguments-9">§</a>Arguments:</h5>
+<h5 id="arguments-7"><a class="doc-anchor" href="#arguments-7">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>strategy_address</code> - The address of the strategy to unpause.</li>
@@ -276,7 +374,7 @@ again in the vault.</p>
 <li><code>Result&lt;(), ContractError&gt;</code> - Ok if successful, otherwise returns a ContractError.</li>
 </ul>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.get_assets" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub fn <a href="#method.get_assets" class="fn">get_assets</a>(&amp;self) -&gt; Vec&lt;AssetStrategySet&gt;</h4></section></summary><div class="docblock"><p>Retrieves the list of assets managed by the DeFindex Vault.</p>
-<h5 id="arguments-10"><a class="doc-anchor" href="#arguments-10">§</a>Arguments:</h5>
+<h5 id="arguments-8"><a class="doc-anchor" href="#arguments-8">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -287,7 +385,7 @@ again in the vault.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.try_get_assets" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub fn <a href="#method.try_get_assets" class="fn">try_get_assets</a>(
     &amp;self,
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Vec&lt;AssetStrategySet&gt;, &lt;Vec&lt;AssetStrategySet&gt; as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Error, InvokeError&gt;&gt;</h4></section></summary><div class="docblock"><p>Retrieves the list of assets managed by the DeFindex Vault.</p>
-<h5 id="arguments-11"><a class="doc-anchor" href="#arguments-11">§</a>Arguments:</h5>
+<h5 id="arguments-9"><a class="doc-anchor" href="#arguments-9">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -300,7 +398,7 @@ again in the vault.</p>
 ) -&gt; Map&lt;Address, CurrentAssetInvestmentAllocation&gt;</h4></section></summary><div class="docblock"><p>Returns the total managed funds of the vault, including both invested and idle funds.</p>
 <p>This function provides a map where the key is the asset address and the value is the total amount
 of that asset being managed by the vault.</p>
-<h5 id="arguments-12"><a class="doc-anchor" href="#arguments-12">§</a>Arguments:</h5>
+<h5 id="arguments-10"><a class="doc-anchor" href="#arguments-10">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -313,7 +411,7 @@ of that asset being managed by the vault.</p>
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Map&lt;Address, CurrentAssetInvestmentAllocation&gt;, &lt;Map&lt;Address, CurrentAssetInvestmentAllocation&gt; as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Error, InvokeError&gt;&gt;</h4></section></summary><div class="docblock"><p>Returns the total managed funds of the vault, including both invested and idle funds.</p>
 <p>This function provides a map where the key is the asset address and the value is the total amount
 of that asset being managed by the vault.</p>
-<h5 id="arguments-13"><a class="doc-anchor" href="#arguments-13">§</a>Arguments:</h5>
+<h5 id="arguments-11"><a class="doc-anchor" href="#arguments-11">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -324,7 +422,7 @@ of that asset being managed by the vault.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.fetch_current_invested_funds" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub fn <a href="#method.fetch_current_invested_funds" class="fn">fetch_current_invested_funds</a>(&amp;self) -&gt; Map&lt;Address, <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;</h4></section></summary><div class="docblock"><p>Returns the current invested funds, representing the total assets allocated to strategies.</p>
 <p>This function provides a map where the key is the asset address and the value is the total amount
 of that asset currently invested in various strategies.</p>
-<h5 id="arguments-14"><a class="doc-anchor" href="#arguments-14">§</a>Arguments:</h5>
+<h5 id="arguments-12"><a class="doc-anchor" href="#arguments-12">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -337,7 +435,7 @@ of that asset currently invested in various strategies.</p>
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Map&lt;Address, <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;, &lt;Map&lt;Address, <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt; as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Error, InvokeError&gt;&gt;</h4></section></summary><div class="docblock"><p>Returns the current invested funds, representing the total assets allocated to strategies.</p>
 <p>This function provides a map where the key is the asset address and the value is the total amount
 of that asset currently invested in various strategies.</p>
-<h5 id="arguments-15"><a class="doc-anchor" href="#arguments-15">§</a>Arguments:</h5>
+<h5 id="arguments-13"><a class="doc-anchor" href="#arguments-13">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -348,7 +446,7 @@ of that asset currently invested in various strategies.</p>
 </div></details><details class="toggle method-toggle" open><summary><section id="method.fetch_current_idle_funds" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub fn <a href="#method.fetch_current_idle_funds" class="fn">fetch_current_idle_funds</a>(&amp;self) -&gt; Map&lt;Address, <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;</h4></section></summary><div class="docblock"><p>Returns the current idle funds, representing the total assets held directly by the vault (not invested).</p>
 <p>This function provides a map where the key is the asset address and the value is the total amount
 of that asset held as idle funds within the vault.</p>
-<h5 id="arguments-16"><a class="doc-anchor" href="#arguments-16">§</a>Arguments:</h5>
+<h5 id="arguments-14"><a class="doc-anchor" href="#arguments-14">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -361,7 +459,7 @@ of that asset held as idle funds within the vault.</p>
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Map&lt;Address, <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;, &lt;Map&lt;Address, <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt; as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Error, InvokeError&gt;&gt;</h4></section></summary><div class="docblock"><p>Returns the current idle funds, representing the total assets held directly by the vault (not invested).</p>
 <p>This function provides a map where the key is the asset address and the value is the total amount
 of that asset held as idle funds within the vault.</p>
-<h5 id="arguments-17"><a class="doc-anchor" href="#arguments-17">§</a>Arguments:</h5>
+<h5 id="arguments-15"><a class="doc-anchor" href="#arguments-15">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -375,7 +473,7 @@ of that asset held as idle funds within the vault.</p>
 ) -&gt; Map&lt;Address, <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;</h4></section></summary><div class="docblock"><p>This function extends the contract’s time-to-live and calculates how much of each asset corresponds
 per the provided number of vault shares (<code>vault_shares</code>). It provides proportional allocations for each asset
 in the vault relative to the specified shares.</p>
-<h5 id="arguments-18"><a class="doc-anchor" href="#arguments-18">§</a>Arguments</h5>
+<h5 id="arguments-16"><a class="doc-anchor" href="#arguments-16">§</a>Arguments</h5>
 <ul>
 <li><code>e</code> - The current environment reference.</li>
 <li><code>vault_shares</code> - The number of vault shares for which the corresponding asset amounts are calculated.</li>
@@ -390,7 +488,7 @@ in the vault relative to the specified shares.</p>
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Map&lt;Address, <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt;, &lt;Map&lt;Address, <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.i128.html">i128</a>&gt; as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="enum.ContractError.html" title="enum defindex_vault::ContractError">ContractError</a>, InvokeError&gt;&gt;</h4></section></summary><div class="docblock"><p>This function extends the contract’s time-to-live and calculates how much of each asset corresponds
 per the provided number of vault shares (<code>vault_shares</code>). It provides proportional allocations for each asset
 in the vault relative to the specified shares.</p>
-<h5 id="arguments-19"><a class="doc-anchor" href="#arguments-19">§</a>Arguments</h5>
+<h5 id="arguments-17"><a class="doc-anchor" href="#arguments-17">§</a>Arguments</h5>
 <ul>
 <li><code>e</code> - The current environment reference.</li>
 <li><code>vault_shares</code> - The number of vault shares for which the corresponding asset amounts are calculated.</li>
@@ -403,9 +501,9 @@ in the vault relative to the specified shares.</p>
     &amp;self,
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;(<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u32.html">u32</a>, <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u32.html">u32</a>), &lt;(<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u32.html">u32</a>, <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u32.html">u32</a>) as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Error, InvokeError&gt;&gt;</h4></section><section id="method.collect_fees" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub fn <a href="#method.collect_fees" class="fn">collect_fees</a>(&amp;self)</h4></section><section id="method.try_collect_fees" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub fn <a href="#method.try_collect_fees" class="fn">try_collect_fees</a>(
     &amp;self,
-) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a>, &lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a> as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="enum.ContractError.html" title="enum defindex_vault::ContractError">ContractError</a>, InvokeError&gt;&gt;</h4></section></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVaultClient%3C'a%3E-2" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><a href="#impl-DeFindexVaultClient%3C'a%3E-2" class="anchor">§</a><h3 class="code-header">impl&lt;'a&gt; <a class="struct" href="struct.DeFindexVaultClient.html" title="struct defindex_vault::DeFindexVaultClient">DeFindexVaultClient</a>&lt;'a&gt;</h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.set_fee_receiver" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><h4 class="code-header">pub fn <a href="#method.set_fee_receiver" class="fn">set_fee_receiver</a>(&amp;self, caller: &amp;Address, new_fee_receiver: &amp;Address)</h4></section></summary><div class="docblock"><p>Sets the fee receiver for the vault.</p>
+) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a>, &lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a> as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="enum.ContractError.html" title="enum defindex_vault::ContractError">ContractError</a>, InvokeError&gt;&gt;</h4></section></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVaultClient%3C'a%3E-2" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><a href="#impl-DeFindexVaultClient%3C'a%3E-2" class="anchor">§</a><h3 class="code-header">impl&lt;'a&gt; <a class="struct" href="struct.DeFindexVaultClient.html" title="struct defindex_vault::DeFindexVaultClient">DeFindexVaultClient</a>&lt;'a&gt;</h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.set_fee_receiver" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><h4 class="code-header">pub fn <a href="#method.set_fee_receiver" class="fn">set_fee_receiver</a>(&amp;self, caller: &amp;Address, new_fee_receiver: &amp;Address)</h4></section></summary><div class="docblock"><p>Sets the fee receiver for the vault.</p>
 <p>This function allows the manager or emergency manager to set a new fee receiver address for the vault.</p>
-<h5 id="arguments-20"><a class="doc-anchor" href="#arguments-20">§</a>Arguments:</h5>
+<h5 id="arguments-18"><a class="doc-anchor" href="#arguments-18">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>caller</code> - The address initiating the change (must be the manager or emergency manager).</li>
@@ -415,13 +513,13 @@ in the vault relative to the specified shares.</p>
 <ul>
 <li><code>()</code> - No return value.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.try_set_fee_receiver" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><h4 class="code-header">pub fn <a href="#method.try_set_fee_receiver" class="fn">try_set_fee_receiver</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.try_set_fee_receiver" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><h4 class="code-header">pub fn <a href="#method.try_set_fee_receiver" class="fn">try_set_fee_receiver</a>(
     &amp;self,
     caller: &amp;Address,
     new_fee_receiver: &amp;Address,
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a>, &lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a> as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Error, InvokeError&gt;&gt;</h4></section></summary><div class="docblock"><p>Sets the fee receiver for the vault.</p>
 <p>This function allows the manager or emergency manager to set a new fee receiver address for the vault.</p>
-<h5 id="arguments-21"><a class="doc-anchor" href="#arguments-21">§</a>Arguments:</h5>
+<h5 id="arguments-19"><a class="doc-anchor" href="#arguments-19">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>caller</code> - The address initiating the change (must be the manager or emergency manager).</li>
@@ -431,8 +529,8 @@ in the vault relative to the specified shares.</p>
 <ul>
 <li><code>()</code> - No return value.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.get_fee_receiver" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><h4 class="code-header">pub fn <a href="#method.get_fee_receiver" class="fn">get_fee_receiver</a>(&amp;self) -&gt; Address</h4></section></summary><div class="docblock"><p>Retrieves the current fee receiver address for the vault.</p>
-<h5 id="arguments-22"><a class="doc-anchor" href="#arguments-22">§</a>Arguments:</h5>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.get_fee_receiver" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><h4 class="code-header">pub fn <a href="#method.get_fee_receiver" class="fn">get_fee_receiver</a>(&amp;self) -&gt; Address</h4></section></summary><div class="docblock"><p>Retrieves the current fee receiver address for the vault.</p>
+<h5 id="arguments-20"><a class="doc-anchor" href="#arguments-20">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -440,10 +538,10 @@ in the vault relative to the specified shares.</p>
 <ul>
 <li><code>Result&lt;Address, ContractError&gt;</code> - The fee receiver address if successful, otherwise returns a ContractError.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.try_get_fee_receiver" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><h4 class="code-header">pub fn <a href="#method.try_get_fee_receiver" class="fn">try_get_fee_receiver</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.try_get_fee_receiver" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><h4 class="code-header">pub fn <a href="#method.try_get_fee_receiver" class="fn">try_get_fee_receiver</a>(
     &amp;self,
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Address, &lt;Address as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="enum.ContractError.html" title="enum defindex_vault::ContractError">ContractError</a>, InvokeError&gt;&gt;</h4></section></summary><div class="docblock"><p>Retrieves the current fee receiver address for the vault.</p>
-<h5 id="arguments-23"><a class="doc-anchor" href="#arguments-23">§</a>Arguments:</h5>
+<h5 id="arguments-21"><a class="doc-anchor" href="#arguments-21">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -451,9 +549,9 @@ in the vault relative to the specified shares.</p>
 <ul>
 <li><code>Result&lt;Address, ContractError&gt;</code> - The fee receiver address if successful, otherwise returns a ContractError.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.set_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><h4 class="code-header">pub fn <a href="#method.set_manager" class="fn">set_manager</a>(&amp;self, manager: &amp;Address)</h4></section></summary><div class="docblock"><p>Sets the manager for the vault.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.set_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><h4 class="code-header">pub fn <a href="#method.set_manager" class="fn">set_manager</a>(&amp;self, manager: &amp;Address)</h4></section></summary><div class="docblock"><p>Sets the manager for the vault.</p>
 <p>This function allows the current manager or emergency manager to set a new manager for the vault.</p>
-<h5 id="arguments-24"><a class="doc-anchor" href="#arguments-24">§</a>Arguments:</h5>
+<h5 id="arguments-22"><a class="doc-anchor" href="#arguments-22">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>manager</code> - The new manager address.</li>
@@ -462,12 +560,12 @@ in the vault relative to the specified shares.</p>
 <ul>
 <li><code>()</code> - No return value.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.try_set_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><h4 class="code-header">pub fn <a href="#method.try_set_manager" class="fn">try_set_manager</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.try_set_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><h4 class="code-header">pub fn <a href="#method.try_set_manager" class="fn">try_set_manager</a>(
     &amp;self,
     manager: &amp;Address,
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a>, &lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a> as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Error, InvokeError&gt;&gt;</h4></section></summary><div class="docblock"><p>Sets the manager for the vault.</p>
 <p>This function allows the current manager or emergency manager to set a new manager for the vault.</p>
-<h5 id="arguments-25"><a class="doc-anchor" href="#arguments-25">§</a>Arguments:</h5>
+<h5 id="arguments-23"><a class="doc-anchor" href="#arguments-23">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>manager</code> - The new manager address.</li>
@@ -476,8 +574,8 @@ in the vault relative to the specified shares.</p>
 <ul>
 <li><code>()</code> - No return value.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.get_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><h4 class="code-header">pub fn <a href="#method.get_manager" class="fn">get_manager</a>(&amp;self) -&gt; Address</h4></section></summary><div class="docblock"><p>Retrieves the current manager address for the vault.</p>
-<h5 id="arguments-26"><a class="doc-anchor" href="#arguments-26">§</a>Arguments:</h5>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.get_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><h4 class="code-header">pub fn <a href="#method.get_manager" class="fn">get_manager</a>(&amp;self) -&gt; Address</h4></section></summary><div class="docblock"><p>Retrieves the current manager address for the vault.</p>
+<h5 id="arguments-24"><a class="doc-anchor" href="#arguments-24">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -485,10 +583,10 @@ in the vault relative to the specified shares.</p>
 <ul>
 <li><code>Result&lt;Address, ContractError&gt;</code> - The manager address if successful, otherwise returns a ContractError.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.try_get_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><h4 class="code-header">pub fn <a href="#method.try_get_manager" class="fn">try_get_manager</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.try_get_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><h4 class="code-header">pub fn <a href="#method.try_get_manager" class="fn">try_get_manager</a>(
     &amp;self,
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Address, &lt;Address as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="enum.ContractError.html" title="enum defindex_vault::ContractError">ContractError</a>, InvokeError&gt;&gt;</h4></section></summary><div class="docblock"><p>Retrieves the current manager address for the vault.</p>
-<h5 id="arguments-27"><a class="doc-anchor" href="#arguments-27">§</a>Arguments:</h5>
+<h5 id="arguments-25"><a class="doc-anchor" href="#arguments-25">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -496,9 +594,9 @@ in the vault relative to the specified shares.</p>
 <ul>
 <li><code>Result&lt;Address, ContractError&gt;</code> - The manager address if successful, otherwise returns a ContractError.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.set_emergency_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><h4 class="code-header">pub fn <a href="#method.set_emergency_manager" class="fn">set_emergency_manager</a>(&amp;self, emergency_manager: &amp;Address)</h4></section></summary><div class="docblock"><p>Sets the emergency manager for the vault.</p>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.set_emergency_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><h4 class="code-header">pub fn <a href="#method.set_emergency_manager" class="fn">set_emergency_manager</a>(&amp;self, emergency_manager: &amp;Address)</h4></section></summary><div class="docblock"><p>Sets the emergency manager for the vault.</p>
 <p>This function allows the current manager or emergency manager to set a new emergency manager for the vault.</p>
-<h5 id="arguments-28"><a class="doc-anchor" href="#arguments-28">§</a>Arguments:</h5>
+<h5 id="arguments-26"><a class="doc-anchor" href="#arguments-26">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>emergency_manager</code> - The new emergency manager address.</li>
@@ -507,12 +605,12 @@ in the vault relative to the specified shares.</p>
 <ul>
 <li><code>()</code> - No return value.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.try_set_emergency_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><h4 class="code-header">pub fn <a href="#method.try_set_emergency_manager" class="fn">try_set_emergency_manager</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.try_set_emergency_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><h4 class="code-header">pub fn <a href="#method.try_set_emergency_manager" class="fn">try_set_emergency_manager</a>(
     &amp;self,
     emergency_manager: &amp;Address,
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a>, &lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a> as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Error, InvokeError&gt;&gt;</h4></section></summary><div class="docblock"><p>Sets the emergency manager for the vault.</p>
 <p>This function allows the current manager or emergency manager to set a new emergency manager for the vault.</p>
-<h5 id="arguments-29"><a class="doc-anchor" href="#arguments-29">§</a>Arguments:</h5>
+<h5 id="arguments-27"><a class="doc-anchor" href="#arguments-27">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>emergency_manager</code> - The new emergency manager address.</li>
@@ -521,8 +619,8 @@ in the vault relative to the specified shares.</p>
 <ul>
 <li><code>()</code> - No return value.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.get_emergency_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><h4 class="code-header">pub fn <a href="#method.get_emergency_manager" class="fn">get_emergency_manager</a>(&amp;self) -&gt; Address</h4></section></summary><div class="docblock"><p>Retrieves the current emergency manager address for the vault.</p>
-<h5 id="arguments-30"><a class="doc-anchor" href="#arguments-30">§</a>Arguments:</h5>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.get_emergency_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><h4 class="code-header">pub fn <a href="#method.get_emergency_manager" class="fn">get_emergency_manager</a>(&amp;self) -&gt; Address</h4></section></summary><div class="docblock"><p>Retrieves the current emergency manager address for the vault.</p>
+<h5 id="arguments-28"><a class="doc-anchor" href="#arguments-28">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -530,10 +628,10 @@ in the vault relative to the specified shares.</p>
 <ul>
 <li><code>Result&lt;Address, ContractError&gt;</code> - The emergency manager address if successful, otherwise returns a ContractError.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.try_get_emergency_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><h4 class="code-header">pub fn <a href="#method.try_get_emergency_manager" class="fn">try_get_emergency_manager</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.try_get_emergency_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><h4 class="code-header">pub fn <a href="#method.try_get_emergency_manager" class="fn">try_get_emergency_manager</a>(
     &amp;self,
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;Address, &lt;Address as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="enum.ContractError.html" title="enum defindex_vault::ContractError">ContractError</a>, InvokeError&gt;&gt;</h4></section></summary><div class="docblock"><p>Retrieves the current emergency manager address for the vault.</p>
-<h5 id="arguments-31"><a class="doc-anchor" href="#arguments-31">§</a>Arguments:</h5>
+<h5 id="arguments-29"><a class="doc-anchor" href="#arguments-29">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -541,10 +639,10 @@ in the vault relative to the specified shares.</p>
 <ul>
 <li><code>Result&lt;Address, ContractError&gt;</code> - The emergency manager address if successful, otherwise returns a ContractError.</li>
 </ul>
-</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVaultClient%3C'a%3E-3" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#626">source</a><a href="#impl-DeFindexVaultClient%3C'a%3E-3" class="anchor">§</a><h3 class="code-header">impl&lt;'a&gt; <a class="struct" href="struct.DeFindexVaultClient.html" title="struct defindex_vault::DeFindexVaultClient">DeFindexVaultClient</a>&lt;'a&gt;</h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.invest" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#626">source</a><h4 class="code-header">pub fn <a href="#method.invest" class="fn">invest</a>(&amp;self, asset_investments: &amp;Vec&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;AssetInvestmentAllocation&gt;&gt;)</h4></section></summary><div class="docblock"><p>Executes the investment of the vault’s idle funds based on the specified asset allocations.
+</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVaultClient%3C'a%3E-3" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#674">source</a><a href="#impl-DeFindexVaultClient%3C'a%3E-3" class="anchor">§</a><h3 class="code-header">impl&lt;'a&gt; <a class="struct" href="struct.DeFindexVaultClient.html" title="struct defindex_vault::DeFindexVaultClient">DeFindexVaultClient</a>&lt;'a&gt;</h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.invest" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#674">source</a><h4 class="code-header">pub fn <a href="#method.invest" class="fn">invest</a>(&amp;self, asset_investments: &amp;Vec&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;AssetInvestmentAllocation&gt;&gt;)</h4></section></summary><div class="docblock"><p>Executes the investment of the vault’s idle funds based on the specified asset allocations.
 This function allows partial investments by providing an optional allocation for each asset,
 and it ensures proper authorization and validation checks before proceeding with investments.</p>
-<h5 id="arguments-32"><a class="doc-anchor" href="#arguments-32">§</a>Arguments</h5>
+<h5 id="arguments-30"><a class="doc-anchor" href="#arguments-30">§</a>Arguments</h5>
 <ul>
 <li><code>e</code> - The current environment reference.</li>
 <li><code>asset_investments</code> - A vector of optional <code>AssetInvestmentAllocation</code> structures, where each element
@@ -565,7 +663,7 @@ the number of assets managed by the vault. If they don’t match, a <code>WrongI
 <li><strong>Investment Execution</strong>: Calls the <code>check_and_execute_investments</code> function to perform the investment
 after validating the inputs and ensuring correct execution flows for each asset allocation.</li>
 </ol>
-<h5 id="errors-2"><a class="doc-anchor" href="#errors-2">§</a>Errors</h5>
+<h5 id="errors-6"><a class="doc-anchor" href="#errors-6">§</a>Errors</h5>
 <ul>
 <li>Returns <code>ContractError::WrongInvestmentLength</code> if the length of <code>asset_investments</code> does not match the vault assets.</li>
 <li>Returns <code>ContractError</code> if access control validation fails or if investment execution encounters an issue.</li>
@@ -574,13 +672,13 @@ after validating the inputs and ensuring correct execution flows for each asset 
 <ul>
 <li>Only addresses with the <code>Manager</code> role can call this function, ensuring restricted access to managing investments.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.try_invest" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#626">source</a><h4 class="code-header">pub fn <a href="#method.try_invest" class="fn">try_invest</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.try_invest" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#674">source</a><h4 class="code-header">pub fn <a href="#method.try_invest" class="fn">try_invest</a>(
     &amp;self,
     asset_investments: &amp;Vec&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/option/enum.Option.html" title="enum core::option::Option">Option</a>&lt;AssetInvestmentAllocation&gt;&gt;,
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a>, &lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a> as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="enum.ContractError.html" title="enum defindex_vault::ContractError">ContractError</a>, InvokeError&gt;&gt;</h4></section></summary><div class="docblock"><p>Executes the investment of the vault’s idle funds based on the specified asset allocations.
 This function allows partial investments by providing an optional allocation for each asset,
 and it ensures proper authorization and validation checks before proceeding with investments.</p>
-<h5 id="arguments-33"><a class="doc-anchor" href="#arguments-33">§</a>Arguments</h5>
+<h5 id="arguments-31"><a class="doc-anchor" href="#arguments-31">§</a>Arguments</h5>
 <ul>
 <li><code>e</code> - The current environment reference.</li>
 <li><code>asset_investments</code> - A vector of optional <code>AssetInvestmentAllocation</code> structures, where each element
@@ -601,7 +699,7 @@ the number of assets managed by the vault. If they don’t match, a <code>WrongI
 <li><strong>Investment Execution</strong>: Calls the <code>check_and_execute_investments</code> function to perform the investment
 after validating the inputs and ensuring correct execution flows for each asset allocation.</li>
 </ol>
-<h5 id="errors-3"><a class="doc-anchor" href="#errors-3">§</a>Errors</h5>
+<h5 id="errors-7"><a class="doc-anchor" href="#errors-7">§</a>Errors</h5>
 <ul>
 <li>Returns <code>ContractError::WrongInvestmentLength</code> if the length of <code>asset_investments</code> does not match the vault assets.</li>
 <li>Returns <code>ContractError</code> if access control validation fails or if investment execution encounters an issue.</li>
@@ -610,8 +708,8 @@ after validating the inputs and ensuring correct execution flows for each asset 
 <ul>
 <li>Only addresses with the <code>Manager</code> role can call this function, ensuring restricted access to managing investments.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.rebalance" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#626">source</a><h4 class="code-header">pub fn <a href="#method.rebalance" class="fn">rebalance</a>(&amp;self, instructions: &amp;Vec&lt;Instruction&gt;)</h4></section></summary><div class="docblock"><p>Rebalances the vault by executing a series of instructions.</p>
-<h5 id="arguments-34"><a class="doc-anchor" href="#arguments-34">§</a>Arguments:</h5>
+</div></details><details class="toggle method-toggle" open><summary><section id="method.rebalance" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#674">source</a><h4 class="code-header">pub fn <a href="#method.rebalance" class="fn">rebalance</a>(&amp;self, instructions: &amp;Vec&lt;Instruction&gt;)</h4></section></summary><div class="docblock"><p>Rebalances the vault by executing a series of instructions.</p>
+<h5 id="arguments-32"><a class="doc-anchor" href="#arguments-32">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>instructions</code> - A vector of <code>Instruction</code> structs representing actions (withdraw, invest, swap, zapper) to be taken.</li>
@@ -620,11 +718,11 @@ after validating the inputs and ensuring correct execution flows for each asset 
 <ul>
 <li><code>Result&lt;(), ContractError&gt;</code> - Ok if successful, otherwise returns a ContractError.</li>
 </ul>
-</div></details><details class="toggle method-toggle" open><summary><section id="method.try_rebalance" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#626">source</a><h4 class="code-header">pub fn <a href="#method.try_rebalance" class="fn">try_rebalance</a>(
+</div></details><details class="toggle method-toggle" open><summary><section id="method.try_rebalance" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#674">source</a><h4 class="code-header">pub fn <a href="#method.try_rebalance" class="fn">try_rebalance</a>(
     &amp;self,
     instructions: &amp;Vec&lt;Instruction&gt;,
 ) -&gt; <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a>, &lt;<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.unit.html">()</a> as TryFromVal&lt;Env, Val&gt;&gt;::Error&gt;, <a class="enum" href="https://doc.rust-lang.org/1.82.0/core/result/enum.Result.html" title="enum core::result::Result">Result</a>&lt;<a class="enum" href="enum.ContractError.html" title="enum defindex_vault::ContractError">ContractError</a>, InvokeError&gt;&gt;</h4></section></summary><div class="docblock"><p>Rebalances the vault by executing a series of instructions.</p>
-<h5 id="arguments-35"><a class="doc-anchor" href="#arguments-35">§</a>Arguments:</h5>
+<h5 id="arguments-33"><a class="doc-anchor" href="#arguments-33">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>instructions</code> - A vector of <code>Instruction</code> structs representing actions (withdraw, invest, swap, zapper) to be taken.</li>
