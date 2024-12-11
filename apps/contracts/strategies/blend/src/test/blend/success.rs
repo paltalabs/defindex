@@ -185,7 +185,7 @@ fn success() {
 
     // -> verify over withdraw fails
     let result = strategy_client.try_withdraw(&(withdraw_amount + 100_000_000_0000000), &user_3);
-    assert_eq!(result, Err(Ok(StrategyError::InvalidArgument))); // TODO: Check which is the one failing
+    assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
 
     strategy_client.withdraw(&withdraw_amount, &user_2);
     // -> verify withdraw auth
