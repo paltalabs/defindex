@@ -23,17 +23,23 @@ any setup fails (e.g., strategy mismatch with asset).</li>
 <li><code>ContractError::AlreadyInitialized</code>: If the vault has already been initialized.</li>
 <li><code>ContractError::StrategyDoesNotSupportAsset</code>: If a strategy within an asset does not support the asset’s contract.</li>
 </ul>
-</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-1" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><a href="#impl-DeFindexVault-1" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_deposit" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_deposit" class="fn">spec_xdr_deposit</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">1196</a>]</h4></section></summary><div class="docblock"><p>Handles user deposits into the DeFindex Vault.</p>
+</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-1" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><a href="#impl-DeFindexVault-1" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_deposit" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_deposit" class="fn">spec_xdr_deposit</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">1196</a>]</h4></section></summary><div class="docblock"><p>Handles user deposits into the DeFindex Vault and optionally allocates investments automatically.</p>
 <p>This function processes a deposit by transferring each specified asset amount from the user’s address to
 the vault, allocating assets according to the vault’s defined strategy ratios, and minting vault shares that
-represent the user’s proportional share in the vault. The <code>amounts_desired</code> and <code>amounts_min</code> vectors should
-align with the vault’s asset order to ensure correct allocation.</p>
+represent the user’s proportional share in the vault. Additionally, if the <code>invest</code> parameter is set to <code>true</code>,
+the function will immediately generate and execute investment allocations based on the vault’s strategy configuration.</p>
 <h5 id="parameters"><a class="doc-anchor" href="#parameters">§</a>Parameters</h5>
 <ul>
 <li><code>e</code> - The current environment reference (<code>Env</code>), for access to the contract state and utilities.</li>
 <li><code>amounts_desired</code> - A vector specifying the user’s intended deposit amounts for each asset.</li>
 <li><code>amounts_min</code> - A vector of minimum deposit amounts required for the transaction to proceed.</li>
 <li><code>from</code> - The address of the user making the deposit.</li>
+<li><code>invest</code> - A boolean flag indicating whether to immediately invest the deposited funds into the vault’s strategies:
+<ul>
+<li><code>true</code>: Generate and execute investments after the deposit.</li>
+<li><code>false</code>: Leave the deposited funds as idle assets in the vault.</li>
+</ul>
+</li>
 </ul>
 <h5 id="returns-1"><a class="doc-anchor" href="#returns-1">§</a>Returns</h5>
 <ul>
@@ -46,7 +52,13 @@ otherwise a <code>ContractError</code>.</li>
 <li><strong>Validation</strong>: Checks that the lengths of <code>amounts_desired</code> and <code>amounts_min</code> match the vault’s assets.</li>
 <li><strong>Share Calculation</strong>: Calculates <code>shares_to_mint</code> based on the vault’s total managed funds and the deposit amount.</li>
 <li><strong>Asset Transfer</strong>: Transfers each specified amount from the user’s address to the vault as idle funds.</li>
-<li><strong>Vault shares Minting</strong>: Mints vault shares for the user to represent their ownership in the vault.</li>
+<li><strong>Vault Shares Minting</strong>: Mints vault shares for the user to represent their ownership in the vault.</li>
+<li><strong>Investment Execution</strong>: If <code>invest</code> is <code>true</code>, generates and executes the investment allocations for the deposited funds.
+<ul>
+<li>Allocates funds across strategies proportionally to their current state.</li>
+<li>Executes the investment to transition idle funds into the vault’s strategies.</li>
+</ul>
+</li>
 </ol>
 <h5 id="notes"><a class="doc-anchor" href="#notes">§</a>Notes</h5>
 <ul>
@@ -54,26 +66,63 @@ otherwise a <code>ContractError</code>.</li>
 <li>For multiple assets, the function delegates to <code>calculate_deposit_amounts_and_shares_to_mint</code>
 for precise share computation.</li>
 <li>An event is emitted to log the deposit, including the actual deposited amounts and minted shares.</li>
+<li>If <code>invest</code> is <code>false</code>, deposited funds remain idle, allowing for manual investment at a later time.</li>
 </ul>
-</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-2" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><a href="#impl-DeFindexVault-2" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_withdraw" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_withdraw" class="fn">spec_xdr_withdraw</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">684</a>]</h4></section></summary><div class="docblock"><p>Withdraws assets from the DeFindex Vault by burning Vault Share tokens.</p>
-<p>This function calculates the amount of assets to withdraw based on the number of Vault Share tokens being burned,
-then transfers the appropriate assets back to the user, pulling from both idle funds and strategies
-as needed.</p>
-<h5 id="arguments-1"><a class="doc-anchor" href="#arguments-1">§</a>Arguments:</h5>
+<h5 id="errors-1"><a class="doc-anchor" href="#errors-1">§</a>Errors</h5>
 <ul>
-<li><code>e</code> - The environment.</li>
-<li><code>shares_amount</code> - The amount of Vault Share tokens to burn for the withdrawal.</li>
-<li><code>from</code> - The address of the user requesting the withdrawal.</li>
+<li>Returns a <code>ContractError</code> if any validation or execution step fails.</li>
 </ul>
-<h5 id="returns-2"><a class="doc-anchor" href="#returns-2">§</a>Returns:</h5>
+</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-2" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><a href="#impl-DeFindexVault-2" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_withdraw" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_withdraw" class="fn">spec_xdr_withdraw</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">1132</a>]</h4></section></summary><div class="docblock"><p>Handles the withdrawal process for a specified number of vault shares.</p>
+<p>This function performs the following steps:</p>
+<ol>
+<li>Validates the environment and the inputs:
 <ul>
-<li><code>Result&lt;(), ContractError&gt;</code> - Ok if successful, otherwise returns a ContractError.</li>
+<li>Ensures the contract is initialized.</li>
+<li>Checks that the withdrawal amount (<code>withdraw_shares</code>) is non-negative.</li>
+<li>Verifies the authorization of the <code>from</code> address.</li>
+</ul>
+</li>
+<li>Collects applicable fees.</li>
+<li>Calculates the proportionate withdrawal amounts for each asset based on the number of shares.</li>
+<li>Burns the specified shares from the user’s account.</li>
+<li>Processes the withdrawal for each asset:
+<ul>
+<li>First attempts to cover the withdrawal amount using idle funds.</li>
+<li>If idle funds are insufficient, unwinds investments from the associated strategies
+to cover the remaining amount, accounting for rounding errors in the last strategy.</li>
+</ul>
+</li>
+<li>Transfers the withdrawn funds to the user’s address (<code>from</code>).</li>
+<li>Emits an event to record the withdrawal details.</li>
+</ol>
+<h6 id="parameters-1"><a class="doc-anchor" href="#parameters-1">§</a>Parameters:</h6>
+<ul>
+<li><code>e</code>: The contract environment (<code>Env</code>).</li>
+<li><code>withdraw_shares</code>: The number of vault shares to withdraw.</li>
+<li><code>from</code>: The address initiating the withdrawal.</li>
+</ul>
+<h6 id="returns-2"><a class="doc-anchor" href="#returns-2">§</a>Returns:</h6>
+<ul>
+<li>A <code>Result</code> containing a vector of withdrawn amounts for each asset (<code>Vec&lt;i128&gt;</code>),
+or a <code>ContractError</code> if the withdrawal fails.</li>
+</ul>
+<h6 id="errors-2"><a class="doc-anchor" href="#errors-2">§</a>Errors:</h6>
+<ul>
+<li><code>ContractError::AmountOverTotalSupply</code>: If the specified shares exceed the total supply.</li>
+<li><code>ContractError::ArithmeticError</code>: If any arithmetic operation fails during calculations.</li>
+<li><code>ContractError::WrongAmountsLength</code>: If there is a mismatch in asset allocation data.</li>
+</ul>
+<h6 id="todos"><a class="doc-anchor" href="#todos">§</a>TODOs:</h6>
+<ul>
+<li>Implement minimum amounts for withdrawals to ensure compliance with potential restrictions.</li>
+<li>Replace the returned vector with the original <code>asset_withdrawal_amounts</code> map for better structure.</li>
+<li>avoid the usage of a Map, choose between using map or vector</li>
 </ul>
 </div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-3" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><a href="#impl-DeFindexVault-3" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_emergency_withdraw" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_emergency_withdraw" class="fn">spec_xdr_emergency_withdraw</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">712</a>]</h4></section></summary><div class="docblock"><p>Executes an emergency withdrawal from a specific strategy.</p>
 <p>This function allows the emergency manager or manager to withdraw all assets from a particular strategy
 and store them as idle funds within the vault. It also pauses the strategy to prevent further use until
 unpaused.</p>
-<h5 id="arguments-2"><a class="doc-anchor" href="#arguments-2">§</a>Arguments:</h5>
+<h5 id="arguments-1"><a class="doc-anchor" href="#arguments-1">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>strategy_address</code> - The address of the strategy to withdraw from.</li>
@@ -86,7 +135,7 @@ unpaused.</p>
 </div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-4" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><a href="#impl-DeFindexVault-4" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_pause_strategy" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_pause_strategy" class="fn">spec_xdr_pause_strategy</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">604</a>]</h4></section></summary><div class="docblock"><p>Pauses a strategy to prevent it from being used in the vault.</p>
 <p>This function pauses a strategy by setting its <code>paused</code> field to <code>true</code>. Only the manager or emergency
 manager can pause a strategy.</p>
-<h5 id="arguments-3"><a class="doc-anchor" href="#arguments-3">§</a>Arguments:</h5>
+<h5 id="arguments-2"><a class="doc-anchor" href="#arguments-2">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>strategy_address</code> - The address of the strategy to pause.</li>
@@ -99,7 +148,7 @@ manager can pause a strategy.</p>
 </div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-5" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><a href="#impl-DeFindexVault-5" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_unpause_strategy" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_unpause_strategy" class="fn">spec_xdr_unpause_strategy</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">572</a>]</h4></section></summary><div class="docblock"><p>Unpauses a previously paused strategy.</p>
 <p>This function unpauses a strategy by setting its <code>paused</code> field to <code>false</code>, allowing it to be used
 again in the vault.</p>
-<h5 id="arguments-4"><a class="doc-anchor" href="#arguments-4">§</a>Arguments:</h5>
+<h5 id="arguments-3"><a class="doc-anchor" href="#arguments-3">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>strategy_address</code> - The address of the strategy to unpause.</li>
@@ -110,7 +159,7 @@ again in the vault.</p>
 <li><code>Result&lt;(), ContractError&gt;</code> - Ok if successful, otherwise returns a ContractError.</li>
 </ul>
 </div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-6" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><a href="#impl-DeFindexVault-6" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_get_assets" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_get_assets" class="fn">spec_xdr_get_assets</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">284</a>]</h4></section></summary><div class="docblock"><p>Retrieves the list of assets managed by the DeFindex Vault.</p>
-<h5 id="arguments-5"><a class="doc-anchor" href="#arguments-5">§</a>Arguments:</h5>
+<h5 id="arguments-4"><a class="doc-anchor" href="#arguments-4">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -121,7 +170,7 @@ again in the vault.</p>
 </div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-7" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><a href="#impl-DeFindexVault-7" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_fetch_total_managed_funds" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_fetch_total_managed_funds" class="fn">spec_xdr_fetch_total_managed_funds</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">456</a>]</h4></section></summary><div class="docblock"><p>Returns the total managed funds of the vault, including both invested and idle funds.</p>
 <p>This function provides a map where the key is the asset address and the value is the total amount
 of that asset being managed by the vault.</p>
-<h5 id="arguments-6"><a class="doc-anchor" href="#arguments-6">§</a>Arguments:</h5>
+<h5 id="arguments-5"><a class="doc-anchor" href="#arguments-5">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -132,7 +181,7 @@ of that asset being managed by the vault.</p>
 </div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-8" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><a href="#impl-DeFindexVault-8" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_fetch_current_invested_funds" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_fetch_current_invested_funds" class="fn">spec_xdr_fetch_current_invested_funds</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">440</a>]</h4></section></summary><div class="docblock"><p>Returns the current invested funds, representing the total assets allocated to strategies.</p>
 <p>This function provides a map where the key is the asset address and the value is the total amount
 of that asset currently invested in various strategies.</p>
-<h5 id="arguments-7"><a class="doc-anchor" href="#arguments-7">§</a>Arguments:</h5>
+<h5 id="arguments-6"><a class="doc-anchor" href="#arguments-6">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -143,7 +192,7 @@ of that asset currently invested in various strategies.</p>
 </div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-9" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><a href="#impl-DeFindexVault-9" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_fetch_current_idle_funds" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_fetch_current_idle_funds" class="fn">spec_xdr_fetch_current_idle_funds</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">440</a>]</h4></section></summary><div class="docblock"><p>Returns the current idle funds, representing the total assets held directly by the vault (not invested).</p>
 <p>This function provides a map where the key is the asset address and the value is the total amount
 of that asset held as idle funds within the vault.</p>
-<h5 id="arguments-8"><a class="doc-anchor" href="#arguments-8">§</a>Arguments:</h5>
+<h5 id="arguments-7"><a class="doc-anchor" href="#arguments-7">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -154,7 +203,7 @@ of that asset held as idle funds within the vault.</p>
 </div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-10" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><a href="#impl-DeFindexVault-10" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_get_asset_amounts_per_shares" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_get_asset_amounts_per_shares" class="fn">spec_xdr_get_asset_amounts_per_shares</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">644</a>]</h4></section></summary><div class="docblock"><p>This function extends the contract’s time-to-live and calculates how much of each asset corresponds
 per the provided number of vault shares (<code>vault_shares</code>). It provides proportional allocations for each asset
 in the vault relative to the specified shares.</p>
-<h5 id="arguments-9"><a class="doc-anchor" href="#arguments-9">§</a>Arguments</h5>
+<h5 id="arguments-8"><a class="doc-anchor" href="#arguments-8">§</a>Arguments</h5>
 <ul>
 <li><code>e</code> - The current environment reference.</li>
 <li><code>vault_shares</code> - The number of vault shares for which the corresponding asset amounts are calculated.</li>
@@ -163,9 +212,9 @@ in the vault relative to the specified shares.</p>
 <ul>
 <li><code>Map&lt;Address, i128&gt;</code> - A map containing each asset address and its corresponding proportional amount.</li>
 </ul>
-</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-11" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><a href="#impl-DeFindexVault-11" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><section id="method.spec_xdr_get_fees" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_get_fees" class="fn">spec_xdr_get_fees</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">44</a>]</h4></section></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-12" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><a href="#impl-DeFindexVault-12" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><section id="method.spec_xdr_collect_fees" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_collect_fees" class="fn">spec_xdr_collect_fees</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">68</a>]</h4></section></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-13" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><a href="#impl-DeFindexVault-13" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_set_fee_receiver" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_set_fee_receiver" class="fn">spec_xdr_set_fee_receiver</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">448</a>]</h4></section></summary><div class="docblock"><p>Sets the fee receiver for the vault.</p>
+</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-11" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><a href="#impl-DeFindexVault-11" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><section id="method.spec_xdr_get_fees" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_get_fees" class="fn">spec_xdr_get_fees</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">44</a>]</h4></section></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-12" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><a href="#impl-DeFindexVault-12" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><section id="method.spec_xdr_collect_fees" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#64">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_collect_fees" class="fn">spec_xdr_collect_fees</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">68</a>]</h4></section></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-13" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><a href="#impl-DeFindexVault-13" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_set_fee_receiver" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_set_fee_receiver" class="fn">spec_xdr_set_fee_receiver</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">448</a>]</h4></section></summary><div class="docblock"><p>Sets the fee receiver for the vault.</p>
 <p>This function allows the manager or emergency manager to set a new fee receiver address for the vault.</p>
-<h5 id="arguments-10"><a class="doc-anchor" href="#arguments-10">§</a>Arguments:</h5>
+<h5 id="arguments-9"><a class="doc-anchor" href="#arguments-9">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>caller</code> - The address initiating the change (must be the manager or emergency manager).</li>
@@ -175,8 +224,8 @@ in the vault relative to the specified shares.</p>
 <ul>
 <li><code>()</code> - No return value.</li>
 </ul>
-</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-14" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><a href="#impl-DeFindexVault-14" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_get_fee_receiver" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_get_fee_receiver" class="fn">spec_xdr_get_fee_receiver</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">288</a>]</h4></section></summary><div class="docblock"><p>Retrieves the current fee receiver address for the vault.</p>
-<h5 id="arguments-11"><a class="doc-anchor" href="#arguments-11">§</a>Arguments:</h5>
+</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-14" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><a href="#impl-DeFindexVault-14" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_get_fee_receiver" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_get_fee_receiver" class="fn">spec_xdr_get_fee_receiver</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">288</a>]</h4></section></summary><div class="docblock"><p>Retrieves the current fee receiver address for the vault.</p>
+<h5 id="arguments-10"><a class="doc-anchor" href="#arguments-10">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -184,9 +233,9 @@ in the vault relative to the specified shares.</p>
 <ul>
 <li><code>Result&lt;Address, ContractError&gt;</code> - The fee receiver address if successful, otherwise returns a ContractError.</li>
 </ul>
-</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-15" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><a href="#impl-DeFindexVault-15" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_set_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_set_manager" class="fn">spec_xdr_set_manager</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">300</a>]</h4></section></summary><div class="docblock"><p>Sets the manager for the vault.</p>
+</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-15" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><a href="#impl-DeFindexVault-15" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_set_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_set_manager" class="fn">spec_xdr_set_manager</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">300</a>]</h4></section></summary><div class="docblock"><p>Sets the manager for the vault.</p>
 <p>This function allows the current manager or emergency manager to set a new manager for the vault.</p>
-<h5 id="arguments-12"><a class="doc-anchor" href="#arguments-12">§</a>Arguments:</h5>
+<h5 id="arguments-11"><a class="doc-anchor" href="#arguments-11">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>manager</code> - The new manager address.</li>
@@ -195,8 +244,8 @@ in the vault relative to the specified shares.</p>
 <ul>
 <li><code>()</code> - No return value.</li>
 </ul>
-</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-16" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><a href="#impl-DeFindexVault-16" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_get_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_get_manager" class="fn">spec_xdr_get_manager</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">276</a>]</h4></section></summary><div class="docblock"><p>Retrieves the current manager address for the vault.</p>
-<h5 id="arguments-13"><a class="doc-anchor" href="#arguments-13">§</a>Arguments:</h5>
+</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-16" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><a href="#impl-DeFindexVault-16" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_get_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_get_manager" class="fn">spec_xdr_get_manager</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">276</a>]</h4></section></summary><div class="docblock"><p>Retrieves the current manager address for the vault.</p>
+<h5 id="arguments-12"><a class="doc-anchor" href="#arguments-12">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -204,9 +253,9 @@ in the vault relative to the specified shares.</p>
 <ul>
 <li><code>Result&lt;Address, ContractError&gt;</code> - The manager address if successful, otherwise returns a ContractError.</li>
 </ul>
-</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-17" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><a href="#impl-DeFindexVault-17" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_set_emergency_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_set_emergency_manager" class="fn">spec_xdr_set_emergency_manager</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">364</a>]</h4></section></summary><div class="docblock"><p>Sets the emergency manager for the vault.</p>
+</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-17" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><a href="#impl-DeFindexVault-17" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_set_emergency_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_set_emergency_manager" class="fn">spec_xdr_set_emergency_manager</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">364</a>]</h4></section></summary><div class="docblock"><p>Sets the emergency manager for the vault.</p>
 <p>This function allows the current manager or emergency manager to set a new emergency manager for the vault.</p>
-<h5 id="arguments-14"><a class="doc-anchor" href="#arguments-14">§</a>Arguments:</h5>
+<h5 id="arguments-13"><a class="doc-anchor" href="#arguments-13">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>emergency_manager</code> - The new emergency manager address.</li>
@@ -215,8 +264,8 @@ in the vault relative to the specified shares.</p>
 <ul>
 <li><code>()</code> - No return value.</li>
 </ul>
-</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-18" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><a href="#impl-DeFindexVault-18" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_get_emergency_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#530">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_get_emergency_manager" class="fn">spec_xdr_get_emergency_manager</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">308</a>]</h4></section></summary><div class="docblock"><p>Retrieves the current emergency manager address for the vault.</p>
-<h5 id="arguments-15"><a class="doc-anchor" href="#arguments-15">§</a>Arguments:</h5>
+</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-18" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><a href="#impl-DeFindexVault-18" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_get_emergency_manager" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#578">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_get_emergency_manager" class="fn">spec_xdr_get_emergency_manager</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">308</a>]</h4></section></summary><div class="docblock"><p>Retrieves the current emergency manager address for the vault.</p>
+<h5 id="arguments-14"><a class="doc-anchor" href="#arguments-14">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 </ul>
@@ -224,10 +273,10 @@ in the vault relative to the specified shares.</p>
 <ul>
 <li><code>Result&lt;Address, ContractError&gt;</code> - The emergency manager address if successful, otherwise returns a ContractError.</li>
 </ul>
-</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-19" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#626">source</a><a href="#impl-DeFindexVault-19" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_invest" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#626">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_invest" class="fn">spec_xdr_invest</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">1160</a>]</h4></section></summary><div class="docblock"><p>Executes the investment of the vault’s idle funds based on the specified asset allocations.
+</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-19" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#674">source</a><a href="#impl-DeFindexVault-19" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_invest" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#674">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_invest" class="fn">spec_xdr_invest</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">1160</a>]</h4></section></summary><div class="docblock"><p>Executes the investment of the vault’s idle funds based on the specified asset allocations.
 This function allows partial investments by providing an optional allocation for each asset,
 and it ensures proper authorization and validation checks before proceeding with investments.</p>
-<h5 id="arguments-16"><a class="doc-anchor" href="#arguments-16">§</a>Arguments</h5>
+<h5 id="arguments-15"><a class="doc-anchor" href="#arguments-15">§</a>Arguments</h5>
 <ul>
 <li><code>e</code> - The current environment reference.</li>
 <li><code>asset_investments</code> - A vector of optional <code>AssetInvestmentAllocation</code> structures, where each element
@@ -248,7 +297,7 @@ the number of assets managed by the vault. If they don’t match, a <code>WrongI
 <li><strong>Investment Execution</strong>: Calls the <code>check_and_execute_investments</code> function to perform the investment
 after validating the inputs and ensuring correct execution flows for each asset allocation.</li>
 </ol>
-<h5 id="errors-1"><a class="doc-anchor" href="#errors-1">§</a>Errors</h5>
+<h5 id="errors-3"><a class="doc-anchor" href="#errors-3">§</a>Errors</h5>
 <ul>
 <li>Returns <code>ContractError::WrongInvestmentLength</code> if the length of <code>asset_investments</code> does not match the vault assets.</li>
 <li>Returns <code>ContractError</code> if access control validation fails or if investment execution encounters an issue.</li>
@@ -257,8 +306,8 @@ after validating the inputs and ensuring correct execution flows for each asset 
 <ul>
 <li>Only addresses with the <code>Manager</code> role can call this function, ensuring restricted access to managing investments.</li>
 </ul>
-</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-20" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#626">source</a><a href="#impl-DeFindexVault-20" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_rebalance" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#626">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_rebalance" class="fn">spec_xdr_rebalance</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">428</a>]</h4></section></summary><div class="docblock"><p>Rebalances the vault by executing a series of instructions.</p>
-<h5 id="arguments-17"><a class="doc-anchor" href="#arguments-17">§</a>Arguments:</h5>
+</div></details></div></details><details class="toggle implementors-toggle" open><summary><section id="impl-DeFindexVault-20" class="impl"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#674">source</a><a href="#impl-DeFindexVault-20" class="anchor">§</a><h3 class="code-header">impl <a class="struct" href="struct.DeFindexVault.html" title="struct defindex_vault::DeFindexVault">DeFindexVault</a></h3></section></summary><div class="impl-items"><details class="toggle method-toggle" open><summary><section id="method.spec_xdr_rebalance" class="method"><a class="src rightside" href="../src/defindex_vault/lib.rs.html#674">source</a><h4 class="code-header">pub const fn <a href="#method.spec_xdr_rebalance" class="fn">spec_xdr_rebalance</a>() -&gt; [<a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.u8.html">u8</a>; <a class="primitive" href="https://doc.rust-lang.org/1.82.0/std/primitive.array.html">428</a>]</h4></section></summary><div class="docblock"><p>Rebalances the vault by executing a series of instructions.</p>
+<h5 id="arguments-16"><a class="doc-anchor" href="#arguments-16">§</a>Arguments:</h5>
 <ul>
 <li><code>e</code> - The environment.</li>
 <li><code>instructions</code> - A vector of <code>Instruction</code> structs representing actions (withdraw, invest, swap, zapper) to be taken.</li>
