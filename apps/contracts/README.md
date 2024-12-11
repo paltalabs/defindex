@@ -20,28 +20,40 @@ if you want to test or build each contract separatedly you can do the same insid
 
 ### Tests on typescript
 
-to deploy the factory you can use 
+Before running the tests, you need to deploy the contracts, you can do this by running:
+
+```bash 
+cd apps/contracts
+make build
+```
 
 ```bash 
 yarn deploy-factory <network>
 ```
-
-Make sure you have the hodl strategy deployed, if not, you can run:
-    
-```bash
+```bash 
 yarn deploy-hodl <network>
 ```
+```bash 
+yarn deploy-fixed <network>
+```
+```bash 
+yarn deploy-blend <network>
+```
 
-to test the factory to deploy a DeFindex Vault, and deposit there two times, you can run:
+once you have deployed all the contracts you can run all the tests by running:
 
 ```bash
-yarn test <network>
+yarn test testnet -a
 ```
-If you only want to test a specific vault you should modify the contract address in the test file `apps/contracts/src/tests/testOnlyVault.ts` and run the following command:
+If you want to see all the avaliable test you can do so by running:
 
 ```bash
-yarn test-vault <network>
+yarn test testnet -h
 ```
+it will show the next message where you can see all the available tests and the specific flags to run them.
+  
+  ```bash
+
 
 ### Generate Docs
 ```bash 

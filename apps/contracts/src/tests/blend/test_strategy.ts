@@ -14,7 +14,9 @@ export async function testBlendStrategy(user?: Keypair) {
   console.log(green, '----------------------- New account created -------------------------')
   console.log(green, 'Public key: ',newUser.publicKey())
   console.log(green, '---------------------------------------------------------------------')
-
+  let depositStatus: boolean;
+  let withdrawStatus: boolean;
+  let harvestStatus: boolean;
   if (network !== "mainnet") {
     console.log(purple, '-------------------------------------------------------------------')
     console.log(purple, '----------------------- Funding new account -----------------------')
@@ -22,8 +24,8 @@ export async function testBlendStrategy(user?: Keypair) {
     await airdropAccount(newUser);
   }
 
+  // Deposit XLM into Blend Strategy
   try {
-      // Deposit XLM into Blend Strategy
       console.log(purple, '---------------------------------------------------------------------------')
       console.log(purple, '----------------------- Depositing XLM to the Strategy -----------------------')
       console.log(purple, '---------------------------------------------------------------------------')
@@ -45,7 +47,9 @@ export async function testBlendStrategy(user?: Keypair) {
       console.log(green, '------------ XLM deposited to the Strategy ------------')
       console.log(green, 'depositResult', depositResultValue)
       console.log(green, '----------------------------------------------------')
+      depositStatus = true
     }catch(e){
+      depositStatus = false
       console.log('error', e)
     }
   
@@ -55,8 +59,8 @@ export async function testBlendStrategy(user?: Keypair) {
     console.log(purple, '---------------------------------------------------------------------------')
     await new Promise(resolve => setTimeout(resolve, 100));
   
+    // Withdrawing XLM from Blend Strategy
     try {
-      // Withdrawing XLM from Blend Strategy
       console.log(purple, '---------------------------------------------------------------------------')
       console.log(purple, '----------------------- Withdrawing XLM from the Strategy -----------------------')
       console.log(purple, '---------------------------------------------------------------------------')
@@ -91,12 +95,14 @@ export async function testBlendStrategy(user?: Keypair) {
       console.log(green, '------------ XLM withdrawed from the Strategy ------------')
       console.log(green, 'withdrawResult', withdrawResultValue)
       console.log(green, '----------------------------------------------------')
+      withdrawStatus = true
     }catch(e){
+      withdrawStatus = false
       console.log('error', e)
     }
   
+    // Harvest rewards from Blend Strategy
     try {
-      // Harvest rewards from Blend Strategy
       console.log(purple, '---------------------------------------------------------------------------')
       console.log(purple, '----------------------- Harvesting from the Strategy -----------------------')
       console.log(purple, '---------------------------------------------------------------------------')
@@ -117,10 +123,18 @@ export async function testBlendStrategy(user?: Keypair) {
       console.log(green, '------------ BLND Harvested from the vault ------------')
       console.log(green, 'harvestResult', harvestResultValue)
       console.log(green, '----------------------------------------------------')
-      return true
+      harvestStatus = true
     }catch(e){
+      harvestStatus = false
       console.log('error', e)
-      return false
+    }
+
+    return { 
+      status:{
+        depositStatus: depositStatus ?  '✅ Success' : '❌ Failed', 
+        withdrawStatus: withdrawStatus ?  '✅ Success' : '❌ Failed',
+        harvestStatus: harvestStatus ?  '✅ Success' : '❌ Failed',
+      }
     }
 }
 
