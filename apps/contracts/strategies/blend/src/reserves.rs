@@ -5,6 +5,7 @@ use soroban_sdk::{contracttype, panic_with_error, Address, Env};
 use crate::{constants::SCALAR_9, storage};
 
 #[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct StrategyReserves {
     /// The total deposited amount of the underlying asset
     pub total_shares: i128,
@@ -83,7 +84,7 @@ pub fn deposit(
     
     storage::set_strategy_reserves(&e, reserves);
     storage::set_vault_shares(&e, &from, vault_shares);
-    share_amount
+    vault_shares
 }
 
 /// Withdraw from the reserve vault. This function expects the withdraw to have already been made
@@ -122,7 +123,7 @@ pub fn withdraw(
     storage::set_strategy_reserves(&e, reserves);
     storage::set_vault_shares(&e, &from, vault_shares);
 
-    share_amount
+    vault_shares
 }
 
 pub fn harvest(

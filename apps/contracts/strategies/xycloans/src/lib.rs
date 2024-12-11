@@ -55,7 +55,7 @@ impl DeFindexStrategyTrait for XycloansAdapter {
         e: Env,
         amount: i128,
         from: Address,
-    ) -> Result<(), StrategyError> {
+    ) -> Result<i128, StrategyError> {
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
         from.require_auth();
@@ -70,7 +70,7 @@ impl DeFindexStrategyTrait for XycloansAdapter {
         let xycloans_pool_client = XycloansPoolClient::new(&e, &xycloans_address);
         xycloans_pool_client.deposit(&from, &total_swapped_amount);
 
-        Ok(())
+        Ok(0)
     }
 
     fn harvest(e: Env, _from: Address) -> Result<(), StrategyError> {

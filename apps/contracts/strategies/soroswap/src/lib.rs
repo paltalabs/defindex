@@ -56,7 +56,7 @@ impl DeFindexStrategyTrait for SoroswapAdapter {
         e: Env,
         amount: i128,
         from: Address,
-    ) -> Result<(), StrategyError> {
+    ) -> Result<i128, StrategyError> {
         from.require_auth();
         check_initialized(&e)?;
         check_nonnegative_amount(amount)?;
@@ -120,7 +120,7 @@ impl DeFindexStrategyTrait for SoroswapAdapter {
             &u64::MAX,
         );
 
-        Ok(())
+        Ok(0)
     }
 
     fn harvest(e: Env, _from: Address) -> Result<(), StrategyError> {
