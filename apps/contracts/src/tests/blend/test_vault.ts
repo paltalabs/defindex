@@ -137,7 +137,6 @@ export async function testBlendVault(user?: Keypair) {
   } catch(e){
     console.log('❌ Error Creating the vault', e)
     createStatus = false;
-    exit("Error Creating");
   }
 
   // Deposit assets to the vault
@@ -157,7 +156,6 @@ export async function testBlendVault(user?: Keypair) {
   } catch (error) {
     depositStatus = false;
     console.log('❌ Error depositing into the vault:', error);
-    exit("Error Depositing");
   }
 
   // Invest in strategy
@@ -188,7 +186,6 @@ export async function testBlendVault(user?: Keypair) {
   } catch (error) {
     console.log('❌ Error Investing the Vault:', error);
     investStatus = false;
-    exit("Error Investing");
   }
   return { status:{
       createStatus: createStatus,
