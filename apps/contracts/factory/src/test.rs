@@ -86,6 +86,7 @@ pub(crate) fn create_asset_params(test: &DeFindexFactoryTest) -> Vec<AssetStrate
 pub struct DeFindexFactoryTest<'a> {
     env: Env,
     factory_contract: DeFindexFactoryClient<'a>,
+    defindex_wasm_hash: BytesN<32>,
     admin: Address,
     defindex_receiver: Address,
     emergency_manager: Address,
@@ -134,6 +135,7 @@ impl<'a> DeFindexFactoryTest<'a> {
             env,
             factory_contract,
             admin,
+            defindex_wasm_hash,
             defindex_receiver,
             emergency_manager,
             fee_receiver,
