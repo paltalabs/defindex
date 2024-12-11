@@ -127,7 +127,6 @@ export async function testBlendStrategy(user?: Keypair) {
     }catch(e){
       harvestStatus = false
       console.log('error', e)
-      return false
     }
 
     return { status:{
