@@ -511,15 +511,23 @@ async function testVaultTwoStrategies() {
 
 switch (tests) {
   case "-h":
+    console.log("");
     console.log(green, "Usage: yarn test <network> <test>");
+    console.log("");
     console.log(yellow, "   Options:");
     console.log(
       yellow,
       "       Network: mainnet (not avaliable yet) | testnet"
     );
+    console.log("");
     console.log(
       yellow,
-      "       Tests: -a (all tests) | -os (one strategy tests)| -ts (two strategy tests) | -bs (blend strategy tests) | -bv (blend vault tests)"
+      `   Tests:       
+       -a  all tests,
+       -os one strategy tests,
+       -ts two strategy tests, 
+       -bs blend strategy tests,
+       -bv blend vault tests`       
     );
     exit(0);
   case "-a":
