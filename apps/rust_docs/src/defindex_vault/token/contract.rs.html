@@ -149,7 +149,6 @@
 <a href="#149" id="149">149</a>
 <a href="#150" id="150">150</a>
 <a href="#151" id="151">151</a>
-<a href="#152" id="152">152</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! This contract demonstrates a sample implementation of the Soroban token
 //! interface.
 </span><span class="kw">use </span><span class="kw">crate</span>::token::allowance::{read_allowance, spend_allowance, write_allowance};
@@ -158,12 +157,11 @@
 <span class="kw">use </span><span class="kw">crate</span>::token::total_supply::{decrease_total_supply, increase_total_supply, read_total_supply};
 
 <span class="attr">#[cfg(test)]
-</span><span class="kw">use </span><span class="kw">crate</span>::token::storage_types::{AllowanceDataKey, AllowanceValue, DataKey};
+</span><span class="kw">use </span><span class="kw">crate</span>::token::storage_types::{AllowanceDataKey};
 <span class="kw">use </span><span class="kw">crate</span>::token::storage_types::{INSTANCE_BUMP_AMOUNT, INSTANCE_LIFETIME_THRESHOLD};
 <span class="kw">use </span>soroban_sdk::token::{<span class="self">self</span>, Interface <span class="kw">as _</span>};
 <span class="kw">use </span>soroban_sdk::{contract, contractimpl, Address, Env, String};
 <span class="kw">use </span>soroban_token_sdk::TokenUtils;
-<span class="kw">use </span><span class="kw">crate</span>::ContractError;
 
 <span class="kw">fn </span>check_nonnegative_amount(amount: i128) {
     <span class="kw">if </span>amount &lt; <span class="number">0 </span>{

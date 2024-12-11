@@ -3,9 +3,6 @@ use soroban_sdk::{panic_with_error, Address, Env, Map, Vec};
 use crate::{
     models::{CurrentAssetInvestmentAllocation},
     access::{AccessControl, AccessControlTrait, RolesDataKey},
-    funds::{
-        fetch_total_managed_funds,
-    },
     token::VaultToken,
     ContractError,
 };
@@ -55,7 +52,7 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
 //             continue;
 //         }
 
-//         let strategy_invested_funds = fetch_invested_funds_for_strategy(e, &strategy.address);
+//         let strategy_invested_funds = fetch_strategy_invested_funds(e, &strategy.address);
 
 //         let strategy_share_of_withdrawal =
 //             (amount * strategy_invested_funds) / total_invested_in_strategies;
@@ -227,11 +224,10 @@ pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
 pub fn calculate_deposit_amounts_and_shares_to_mint(
     e: &Env,
     assets: &Vec<AssetStrategySet>,
+    total_managed_funds: &Map<Address, CurrentAssetInvestmentAllocation>,
     amounts_desired: &Vec<i128>,
     amounts_min: &Vec<i128>,
 ) -> Result<(Vec<i128>, i128), ContractError> {
-    // Retrieve the total managed funds for each asset as a Map<Address, i128>.
-    let total_managed_funds = fetch_total_managed_funds(e);
 
     for i in 0..assets.len() {
         // Calculate the optimal amounts and shares to mint for asset `i`.

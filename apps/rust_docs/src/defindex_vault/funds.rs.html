@@ -117,6 +117,31 @@
 <a href="#117" id="117">117</a>
 <a href="#118" id="118">118</a>
 <a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>soroban_sdk::token::TokenClient;
 <span class="kw">use </span>soroban_sdk::{Address, Env, Map, Vec};
 
@@ -125,40 +150,58 @@
 <span class="kw">use </span><span class="kw">crate</span>::storage::get_assets;
 <span class="kw">use </span><span class="kw">crate</span>::strategies::get_strategy_client;
 
-<span class="doccomment">/// Fetches the idle funds for a given asset. Idle funds refer to the balance of the asset
-/// that is currently not invested in any strategies.
+<span class="doccomment">/// Retrieves the idle funds for a given asset.
+/// 
+/// Idle funds represent the balance of the asset that is held by the current contract 
+/// but not actively allocated to any strategies.
 ///
 /// # Arguments
 /// * `e` - The current environment instance.
-/// * `asset` - The asset for which idle funds are being fetched.
+/// * `asset_address` - The address of the asset for which idle funds are being calculated.
 ///
 /// # Returns
-/// * The idle balance (i128) of the asset in the current contract address.
+/// The idle funds of the asset as an `i128`, representing the unallocated balance.
 </span><span class="kw">pub fn </span>fetch_idle_funds_for_asset(e: <span class="kw-2">&amp;</span>Env, asset: <span class="kw-2">&amp;</span>Address) -&gt; i128 {
     TokenClient::new(e, <span class="kw-2">&amp;</span>asset).balance(<span class="kw-2">&amp;</span>e.current_contract_address())
 }
 
-<span class="doccomment">/// Fetches the total funds that are invested for a given asset.
-/// It iterates through all the strategies associated with the asset and sums their balances.
+<span class="doccomment">/// Retrieves the total funds invested in a specified strategy.
+/// 
+/// Since only the strategy contract itself can accurately determine the amount invested, 
+/// this function performs a cross-contract call to the strategy to fetch the current balance 
+/// of the investment.
 ///
 /// # Arguments
 /// * `e` - The current environment instance.
-/// * `asset` - The asset for which invested funds are being fetched.
+/// * `strategy_address` - The address of the strategy whose investment balance is to be retrieved.
 ///
 /// # Returns
-/// * The total invested balance (i128) of the asset across all strategies.
-</span><span class="kw">pub fn </span>fetch_invested_funds_for_strategy(e: <span class="kw-2">&amp;</span>Env, strategy_address: <span class="kw-2">&amp;</span>Address) -&gt; i128 {
+/// The total invested funds in the strategy as an `i128`.
+</span><span class="kw">pub fn </span>fetch_strategy_invested_funds(e: <span class="kw-2">&amp;</span>Env, strategy_address: <span class="kw-2">&amp;</span>Address) -&gt; i128 {
     <span class="kw">let </span>strategy_client = get_strategy_client(e, strategy_address.clone());
     strategy_client.balance(<span class="kw-2">&amp;</span>e.current_contract_address())
 }
 
 
-<span class="comment">// return total invested funds but also a vec of StrategyAllocation
-</span><span class="kw">pub fn </span>fetch_invested_funds_for_asset(e: <span class="kw-2">&amp;</span>Env, asset: <span class="kw-2">&amp;</span>AssetStrategySet) -&gt; (i128, Vec&lt;StrategyAllocation&gt;){
+<span class="doccomment">/// Calculates the total funds invested in strategies for a given asset and 
+/// provides a detailed breakdown of allocations.
+///
+/// This function aggregates the balances of all strategies linked to the specified 
+/// asset and returns both the total invested amount and a detailed allocation.
+///
+/// # Arguments
+/// * `e` - The current environment instance.
+/// * `asset_strategy_set` - The asset and its associated set of strategies to evaluate.
+///
+/// # Returns
+/// A tuple containing:
+/// * `i128`: The total funds invested across all strategies.
+/// * `Vec&lt;StrategyAllocation&gt;`: A vector with the allocation details for each strategy.
+</span><span class="kw">pub fn </span>fetch_invested_funds_for_asset(e: <span class="kw-2">&amp;</span>Env, asset_strategy_set: <span class="kw-2">&amp;</span>AssetStrategySet) -&gt; (i128, Vec&lt;StrategyAllocation&gt;){
     <span class="kw">let </span><span class="kw-2">mut </span>invested_funds = <span class="number">0</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>strategy_allocations: Vec&lt;StrategyAllocation&gt; = Vec::new(e);
-    <span class="kw">for </span>strategy <span class="kw">in </span>asset.strategies.iter() {
-        <span class="kw">let </span>strategy_balance = fetch_invested_funds_for_strategy(e, <span class="kw-2">&amp;</span>strategy.address);
+    <span class="kw">for </span>strategy <span class="kw">in </span>asset_strategy_set.strategies.iter() {
+        <span class="kw">let </span>strategy_balance = fetch_strategy_invested_funds(e, <span class="kw-2">&amp;</span>strategy.address);
         invested_funds += strategy_balance;
         strategy_allocations.push_back(StrategyAllocation {
             strategy_address: strategy.address.clone(),
@@ -166,10 +209,47 @@
         });
     }
     (invested_funds, strategy_allocations)
+} 
+
+<span class="doccomment">/// Fetches the total managed funds for all assets. This includes both idle and invested funds.
+/// It returns a map where the key is the asset's address and the value is the total managed balance
+/// (idle + invested). With this map we can calculate the current managed funds ratio.
+///
+/// # Arguments
+/// * `e` - The current environment instance.
+///
+/// # Returns
+/// * A map where each entry represents an asset's address and its total managed balance.
+</span><span class="kw">pub fn </span>fetch_total_managed_funds(e: <span class="kw-2">&amp;</span>Env) -&gt; Map&lt;Address, CurrentAssetInvestmentAllocation&gt; {
+    <span class="kw">let </span>assets = get_assets(e);
+    <span class="kw">let </span><span class="kw-2">mut </span>map: Map&lt;Address, CurrentAssetInvestmentAllocation&gt; = Map::new(e);
+    <span class="kw">for </span>asset <span class="kw">in </span>assets {
+        <span class="kw">let </span>idle_amount = fetch_idle_funds_for_asset(e, <span class="kw-2">&amp;</span>asset.address);
+        <span class="kw">let </span>(invested_amount, strategy_allocations) = fetch_invested_funds_for_asset(e, <span class="kw-2">&amp;</span>asset);
+        <span class="kw">let </span>total_amount = idle_amount + invested_amount;
+        map.set(
+            asset.address.clone(),
+            CurrentAssetInvestmentAllocation {
+                asset: asset.address.clone(),
+                total_amount,
+                idle_amount,
+                invested_amount,
+                strategy_allocations,
+            },
+        );
+    }
+    map
 }
 
+<span class="comment">/*
+    User experience functions. The following functions are not being used inernally in 
+    the contrac, but are intender to be used by the client for a better user experience.
+    They create maps for better redeability
 
-<span class="doccomment">/// Fetches the current idle funds for all assets managed by the contract.
+*/
+
+
+</span><span class="doccomment">/// Fetches the current idle funds for all assets managed by the contract.
 /// It returns a map where the key is the asset's address and the value is the idle balance.
 ///
 /// # Arguments
@@ -202,36 +282,6 @@
         map.set(
             asset.address.clone(),
             invested_funds
-        );
-    }
-    map
-}
-
-<span class="doccomment">/// Fetches the total managed funds for all assets. This includes both idle and invested funds.
-/// It returns a map where the key is the asset's address and the value is the total managed balance
-/// (idle + invested). With this map we can calculate the current managed funds ratio.
-///
-/// # Arguments
-/// * `e` - The current environment instance.
-///
-/// # Returns
-/// * A map where each entry represents an asset's address and its total managed balance.
-</span><span class="kw">pub fn </span>fetch_total_managed_funds(e: <span class="kw-2">&amp;</span>Env) -&gt; Map&lt;Address, CurrentAssetInvestmentAllocation&gt; {
-    <span class="kw">let </span>assets = get_assets(e);
-    <span class="kw">let </span><span class="kw-2">mut </span>map: Map&lt;Address, CurrentAssetInvestmentAllocation&gt; = Map::new(e);
-    <span class="kw">for </span>asset <span class="kw">in </span>assets {
-        <span class="kw">let </span>idle_amount = fetch_idle_funds_for_asset(e, <span class="kw-2">&amp;</span>asset.address);
-        <span class="kw">let </span>(invested_amount, strategy_allocations) = fetch_invested_funds_for_asset(e, <span class="kw-2">&amp;</span>asset);
-        <span class="kw">let </span>total_amount = idle_amount + invested_amount;
-        map.set(
-            asset.address.clone(),
-            CurrentAssetInvestmentAllocation {
-                asset: asset.address.clone(),
-                total_amount,
-                idle_amount,
-                invested_amount,
-                strategy_allocations,
-            },
         );
     }
     map

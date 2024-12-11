@@ -211,10 +211,6 @@ pub trait VaultTrait {
     /// * `Map<Address, i128>` - A map containing each asset address and its corresponding proportional amount.
     fn get_asset_amounts_per_shares(e: Env, vault_shares: i128) -> Result<Map<Address, i128>, ContractError>;
     
-    // TODO: DELETE THIS, USED FOR TESTING
-    /// Temporary method for testing purposes.
-    // fn get_asset_amounts_for_dftokens(e: Env, df_token: i128) -> Map<Address, i128>;
-
     fn get_fees(e: Env) -> (u32, u32);
 
     /// Collects the fees from the vault and transfers them to the fee receiver addresses. 
