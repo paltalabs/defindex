@@ -584,7 +584,7 @@ fn several_assets_wih_previous_investment_success() {
     test.token1_admin_client.mint(&users[0], &amount1);
    
     // deposit with no previous investment
-    let deposit_result=defindex_contract.deposit(
+    defindex_contract.deposit(
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0, amount1],
         &users[0],
