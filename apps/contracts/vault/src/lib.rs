@@ -17,6 +17,7 @@ mod funds;
 mod interface;
 mod investment;
 mod models;
+mod report;
 mod storage;
 mod strategies;
 mod test;

@@ -142,7 +142,7 @@ pub fn invest_in_strategy(
     asset_address: &Address,
     strategy_address: &Address,
     amount: &i128,
-) -> Result<(), ContractError> {
+) -> Result<i128, ContractError> {
     
     // Now we will handle funds on behalf of the contract, not the caller (manager or user)
 
@@ -165,7 +165,11 @@ pub fn invest_in_strategy(
 
     let strategy_client = get_strategy_client(&e, strategy_address.clone());
 
-    strategy_client.deposit(amount, &e.current_contract_address());
+    let strategy_funds = strategy_client.deposit(amount, &e.current_contract_address());
 
-    Ok(())
+    // Reports
+    // Store Strategy invested funds for reports
+    
+
+    Ok(strategy_funds)
 }
