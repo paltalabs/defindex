@@ -115,7 +115,7 @@ pub fn withdraw(
     reserves.total_b_tokens -= b_tokens_amount;
     
     if share_amount > vault_shares {
-        panic_with_error!(e, StrategyError::InvalidArgument);
+        panic_with_error!(e, StrategyError::InsufficientBalance);
     }
 
     vault_shares -= share_amount;
