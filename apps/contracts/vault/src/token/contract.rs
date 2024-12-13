@@ -5,8 +5,6 @@ use crate::token::balance::{read_balance, receive_balance, spend_balance};
 use crate::token::metadata::{read_decimal, read_name, read_symbol};
 use crate::token::total_supply::{decrease_total_supply, increase_total_supply, read_total_supply};
 
-#[cfg(test)]
-use crate::token::storage_types::{AllowanceDataKey, AllowanceValue, DataKey};
 use crate::token::storage_types::{INSTANCE_BUMP_AMOUNT, INSTANCE_LIFETIME_THRESHOLD};
 use soroban_sdk::token::{self, Interface as _};
 use soroban_sdk::{contract, contractimpl, Address, Env, String};
@@ -53,13 +51,6 @@ pub struct VaultToken;
 impl VaultToken {
     pub fn total_supply(e: Env) -> i128 {
         read_total_supply(&e)
-    }
-
-    #[cfg(test)]
-    pub fn get_allowance(e: Env, from: Address, spender: Address) -> Option<AllowanceValue> {
-        let key = DataKey::Allowance(AllowanceDataKey { from, spender });
-        let allowance = e.storage().temporary().get::<_, AllowanceValue>(&key);
-        allowance
     }
 }
 

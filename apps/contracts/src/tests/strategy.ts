@@ -1,9 +1,9 @@
 import {
     Address,
-    scValToNative,
-    xdr,
     Keypair,
     nativeToScVal,
+    scValToNative,
+    xdr
 } from "@stellar/stellar-sdk";
 import { invokeCustomContract } from "../utils/contract.js";
 
@@ -22,18 +22,19 @@ import { invokeCustomContract } from "../utils/contract.js";
 export async function checkUserBalance(contractAddress: string, userPublicKey: string, source?: Keypair): Promise<number> {
     const userAddress = new Address(userPublicKey).toScVal();
     const methodName = "balance";
-
+    console.log(`Checking balance for user ${userPublicKey}...`);
     try {
         // Call the `balance` method from the contract
         const result = await invokeCustomContract(
             contractAddress,
             methodName,
             [userAddress],
-            source ? source : Keypair.random()
+            source ? source : Keypair.random(),
+            true
         );
 
         // Convert the result to a native JavaScript number
-        const balance = scValToNative(result.returnValue) as number;
+        const balance = scValToNative(result.result.retval) as number;
         console.log(`Balance for user ${userPublicKey}:`, balance);
 
         return balance;
@@ -58,7 +59,7 @@ export async function depositToStrategy(deployedStrategy: string, user: Keypair,
 
     const depositParams: xdr.ScVal[] = [
         nativeToScVal(depositAmount, { type: "i128" }),
-        (new Address(user.publicKey())).toScVal()
+        new Address(user.publicKey()).toScVal()
     ];
 
     try {

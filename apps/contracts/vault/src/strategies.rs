@@ -4,10 +4,11 @@ use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractIn
 
 
 use crate::{
-    models::{AssetStrategySet, Strategy},
     storage::{get_asset, get_assets, get_total_assets, set_asset},
     ContractError,
 };
+
+use common::models::{AssetStrategySet, Strategy};
 
 pub fn get_strategy_client(e: &Env, address: Address) -> DeFindexStrategyClient {
     DeFindexStrategyClient::new(&e, &address)
@@ -33,21 +34,21 @@ pub fn get_strategy_asset(
     Err(ContractError::StrategyNotFound)
 }
 
-/// Finds the AssetStrategySet corresponding to the given asset address.
-pub fn get_asset_allocation_from_address(
-    e: &Env,
-    asset_address: Address,
-) -> Result<AssetStrategySet, ContractError> {
-    let assets = get_assets(e);
+// /// Finds the AssetStrategySet corresponding to the given asset address.
+// pub fn get_asset_allocation_from_address(
+//     e: &Env,
+//     asset_address: Address,
+// ) -> Result<AssetStrategySet, ContractError> {
+//     let assets = get_assets(e);
 
-    for asset in assets.iter() {
-        if asset.address == asset_address {
-            return Ok(asset);
-        }
-    }
+//     for asset in assets.iter() {
+//         if asset.address == asset_address {
+//             return Ok(asset);
+//         }
+//     }
 
-    Err(ContractError::AssetNotFound)
-}
+//     Err(ContractError::AssetNotFound)
+// }
 
 /// Finds the strategy struct corresponding to the given strategy address within the given asset.
 pub fn get_strategy_struct(
@@ -123,7 +124,7 @@ pub fn unpause_strategy(e: &Env, strategy_address: Address) -> Result<(), Contra
     Err(ContractError::StrategyNotFound)
 }
 
-pub fn withdraw_from_strategy(
+pub fn unwind_from_strategy(
     e: &Env,
     strategy_address: &Address,
     amount: &i128,

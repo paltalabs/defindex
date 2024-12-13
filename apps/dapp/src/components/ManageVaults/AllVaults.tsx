@@ -91,14 +91,13 @@ export const AllVaults = ({
   }, [activeChain?.networkPassphrase])
 
   useEffect(() => {
-    if (address) {
-      createdVaults.forEach(async (v: VaultData) => {
-        const TVL = await vault.getTVL(v.address)
-        if (TVL) {
-          dispatch(setVaultTVL({ value: TVL, address: v.address }))
-        }
-      })
-    }
+    createdVaults.forEach(async (v: VaultData) => {
+      const TVL = await vault.getTVL(v.address)
+      if (TVL) {
+        dispatch(setVaultTVL({ value: TVL, address: v.address }))
+      }
+    })
+
   }, [createdVaults])
 
   useEffect(() => {

@@ -1,9 +1,10 @@
 use soroban_sdk::{Address, Env, Map, String, Vec};
 
 use crate::{
-    models::{AssetStrategySet, Instruction, AssetInvestmentAllocation},
+    models::{Instruction, AssetInvestmentAllocation, CurrentAssetInvestmentAllocation},
     ContractError,
 };
+use common::models::AssetStrategySet;
 
 pub trait VaultTrait {
     /// Initializes the DeFindex Vault contract with the required parameters.
@@ -30,8 +31,8 @@ pub trait VaultTrait {
     /// - `ContractError::AlreadyInitialized`: If the vault has already been initialized.
     /// - `ContractError::StrategyDoesNotSupportAsset`: If a strategy within an asset does not support the asset’s contract.
     ///
-    fn initialize(
-        e: Env,
+    fn __constructor(
+        e: Env, 
         assets: Vec<AssetStrategySet>,
         manager: Address,
         emergency_manager: Address,
@@ -41,7 +42,7 @@ pub trait VaultTrait {
         factory: Address,
         vault_name: String,
         vault_symbol: String,
-    ) -> Result<(), ContractError>;
+    );
 
     /// Handles user deposits into the DeFindex Vault.
     ///
@@ -78,6 +79,7 @@ pub trait VaultTrait {
         amounts_desired: Vec<i128>,
         amounts_min: Vec<i128>,
         from: Address,
+        invest: bool,
     ) -> Result<(Vec<i128>, i128), ContractError>;
 
     /// Withdraws assets from the DeFindex Vault by burning dfTokens.
@@ -169,7 +171,7 @@ pub trait VaultTrait {
     ///
     /// # Returns:
     /// * `Map<Address, i128>` - A map of asset addresses to their total managed amounts.
-    fn fetch_total_managed_funds(e: &Env) -> Map<Address, i128>;
+    fn fetch_total_managed_funds(e: &Env) -> Map<Address, CurrentAssetInvestmentAllocation>;
 
     /// Returns the current invested funds, representing the total assets allocated to strategies.
     ///
@@ -195,11 +197,24 @@ pub trait VaultTrait {
     /// * `Map<Address, i128>` - A map of asset addresses to their total idle amounts.
     fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128>;
 
-    // TODO: DELETE THIS, USED FOR TESTING
-    /// Temporary method for testing purposes.
-    fn get_asset_amounts_for_dftokens(e: Env, df_token: i128) -> Map<Address, i128>;
 
+    // Calculates the corresponding amounts of each asset per a given number of vault shares.
+    /// This function extends the contract's time-to-live and calculates how much of each asset corresponds 
+    /// per the provided number of vault shares (`vault_shares`). It provides proportional allocations for each asset 
+    /// in the vault relative to the specified shares.
+    ///
+    /// # Arguments
+    /// * `e` - The current environment reference.
+    /// * `vault_shares` - The number of vault shares for which the corresponding asset amounts are calculated.
+    ///
+    /// # Returns
+    /// * `Map<Address, i128>` - A map containing each asset address and its corresponding proportional amount.
+    fn get_asset_amounts_per_shares(e: Env, vault_shares: i128) -> Result<Map<Address, i128>, ContractError>;
+    
     fn get_fees(e: Env) -> (u32, u32);
+
+    /// Collects the fees from the vault and transfers them to the fee receiver addresses. 
+    fn collect_fees(e: Env) -> Result<(), ContractError>;
 }
 
 pub trait AdminInterfaceTrait {

@@ -1,35 +1,31 @@
 use soroban_sdk::{contracttype, Address, String, Vec};
 
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Strategy {
-    pub address: Address,
-    pub name: String,
-    pub paused: bool,
-}
-
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct AssetStrategySet {
-    pub address: Address,
-    pub strategies: Vec<Strategy>,
-}
-
 // Investment Allocation in Strategies
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct StrategyInvestment {
-    pub strategy: Address,
+pub struct StrategyAllocation {
+    pub strategy_address: Address,
     pub amount: i128,
+}
+
+// Current Asset Investment Allocation
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct CurrentAssetInvestmentAllocation {
+    pub asset: Address,
+    pub total_amount: i128,
+    pub idle_amount: i128,
+    pub invested_amount: i128,
+    pub strategy_allocations: Vec<StrategyAllocation>,
 }
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct AssetInvestmentAllocation {
     pub asset: Address,
-    pub strategy_investments: Vec<Option<StrategyInvestment>>,
+    pub strategy_allocations: Vec<Option<StrategyAllocation>>,
 }
-
+//
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Instruction {

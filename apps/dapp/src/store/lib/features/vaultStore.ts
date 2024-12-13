@@ -12,7 +12,6 @@ const initialState: NewVaultState = {
   symbol: "",
   vaultShare: 0,
   assets: [],
-  amounts: [],
   TVL: 0,
 }
 
@@ -30,6 +29,7 @@ export const getDefaultStrategies = async (network: string) => {
           address: remoteStrategies.ids[strategy],
           name: parsedName ? prettierName : '',
           paused: false,
+          tempAmount: 0
         })
       }
     }
@@ -65,12 +65,13 @@ export const newVaultSlice = createSlice({
       state.vaultShare = action.payload;
     }),
     pushAsset: ((state, action: PayloadAction<Asset>) => {
-      const alreadyExists = state.assets.find(asset => asset.address === action.payload.address && asset.strategies.length === action.payload.strategies.length)
-      if(alreadyExists) {
-        console.warn('Asset already exists')
-        return;
-      } else {
+      const assetIndex = state.assets.findIndex(asset => asset.address === action.payload.address);
+      if (assetIndex === -1) {
         state.assets.push(action.payload);
+      } else if (assetIndex !== -1) {
+        action.payload.strategies.forEach(strategy => {
+          state.assets[assetIndex]!.strategies.push(strategy);
+        });
       }
     }),
     resetAssets: ((state) => {
@@ -82,17 +83,11 @@ export const newVaultSlice = createSlice({
     pushStrategy: ((state, action: PayloadAction<Strategy>) => {
       state.assets.find(asset => asset.address === action.payload.address)?.strategies.push(action.payload);
     }),
-    pushAmount: ((state, action: PayloadAction<number>) => {
-      state.amounts?.push(action.payload);
-    }),
-    setAmountByAddress: ((state, action: PayloadAction<{address:string, amount:number}>) => {
-      const index = state.assets.findIndex(asset => asset.address === action.payload.address);
-      if(index !== -1) {
-        state.amounts[index] = action.payload.amount;
+    setAssetAmount: ((state, action: PayloadAction<{address:string, amount:number}>) => {
+      const assetIndex = state.assets.findIndex(asset => asset.address === action.payload.address);
+      if (assetIndex !== -1) {
+        state.assets[assetIndex]!.amount = Number(state.assets[assetIndex]!.amount || 0) + Number(action.payload.amount);
       }
-    }),
-    removeAmountByIndex: ((state, action: PayloadAction<number>) => {
-      state.amounts?.splice(action.payload, 1);
     }),
     openEditVault: ((state, action: PayloadAction<VaultData>) => {
       state.name = action.payload.name;
@@ -111,8 +106,12 @@ export const newVaultSlice = createSlice({
       state.symbol = "";
       state.vaultShare = 0;
       state.assets = [];
-      state.amounts = [];
       state.TVL = 0;
+    }),
+    removeStrategy: ((state, action: PayloadAction<Strategy>) => {
+      state.assets.forEach(asset => {
+        asset.strategies = asset.strategies.filter(strategy => strategy.address !== action.payload.address);
+      });
     }),
   }
 })
@@ -125,13 +124,12 @@ export const {
   setFeeReceiver,
   setVaultShare,
   pushAsset,
-  pushAmount,
   removeAsset,
-  removeAmountByIndex,
   resetAssets,
   openEditVault,
   resetNewVault,
-  setAmountByAddress
+  removeStrategy,
+  setAssetAmount,
 } = newVaultSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type

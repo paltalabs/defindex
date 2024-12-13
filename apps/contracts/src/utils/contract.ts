@@ -62,6 +62,7 @@ export async function deployContract(
   contractKey: string,
   wasmKey: string,
   addressBook: AddressBook,
+  args: xdr.ScVal[],
   source: Keypair
 ) {
   const contractIdSalt = randomBytes(32);
@@ -85,10 +86,11 @@ export async function deployContract(
   addressBook.setContractId(contractKey, contractId);
   const wasmHash = Buffer.from(addressBook.getWasmHash(wasmKey), "hex");
 
-  const deployFunction = xdr.HostFunction.hostFunctionTypeCreateContract(
-    new xdr.CreateContractArgs({
-      contractIdPreimage: contractIdPreimage,
+  const deployFunction = xdr.HostFunction.hostFunctionTypeCreateContractV2(
+    new xdr.CreateContractArgsV2({
+      contractIdPreimage,
       executable: xdr.ContractExecutable.contractExecutableWasm(wasmHash),
+      constructorArgs: args,
     })
   );
 

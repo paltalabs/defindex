@@ -13,6 +13,9 @@ crate-type = ["cdylib"]
 [dependencies] 
 soroban-sdk = { workspace = true }
 defindex-strategy-core = { workspace = true }
+soroban-fixed-point-math = { path = "./temp_script3/soroban-fixed-point-math" }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
+sep-40-oracle = { path = "./temp_script3/sep-40-oracle/sep-40", features = ["testutils"] }
+sep-41-token = { path = "./temp_script3/sep-41-token/sep-41", features = ["testutils"] }

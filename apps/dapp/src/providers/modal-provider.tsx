@@ -18,6 +18,8 @@ export const ModalProvider = ({
   const [isInspectVaultModalOpen, setIsInspectVaultModalOpen] = React.useState<boolean>(false)
   const [isInteractWithVaultModalOpen, setIsInteractWithVaultModalOpen] = React.useState<boolean>(false)
   const [isEditVaultModalOpen, setIsEditVaultModalOpen] = React.useState<boolean>(false)
+  const [isRebalanceModalOpen, setIsRebalanceModalOpen] = React.useState<boolean>(false)
+  const [isInvestStrategiesModalOpen, setIsInvestStrategiesModalOpen] = React.useState<boolean>(false)
 
   const [isTransactionStatusModalOpen, setIsTransactionStatusModalOpen] = React.useState<boolean>(false)
   const [transactionStatusModalStep, setTransactionStatusModalStep] = React.useState<number>(0)
@@ -102,6 +104,14 @@ export const ModalProvider = ({
     editVaultModal: {
       isOpen: isEditVaultModalOpen,
       setIsOpen: setIsEditVaultModalOpen,
+    },
+    rebalanceVaultModal: {
+      isOpen: isRebalanceModalOpen,
+      setIsOpen: setIsRebalanceModalOpen,
+    },
+    investStrategiesModal: {
+      isOpen: isInvestStrategiesModalOpen,
+      setIsOpen: setIsInvestStrategiesModalOpen,
     },
   }
 

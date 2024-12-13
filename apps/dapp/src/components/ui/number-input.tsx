@@ -9,10 +9,6 @@ export const NumberInputRoot = forwardRef<HTMLDivElement, NumberInputProps>(
     return (
       <ChakraNumberInput.Root ref={ref} variant="outline" {...rest}>
         {children}
-        <ChakraNumberInput.Control>
-          <ChakraNumberInput.IncrementTrigger />
-          <ChakraNumberInput.DecrementTrigger />
-        </ChakraNumberInput.Control>
       </ChakraNumberInput.Root>
     )
   },

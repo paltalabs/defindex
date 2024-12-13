@@ -81,6 +81,7 @@ export async function invokeTransaction(
   const prepped_tx = assemble_tx.setSorobanData(sim_tx_data).build();
   prepped_tx.sign(source);
   const tx_hash = prepped_tx.hash().toString("hex");
+  console.log('🛑 SIGNED TX:', prepped_tx.toXDR());
 
   console.log("submitting tx...");
   let response: txResponse = await loadedConfig.rpc.sendTransaction(prepped_tx);
@@ -124,3 +125,50 @@ export const getCurrentTimePlusOneHour = () => {
 
   return oneHourLater;
 };
+
+export function getTransactionBudget(tx: any): { instructions: number, readBytes: number, writeBytes: number } {
+  const resources = tx.envelopeXdr.value().tx().ext().value().resources()
+  const warningTolerance = 0.85
+  const MAXWRITEBYTES = 132096
+  const MAXREADBYTES = 200000
+  const MAXINSTRUCTIONS = 100000000
+  const budget= {
+      instructions: resources.instructions(),
+      readBytes: resources.readBytes(),
+      writeBytes: resources.writeBytes(),
+  }
+  const getPercentage = (value: number, max: number)=>{
+      return (value * 100)/max
+  }
+  if(budget.instructions > MAXINSTRUCTIONS * warningTolerance){
+      console.warn('Instructions budget exceeded')
+      console.table({
+          value:{
+              instructions: budget.instructions,
+              maxInstructions: MAXINSTRUCTIONS,
+              '%': getPercentage(budget.instructions, MAXINSTRUCTIONS)
+          },
+      })
+  }
+  if(budget.readBytes > MAXREADBYTES * warningTolerance){
+      console.warn('ReadBytes budget exceeded')
+      console.table({
+          value: {
+              readBytes: budget.readBytes,
+              maxReadBytes: MAXREADBYTES,
+              '%': getPercentage(budget.readBytes, MAXREADBYTES)
+          }
+      })
+  }
+  if(budget.writeBytes > MAXWRITEBYTES * warningTolerance){
+      console.warn('WriteBytes budget exceeded')
+      console.table({
+          value:{
+              writeBytes: budget.writeBytes,
+              maxWriteBytes: MAXWRITEBYTES,
+              '%': getPercentage(budget.writeBytes, MAXWRITEBYTES)
+          }
+      })
+  }
+  return budget
+}

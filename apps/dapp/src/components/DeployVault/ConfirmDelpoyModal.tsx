@@ -41,6 +41,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   const sorobanContext = useSorobanReact();
   const { activeChain, address } = sorobanContext;
   const factory = useFactoryCallback();
+  const { getInvestedFunds } = useVault();
   const newVault: NewVaultState = useAppSelector(state => state.newVault);
   const indexName = useAppSelector(state => state.newVault.name)
   const indexSymbol = useAppSelector(state => state.newVault.symbol)
@@ -50,7 +51,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   const feeReceiverString = useAppSelector(state => state.newVault.feeReceiver)
   const { transactionStatusModal: txModal, deployVaultModal: deployModal } = useContext(ModalContext);
   const dispatch = useAppDispatch();
-  const { getIdleFunds, getInvestedFunds, getTVL, getUserBalance } = useVault()
+  const { getFees } = useVault()
 
   const [deployDisabled, setDeployDisabled] = useState(true);
 
@@ -174,10 +175,10 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     });
     const assetParamsScValVec = xdr.ScVal.scvVec(assetParamsScVal);
     const amountsScVal = newVault.assets.map((asset, index) => {
-      const parsedAmount = newVault.amounts[index] || 0;
+      const parsedAmount = newVault.assets[index]?.amount || 0;
       const truncatedAmount = Math.floor(parsedAmount * 1e7) / 1e7;
       const convertedAmount = Number(truncatedAmount) * Math.pow(10, 7)
-      if (newVault.amounts.length === 0) return nativeToScVal(0, { type: "i128" });
+      if (newVault.assets[index]?.amount === 0) return nativeToScVal(0, { type: "i128" });
       return nativeToScVal(convertedAmount, { type: "i128" });
     });
     /*  const amountsScVal = newVault.amounts.map((amount) => {
@@ -197,7 +198,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     let result: any;
 
 
-    if (newVault.amounts.length === 0) {
+    if (newVault.assets[0]?.amount === undefined) {
       const createDefindexParams: xdr.ScVal[] = [
         emergencyManager.toScVal(),
         feeReceiver.toScVal(),
@@ -221,7 +222,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
         txModal.handleError(e.toString());
         return
       }
-    } else {
+    } else if (newVault.assets[0]?.amount! > 0) {
       if (!address) throw new Error('Address not found')
       const caller = new Address(address);
       const createDefindexParams: xdr.ScVal[] = [
@@ -255,9 +256,11 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     const idleFunds = newVault.assets.map((asset, index) => {
       return {
         address: asset.address,
-        amount: newVault.amounts[index] || 0
+        amount: newVault.assets[index]?.amount || 0
       }
     })
+    const investedFunds = await getInvestedFunds(parsedResult);
+    const fees = await getFees(parsedResult)
     const tempVault: VaultData = {
       ...newVault,
       address: parsedResult,
@@ -268,6 +271,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       totalSupply: 0,
       idleFunds: idleFunds,
       investedFunds: [{ address: '', amount: 0 }],
+      fees: fees,
     }
     await txModal.handleSuccess(result.txHash);
     dispatch(pushVault(tempVault));

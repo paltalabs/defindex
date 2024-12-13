@@ -1,25 +1,6 @@
 //! Definition of the Events used in the contract
+use common::models::AssetStrategySet;
 use soroban_sdk::{contracttype, symbol_short, Address, Env, Vec};
-use crate::defindex::AssetStrategySet;
-
-// INITIALIZED
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct InitializedEvent {
-    pub admin: Address,
-    pub defindex_receiver: Address,
-    pub defindex_fee: u32,
-}
-
-pub(crate) fn emit_initialized(e: &Env, admin: Address, defindex_receiver: Address, defindex_fee: u32) {
-    let event: InitializedEvent = InitializedEvent {
-        admin,
-        defindex_receiver,
-        defindex_fee,
-    };
-    e.events()
-        .publish(("DeFindexFactory", symbol_short!("init")), event);
-}
 
 // CREATE DEFINDEX VAULT EVENT
 #[contracttype]

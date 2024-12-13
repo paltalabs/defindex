@@ -6,10 +6,9 @@ use soroban_sdk::{self, contracterror};
 pub enum ContractError {
     // Initialization Errors (10x)
     NotInitialized = 100,
-    AlreadyInitialized = 101,
-    InvalidRatio = 102,
-    StrategyDoesNotSupportAsset = 103,
-    NoAssetAllocation = 104,
+    InvalidRatio = 101,
+    StrategyDoesNotSupportAsset = 102,
+    NoAssetAllocation = 103,
 
     // Validation Errors (11x)
     NegativeNotAllowed = 110,
@@ -24,6 +23,8 @@ pub enum ContractError {
     WrongInvestmentLength = 119,
     WrongAssetAddress = 122,
     WrongStrategiesLength = 123,
+    AmountOverTotalSupply = 124,
+    NoInstructions = 125,
 
 
     // Arithmetic Errors (12x)

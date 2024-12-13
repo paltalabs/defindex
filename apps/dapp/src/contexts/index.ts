@@ -41,6 +41,8 @@ export type ModalContextType = {
   inspectVaultModal: ToggleModalProps,
   interactWithVaultModal: ToggleModalProps,
   editVaultModal: ToggleModalProps,
+  rebalanceVaultModal: ToggleModalProps,
+  investStrategiesModal: ToggleModalProps,
 
 };
 export const ModalContext = React.createContext<ModalContextType>({
@@ -75,6 +77,14 @@ export const ModalContext = React.createContext<ModalContextType>({
     setIsOpen: () => {},
   },
   editVaultModal: {
+    isOpen: false,
+    setIsOpen: () => {},
+  },
+  rebalanceVaultModal: {
+    isOpen: false,
+    setIsOpen: () => {},
+  },
+  investStrategiesModal: {
     isOpen: false,
     setIsOpen: () => {},
   },

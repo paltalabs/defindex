@@ -27,6 +27,7 @@ import {
 import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io'
 import { Asset } from '@/store/lib/types'
 import { InfoTip } from '../ui/toggle-tip'
+import { NumberInputField, NumberInputRoot } from '../ui/number-input'
 
 
 export enum AccordionItems {
@@ -123,6 +124,7 @@ const CustomInputField = ({
             <IconButton
               aria-label='Connected address'
               size={'sm'}
+              variant={'ghost'}
               onClick={() => handleClick(address!)}
             >
               <FaRegPaste />
@@ -181,8 +183,7 @@ export const dropdownData = {
 export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue, setAccordionValue, formControl, setFormControl }) => {
 
   const dispatch = useAppDispatch()
-  const amounts = useAppSelector(state => state.newVault.amounts)
-
+  const newVault = useAppSelector(state => state.newVault)
   const handleManagerChange = (input: string) => {
     const isValid = isValidAddress(input)
     while (!isValid) {
@@ -260,10 +261,6 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
     if (input < 0 || input > 100) return
     const decimalRegex = /^(\d+)?(\.\d{0,2})?$/
     if (!decimalRegex.test(input)) return
-    if (input.startsWith('.')) {
-      setFormControl({ ...formControl, vaultShare: 0 + input });
-      return
-    }
     setFormControl({
       ...formControl,
       vaultShare: input
@@ -289,7 +286,7 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
                   <Table.Cell>Name</Table.Cell>
                   <Table.Cell textAlign={'center'}>Address</Table.Cell>
                   <Table.Cell textAlign={'center'} >Asset</Table.Cell>
-                  {amounts.length > 0 && (
+                  {newVault.assets.some((asset) => asset.amount) && (
                     <Table.Cell textAlign={'center'}>Initial deposit</Table.Cell>
                   )}
                 </Table.Row>
@@ -302,8 +299,8 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
                       {asset.strategies[0]?.address ? shortenAddress(asset.strategies[0]?.address) : '-'}
                     </Table.Cell>
                     <Table.Cell textAlign={'center'}>{asset.symbol}</Table.Cell>
-                    {amounts.length > 0 && (
-                      <Table.Cell textAlign={'center'}>${amounts[index]} {asset.symbol}</Table.Cell>
+                    {(asset.amount && asset.amount > 0) && (
+                      <Table.Cell textAlign={'center'}>${asset.amount} {asset.symbol}</Table.Cell>
                     )}
                   </Table.Row>
                 ))}
@@ -374,11 +371,12 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
               } /></Fieldset.Legend>
               <Stack w={100}>
                 <InputGroup endElement={'%'}>
-                  <Input
-                    value={formControl.vaultShare}
-                    onChange={(e) => { handleVaultShareChange(e.target.value) }}
+                  <NumberInputRoot
+                    onValueChange={(e) => { handleVaultShareChange(Number(e.value)) }}
                     required
-                  />
+                  >
+                    <NumberInputField />
+                  </NumberInputRoot>
                 </InputGroup>
               </Stack>
               <Fieldset.ErrorText>This field is required.</Fieldset.ErrorText>
