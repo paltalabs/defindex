@@ -11,7 +11,7 @@ use soroban_sdk::{
 };
 use error::FactoryError;
 pub use vault::create_contract;
-use storage::{ add_new_defindex, extend_instance_ttl, get_admin, get_vault_wasm_hash, get_defindex_receiver, get_deployed_defindexes, get_fee_rate, has_admin, put_admin, put_vault_wasm_hash, put_defindex_receiver, put_defindex_fee };
+use storage::{ add_new_defindex, extend_instance_ttl, get_admin, get_aggregator, get_defindex_receiver, get_deployed_defindexes, get_fee_rate, get_vault_wasm_hash, has_admin, put_admin, put_aggregator, put_defindex_fee, put_defindex_receiver, put_vault_wasm_hash };
 
 fn check_initialized(e: &Env) -> Result<(), FactoryError> {
     if !has_admin(e) {
@@ -37,6 +37,7 @@ pub trait FactoryTrait {
         admin: Address,
         defindex_receiver: Address,
         defindex_fee: u32,
+        soroswap_aggregator: Address,
         vault_wasm_hash: BytesN<32>
     );
 
@@ -166,6 +167,8 @@ pub trait FactoryTrait {
     /// # Returns
     /// * `Result<u32, FactoryError>` - Returns the fee rate in basis points or an error if not found.
     fn defindex_fee(e: Env) -> Result<u32, FactoryError>;
+
+    fn aggregator(e: Env) -> Result<Address, FactoryError>;
 }
 
 #[contract]
@@ -179,12 +182,14 @@ impl FactoryTrait for DeFindexFactory {
         admin: Address,
         defindex_receiver: Address,
         defindex_fee: u32,
+        soroswap_aggregator: Address,
         vault_wasm_hash: BytesN<32>
     ) {
         put_admin(&e, &admin);
         put_defindex_receiver(&e, &defindex_receiver);
         put_vault_wasm_hash(&e, vault_wasm_hash);
         put_defindex_fee(&e, &defindex_fee);
+        put_aggregator(&e, &soroswap_aggregator);
 
         extend_instance_ttl(&e);
     }
@@ -457,6 +462,12 @@ impl FactoryTrait for DeFindexFactory {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
         Ok(get_fee_rate(&e))
+    }
+
+    fn aggregator(e: Env) -> Result<Address, FactoryError> {
+        check_initialized(&e)?;
+        extend_instance_ttl(&e);
+        Ok(get_aggregator(&e))
     }
 }
 

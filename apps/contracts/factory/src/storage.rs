@@ -11,6 +11,7 @@ pub enum DataKey {
     DeFindexReceiver,
     DeFindexesMap,
     FeeRate,
+    Aggregator
 }
 
 const DAY_IN_LEDGERS: u32 = 17280;
@@ -105,4 +106,13 @@ pub fn put_defindex_fee(e: &Env, value: &u32) {
 
 pub fn get_fee_rate(e: &Env) -> u32 {
     e.storage().instance().get(&DataKey::FeeRate).unwrap()
+}
+
+// Soroswap Aggregator
+pub fn put_aggregator(e: &Env, address: &Address) {
+    e.storage().instance().set(&DataKey::Aggregator, address);
+}
+
+pub fn get_aggregator(e: &Env) -> Address {
+    e.storage().instance().get(&DataKey::Aggregator).unwrap()
 }
