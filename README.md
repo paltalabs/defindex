@@ -122,6 +122,16 @@ flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0
 This will launch the example app on the port 8080 of your localhost. so you can go to
 `http://localhost:8080` to see the app.
 
+If you are getting the folowing error:
+```
+[+] Running 0/0
+ ⠋ Container dart-defindex  Starting     0.0s 
+Error response from daemon: network 9b51654ecff85fb4a6176438b85fc52f19e12f994427193e5c35bad48c9c7917 not found
+```
+You need to do 
+```
+docker rm dart-defindex
+```
 
 ### Publish dart package
 This is published on https://pub.dev/packages/defindex_sdk
