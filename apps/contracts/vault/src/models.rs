@@ -56,6 +56,8 @@ pub struct SwapDetailsExactIn {
     pub amount_out_min: i128,
     pub distribution: Vec<DexDistribution>,
     pub deadline: u64,
+    pub router: Address,
+    pub pair: Address,
 }
 
 #[contracttype]

@@ -437,6 +437,7 @@ export interface SwapDetailsExactIn {
     distribution: Array<DexDistribution>;
     token_in: string;
     token_out: string;
+    router: Address;
 }
 
 

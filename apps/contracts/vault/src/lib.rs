@@ -750,11 +750,12 @@ impl VaultManagementTrait for DeFindexVault {
                     OptionalSwapDetailsExactIn::Some(swap_details) => {
                         internal_swap_exact_tokens_for_tokens(
                             &e,
+                            &swap_details.router,
+                            &swap_details.pair,
                             &swap_details.token_in,
                             &swap_details.token_out,
                             &swap_details.amount_in,
                             &swap_details.amount_out_min,
-                            &swap_details.distribution,
                             &swap_details.deadline,
                         )?;
                     }

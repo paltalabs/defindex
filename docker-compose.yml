@@ -9,9 +9,9 @@ services:
       - defindex-network
     command: tail -f /dev/null
     ports:
-      - "3000:3000"
-      - "3010:3010"
-      - "3050:3050"
+      - "3001:300"
+      - "3011:3010"
+      - "3051:3050"
 
   stellar:
     image: stellar/quickstart
@@ -19,7 +19,7 @@ services:
     networks:
       - defindex-network
     ports:
-      - "8000:8000"
+      - "8000:8001"
     command: --local --protocol-version 22
     stdin_open: true
     tty: true

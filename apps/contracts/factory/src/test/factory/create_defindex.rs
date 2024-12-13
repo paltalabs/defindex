@@ -10,7 +10,7 @@ fn create_success() {
 
   let salt = BytesN::from_array(&test.env, &[0; 32]);
 
-  test.factory_contract.create_defindex_vault(
+  test.factory_contract.create_defindex_vault( 
     &test.emergency_manager, 
     &test.fee_receiver,
     &2000u32,
