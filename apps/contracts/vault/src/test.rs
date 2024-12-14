@@ -6,6 +6,8 @@ use soroban_sdk::token::{
 use soroban_sdk::Val;
 use soroban_sdk::{testutils::Address as _, vec as sorobanvec, Address, Env, String, Vec};
 use std::vec;
+use soroswap_setup::{create_soroswap_aggregator, create_soroswap_factory, create_soroswap_pool, create_soroswap_router, SoroswapFactoryClient, SoroswapRouterClient};
+
 
 // DeFindex Hodl Strategy Contract
 pub mod hodl_strategy {
@@ -117,12 +119,15 @@ pub struct DeFindexVaultTest<'a> {
     manager: Address,
     strategy_client_token0: HodlStrategyClient<'a>,
     strategy_client_token1: HodlStrategyClient<'a>,
+    soroswap_router: SoroswapRouterClient<'a>,
+    soroswap_factory: SoroswapFactoryClient<'a>,
+    soroswap_pair: Address,
 }
 
 impl<'a> DeFindexVaultTest<'a> {
     fn setup() -> Self {
         let env = Env::default();
-        // env.mock_all_auths();
+        env.mock_all_auths();
 
         // Mockup, should be the factory contract
         let defindex_factory = Address::generate(&env);
@@ -147,6 +152,20 @@ impl<'a> DeFindexVaultTest<'a> {
         let strategy_client_token1 = create_hodl_strategy(&env, &token1.address);
 
         env.budget().reset_unlimited();
+
+        // Soroswap Setup
+        let soroswap_admin = Address::generate(&env);
+
+        token0_admin_client.mint(&soroswap_admin, &9900_0_000_000);
+        token1_admin_client.mint(&soroswap_admin, &1770_5_698_535);
+
+        let soroswap_factory = create_soroswap_factory(&env, &soroswap_admin);
+        let soroswap_router = create_soroswap_router(&env, &soroswap_factory.address);
+        create_soroswap_pool(&env, &soroswap_router, &soroswap_admin, &token0.address, &token1.address, &9900_0_000_000, &1770_5_698_535);
+        let soroswap_pair = soroswap_factory.get_pair(&token0.address, &token1.address);
+
+        let soroswap_aggregator = create_soroswap_aggregator(&env, &soroswap_admin, &soroswap_router.address);
+        
         
         DeFindexVaultTest {
             env,
@@ -163,6 +182,9 @@ impl<'a> DeFindexVaultTest<'a> {
             manager,
             strategy_client_token0,
             strategy_client_token1,
+            soroswap_router,
+            soroswap_factory,
+            soroswap_pair,
         }
     }
 
@@ -176,3 +198,5 @@ impl<'a> DeFindexVaultTest<'a> {
 }
 
 mod vault;
+mod soroswap_setup;
+mod swap;
