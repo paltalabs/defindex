@@ -229,7 +229,7 @@ class Vault {
       if (simulateResponse.results != null && simulateResponse.results!.isNotEmpty) {
         String? xdrValue = simulateResponse.results![0].xdr;
         XdrSCVal xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(xdrValue!);
-        dfBalance = BigInt.from(xdrSCVal.i128!.lo.uint64!).toDouble() / 10000000; 
+        dfBalance = BigInt.from(xdrSCVal.i128!.lo.uint64).toDouble() / 10000000; 
       }
 
       dynamic totalManagedFunds = await fetchTotalManagedFunds();
@@ -274,7 +274,7 @@ class Vault {
         
         XdrSCVal xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(xdrValue!);
         
-        return BigInt.from(xdrSCVal.i128!.lo.uint64!).toDouble();
+        return BigInt.from(xdrSCVal.i128!.lo.uint64).toDouble();
       }
     }
     
@@ -315,9 +315,7 @@ class Vault {
           Map<String, dynamic> parsedMap = parseMap(xdrSCVal);
           return parsedMap;
         } catch (e) {
-          print("Error parsing managed funds: $e");
-          print("Error stack trace: ${e.toString()}");
-          return null;
+          throw Exception('Unsupported type: ${xdrSCVal.discriminant}');
         }
       }
     }
@@ -346,17 +344,17 @@ dynamic parseScVal(XdrSCVal val) {
     case XdrSCValType.SCV_BOOL:
       return val.b;
     case XdrSCValType.SCV_U32:
-      return BigInt.from(val.u32!.uint32!).toDouble();
+      return BigInt.from(val.u32!.uint32).toDouble();
     case XdrSCValType.SCV_I32:
-      return BigInt.from(val.i32!.int32!).toDouble();
+      return BigInt.from(val.i32!.int32).toDouble();
     case XdrSCValType.SCV_U64:
-      return BigInt.from(val.u64!.uint64!).toDouble();
+      return BigInt.from(val.u64!.uint64).toDouble();
     case XdrSCValType.SCV_I64:
-      return BigInt.from(val.i64!.int64!).toDouble();
+      return BigInt.from(val.i64!.int64).toDouble();
     case XdrSCValType.SCV_U128:
-      return BigInt.from(val.u128!.lo.uint64!).toDouble();
+      return BigInt.from(val.u128!.lo.uint64).toDouble();
     case XdrSCValType.SCV_I128:
-      return BigInt.from(val.i128!.lo.uint64!).toDouble();
+      return BigInt.from(val.i128!.lo.uint64).toDouble();
     case XdrSCValType.SCV_STRING:
       return val.str;
     case XdrSCValType.SCV_BYTES:
