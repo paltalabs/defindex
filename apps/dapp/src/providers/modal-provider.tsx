@@ -35,6 +35,7 @@ export const ModalProvider = ({
     setTransactionStatusModalOperation('')
     setTransactionStatusModalError('')
     setTxHash('')
+    setIsInspectVaultModalOpen(false)
   }
 
   const handleFirstStep = setTimeout(() => setTransactionStatusModalStep(1), 3000)
