@@ -66,15 +66,22 @@ class Vault {
       int transformedValue = bigIntValue.toInt();
 
       // Prepare the argument (Symbol)
-      XdrSCVal arg1 = XdrSCVal.forI128(
+      XdrSCVal amountSCVal = XdrSCVal.forI128(
           XdrInt128Parts(XdrInt64(0), XdrUint64(transformedValue)));
 
-      XdrSCVal arg2 = XdrSCVal.forAddress(XdrSCAddress.forAccountId(accountId));
+      XdrSCVal minAmountScVal = XdrSCVal.forI128(
+          XdrInt128Parts(XdrInt64(0), XdrUint64(0))
+      );
+
+      XdrSCVal arg1 = XdrSCVal.forVec([amountSCVal]);
+      XdrSCVal arg2 = XdrSCVal.forVec([minAmountScVal]);
+      XdrSCVal arg3 = XdrSCVal.forAddress(XdrSCAddress.forAccountId(accountId));
+      XdrSCVal arg4 = XdrSCVal.forBool(true);
 
       // Prepare the "invoke" operation
       InvokeContractHostFunction hostFunction = InvokeContractHostFunction(
           contractId, functionName,
-          arguments: [arg1, arg2]);
+          arguments: [arg1, arg2, arg3, arg4]);
 
       InvokeHostFunctionOperation operation =
           InvokeHostFuncOpBuilder(hostFunction).build();
@@ -122,7 +129,9 @@ class Vault {
   }
 
   Future<String?> withdraw(
-      String accountId, Future<String> Function(String) signer) async {
+      double amount,
+      String accountId, 
+      Future<String> Function(String) signer) async {
     sorobanServer.enableLogging = true;
 
     GetHealthResponse healthResponse = await sorobanServer.getHealth();
@@ -132,12 +141,23 @@ class Vault {
       // Name of the function to be invoked
       String functionName = "widthdraw";
 
-      XdrSCVal arg1 = XdrSCVal.forAddress(XdrSCAddress.forAccountId(accountId));
+      // Determine the number of digits to multiply to achieve at least 7 digits in the decimal place
+      int factor = 10000000;
 
+      // Multiply the value by the factor and convert to int
+      BigInt bigIntValue = BigInt.from(amount * factor);
+
+      int transformedValue = bigIntValue.toInt();
+
+      // Prepare the argument (Symbol)
+      XdrSCVal arg1 = XdrSCVal.forI128(
+          XdrInt128Parts(XdrInt64(0), XdrUint64(transformedValue)));
+
+      XdrSCVal arg2 = XdrSCVal.forAddress(XdrSCAddress.forAccountId(accountId));
       // Prepare the "invoke" operation
       InvokeContractHostFunction hostFunction = InvokeContractHostFunction(
           contractId, functionName,
-          arguments: [arg1]);
+          arguments: [arg1, arg2]);
 
       InvokeHostFunctionOperation operation =
           InvokeHostFuncOpBuilder(hostFunction).build();
