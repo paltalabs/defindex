@@ -33,7 +33,11 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
-
+  var vault = Vault(
+    sorobanRPCUrl: 'https://soroban-testnet.stellar.org',
+    network: SorobanNetwork.TESTNET,
+    contractId: 'CC4J2YNRVGDUWEUVIFHTPGKDA4QMOM6RJAP4S4P7PTI3O4Q6RRHVXELH',
+  );
   void _incrementCounter() {
     setState(() {
       _counter++;
@@ -42,12 +46,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _executeDeposit() async {
     try {
-      var vault = Vault(
-        sorobanRPCUrl: 'https://soroban-testnet.stellar.org',
-        network: SorobanNetwork.TESTNET,
-        contractId: 'CC4J2YNRVGDUWEUVIFHTPGKDA4QMOM6RJAP4S4P7PTI3O4Q6RRHVXELH',
-      );
-
       String? transactionHash = await vault.deposit(
         'GCGKMP4VMPGECGWBMFTA5663QBNYFMO5QG7WPWKYTHWFEJVTNZNAVVR7',
         100.0,
@@ -70,12 +68,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _executeWithdraw() async {
   try {
-    var vault = Vault(
-      sorobanRPCUrl: 'https://soroban-testnet.stellar.org',
-      network: SorobanNetwork.TESTNET,
-      contractId: 'CC4J2YNRVGDUWEUVIFHTPGKDA4QMOM6RJAP4S4P7PTI3O4Q6RRHVXELH',
-    );
-
     String? transactionHash = await vault.withdraw(
       100.0,
       'GCGKMP4VMPGECGWBMFTA5663QBNYFMO5QG7WPWKYTHWFEJVTNZNAVVR7',
@@ -111,6 +103,22 @@ class _MyHomePageState extends State<MyHomePage> {
             Text(
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            SizedBox(height: 20),
+            FutureBuilder<double?>(
+              future: vault.balance('GCGKMP4VMPGECGWBMFTA5663QBNYFMO5QG7WPWKYTHWFEJVTNZNAVVR7'),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else {
+                  return Text(
+                    'Balance: ${snapshot.data ?? 0.0} XLM',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  );
+                }
+              },
             ),
             SizedBox(height: 20),
             ElevatedButton(

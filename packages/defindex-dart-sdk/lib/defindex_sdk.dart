@@ -139,7 +139,7 @@ class Vault {
     if (GetHealthResponse.HEALTHY == healthResponse.status) {
       AccountResponse account = await sdk.accounts.account(accountId);
       // Name of the function to be invoked
-      String functionName = "widthdraw";
+      String functionName = "withdraw";
 
       // Determine the number of digits to multiply to achieve at least 7 digits in the decimal place
       int factor = 10000000;
@@ -198,19 +198,19 @@ class Vault {
     return null;
   }
 
-  Future<double?> totalBalance(String accountId) async {
+  Future<double?> balance(String accountId) async {
     sorobanServer.enableLogging = true;
 
     GetHealthResponse healthResponse = await sorobanServer.getHealth();
 
+    double dfBalance = 0;
+
     if (GetHealthResponse.HEALTHY == healthResponse.status) {
       AccountResponse account = await sdk.accounts.account(accountId);
-      // Name of the function to be invoked
-      String functionName = "read_balance";
+      String functionName = "balance";
 
       XdrSCVal arg1 = XdrSCVal.forAddress(XdrSCAddress.forAccountId(accountId));
 
-      // Prepare the "invoke" operation
       InvokeContractHostFunction hostFunction = InvokeContractHostFunction(
           contractId, functionName,
           arguments: [arg1]);
@@ -226,23 +226,150 @@ class Vault {
       SimulateTransactionResponse simulateResponse =
           await sorobanServer.simulateTransaction(request);
 
-      double balance = 0;
+      if (simulateResponse.results != null && simulateResponse.results!.isNotEmpty) {
+        String? xdrValue = simulateResponse.results![0].xdr;
+        XdrSCVal xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(xdrValue!);
+        dfBalance = BigInt.from(xdrSCVal.i128!.lo.uint64!).toDouble() / 10000000; 
+      }
 
-      simulateResponse.results!.forEach((element) {
-        XdrSCVal resVal = element.resultValue!;
+      dynamic totalManagedFunds = await fetchTotalManagedFunds();
+      double totalAmount = totalManagedFunds.values.first["total_amount"];
+      double? totalSupplySim = await totalSupply();
 
-        List<XdrSCVal>? vec = resVal.vec;
-
-        if (vec != null) {
-          if (vec[0].i128?.lo.uint64 != null) {
-            balance = balance + (vec[0].i128?.lo.uint64 ?? 0) / 10000000;
-          }
-        }
-      });
-
-      return balance;
+      return dfBalance*totalAmount/totalSupplySim!;
     }
-
     return 0;
+  }
+
+  Future<double?> totalSupply() async {
+    sorobanServer.enableLogging = true;
+
+    GetHealthResponse healthResponse = await sorobanServer.getHealth();
+    
+    if (GetHealthResponse.HEALTHY == healthResponse.status) {
+      // We'll use the contract's address as the account for this read-only operation
+      AccountResponse account = await sdk.accounts.account("GAHSP3MM23XG6L3AUBYXTRQWLC2Q6SWM6OCMCIAYV43CE2IXYSRARFDD");
+      
+      // Name of the function to be invoked
+      String functionName = "total_supply";
+
+      // Prepare the "invoke" operation - no arguments needed for total_supply
+      InvokeContractHostFunction hostFunction = InvokeContractHostFunction(
+          contractId, functionName,
+          arguments: []);
+
+      InvokeHostFunctionOperation operation =
+          InvokeHostFuncOpBuilder(hostFunction).build();
+
+      Transaction transaction =
+          TransactionBuilder(account).addOperation(operation).build();
+
+      var request = SimulateTransactionRequest(transaction);
+
+      SimulateTransactionResponse simulateResponse =
+          await sorobanServer.simulateTransaction(request);
+
+      if (simulateResponse.results != null && simulateResponse.results!.isNotEmpty) {
+        String? xdrValue = simulateResponse.results![0].xdr;
+        
+        XdrSCVal xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(xdrValue!);
+        
+        return BigInt.from(xdrSCVal.i128!.lo.uint64!).toDouble();
+      }
+    }
+    
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> fetchTotalManagedFunds() async {
+    sorobanServer.enableLogging = true;
+
+    GetHealthResponse healthResponse = await sorobanServer.getHealth();
+    
+    if (GetHealthResponse.HEALTHY == healthResponse.status) {
+      AccountResponse account = await sdk.accounts.account("GAHSP3MM23XG6L3AUBYXTRQWLC2Q6SWM6OCMCIAYV43CE2IXYSRARFDD");
+      
+      String functionName = "fetch_total_managed_funds";
+
+      InvokeContractHostFunction hostFunction = InvokeContractHostFunction(
+          contractId, functionName,
+          arguments: []);
+
+      InvokeHostFunctionOperation operation =
+          InvokeHostFuncOpBuilder(hostFunction).build();
+
+      Transaction transaction =
+          TransactionBuilder(account).addOperation(operation).build();
+
+      var request = SimulateTransactionRequest(transaction);
+
+      SimulateTransactionResponse simulateResponse =
+          await sorobanServer.simulateTransaction(request);
+
+      if (simulateResponse.results != null && simulateResponse.results!.isNotEmpty) {
+        String? xdrValue = simulateResponse.results![0].xdr;
+
+        XdrSCVal xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(xdrValue!);
+
+        try {
+          Map<String, dynamic> parsedMap = parseMap(xdrSCVal);
+          return parsedMap;
+        } catch (e) {
+          print("Error parsing managed funds: $e");
+          print("Error stack trace: ${e.toString()}");
+          return null;
+        }
+      }
+    }
+    
+    return null;
+  }
+}
+
+Map<String, dynamic> parseMap(XdrSCVal scval) {
+  if (scval.discriminant != XdrSCValType.SCV_MAP) {
+    throw Exception('Expected Map type, got ${scval.discriminant}');
+  }
+
+  Map<String, dynamic> result = {};
+  for (var entry in scval.map!) {
+    String key = parseScVal(entry.key);
+    dynamic value = parseScVal(entry.val);
+    
+    result[key] = value;
+  }
+  return result;
+}
+
+dynamic parseScVal(XdrSCVal val) {
+  switch (val.discriminant) {
+    case XdrSCValType.SCV_BOOL:
+      return val.b;
+    case XdrSCValType.SCV_U32:
+      return BigInt.from(val.u32!.uint32!).toDouble();
+    case XdrSCValType.SCV_I32:
+      return BigInt.from(val.i32!.int32!).toDouble();
+    case XdrSCValType.SCV_U64:
+      return BigInt.from(val.u64!.uint64!).toDouble();
+    case XdrSCValType.SCV_I64:
+      return BigInt.from(val.i64!.int64!).toDouble();
+    case XdrSCValType.SCV_U128:
+      return BigInt.from(val.u128!.lo.uint64!).toDouble();
+    case XdrSCValType.SCV_I128:
+      return BigInt.from(val.i128!.lo.uint64!).toDouble();
+    case XdrSCValType.SCV_STRING:
+      return val.str;
+    case XdrSCValType.SCV_BYTES:
+      return val.bytes;
+    case XdrSCValType.SCV_ADDRESS:
+      return val.address.toString();
+    case XdrSCValType.SCV_SYMBOL:
+      return val.sym;
+    case XdrSCValType.SCV_VEC:
+      return val.vec?.map((e) => parseScVal(e)).toList();
+    case XdrSCValType.SCV_MAP:
+      return parseMap(val);
+    default:
+      throw Exception('Unsupported type: ${val.discriminant}');
   }
 }
