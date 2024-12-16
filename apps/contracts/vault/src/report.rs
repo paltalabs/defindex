@@ -1,23 +1,22 @@
 use soroban_sdk::{Address, Env};
 
-use crate::funds::fetch_strategy_invested_funds;
+use crate::storage::{get_gains_or_losses, get_prev_balance, set_gains_or_losses, set_prev_balance};
 
-pub fn report(e: &Env, strategy: Address) -> (i128, i128) {
-    let current_balance = fetch_strategy_invested_funds(e, &strategy);
-    let prev_balance = get_prev_balance(strategy);
-    let previous_gains_or_losses = get_gains_or_losses(strategy);
+pub fn report(e: &Env, strategy: &Address, current_balance: &i128) -> (i128, i128) {
+    let prev_balance = get_prev_balance(e, strategy);
+    let previous_gains_or_losses = get_gains_or_losses(e, strategy);
     
     let gains_or_losses = current_balance - prev_balance;
     let current_gains_or_losses = previous_gains_or_losses + gains_or_losses;
     
-    store_gains_or_losses(strategy, current_gains_or_losses);
-    store_prev_balance(strategy, current_balance);
+    set_gains_or_losses(e, &strategy, &current_gains_or_losses);
+    set_prev_balance(e, &strategy, &current_balance);
 
-    (0,0)
+    (current_balance.clone(), current_gains_or_losses)
 }
 
-pub fn report_all_strategies() {
-    for strategy in strategies {
-        report(strategy);
-    }
-}
+// pub fn report_all_strategies() {
+//     for strategy in strategies {
+//         report(strategy);
+//     }
+// }

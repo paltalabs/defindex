@@ -5,6 +5,8 @@ use common::models::AssetStrategySet;
 const DAY_IN_LEDGERS: u32 = 17280;
 const INSTANCE_BUMP_AMOUNT: u32 = 30 * DAY_IN_LEDGERS;
 const INSTANCE_LIFETIME_THRESHOLD: u32 = INSTANCE_BUMP_AMOUNT - DAY_IN_LEDGERS;
+const LEDGER_BUMP: u32 = 120 * DAY_IN_LEDGERS;
+const LEDGER_THRESHOLD: u32 = LEDGER_BUMP - 20 * DAY_IN_LEDGERS;
 
 pub fn extend_instance_ttl(e: &Env) {
     e.storage()
@@ -22,9 +24,9 @@ enum DataKey {
     Factory,
     LastFeeAssessment,
     VaultFee,
+    PrevBalance(Address), // Previous balance of a strategy
+    GainsOrLosses(Address) // Gains or Losses per Strategy
 }
-
-
 
 // Assets Management
 pub fn set_asset(e: &Env, index: u32, asset: &AssetStrategySet) {
@@ -112,4 +114,50 @@ pub fn get_vault_fee(e: &Env) -> u32 {
         .instance()
         .get(&DataKey::VaultFee)
         .unwrap()
+}
+
+// Strategy Previous Balance
+pub fn set_prev_balance(e: &Env, strategy_address: &Address, balance: &i128) {
+    let key = DataKey::PrevBalance(strategy_address.clone());
+    e.storage().persistent().set::<DataKey, i128>(&key, &balance);
+    e.storage()
+        .persistent()
+        .extend_ttl(&key, LEDGER_THRESHOLD, LEDGER_BUMP);
+}
+
+pub fn get_prev_balance(e: &Env, strategy_address: &Address) -> i128 {
+    let key = DataKey::PrevBalance(strategy_address.clone());
+    let result = e.storage().persistent().get::<DataKey, i128>(&key);
+    match result {
+        Some(balance) => {
+            e.storage()
+                .persistent()
+                .extend_ttl(&key, LEDGER_THRESHOLD, LEDGER_BUMP);
+            balance
+        }
+        None => 0,
+    }
+}
+
+// Gain or Losses per Strategy
+pub fn set_gains_or_losses(e: &Env, strategy_address: &Address, value: &i128) {
+    let key = DataKey::GainsOrLosses(strategy_address.clone());
+    e.storage().persistent().set::<DataKey, i128>(&key, &value);
+    e.storage()
+        .persistent()
+        .extend_ttl(&key, LEDGER_THRESHOLD, LEDGER_BUMP);
+}
+
+pub fn get_gains_or_losses(e: &Env, strategy_address: &Address) -> i128 {
+    let key = DataKey::GainsOrLosses(strategy_address.clone());
+    let result = e.storage().persistent().get::<DataKey, i128>(&key);
+    match result {
+        Some(gnl) => {
+            e.storage()
+                .persistent()
+                .extend_ttl(&key, LEDGER_THRESHOLD, LEDGER_BUMP);
+            gnl
+        }
+        None => 0,
+    }
 }

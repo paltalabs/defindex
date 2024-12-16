@@ -1,4 +1,5 @@
 #![no_std]
+use report::report;
 use soroban_sdk::{
     contract, contractimpl, panic_with_error,
     token::TokenClient,
@@ -400,8 +401,7 @@ impl VaultTrait for DeFindexVault {
         let strategy_balance = strategy_client.balance(&e.current_contract_address());
 
         if strategy_balance > 0 {
-            strategy_client.withdraw(&strategy_balance, &e.current_contract_address());
-
+            unwind_from_strategy(&e, &strategy_address, &strategy_balance)?;
             //TODO: Should we check if the idle funds are corresponding to the strategy balance withdrawed?
         }
 
