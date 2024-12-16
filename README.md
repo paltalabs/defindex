@@ -117,6 +117,7 @@ docker exec -it dart-defindex bash
 Then you can launch the example app by running:
 ```sh
 cd example
+flutter pub get
 flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0
 ```
 This will launch the example app on the port 8080 of your localhost. so you can go to
