@@ -20,7 +20,7 @@ export enum VaultMethod {
     TOTALMANAGEDFUNDS = "fetch_total_managed_funds",
     TOTALSUPPLY = "total_supply",
     GETASSETS = "get_assets",
-    GETASSETAMMOUNT = "get_asset_amounts_for_dftokens",
+    GETASSETAMMOUNT = "get_asset_amounts_per_shares",
     GETIDLEFUNDS = "fetch_current_idle_funds",
     GETINVESTEDFUNDS = "fetch_current_invested_funds",
     SETFEERECIEVER = "set_fee_receiver",
