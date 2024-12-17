@@ -33,7 +33,11 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
-
+  var vault = Vault(
+    sorobanRPCUrl: 'https://soroban-testnet.stellar.org',
+    network: SorobanNetwork.TESTNET,
+    contractId: 'CC4J2YNRVGDUWEUVIFHTPGKDA4QMOM6RJAP4S4P7PTI3O4Q6RRHVXELH',
+  );
   void _incrementCounter() {
     setState(() {
       _counter++;
@@ -42,14 +46,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _executeDeposit() async {
     try {
-      var vault = Vault(
-        sorobanRPCUrl: 'https://soroban-testnet.stellar.org',
-        network: SorobanNetwork.TESTNET,
-        contractId: 'CD76H2IVRMRMLE4KZXLAVK3L3CO7PENUB3X4VB2FQVUAFVAJMQYQIFDE',
-      );
-
       String? transactionHash = await vault.deposit(
-        'GCW36WQUHJASZVNFIIL7VZQWL6Q72XT6TAU6N3XMFGTLSNE2L7LMJNWT',
+        'GCGKMP4VMPGECGWBMFTA5663QBNYFMO5QG7WPWKYTHWFEJVTNZNAVVR7',
         100.0,
         (transaction) async => signerFunction(transaction),
       );
@@ -68,6 +66,28 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future<void> _executeWithdraw() async {
+  try {
+    String? transactionHash = await vault.withdraw(
+      100.0,
+      'GCGKMP4VMPGECGWBMFTA5663QBNYFMO5QG7WPWKYTHWFEJVTNZNAVVR7',
+      (transaction) async => signerFunction(transaction),
+    );
+
+    print('Transaction hash: $transactionHash');
+
+    // You can also show a dialog or snackbar with the result
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Transaction hash: $transactionHash')),
+    );
+  } catch (error) {
+    print('Error: $error');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error during deposit: $error')),
+    );
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,9 +105,30 @@ class _MyHomePageState extends State<MyHomePage> {
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             SizedBox(height: 20),
+            FutureBuilder<double?>(
+              future: vault.balance('GCGKMP4VMPGECGWBMFTA5663QBNYFMO5QG7WPWKYTHWFEJVTNZNAVVR7'),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else {
+                  return Text(
+                    'Balance: ${snapshot.data ?? 0.0} XLM',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  );
+                }
+              },
+            ),
+            SizedBox(height: 20),
             ElevatedButton(
               onPressed: _executeDeposit,
               child: const Text('Execute Deposit'),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _executeWithdraw,
+              child: const Text('Execute Withdraw'),
             ),
           ],
         ),
@@ -122,7 +163,7 @@ String signerFunction(String transactionXdr) {
   );
   
   // Create keypair and sign
-  KeyPair keyPair = KeyPair.fromSecretSeed("SC352W6PEHWSHYKP5IYO3HWAEVGLTVLZW5WE3UXPWSGKBST5K6DKRT7F");
+  KeyPair keyPair = KeyPair.fromSecretSeed("SDI5ZSGJBJS2BD7PE7MPA6EXHUPJQM7I6TX5SB63HSSSZVD47OYE5X6X");
   transaction.sign(keyPair, Network.TESTNET);
   
   // Return signed XDR

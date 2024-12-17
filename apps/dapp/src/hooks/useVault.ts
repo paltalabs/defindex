@@ -20,7 +20,7 @@ export enum VaultMethod {
     TOTALMANAGEDFUNDS = "fetch_total_managed_funds",
     TOTALSUPPLY = "total_supply",
     GETASSETS = "get_assets",
-    GETASSETAMMOUNT = "get_asset_amounts_for_dftokens",
+    GETASSETAMMOUNT = "get_asset_amounts_per_shares",
     GETIDLEFUNDS = "fetch_current_idle_funds",
     GETINVESTEDFUNDS = "fetch_current_invested_funds",
     SETFEERECIEVER = "set_fee_receiver",
@@ -157,10 +157,18 @@ export const useVault = (vaultAddress?: string | undefined) => {
         console.error(error);
         }
     }
+    interface TotalManagedFunds {
+        asset: string;
+        idle_amounts: number;
+        invested_amounts: number;
+        strategy_allocation: any[];
+        total_amount: number;
+    }
+
     const getTVL = async (selectedVault: string) => {
         try {
         const totalValues = await vault(VaultMethod.TOTALMANAGEDFUNDS, selectedVault, undefined, false).then((res: any) => scValToNative(res));
-        const value = Object.values(totalValues)[0];
+        const {total_amount:value} = Object.values(totalValues)[0] as TotalManagedFunds;
         const parsedValue = Number(value) / 10 ** 7;
         return parsedValue;
         } catch (error) {
