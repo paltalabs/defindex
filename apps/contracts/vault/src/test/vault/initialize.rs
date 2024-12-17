@@ -1,24 +1,24 @@
 use soroban_sdk::{vec as sorobanvec, String, Vec};
 
 use crate::test::{
-    create_defindex_vault, create_strategy_params_token0, create_strategy_params_token1, defindex_vault::AssetStrategySet, DeFindexVaultTest
+    create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1, defindex_vault::AssetStrategySet, DeFindexVaultTest
 };
 
 
 #[test]
 fn get_roles() {
     let test = DeFindexVaultTest::setup();
-    let strategy_params_token0 = create_strategy_params_token0(&test);
-    let strategy_params_token1 = create_strategy_params_token1(&test);
+    let strategy_params_token_0 = create_strategy_params_token_0(&test);
+    let strategy_params_token_1 = create_strategy_params_token_1(&test);
     let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
         AssetStrategySet {
-            address: test.token0.address.clone(),
-            strategies: strategy_params_token0.clone()
+            address: test.token_0.address.clone(),
+            strategies: strategy_params_token_0.clone()
         },
         AssetStrategySet {
-            address: test.token1.address.clone(),
-            strategies: strategy_params_token1.clone()
+            address: test.token_1.address.clone(),
+            strategies: strategy_params_token_1.clone()
         }
     ];
 
@@ -50,17 +50,17 @@ fn get_roles() {
 #[should_panic(expected = "HostError: Error(Context, InvalidAction)")]
 fn deploy_unsupported_strategy() {
     let test = DeFindexVaultTest::setup();
-    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token_0 = create_strategy_params_token_0(&test);
 
     let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
         AssetStrategySet {
-            address: test.token0.address.clone(),
-            strategies: strategy_params_token0.clone()
+            address: test.token_0.address.clone(),
+            strategies: strategy_params_token_0.clone()
         },
         AssetStrategySet {
-            address: test.token1.address.clone(),
-            strategies: strategy_params_token0.clone() // Here Strategy 0 supports token0
+            address: test.token_1.address.clone(),
+            strategies: strategy_params_token_0.clone() // Here Strategy 0 supports token_0
         }
     ];
 
@@ -83,7 +83,7 @@ fn deploy_unsupported_strategy() {
 #[should_panic(expected = "HostError: Error(Context, InvalidAction)")]
 fn initialize_with_empty_asset_allocation() {
     let test = DeFindexVaultTest::setup();
-    // let strategy_params_token0 = create_strategy_params_token0(&test);
+    // let strategy_params_token_0 = create_strategy_params_token_0(&test);
 
     let assets: Vec<AssetStrategySet> = sorobanvec![&test.env];
 
