@@ -45,6 +45,7 @@ fn calculate_fees(e: &Env, time_elapsed: u64, fee_rate: u32) -> Result<i128, Con
 }
 
 /// Collects and mints fees in dfTokens, distributing them to the appropriate fee receivers.
+/// TODO: REMOVE ALL MANAGEMENT FEE LOGIC
 pub fn collect_fees(e: &Env) -> Result<(), ContractError> {
     let current_timestamp = e.ledger().timestamp();
     // If last_fee_assesment was not set yet, this will be set to the current timestamp

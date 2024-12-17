@@ -213,8 +213,17 @@ pub trait VaultTrait {
     
     fn get_fees(e: Env) -> (u32, u32);
 
-    /// Collects the fees from the vault and transfers them to the fee receiver addresses. 
-    fn collect_fees(e: Env) -> Result<(), ContractError>;
+    /// Reports the gains or losses for all strategies in the vault based on their current balances.
+    ///
+    /// This function iterates through all the strategies managed by the vault and calculates the gains or losses
+    /// for each strategy based on their current balances. It updates the vault's records accordingly.
+    ///
+    /// # Arguments
+    /// * `e` - A reference to the environment.
+    ///
+    /// # Returns TODO:
+    fn report(e: Env) -> Result<Vec<(Address, (i128, i128))>, ContractError>;
+    
 }
 
 pub trait AdminInterfaceTrait {

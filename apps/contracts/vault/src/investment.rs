@@ -124,7 +124,6 @@ pub fn check_and_execute_investments(
 /// # Notes
 /// - This function does not execute the investments; it only prepares the allocations.
 /// - It assumes that the provided `total_managed_funds` contains valid and complete data.
-
 pub fn generate_investment_allocations(
     e: &Env,
     assets: &Vec<AssetStrategySet>,
