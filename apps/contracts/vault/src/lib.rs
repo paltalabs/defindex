@@ -557,11 +557,8 @@ impl VaultTrait for DeFindexVault {
             let (_, strategy_allocations) = fetch_invested_funds_for_asset(&e, &asset);
 
             for strategy_allocation in strategy_allocations.iter() {
-                let mut report = get_report(&e, &strategy_allocation.strategy_address);
-                report.report(strategy_allocation.amount);
-                set_report(&e, &strategy_allocation.strategy_address, &report);
-                
-                reports.push_back(report);
+                let report_result = report::report(&e, &strategy_allocation.strategy_address, &strategy_allocation.amount);
+                reports.push_back(report_result);
             }
         }
 

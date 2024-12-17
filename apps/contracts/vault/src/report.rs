@@ -38,3 +38,21 @@ impl Report {
         self.prev_balance = current_balance;
     }
 }
+
+/// Reports the gains or losses for a strategy based on the current balance.
+///
+/// # Arguments
+/// * `e` - A reference to the environment.
+/// * `strategy` - The address of the strategy.
+/// * `current_balance` - A reference to the current balance.
+///
+/// # Returns
+/// Report struct containing the previous balance, gains or losses, and locked fee.
+pub fn report(e: &Env, strategy: &Address, current_balance: &i128) -> Report {
+    let mut report = get_report(e, strategy);
+    
+    report.report(current_balance.clone());
+    set_report(e, strategy, &report);
+
+    report
+}
