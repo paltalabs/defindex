@@ -1,8 +1,7 @@
 use soroban_sdk::{Address, Env, Map, String, Vec};
 
 use crate::{
-    models::{Instruction, AssetInvestmentAllocation, CurrentAssetInvestmentAllocation},
-    ContractError,
+    models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction}, report::Report, ContractError
 };
 use common::models::AssetStrategySet;
 
@@ -223,7 +222,7 @@ pub trait VaultTrait {
     ///
     /// # Returns 
     /// * `Result<Vec<(Address, (i128, i128))>, ContractError>` - A vector of tuples containing the strategy address, current balance, and the gain or loss.
-    fn report(e: Env) -> Result<Vec<(Address, (i128, i128))>, ContractError>;
+    fn report(e: Env) -> Result<Vec<Report>, ContractError>;
 
 }
 
@@ -346,9 +345,9 @@ pub trait VaultManagementTrait {
     ///
     /// # Returns
     /// * `Result<Vec<(Address, i128)>, ContractError>` - A vector of tuples with strategy addresses and locked fee amounts in their underlying_asset.
-    fn lock_fees(e: Env, new_fee_bps: Option<u32>) -> Result<Vec<(Address, i128)>, ContractError>;
+    fn lock_fees(e: Env, new_fee_bps: Option<u32>) -> Result<Vec<Report>, ContractError>;
 
-    fn release_fees(e: Env, strategy: Address, amount: i128) -> Result<(), ContractError>;
+    fn release_fees(e: Env, strategy: Address, amount: i128) -> Result<Report, ContractError>;
 
     fn distribute_fees(e: Env) -> Result<(), ContractError>;
 }

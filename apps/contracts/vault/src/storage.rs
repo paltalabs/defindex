@@ -119,9 +119,9 @@ pub fn get_vault_fee(e: &Env) -> u32 {
 }
 
 // Strategy Previous Balance
-pub fn set_report(e: &Env, strategy_address: &Address, report: Report) {
+pub fn set_report(e: &Env, strategy_address: &Address, report: &Report) {
     let key = DataKey::Report(strategy_address.clone());
-    e.storage().persistent().set::<DataKey, Report>(&key, &report);
+    e.storage().persistent().set::<DataKey, Report>(&key, report);
     e.storage()
         .persistent()
         .extend_ttl(&key, LEDGER_THRESHOLD, LEDGER_BUMP);

@@ -1,5 +1,5 @@
 #![no_std]
-use report::report;
+use report::Report;
 use soroban_sdk::{
     contract, contractimpl, panic_with_error,
     token::TokenClient,
@@ -545,20 +545,20 @@ impl VaultTrait for DeFindexVault {
         (defindex_protocol_fee, vault_fee)
     }
 
-    fn report(e: Env) -> Result<Vec<(Address, (i128, i128))>, ContractError> {
+    fn report(e: Env) -> Result<Vec<Report>, ContractError> {
         extend_instance_ttl(&e);
 
         // Get all assets and their strategies
         let assets = get_assets(&e);
-        let mut reports: Vec<(Address, (i128, i128))> = Vec::new(&e);
+        let mut reports: Vec<Report> = Vec::new(&e);
 
         // Loop through each asset and its strategies to report the balances
         for asset in assets.iter() {
             let (_, strategy_allocations) = fetch_invested_funds_for_asset(&e, &asset);
 
             for strategy_allocation in strategy_allocations.iter() {
-                let report_result = report(&e, &strategy_allocation.strategy_address, &strategy_allocation.amount);
-                reports.push_back((strategy_allocation.strategy_address.clone(), report_result));
+                let report_result = report::report(&e, &strategy_allocation.strategy_address, &strategy_allocation.amount);
+                reports.push_back(report_result);
             }
         }
 
@@ -790,7 +790,7 @@ impl VaultManagementTrait for DeFindexVault {
         Ok(())
     }
 
-    fn lock_fees(e: Env, new_fee_bps: Option<u32>) -> Result<Vec<(Address, i128)>, ContractError> {
+    fn lock_fees(e: Env, new_fee_bps: Option<u32>) -> Result<Vec<Report>, ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
 
@@ -799,7 +799,7 @@ impl VaultManagementTrait for DeFindexVault {
 
         // Get all assets and their strategies
         let assets = get_assets(&e);
-        let mut collected_fees: Vec<(Address, i128)> = Vec::new(&e);
+        let mut reports: Vec<Report> = Vec::new(&e);
 
         // Loop through each asset and its strategies to lock the fees
         for asset in assets.iter() {
@@ -808,24 +808,28 @@ impl VaultManagementTrait for DeFindexVault {
             for strategy_allocation in strategy_allocations.iter() {
                 let mut report = get_report(&e, &strategy_allocation.strategy_address);
                 if report.gains_or_losses > 0 {
-                    let collected_fee = report.lock_fee(new_fee_bps.unwrap_or(get_vault_fee(&e)));
-                    set_report(&e, &strategy_allocation.strategy_address, report);
-                    collected_fees.push_back((strategy_allocation.strategy_address.clone(), collected_fee));
+                    report.lock_fee(new_fee_bps.unwrap_or(get_vault_fee(&e)));
+                    set_report(&e, &strategy_allocation.strategy_address, &report);
+                    reports.push_back(report);
                 }
             }
         };
 
-        Ok(collected_fees)
+        Ok(reports)
     }
 
-    fn release_fees(e: Env, strategy: Address, amount: i128) -> Result<(), ContractError> {
+    fn release_fees(e: Env, strategy: Address, amount: i128) -> Result<Report, ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
 
         let access_control = AccessControl::new(&e);
         access_control.require_role(&RolesDataKey::Manager);
 
-        Ok(())
+        let mut report = get_report(&e, &strategy);
+
+        report.release_fee(&e, amount);
+        set_report(&e, &strategy, &report);
+        Ok(report)
     }
 
     fn distribute_fees(e: Env) -> Result<(), ContractError> {
