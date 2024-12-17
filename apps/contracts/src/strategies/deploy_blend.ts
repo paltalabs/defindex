@@ -44,10 +44,10 @@ export async function deployBlendStrategy(addressBook: AddressBook) {
   const xlmScVal = xlmAddress.toScVal();
 
   const initArgs = xdr.ScVal.scvVec([
-    new Address("CCEVW3EEW4GRUZTZRTAMJAXD6XIF5IG7YQJMEEMKMVVGFPESTRXY2ZAV").toScVal(), //Blend pool on testnet!
+    new Address("CD2OM6AQMIXPS6ODWAYDEKLLFX5376ZHUFCMSSQJ5ACPVKMTK5NOQC5D").toScVal(), //Blend pool on testnet!
     nativeToScVal(0, { type: "u32" }), // ReserveId 0 is XLM
     new Address("CB22KRA3YZVCNCQI64JQ5WE7UY2VAV7WFLK6A2JN3HEX56T2EDAFO7QF").toScVal(), // BLND Token
-    new Address("CAG5LRYQ5JVEUI5TEID72EYOVX44TTUJT5BQR2J6J77FH65PCCFAJDDH").toScVal(), // Soroswap router
+    new Address("CC6WRJYMZA574TOXNO2ZWU4HIXJ5OLKGB7JF556RKMZPSV2V62SLBTPK").toScVal(), // Soroswap router
   ]);
 
   const args: xdr.ScVal[] = [
