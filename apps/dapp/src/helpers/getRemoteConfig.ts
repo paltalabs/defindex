@@ -1,12 +1,14 @@
-import axios from 'axios'
+import { configFile } from '@/constants/constants';
+//import localDeployment from '../../../contracts/.soroban/testnet.contracts.json'
+
+const isLocal = process.env.NEXT_PUBLIC_IS_LOCAL
+
 export const getRemoteConfig = async (network: string) => {
-  try {
-    "https://raw.githubusercontent.com/ydag/test-defindex/refs/heads/main/testnet.contracts.json"
-    // const {data: remoteConfig} = await axios.get(`https://raw.githubusercontent.com/paltalabs/defindex/refs/heads/main/public/${network}.contracts.json`)
-    const { data: remoteConfig } = await axios.get("https://raw.githubusercontent.com/ydag/test-defindex/refs/heads/main/testnet.contracts.json")
-    return remoteConfig
-  } catch (error) {
-    console.error(error)
-    return {}
+  if (isLocal === 'false' || isLocal === undefined) {
+    const deployments = await configFile(network)
+    return deployments
   }
+  /* else if(isLocal === 'true') {
+    return localDeployment.ids
+  } */
 }

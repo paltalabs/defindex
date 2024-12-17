@@ -83,7 +83,7 @@ export const InspectVault = ({
           <Stack>
             <Text>Total value locked:</Text>
             <HStack alignContent={'center'}>
-              ${selectedVault.TVL.toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 4 })}
+              ${selectedVault.TVL.toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 4 }) ?? 0}
               <Text fontSize={'2xs'}>{`(${selectedVault.assets[0]!.symbol})`}</Text>
             </HStack>
           </Stack>
@@ -92,7 +92,7 @@ export const InspectVault = ({
             {selectedVault.idleFunds.map((asset: AssetAmmount, index: number) => (
               <HStack key={index}>
                 <Text>
-                  ${asset.amount.toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 4 })}
+                  ${asset.amount.toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 4 }) ?? 0}
                 </Text>
                 <Text fontSize={'2xs'}>{`(${selectedVault.assets.find((a) => asset.address === a.address)?.symbol})`}</Text>
               </HStack>
@@ -103,7 +103,7 @@ export const InspectVault = ({
             {selectedVault.investedFunds.map((asset: AssetAmmount, index: number) => (
               <HStack key={index}>
                 <Text>
-                  ${asset.amount.toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 4 })}
+                  ${asset.amount.toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 4 }) ?? 0}
                 </Text>
                 <Text fontSize={'2xs'}>{`(${selectedVault.assets.find((a) => asset.address === a.address)?.symbol})`}</Text>
               </HStack>
@@ -112,17 +112,17 @@ export const InspectVault = ({
           <Stack>
             <Text>Fees:</Text>
             <Text>
-              Defindex fee: {(selectedVault.fees[0]! / 100).toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 2 })} %
+              Defindex fee: {(selectedVault.fees[0]! / 100).toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 2 }) ?? 0} %
             </Text>
             <Text>
-              Vault fee: {(selectedVault.fees[1]! / 100).toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 2 })} %
+              Vault fee: {(selectedVault.fees[1]! / 100).toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 2 }) ?? 0} %
             </Text>
           </Stack>
           {(address && selectedVault.userBalance) &&
             <Stack>
               <Text>User balance:</Text>
               <HStack>
-                ${selectedVault.userBalance.toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 4 })}
+                ${selectedVault.userBalance.toLocaleString('en-US', { style: 'decimal', maximumFractionDigits: 4 }) ?? 0}
                 <Text fontSize={'2xs'}>{`(${selectedVault.assets[0]!.symbol})`}</Text>
               </HStack>
             </Stack>

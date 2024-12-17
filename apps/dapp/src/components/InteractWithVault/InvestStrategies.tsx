@@ -1,4 +1,4 @@
-import { Box, Button, For, HStack, NumberInput, NumberInputRoot, Stack, Text } from "@chakra-ui/react"
+import { Box, Button, For, HStack, NumberInputRoot, Stack, Text } from "@chakra-ui/react"
 import { DialogBody, DialogContent, DialogHeader } from "../ui/dialog"
 import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
 import { useVault, useVaultCallback, VaultMethod } from "@/hooks/useVault"
@@ -49,7 +49,7 @@ export const InvestStrategies = () => {
             val: new Address(entry.asset).toScVal()// Convert asset address to ScVal
           }),
           new xdr.ScMapEntry({
-            key: xdr.ScVal.scvSymbol("strategy_investments"),
+            key: xdr.ScVal.scvSymbol("strategy_allocations"),
             val: xdr.ScVal.scvVec(
               entry.strategy_investments.map((strategy_investment) => {
                 return xdr.ScVal.scvMap([
@@ -58,7 +58,7 @@ export const InvestStrategies = () => {
                     val: nativeToScVal(BigInt((strategy_investment.amount ?? 0) * 10 ** 7), { type: "i128" }), // Ensure i128 conversion
                   }),
                   new xdr.ScMapEntry({
-                    key: xdr.ScVal.scvSymbol("strategy"),
+                    key: xdr.ScVal.scvSymbol("strategy_address"),
                     val: new Address(strategy_investment.strategy).toScVal() // Convert strategy address
                   }),
                 ])
