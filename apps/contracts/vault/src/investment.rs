@@ -3,7 +3,7 @@ use soroban_sdk::{Env, Vec, panic_with_error, Map, Address};
 use crate::{
     models::{AssetInvestmentAllocation, StrategyAllocation, CurrentAssetInvestmentAllocation},
     strategies::invest_in_strategy,
-    utils::{check_nonnegative_amount},
+    utils::check_nonnegative_amount,
     ContractError,
 };
 use common::models::AssetStrategySet;
