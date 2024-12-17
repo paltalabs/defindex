@@ -7,7 +7,7 @@ export async function fetchFactoryAddress(network: string): Promise<string> {
   
     const remoteConfig: any = await getRemoteConfig(network);
     try {
-        const factoryAddress = remoteConfig.ids.defindex_factory;
+        const factoryAddress = remoteConfig.defindex_factory;
         return factoryAddress;
 
     } catch (error) {
