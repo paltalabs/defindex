@@ -41,7 +41,7 @@ yarn
  ```sh
 yarn dev --filter dapp
 ```
-For more information about dapp, please refer to the [dapp README](apps/dapp/README.md).    
+For more information about dapp, for example how to run it with your own deployment of the smart contracts, please refer to the [dapp README](apps/dapp/README.md).    
 
 ### 🔨 Build & test Smart contracts:
 while inside the docker container you can deploy build and test the smart contracts.
