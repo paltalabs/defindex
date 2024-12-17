@@ -27,9 +27,9 @@ mod utils;
 
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use aggregator::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
-use deposit::{process_deposit};
+use deposit::process_deposit;
 use fee::{collect_fees, fetch_defindex_fee};
-use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds}; 
+use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_invested_funds_for_asset, fetch_total_managed_funds}; 
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::{check_and_execute_investments, generate_investment_allocations};
 use models::{
@@ -38,8 +38,7 @@ use models::{
     ActionType, AssetInvestmentAllocation,
 };
 use storage::{
-    extend_instance_ttl, get_assets, get_vault_fee, set_asset, set_defindex_protocol_fee_receiver,
-    set_factory, set_total_assets, set_vault_fee,
+    extend_instance_ttl, get_assets, get_report, get_vault_fee, set_asset, set_defindex_protocol_fee_receiver, set_factory, set_report, set_total_assets, set_vault_fee
 };
 use strategies::{
     get_strategy_asset, get_strategy_client,
@@ -190,7 +189,6 @@ impl VaultTrait for DeFindexVault {
     ///
     /// # Errors
     /// - Returns a `ContractError` if any validation or execution step fails.
-
     fn deposit(
         e: Env,
         amounts_desired: Vec<i128>,
@@ -201,10 +199,6 @@ impl VaultTrait for DeFindexVault {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
         from.require_auth();
-
-        // Collect Fees
-        // If this was not done before, last_fee_assesment will set to be current timestamp and this will return without action
-        collect_fees(&e)?;
 
         let total_managed_funds = fetch_total_managed_funds(&e);
 
@@ -277,9 +271,6 @@ impl VaultTrait for DeFindexVault {
         check_initialized(&e)?;
         check_nonnegative_amount(withdraw_shares)?;
         from.require_auth();
-    
-        // Assess fees
-        collect_fees(&e)?;
     
         // Calculate the withdrawal amounts for each asset based on the share amounts
         let total_managed_funds = fetch_total_managed_funds(&e);
@@ -554,9 +545,24 @@ impl VaultTrait for DeFindexVault {
         (defindex_protocol_fee, vault_fee)
     }
 
-    fn collect_fees(e: Env) -> Result<(), ContractError> {
+    fn report(e: Env) -> Result<Vec<(Address, (i128, i128))>, ContractError> {
         extend_instance_ttl(&e);
-        collect_fees(&e)
+
+        // Get all assets and their strategies
+        let assets = get_assets(&e);
+        let mut reports: Vec<(Address, (i128, i128))> = Vec::new(&e);
+
+        // Loop through each asset and its strategies to report the balances
+        for asset in assets.iter() {
+            let (_, strategy_allocations) = fetch_invested_funds_for_asset(&e, &asset);
+
+            for strategy_allocation in strategy_allocations.iter() {
+                let report_result = report(&e, &strategy_allocation.strategy_address, &strategy_allocation.amount);
+                reports.push_back((strategy_allocation.strategy_address.clone(), report_result));
+            }
+        }
+
+        Ok(reports)
     }
 }
 
@@ -780,6 +786,54 @@ impl VaultManagementTrait for DeFindexVault {
                 }
             }
         }
+
+        Ok(())
+    }
+
+    fn lock_fees(e: Env, new_fee_bps: Option<u32>) -> Result<Vec<(Address, i128)>, ContractError> {
+        extend_instance_ttl(&e);
+        check_initialized(&e)?;
+
+        let access_control = AccessControl::new(&e);
+        access_control.require_role(&RolesDataKey::Manager);
+
+        // Get all assets and their strategies
+        let assets = get_assets(&e);
+        let mut collected_fees: Vec<(Address, i128)> = Vec::new(&e);
+
+        // Loop through each asset and its strategies to lock the fees
+        for asset in assets.iter() {
+            let (_, strategy_allocations) = fetch_invested_funds_for_asset(&e, &asset);
+
+            for strategy_allocation in strategy_allocations.iter() {
+                let mut report = get_report(&e, &strategy_allocation.strategy_address);
+                if report.gains_or_losses > 0 {
+                    let collected_fee = report.lock_fee(new_fee_bps.unwrap_or(get_vault_fee(&e)));
+                    set_report(&e, &strategy_allocation.strategy_address, report);
+                    collected_fees.push_back((strategy_allocation.strategy_address.clone(), collected_fee));
+                }
+            }
+        };
+
+        Ok(collected_fees)
+    }
+
+    fn release_fees(e: Env, strategy: Address, amount: i128) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
+        check_initialized(&e)?;
+
+        let access_control = AccessControl::new(&e);
+        access_control.require_role(&RolesDataKey::Manager);
+
+        Ok(())
+    }
+
+    fn distribute_fees(e: Env) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
+        check_initialized(&e)?;
+
+        let access_control = AccessControl::new(&e);
+        access_control.require_role(&RolesDataKey::Manager);
 
         Ok(())
     }

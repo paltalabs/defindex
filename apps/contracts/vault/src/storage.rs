@@ -2,6 +2,8 @@ use soroban_sdk::{contracttype, Address, Env, Vec};
 
 use common::models::AssetStrategySet;
 
+use crate::report::Report;
+
 const DAY_IN_LEDGERS: u32 = 17280;
 const INSTANCE_BUMP_AMOUNT: u32 = 30 * DAY_IN_LEDGERS;
 const INSTANCE_LIFETIME_THRESHOLD: u32 = INSTANCE_BUMP_AMOUNT - DAY_IN_LEDGERS;
@@ -24,8 +26,7 @@ enum DataKey {
     Factory,
     LastFeeAssessment,
     VaultFee,
-    PrevBalance(Address), // Previous balance of a strategy
-    GainsOrLosses(Address) // Gains or Losses per Strategy
+    Report(Address)
 }
 
 // Assets Management
@@ -83,6 +84,7 @@ pub fn get_factory(e: &Env) -> Address {
 }
 
 // Last Fee Assesment
+//TODO: DELETE LATER
 pub fn set_last_fee_assesment(e: &Env, timestamp: &u64) {
     e.storage()
         .instance()
@@ -117,47 +119,24 @@ pub fn get_vault_fee(e: &Env) -> u32 {
 }
 
 // Strategy Previous Balance
-pub fn set_prev_balance(e: &Env, strategy_address: &Address, balance: &i128) {
-    let key = DataKey::PrevBalance(strategy_address.clone());
-    e.storage().persistent().set::<DataKey, i128>(&key, &balance);
+pub fn set_report(e: &Env, strategy_address: &Address, report: Report) {
+    let key = DataKey::Report(strategy_address.clone());
+    e.storage().persistent().set::<DataKey, Report>(&key, &report);
     e.storage()
         .persistent()
         .extend_ttl(&key, LEDGER_THRESHOLD, LEDGER_BUMP);
 }
 
-pub fn get_prev_balance(e: &Env, strategy_address: &Address) -> i128 {
-    let key = DataKey::PrevBalance(strategy_address.clone());
-    let result = e.storage().persistent().get::<DataKey, i128>(&key);
+pub fn get_report(e: &Env, strategy_address: &Address) -> Report {
+    let key = DataKey::Report(strategy_address.clone());
+    let result = e.storage().persistent().get::<DataKey, Report>(&key);
     match result {
-        Some(balance) => {
+        Some(report) => {
             e.storage()
                 .persistent()
                 .extend_ttl(&key, LEDGER_THRESHOLD, LEDGER_BUMP);
-            balance
+            report
         }
-        None => 0,
-    }
-}
-
-// Gain or Losses per Strategy
-pub fn set_gains_or_losses(e: &Env, strategy_address: &Address, value: &i128) {
-    let key = DataKey::GainsOrLosses(strategy_address.clone());
-    e.storage().persistent().set::<DataKey, i128>(&key, &value);
-    e.storage()
-        .persistent()
-        .extend_ttl(&key, LEDGER_THRESHOLD, LEDGER_BUMP);
-}
-
-pub fn get_gains_or_losses(e: &Env, strategy_address: &Address) -> i128 {
-    let key = DataKey::GainsOrLosses(strategy_address.clone());
-    let result = e.storage().persistent().get::<DataKey, i128>(&key);
-    match result {
-        Some(gnl) => {
-            e.storage()
-                .persistent()
-                .extend_ttl(&key, LEDGER_THRESHOLD, LEDGER_BUMP);
-            gnl
-        }
-        None => 0,
+        None => Report { prev_balance: 0, gains_or_losses: 0, locked_fee: 0 },
     }
 }

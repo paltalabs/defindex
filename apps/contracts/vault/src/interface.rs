@@ -213,8 +213,18 @@ pub trait VaultTrait {
     
     fn get_fees(e: Env) -> (u32, u32);
 
-    /// Collects the fees from the vault and transfers them to the fee receiver addresses. 
-    fn collect_fees(e: Env) -> Result<(), ContractError>;
+    /// Reports the gains or losses for all strategies in the vault based on their current balances.
+    ///
+    /// This function iterates through all the strategies managed by the vault and calculates the gains or losses
+    /// for each strategy based on their current balances. It updates the vault's records accordingly.
+    ///
+    /// # Arguments
+    /// * `e` - A reference to the environment.
+    ///
+    /// # Returns 
+    /// * `Result<Vec<(Address, (i128, i128))>, ContractError>` - A vector of tuples containing the strategy address, current balance, and the gain or loss.
+    fn report(e: Env) -> Result<Vec<(Address, (i128, i128))>, ContractError>;
+
 }
 
 pub trait AdminInterfaceTrait {
@@ -325,4 +335,20 @@ pub trait VaultManagementTrait {
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn rebalance(e: Env, instructions: Vec<Instruction>) -> Result<(), ContractError>;
+
+    /// Locks fees for all assets and their strategies.
+    ///
+    /// Iterates through each asset and its strategies, locking fees based on `new_fee_bps` or the default vault fee.
+    ///
+    /// # Arguments
+    /// * `e` - The environment reference.
+    /// * `new_fee_bps` - Optional fee basis points to override the default.
+    ///
+    /// # Returns
+    /// * `Result<Vec<(Address, i128)>, ContractError>` - A vector of tuples with strategy addresses and locked fee amounts in their underlying_asset.
+    fn lock_fees(e: Env, new_fee_bps: Option<u32>) -> Result<Vec<(Address, i128)>, ContractError>;
+
+    fn release_fees(e: Env, strategy: Address, amount: i128) -> Result<(), ContractError>;
+
+    fn distribute_fees(e: Env) -> Result<(), ContractError>;
 }

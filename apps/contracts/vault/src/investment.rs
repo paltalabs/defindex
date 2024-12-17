@@ -3,7 +3,7 @@ use soroban_sdk::{Env, Vec, panic_with_error, Map, Address};
 use crate::{
     models::{AssetInvestmentAllocation, StrategyAllocation, CurrentAssetInvestmentAllocation},
     strategies::invest_in_strategy,
-    utils::{check_nonnegative_amount},
+    utils::check_nonnegative_amount,
     ContractError,
 };
 use common::models::AssetStrategySet;
@@ -124,7 +124,6 @@ pub fn check_and_execute_investments(
 /// # Notes
 /// - This function does not execute the investments; it only prepares the allocations.
 /// - It assumes that the provided `total_managed_funds` contains valid and complete data.
-
 pub fn generate_investment_allocations(
     e: &Env,
     assets: &Vec<AssetStrategySet>,
