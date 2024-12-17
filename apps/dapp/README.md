@@ -11,7 +11,7 @@ cp env.example .env
 ```
 
 >[!NOTE]
-> If you want to use your own deployment of the smart contract, you can set the .env property `NEXT_PUBLIC_IS_LOCAL` to true and uncomment the lines 11-13 of the file `src/helpers/getRemoteConfig.ts` and do not commit this changes.
+> If you want to use your own deployment of the smart contract, you can set the .env property `NEXT_PUBLIC_IS_LOCAL` to true and uncomment the lines 2, 11-13 of the file `src/helpers/getRemoteConfig.ts` and do not commit this changes.
 
 ## Running the app
 Run the development server:
