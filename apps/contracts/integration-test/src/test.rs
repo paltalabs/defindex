@@ -1,6 +1,7 @@
 extern crate std;
 use crate::factory::DeFindexFactoryClient;
 use soroban_sdk::{
+    testutils::{LedgerInfo, Ledger},
     Env, 
     Address, 
     testutils::Address as _,
@@ -12,6 +13,7 @@ use crate::vault::defindex_vault_contract;
 
 pub static ONE_YEAR_IN_SECONDS: u64 = 31_536_000;
 pub static DEFINDEX_FEE: u32 = 50;
+pub static DAY_IN_LEDGERS: u32 = 17280;
 
 pub struct IntegrationTest<'a> {
     pub env: Env,
@@ -19,6 +21,43 @@ pub struct IntegrationTest<'a> {
     pub admin: Address,
     pub defindex_receiver: Address,
     pub defindex_fee: u32
+}
+
+pub trait EnvTestUtils {
+    /// Jump the env by the given amount of ledgers. Assumes 5 seconds per ledger.
+    fn jump(&self, ledgers: u32);
+    /// Jump the env by the given amount of seconds. Incremends the sequence by 1.
+    fn jump_time(&self, seconds: u64);
+
+}
+
+impl EnvTestUtils for Env {
+    fn jump(&self, ledgers: u32) {
+        self.ledger().set(LedgerInfo {
+            timestamp: self.ledger().timestamp().saturating_add(ledgers as u64 * 5),
+            protocol_version: 22,
+            sequence_number: self.ledger().sequence().saturating_add(ledgers),
+            network_id: Default::default(),
+            base_reserve: 10,
+            min_temp_entry_ttl: 30 * DAY_IN_LEDGERS,
+            min_persistent_entry_ttl: 30 * DAY_IN_LEDGERS,
+            max_entry_ttl: 365 * DAY_IN_LEDGERS,
+        });
+    }
+
+
+    fn jump_time(&self, seconds: u64) {
+        self.ledger().set(LedgerInfo {
+            timestamp: self.ledger().timestamp().saturating_add(seconds),
+            protocol_version: 22,
+            sequence_number: self.ledger().sequence().saturating_add(1),
+            network_id: Default::default(),
+            base_reserve: 10,
+            min_temp_entry_ttl: 30 * DAY_IN_LEDGERS,
+            min_persistent_entry_ttl: 30 * DAY_IN_LEDGERS,
+            max_entry_ttl: 365 * DAY_IN_LEDGERS,
+        });
+    }
 }
 
 impl<'a> IntegrationTest<'a> {
