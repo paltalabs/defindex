@@ -41,6 +41,12 @@ impl Report {
         self.gains_or_losses += gains_or_losses;
         self.prev_balance = current_balance;
     }
+
+    pub fn reset(&mut self) {
+        self.prev_balance = 0;
+        self.gains_or_losses = 0;
+        self.locked_fee = 0;
+    }
 }
 
 /// Reports the gains or losses for a strategy based on the current balance.

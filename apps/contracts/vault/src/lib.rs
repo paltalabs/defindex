@@ -328,11 +328,7 @@ impl VaultTrait for DeFindexVault {
                         };
 
                         if strategy_amount_to_unwind > 0 {
-                            let mut report = unwind_from_strategy(&e, &strategy_allocation.strategy_address, &strategy_amount_to_unwind, &e.current_contract_address())?;
-                            if report.gains_or_losses > 0 {
-                                report.lock_fee(get_vault_fee(&e));
-                                set_report(&e, &strategy_allocation.strategy_address, &report);
-                            }
+                            unwind_from_strategy(&e, &strategy_allocation.strategy_address, &strategy_amount_to_unwind, &e.current_contract_address())?;
                             cumulative_amount_for_asset += strategy_amount_to_unwind;
                         }
                     }
@@ -395,7 +391,9 @@ impl VaultTrait for DeFindexVault {
         let strategy_balance = strategy_client.balance(&e.current_contract_address());
 
         if strategy_balance > 0 {
-            unwind_from_strategy(&e, &strategy_address, &strategy_balance, &e.current_contract_address())?;
+            let mut report = unwind_from_strategy(&e, &strategy_address, &strategy_balance, &e.current_contract_address())?;
+            report.reset();
+            set_report(&e, &strategy_address, &report);
             //TODO: Should we check if the idle funds are corresponding to the strategy balance withdrawed?
         }
 
@@ -537,6 +535,7 @@ impl VaultTrait for DeFindexVault {
     /// * `Map<Address, i128>` - A map containing each asset address and its corresponding proportional amount.
     fn get_asset_amounts_per_shares(e: Env, vault_shares: i128) -> Result<Map<Address, i128>, ContractError> {
         extend_instance_ttl(&e);
+
         let total_managed_funds = fetch_total_managed_funds(&e);
         Ok(calculate_asset_amounts_per_vault_shares(&e, vault_shares, &total_managed_funds)?)
     }
