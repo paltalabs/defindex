@@ -1,4 +1,4 @@
-use soroban_sdk::{vec, Address, Env, IntoVal, Symbol, Val, Vec};
+use soroban_sdk::{vec, Address, Env, IntoVal, Symbol, Val, Vec, auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation}};
 
 use crate::{
     // models::DexDistribution,
@@ -34,11 +34,37 @@ pub fn internal_swap_exact_tokens_for_tokens(
         deadline.into_val(e),
     ];
 
-    e.invoke_contract(
+    let soroswap_router = get_soroswap_router(e);
+
+    let pair_address: Address = e.invoke_contract(
+        &soroswap_router,
+        &Symbol::new(&e, "router_pair_for"),
+        vec![e, token_in.to_val(), token_out.to_val()],
+    );
+
+    e.authorize_as_current_contract(vec![
+        &e,
+        InvokerContractAuthEntry::Contract(SubContractInvocation {
+            context: ContractContext {
+                contract: token_in.clone(),
+                fn_name: Symbol::new(&e, "transfer"),
+                args: (
+                    e.current_contract_address(),
+                    pair_address.clone(),
+                    amount_in.clone()).into_val(e),
+
+            },
+            sub_invocations: vec![&e],
+        }),
+    ]);
+
+    let result: Vec<i128> = e.invoke_contract(
         &get_soroswap_router(e),
         &Symbol::new(&e, "swap_exact_tokens_for_tokens"),
         swap_args,
-    )
+    );
+    Ok(())
+    // TODO: Do something with the result
 }
 
 pub fn internal_swap_tokens_for_exact_tokens(
