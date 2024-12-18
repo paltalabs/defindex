@@ -201,6 +201,7 @@ fn success() {
                         &e,
                         withdraw_amount.into_val(&e),
                         user_2.to_val(),
+                        user_2.to_val(),
                     ]
                 )),
                 sub_invocations: std::vec![]
