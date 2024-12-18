@@ -18,15 +18,15 @@ const initialState: NewVaultState = {
 //Filtrar Strategies por network y retornar array de Strategies
 export const getDefaultStrategies = async (network: string) => {
   try {
-    const remoteStrategies = await getRemoteConfig(network)
+    const remoteStrategies: any = await getRemoteConfig(network)
     const strategies: Strategy[] = []
-    for (let strategy in remoteStrategies.ids) {
+    for (let strategy in remoteStrategies) {
       if (strategy.includes('strategy')) {
         const parsedName = strategy.split('_')[0]
         if (!parsedName) continue
         const prettierName = parsedName.charAt(0).toUpperCase() + parsedName.slice(1)
         strategies.push({
-          address: remoteStrategies.ids[strategy],
+          address: remoteStrategies[strategy],
           name: parsedName ? prettierName : '',
           paused: false,
           tempAmount: 0
