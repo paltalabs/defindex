@@ -2,8 +2,7 @@ use defindex_strategy_core::DeFindexStrategyClient;
 use soroban_sdk::{Address, Env, vec, IntoVal, Symbol};
 use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
 
-
-use crate::report::report;
+use crate::report::{self, Report};
 use crate::{
     storage::{get_asset, get_assets, get_total_assets, set_asset},
     ContractError,
@@ -129,13 +128,14 @@ pub fn unwind_from_strategy(
     e: &Env,
     strategy_address: &Address,
     amount: &i128,
-) -> Result<(), ContractError> {
+    to: &Address,
+) -> Result<Report, ContractError> {
     let strategy_client = get_strategy_client(e, strategy_address.clone());
 
-    match strategy_client.try_withdraw(amount, &e.current_contract_address()) {
+    match strategy_client.try_withdraw(amount, &e.current_contract_address(), to) {
         Ok(Ok(result)) => {
-            report(e, strategy_address, &result);
-            Ok(())
+            let report = report::report(e, strategy_address, &result);
+            Ok(report)
         },
         Ok(Err(_)) | Err(_) => Err(ContractError::StrategyWithdrawError),
     }
@@ -146,7 +146,7 @@ pub fn invest_in_strategy(
     asset_address: &Address,
     strategy_address: &Address,
     amount: &i128,
-) -> Result<i128, ContractError> {
+) -> Result<Report, ContractError> {
     
     // Now we will handle funds on behalf of the contract, not the caller (manager or user)
 
@@ -173,7 +173,7 @@ pub fn invest_in_strategy(
 
     // Reports
     // Store Strategy invested funds for reports
-    report(e, strategy_address, &strategy_funds);
+    let report = report::report(e, strategy_address, &strategy_funds);
 
-    Ok(strategy_funds)
+    Ok(report)
 }

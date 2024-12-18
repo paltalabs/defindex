@@ -3,7 +3,7 @@ use soroban_sdk::{Address, Env, Map, Vec};
 
 use common::models::AssetStrategySet;
 use crate::models::{StrategyAllocation, CurrentAssetInvestmentAllocation};
-use crate::storage::get_assets;
+use crate::storage::{get_assets, get_report};
 use crate::strategies::get_strategy_client;
 
 /// Retrieves the idle funds for a given asset.
@@ -21,21 +21,24 @@ pub fn fetch_idle_funds_for_asset(e: &Env, asset: &Address) -> i128 {
     TokenClient::new(e, &asset).balance(&e.current_contract_address())
 }
 
-/// Retrieves the total funds invested in a specified strategy.
+/// Retrieves the total funds invested in a specified strategy, excluding any locked fees.
 /// 
-/// Since only the strategy contract itself can accurately determine the amount invested, 
-/// this function performs a cross-contract call to the strategy to fetch the current balance 
-/// of the investment.
+/// This function performs a cross-contract call to the strategy to fetch the current balance 
+/// of the investment. It then subtracts any locked fees from the total to provide an accurate 
+/// representation of the funds that are actively invested and available to the user.
 ///
 /// # Arguments
 /// * `e` - The current environment instance.
 /// * `strategy_address` - The address of the strategy whose investment balance is to be retrieved.
 ///
 /// # Returns
-/// The total invested funds in the strategy as an `i128`.
+/// The total invested funds in the strategy as an `i128`, excluding locked fees.
 pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address) -> i128 {
     let strategy_client = get_strategy_client(e, strategy_address.clone());
-    strategy_client.balance(&e.current_contract_address())
+    let strategy_invested_funds = strategy_client.balance(&e.current_contract_address());
+
+    let report = get_report(e, strategy_address);
+    strategy_invested_funds.checked_sub(report.locked_fee).unwrap_or(0)
 }
 
 

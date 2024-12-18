@@ -1,4 +1,5 @@
 #![no_std]
+use constants::MAX_BPS;
 use report::Report;
 use soroban_sdk::{
     contract, contractimpl, panic_with_error,
@@ -13,7 +14,6 @@ mod constants;
 mod deposit;
 mod error;
 mod events;
-mod fee;
 mod funds;
 mod interface;
 mod investment;
@@ -28,8 +28,7 @@ mod utils;
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use aggregator::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
 use deposit::process_deposit;
-use fee::{collect_fees, fetch_defindex_fee};
-use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_invested_funds_for_asset, fetch_total_managed_funds}; 
+use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds}; 
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::{check_and_execute_investments, generate_investment_allocations};
 use models::{
@@ -38,7 +37,7 @@ use models::{
     ActionType, AssetInvestmentAllocation,
 };
 use storage::{
-    extend_instance_ttl, get_assets, get_report, get_vault_fee, set_asset, set_defindex_protocol_fee_receiver, set_factory, set_report, set_total_assets, set_vault_fee
+    extend_instance_ttl, get_assets, get_defindex_protocol_fee_rate, get_defindex_protocol_fee_receiver, get_report, get_vault_fee, set_asset, set_defindex_protocol_fee_rate, set_defindex_protocol_fee_receiver, set_factory, set_report, set_total_assets, set_vault_fee
 };
 use strategies::{
     get_strategy_asset, get_strategy_client,
@@ -96,6 +95,7 @@ impl VaultTrait for DeFindexVault {
         vault_fee_receiver: Address,
         vault_fee: u32,
         defindex_protocol_receiver: Address,
+        defindex_protocol_rate: u32,
         factory: Address,
         vault_name: String,
         vault_symbol: String,
@@ -111,6 +111,7 @@ impl VaultTrait for DeFindexVault {
 
         // Set Paltalabs Fee Receiver
         set_defindex_protocol_fee_receiver(&e, &defindex_protocol_receiver);
+        set_defindex_protocol_fee_rate(&e, &defindex_protocol_rate);
 
         // Set the factory address
         set_factory(&e, &factory);
@@ -327,7 +328,11 @@ impl VaultTrait for DeFindexVault {
                         };
 
                         if strategy_amount_to_unwind > 0 {
-                            unwind_from_strategy(&e, &strategy_allocation.strategy_address, &strategy_amount_to_unwind)?;
+                            let mut report = unwind_from_strategy(&e, &strategy_allocation.strategy_address, &strategy_amount_to_unwind, &e.current_contract_address())?;
+                            if report.gains_or_losses > 0 {
+                                report.lock_fee(get_vault_fee(&e));
+                                set_report(&e, &strategy_allocation.strategy_address, &report);
+                            }
                             cumulative_amount_for_asset += strategy_amount_to_unwind;
                         }
                     }
@@ -351,8 +356,6 @@ impl VaultTrait for DeFindexVault {
     
         Ok(withdrawn_amounts)
     }
-
-    
 
     /// Executes an emergency withdrawal from a specific strategy.
     ///
@@ -392,7 +395,7 @@ impl VaultTrait for DeFindexVault {
         let strategy_balance = strategy_client.balance(&e.current_contract_address());
 
         if strategy_balance > 0 {
-            unwind_from_strategy(&e, &strategy_address, &strategy_balance)?;
+            unwind_from_strategy(&e, &strategy_address, &strategy_balance, &e.current_contract_address())?;
             //TODO: Should we check if the idle funds are corresponding to the strategy balance withdrawed?
         }
 
@@ -538,11 +541,23 @@ impl VaultTrait for DeFindexVault {
         Ok(calculate_asset_amounts_per_vault_shares(&e, vault_shares, &total_managed_funds)?)
     }
 
+    /// Retrieves the current fee rates for the vault and the DeFindex protocol.
+    ///
+    /// This function returns the fee rates for both the vault and the DeFindex protocol.
+    ///
+    /// # Arguments
+    /// * `e` - The environment.
+    ///
+    /// # Returns
+    /// * `(u32, u32)` - A tuple containing:
+    ///     - The vault fee rate as a percentage in basis points.
+    ///     - The DeFindex protocol fee rate as a percentage in basis points.
+    ///
     fn get_fees(e: Env) -> (u32, u32) {
         extend_instance_ttl(&e);
-        let defindex_protocol_fee = fetch_defindex_fee(&e);
+        let defindex_protocol_fee = get_defindex_protocol_fee_rate(&e);
         let vault_fee = get_vault_fee(&e);
-        (defindex_protocol_fee, vault_fee)
+        (vault_fee, defindex_protocol_fee)
     }
 
     fn report(e: Env) -> Result<Vec<Report>, ContractError> {
@@ -554,10 +569,11 @@ impl VaultTrait for DeFindexVault {
 
         // Loop through each asset and its strategies to report the balances
         for asset in assets.iter() {
-            let (_, strategy_allocations) = fetch_invested_funds_for_asset(&e, &asset);
+            for strategy in asset.strategies.iter() {
+                let strategy_client = get_strategy_client(&e, strategy.address.clone());
+                let strategy_invested_funds = strategy_client.balance(&e.current_contract_address());
 
-            for strategy_allocation in strategy_allocations.iter() {
-                let report_result = report::report(&e, &strategy_allocation.strategy_address, &strategy_allocation.amount);
+                let report_result = report::report(&e, &strategy.address, &strategy_invested_funds);
                 reports.push_back(report_result);
             }
         }
@@ -742,7 +758,7 @@ impl VaultManagementTrait for DeFindexVault {
             match instruction.action {
                 ActionType::Withdraw => match (&instruction.strategy, &instruction.amount) {
                     (Some(strategy_address), Some(amount)) => {
-                        unwind_from_strategy(&e, strategy_address, amount)?;
+                        unwind_from_strategy(&e, strategy_address, amount, &e.current_contract_address())?;
                     }
                     _ => return Err(ContractError::MissingInstructionData),
                 },
@@ -790,6 +806,16 @@ impl VaultManagementTrait for DeFindexVault {
         Ok(())
     }
 
+    /// Locks fees for all assets and their strategies.
+    ///
+    /// Iterates through each asset and its strategies, locking fees based on `new_fee_bps` or the default vault fee.
+    ///
+    /// # Arguments
+    /// * `e` - The environment reference.
+    /// * `new_fee_bps` - Optional fee basis points to override the default.
+    ///
+    /// # Returns
+    /// * `Result<Vec<(Address, i128)>, ContractError>` - A vector of tuples with strategy addresses and locked fee amounts in their underlying_asset.
     fn lock_fees(e: Env, new_fee_bps: Option<u32>) -> Result<Vec<Report>, ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
@@ -797,19 +823,25 @@ impl VaultManagementTrait for DeFindexVault {
         let access_control = AccessControl::new(&e);
         access_control.require_role(&RolesDataKey::Manager);
 
+        // If a new fee basis points is provided, set the new vault fee
+        if let Some(fee_bps) = new_fee_bps {
+            set_vault_fee(&e, &fee_bps);
+        }
+
+        // Get the current vault fee
+        let current_vault_fee = get_vault_fee(&e);
+
         // Get all assets and their strategies
         let assets = get_assets(&e);
         let mut reports: Vec<Report> = Vec::new(&e);
 
         // Loop through each asset and its strategies to lock the fees
         for asset in assets.iter() {
-            let (_, strategy_allocations) = fetch_invested_funds_for_asset(&e, &asset);
-
-            for strategy_allocation in strategy_allocations.iter() {
-                let mut report = get_report(&e, &strategy_allocation.strategy_address);
+            for strategy in asset.strategies.iter() {
+                let mut report = get_report(&e, &strategy.address);
                 if report.gains_or_losses > 0 {
-                    report.lock_fee(new_fee_bps.unwrap_or(get_vault_fee(&e)));
-                    set_report(&e, &strategy_allocation.strategy_address, &report);
+                    report.lock_fee(current_vault_fee);
+                    set_report(&e, &strategy.address, &report);
                     reports.push_back(report);
                 }
             }
@@ -818,6 +850,15 @@ impl VaultManagementTrait for DeFindexVault {
         Ok(reports)
     }
 
+    /// Releases locked fees for a specific strategy.
+    ///
+    /// # Arguments
+    /// * `e` - The environment reference.
+    /// * `strategy` - The address of the strategy for which to release fees.
+    /// * `amount` - The amount of fees to release.
+    ///
+    /// # Returns
+    /// * `Result<Report, ContractError>` - A report of the released fees or a `ContractError` if the operation fails.
     fn release_fees(e: Env, strategy: Address, amount: i128) -> Result<Report, ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
@@ -832,13 +873,64 @@ impl VaultManagementTrait for DeFindexVault {
         Ok(report)
     }
 
-    fn distribute_fees(e: Env) -> Result<(), ContractError> {
+    /// Distributes the locked fees for all assets and their strategies.
+    ///
+    /// This function iterates through each asset and its strategies, calculating the fees to be distributed
+    /// to the vault fee receiver and the DeFindex protocol fee receiver based on their respective fee rates.
+    /// It ensures proper authorization and validation checks before proceeding with the distribution.
+    ///
+    /// # Arguments
+    /// * `e` - The environment reference.
+    ///
+    /// # Returns
+    /// * `Result<Vec<(Address, i128)>, ContractError>` - A vector of tuples with asset addresses and the total distributed fee amounts.
+    fn distribute_fees(e: Env) -> Result<Vec<(Address, i128)>, ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
 
         let access_control = AccessControl::new(&e);
         access_control.require_role(&RolesDataKey::Manager);
 
-        Ok(())
+        // Get all assets and their strategies
+        let assets = get_assets(&e);
+
+        let vault_fee_receiver = access_control.get_fee_receiver()?;
+        let defindex_protocol_receiver = get_defindex_protocol_fee_receiver(&e);
+        let defindex_fee = get_defindex_protocol_fee_rate(&e);
+
+        let mut distributed_fees: Vec<(Address, i128)> = Vec::new(&e);
+
+        // Loop through each asset and its strategies to lock the fees
+        for asset in assets.iter() {
+            let mut total_fees_distributed: i128 = 0;
+
+            for strategy in asset.strategies.iter() {
+                let mut report = get_report(&e, &strategy.address);
+
+                if report.locked_fee > 0 {
+                    // Calculate shares for each receiver based on their fee proportion
+                    let numerator = report.locked_fee
+                        .checked_mul(defindex_fee as i128)
+                        .unwrap();
+                    let defindex_fee_amount = numerator.checked_div(MAX_BPS).unwrap();
+
+                    let vault_fee_amount = report.locked_fee - defindex_fee_amount;
+
+                    unwind_from_strategy(&e, &strategy.address, &defindex_fee_amount, &defindex_protocol_receiver)?;
+                    unwind_from_strategy(&e, &strategy.address, &vault_fee_amount, &vault_fee_receiver)?;
+                    total_fees_distributed += report.locked_fee;
+                    report.locked_fee = 0;
+                    set_report(&e, &strategy.address, &report);
+                }
+            }
+
+            if total_fees_distributed > 0 {
+                distributed_fees.push_back((asset.address.clone(), total_fees_distributed));
+            }
+        };
+
+        events::emit_fees_distributed_event(&e, distributed_fees.clone());
+
+        Ok(distributed_fees)
     }
 }
