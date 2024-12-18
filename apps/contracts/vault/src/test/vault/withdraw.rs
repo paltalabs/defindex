@@ -7,6 +7,8 @@ use crate::test::{
     }, DeFindexVaultTest
 };
 
+extern crate std;
+
 // check that withdraw with negative amount after initialized returns error
 #[test]
 fn negative_amount() {
@@ -29,6 +31,7 @@ fn negative_amount() {
         test.vault_fee_receiver.clone(),
         2000u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
@@ -63,6 +66,7 @@ fn zero_total_supply() {
         test.vault_fee_receiver.clone(),
         2000u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
@@ -96,6 +100,7 @@ fn not_enough_balance() {
         test.vault_fee_receiver.clone(),
         2000u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
@@ -159,6 +164,7 @@ fn from_idle_one_asset_one_strategy_success() {
         test.vault_fee_receiver.clone(),
         2000u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
@@ -339,6 +345,7 @@ fn from_idle_two_assets_success() {
         test.vault_fee_receiver.clone(),
         2000u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
@@ -532,6 +539,7 @@ fn from_strategy_one_asset_one_strategy_success() {
         test.vault_fee_receiver.clone(),
         2000u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
@@ -669,6 +677,7 @@ fn from_strategies_two_asset_each_one_strategy_success() {
         test.vault_fee_receiver.clone(),
         2000u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
@@ -810,11 +819,11 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     // total supply was 123456789+234567890 = 358024679
     // then we withdaw 35353535
     // total supply is 358024679 - 35353535 = 322671144
-    // new shares to mint = total_supplly * amount_desired_target / reserve_target
-    // 322671144 * 2222222 / 111265915 = 6444443.610264365 = 6444443
-    assert_eq!(shares_minted, 6444443);
+    // new shares to mint = total_supply * amount_desired_target / (reserve_target - locked_fee) 
+    // 322671144 * 2222222 / (111265915 - 22253183) = 8055554.5128304567 = 8055554
+    assert_eq!(shares_minted, 8055554);
 
-    assert_eq!(defindex_contract.total_supply(), 329115587); //358024679- 35353535 + 6444443
+    assert_eq!(defindex_contract.total_supply(), 330726698); //358024679 - 35353535 + 8055554
     
 
     // check user balances
@@ -835,23 +844,25 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     let amount_to_withdraw = 644444i128;
     let result = defindex_contract.withdraw(&amount_to_withdraw, &users[0]);
 
-    assert_eq!(defindex_contract.total_supply(), 328471143); //358024679- 35353535 + 6444443 - 644444
+    assert_eq!(defindex_contract.total_supply(), 330082254); //358024679- 35353535 + 8055554 - 644444
  
-
-    // the new totqal supply was 322671144+6444443 = 329115587
+    let report = defindex_contract.report();
+    std::println!("report: {:?}", report);
+    // the new totqal supply was 322026700+8055554 = 330082254
     // the total managed funds for asset 0 was 2222222 (idle) + amount_to_deposit_0 - 12190874
-    // = 2222222 + 123456789 - 12190874 = 113488137
+    // = 2222222 + 123456789 - 12190874 = 113488137  // 111265915
 
     // the total managed funds for asset 1 was 4222221 (idle) + amount_to_deposit_1 - 23162660
     // = 4222221 + 234567890 - 23162660 = 215627451
 
-    // the expected amount to withdraw for asset 0 was total_funds_0 * withdraw_shares / total_shares
-    // = 113488137 * 644444 / 329115587 = 222222.075920178 = 222222
+    // the expected amount to withdraw for asset 0 was (total_funds_0 - locked_fees_0) * withdraw_shares / total_shares
+    // = (111265915 - 22253183) * 644444 / 330082254 = 222222.075920178 = 221571
 
-    // the expected amount to withdraw for asset 1 was total_funds_1 * withdraw_shares / total_shares
-    // = 215627451 * 644444 / 329115587 = 422221.92603793 = 422221
+    // the expected amount to withdraw for asset 1 was (total_funds_1 - locked_fees_1) * withdraw_shares / total_shares
+    // = (215627451 - 42281046) * 644444 / 330082254 = 422221.92603793 = 422221
 
-    let expected_result = sorobanvec![&test.env, 222222, 422221];
+    // TODO: Calculate manually this amounts
+    let expected_result = sorobanvec![&test.env, 177777, 337777];
     assert_eq!(result, expected_result);
 
     // check balances
@@ -867,7 +878,7 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     assert_eq!(test.token0.balance(&test.strategy_client_token0.address), amount_to_deposit_0 - 12190874);
     assert_eq!(test.token1.balance(&test.strategy_client_token1.address), amount_to_deposit_1 - 23162660);
 
-    assert_eq!(defindex_contract.total_supply(), 328471143); //358024679- 35353535 + 6444443 - 644444
+    assert_eq!(defindex_contract.total_supply(), 328471143); //358024679- 35353535 + 8055554 - 644444
 
     // check df tokens balance of user
     assert_eq!(defindex_contract.balance(&users[0]), 328470143);

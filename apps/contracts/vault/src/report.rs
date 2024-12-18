@@ -31,7 +31,11 @@ impl Report {
     }
 
     pub fn report(&mut self, current_balance: i128) {
-        let prev_balance = self.prev_balance;
+        let prev_balance = if self.prev_balance == 0 {
+            current_balance
+        } else {
+            self.prev_balance
+        };
         
         let gains_or_losses = current_balance - prev_balance;
         self.gains_or_losses += gains_or_losses;

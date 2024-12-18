@@ -39,11 +39,12 @@ pub fn create_defindex_vault<'a>(
     vault_fee_receiver: Address,
     vault_fee: u32,
     defindex_protocol_receiver: Address,
+    defindex_protocol_rate: u32,
     factory: Address,
     vault_name: String,
     vault_symbol: String,
 ) -> DeFindexVaultClient<'a> {
-    let args = (assets, manager, emergency_manager, vault_fee_receiver, vault_fee, defindex_protocol_receiver, factory, vault_name, vault_symbol);
+    let args = (assets, manager, emergency_manager, vault_fee_receiver, vault_fee, defindex_protocol_receiver, defindex_protocol_rate, factory, vault_name, vault_symbol);
     let address = &e.register(defindex_vault::WASM, args);
     let client = DeFindexVaultClient::new(e, address);
     client
