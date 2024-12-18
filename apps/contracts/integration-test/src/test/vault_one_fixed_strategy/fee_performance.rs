@@ -105,10 +105,11 @@ fn fee_performance() {
 
     let vault_balance_in_strategy = enviroment.strategy_contract.balance(&enviroment.vault_contract.address);
     std::println!("Shares after one year: {:?}", vault_balance_in_strategy);
+    
     assert_eq!(vault_balance_in_strategy, (deposit_amount * 11 / 10));
 
 
-    let lock_fees_bps = 10000u32;
+    let lock_fees_bps = 100u32;
     let lock_fees_result = enviroment.vault_contract.mock_auths(&[MockAuth {
         address: &enviroment.manager.clone(),
         invoke: &MockAuthInvoke {
@@ -117,7 +118,7 @@ fn fee_performance() {
             args: svec![&setup.env, lock_fees_bps].into_val(&setup.env),
             sub_invokes: &[]
     },
-    }]).try_lock_fees(&Some(lock_fees_bps));
+    }]).lock_fees(&Some(lock_fees_bps));
 
     std::println!("🟡Lock fees result: {:?}", lock_fees_result);
 
@@ -133,7 +134,7 @@ fn fee_performance() {
 
     std::println!("🟡Report result: {:?}", report_result);
 
-    let release_fees_amount = 5_000_000i128;
+    let release_fees_amount = 100i128;
     let release_fees_result = enviroment.vault_contract.mock_auths(&[MockAuth {
         address: &enviroment.manager.clone(),
         invoke: &MockAuthInvoke {
@@ -158,7 +159,7 @@ fn fee_performance() {
             args: ().into_val(&setup.env),
             sub_invokes: &[]
     },
-    }]).try_distribute_fees();
+    }]).distribute_fees();
 
     std::println!("🟡Distribute fees result: {:?}", distribute_fees_result);
 

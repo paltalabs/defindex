@@ -108,6 +108,16 @@ fn fee_performance() {
 
     std::println!("Shares after one year: {:?}", shares);
 
+    enviroment.vault_contract.mock_auths(&[MockAuth {
+        address: &enviroment.manager.clone(),
+        invoke: &MockAuthInvoke {
+            contract: &enviroment.vault_contract.address.clone(),
+            fn_name: "report",
+            args: (  ).into_val(&setup.env),
+            sub_invokes: &[]
+    },
+    }]);
+
 
     let lock_fees_result = enviroment.vault_contract.mock_auths(&[MockAuth {
         address: &enviroment.manager.clone(),
@@ -117,9 +127,12 @@ fn fee_performance() {
             args: svec![&setup.env, 2000u32].into_val(&setup.env),
             sub_invokes: &[]
     },
-    }]).try_lock_fees(&Some(2000u32));
+    }]).lock_fees(&Some(2000u32));
 
     std::println!("🟡Lock fees result: {:?}", lock_fees_result);
+    let report_result = enviroment.vault_contract.try_report();
+
+    std::println!("🔵Report result: {:?}", report_result);
 
     let release_fees_amount = 1_0_000_000i128;
     let release_fees_result = enviroment.vault_contract.mock_auths(&[MockAuth {
@@ -137,6 +150,9 @@ fn fee_performance() {
 
     std::println!("🟡Release fees result: {:?}", release_fees_result);
     assert_eq!(release_fees_result, Err(Ok(VaultContractError::InsufficientManagedFunds)));
+    let report_result = enviroment.vault_contract.try_report();
+
+    std::println!("🔵Report result: {:?}", report_result);
     
     let distribute_fees_result = enviroment.vault_contract.mock_auths(&[MockAuth {
         address: &enviroment.manager.clone(),
@@ -146,19 +162,11 @@ fn fee_performance() {
             args: ().into_val(&setup.env),
             sub_invokes: &[]
     },
-    }]).try_distribute_fees();
+    }]).distribute_fees();
 
     std::println!("🟡Distribute fees result: {:?}", distribute_fees_result);
 
-    let report_result = enviroment.vault_contract.mock_auths(&[MockAuth {
-        address: &enviroment.manager.clone(),
-        invoke: &MockAuthInvoke {
-            contract: &enviroment.vault_contract.address.clone(),
-            fn_name: "report",
-            args: (  ).into_val(&setup.env),
-            sub_invokes: &[]
-    },
-    }]).try_report();
+    let report_result = enviroment.vault_contract.try_report();
 
-    std::println!("🟡Report result: {:?}", report_result);
+    std::println!("🔵Report result: {:?}", report_result);
 }
