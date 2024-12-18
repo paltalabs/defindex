@@ -915,6 +915,8 @@ impl VaultManagementTrait for DeFindexVault {
 
                     let vault_fee_amount = report.locked_fee - defindex_fee_amount;
 
+                    report.prev_balance = report.prev_balance - report.locked_fee;
+
                     unwind_from_strategy(&e, &strategy.address, &defindex_fee_amount, &defindex_protocol_receiver)?;
                     unwind_from_strategy(&e, &strategy.address, &vault_fee_amount, &vault_fee_receiver)?;
                     total_fees_distributed += report.locked_fee;

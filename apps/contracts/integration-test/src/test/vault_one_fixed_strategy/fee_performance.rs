@@ -105,11 +105,14 @@ fn fee_performance() {
 
     let vault_balance_in_strategy = enviroment.strategy_contract.balance(&enviroment.vault_contract.address);
     std::println!("Shares after one year: {:?}", vault_balance_in_strategy);
+
+    let report = enviroment.vault_contract.mock_all_auths().report();
+    std::println!("Report: {:?}", report);
     
     assert_eq!(vault_balance_in_strategy, (deposit_amount * 11 / 10));
 
 
-    let lock_fees_bps = 100u32;
+    let lock_fees_bps = 2000u32;
     let lock_fees_result = enviroment.vault_contract.mock_auths(&[MockAuth {
         address: &enviroment.manager.clone(),
         invoke: &MockAuthInvoke {
