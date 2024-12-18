@@ -111,7 +111,6 @@ fn fee_performance() {
     
     assert_eq!(vault_balance_in_strategy, (deposit_amount * 11 / 10));
 
-
     let lock_fees_bps = 2000u32;
     let lock_fees_result = enviroment.vault_contract.mock_auths(&[MockAuth {
         address: &enviroment.manager.clone(),
