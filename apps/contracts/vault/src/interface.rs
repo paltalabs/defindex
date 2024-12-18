@@ -20,6 +20,7 @@ pub trait VaultTrait {
     /// - `vault_fee`: Vault-specific fee percentage in basis points (typically set at 0-2% APR).
     /// - `defindex_protocol_receiver`: Address receiving DeFindex’s protocol-wide fee in basis points (0.5% APR).
     /// - `factory`: Factory contract address for deployment linkage.
+    /// - `soroswap_router`: Address of the Soroswap Router
     /// - `vault_name`: Name of the vault token to be displayed in metadata.
     /// - `vault_symbol`: Symbol representing the vault’s token.
     ///
@@ -40,6 +41,7 @@ pub trait VaultTrait {
         vault_fee: u32,
         defindex_protocol_receiver: Address,
         factory: Address,
+        soroswap_router: Address,
         vault_name: String,
         vault_symbol: String,
     );

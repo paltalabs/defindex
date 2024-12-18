@@ -31,13 +31,12 @@ use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::{check_and_execute_investments, generate_investment_allocations};
 use models::{
-    Instruction, OptionalSwapDetailsExactIn,
-    OptionalSwapDetailsExactOut, CurrentAssetInvestmentAllocation,
-    ActionType, AssetInvestmentAllocation,
+    Instruction, CurrentAssetInvestmentAllocation,
+    AssetInvestmentAllocation,
 };
 use storage::{
     extend_instance_ttl, get_assets, get_vault_fee, set_asset, set_defindex_protocol_fee_receiver,
-    set_factory, set_total_assets, set_vault_fee,
+    set_factory, set_total_assets, set_vault_fee, set_soroswap_router,
 };
 use strategies::{
     get_strategy_asset, get_strategy_client,
@@ -76,6 +75,7 @@ impl VaultTrait for DeFindexVault {
     /// - `vault_fee`: Vault-specific fee percentage in basis points (typically set at 0-2% APR).
     /// - `defindex_protocol_receiver`: Address receiving DeFindex’s protocol-wide fee in basis points (0.5% APR).
     /// - `factory`: Factory contract address for deployment linkage.
+    /// - `soroswap_router`: Address of the Soroswap router
     /// - `vault_name`: Name of the vault token to be displayed in metadata.
     /// - `vault_symbol`: Symbol representing the vault’s token.
     ///
@@ -96,6 +96,7 @@ impl VaultTrait for DeFindexVault {
         vault_fee: u32,
         defindex_protocol_receiver: Address,
         factory: Address,
+        soroswap_router: Address,
         vault_name: String,
         vault_symbol: String,
     ) {
@@ -113,6 +114,9 @@ impl VaultTrait for DeFindexVault {
 
         // Set the factory address
         set_factory(&e, &factory);
+
+        // Set soroswap router
+        set_soroswap_router(&e, &soroswap_router);
 
         // Store Assets Objects
         let total_assets = assets.len();
@@ -712,74 +716,66 @@ impl VaultManagementTrait for DeFindexVault {
         Ok(())
     }
 
-    /// Rebalances the vault by executing a series of instructions.
-    ///
-    /// # Arguments:
-    /// * `e` - The environment.
-    /// * `instructions` - A vector of `Instruction` structs representing actions (withdraw, invest, swap, zapper) to be taken.
-    ///
-    /// # Returns:
-    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn rebalance(e: Env, instructions: Vec<Instruction>) -> Result<(), ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
-
+    
         let access_control = AccessControl::new(&e);
         access_control.require_role(&RolesDataKey::Manager);
-
+    
         if instructions.is_empty() {
             panic_with_error!(&e, ContractError::NoInstructions);
         }
-
+    
         for instruction in instructions.iter() {
-            match instruction.action {
-                ActionType::Withdraw => match (&instruction.strategy, &instruction.amount) {
-                    (Some(strategy_address), Some(amount)) => {
-                        unwind_from_strategy(&e, strategy_address, amount)?;
-                    }
-                    _ => return Err(ContractError::MissingInstructionData),
-                },
-                ActionType::Invest => match (&instruction.strategy, &instruction.amount) {
-                    (Some(strategy_address), Some(amount)) => {
-                        let asset_address = get_strategy_asset(&e, strategy_address)?;
-                        invest_in_strategy(&e, &asset_address.address, strategy_address, amount)?;
-                    }
-                    _ => return Err(ContractError::MissingInstructionData),
-                },
-                ActionType::SwapExactIn => match &instruction.swap_details_exact_in {
-                    OptionalSwapDetailsExactIn::Some(swap_details) => {
-                        internal_swap_exact_tokens_for_tokens(
-                            &e,
-                            &swap_details.token_in,
-                            &swap_details.token_out,
-                            &swap_details.amount_in,
-                            &swap_details.amount_out_min,
-                            &swap_details.distribution,
-                            &swap_details.deadline,
-                        )?;
-                    }
-                    _ => return Err(ContractError::MissingInstructionData),
-                },
-                ActionType::SwapExactOut => match &instruction.swap_details_exact_out {
-                    OptionalSwapDetailsExactOut::Some(swap_details) => {
-                        internal_swap_tokens_for_exact_tokens(
-                            &e,
-                            &swap_details.token_in,
-                            &swap_details.token_out,
-                            &swap_details.amount_out,
-                            &swap_details.amount_in_max,
-                            &swap_details.distribution,
-                            &swap_details.deadline,
-                        )?;
-                    }
-                    _ => return Err(ContractError::MissingInstructionData),
-                },
-                ActionType::Zapper => {
-                    // TODO: Implement Zapper instructions
+            match instruction {
+                Instruction::Withdraw(strategy_address, amount) => {
+                    unwind_from_strategy(&e, &strategy_address, &amount)?;
                 }
+                Instruction::Invest(strategy_address, amount) => {
+                    let asset_address = get_strategy_asset(&e, &strategy_address)?;
+                    invest_in_strategy(&e, &asset_address.address, &strategy_address, &amount)?;
+                }
+                Instruction::SwapExactIn (
+                    token_in,
+                    token_out,
+                    amount_in,
+                    amount_out_min,
+                    deadline,
+                 ) => {
+                    internal_swap_exact_tokens_for_tokens(
+                        &e,
+                        &token_in,
+                        &token_out,
+                        &amount_in,
+                        &amount_out_min,
+                        &deadline,
+                    )?;
+                }
+                Instruction::SwapExactOut (
+                    token_in,
+                    token_out,
+                    amount_out,
+                    amount_in_max,
+                    deadline,
+                 ) => {
+                    internal_swap_tokens_for_exact_tokens(
+                        &e,
+                        &token_in,
+                        &token_out,
+                        &amount_out,
+                        &amount_in_max,
+                        &deadline,
+                    )?;
+                }
+                // Zapper instruction is omitted for now
+                // Instruction::Zapper(instructions) => {
+                //     // TODO: Implement Zapper instructions
+                // }
             }
         }
-
+    
         Ok(())
     }
+    
 }

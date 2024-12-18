@@ -2,15 +2,12 @@ extern crate std;
 use crate::
   test::{
     create_defindex_vault,
-    create_strategy_params_token0, 
-    create_strategy_params_token1, 
+    create_strategy_params_token_0, 
+    create_strategy_params_token_1, 
     defindex_vault::{
-      ActionType, 
       AssetInvestmentAllocation, 
       AssetStrategySet, 
       Instruction, 
-      OptionalSwapDetailsExactIn, 
-      OptionalSwapDetailsExactOut,
       StrategyAllocation,
     }, DeFindexVaultTest
    
@@ -24,18 +21,18 @@ fn budget() {
   test.env.budget().reset_unlimited();
   
   test.env.mock_all_auths();
-  let strategy_params_token0 = create_strategy_params_token0(&test);
-  let strategy_params_token1 = create_strategy_params_token1(&test);
+  let strategy_params_token_0 = create_strategy_params_token_0(&test);
+  let strategy_params_token_1 = create_strategy_params_token_1(&test);
 
   let assets: Vec<AssetStrategySet> = sorobanvec![
       &test.env,
       AssetStrategySet {
-          address: test.token0.address.clone(),
-          strategies: strategy_params_token0.clone()
+          address: test.token_0.address.clone(),
+          strategies: strategy_params_token_0.clone()
       },
       AssetStrategySet {
-          address: test.token1.address.clone(),
-          strategies: strategy_params_token1.clone()
+          address: test.token_1.address.clone(),
+          strategies: strategy_params_token_1.clone()
       }
   ];
 
@@ -48,6 +45,7 @@ fn budget() {
       2000u32,
       test.defindex_protocol_receiver.clone(),
       test.defindex_factory.clone(),
+      test.soroswap_router.address.clone(),
       String::from_str(&test.env, "dfToken"),
       String::from_str(&test.env, "DFT"),
     );
@@ -64,8 +62,8 @@ fn budget() {
 
   let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
 
-  test.token0_admin_client.mint(&users[0], &99987654321i128);
-  test.token1_admin_client.mint(&users[0], &99987654321i128);
+  test.token_0_admin_client.mint(&users[0], &99987654321i128);
+  test.token_1_admin_client.mint(&users[0], &99987654321i128);
   
   let _ = defindex_contract.deposit(
     &sorobanvec![&test.env, amount0, amount1],
@@ -86,8 +84,8 @@ fn budget() {
 
   let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
 
-  test.token0_admin_client.mint(&users[0], &99987654321i128);
-  test.token1_admin_client.mint(&users[0], &99987654321i128);
+  test.token_0_admin_client.mint(&users[0], &99987654321i128);
+  test.token_1_admin_client.mint(&users[0], &99987654321i128);
   
   let _ = defindex_contract.deposit(
     &sorobanvec![&test.env, amount0, amount1],
@@ -118,20 +116,20 @@ fn budget() {
   let asset_investments = sorobanvec![
     &test.env,
     Some(AssetInvestmentAllocation {
-    asset: test.token0.address.clone(),
+    asset: test.token_0.address.clone(),
     strategy_allocations: sorobanvec![
       &test.env,
       Some(StrategyAllocation {
-      strategy_address: test.strategy_client_token0.address.clone(),
+      strategy_address: test.strategy_client_token_0.address.clone(),
       amount: 100,
       }),
     ]}),
     Some(AssetInvestmentAllocation {
-      asset: test.token1.address.clone(),
+      asset: test.token_1.address.clone(),
       strategy_allocations: sorobanvec![
         &test.env,
         Some(StrategyAllocation {
-        strategy_address: test.strategy_client_token1.address.clone(),
+        strategy_address: test.strategy_client_token_1.address.clone(),
         amount: 200,
         }),
     ]})];
@@ -147,15 +145,9 @@ fn budget() {
 
   // rebalance withdraw
   let withdraw_instructions = sorobanvec![
-        &test.env,
-        Instruction {
-            action: ActionType::Withdraw,
-            strategy: Some(test.strategy_client_token0.address.clone()),
-            amount: Some(100),
-            swap_details_exact_in: OptionalSwapDetailsExactIn::None,
-            swap_details_exact_out: OptionalSwapDetailsExactOut::None,
-        },
-    ];
+    &test.env,
+    Instruction::Withdraw (test.strategy_client_token_0.address.clone(),100),
+];
   let _ = defindex_contract.rebalance(&withdraw_instructions);
   let mem = test.env.budget().memory_bytes_cost();
   let cpu = test.env.budget().cpu_instruction_cost();
@@ -166,15 +158,10 @@ fn budget() {
   // rebalance invest
   
   let invest_instructions = sorobanvec![
-        &test.env,
-        Instruction {
-            action: ActionType::Invest,
-            strategy: Some(test.strategy_client_token0.address.clone()),
-            amount: Some(100),
-            swap_details_exact_in: OptionalSwapDetailsExactIn::None,
-            swap_details_exact_out: OptionalSwapDetailsExactOut::None,
-        },
-    ];
+    &test.env,
+    Instruction::Invest(test.strategy_client_token_0.address.clone(), 100),
+];
+
   let _ = defindex_contract.rebalance(&invest_instructions);
   let mem = test.env.budget().memory_bytes_cost();
   let cpu = test.env.budget().cpu_instruction_cost();
@@ -185,36 +172,13 @@ fn budget() {
   //Rebalance with several instructions one strategy
 
   let several_instructions_one_strategy = sorobanvec![
-        &test.env,
-        Instruction {
-            action: ActionType::Invest,
-            strategy: Some(test.strategy_client_token0.address.clone()),
-            amount: Some(100),
-            swap_details_exact_in: OptionalSwapDetailsExactIn::None,
-            swap_details_exact_out: OptionalSwapDetailsExactOut::None,
-        },
-        Instruction {
-            action: ActionType::Invest,
-            strategy: Some(test.strategy_client_token0.address.clone()),
-            amount: Some(100),
-            swap_details_exact_in: OptionalSwapDetailsExactIn::None,
-            swap_details_exact_out: OptionalSwapDetailsExactOut::None,
-        },
-        Instruction {
-            action: ActionType::Invest,
-            strategy: Some(test.strategy_client_token0.address.clone()),
-            amount: Some(100),
-            swap_details_exact_in: OptionalSwapDetailsExactIn::None,
-            swap_details_exact_out: OptionalSwapDetailsExactOut::None,
-        },
-        Instruction {
-            action: ActionType::Invest,
-            strategy: Some(test.strategy_client_token0.address.clone()),
-            amount: Some(100),
-            swap_details_exact_in: OptionalSwapDetailsExactIn::None,
-            swap_details_exact_out: OptionalSwapDetailsExactOut::None,
-        },
-    ];
+    &test.env,
+    Instruction::Invest(test.strategy_client_token_0.address.clone(), 100),
+    Instruction::Invest(test.strategy_client_token_0.address.clone(), 100),
+    Instruction::Invest(test.strategy_client_token_0.address.clone(), 100),
+    Instruction::Invest(test.strategy_client_token_0.address.clone(), 100),
+];
+
   let _ = defindex_contract.rebalance(&several_instructions_one_strategy);
   let mem = test.env.budget().memory_bytes_cost();
   let cpu = test.env.budget().cpu_instruction_cost();
@@ -225,36 +189,13 @@ fn budget() {
   // Rebalance several instructions two strategies
 
   let several_instructions_two_strategy = sorobanvec![
-        &test.env,
-        Instruction {
-            action: ActionType::Invest,
-            strategy: Some(test.strategy_client_token1.address.clone()),
-            amount: Some(100),
-            swap_details_exact_in: OptionalSwapDetailsExactIn::None,
-            swap_details_exact_out: OptionalSwapDetailsExactOut::None,
-        },
-        Instruction {
-            action: ActionType::Invest,
-            strategy: Some(test.strategy_client_token1.address.clone()),
-            amount: Some(100),
-            swap_details_exact_in: OptionalSwapDetailsExactIn::None,
-            swap_details_exact_out: OptionalSwapDetailsExactOut::None,
-        },
-        Instruction {
-            action: ActionType::Invest,
-            strategy: Some(test.strategy_client_token0.address.clone()),
-            amount: Some(100),
-            swap_details_exact_in: OptionalSwapDetailsExactIn::None,
-            swap_details_exact_out: OptionalSwapDetailsExactOut::None,
-        },
-        Instruction {
-            action: ActionType::Invest,
-            strategy: Some(test.strategy_client_token0.address.clone()),
-            amount: Some(100),
-            swap_details_exact_in: OptionalSwapDetailsExactIn::None,
-            swap_details_exact_out: OptionalSwapDetailsExactOut::None,
-        },
-    ];
+    &test.env,
+    Instruction::Invest(test.strategy_client_token_1.address.clone(), 100),
+    Instruction::Invest(test.strategy_client_token_1.address.clone(), 100),
+    Instruction::Invest(test.strategy_client_token_0.address.clone(), 100),
+    Instruction::Invest(test.strategy_client_token_0.address.clone(), 100),
+];
+
   let _ = defindex_contract.rebalance(&several_instructions_two_strategy);
   let mem = test.env.budget().memory_bytes_cost();
   let cpu = test.env.budget().cpu_instruction_cost();
