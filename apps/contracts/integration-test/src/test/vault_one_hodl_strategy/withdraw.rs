@@ -375,14 +375,13 @@ fn test_withdraw_after_invest() {
     let token_balance_after_withdraw = enviroment.token.balance(&enviroment.vault_contract.address);
     assert_eq!(token_balance_after_withdraw, 0);
 
-    let charged_fee = (deposit_amount - MINIMUM_LIQUIDITY) * (DEFINDEX_FEE as i128 + VAULT_FEE as i128) / 10000;
-    let expected_amount = deposit_amount - MINIMUM_LIQUIDITY - charged_fee;
+    let expected_amount = deposit_amount - MINIMUM_LIQUIDITY;
 
     let user_balance_after_withdraw = enviroment.token.balance(user);
     assert_eq!(user_balance_after_withdraw, expected_amount);
 
     let strategy_balance = enviroment.strategy_contract.balance(&enviroment.vault_contract.address);
-    assert_eq!(strategy_balance, charged_fee + MINIMUM_LIQUIDITY);   
+    assert_eq!(strategy_balance, MINIMUM_LIQUIDITY);   
 
     let vault_balance_after_withdraw = enviroment.token.balance(&enviroment.vault_contract.address);
     assert_eq!(vault_balance_after_withdraw, 0);
@@ -717,11 +716,9 @@ fn test_withdraw_after_invest_multiple_users() {
     let token_balance_after_withdraw = enviroment.token.balance(&enviroment.vault_contract.address);
     assert_eq!(token_balance_after_withdraw, 0);
 
-    let charged_fee_user1 = (deposit_amount - MINIMUM_LIQUIDITY) * (DEFINDEX_FEE as i128 + VAULT_FEE as i128) / 10000;
-    let expected_amount_user1 = deposit_amount - MINIMUM_LIQUIDITY - charged_fee_user1;
+    let expected_amount_user1 = deposit_amount - MINIMUM_LIQUIDITY;
 
-    let charged_fee_user2 = deposit_amount * (DEFINDEX_FEE as i128 + VAULT_FEE as i128) / 10000;
-    let expected_amount_user2 = deposit_amount - charged_fee_user2;
+    let expected_amount_user2 = deposit_amount;
 
     let user1_balance_after_withdraw = enviroment.token.balance(user1);
     let user2_balance_after_withdraw = enviroment.token.balance(user2);
@@ -729,7 +726,7 @@ fn test_withdraw_after_invest_multiple_users() {
     assert_eq!(user2_balance_after_withdraw, expected_amount_user2);
 
     let strategy_balance = enviroment.strategy_contract.balance(&enviroment.vault_contract.address);
-    assert_eq!(strategy_balance, charged_fee_user1 + charged_fee_user2 + MINIMUM_LIQUIDITY);   
+    assert_eq!(strategy_balance, MINIMUM_LIQUIDITY);   
 
     let vault_balance_after_withdraw = enviroment.token.balance(&enviroment.vault_contract.address);
     assert_eq!(vault_balance_after_withdraw, 0);
