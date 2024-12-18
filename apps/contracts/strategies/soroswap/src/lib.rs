@@ -134,6 +134,7 @@ impl DeFindexStrategyTrait for SoroswapAdapter {
         e: Env,
         _amount: i128,
         from: Address,
+        to: Address,
     ) -> Result<i128, StrategyError> {
         from.require_auth();
         check_initialized(&e)?;

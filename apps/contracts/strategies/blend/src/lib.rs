@@ -122,6 +122,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
         e: Env,
         amount: i128,
         from: Address,
+        to: Address,
     ) -> Result<i128, StrategyError> {
         check_initialized(&e)?;
         check_nonnegative_amount(amount)?;
@@ -138,7 +139,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         let config = storage::get_config(&e);
 
-        let (tokens_withdrawn, b_tokens_burnt) = blend_pool::withdraw(&e, &from, &amount, &config);
+        let (tokens_withdrawn, b_tokens_burnt) = blend_pool::withdraw(&e, &to, &amount, &config);
 
         let vault_shares = reserves::withdraw(&e, reserves.clone(), &from, tokens_withdrawn, b_tokens_burnt);
         let underlying_balance = shares_to_underlying(vault_shares, reserves);

@@ -107,6 +107,7 @@ impl DeFindexStrategyTrait for FixAprStrategy {
         e: Env,
         amount: i128,
         from: Address,
+        to: Address,
     ) -> Result<i128, StrategyError> {
         from.require_auth();
         check_initialized(&e)?;
@@ -117,7 +118,7 @@ impl DeFindexStrategyTrait for FixAprStrategy {
         
         let contract_address = e.current_contract_address();
         let underlying_asset = get_underlying_asset(&e);
-        TokenClient::new(&e, &underlying_asset).transfer(&contract_address, &from, &amount);
+        TokenClient::new(&e, &underlying_asset).transfer(&contract_address, &to, &amount);
         event::emit_withdraw(&e, String::from_str(&e, STRATEGY_NAME), amount, from.clone());
 
         Ok(read_balance(&e, from))

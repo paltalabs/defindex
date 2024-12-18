@@ -184,10 +184,10 @@ fn success() {
     // withdraw_amount = 100_0958904
 
     // -> verify over withdraw fails
-    let result = strategy_client.try_withdraw(&(withdraw_amount + 100_000_000_0000000), &user_3);
+    let result = strategy_client.try_withdraw(&(withdraw_amount + 100_000_000_0000000), &user_3, &user_3);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
 
-    strategy_client.withdraw(&withdraw_amount, &user_2);
+    strategy_client.withdraw(&withdraw_amount, &user_2, &user_2);
     // -> verify withdraw auth
     assert_eq!(
         e.auths()[0],
@@ -213,7 +213,7 @@ fn success() {
     assert_eq!(strategy_client.balance(&user_2), 0);
 
     // -> verify withdraw from empty vault fails
-    let result = strategy_client.try_withdraw(&MIN_DUST, &user_2);
+    let result = strategy_client.try_withdraw(&MIN_DUST, &user_2, &user_2);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
 
     // TODO: Finish harvest testings, pending soroswap router setup with a blend token pair with the underlying asset
