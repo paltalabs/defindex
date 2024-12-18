@@ -2,7 +2,6 @@ use crate::{setup::create_vault_one_asset_hodl_strategy, test::{EnvTestUtils, In
 use soroban_sdk::{testutils::{MockAuth, MockAuthInvoke}, vec as svec, IntoVal, Vec};
 
 extern crate std;
-
 #[test]
 fn fee_performance() {
     let enviroment = create_vault_one_asset_hodl_strategy();
@@ -95,18 +94,9 @@ fn fee_performance() {
         },
     }])
     .invest(&investments);
-    let shares = enviroment.strategy_contract.balance( &enviroment.vault_contract.address);
-
-    std::println!("Shares: {:?}", shares);
-    //let amount = enviroment.vault_contract.get_asset_amounts_per_shares(shares);
 
     setup.env.jump_time(ONE_YEAR_IN_SECONDS);
-
-
     enviroment.strategy_contract.harvest(&enviroment.vault_contract.address);
-    let shares = enviroment.strategy_contract.balance( &enviroment.vault_contract.address);
-
-    std::println!("Shares after one year: {:?}", shares);
 
     enviroment.vault_contract.mock_auths(&[MockAuth {
         address: &enviroment.manager.clone(),
@@ -119,7 +109,7 @@ fn fee_performance() {
     }]);
 
 
-    let lock_fees_result = enviroment.vault_contract.mock_auths(&[MockAuth {
+    let _lock_fees_result = enviroment.vault_contract.mock_auths(&[MockAuth {
         address: &enviroment.manager.clone(),
         invoke: &MockAuthInvoke {
             contract: &enviroment.vault_contract.address.clone(),
@@ -129,10 +119,8 @@ fn fee_performance() {
     },
     }]).lock_fees(&Some(2000u32));
 
-    std::println!("🟡Lock fees result: {:?}", lock_fees_result);
-    let report_result = enviroment.vault_contract.try_report();
-
-    std::println!("🔵Report result: {:?}", report_result);
+    let total_funds_after_lock = enviroment.vault_contract.fetch_total_managed_funds().get(enviroment.token.address.clone()).unwrap().total_amount;
+    assert_eq!(total_funds_after_lock, deposit_amount);
 
     let release_fees_amount = 1_0_000_000i128;
     let release_fees_result = enviroment.vault_contract.mock_auths(&[MockAuth {
@@ -148,13 +136,9 @@ fn fee_performance() {
     },
     }]).try_release_fees(&enviroment.strategy_contract.address.clone(), &release_fees_amount);
 
-    std::println!("🟡Release fees result: {:?}", release_fees_result);
     assert_eq!(release_fees_result, Err(Ok(VaultContractError::InsufficientManagedFunds)));
-    let report_result = enviroment.vault_contract.try_report();
 
-    std::println!("🔵Report result: {:?}", report_result);
-    
-    let distribute_fees_result = enviroment.vault_contract.mock_auths(&[MockAuth {
+    let _distribute_fees_result = enviroment.vault_contract.mock_auths(&[MockAuth {
         address: &enviroment.manager.clone(),
         invoke: &MockAuthInvoke {
             contract: &enviroment.vault_contract.address.clone(),
@@ -164,9 +148,9 @@ fn fee_performance() {
     },
     }]).distribute_fees();
 
-    std::println!("🟡Distribute fees result: {:?}", distribute_fees_result);
+    let _report_result = enviroment.vault_contract.report();
 
-    let report_result = enviroment.vault_contract.try_report();
+    let total_funds_after_distribute = enviroment.vault_contract.fetch_total_managed_funds().get(enviroment.token.address.clone()).unwrap().total_amount;
+    assert_eq!(total_funds_after_distribute, deposit_amount);
 
-    std::println!("🔵Report result: {:?}", report_result);
 }

@@ -1,13 +1,11 @@
 use crate::{setup::create_vault_one_asset_fixed_strategy, test::{EnvTestUtils, IntegrationTest, ONE_YEAR_IN_SECONDS}, vault::{defindex_vault_contract::{AssetInvestmentAllocation, StrategyAllocation}, VaultContractError, MINIMUM_LIQUIDITY}};
 use soroban_sdk::{testutils::{Ledger, MockAuth, MockAuthInvoke}, vec as svec,  IntoVal, Vec};
 
-extern crate std;
-
 #[test]
 fn fee_performance() {
     let enviroment = create_vault_one_asset_fixed_strategy();
     let setup = enviroment.setup;
-
+    let token_address = enviroment.token.address.clone();
     let user_starting_balance = 100_000_0_000_000i128;
 
     let users = IntegrationTest::generate_random_users(&setup.env, 1);
@@ -25,7 +23,7 @@ fn fee_performance() {
     let user_balance = enviroment.token.balance(user);
     assert_eq!(user_balance, user_starting_balance);
 
-    let deposit_amount = 10_0_000_000i128;
+    let deposit_amount = 100_0_000_000i128;
     enviroment.vault_contract
     .mock_auths(&[MockAuth {
         address: &user.clone(),
@@ -99,18 +97,22 @@ fn fee_performance() {
 
     std::println!("Shares: {:?}", vault_balance_in_strategy);
 
+    // Jump one year
     setup.env.jump_time(ONE_YEAR_IN_SECONDS);
 
+    // Harvest
     enviroment.strategy_contract.harvest(&enviroment.vault_contract.address);
 
     let vault_balance_in_strategy = enviroment.strategy_contract.balance(&enviroment.vault_contract.address);
     std::println!("Shares after one year: {:?}", vault_balance_in_strategy);
 
-    let report = enviroment.vault_contract.mock_all_auths().report();
-    std::println!("Report: {:?}", report);
+    // Report
+    let _report = enviroment.vault_contract.mock_all_auths().report();
     
-    assert_eq!(vault_balance_in_strategy, (deposit_amount * 11 / 10));
+    let expected_balance = deposit_amount * 11 / 10; // 10% fixed APR
+    assert_eq!(vault_balance_in_strategy, expected_balance);
 
+    // Lock fees
     let lock_fees_bps = 2000u32;
     let lock_fees_result = enviroment.vault_contract.mock_auths(&[MockAuth {
         address: &enviroment.manager.clone(),
@@ -122,22 +124,14 @@ fn fee_performance() {
     },
     }]).lock_fees(&Some(lock_fees_bps));
 
-    std::println!("🟡Lock fees result: {:?}", lock_fees_result);
-
-    let report_result = enviroment.vault_contract.mock_auths(&[MockAuth {
-        address: &enviroment.manager.clone(),
-        invoke: &MockAuthInvoke {
-            contract: &enviroment.vault_contract.address.clone(),
-            fn_name: "report",
-            args: (  ).into_val(&setup.env),
-            sub_invokes: &[]
-    },
-    }]).try_report();
-
-    std::println!("🟡Report result: {:?}", report_result);
-
-    let release_fees_amount = 100i128;
-    let release_fees_result = enviroment.vault_contract.mock_auths(&[MockAuth {
+    let locked_fee = lock_fees_result.get(0).unwrap().locked_fee;
+    
+    let total_funds_after_lock = enviroment.vault_contract.fetch_total_managed_funds().get(token_address.clone()).unwrap().total_amount;
+    assert_eq!( total_funds_after_lock, (expected_balance - locked_fee));
+    
+    // Release fees
+    let release_fees_amount = 2_0_000_000i128; // release all locked fees (10_0_000_000 * 0.2 = 2_0_000_000)
+    let _release_fees_result = enviroment.vault_contract.mock_auths(&[MockAuth {
         address: &enviroment.manager.clone(),
         invoke: &MockAuthInvoke {
             contract: &enviroment.vault_contract.address.clone(),
@@ -150,10 +144,26 @@ fn fee_performance() {
     },
     }]).release_fees(&enviroment.strategy_contract.address.clone(), &release_fees_amount);
 
-    std::println!("🟡Release fees result: {:?}", release_fees_result);
-    //assert_eq!(release_fees_result, Err(Ok(VaultContractError::InsufficientManagedFunds)));
-    
-    let distribute_fees_result = enviroment.vault_contract.mock_auths(&[MockAuth {
+    let total_funds_after_release = enviroment.vault_contract.fetch_total_managed_funds().get(token_address.clone()).unwrap().total_amount;
+    assert_eq!( total_funds_after_release, (total_funds_after_lock + release_fees_amount));
+
+    // Lock fees
+    let lock_fees_bps = 2000u32;
+    let _lock_fees_result = enviroment.vault_contract.mock_auths(&[MockAuth {
+        address: &enviroment.manager.clone(),
+        invoke: &MockAuthInvoke {
+            contract: &enviroment.vault_contract.address.clone(),
+            fn_name: "lock_fees",
+            args: svec![&setup.env, lock_fees_bps].into_val(&setup.env),
+            sub_invokes: &[]
+    },
+    }]).lock_fees(&Some(lock_fees_bps));
+
+    let total_funds_after_lock = enviroment.vault_contract.fetch_total_managed_funds().get(token_address.clone()).unwrap().total_amount;
+
+
+    // Distribute fees
+    let _distribute_fees_result = enviroment.vault_contract.mock_auths(&[MockAuth {
         address: &enviroment.manager.clone(),
         invoke: &MockAuthInvoke {
             contract: &enviroment.vault_contract.address.clone(),
@@ -163,35 +173,6 @@ fn fee_performance() {
     },
     }]).distribute_fees();
 
-    std::println!("🟡Distribute fees result: {:?}", distribute_fees_result);
-
-    let report_result = enviroment.vault_contract.mock_auths(&[MockAuth {
-        address: &enviroment.manager.clone(),
-        invoke: &MockAuthInvoke {
-            contract: &enviroment.vault_contract.address.clone(),
-            fn_name: "report",
-            args: (  ).into_val(&setup.env),
-            sub_invokes: &[]
-    },
-    }]).try_report();
-
-    std::println!("🟡Report result: {:?}", report_result);
-
-    /* 
-
-- before = get_asset_amounts_per_shares(1000):
-
-- lock_fees():
-dependiendo del tiempo que pase, vamos a saber cuanto genera la estrategia.
-Si la fixed APR tiene 10%, hacemos pasar un año y la estrategia debería tener un 10% más
-1000
-
-- get_locked_fees(strategy); deberia ser la ganancia
-
-*vault_fee_rate (ex. 20%) 
-
-- after = get_asset_amounts_per_shares(1000):
-- assert (before, after*0.8)
-     */
-
+    let total_funds_after_distribute = enviroment.vault_contract.fetch_total_managed_funds().get(token_address.clone()).unwrap().total_amount;
+    assert_eq!(total_funds_after_distribute, total_funds_after_lock);
 }
