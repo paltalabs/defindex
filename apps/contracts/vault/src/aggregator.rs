@@ -1,7 +1,7 @@
 use soroban_sdk::{vec, Address, Env, IntoVal, Symbol, Val, Vec};
 
 use crate::{
-    models::DexDistribution,
+    // models::DexDistribution,
     storage::{get_assets, get_factory},
     ContractError,
 };
@@ -27,7 +27,7 @@ pub fn internal_swap_exact_tokens_for_tokens(
     token_out: &Address,
     amount_in: &i128,
     amount_out_min: &i128,
-    distribution: &Vec<DexDistribution>,
+    // distribution: &Vec<DexDistribution>,
     deadline: &u64,
 ) -> Result<(), ContractError> {
     let aggregator_address = fetch_aggregator_address(e);
@@ -42,7 +42,7 @@ pub fn internal_swap_exact_tokens_for_tokens(
     swap_args.push_back(token_out.to_val());
     swap_args.push_back(amount_in.into_val(e));
     swap_args.push_back(amount_out_min.into_val(e));
-    swap_args.push_back(distribution.into_val(e));
+    // swap_args.push_back(distribution.into_val(e));
     swap_args.push_back(e.current_contract_address().to_val());
     swap_args.push_back(deadline.into_val(e));
 
@@ -59,7 +59,7 @@ pub fn internal_swap_tokens_for_exact_tokens(
     token_out: &Address,
     amount_out: &i128,
     amount_in_max: &i128,
-    distribution: &Vec<DexDistribution>,
+    // distribution: &Vec<DexDistribution>,
     deadline: &u64,
 ) -> Result<(), ContractError> {
     let aggregator_address = fetch_aggregator_address(e);
@@ -74,7 +74,7 @@ pub fn internal_swap_tokens_for_exact_tokens(
     swap_args.push_back(token_out.to_val());
     swap_args.push_back(amount_out.into_val(e));
     swap_args.push_back(amount_in_max.into_val(e));
-    swap_args.push_back(distribution.into_val(e));
+    // swap_args.push_back(distribution.into_val(e));
     swap_args.push_back(e.current_contract_address().to_val());
     swap_args.push_back(deadline.into_val(e));
 
