@@ -3,7 +3,7 @@ use soroban_sdk::{Address, Env, Map, Vec};
 
 use common::models::AssetStrategySet;
 use crate::models::{StrategyAllocation, CurrentAssetInvestmentAllocation};
-use crate::storage::{get_assets, get_report};
+use crate::storage::{get_assets, get_report, get_vault_fee, set_report};
 use crate::strategies::get_strategy_client;
 
 /// Retrieves the idle funds for a given asset.
@@ -37,7 +37,9 @@ pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address) -> i12
     let strategy_client = get_strategy_client(e, strategy_address.clone());
     let strategy_invested_funds = strategy_client.balance(&e.current_contract_address());
 
-    let report = get_report(e, strategy_address);
+    let mut report = get_report(e, strategy_address);
+    report.lock_fee(get_vault_fee(e));
+    set_report(e, strategy_address, &report);
     strategy_invested_funds.checked_sub(report.locked_fee).unwrap_or(0)
 }
 
