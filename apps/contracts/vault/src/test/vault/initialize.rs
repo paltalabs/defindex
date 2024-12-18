@@ -1,7 +1,7 @@
 use soroban_sdk::{vec as sorobanvec, String, Vec};
 
 use crate::test::{
-    create_defindex_vault, create_strategy_params_token0, create_strategy_params_token1, defindex_vault::AssetStrategySet, DeFindexVaultTest
+    create_defindex_vault, create_hodl_strategy, create_strategy_params_token0, create_strategy_params_token1, defindex_vault::{AssetStrategySet, Strategy}, DeFindexVaultTest
 };
 
 
@@ -104,5 +104,64 @@ fn initialize_with_empty_asset_allocation() {
 // test initialzie with one asset and several strategies for the same asset
 #[test]
 fn with_one_asset_and_several_strategies() {
-    todo!();
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let strategy_client_1 = create_hodl_strategy(&test.env, &test.token0.address.clone());
+    let strategy_client_2 = create_hodl_strategy(&test.env, &test.token0.address.clone());
+    let strategy_client_3 = create_hodl_strategy(&test.env, &test.token0.address.clone());
+    let strategy_client_4 = create_hodl_strategy(&test.env, &test.token0.address.clone());
+    
+    let strategy_params = sorobanvec![
+        &test.env, 
+        Strategy {
+            name: String::from_str(&test.env, "strategy1"),
+            address: test.strategy_client_token0.address.clone(),
+            paused: false,
+        },
+        Strategy {
+            name: String::from_str(&test.env, "strategy2"),
+            address: strategy_client_1.address.clone(),
+            paused: false,
+        },
+        Strategy {
+            name: String::from_str(&test.env, "strategy3"),
+            address: strategy_client_2.address.clone(),
+            paused: false,
+        },
+        Strategy {
+            name: String::from_str(&test.env, "strategy4"),
+            address: strategy_client_3.address.clone(),
+            paused: false,
+        },
+        Strategy {
+            name: String::from_str(&test.env, "strategy4"),
+            address: strategy_client_4.address.clone(),
+            paused: false,
+        },
+    ];
+
+    // initialize with 1 asset, 3 strategies
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token0.address.clone(),
+            strategies: strategy_params.clone(),
+        }
+    ];
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        test.defindex_factory.clone(),
+        String::from_str(&test.env, "dfToken"),
+        String::from_str(&test.env, "DFT"),
+    );
+    let assets = defindex_contract.get_assets();
+    assert_eq!(assets.len(), 1);
+    let asset = assets.get(0).unwrap();
+    assert_eq!(asset.strategies.len(), strategy_params.len());
 }
