@@ -36,7 +36,7 @@ use models::{
 };
 use storage::{
     extend_instance_ttl, get_assets, get_vault_fee, set_asset, set_defindex_protocol_fee_receiver,
-    set_factory, set_total_assets, set_vault_fee,
+    set_factory, set_total_assets, set_vault_fee, set_soroswap_router,
 };
 use strategies::{
     get_strategy_asset, get_strategy_client,
@@ -75,6 +75,7 @@ impl VaultTrait for DeFindexVault {
     /// - `vault_fee`: Vault-specific fee percentage in basis points (typically set at 0-2% APR).
     /// - `defindex_protocol_receiver`: Address receiving DeFindex’s protocol-wide fee in basis points (0.5% APR).
     /// - `factory`: Factory contract address for deployment linkage.
+    /// - `soroswap_router`: Address of the Soroswap router
     /// - `vault_name`: Name of the vault token to be displayed in metadata.
     /// - `vault_symbol`: Symbol representing the vault’s token.
     ///
@@ -95,6 +96,7 @@ impl VaultTrait for DeFindexVault {
         vault_fee: u32,
         defindex_protocol_receiver: Address,
         factory: Address,
+        soroswap_router: Address,
         vault_name: String,
         vault_symbol: String,
     ) {
@@ -112,6 +114,9 @@ impl VaultTrait for DeFindexVault {
 
         // Set the factory address
         set_factory(&e, &factory);
+
+        // Set soroswap router
+        set_soroswap_router(&e, &soroswap_router);
 
         // Store Assets Objects
         let total_assets = assets.len();

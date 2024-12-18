@@ -35,6 +35,7 @@ fn one_asset_no_previous_investment() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
     );
@@ -183,6 +184,7 @@ fn one_asset_previous_investment_success() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
     );
@@ -370,6 +372,7 @@ fn several_assets_no_previous_investment() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
     );
@@ -570,6 +573,7 @@ fn several_assets_wih_previous_investment_success() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
     );

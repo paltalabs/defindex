@@ -34,6 +34,7 @@ fn amounts_desired_less_length() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
     );
@@ -77,6 +78,7 @@ fn amounts_desired_more_length() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
     );
@@ -124,6 +126,7 @@ fn amounts_min_less_length() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
     );
@@ -172,6 +175,7 @@ fn amounts_min_more_length() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
     );
@@ -219,6 +223,7 @@ fn amounts_desired_negative() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
     );
@@ -261,6 +266,7 @@ fn one_asset_success() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
     );
@@ -421,6 +427,7 @@ fn one_asset_min_more_than_desired() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
     );
@@ -478,6 +485,7 @@ fn several_assets_success() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
     );
@@ -734,6 +742,7 @@ fn several_assets_min_greater_than_optimal() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
     );
@@ -828,6 +837,7 @@ fn amounts_min_greater_than_amounts_desired(){
         2000u32,
         test.defindex_protocol_receiver.clone(),
         test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
     );
@@ -889,6 +899,7 @@ fn transfers_tokens_from_user_to_vault(){
         2000u32,
         test.defindex_protocol_receiver.clone(),
         test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
     );
@@ -948,6 +959,7 @@ fn arithmetic_error() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
     );
@@ -1011,6 +1023,7 @@ fn amounts_desired_zero() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
     );
@@ -1075,6 +1088,7 @@ fn insufficient_funds_with_error_message() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
         String::from_str(&test.env, "DFT"),
     );

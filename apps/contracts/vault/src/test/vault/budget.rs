@@ -45,6 +45,7 @@ fn budget() {
       2000u32,
       test.defindex_protocol_receiver.clone(),
       test.defindex_factory.clone(),
+      test.soroswap_router.address.clone(),
       String::from_str(&test.env, "dfToken"),
       String::from_str(&test.env, "DFT"),
     );

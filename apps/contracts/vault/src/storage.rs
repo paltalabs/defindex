@@ -16,30 +16,17 @@ pub fn extend_instance_ttl(e: &Env) {
 #[derive(Clone)]
 #[contracttype]
 enum DataKey {
-    AssetStrategySet(u32), // AssetStrategySet Addresse by index
     TotalAssets,          // Total number of tokens
+    AssetStrategySet(u32), // AssetStrategySet Addresse by index
     DeFindexProtocolFeeReceiver,
-    Factory,
+    DeFindexFactory,
     LastFeeAssessment,
     VaultFee,
+    SoroswapRouter,
 }
 
 
-
-// Assets Management
-pub fn set_asset(e: &Env, index: u32, asset: &AssetStrategySet) {
-    e.storage()
-        .instance()
-        .set(&DataKey::AssetStrategySet(index), asset);
-}
-
-pub fn get_asset(e: &Env, index: u32) -> AssetStrategySet {
-    e.storage()
-        .instance()
-        .get(&DataKey::AssetStrategySet(index))
-        .unwrap()
-}
-
+// TotalAssets
 pub fn set_total_assets(e: &Env, n: u32) {
     e.storage().instance().set(&DataKey::TotalAssets, &n);
 }
@@ -48,6 +35,18 @@ pub fn get_total_assets(e: &Env) -> u32 {
     e.storage().instance().get(&DataKey::TotalAssets).unwrap()
 }
 
+// AssetStrategySet(index)
+pub fn set_asset(e: &Env, index: u32, asset: &AssetStrategySet) {
+    e.storage()
+        .instance()
+        .set(&DataKey::AssetStrategySet(index), asset);
+}
+pub fn get_asset(e: &Env, index: u32) -> AssetStrategySet {
+    e.storage()
+        .instance()
+        .get(&DataKey::AssetStrategySet(index))
+        .unwrap()
+}
 pub fn get_assets(e: &Env) -> Vec<AssetStrategySet> {
     let total_assets = get_total_assets(e);
     let mut assets = Vec::new(e);
@@ -71,14 +70,24 @@ pub fn get_defindex_protocol_fee_receiver(e: &Env) -> Address {
         .unwrap()
 }
 
-// DeFindex Factory
+// DeFindex DeFindexFactory
 pub fn set_factory(e: &Env, address: &Address) {
-    e.storage().instance().set(&DataKey::Factory, address);
+    e.storage().instance().set(&DataKey::DeFindexFactory, address);
 }
 
 pub fn get_factory(e: &Env) -> Address {
-    e.storage().instance().get(&DataKey::Factory).unwrap()
+    e.storage().instance().get(&DataKey::DeFindexFactory).unwrap()
 }
+
+// Soroswap Router
+pub fn set_soroswap_router(e: &Env, address: &Address) {
+    e.storage().instance().set(&DataKey::SoroswapRouter, address);
+}
+
+pub fn get_soroswap_router(e: &Env) -> Address {
+    e.storage().instance().get(&DataKey::SoroswapRouter).unwrap()
+}
+
 
 // Last Fee Assesment
 pub fn set_last_fee_assesment(e: &Env, timestamp: &u64) {
@@ -86,7 +95,6 @@ pub fn set_last_fee_assesment(e: &Env, timestamp: &u64) {
         .instance()
         .set(&DataKey::LastFeeAssessment, timestamp);
 }
-
 pub fn get_last_fee_assesment(e: &Env) -> u64 {
     e.storage()
         .instance()
