@@ -1,6 +1,6 @@
 use soroban_sdk::{
     vec, Address, BytesN, Env, String, 
-    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
+    testutils::{MockAuth, MockAuthInvoke},
     IntoVal,
 };
 

@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, Address, String, Vec};
+use soroban_sdk::{contracttype, Address, Vec};
 
 // Investment Allocation in Strategies
 #[contracttype]

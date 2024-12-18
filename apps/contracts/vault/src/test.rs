@@ -5,12 +5,12 @@ use soroban_sdk::{
         StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient
     },
     testutils::{
-        Address as _, AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
+        Address as _, MockAuth, MockAuthInvoke},
     vec as sorobanvec, Address, Env, String, Vec, Val, IntoVal,
 };
 use std::vec;
 
-use soroswap_setup::{create_soroswap_aggregator, create_soroswap_factory, create_soroswap_pool, create_soroswap_router, SoroswapFactoryClient, SoroswapRouterClient};
+use soroswap_setup::{create_soroswap_factory, create_soroswap_pool, create_soroswap_router, SoroswapFactoryClient, SoroswapRouterClient};
 
 // DeFindex Hodl Strategy Contract 
 pub mod hodl_strategy {
