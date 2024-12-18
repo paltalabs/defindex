@@ -7,6 +7,7 @@ use crate::test::{
 #[test]
 fn get_roles() {
     let test = DeFindexVaultTest::setup();
+
     let strategy_params_token0 = create_strategy_params_token0(&test);
     let strategy_params_token1 = create_strategy_params_token1(&test);
     let assets: Vec<AssetStrategySet> = sorobanvec![
@@ -18,7 +19,7 @@ fn get_roles() {
         AssetStrategySet {
             address: test.token1.address.clone(),
             strategies: strategy_params_token1.clone()
-        }
+        },
     ];
 
     let defindex_contract = create_defindex_vault(
@@ -37,6 +38,23 @@ fn get_roles() {
     let manager_role = defindex_contract.get_manager();
     let fee_receiver_role = defindex_contract.get_fee_receiver();
     let emergency_manager_role = defindex_contract.get_emergency_manager();
+
+    let vault_assets = defindex_contract.get_assets();
+    let asset_0 = vault_assets.get(0).unwrap();
+    let asset_1 = vault_assets.get(1).unwrap();
+    
+    let total_managed_funds = defindex_contract.fetch_total_managed_funds();
+    let current_invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token0.address.clone());
+    let current_idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token0.address.clone());
+    let total_amount = total_managed_funds.get(test.token0.address.clone()).unwrap().total_amount;
+
+    assert_eq!(asset_0.address, test.token0.address);
+    assert_eq!(asset_1.address, test.token1.address);
+    assert_eq!(vault_assets.len(), 2);
+
+    assert_eq!(total_amount, 0i128);
+    assert_eq!(current_invested_funds, Some(0));
+    assert_eq!(current_idle_funds, Some(0));
 
     assert_eq!(manager_role, test.manager);
     assert_eq!(fee_receiver_role, test.vault_fee_receiver);
@@ -135,6 +153,21 @@ fn with_one_asset_and_several_strategies() {
             strategies: strategy_params.clone()
         }
     ];
+
+    /* 
+fn __constructor(
+        e: Env,
+        assets: Vec<AssetStrategySet>,
+        manager: Address,
+        emergency_manager: Address,
+        vault_fee_receiver: Address,
+        vault_fee: u32,
+        defindex_protocol_receiver: Address,
+        factory: Address,
+        vault_name: String,
+        vault_symbol: String,
+    )
+*/
 
     let defindex_contract = create_defindex_vault(
         &test.env,
