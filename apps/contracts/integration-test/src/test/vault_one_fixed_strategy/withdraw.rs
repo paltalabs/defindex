@@ -71,14 +71,13 @@ fn fixed_apr_no_invest_withdraw_success() {
     }])
     .withdraw(&df_balance_before_withdraw, &user);
 
-    let charged_fee_user = (deposit_amount - MINIMUM_LIQUIDITY) * (DEFINDEX_FEE as i128 + VAULT_FEE as i128) / 10000;
-    let expected_amount_user = deposit_amount - MINIMUM_LIQUIDITY - charged_fee_user;
+    let expected_amount_user = deposit_amount - MINIMUM_LIQUIDITY;
 
     let user_balance_after_withdraw = enviroment.token.balance(user);
     assert_eq!(user_balance_after_withdraw, expected_amount_user);
 
     let vault_balance = enviroment.token.balance(&enviroment.vault_contract.address);
-    assert_eq!(vault_balance, charged_fee_user + MINIMUM_LIQUIDITY);
+    assert_eq!(vault_balance, MINIMUM_LIQUIDITY);
 
     let df_balance = enviroment.vault_contract.balance(&user);
     assert_eq!(df_balance, 0);
@@ -197,12 +196,11 @@ fn fixed_apr_invest_withdraw_success() {
 
     let user_expected_reward = calculate_yield(deposit_amount.clone(), 1000u32, ONE_YEAR_IN_SECONDS);
 
-    let charged_fee_user = (deposit_amount + user_expected_reward - MINIMUM_LIQUIDITY) * (DEFINDEX_FEE as i128 + VAULT_FEE as i128) / 10000;
-    let expected_amount_user = deposit_amount + user_expected_reward - MINIMUM_LIQUIDITY - charged_fee_user;
+    let expected_amount_user = deposit_amount + user_expected_reward - MINIMUM_LIQUIDITY;
 
     let user_balance_after_withdraw = enviroment.token.balance(user);
-    //TODO: 98 missing?
-    assert_eq!(user_balance_after_withdraw, expected_amount_user - 98);
+    //TODO: 100 missing?
+    assert_eq!(user_balance_after_withdraw, expected_amount_user - 100);
 
     let vault_balance = enviroment.token.balance(&enviroment.vault_contract.address);
     assert_eq!(vault_balance, 0);

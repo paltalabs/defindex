@@ -23,8 +23,8 @@ enum DataKey {
     AssetStrategySet(u32), // AssetStrategySet Addresse by index
     TotalAssets,          // Total number of tokens
     DeFindexProtocolFeeReceiver,
+    DeFindexProtocolFeeRate,
     Factory,
-    LastFeeAssessment,
     VaultFee,
     Report(Address)
 }
@@ -74,6 +74,21 @@ pub fn get_defindex_protocol_fee_receiver(e: &Env) -> Address {
         .unwrap()
 }
 
+// DeFindex Fee BPS
+pub fn set_defindex_protocol_fee_rate(e: &Env, value: &u32) {
+    e.storage()
+        .instance()
+        .set(&DataKey::DeFindexProtocolFeeRate, value);
+}
+
+pub fn get_defindex_protocol_fee_rate(e: &Env) -> u32 {
+    e.storage()
+        .instance()
+        .get(&DataKey::DeFindexProtocolFeeRate)
+        .unwrap()
+}
+
+
 // DeFindex Factory
 pub fn set_factory(e: &Env, address: &Address) {
     e.storage().instance().set(&DataKey::Factory, address);
@@ -81,27 +96,6 @@ pub fn set_factory(e: &Env, address: &Address) {
 
 pub fn get_factory(e: &Env) -> Address {
     e.storage().instance().get(&DataKey::Factory).unwrap()
-}
-
-// Last Fee Assesment
-//TODO: DELETE LATER
-pub fn set_last_fee_assesment(e: &Env, timestamp: &u64) {
-    e.storage()
-        .instance()
-        .set(&DataKey::LastFeeAssessment, timestamp);
-}
-
-pub fn get_last_fee_assesment(e: &Env) -> u64 {
-    e.storage()
-        .instance()
-        .get(&DataKey::LastFeeAssessment)
-        .unwrap_or_else(|| {
-            let timestamp = &e.ledger().timestamp();
-            e.storage()
-                .instance()
-                .set(&DataKey::LastFeeAssessment, timestamp);
-            timestamp.clone()
-        })
 }
 
 // Vault Share

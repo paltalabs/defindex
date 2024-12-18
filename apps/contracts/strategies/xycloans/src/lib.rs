@@ -83,6 +83,7 @@ impl DeFindexStrategyTrait for XycloansAdapter {
         e: Env,
         _amount: i128,
         from: Address,
+        _to: Address,
     ) -> Result<i128, StrategyError> {
         from.require_auth();
         extend_instance_ttl(&e);

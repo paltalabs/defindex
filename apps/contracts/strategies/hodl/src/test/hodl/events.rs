@@ -38,7 +38,7 @@ fn withdraw() {
     strategy.deposit(&amount_to_deposit, &test.user);
 
     let amount_to_withdraw = 123456;
-    strategy.withdraw(&amount_to_withdraw, &test.user);
+    strategy.withdraw(&amount_to_withdraw, &test.user, &test.user);
     let withdraw_event = test.env.events().all().last().unwrap();
     let expected_withdraw_event = WithdrawEvent {
         amount: amount_to_withdraw,

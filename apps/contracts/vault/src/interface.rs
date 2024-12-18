@@ -16,8 +16,9 @@ pub trait VaultTrait {
     /// - `manager`: Primary vault manager with permissions for vault control.
     /// - `emergency_manager`: Address with emergency access for emergency control over the vault.
     /// - `vault_fee_receiver`: Address designated to receive the vault fee receiver's portion of management fees.
-    /// - `vault_fee`: Vault-specific fee percentage in basis points (typically set at 0-2% APR).
-    /// - `defindex_protocol_receiver`: Address receiving DeFindex’s protocol-wide fee in basis points (0.5% APR).
+    /// - `vault_fee`: Vault-specific fee percentage in basis points.
+    /// - `defindex_protocol_receiver`: Address receiving DeFindex’s protocol-wide fee in basis points.
+    /// - `defindex_protocol_rate`: DeFindex’s protocol fee percentage in basis points.
     /// - `factory`: Factory contract address for deployment linkage.
     /// - `vault_name`: Name of the vault token to be displayed in metadata.
     /// - `vault_symbol`: Symbol representing the vault’s token.
@@ -38,6 +39,7 @@ pub trait VaultTrait {
         vault_fee_receiver: Address,
         vault_fee: u32,
         defindex_protocol_receiver: Address,
+        defindex_protocol_rate: u32,
         factory: Address,
         vault_name: String,
         vault_symbol: String,
@@ -347,7 +349,27 @@ pub trait VaultManagementTrait {
     /// * `Result<Vec<(Address, i128)>, ContractError>` - A vector of tuples with strategy addresses and locked fee amounts in their underlying_asset.
     fn lock_fees(e: Env, new_fee_bps: Option<u32>) -> Result<Vec<Report>, ContractError>;
 
+    /// Releases locked fees for a specific strategy.
+    ///
+    /// # Arguments
+    /// * `e` - The environment reference.
+    /// * `strategy` - The address of the strategy for which to release fees.
+    /// * `amount` - The amount of fees to release.
+    ///
+    /// # Returns
+    /// * `Result<Report, ContractError>` - A report of the released fees or a `ContractError` if the operation fails.
     fn release_fees(e: Env, strategy: Address, amount: i128) -> Result<Report, ContractError>;
 
-    fn distribute_fees(e: Env) -> Result<(), ContractError>;
+    /// Distributes the locked fees for all assets and their strategies.
+    ///
+    /// This function iterates through each asset and its strategies, calculating the fees to be distributed
+    /// to the vault fee receiver and the DeFindex protocol fee receiver based on their respective fee rates.
+    /// It ensures proper authorization and validation checks before proceeding with the distribution.
+    ///
+    /// # Arguments
+    /// * `e` - The environment reference.
+    ///
+    /// # Returns
+    /// * `Result<Vec<(Address, i128)>, ContractError>` - A vector of tuples with asset addresses and the total distributed fee amounts.
+    fn distribute_fees(e: Env) -> Result<Vec<(Address, i128)>, ContractError>;
 }

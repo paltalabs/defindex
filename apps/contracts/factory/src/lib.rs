@@ -253,6 +253,7 @@ impl FactoryTrait for DeFindexFactory {
         
 
         let defindex_receiver = get_defindex_receiver(&e);
+        let defindex_fee = get_fee_rate(&e);
 
         let mut init_args: Vec<Val> = vec![&e];
         init_args.push_back(assets.to_val());
@@ -261,6 +262,7 @@ impl FactoryTrait for DeFindexFactory {
         init_args.push_back(fee_receiver.to_val());
         init_args.push_back(vault_fee.into_val(&e));
         init_args.push_back(defindex_receiver.to_val());
+        init_args.push_back(defindex_fee.into_val(&e));
         init_args.push_back(current_contract.to_val());
         init_args.push_back(vault_name.to_val());
         init_args.push_back(vault_symbol.to_val());
@@ -314,6 +316,7 @@ impl FactoryTrait for DeFindexFactory {
         let vault_wasm_hash = get_vault_wasm_hash(&e)?;
 
         let defindex_receiver = get_defindex_receiver(&e);
+        let defindex_fee = get_fee_rate(&e);
 
         let mut init_args: Vec<Val> = vec![&e];
         init_args.push_back(assets.to_val());
@@ -322,6 +325,7 @@ impl FactoryTrait for DeFindexFactory {
         init_args.push_back(fee_receiver.to_val());
         init_args.push_back(vault_fee.into_val(&e));
         init_args.push_back(defindex_receiver.to_val());
+        init_args.push_back(defindex_fee.into_val(&e));
         init_args.push_back(current_contract.to_val());
         init_args.push_back(vault_name.to_val());
         init_args.push_back(vault_symbol.to_val());

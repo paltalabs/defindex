@@ -6,7 +6,7 @@ use crate::{
     token::{internal_mint, VaultToken},
     utils::{calculate_deposit_amounts_and_shares_to_mint, check_nonnegative_amount},
     ContractError, MINIMUM_LIQUIDITY,
-    models::{CurrentAssetInvestmentAllocation},
+    models::CurrentAssetInvestmentAllocation,
 };
 
 /// Common logic for processing deposits.

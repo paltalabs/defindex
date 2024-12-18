@@ -74,7 +74,7 @@ pub fn supply(e: &Env, from: &Address, amount: &i128, config: &Config) -> i128 {
     b_tokens_amount
 }
 
-pub fn withdraw(e: &Env, from: &Address, amount: &i128, config: &Config) -> (i128, i128) {
+pub fn withdraw(e: &Env, to: &Address, amount: &i128, config: &Config) -> (i128, i128) {
     let pool_client = BlendPoolClient::new(e, &config.pool);
 
     let pre_supply = pool_client
@@ -84,7 +84,7 @@ pub fn withdraw(e: &Env, from: &Address, amount: &i128, config: &Config) -> (i12
         .unwrap_or_else(|| panic_with_error!(e, StrategyError::InsufficientBalance));
 
     // Get balance pre-withdraw, as the pool can modify the withdrawal amount
-    let pre_withdrawal_balance = TokenClient::new(&e, &config.asset).balance(&from);
+    let pre_withdrawal_balance = TokenClient::new(&e, &config.asset).balance(&to);
 
     let requests: Vec<Request> = vec![&e, Request {
         address: config.asset.clone(),
@@ -96,12 +96,12 @@ pub fn withdraw(e: &Env, from: &Address, amount: &i128, config: &Config) -> (i12
     let new_positions = pool_client.submit(
         &e.current_contract_address(),
         &e.current_contract_address(),
-        &from,
+        &to,
         &requests
     );
 
     // Calculate the amount of tokens withdrawn and bTokens burnt
-    let post_withdrawal_balance = TokenClient::new(&e, &config.asset).balance(&from);
+    let post_withdrawal_balance = TokenClient::new(&e, &config.asset).balance(&to);
     let real_amount = post_withdrawal_balance - pre_withdrawal_balance;
     
     // position entry is deleted if the position is cleared

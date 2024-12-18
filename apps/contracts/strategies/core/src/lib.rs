@@ -114,5 +114,6 @@ pub trait DeFindexStrategyTrait {
         env: Env,
         amount: i128, // Specify the amount to withdraw.
         from: Address,
+        to: Address,
     ) -> Result<i128, StrategyError>;
 }
