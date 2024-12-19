@@ -154,21 +154,6 @@ fn with_one_asset_and_several_strategies() {
         }
     ];
 
-    /* 
-fn __constructor(
-        e: Env,
-        assets: Vec<AssetStrategySet>,
-        manager: Address,
-        emergency_manager: Address,
-        vault_fee_receiver: Address,
-        vault_fee: u32,
-        defindex_protocol_receiver: Address,
-        factory: Address,
-        vault_name: String,
-        vault_symbol: String,
-    )
-*/
-
     let defindex_contract = create_defindex_vault(
         &test.env,
         assets,
