@@ -33,13 +33,16 @@ pub fn fetch_idle_funds_for_asset(e: &Env, asset: &Address) -> i128 {
 ///
 /// # Returns
 /// The total invested funds in the strategy as an `i128`, excluding locked fees.
-pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address) -> i128 {
+pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address, lock_fees: bool) -> i128 {
     let strategy_client = get_strategy_client(e, strategy_address.clone());
     let strategy_invested_funds = strategy_client.balance(&e.current_contract_address());
 
     let mut report = get_report(e, strategy_address);
-    report.lock_fee(get_vault_fee(e));
-    set_report(e, strategy_address, &report);
+
+    if lock_fees {
+        report.lock_fee(get_vault_fee(e));
+        set_report(e, strategy_address, &report);
+    }
     strategy_invested_funds.checked_sub(report.locked_fee).unwrap_or(0)
 }
 
@@ -58,11 +61,11 @@ pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address) -> i12
 /// A tuple containing:
 /// * `i128`: The total funds invested across all strategies.
 /// * `Vec<StrategyAllocation>`: A vector with the allocation details for each strategy.
-pub fn fetch_invested_funds_for_asset(e: &Env, asset_strategy_set: &AssetStrategySet) -> (i128, Vec<StrategyAllocation>){
+pub fn fetch_invested_funds_for_asset(e: &Env, asset_strategy_set: &AssetStrategySet, lock_fees: bool) -> (i128, Vec<StrategyAllocation>){
     let mut invested_funds = 0;
     let mut strategy_allocations: Vec<StrategyAllocation> = Vec::new(e);
     for strategy in asset_strategy_set.strategies.iter() {
-        let strategy_balance = fetch_strategy_invested_funds(e, &strategy.address);
+        let strategy_balance = fetch_strategy_invested_funds(e, &strategy.address, lock_fees);
         invested_funds += strategy_balance;
         strategy_allocations.push_back(StrategyAllocation {
             strategy_address: strategy.address.clone(),
@@ -81,12 +84,12 @@ pub fn fetch_invested_funds_for_asset(e: &Env, asset_strategy_set: &AssetStrateg
 ///
 /// # Returns
 /// * A map where each entry represents an asset's address and its total managed balance.
-pub fn fetch_total_managed_funds(e: &Env) -> Map<Address, CurrentAssetInvestmentAllocation> {
+pub fn fetch_total_managed_funds(e: &Env, lock_fees: bool) -> Map<Address, CurrentAssetInvestmentAllocation> {
     let assets = get_assets(e);
     let mut map: Map<Address, CurrentAssetInvestmentAllocation> = Map::new(e);
     for asset in assets {
         let idle_amount = fetch_idle_funds_for_asset(e, &asset.address);
-        let (invested_amount, strategy_allocations) = fetch_invested_funds_for_asset(e, &asset);
+        let (invested_amount, strategy_allocations) = fetch_invested_funds_for_asset(e, &asset, lock_fees);
         let total_amount = idle_amount + invested_amount;
         map.set(
             asset.address.clone(),
@@ -135,11 +138,11 @@ pub fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128> {
 ///
 /// # Returns
 /// * A map where each entry represents an asset's address and its corresponding invested balance.
-pub fn fetch_current_invested_funds(e: &Env) -> Map<Address, i128> {
+pub fn fetch_current_invested_funds(e: &Env, lock_fees: bool) -> Map<Address, i128> {
     let assets = get_assets(e);
     let mut map: Map<Address, i128> = Map::new(e);
     for asset in assets {
-        let (invested_funds, _) = fetch_invested_funds_for_asset(e, &asset);
+        let (invested_funds, _) = fetch_invested_funds_for_asset(e, &asset, lock_fees);
         map.set(
             asset.address.clone(),
             invested_funds

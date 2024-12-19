@@ -201,7 +201,7 @@ impl VaultTrait for DeFindexVault {
         check_initialized(&e)?;
         from.require_auth();
 
-        let total_managed_funds = fetch_total_managed_funds(&e);
+        let total_managed_funds = fetch_total_managed_funds(&e, false);
 
         let assets = get_assets(&e);
 
@@ -274,7 +274,7 @@ impl VaultTrait for DeFindexVault {
         from.require_auth();
     
         // Calculate the withdrawal amounts for each asset based on the share amounts
-        let total_managed_funds = fetch_total_managed_funds(&e);
+        let total_managed_funds = fetch_total_managed_funds(&e, true);
 
         let asset_withdrawal_amounts = calculate_asset_amounts_per_vault_shares(
             &e,
@@ -489,7 +489,7 @@ impl VaultTrait for DeFindexVault {
     /// * `Map<Address, i128>` - A map of asset addresses to their total managed amounts.
     fn fetch_total_managed_funds(e: &Env) -> Map<Address, CurrentAssetInvestmentAllocation> {
         extend_instance_ttl(&e);
-        fetch_total_managed_funds(e)
+        fetch_total_managed_funds(e, false)
     }
 
     /// Returns the current invested funds, representing the total assets allocated to strategies.
@@ -504,7 +504,7 @@ impl VaultTrait for DeFindexVault {
     /// * `Map<Address, i128>` - A map of asset addresses to their total invested amounts.
     fn fetch_current_invested_funds(e: &Env) -> Map<Address, i128> {
         extend_instance_ttl(&e);
-        fetch_current_invested_funds(e)
+        fetch_current_invested_funds(e, false)
     }
 
     /// Returns the current idle funds, representing the total assets held directly by the vault (not invested).
@@ -536,7 +536,7 @@ impl VaultTrait for DeFindexVault {
     fn get_asset_amounts_per_shares(e: Env, vault_shares: i128) -> Result<Map<Address, i128>, ContractError> {
         extend_instance_ttl(&e);
 
-        let total_managed_funds = fetch_total_managed_funds(&e);
+        let total_managed_funds = fetch_total_managed_funds(&e, true);
         Ok(calculate_asset_amounts_per_vault_shares(&e, vault_shares, &total_managed_funds)?)
     }
 
@@ -572,8 +572,11 @@ impl VaultTrait for DeFindexVault {
                 let strategy_client = get_strategy_client(&e, strategy.address.clone());
                 let strategy_invested_funds = strategy_client.balance(&e.current_contract_address());
 
-                let report_result = report::report(&e, &strategy.address, &strategy_invested_funds);
-                reports.push_back(report_result);
+                let mut report = get_report(&e, &strategy.address);
+                report.report(strategy_invested_funds);
+                set_report(&e, &strategy.address, &report);
+                
+                reports.push_back(report);
             }
         }
 

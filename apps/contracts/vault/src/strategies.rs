@@ -3,6 +3,7 @@ use soroban_sdk::{Address, Env, vec, IntoVal, Symbol};
 use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
 
 use crate::report::{self, Report};
+use crate::storage::{get_report, set_report};
 use crate::{
     storage::{get_asset, get_assets, get_total_assets, set_asset},
     ContractError,
@@ -131,10 +132,13 @@ pub fn unwind_from_strategy(
     to: &Address,
 ) -> Result<Report, ContractError> {
     let strategy_client = get_strategy_client(e, strategy_address.clone());
+    let mut report = get_report(e, strategy_address);
+    report.update_prev_balance(report.prev_balance - amount);
 
     match strategy_client.try_withdraw(amount, &e.current_contract_address(), to) {
         Ok(Ok(result)) => {
-            let report = report::report(e, strategy_address, &result);
+            report.report(result);
+            set_report(e, strategy_address, &report);
             Ok(report)
         },
         Ok(Err(_)) | Err(_) => Err(ContractError::StrategyWithdrawError),
@@ -173,7 +177,9 @@ pub fn invest_in_strategy(
 
     // Reports
     // Store Strategy invested funds for reports
-    let report = report::report(e, strategy_address, &strategy_funds);
+    let mut report = get_report(e, strategy_address);
+    report.report(strategy_funds);
+    set_report(e, strategy_address, &report);
 
     Ok(report)
 }
