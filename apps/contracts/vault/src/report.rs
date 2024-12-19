@@ -1,6 +1,6 @@
-use soroban_sdk::{contracttype, panic_with_error, Address, Env};
+use soroban_sdk::{contracttype, panic_with_error, Env};
 
-use crate::{constants::MAX_BPS, storage::{get_report, set_report}, ContractError};
+use crate::{constants::MAX_BPS, ContractError};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]

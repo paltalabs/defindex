@@ -2,7 +2,7 @@ use defindex_strategy_core::DeFindexStrategyClient;
 use soroban_sdk::{Address, Env, vec, IntoVal, Symbol};
 use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
 
-use crate::report::{self, Report};
+use crate::report::Report;
 use crate::storage::{get_report, set_report};
 use crate::{
     storage::{get_asset, get_assets, get_total_assets, set_asset},
