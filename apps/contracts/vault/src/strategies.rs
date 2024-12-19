@@ -133,7 +133,7 @@ pub fn unwind_from_strategy(
 ) -> Result<Report, ContractError> {
     let strategy_client = get_strategy_client(e, strategy_address.clone());
     let mut report = get_report(e, strategy_address);
-    report.update_prev_balance(report.prev_balance - amount);
+    report.prev_balance -= amount;
 
     match strategy_client.try_withdraw(amount, &e.current_contract_address(), to) {
         Ok(Ok(result)) => {
@@ -151,7 +151,9 @@ pub fn invest_in_strategy(
     strategy_address: &Address,
     amount: &i128,
 ) -> Result<Report, ContractError> {
-    
+    let strategy_client = get_strategy_client(&e, strategy_address.clone());
+    let mut report = get_report(e, strategy_address);
+    report.prev_balance += amount;
     // Now we will handle funds on behalf of the contract, not the caller (manager or user)
 
     e.authorize_as_current_contract(vec![
@@ -170,14 +172,10 @@ pub fn invest_in_strategy(
         }),
     ]);
 
-
-    let strategy_client = get_strategy_client(&e, strategy_address.clone());
-
     let strategy_funds = strategy_client.deposit(amount, &e.current_contract_address());
 
     // Reports
     // Store Strategy invested funds for reports
-    let mut report = get_report(e, strategy_address);
     report.report(strategy_funds);
     set_report(e, strategy_address, &report);
 

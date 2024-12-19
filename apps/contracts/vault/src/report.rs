@@ -47,8 +47,4 @@ impl Report {
         self.gains_or_losses = 0;
         self.locked_fee = 0;
     }
-
-    pub fn update_prev_balance(&mut self, new_prev_balance: i128) {
-        self.prev_balance = new_prev_balance;
-    }
 }
