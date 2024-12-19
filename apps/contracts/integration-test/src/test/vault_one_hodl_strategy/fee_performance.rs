@@ -53,7 +53,8 @@ fn fee_performance() {
     }])
     .deposit(&svec![&setup.env, deposit_amount], &svec![&setup.env, deposit_amount], &user, &false);
 
-    // Create investment strategies for the deposited tokens
+    // Split deposit amount in two
+    let half_deposit = deposit_amount / 2;
     let investments = svec![
         &setup.env,
         Some(AssetInvestmentAllocation {
@@ -61,13 +62,14 @@ fn fee_performance() {
             strategy_allocations: svec![
                 &setup.env,
                 Some(StrategyAllocation {
-                    amount: deposit_amount,
+                    amount: half_deposit,
                     strategy_address: enviroment.strategy_contract.address.clone(),
                 }),
             ],
         }),
     ];
 
+    // First investment
     enviroment.vault_contract
     .mock_auths(&[MockAuth {
         address: &enviroment.manager.clone(),
@@ -82,7 +84,7 @@ fn fee_performance() {
                             strategy_allocations:
                                 svec![&setup.env,
                                     Some(StrategyAllocation {
-                                        amount: deposit_amount,
+                                        amount: half_deposit,
                                         strategy_address: enviroment.strategy_contract.address.clone(),
                                     })
                                 ]
@@ -94,6 +96,41 @@ fn fee_performance() {
         },
     }])
     .invest(&investments);
+
+    let report_result_after_1_invest = enviroment.vault_contract.report();
+    println!("report_result_after_1_invest: {:?}", report_result_after_1_invest);
+
+    // Second investment
+    enviroment.vault_contract
+    .mock_auths(&[MockAuth {
+        address: &enviroment.manager.clone(),
+        invoke: &MockAuthInvoke {
+            contract: &enviroment.vault_contract.address.clone(),
+            fn_name: "invest",
+            args: (
+                Vec::from_array(&setup.env,[
+                    Some(
+                        AssetInvestmentAllocation {
+                            asset: enviroment.token.address.clone(),
+                            strategy_allocations:
+                                svec![&setup.env,
+                                    Some(StrategyAllocation {
+                                        amount: half_deposit,
+                                        strategy_address: enviroment.strategy_contract.address.clone(),
+                                    })
+                                ]
+                        }
+                    )
+                ]),
+            ).into_val(&setup.env),
+            sub_invokes: &[]
+        },
+    }])
+    .invest(&investments);
+
+    let report_result_after_2_invests = enviroment.vault_contract.report();
+    println!("report_result_after_2_invests: {:?}", report_result_after_2_invests);
+    
 
     setup.env.jump_time(ONE_YEAR_IN_SECONDS);
     enviroment.strategy_contract.harvest(&enviroment.vault_contract.address);
@@ -118,7 +155,6 @@ fn fee_performance() {
             sub_invokes: &[]
     },
     }]).lock_fees(&Some(2000u32));
-
     let total_funds_after_lock = enviroment.vault_contract.fetch_total_managed_funds().get(enviroment.token.address.clone()).unwrap().total_amount;
     assert_eq!(total_funds_after_lock, deposit_amount);
 
