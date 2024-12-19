@@ -1,6 +1,7 @@
 #![no_std]
 use blend_pool::perform_reinvest;
 use constants::{MIN_DUST, SCALAR_9};
+use reserves::StrategyReserves;
 use soroban_sdk::{
     contract, contractimpl, token::TokenClient, Address, Env, IntoVal, String, Val, Vec};
 
@@ -72,7 +73,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
         e: Env,
         amount: i128,
         from: Address,
-    ) -> Result<(), StrategyError> {
+    ) -> Result<i128, StrategyError> {
         check_initialized(&e)?;
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
@@ -96,10 +97,12 @@ impl DeFindexStrategyTrait for BlendStrategy {
         let b_tokens_minted = blend_pool::supply(&e, &from, &amount, &config);
 
         // Keeping track of the total deposited amount and the total bTokens owned by the strategy depositors
-        reserves::deposit(&e, reserves, &from, amount, b_tokens_minted);
+        let vault_shares = reserves::deposit(&e, reserves.clone(), &from, amount, b_tokens_minted);
+
+        let underlying_balance = shares_to_underlying(vault_shares, reserves);
 
         event::emit_deposit(&e, String::from_str(&e, STARETEGY_NAME), amount, from);
-        Ok(())
+        Ok(underlying_balance)
     }
 
     fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
@@ -119,6 +122,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
         e: Env,
         amount: i128,
         from: Address,
+        to: Address,
     ) -> Result<i128, StrategyError> {
         check_initialized(&e)?;
         check_nonnegative_amount(amount)?;
@@ -135,13 +139,14 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         let config = storage::get_config(&e);
 
-        let (tokens_withdrawn, b_tokens_burnt) = blend_pool::withdraw(&e, &from, &amount, &config);
+        let (tokens_withdrawn, b_tokens_burnt) = blend_pool::withdraw(&e, &to, &amount, &config);
 
-        let _burnt_shares = reserves::withdraw(&e, reserves, &from, tokens_withdrawn, b_tokens_burnt);
+        let vault_shares = reserves::withdraw(&e, reserves.clone(), &from, tokens_withdrawn, b_tokens_burnt);
+        let underlying_balance = shares_to_underlying(vault_shares, reserves);
 
         event::emit_withdraw(&e, String::from_str(&e, STARETEGY_NAME), amount, from);
 
-        Ok(tokens_withdrawn)
+        Ok(underlying_balance)
     }
 
     fn balance(
@@ -156,22 +161,25 @@ impl DeFindexStrategyTrait for BlendStrategy {
     
         // Get the strategy's total shares and bTokens
         let reserves = storage::get_strategy_reserves(&e);
-        let total_shares = reserves.total_shares;
-        let total_b_tokens = reserves.total_b_tokens;
     
-        if total_shares == 0 || total_b_tokens == 0 {
-            // No shares or bTokens in the strategy
-            return Ok(0);
-        }
-    
-        // Calculate the bTokens corresponding to the vault's shares
-        let vault_b_tokens = (vault_shares * total_b_tokens) / total_shares;
-    
-        // Use the b_rate to convert bTokens to underlying assets
-        let underlying_balance = (vault_b_tokens * reserves.b_rate) / SCALAR_9;
+        let underlying_balance = shares_to_underlying(vault_shares, reserves);
     
         Ok(underlying_balance)
     }
 }
 
+fn shares_to_underlying(shares: i128, reserves: StrategyReserves) -> i128 {
+    let total_shares = reserves.total_shares;
+    let total_b_tokens = reserves.total_b_tokens;
+
+    if total_shares == 0 || total_b_tokens == 0 {
+        // No shares or bTokens in the strategy
+        return 0i128;
+    }
+    // Calculate the bTokens corresponding to the vault's shares
+    let vault_b_tokens = (shares * total_b_tokens) / total_shares;
+    
+    // Use the b_rate to convert bTokens to underlying assets
+    (vault_b_tokens * reserves.b_rate) / SCALAR_9
+}
 mod test;

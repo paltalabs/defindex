@@ -19,7 +19,7 @@ fn withdraw() {
     let user_balance = test.token.balance(&users[0]);
     assert_eq!(user_balance, 0);
 
-    strategy.withdraw(&amount, &users[0]);
+    strategy.withdraw(&amount, &users[0], &users[0]);
     let user_balance_after_withdraw = test.token.balance(&users[0]);
     assert_eq!(user_balance_after_withdraw, amount);
 }
@@ -49,7 +49,7 @@ fn withdraw_with_harvest() {
     let user_balance_after_harvest = strategy.balance(&users[0]);
     assert_eq!(user_balance_after_harvest, amount + expected_reward);
 
-    strategy.withdraw(&amount, &users[0]);
+    strategy.withdraw(&amount, &users[0], &users[0]);
     let user_balance_after_withdraw = test.token.balance(&users[0]);
     assert_eq!(user_balance_after_withdraw, amount);
 }
@@ -76,7 +76,7 @@ fn withdraw_then_harvest_then_withdraw_again() {
     let user_balance_before_harvest = strategy.balance(&users[0]);
     assert_eq!(user_balance_before_harvest, amount);
 
-    strategy.withdraw(&amount, &users[0]);
+    strategy.withdraw(&amount, &users[0], &users[0]);
     let user_balance_after_withdraw = test.token.balance(&users[0]);
     assert_eq!(user_balance_after_withdraw, amount);
 
@@ -101,6 +101,6 @@ fn withdraw_with_no_balance() {
 
     let amount = 1_000_0_00_000;
 
-    let result = strategy.try_withdraw(&amount, &users[0]);
+    let result = strategy.try_withdraw(&amount, &users[0], &users[0]);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
 }
