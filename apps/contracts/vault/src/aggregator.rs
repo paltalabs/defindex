@@ -3,7 +3,7 @@ use soroswap_library::{get_reserves_with_pair, get_amount_in};
 
 use crate::{
     // models::DexDistribution,
-    storage::{get_assets, get_factory, get_soroswap_router},
+    storage::{get_assets, get_soroswap_router},
     ContractError,
 };
 
@@ -59,7 +59,7 @@ pub fn internal_swap_exact_tokens_for_tokens(
         }),
     ]);
 
-    let result: Vec<i128> = e.invoke_contract(
+    let _result: Vec<i128> = e.invoke_contract(
         &get_soroswap_router(e),
         &Symbol::new(&e, "swap_exact_tokens_for_tokens"),
         swap_args,
@@ -115,7 +115,7 @@ pub fn internal_swap_tokens_for_exact_tokens(
         }),
     ]);
 
-    let result: Vec<i128> = e.invoke_contract(
+    let _result: Vec<i128> = e.invoke_contract(
         &get_soroswap_router(e),
         &Symbol::new(&e, "swap_tokens_for_exact_tokens"),
         swap_args,

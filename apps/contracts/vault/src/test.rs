@@ -10,7 +10,7 @@ use soroban_sdk::{
 };
 use std::vec;
 
-use soroswap_setup::{create_soroswap_factory, create_soroswap_pool, create_soroswap_router, SoroswapFactoryClient, SoroswapRouterClient};
+use soroswap_setup::{create_soroswap_factory, create_soroswap_pool, create_soroswap_router, SoroswapRouterClient};
 
 // DeFindex Hodl Strategy Contract 
 pub mod hodl_strategy {
@@ -134,8 +134,8 @@ pub struct DeFindexVaultTest<'a> {
     strategy_client_token_0: HodlStrategyClient<'a>,
     strategy_client_token_1: HodlStrategyClient<'a>,
     soroswap_router: SoroswapRouterClient<'a>,
-    soroswap_factory: SoroswapFactoryClient<'a>,
-    soroswap_pair: Address,
+    // soroswap_factory: SoroswapFactoryClient<'a>,
+    // soroswap_pair: Address,
 }
 
 impl<'a> DeFindexVaultTest<'a> {
@@ -180,7 +180,7 @@ impl<'a> DeFindexVaultTest<'a> {
         env.budget().reset_unlimited();
 
         create_soroswap_pool(&env, &soroswap_router, &soroswap_admin, &token_0.address, &token_1.address, &amount_0, &amount_1);
-        let soroswap_pair = soroswap_factory.get_pair(&token_0.address, &token_1.address);        
+        // let soroswap_pair = soroswap_factory.get_pair(&token_0.address, &token_1.address);        
 
         env.budget().reset_unlimited();
         
@@ -200,8 +200,8 @@ impl<'a> DeFindexVaultTest<'a> {
             strategy_client_token_0,
             strategy_client_token_1,
             soroswap_router,
-            soroswap_factory,
-            soroswap_pair,
+            // soroswap_factory,
+            // soroswap_pair,
 
         }
     }

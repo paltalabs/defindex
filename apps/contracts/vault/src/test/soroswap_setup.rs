@@ -1,5 +1,5 @@
 use soroban_sdk::{
-    vec, Address, BytesN, Env, String, 
+    vec, Address, BytesN, Env,
     testutils::{MockAuth, MockAuthInvoke},
     IntoVal,
 };
@@ -100,26 +100,26 @@ pub fn create_soroswap_pool<'a>(e: &Env, router: &SoroswapRouterClient, to: &Add
     )
 }
 
-// SoroswapRouter Contract
-mod aggregator {
-    soroban_sdk::contractimport!(file = "../soroswap/soroswap_aggregator.wasm");
-    pub type SoroswapAggregatorClient<'a> = Client<'a>;
-}
-pub use aggregator::{SoroswapAggregatorClient, Adapter};
+// // SoroswapRouter Contract
+// mod aggregator {
+//     soroban_sdk::contractimport!(file = "../soroswap/soroswap_aggregator.wasm");
+//     pub type SoroswapAggregatorClient<'a> = Client<'a>;
+// }
+// pub use aggregator::{SoroswapAggregatorClient, Adapter};
 
-pub fn create_soroswap_aggregator<'a>(e: &Env, admin: &Address, router: &Address) -> SoroswapAggregatorClient<'a> {
-    let aggregator_address = &e.register(aggregator::WASM, ());
-    let aggregator = SoroswapAggregatorClient::new(e, aggregator_address);
+// pub fn create_soroswap_aggregator<'a>(e: &Env, admin: &Address, router: &Address) -> SoroswapAggregatorClient<'a> {
+//     let aggregator_address = &e.register(aggregator::WASM, ());
+//     let aggregator = SoroswapAggregatorClient::new(e, aggregator_address);
     
-    let adapter_vec = vec![
-        e,
-        Adapter {
-            protocol_id: String::from_str(e, "soroswap"),
-            address: router.clone(),
-            paused: false,
-        }
-    ];
+//     let adapter_vec = vec![
+//         e,
+//         Adapter {
+//             protocol_id: String::from_str(e, "soroswap"),
+//             address: router.clone(),
+//             paused: false,
+//         }
+//     ];
 
-    aggregator.initialize(&admin, &adapter_vec);    
-    aggregator
-}
+//     aggregator.initialize(&admin, &adapter_vec);    
+//     aggregator
+// }
