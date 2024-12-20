@@ -60,11 +60,11 @@ pub trait FactoryTrait {
         emergency_manager: Address, 
         fee_receiver: Address, 
         vault_fee: u32,
-        vault_name: String,
-        vault_symbol: String,
         manager: Address,
         assets: Vec<AssetStrategySet>,
-        salt: BytesN<32>
+        salt: BytesN<32>,
+        soroswap_router: Address,
+        name_symbol: Vec<String>
     ) -> Result<Address, FactoryError>;
 
     /// Creates a new DeFindex Vault with specified parameters and makes the first deposit to set ratios.
@@ -89,12 +89,12 @@ pub trait FactoryTrait {
         emergency_manager: Address, 
         fee_receiver: Address, 
         vault_fee: u32,
-        vault_name: String,
-        vault_symbol: String,
         manager: Address,
         assets: Vec<AssetStrategySet>,
+        salt: BytesN<32>,
+        soroswap_router: Address,
+        name_symbol: Vec<String>,
         amounts: Vec<i128>,
-        salt: BytesN<32>
     ) -> Result<Address, FactoryError>;
 
     // --- Admin Functions ---
@@ -239,22 +239,21 @@ impl FactoryTrait for DeFindexFactory {
         emergency_manager: Address, 
         fee_receiver: Address, 
         vault_fee: u32,
-        vault_name: String,
-        vault_symbol: String,
         manager: Address,
         assets: Vec<AssetStrategySet>,
-        salt: BytesN<32>
+        salt: BytesN<32>,
+        soroswap_router: Address,
+        name_symbol: Vec<String>
     ) -> Result<Address, FactoryError> {
         extend_instance_ttl(&e);
 
         let current_contract = e.current_contract_address();
 
         let vault_wasm_hash = get_vault_wasm_hash(&e)?;
-        
 
         let defindex_receiver = get_defindex_receiver(&e);
         let defindex_fee = get_fee_rate(&e);
-
+        
         let mut init_args: Vec<Val> = vec![&e];
         init_args.push_back(assets.to_val());
         init_args.push_back(manager.to_val());
@@ -264,8 +263,8 @@ impl FactoryTrait for DeFindexFactory {
         init_args.push_back(defindex_receiver.to_val());
         init_args.push_back(defindex_fee.into_val(&e));
         init_args.push_back(current_contract.to_val());
-        init_args.push_back(vault_name.to_val());
-        init_args.push_back(vault_symbol.to_val());
+        init_args.push_back(soroswap_router.to_val());
+        init_args.push_back(name_symbol.to_val());
 
         // e.invoke_contract::<Val>(&defindex_address, &Symbol::new(&e, "initialize"), init_args);
         let defindex_address = create_contract(&e, vault_wasm_hash, init_args, salt);
@@ -297,12 +296,12 @@ impl FactoryTrait for DeFindexFactory {
         emergency_manager: Address, 
         fee_receiver: Address, 
         vault_fee: u32,
-        vault_name: String,
-        vault_symbol: String,
         manager: Address,
         assets: Vec<AssetStrategySet>,
+        salt: BytesN<32>,
+        soroswap_router: Address,
+        name_symbol: Vec<String>,
         amounts: Vec<i128>,
-        salt: BytesN<32>
     ) -> Result<Address, FactoryError> {
         extend_instance_ttl(&e);
         caller.require_auth();
@@ -327,8 +326,8 @@ impl FactoryTrait for DeFindexFactory {
         init_args.push_back(defindex_receiver.to_val());
         init_args.push_back(defindex_fee.into_val(&e));
         init_args.push_back(current_contract.to_val());
-        init_args.push_back(vault_name.to_val());
-        init_args.push_back(vault_symbol.to_val());
+        init_args.push_back(soroswap_router.to_val());
+        init_args.push_back(name_symbol.to_val());
 
         let defindex_address = create_contract(&e, vault_wasm_hash, init_args, salt);
 

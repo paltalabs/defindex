@@ -14,11 +14,11 @@ fn create_success() {
     &test.emergency_manager, 
     &test.fee_receiver,
     &2000u32,
-    &String::from_str(&test.env, "dfToken"),
-    &String::from_str(&test.env, "DFT"),
     &test.manager,
     &asset_params,
-    &salt
+    &salt,
+    &test.emergency_manager, //soroswap_router,
+    &vec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
   );
 
   let deployed_defindexes = test.factory_contract.deployed_defindexes();
@@ -47,14 +47,13 @@ fn create_and_deposit_success() {
     &test.emergency_manager, 
     &test.fee_receiver,
     &2000u32,
-    &String::from_str(&test.env, "dfToken"),
-    &String::from_str(&test.env, "DFT"),
     &test.manager,
     &asset_params,
+    &salt,
+    &test.emergency_manager, //soroswap_router,
+    &vec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     &amounts,
-    &salt
   );
-
   
   let deployed_defindexes = test.factory_contract.deployed_defindexes();
   assert_eq!(deployed_defindexes.len(), 1);
