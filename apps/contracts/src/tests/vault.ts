@@ -57,7 +57,7 @@ export async function mintToken( user: Keypair, amount: number) {
  * @param {xdr.ScVal[]} assetAllocations - The asset allocations for the vault.
  * @returns {xdr.ScVal[]} An array of ScVal objects representing the parameters.
  */
-function getCreateDeFindexParams(
+function getCreateDeFindexParams( 
     emergencyManager: Keypair,
     feeReceiver: Keypair,
     manager: Keypair,
@@ -65,15 +65,20 @@ function getCreateDeFindexParams(
     vaultSymbol: string,
     assetAllocations: xdr.ScVal[]
   ): xdr.ScVal[] {
+    const nameSymbol = xdr.ScVal.scvVec([
+        nativeToScVal(vaultName ?? 'TestVault', { type: "string" }), // name
+        nativeToScVal(vaultSymbol ?? 'TSTV', { type: "string" }),
+      ]);
+
     return [
       new Address(emergencyManager.publicKey()).toScVal(),
       new Address(feeReceiver.publicKey()).toScVal(),
-      nativeToScVal(100, { type: "u32" }),
-      nativeToScVal(vaultName ?? 'TestVault', { type: "string" }),
-      nativeToScVal(vaultSymbol ?? 'TSTV', { type: "string" }),
+      nativeToScVal(100, { type: "u32" }),// Setting vault_fee as 100 bps for demonstration
       new Address(manager.publicKey()).toScVal(),
       xdr.ScVal.scvVec(assetAllocations),
-      nativeToScVal(randomBytes(32)),
+      nativeToScVal(randomBytes(32)), //salt
+      new Address(emergencyManager.publicKey()).toScVal(), //soroswap_rouer
+      nameSymbol
     ];
   }
 
