@@ -32,8 +32,7 @@ fn negative_amount() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -68,8 +67,7 @@ fn zero_total_supply() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -103,8 +101,7 @@ fn not_enough_balance() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
 
     // We need to generate 2 users, to have more total supply than the amount to withdraw
@@ -168,8 +165,7 @@ fn from_idle_one_asset_one_strategy_success() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
     let amount = 1234567890i128;
 
@@ -350,8 +346,7 @@ fn from_idle_two_assets_success() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
     let amount = 1234567890i128;
 
@@ -545,8 +540,7 @@ fn from_strategy_one_asset_one_strategy_success() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
     let amount = 1000i128;
 
@@ -684,8 +678,7 @@ fn from_strategies_two_asset_each_one_strategy_success() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
     // mint 
     let amount = 987654321i128;

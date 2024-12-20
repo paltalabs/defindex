@@ -100,14 +100,16 @@ impl VaultTrait for DeFindexVault {
         defindex_protocol_rate: u32,
         factory: Address,
         soroswap_router: Address,
-        vault_name: String,
-        vault_symbol: String,
+        name_symbol : Vec<String>,
     ) {
         let access_control = AccessControl::new(&e);
 
         access_control.set_role(&RolesDataKey::EmergencyManager, &emergency_manager);
         access_control.set_role(&RolesDataKey::VaultFeeReceiver, &vault_fee_receiver);
         access_control.set_role(&RolesDataKey::Manager, &manager);
+
+        let vault_name = name_symbol.get(0).unwrap();
+        let vault_symbol = name_symbol.get(1).unwrap();
 
         // Set Vault Fee (in basis points)
         set_vault_fee(&e, &vault_fee);

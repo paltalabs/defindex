@@ -37,8 +37,7 @@ fn one_asset_no_previous_investment() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
     let amount = 123456789i128;
 
@@ -187,8 +186,7 @@ fn one_asset_previous_investment_success() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
 
     let amount = 123456789i128;
@@ -376,8 +374,7 @@ fn several_assets_no_previous_investment() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
     let amount0 = 123456789i128;
     let amount1 = 987654321i128;
@@ -578,8 +575,7 @@ fn several_assets_wih_previous_investment_success() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
 
     let amount0 = 123456789i128;

@@ -40,8 +40,7 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
 
     let amount0 = 123456789i128;

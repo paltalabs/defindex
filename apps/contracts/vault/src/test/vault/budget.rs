@@ -47,8 +47,7 @@ fn budget() {
       2500u32,
       test.defindex_factory.clone(),
       test.soroswap_router.address.clone(),
-      String::from_str(&test.env, "dfToken"),
-      String::from_str(&test.env, "DFT"),
+      sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
   let mem = test.env.budget().memory_bytes_cost();
   let cpu = test.env.budget().cpu_instruction_cost();

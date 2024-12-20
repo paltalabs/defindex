@@ -33,8 +33,7 @@ fn get_roles() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
 
     let manager_role = defindex_contract.get_manager();
@@ -77,8 +76,7 @@ fn deploy_unsupported_strategy() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
 }
 
@@ -102,8 +100,7 @@ fn initialize_with_empty_asset_allocation() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
 }
 

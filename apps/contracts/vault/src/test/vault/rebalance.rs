@@ -34,8 +34,7 @@ fn multi_instructions() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
     let amount = 987654321i128;
 
@@ -125,8 +124,7 @@ fn one_instruction() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
     let amount = 987654321i128;
 
@@ -207,8 +205,7 @@ fn empty_instructions(){
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
     let amount: i128 = 987654321;
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -250,8 +247,7 @@ fn no_instructions(){
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
     let amount: i128 = 987654321;
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -296,8 +292,7 @@ fn insufficient_balance(){
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
     let amount: i128 = 987654321;
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -389,10 +384,10 @@ fn swap_exact_in() {
         test.vault_fee_receiver.clone(),
         2000u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
     let amount0 = 123456789i128;
     let amount1 = 987654321i128;
@@ -527,10 +522,10 @@ fn swap_exact_out() {
         test.vault_fee_receiver.clone(),
         2000u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
     );
     let amount0 = 123456789i128;
     let amount1 = 987654321i128;

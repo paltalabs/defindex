@@ -43,8 +43,7 @@ pub trait VaultTrait {
         defindex_protocol_rate: u32,
         factory: Address,
         soroswap_router: Address,
-        vault_name: String,
-        vault_symbol: String,
+        name_symbol : Vec<String>,
     );
 
     /// Handles user deposits into the DeFindex Vault.
