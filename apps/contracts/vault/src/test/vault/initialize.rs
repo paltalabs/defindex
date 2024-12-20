@@ -4,48 +4,18 @@ use crate::test::{
     create_defindex_vault, create_strategy_params_token0, create_strategy_params_token1, create_hodl_strategy, defindex_vault::{AssetStrategySet, Strategy, CurrentAssetInvestmentAllocation, StrategyAllocation}, DeFindexVaultTest
 };
 
-fn create_expected_total_managed_funds(test: &DeFindexVaultTest) -> Map<Address, CurrentAssetInvestmentAllocation> {
-    let mut total_managed_funds: Map<Address, CurrentAssetInvestmentAllocation> = Map::new(&test.env);
-    
-    // Add entry for token0
-    total_managed_funds.set(
-        test.token0.address.clone(),
-        CurrentAssetInvestmentAllocation {
-            asset: test.token0.address.clone(),
-            total_amount: 0i128,
-            idle_amount: 0i128,
-            invested_amount: 0i128,
-            strategy_allocations: sorobanvec![&test.env],
-        },
-    );
-
-    // Add entry for token1
-    total_managed_funds.set(
-        test.token1.address.clone(),
-        CurrentAssetInvestmentAllocation {
-            asset: test.token1.address.clone(),
-            total_amount: 0i128,
-            idle_amount: 0i128,
-            invested_amount: 0i128,
-            strategy_allocations: sorobanvec![&test.env],
-        },
-    );
-
-    total_managed_funds
-}
-
 fn create_expected_current_invested_funds(test: &DeFindexVaultTest) -> Map<Address, i128> {
-    let mut current_invested_funds: Map<Address, i128> = Map::new(&test.env);
-    current_invested_funds.set(test.token0.address.clone(), 0i128);
-    current_invested_funds.set(test.token1.address.clone(), 0i128);
-    current_invested_funds
+    let mut expected_current_invested_funds: Map<Address, i128> = Map::new(&test.env);
+    expected_current_invested_funds.set(test.token0.address.clone(), 0i128);
+    expected_current_invested_funds.set(test.token1.address.clone(), 0i128);
+    expected_current_invested_funds
 }
 
 fn create_expected_current_idle_funds(test: &DeFindexVaultTest) -> Map<Address, i128> {
-    let mut current_idle_funds: Map<Address, i128> = Map::new(&test.env);
-    current_idle_funds.set(test.token0.address.clone(), 0i128);
-    current_idle_funds.set(test.token1.address.clone(), 0i128);
-    current_idle_funds
+    let mut expected_current_idle_funds: Map<Address, i128> = Map::new(&test.env);
+    expected_current_idle_funds.set(test.token0.address.clone(), 0i128);
+    expected_current_idle_funds.set(test.token1.address.clone(), 0i128);
+    expected_current_idle_funds
 }
 
 #[test]
@@ -91,9 +61,51 @@ fn get_roles() {
     let current_invested_funds = defindex_contract.fetch_current_invested_funds();
     let current_idle_funds = defindex_contract.fetch_current_idle_funds();
 
-    let expected_total_managed_funds = create_expected_total_managed_funds(&test);
-    let expected_current_invested_funds = create_expected_current_invested_funds(&test);
-    let expected_current_idle_funds = create_expected_current_idle_funds(&test);
+    let mut expected_total_managed_funds: Map<Address, CurrentAssetInvestmentAllocation> = Map::new(&test.env);
+    
+    // Add entry for token0
+    expected_total_managed_funds.set(
+        test.token0.address.clone(),
+        CurrentAssetInvestmentAllocation {
+            asset: test.token0.address.clone(),
+            total_amount: 0i128,
+            idle_amount: 0i128,
+            invested_amount: 0i128,
+            strategy_allocations: sorobanvec![
+                &test.env,
+                StrategyAllocation {
+                    strategy_address: test.strategy_client_token0.address.clone(),
+                    amount: 0i128,
+                },
+            ],
+        },
+    );
+
+    // Add entry for token1
+    expected_total_managed_funds.set(
+        test.token1.address.clone(),
+        CurrentAssetInvestmentAllocation {
+            asset: test.token1.address.clone(),
+            total_amount: 0i128,
+            idle_amount: 0i128,
+            invested_amount: 0i128,
+            strategy_allocations: sorobanvec![
+                &test.env,
+                StrategyAllocation {
+                    strategy_address: test.strategy_client_token1.address.clone(),
+                    amount: 0i128,
+                },
+            ],
+        },
+    );
+
+    let mut expected_current_invested_funds: Map<Address, i128> = Map::new(&test.env);
+    expected_current_invested_funds.set(test.token0.address.clone(), 0i128);
+    expected_current_invested_funds.set(test.token1.address.clone(), 0i128);
+
+    let mut expected_current_idle_funds: Map<Address, i128> = Map::new(&test.env);
+    expected_current_idle_funds.set(test.token0.address.clone(), 0i128);
+    expected_current_idle_funds.set(test.token1.address.clone(), 0i128);
 
     assert_eq!(asset_0.address, test.token0.address);
     assert_eq!(asset_1.address, test.token1.address);
@@ -226,9 +238,38 @@ fn with_one_asset_and_several_strategies() {
     let current_invested_funds = defindex_contract.fetch_current_invested_funds();
     let current_idle_funds = defindex_contract.fetch_current_idle_funds();
 
-    let expected_total_managed_funds = create_expected_total_managed_funds(&test);
-    let expected_current_invested_funds = create_expected_current_invested_funds(&test);
-    let expected_current_idle_funds = create_expected_current_idle_funds(&test);
+    let mut expected_total_managed_funds: Map<Address, CurrentAssetInvestmentAllocation> = Map::new(&test.env);
+    expected_total_managed_funds.set(
+        test.token0.address.clone(),
+        CurrentAssetInvestmentAllocation {
+            asset: test.token0.address.clone(),
+            total_amount: 0i128,
+            idle_amount: 0i128,
+            invested_amount: 0i128,
+            strategy_allocations: sorobanvec![
+                &test.env,
+                StrategyAllocation {
+                    strategy_address: strategy_0.address.clone(),
+                    amount: 0i128,
+                },
+                StrategyAllocation {
+                    strategy_address: strategy_1.address.clone(),
+                    amount: 0i128,
+                },
+                StrategyAllocation {
+                    strategy_address: strategy_2.address.clone(),
+                    amount: 0i128,
+                },
+            ],
+        },
+    );
+
+    let mut expected_current_invested_funds: Map<Address, i128> = Map::new(&test.env);
+    expected_current_invested_funds.set(test.token0.address.clone(), 0i128);
+
+    let mut expected_current_idle_funds: Map<Address, i128> = Map::new(&test.env);
+    expected_current_idle_funds.set(test.token0.address.clone(), 0i128);
+
 
     assert_eq!(manager_role, test.manager);
     assert_eq!(fee_receiver_role, test.vault_fee_receiver);
