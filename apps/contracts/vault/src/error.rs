@@ -1,4 +1,5 @@
 use soroban_sdk::{self, contracterror};
+use soroswap_library::{SoroswapLibraryError};
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -45,4 +46,16 @@ pub enum ContractError {
     // Asset Errors (15x)
     AssetNotFound = 150,
     NoAssetsProvided = 151,
+
+     // Add mappings for SoroswapLibraryError
+     LibrarySortIdenticalTokens = 190,
+}
+
+impl From<SoroswapLibraryError> for ContractError {
+    fn from(err: SoroswapLibraryError) -> Self {
+        match err {
+            SoroswapLibraryError::SortIdenticalTokens => ContractError::LibrarySortIdenticalTokens,
+            _ => panic!("Unhandled SoroswapLibraryError variant: {:?}", err),
+        }
+    }
 }

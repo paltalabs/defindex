@@ -87,7 +87,7 @@ pub fn internal_swap_tokens_for_exact_tokens(
         &Symbol::new(&e, "router_pair_for"),
         vec![e, token_in.to_val(), token_out.to_val()],
     );
-    let (reserve_in, reserve_out) = get_reserves_with_pair(e.clone(), pair_address, *token_in, *token_out)?;
+    let (reserve_in, reserve_out) = get_reserves_with_pair(e.clone(), pair_address, token_in.clone(), token_out.clone())?;
 
     let swap_args: Vec<Val> = vec![
         e,
