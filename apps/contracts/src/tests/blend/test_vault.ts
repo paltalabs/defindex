@@ -97,16 +97,23 @@ export async function testBlendVault(user?: Keypair) {
     ]);
   });
 
+  const nameSymbol = xdr.ScVal.scvVec([
+    nativeToScVal("BLND Vault", { type: "string" }), // name
+    nativeToScVal("BLNVLT", { type: "string" }),
+  ]);
+
   const createDeFindexParams: xdr.ScVal[] = [
     new Address(emergencyManager.publicKey()).toScVal(),
     new Address(feeReceiver.publicKey()).toScVal(),
     nativeToScVal(100, { type: "u32" }), 
-    nativeToScVal("BLND Vault", { type: "string" }),
-    nativeToScVal("BLNVLT", { type: "string" }),
     new Address(manager.publicKey()).toScVal(),
     xdr.ScVal.scvVec(assetAllocations),
     nativeToScVal(randomBytes(32)),
+    new Address(emergencyManager.publicKey()).toScVal(), //     soroswap_router: Address, 
+    nameSymbol, //     name_symbol: Vec<ScVal>,
   ];
+
+    
 
   const initialAmount = 100_0_000_000;
   let blendVaultAddress: string = "";
