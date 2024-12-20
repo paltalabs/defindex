@@ -21,7 +21,7 @@ Add the defindex-strategy-core package to your Cargo.toml dependencies:
 
 ```toml
 [dependencies]
-defindex-strategy-core = "0.1.0"
+defindex-strategy-core = "0.2.0"
 ```
 
 ### Usage
@@ -42,19 +42,18 @@ struct MyCustomStrategy;
 
 #[contractimpl]
 impl DeFindexStrategyTrait for MyCustomStrategy {
-    fn initialize(e: Env, asset: Address, init_args: Vec<Val>) -> Result<(), StrategyError> {
+    fn __constructor(e: Env, asset: Address, init_args: Vec<Val>) {
         // Initialization logic
-        Ok(())
     }
 
-    fn deposit(e: Env, amount: i128, from: Address) -> Result<(), StrategyError> {
+    fn deposit(e: Env, amount: i128, from: Address) -> Result<i128, StrategyError> {
         // Deposit logic
-        Ok(())
+        Ok(0) // it must return the vault balance, same response as balance() 
     }
 
-    fn withdraw(e: Env, amount: i128, from: Address) -> Result<i128, StrategyError> {
+    fn withdraw(e: Env, amount: i128, from: Address, to: Address) -> Result<i128, StrategyError> {
         // Withdrawal logic
-        Ok(amount)
+        Ok(amount) // it must return the vault balance, same response as balance() 
     }
 
     fn balance(e: Env, from: Address) -> Result<i128, StrategyError> {

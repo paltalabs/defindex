@@ -61,7 +61,7 @@ impl DeFindexStrategyTrait for HodlStrategy {
         e: Env,
         amount: i128,
         from: Address,
-    ) -> Result<(), StrategyError> {
+    ) -> Result<i128, StrategyError> {
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
         from.require_auth();
@@ -72,9 +72,9 @@ impl DeFindexStrategyTrait for HodlStrategy {
         TokenClient::new(&e, &underlying_asset).transfer(&from, &contract_address, &amount);
 
         receive_balance(&e, from.clone(), amount);
-        event::emit_deposit(&e, String::from_str(&e, STARETEGY_NAME), amount, from);
+        event::emit_deposit(&e, String::from_str(&e, STARETEGY_NAME), amount, from.clone());
 
-        Ok(())
+        Ok(read_balance(&e, from))
     }
 
     fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
@@ -88,6 +88,7 @@ impl DeFindexStrategyTrait for HodlStrategy {
         e: Env,
         amount: i128,
         from: Address,
+        to: Address,
     ) -> Result<i128, StrategyError> {
         from.require_auth();
         check_nonnegative_amount(amount)?;
@@ -97,10 +98,10 @@ impl DeFindexStrategyTrait for HodlStrategy {
         
         let contract_address = e.current_contract_address();
         let underlying_asset = get_underlying_asset(&e);
-        TokenClient::new(&e, &underlying_asset).transfer(&contract_address, &from, &amount);
-        event::emit_withdraw(&e, String::from_str(&e, STARETEGY_NAME), amount, from);
+        TokenClient::new(&e, &underlying_asset).transfer(&contract_address, &to, &amount);
+        event::emit_withdraw(&e, String::from_str(&e, STARETEGY_NAME), amount, from.clone());
 
-        Ok(amount)
+        Ok(read_balance(&e, from))
     }
 
     fn balance(

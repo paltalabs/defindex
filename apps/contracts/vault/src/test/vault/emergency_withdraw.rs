@@ -26,6 +26,7 @@ fn withdraw_success() {
         test.vault_fee_receiver.clone(),
         2000u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),

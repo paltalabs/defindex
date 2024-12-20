@@ -13,7 +13,6 @@ pub struct Config {
 
 #[derive(Clone)]
 #[contracttype]
-
 pub enum DataKey {
     Config,
     Reserves,

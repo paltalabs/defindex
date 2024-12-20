@@ -34,6 +34,7 @@ fn one_asset_no_previous_investment() {
         test.vault_fee_receiver.clone(),
         2000u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
@@ -183,6 +184,7 @@ fn one_asset_previous_investment_success() {
         test.vault_fee_receiver.clone(),
         2000u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
@@ -371,6 +373,7 @@ fn several_assets_no_previous_investment() {
         test.vault_fee_receiver.clone(),
         2000u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
@@ -572,6 +575,7 @@ fn several_assets_wih_previous_investment_success() {
         test.vault_fee_receiver.clone(),
         2000u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         String::from_str(&test.env, "dfToken"),
@@ -736,6 +740,8 @@ fn several_assets_wih_previous_investment_success() {
     let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
     
+    // invested_amount: 1780246914, strategy_allocations: Vec(Ok(StrategyAllocation { amount: 1780246914, strategy_address: Contract(CDDD62URLXHZ2SEMZ3ZWWKRA2DCK75PELPRVLAW4PPO5PRL2HJW25HLF) })), total_amount: 2567901235 })), Ok((Contract(CDS3FDGQ4JA2V3F26Y4BMWWJEC5TT26RJBN7KIQKUMVO2MAOCMDTSZ7A), CurrentAssetInvestmentAllocation { asset: Contract(CDS3FDGQ4JA2V3F26Y4BMWWJEC5TT26RJBN7KIQKUMVO2MAOCMDTSZ7A), idle_amount: 23456789, invested_amount: 297530863, strategy_allocations: Vec(Ok(StrategyAllocation { amount: 297530863, strategy_address: Contract(CB457TMKS3NBPJJRHNCRJMSAWP2YMCNIORWHHF6MNZJQQGZQRPSANQSE) })), total_amount: 320987652 })))
+    // invested_amount: 2175308642, strategy_allocations: Vec(Ok(StrategyAllocation { amount: 2175308642, strategy_address: Contract(CDDD62URLXHZ2SEMZ3ZWWKRA2DCK75PELPRVLAW4PPO5PRL2HJW25HLF) })), total_amount: 2962962963 })), Ok((Contract(CDS3FDGQ4JA2V3F26Y4BMWWJEC5TT26RJBN7KIQKUMVO2MAOCMDTSZ7A), CurrentAssetInvestmentAllocation { asset: Contract(CDS3FDGQ4JA2V3F26Y4BMWWJEC5TT26RJBN7KIQKUMVO2MAOCMDTSZ7A), idle_amount: 23456789, invested_amount: 346913578, strategy_allocations: Vec(Ok(StrategyAllocation { amount: 346913578, strategy_address: Contract(CB457TMKS3NBPJJRHNCRJMSAWP2YMCNIORWHHF6MNZJQQGZQRPSANQSE) })), total_amount: 370370367 })))
     // // check current idle funds
     // let mut expected_idle_map = Map::new(&test.env);
     // expected_idle_map.set(test.token_0.address.clone(), 0);
