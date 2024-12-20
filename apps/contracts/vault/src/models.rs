@@ -31,28 +31,27 @@ pub struct AssetInvestmentAllocation {
 pub enum Instruction {
     /// Withdraw funds from a strategy.
     Withdraw(Address, i128), // (strategy, amount)
-    
+
     /// Invest funds into a strategy.
     Invest(Address, i128), // (strategy, amount)
-    
+
     /// Perform a swap with an exact input amount.
     SwapExactIn(
         Address, // token_in
         Address, // token_out
         i128,    // amount_in
         i128,    // amount_out_min
-        u64      // deadline
+        u64,     // deadline
     ),
-    
+
     /// Perform a swap with an exact output amount.
     SwapExactOut(
         Address, // token_in
         Address, // token_out
         i128,    // amount_out
         i128,    // amount_in_max
-        u64      // deadline
+        u64,     // deadline
     ),
-    
     // /// Placeholder for zap operations (commented for future use).
     // Zapper(Vec<ZapperInstruction>), // instructions
 }

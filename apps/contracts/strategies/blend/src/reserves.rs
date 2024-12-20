@@ -46,13 +46,10 @@ impl StrategyReserves {
     pub fn update_rate(&mut self, amount: i128, b_tokens: i128) {
         // Calculate the new bRate - 9 decimal places of precision
         // Update the reserve's bRate
-        let new_rate = amount
-            .fixed_div_floor(b_tokens, SCALAR_9)
-            .unwrap();
+        let new_rate = amount.fixed_div_floor(b_tokens, SCALAR_9).unwrap();
 
         self.b_rate = new_rate;
     }
-
 }
 
 /// Deposit into the reserve vault. This function expects the deposit to have already been made
@@ -73,15 +70,15 @@ pub fn deposit(
     }
 
     reserves.update_rate(underlying_amount, b_tokens_amount);
-    
+
     let mut vault_shares = storage::get_vault_shares(&e, &from);
     let share_amount: i128 = reserves.b_tokens_to_shares_down(b_tokens_amount);
-    
+
     reserves.total_shares += share_amount;
     reserves.total_b_tokens += b_tokens_amount;
 
     vault_shares += share_amount;
-    
+
     storage::set_strategy_reserves(&e, reserves);
     storage::set_vault_shares(&e, &from, vault_shares);
     vault_shares
@@ -114,7 +111,7 @@ pub fn withdraw(
 
     reserves.total_shares -= share_amount;
     reserves.total_b_tokens -= b_tokens_amount;
-    
+
     if share_amount > vault_shares {
         panic_with_error!(e, StrategyError::InsufficientBalance);
     }
@@ -141,7 +138,7 @@ pub fn harvest(
     }
 
     reserves.update_rate(underlying_amount, b_tokens_amount);
-    
+
     reserves.total_b_tokens += b_tokens_amount;
 
     storage::set_strategy_reserves(&e, reserves);

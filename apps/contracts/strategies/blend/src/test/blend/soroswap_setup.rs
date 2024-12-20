@@ -1,18 +1,15 @@
-use soroban_sdk::{
-    Env, BytesN, Address,
-    testutils::{Address as _}
-};
+use soroban_sdk::{testutils::Address as _, Address, BytesN, Env};
 
 fn pair_contract_wasm(e: &Env) -> BytesN<32> {
-    soroban_sdk::contractimport!(
-        file = "../external_wasms/soroswap/soroswap_pair.optimized.wasm"
-    );
+    soroban_sdk::contractimport!(file = "../external_wasms/soroswap/soroswap_pair.optimized.wasm");
     e.deployer().upload_contract_wasm(WASM)
 }
 
 // SoroswapFactory Contract
 mod factory {
-    soroban_sdk::contractimport!(file = "../external_wasms/soroswap/soroswap_factory.optimized.wasm");
+    soroban_sdk::contractimport!(
+        file = "../external_wasms/soroswap/soroswap_factory.optimized.wasm"
+    );
     pub type SoroswapFactoryClient<'a> = Client<'a>;
 }
 use factory::SoroswapFactoryClient;
@@ -27,7 +24,9 @@ pub fn create_soroswap_factory<'a>(e: &Env, setter: &Address) -> SoroswapFactory
 
 // SoroswapRouter Contract
 mod router {
-    soroban_sdk::contractimport!(file = "../external_wasms/soroswap/soroswap_router.optimized.wasm");
+    soroban_sdk::contractimport!(
+        file = "../external_wasms/soroswap/soroswap_router.optimized.wasm"
+    );
     pub type SoroswapRouterClient<'a> = Client<'a>;
 }
 pub use router::SoroswapRouterClient;
@@ -39,21 +38,28 @@ pub fn create_soroswap_router<'a>(e: &Env, factory: &Address) -> SoroswapRouterC
     router.initialize(factory);
     router
 }
- 
-pub fn create_soroswap_pool<'a>(e: &Env, to: &Address, token_a: &Address, token_b: &Address, amount_a: &i128, amount_b: &i128) -> SoroswapRouterClient<'a> {
+
+pub fn create_soroswap_pool<'a>(
+    e: &Env,
+    to: &Address,
+    token_a: &Address,
+    token_b: &Address,
+    amount_a: &i128,
+    amount_b: &i128,
+) -> SoroswapRouterClient<'a> {
     let soroswap_admin = Address::generate(&e);
     let factory = create_soroswap_factory(&e, &soroswap_admin);
     let router = create_soroswap_router(&e, &factory.address);
 
     router.add_liquidity(
-        token_a, 
-        token_b, 
-        &amount_a, 
-        &amount_b, 
-        &0i128, 
-        &0i128, 
-        &to, 
-        &(e.ledger().timestamp() + 3600)
+        token_a,
+        token_b,
+        &amount_a,
+        &amount_b,
+        &0i128,
+        &0i128,
+        &to,
+        &(e.ledger().timestamp() + 3600),
     );
 
     router

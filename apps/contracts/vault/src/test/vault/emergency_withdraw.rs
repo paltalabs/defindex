@@ -1,8 +1,9 @@
 use soroban_sdk::{vec as sorobanvec, String, Vec};
 
 use crate::test::{
-    create_defindex_vault, create_strategy_params_token_0, defindex_vault::{AssetInvestmentAllocation, AssetStrategySet, StrategyAllocation
-    }, DeFindexVaultTest
+    create_defindex_vault, create_strategy_params_token_0,
+    defindex_vault::{AssetInvestmentAllocation, AssetStrategySet, StrategyAllocation},
+    DeFindexVaultTest,
 };
 
 #[test]
@@ -29,7 +30,11 @@ fn withdraw_success() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
 
     let amount = 987654321i128;
@@ -48,16 +53,16 @@ fn withdraw_success() {
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
-        &false
+        &false,
     );
 
     let df_balance = defindex_contract.balance(&users[0]);
-    assert_eq!(df_balance, amount - 1000);   
+    assert_eq!(df_balance, amount - 1000);
 
     // Balance of the token_0 on the vault should be `amount` since it is deposited into the vault first
     let vault_balance_of_token = test.token_0.balance(&defindex_contract.address);
     assert_eq!(vault_balance_of_token, amount);
-    
+
     let investments = sorobanvec![
         &test.env,
         Some(AssetInvestmentAllocation {
@@ -71,7 +76,6 @@ fn withdraw_success() {
             ],
         }),
     ];
-
 
     defindex_contract.invest(&investments);
 

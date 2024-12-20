@@ -1,14 +1,14 @@
-use soroban_sdk::{
-    Address, vec as sorobanvec, InvokeError, String, Vec, Map};
+use soroban_sdk::{vec as sorobanvec, Address, InvokeError, Map, String, Vec};
 
+use crate::test::defindex_vault::ContractError;
 use crate::test::{
     create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1,
     defindex_vault::{
-        AssetInvestmentAllocation, AssetStrategySet, Instruction, 
-        StrategyAllocation, CurrentAssetInvestmentAllocation}, 
-    DeFindexVaultTest
+        AssetInvestmentAllocation, AssetStrategySet, CurrentAssetInvestmentAllocation, Instruction,
+        StrategyAllocation,
+    },
+    DeFindexVaultTest,
 };
-use crate::test::defindex_vault::ContractError;
 
 #[test]
 fn multi_instructions() {
@@ -34,7 +34,11 @@ fn multi_instructions() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
     let amount = 987654321i128;
 
@@ -51,7 +55,7 @@ fn multi_instructions() {
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
-        &false
+        &false,
     );
 
     let df_balance = defindex_contract.balance(&users[0]);
@@ -82,17 +86,16 @@ fn multi_instructions() {
     let instruction_amount_1 = 100i128;
 
     let instructions = sorobanvec![
-    &test.env,
-    Instruction::Withdraw(
-        test.strategy_client_token_0.address.clone(),
-        instruction_amount_0
-    ),
-    Instruction::Invest(
-        test.strategy_client_token_0.address.clone(),
-        instruction_amount_1
-    ),
-];
-
+        &test.env,
+        Instruction::Withdraw(
+            test.strategy_client_token_0.address.clone(),
+            instruction_amount_0
+        ),
+        Instruction::Invest(
+            test.strategy_client_token_0.address.clone(),
+            instruction_amount_1
+        ),
+    ];
 
     defindex_contract.rebalance(&instructions);
 
@@ -124,7 +127,11 @@ fn one_instruction() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
     let amount = 987654321i128;
 
@@ -141,7 +148,7 @@ fn one_instruction() {
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
-        &false
+        &false,
     );
 
     let df_balance = defindex_contract.balance(&users[0]);
@@ -171,9 +178,12 @@ fn one_instruction() {
     let instruction_amount_0 = 200i128;
 
     let instructions = sorobanvec![
-    &test.env,
-    Instruction::Withdraw(test.strategy_client_token_0.address.clone(), instruction_amount_0),
-]   ;
+        &test.env,
+        Instruction::Withdraw(
+            test.strategy_client_token_0.address.clone(),
+            instruction_amount_0
+        ),
+    ];
 
     defindex_contract.rebalance(&instructions);
 
@@ -182,7 +192,7 @@ fn one_instruction() {
 }
 
 #[test]
-fn empty_instructions(){
+fn empty_instructions() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
 
@@ -205,7 +215,11 @@ fn empty_instructions(){
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
     let amount: i128 = 987654321;
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -217,14 +231,14 @@ fn empty_instructions(){
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
-        &false
+        &false,
     );
     let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount - 1000);
 }
 
 #[test]
-fn no_instructions(){
+fn no_instructions() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
 
@@ -247,7 +261,11 @@ fn no_instructions(){
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
     let amount: i128 = 987654321;
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -259,7 +277,7 @@ fn no_instructions(){
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
-        &false
+        &false,
     );
     let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount - 1000);
@@ -269,7 +287,7 @@ fn no_instructions(){
 }
 
 #[test]
-fn insufficient_balance(){
+fn insufficient_balance() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
 
@@ -292,28 +310,35 @@ fn insufficient_balance(){
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
     let amount: i128 = 987654321;
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
     test.token_0_admin_client.mint(&users[0], &amount);
-    
+
     //Balance should be 0
     let vault_balance = defindex_contract.balance(&users[0]);
     assert_eq!(vault_balance, 0i128);
 
     //Withdraw with no funds
     let withdraw_no_funds_instructions = sorobanvec![
-    &test.env,
-    Instruction::Withdraw(test.strategy_client_token_0.address.clone(), amount + 1),
-]   ;
+        &test.env,
+        Instruction::Withdraw(test.strategy_client_token_0.address.clone(), amount + 1),
+    ];
 
     let withdraw_no_funds = defindex_contract.try_rebalance(&withdraw_no_funds_instructions);
-    assert_eq!(withdraw_no_funds, Err(Ok(ContractError::StrategyWithdrawError))); //Contract should respond 'Insuficient balance'?
+    assert_eq!(
+        withdraw_no_funds,
+        Err(Ok(ContractError::StrategyWithdrawError))
+    ); //Contract should respond 'Insuficient balance'?
 
     let invest_no_funds_instructions = sorobanvec![
-    &test.env,
-    Instruction::Invest(test.strategy_client_token_0.address.clone(), 1),
+        &test.env,
+        Instruction::Invest(test.strategy_client_token_0.address.clone(), 1),
     ];
 
     let invest_no_funds = defindex_contract.try_rebalance(&invest_no_funds_instructions);
@@ -328,7 +353,7 @@ fn insufficient_balance(){
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
-        &false
+        &false,
     );
     let df_balance: i128 = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount - 1000);
@@ -338,14 +363,14 @@ fn insufficient_balance(){
         &test.env,
         Instruction::Withdraw(test.strategy_client_token_0.address.clone(), amount + 1),
     ];
-    
+
     let rebalance = defindex_contract.try_rebalance(&withdraw_instructions);
     assert_eq!(rebalance, Err(Ok(ContractError::StrategyWithdrawError)));
 
     let invest_instructions = sorobanvec![
         &test.env,
         Instruction::Invest(test.strategy_client_token_0.address.clone(), amount + 1),
-    ];    
+    ];
 
     //Contract should fail with error #10 no balance
     let rebalance = defindex_contract.try_rebalance(&invest_instructions);
@@ -387,7 +412,11 @@ fn swap_exact_in() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
     let amount0 = 123456789i128;
     let amount1 = 987654321i128;
@@ -406,35 +435,43 @@ fn swap_exact_in() {
 
     // check total managed funds
     let mut total_managed_funds_expected = Map::new(&test.env);
-    let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyAllocation {
-        strategy_address: test.strategy_client_token_0.address.clone(),
-        amount: 0, // funds have not been invested yet!
-    }];
-    let strategy_investments_expected_token_1 = sorobanvec![&test.env, StrategyAllocation {
-        strategy_address: test.strategy_client_token_1.address.clone(),
-        amount: 0, // funds have not been invested yet!
-    }];
-    total_managed_funds_expected.set(test.token_0.address.clone(), 
+    let strategy_investments_expected_token_0 = sorobanvec![
+        &test.env,
+        StrategyAllocation {
+            strategy_address: test.strategy_client_token_0.address.clone(),
+            amount: 0, // funds have not been invested yet!
+        }
+    ];
+    let strategy_investments_expected_token_1 = sorobanvec![
+        &test.env,
+        StrategyAllocation {
+            strategy_address: test.strategy_client_token_1.address.clone(),
+            amount: 0, // funds have not been invested yet!
+        }
+    ];
+    total_managed_funds_expected.set(
+        test.token_0.address.clone(),
         CurrentAssetInvestmentAllocation {
             asset: test.token_0.address.clone(),
             total_amount: amount0,
             idle_amount: amount0,
             invested_amount: 0i128,
             strategy_allocations: strategy_investments_expected_token_0,
-        }
+        },
     );
-    total_managed_funds_expected.set(test.token_1.address.clone(), 
+    total_managed_funds_expected.set(
+        test.token_1.address.clone(),
         CurrentAssetInvestmentAllocation {
             asset: test.token_1.address.clone(),
             total_amount: amount1,
             idle_amount: amount1,
             invested_amount: 0i128,
             strategy_allocations: strategy_investments_expected_token_1,
-        }
+        },
     );
     let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
-    
+
     let amount_in = 1_000_000;
     //(1000000×997×4000000000000000000)÷(1000000000000000000×1000+997×1000000) = 3987999,9
     let expected_amount_out = 3987999;
@@ -444,55 +481,59 @@ fn swap_exact_in() {
     path.push_back(test.token_0.address.clone());
     path.push_back(test.token_1.address.clone());
 
-
     // Rebalance from here on
     let instructions = sorobanvec![
-    &test.env,
-    Instruction::SwapExactIn(
-        test.token_0.address.clone(),
-        test.token_1.address.clone(),
-        amount_in,
-        0, // amount_out_min
-        test.env.ledger().timestamp() + 3600u64
-    ),
+        &test.env,
+        Instruction::SwapExactIn(
+            test.token_0.address.clone(),
+            test.token_1.address.clone(),
+            amount_in,
+            0, // amount_out_min
+            test.env.ledger().timestamp() + 3600u64
+        ),
     ];
-
 
     defindex_contract.rebalance(&instructions);
 
     // check total managed funds
     let mut total_managed_funds_expected = Map::new(&test.env);
-    let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyAllocation {
-        strategy_address: test.strategy_client_token_0.address.clone(),
-        amount: 0, // funds have not been invested yet!
-    }];
-    let strategy_investments_expected_token_1 = sorobanvec![&test.env, StrategyAllocation {
-        strategy_address: test.strategy_client_token_1.address.clone(),
-        amount: 0, // funds have not been invested yet!
-    }];
-    total_managed_funds_expected.set(test.token_0.address.clone(), 
+    let strategy_investments_expected_token_0 = sorobanvec![
+        &test.env,
+        StrategyAllocation {
+            strategy_address: test.strategy_client_token_0.address.clone(),
+            amount: 0, // funds have not been invested yet!
+        }
+    ];
+    let strategy_investments_expected_token_1 = sorobanvec![
+        &test.env,
+        StrategyAllocation {
+            strategy_address: test.strategy_client_token_1.address.clone(),
+            amount: 0, // funds have not been invested yet!
+        }
+    ];
+    total_managed_funds_expected.set(
+        test.token_0.address.clone(),
         CurrentAssetInvestmentAllocation {
             asset: test.token_0.address.clone(),
             total_amount: amount0 - amount_in,
             idle_amount: amount0 - amount_in,
             invested_amount: 0i128,
             strategy_allocations: strategy_investments_expected_token_0,
-        }
+        },
     );
-    total_managed_funds_expected.set(test.token_1.address.clone(), 
+    total_managed_funds_expected.set(
+        test.token_1.address.clone(),
         CurrentAssetInvestmentAllocation {
             asset: test.token_1.address.clone(),
             total_amount: amount1 + expected_amount_out,
             idle_amount: amount1 + expected_amount_out,
             invested_amount: 0i128,
             strategy_allocations: strategy_investments_expected_token_1,
-        }
+        },
     );
     let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
-    
 }
-
 
 #[test]
 fn swap_exact_out() {
@@ -525,7 +566,11 @@ fn swap_exact_out() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
     let amount0 = 123456789i128;
     let amount1 = 987654321i128;
@@ -544,92 +589,104 @@ fn swap_exact_out() {
 
     // check total managed funds
     let mut total_managed_funds_expected = Map::new(&test.env);
-    let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyAllocation {
-        strategy_address: test.strategy_client_token_0.address.clone(),
-        amount: 0, // funds have not been invested yet!
-    }];
-    let strategy_investments_expected_token_1 = sorobanvec![&test.env, StrategyAllocation {
-        strategy_address: test.strategy_client_token_1.address.clone(),
-        amount: 0, // funds have not been invested yet!
-    }];
-    total_managed_funds_expected.set(test.token_0.address.clone(), 
+    let strategy_investments_expected_token_0 = sorobanvec![
+        &test.env,
+        StrategyAllocation {
+            strategy_address: test.strategy_client_token_0.address.clone(),
+            amount: 0, // funds have not been invested yet!
+        }
+    ];
+    let strategy_investments_expected_token_1 = sorobanvec![
+        &test.env,
+        StrategyAllocation {
+            strategy_address: test.strategy_client_token_1.address.clone(),
+            amount: 0, // funds have not been invested yet!
+        }
+    ];
+    total_managed_funds_expected.set(
+        test.token_0.address.clone(),
         CurrentAssetInvestmentAllocation {
             asset: test.token_0.address.clone(),
             total_amount: amount0,
             idle_amount: amount0,
             invested_amount: 0i128,
             strategy_allocations: strategy_investments_expected_token_0,
-        }
+        },
     );
-    total_managed_funds_expected.set(test.token_1.address.clone(), 
+    total_managed_funds_expected.set(
+        test.token_1.address.clone(),
         CurrentAssetInvestmentAllocation {
             asset: test.token_1.address.clone(),
             total_amount: amount1,
             idle_amount: amount1,
             invested_amount: 0i128,
             strategy_allocations: strategy_investments_expected_token_1,
-        }
+        },
     );
     let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
-    
+
     let expected_amount_out = 5_000_000;
     // (r_in*amount_out)*1000 / (r_out - amount_out)*997
     // (1000000000000000000*5000000)*1000 / ((4000000000000000000 - 5000000)*997) + 1 = 1253762,2
     // because cealing div = 1253763
-    let amount_in_should =1253763;
+    let amount_in_should = 1253763;
 
     // add one with part 1 and other with part 0
     let mut path: Vec<Address> = Vec::new(&test.env);
     path.push_back(test.token_0.address.clone());
     path.push_back(test.token_1.address.clone());
 
-
     // Rebalance from here on
     let instructions = sorobanvec![
-    &test.env,
-    Instruction::SwapExactOut(
-        test.token_0.address.clone(),
-        test.token_1.address.clone(),
-        expected_amount_out, //amount_out
-        amount_in_should, // amount_in_max
-        test.env.ledger().timestamp() + 3600u64
-    ),
+        &test.env,
+        Instruction::SwapExactOut(
+            test.token_0.address.clone(),
+            test.token_1.address.clone(),
+            expected_amount_out, //amount_out
+            amount_in_should,    // amount_in_max
+            test.env.ledger().timestamp() + 3600u64
+        ),
     ];
-
 
     defindex_contract.rebalance(&instructions);
 
     // check total managed funds
     let mut total_managed_funds_expected = Map::new(&test.env);
-    let strategy_investments_expected_token_0 = sorobanvec![&test.env, StrategyAllocation {
-        strategy_address: test.strategy_client_token_0.address.clone(),
-        amount: 0, // funds have not been invested yet!
-    }];
-    let strategy_investments_expected_token_1 = sorobanvec![&test.env, StrategyAllocation {
-        strategy_address: test.strategy_client_token_1.address.clone(),
-        amount: 0, // funds have not been invested yet!
-    }];
-    total_managed_funds_expected.set(test.token_0.address.clone(), 
+    let strategy_investments_expected_token_0 = sorobanvec![
+        &test.env,
+        StrategyAllocation {
+            strategy_address: test.strategy_client_token_0.address.clone(),
+            amount: 0, // funds have not been invested yet!
+        }
+    ];
+    let strategy_investments_expected_token_1 = sorobanvec![
+        &test.env,
+        StrategyAllocation {
+            strategy_address: test.strategy_client_token_1.address.clone(),
+            amount: 0, // funds have not been invested yet!
+        }
+    ];
+    total_managed_funds_expected.set(
+        test.token_0.address.clone(),
         CurrentAssetInvestmentAllocation {
             asset: test.token_0.address.clone(),
             total_amount: amount0 - amount_in_should,
             idle_amount: amount0 - amount_in_should,
             invested_amount: 0i128,
             strategy_allocations: strategy_investments_expected_token_0,
-        }
+        },
     );
-    total_managed_funds_expected.set(test.token_1.address.clone(), 
+    total_managed_funds_expected.set(
+        test.token_1.address.clone(),
         CurrentAssetInvestmentAllocation {
             asset: test.token_1.address.clone(),
             total_amount: amount1 + expected_amount_out,
             idle_amount: amount1 + expected_amount_out,
             invested_amount: 0i128,
             strategy_allocations: strategy_investments_expected_token_1,
-        }
+        },
     );
     let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
-    
 }
-

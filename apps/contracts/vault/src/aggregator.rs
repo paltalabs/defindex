@@ -1,12 +1,14 @@
-use soroban_sdk::{vec, Address, Env, IntoVal, Symbol, Val, Vec, auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation}};
-use soroswap_library::{get_reserves_with_pair, get_amount_in};
+use soroban_sdk::{
+    auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation},
+    vec, Address, Env, IntoVal, Symbol, Val, Vec,
+};
+use soroswap_library::{get_amount_in, get_reserves_with_pair};
 
 use crate::{
     // models::DexDistribution,
     storage::{get_assets, get_soroswap_router},
     ContractError,
 };
-
 
 fn is_supported_asset(e: &Env, token: &Address) -> bool {
     let assets = get_assets(e);
@@ -21,7 +23,6 @@ pub fn internal_swap_exact_tokens_for_tokens(
     amount_out_min: &i128,
     deadline: &u64,
 ) -> Result<(), ContractError> {
-
     // Check if both tokens are supported by the vault
     if !is_supported_asset(e, token_in) || !is_supported_asset(e, token_out) {
         return Err(ContractError::UnsupportedAsset);
@@ -52,8 +53,9 @@ pub fn internal_swap_exact_tokens_for_tokens(
                 args: (
                     e.current_contract_address(),
                     pair_address.clone(),
-                    amount_in.clone()).into_val(e),
-
+                    amount_in.clone(),
+                )
+                    .into_val(e),
             },
             sub_invocations: vec![&e],
         }),
@@ -76,7 +78,6 @@ pub fn internal_swap_tokens_for_exact_tokens(
     amount_in_max: &i128,
     deadline: &u64,
 ) -> Result<(), ContractError> {
-
     // Check if both tokens are supported by the vault
     if !is_supported_asset(e, token_in) || !is_supported_asset(e, token_out) {
         return Err(ContractError::UnsupportedAsset);
@@ -87,7 +88,12 @@ pub fn internal_swap_tokens_for_exact_tokens(
         &Symbol::new(&e, "router_pair_for"),
         vec![e, token_in.to_val(), token_out.to_val()],
     );
-    let (reserve_in, reserve_out) = get_reserves_with_pair(e.clone(), pair_address.clone(), token_in.clone(), token_out.clone())?;
+    let (reserve_in, reserve_out) = get_reserves_with_pair(
+        e.clone(),
+        pair_address.clone(),
+        token_in.clone(),
+        token_out.clone(),
+    )?;
     let amount_in = get_amount_in(amount_out.clone(), reserve_in, reserve_out);
 
     let swap_args: Vec<Val> = vec![
@@ -108,8 +114,9 @@ pub fn internal_swap_tokens_for_exact_tokens(
                 args: (
                     e.current_contract_address(),
                     pair_address.clone(),
-                    amount_in.clone()).into_val(e),
-
+                    amount_in.clone(),
+                )
+                    .into_val(e),
             },
             sub_invocations: vec![&e],
         }),

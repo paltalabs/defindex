@@ -1,11 +1,10 @@
-use soroban_sdk::{vec as sorobanvec, String, Vec, Map};
+use soroban_sdk::{vec as sorobanvec, Map, String, Vec};
 
 use crate::test::defindex_vault::{AssetStrategySet, ContractError};
 use crate::test::{
-    create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1, DeFindexVaultTest
+    create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1,
+    DeFindexVaultTest,
 };
-
-
 
 // test get_asset_amounts_per_shares function after every deposit
 // do a bunch of deposits with different ratios and check that shares are calculated correctly
@@ -40,7 +39,11 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
 
     let amount0 = 123456789i128;
@@ -85,11 +88,11 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
 
     // next we will consider that total shares are amount0 + amount1 = 123456789 + 987654321 = 1111111110
     // and we will calculate the shares for each asset
-    // amount should 1 for token_0: 
+    // amount should 1 for token_0:
     // amount0 * shares 0 = 123456789 * 1000 = 123456789000
     // amount 0 * shares 0 / total supply = 123456789000 / 1111111110 = 111.111110211
     // because truncating, amount should be 111
-    
+
     // amount should 1 for token_1:
     // amount1 * shares 0 = 987654321 * 1000 = 987654321000
     // amount 1 * shares 0 / total supply = 987654321000 / 1111111110 = 888.888889789
@@ -104,7 +107,7 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
     // amount0 * shares 0 = 123456789 * 2000 = 246913578000
     // amount 0 * shares 0 / total supply = 246913578000 / 1111111110 = 222.222220422
     // because truncating, amount should be 222
-    
+
     // amount should 2 for token_1:
     // amount1 * shares 0 = 987654321 * 2000 = 1975308642000
     // amount 1 * shares 0 / total supply = 1975308642000 / 1111111110 = 1777.777779578
@@ -119,7 +122,7 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
     // amount0 * shares 0 = 123456789 * 3000 = 370370367000
     // amount 0 * shares 0 / total supply = 370370367000 / 1111111110 = 333.333330633
     // because truncating, amount should be 333
-    
+
     // amount should 3 for token_1:
     // amount1 * shares 0 = 987654321 * 3000 = 2962962963000
     // amount 1 * shares 0 / total supply = 2962962963000 / 1111111110 = 2666.666670633
@@ -134,7 +137,7 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
     // amount0 * shares 0 = 123456789 * 4000 = 493827156000
     // amount 0 * shares 0 / total supply = 493827156000 / 1111111110 = 444.444440844
     // because truncating, amount should be 444
-    
+
     // amount should 4 for token_1:
     // amount1 * shares 0 = 987654321 * 4000 = 3950617284000
     // amount 1 * shares 0 / total supply = 3950617284000 / 1111111110 = 3555.555561844
@@ -149,7 +152,7 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
     // amount0 * shares 0 = 123456789 * 5000 = 617283945000
     // amount 0 * shares 0 / total supply = 617283945000 / 1111111110 = 555.555550055
     // because truncating, amount should be 555
-    
+
     // amount should 5 for token_1:
     // amount1 * shares 0 = 987654321 * 5000 = 4938271605000
     // amount 1 * shares 0 / total supply = 4938271605000 / 1111111110 = 4444.444450055
@@ -164,11 +167,9 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
     // now we will consider an amount over total supply , we should get error AmountOverTotalSupply
     let result7 = defindex_contract.try_get_asset_amounts_per_shares(&1111111111i128);
     assert_eq!(result7, Err(Ok(ContractError::AmountOverTotalSupply)));
-
 }
 
 #[test]
 fn deposit_and_invest_several_assets_get_asset_amounts_per_shares() {
     todo!();
-
 }

@@ -1,5 +1,5 @@
 use soroban_sdk::{self, contracterror};
-use soroswap_library::{SoroswapLibraryError};
+use soroswap_library::SoroswapLibraryError;
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -27,7 +27,6 @@ pub enum ContractError {
     AmountOverTotalSupply = 124,
     NoInstructions = 125,
 
-
     // Arithmetic Errors (12x)
     ArithmeticError = 120,
     Overflow = 121,
@@ -47,8 +46,8 @@ pub enum ContractError {
     AssetNotFound = 150,
     NoAssetsProvided = 151,
 
-     // Add mappings for SoroswapLibraryError
-     LibrarySortIdenticalTokens = 190,
+    // Add mappings for SoroswapLibraryError
+    LibrarySortIdenticalTokens = 190,
 }
 
 impl From<SoroswapLibraryError> for ContractError {

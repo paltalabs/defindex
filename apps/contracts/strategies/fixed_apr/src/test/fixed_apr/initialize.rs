@@ -6,7 +6,8 @@ use crate::test::{create_fixapr_strategy, FixAprStrategyTest};
 fn check_storage() {
     let test = FixAprStrategyTest::setup();
 
-    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
+    let strategy =
+        create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
 
     // get asset should return underlying asset
     let underlying_asset = strategy.asset();

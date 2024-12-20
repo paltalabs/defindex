@@ -1,10 +1,13 @@
-use soroban_sdk::{vec as sorobanvec, String, Vec, Map};
+use soroban_sdk::{vec as sorobanvec, Map, String, Vec};
 
 // use super::hodl_strategy::StrategyError;
 use crate::test::{
-    create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1, defindex_vault::{
-        AssetInvestmentAllocation, AssetStrategySet, ContractError, CurrentAssetInvestmentAllocation, Strategy, StrategyAllocation
-    }, DeFindexVaultTest
+    create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1,
+    defindex_vault::{
+        AssetInvestmentAllocation, AssetStrategySet, ContractError,
+        CurrentAssetInvestmentAllocation, Strategy, StrategyAllocation,
+    },
+    DeFindexVaultTest,
 };
 
 // check that withdraw with negative amount after initialized returns error
@@ -32,7 +35,11 @@ fn negative_amount() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -40,7 +47,6 @@ fn negative_amount() {
     let result = defindex_contract.try_withdraw(&-100i128, &users[0]);
     assert_eq!(result, Err(Ok(ContractError::NegativeNotAllowed)));
 }
-
 
 // check that withdraw without balance after initialized returns error AmountOverTotalSupply
 #[test]
@@ -67,7 +73,11 @@ fn zero_total_supply() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -101,16 +111,22 @@ fn not_enough_balance() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
 
     // We need to generate 2 users, to have more total supply than the amount to withdraw
     let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
 
     let amount_to_deposit = 567890i128;
-    test.token_0_admin_client.mint(&users[0], &amount_to_deposit);
-    test.token_0_admin_client.mint(&users[1], &amount_to_deposit);
-    
+    test.token_0_admin_client
+        .mint(&users[0], &amount_to_deposit);
+    test.token_0_admin_client
+        .mint(&users[1], &amount_to_deposit);
+
     assert_eq!(test.token_0.balance(&users[0]), amount_to_deposit);
     assert_eq!(test.token_0.balance(&users[1]), amount_to_deposit);
 
@@ -119,30 +135,33 @@ fn not_enough_balance() {
         &sorobanvec![&test.env, amount_to_deposit],
         &sorobanvec![&test.env, amount_to_deposit],
         &users[0],
-        &false
+        &false,
     );
 
     defindex_contract.deposit(
         &sorobanvec![&test.env, amount_to_deposit],
         &sorobanvec![&test.env, amount_to_deposit],
         &users[1],
-        &false
+        &false,
     );
 
     // check that the every user has vault shares
-    assert_eq!(defindex_contract.balance(&users[0]), amount_to_deposit - 1000);
+    assert_eq!(
+        defindex_contract.balance(&users[0]),
+        amount_to_deposit - 1000
+    );
     assert_eq!(defindex_contract.balance(&users[1]), amount_to_deposit);
     // check that total supply of vault shares is indeed amount_to_deposit*2
-    assert_eq!(defindex_contract.total_supply(), amount_to_deposit*2);
-    
+    assert_eq!(defindex_contract.total_supply(), amount_to_deposit * 2);
+
     // now user 0 tries to withdraw amount_to_deposit - 1000 +1 (more that it has)
 
-    let result = defindex_contract.try_withdraw(&(amount_to_deposit - 1000 +1), &users[0]);
+    let result = defindex_contract.try_withdraw(&(amount_to_deposit - 1000 + 1), &users[0]);
     assert_eq!(result, Err(Ok(ContractError::InsufficientBalance)));
 }
 
 #[test]
-fn from_idle_one_asset_one_strategy_success() { 
+fn from_idle_one_asset_one_strategy_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token_0 = create_strategy_params_token_0(&test);
@@ -165,7 +184,11 @@ fn from_idle_one_asset_one_strategy_success() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
     let amount = 1234567890i128;
 
@@ -210,28 +233,30 @@ fn from_idle_one_asset_one_strategy_success() {
 
     // check total manage funds
     let mut total_managed_funds_expected = Map::new(&test.env);
-    let strategy_investments_expected = sorobanvec![&test.env, StrategyAllocation {
-        strategy_address: test.strategy_client_token_0.address.clone(),
-        amount: 0, //funds has not been invested yet!
-    }];
-    total_managed_funds_expected.set(test.token_0.address.clone(), 
+    let strategy_investments_expected = sorobanvec![
+        &test.env,
+        StrategyAllocation {
+            strategy_address: test.strategy_client_token_0.address.clone(),
+            amount: 0, //funds has not been invested yet!
+        }
+    ];
+    total_managed_funds_expected.set(
+        test.token_0.address.clone(),
         CurrentAssetInvestmentAllocation {
             asset: test.token_0.address.clone(),
             total_amount: amount_to_deposit,
             idle_amount: amount_to_deposit,
             invested_amount: 0i128,
             strategy_allocations: strategy_investments_expected,
-        }
+        },
     );
 
     let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
 
-
     // user decides to withdraw a portion of deposited amount
     let amount_to_withdraw = 123456i128;
-    defindex_contract
-        .withdraw(&amount_to_withdraw, &users[0]);
+    defindex_contract.withdraw(&amount_to_withdraw, &users[0]);
 
     // Check Balances after withdraw
 
@@ -256,34 +281,36 @@ fn from_idle_one_asset_one_strategy_success() {
 
     // check total manage funds
     let mut total_managed_funds_expected = Map::new(&test.env);
-    let strategy_investments_expected = sorobanvec![&test.env, StrategyAllocation {
-        strategy_address: test.strategy_client_token_0.address.clone(),
-        amount: 0, //funds has not been invested yet!
-    }];
-    total_managed_funds_expected.set(test.token_0.address.clone(), 
+    let strategy_investments_expected = sorobanvec![
+        &test.env,
+        StrategyAllocation {
+            strategy_address: test.strategy_client_token_0.address.clone(),
+            amount: 0, //funds has not been invested yet!
+        }
+    ];
+    total_managed_funds_expected.set(
+        test.token_0.address.clone(),
         CurrentAssetInvestmentAllocation {
             asset: test.token_0.address.clone(),
             total_amount: amount_to_deposit - amount_to_withdraw,
             idle_amount: amount_to_deposit - amount_to_withdraw,
             invested_amount: 0i128,
             strategy_allocations: strategy_investments_expected,
-        }
+        },
     );
 
     let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
 
-
     // user tries to withdraw more than deposited amount
     let amount_to_withdraw_more = amount_to_deposit + 1;
-    let result = defindex_contract
-        .try_withdraw(&amount_to_withdraw_more, &users[0]);
+    let result = defindex_contract.try_withdraw(&amount_to_withdraw_more, &users[0]);
 
     assert_eq!(result, Err(Ok(ContractError::AmountOverTotalSupply)));
 
     // // withdraw remaining balance
-    let result = defindex_contract
-        .withdraw(&(amount_to_deposit - amount_to_withdraw - 1000), &users[0]);
+    let result =
+        defindex_contract.withdraw(&(amount_to_deposit - amount_to_withdraw - 1000), &users[0]);
 
     assert_eq!(
         result,
@@ -298,27 +325,30 @@ fn from_idle_one_asset_one_strategy_success() {
 
     // check total manage funds
     let mut total_managed_funds_expected = Map::new(&test.env);
-    let strategy_investments_expected = sorobanvec![&test.env, StrategyAllocation {
-        strategy_address: test.strategy_client_token_0.address.clone(),
-        amount: 0, //funds has not been invested yet!
-    }];
-    total_managed_funds_expected.set(test.token_0.address.clone(), 
+    let strategy_investments_expected = sorobanvec![
+        &test.env,
+        StrategyAllocation {
+            strategy_address: test.strategy_client_token_0.address.clone(),
+            amount: 0, //funds has not been invested yet!
+        }
+    ];
+    total_managed_funds_expected.set(
+        test.token_0.address.clone(),
         CurrentAssetInvestmentAllocation {
             asset: test.token_0.address.clone(),
             total_amount: 1000,
             idle_amount: 1000,
             invested_amount: 0i128,
             strategy_allocations: strategy_investments_expected,
-        }
+        },
     );
 
     let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
-
 }
 
 #[test]
-fn from_idle_two_assets_success() { 
+fn from_idle_two_assets_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token_0 = create_strategy_params_token_0(&test);
@@ -346,7 +376,11 @@ fn from_idle_two_assets_success() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
     let amount = 1234567890i128;
 
@@ -367,58 +401,82 @@ fn from_idle_two_assets_success() {
         &sorobanvec![&test.env, amount_to_deposit_0, amount_to_deposit_1],
         &sorobanvec![&test.env, amount_to_deposit_0, amount_to_deposit_1],
         &users[0],
-        &false
+        &false,
     );
 
     // Check Balances after deposit
 
     // Token balance of user
-    assert_eq!(test.token_0.balance(&users[0]), amount - amount_to_deposit_0);
-    assert_eq!(test.token_1.balance(&users[0]), amount - amount_to_deposit_1);
+    assert_eq!(
+        test.token_0.balance(&users[0]),
+        amount - amount_to_deposit_0
+    );
+    assert_eq!(
+        test.token_1.balance(&users[0]),
+        amount - amount_to_deposit_1
+    );
 
     // Token balance of vault should be amount_to_deposit
     // Because balances are still in indle, balances are not in strategy, but in idle
 
-    assert_eq!(test.token_0.balance(&defindex_contract.address), amount_to_deposit_0);
-    assert_eq!(test.token_1.balance(&defindex_contract.address), amount_to_deposit_1);
+    assert_eq!(
+        test.token_0.balance(&defindex_contract.address),
+        amount_to_deposit_0
+    );
+    assert_eq!(
+        test.token_1.balance(&defindex_contract.address),
+        amount_to_deposit_1
+    );
 
     // Token balance of hodl strategy should be 0 (all in idle)
-    assert_eq!(test.token_0.balance(&test.strategy_client_token_0.address), 0);
-    assert_eq!(test.token_1.balance(&test.strategy_client_token_1.address), 0);
+    assert_eq!(
+        test.token_0.balance(&test.strategy_client_token_0.address),
+        0
+    );
+    assert_eq!(
+        test.token_1.balance(&test.strategy_client_token_1.address),
+        0
+    );
 
     // Df balance of user should be equal to amount_to_deposit_0+amount_to_deposit_1 - 1000
     // 567890+987654-1000 = 1554544
     let df_balance = defindex_contract.balance(&users[0]);
-    assert_eq!(df_balance, 1554544 );
+    assert_eq!(df_balance, 1554544);
 
     // check total manage funds
     let mut total_managed_funds_expected = Map::new(&test.env);
-    total_managed_funds_expected.set(test.token_0.address.clone(), 
+    total_managed_funds_expected.set(
+        test.token_0.address.clone(),
         CurrentAssetInvestmentAllocation {
             asset: test.token_0.address.clone(),
             total_amount: 567890i128,
             idle_amount: 567890i128,
             invested_amount: 0i128,
-            strategy_allocations: sorobanvec![&test.env, 
-            StrategyAllocation {
-                strategy_address: test.strategy_client_token_0.address.clone(),
-                amount: 0, //funds has not been invested yet!
-            }],
-        }
+            strategy_allocations: sorobanvec![
+                &test.env,
+                StrategyAllocation {
+                    strategy_address: test.strategy_client_token_0.address.clone(),
+                    amount: 0, //funds has not been invested yet!
+                }
+            ],
+        },
     );
 
-    total_managed_funds_expected.set(test.token_1.address.clone(), 
+    total_managed_funds_expected.set(
+        test.token_1.address.clone(),
         CurrentAssetInvestmentAllocation {
             asset: test.token_1.address.clone(),
             total_amount: 987654i128,
             idle_amount: 987654i128,
             invested_amount: 0i128,
-            strategy_allocations: sorobanvec![&test.env, 
-            StrategyAllocation {
-                strategy_address: test.strategy_client_token_1.address.clone(),
-                amount: 0, //funds has not been invested yet!
-            }],
-        }
+            strategy_allocations: sorobanvec![
+                &test.env,
+                StrategyAllocation {
+                    strategy_address: test.strategy_client_token_1.address.clone(),
+                    amount: 0, //funds has not been invested yet!
+                }
+            ],
+        },
     );
     let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
@@ -430,8 +488,7 @@ fn from_idle_two_assets_success() {
     // asset 1 = withdaw_shares*total_asset_1/total_shares = 123456*987654/1555544 = 78385.318720653 = 78385
 
     let amount_to_withdraw = 123456i128;
-    let result = defindex_contract
-    .withdraw(&amount_to_withdraw, &users[0]);
+    let result = defindex_contract.withdraw(&amount_to_withdraw, &users[0]);
 
     // expected asset vec Vec<AssetStrategySet>
     // pub struct AssetStrategySet {
@@ -443,78 +500,110 @@ fn from_idle_two_assets_success() {
     //     pub name: String,
     //     pub paused: bool,
     // }
-    let expected_asset_vec = sorobanvec![&test.env, AssetStrategySet {
-        address: test.token_0.address.clone(),
-        strategies: sorobanvec![&test.env, Strategy {
-            address: test.strategy_client_token_0.address.clone(),
-            name: String::from_str(&test.env, "Strategy 1"),
-            paused: false,
-        }],
-    }, AssetStrategySet {
-        address: test.token_1.address.clone(),
-        strategies: sorobanvec![&test.env, Strategy {
-            address: test.strategy_client_token_1.address.clone(),
-            name: String::from_str(&test.env, "Strategy 1"),
-            paused: false,
-        }],
-    }];
+    let expected_asset_vec = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: sorobanvec![
+                &test.env,
+                Strategy {
+                    address: test.strategy_client_token_0.address.clone(),
+                    name: String::from_str(&test.env, "Strategy 1"),
+                    paused: false,
+                }
+            ],
+        },
+        AssetStrategySet {
+            address: test.token_1.address.clone(),
+            strategies: sorobanvec![
+                &test.env,
+                Strategy {
+                    address: test.strategy_client_token_1.address.clone(),
+                    name: String::from_str(&test.env, "Strategy 1"),
+                    paused: false,
+                }
+            ],
+        }
+    ];
     assert_eq!(defindex_contract.get_assets(), expected_asset_vec);
     let expected_result = sorobanvec![&test.env, 45070, 78385];
     assert_eq!(result, expected_result);
 
     // Token balance of user
-    assert_eq!(test.token_0.balance(&users[0]), amount - amount_to_deposit_0 + 45070);
-    assert_eq!(test.token_1.balance(&users[0]), amount - amount_to_deposit_1 + 78385);
+    assert_eq!(
+        test.token_0.balance(&users[0]),
+        amount - amount_to_deposit_0 + 45070
+    );
+    assert_eq!(
+        test.token_1.balance(&users[0]),
+        amount - amount_to_deposit_1 + 78385
+    );
 
     // Token balance of vault (still idle)
 
-    assert_eq!(test.token_0.balance(&defindex_contract.address), amount_to_deposit_0 - 45070);
-    assert_eq!(test.token_1.balance(&defindex_contract.address), amount_to_deposit_1 - 78385);
+    assert_eq!(
+        test.token_0.balance(&defindex_contract.address),
+        amount_to_deposit_0 - 45070
+    );
+    assert_eq!(
+        test.token_1.balance(&defindex_contract.address),
+        amount_to_deposit_1 - 78385
+    );
 
     // Token balance of hodl strategy should be 0 (all in idle)
-    assert_eq!(test.token_0.balance(&test.strategy_client_token_0.address), 0);
-    assert_eq!(test.token_1.balance(&test.strategy_client_token_1.address), 0);
+    assert_eq!(
+        test.token_0.balance(&test.strategy_client_token_0.address),
+        0
+    );
+    assert_eq!(
+        test.token_1.balance(&test.strategy_client_token_1.address),
+        0
+    );
 
     // Df balance of user should be equal to amount_to_deposit_0+amount_to_deposit_1 - 1000 - 123456
     // 567890+987654-1000 -123456 = 1434088
     let df_balance = defindex_contract.balance(&users[0]);
-    assert_eq!(df_balance, 1431088 );
+    assert_eq!(df_balance, 1431088);
 
     // check total manage funds
     let mut total_managed_funds_expected = Map::new(&test.env);
-    total_managed_funds_expected.set(test.token_0.address.clone(), 
+    total_managed_funds_expected.set(
+        test.token_0.address.clone(),
         CurrentAssetInvestmentAllocation {
             asset: test.token_0.address.clone(),
             total_amount: 567890i128 - 45070,
             idle_amount: 567890i128 - 45070,
             invested_amount: 0i128,
-            strategy_allocations: sorobanvec![&test.env, 
-            StrategyAllocation {
-                strategy_address: test.strategy_client_token_0.address.clone(),
-                amount: 0, //funds has not been invested yet!
-            }],
-        }
+            strategy_allocations: sorobanvec![
+                &test.env,
+                StrategyAllocation {
+                    strategy_address: test.strategy_client_token_0.address.clone(),
+                    amount: 0, //funds has not been invested yet!
+                }
+            ],
+        },
     );
 
-    total_managed_funds_expected.set(test.token_1.address.clone(), 
+    total_managed_funds_expected.set(
+        test.token_1.address.clone(),
         CurrentAssetInvestmentAllocation {
             asset: test.token_1.address.clone(),
             total_amount: 987654i128 - 78385,
             idle_amount: 987654i128 - 78385,
             invested_amount: 0i128,
-            strategy_allocations: sorobanvec![&test.env, 
-            StrategyAllocation {
-                strategy_address: test.strategy_client_token_1.address.clone(),
-                amount: 0, //funds has not been invested yet!
-            }],
-        }
+            strategy_allocations: sorobanvec![
+                &test.env,
+                StrategyAllocation {
+                    strategy_address: test.strategy_client_token_1.address.clone(),
+                    amount: 0, //funds has not been invested yet!
+                }
+            ],
+        },
     );
 
     let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
-
 }
-
 
 #[test]
 fn from_strategy_one_asset_one_strategy_success() {
@@ -540,7 +629,11 @@ fn from_strategy_one_asset_one_strategy_success() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
     let amount = 1000i128;
 
@@ -602,7 +695,7 @@ fn from_strategies_one_asset_two_strategies_success() {
     //     AssetStrategySet {
     //         address: test.token_0.address.clone(),
     //         strategies: sorobanvec![
-    //             &test.env, 
+    //             &test.env,
     //             Strategy {
     //                 name: String::from_str(&test.env, "Strategy 1"),
     //                 address: test.strategy_client_token_0.address.clone(),
@@ -633,9 +726,9 @@ fn from_strategies_one_asset_two_strategies_success() {
     // let df_balance = defindex_contract.balance(&users[0]);
     // assert_eq!(df_balance, 0i128);
 
-    // // Deposit 
+    // // Deposit
     // let amount_to_deposit = 987654321i128;
-    
+
     // defindex_contract.deposit(
     //     &sorobanvec![&test.env, amount_to_deposit],
     //     &sorobanvec![&test.env, amount_to_deposit],
@@ -644,9 +737,7 @@ fn from_strategies_one_asset_two_strategies_success() {
     // );
 
     // FIX invest in 2 stretegies for the same asset
-    
 }
-
 
 #[test]
 fn from_strategies_two_asset_each_one_strategy_success() {
@@ -678,9 +769,13 @@ fn from_strategies_two_asset_each_one_strategy_success() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
-    // mint 
+    // mint
     let amount = 987654321i128;
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
     test.token_0_admin_client.mint(&users[0], &amount);
@@ -696,27 +791,50 @@ fn from_strategies_two_asset_each_one_strategy_success() {
         &sorobanvec![&test.env, amount_to_deposit_0, amount_to_deposit_1],
         &sorobanvec![&test.env, amount_to_deposit_0, amount_to_deposit_1],
         &users[0],
-        &false
+        &false,
     );
 
     // check deposit result. Ok((amounts, shares_to_mint))
     // shares to mint = 123456789 + 234567890 = 358024679
     assert_eq!(defindex_contract.total_supply(), 358024679);
 
-    assert_eq!(deposit_result, (sorobanvec![&test.env, amount_to_deposit_0, amount_to_deposit_1], 358024679));
-
+    assert_eq!(
+        deposit_result,
+        (
+            sorobanvec![&test.env, amount_to_deposit_0, amount_to_deposit_1],
+            358024679
+        )
+    );
 
     // check balances
-    assert_eq!(test.token_0.balance(&users[0]), amount - amount_to_deposit_0);
-    assert_eq!(test.token_1.balance(&users[0]), amount - amount_to_deposit_1);
+    assert_eq!(
+        test.token_0.balance(&users[0]),
+        amount - amount_to_deposit_0
+    );
+    assert_eq!(
+        test.token_1.balance(&users[0]),
+        amount - amount_to_deposit_1
+    );
 
     // check vault balances
-    assert_eq!(test.token_0.balance(&defindex_contract.address), amount_to_deposit_0);
-    assert_eq!(test.token_1.balance(&defindex_contract.address), amount_to_deposit_1);
+    assert_eq!(
+        test.token_0.balance(&defindex_contract.address),
+        amount_to_deposit_0
+    );
+    assert_eq!(
+        test.token_1.balance(&defindex_contract.address),
+        amount_to_deposit_1
+    );
 
     // check strategy balances
-    assert_eq!(test.token_0.balance(&test.strategy_client_token_0.address), 0);
-    assert_eq!(test.token_1.balance(&test.strategy_client_token_1.address), 0);
+    assert_eq!(
+        test.token_0.balance(&test.strategy_client_token_0.address),
+        0
+    );
+    assert_eq!(
+        test.token_1.balance(&test.strategy_client_token_1.address),
+        0
+    );
 
     // invest in strategies. We will invest 100% of the idle funds
     let investments = sorobanvec![
@@ -750,8 +868,14 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     assert_eq!(test.token_1.balance(&defindex_contract.address), 0);
 
     // check strategy balances
-    assert_eq!(test.token_0.balance(&test.strategy_client_token_0.address), amount_to_deposit_0);
-    assert_eq!(test.token_1.balance(&test.strategy_client_token_1.address), amount_to_deposit_1);
+    assert_eq!(
+        test.token_0.balance(&test.strategy_client_token_0.address),
+        amount_to_deposit_0
+    );
+    assert_eq!(
+        test.token_1.balance(&test.strategy_client_token_1.address),
+        amount_to_deposit_1
+    );
 
     //check user vault shares
     let df_balance = defindex_contract.balance(&users[0]);
@@ -776,16 +900,28 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     assert_eq!(result, expected_result);
 
     // check user balances
-    assert_eq!(test.token_0.balance(&users[0]), amount - amount_to_deposit_0 + 12190874);
-    assert_eq!(test.token_1.balance(&users[0]), amount - amount_to_deposit_1 + 23162660);
+    assert_eq!(
+        test.token_0.balance(&users[0]),
+        amount - amount_to_deposit_0 + 12190874
+    );
+    assert_eq!(
+        test.token_1.balance(&users[0]),
+        amount - amount_to_deposit_1 + 23162660
+    );
 
     // check vault balances
     assert_eq!(test.token_0.balance(&defindex_contract.address), 0);
     assert_eq!(test.token_1.balance(&defindex_contract.address), 0);
 
     // check strategy balances
-    assert_eq!(test.token_0.balance(&test.strategy_client_token_0.address), amount_to_deposit_0 - 12190874);
-    assert_eq!(test.token_1.balance(&test.strategy_client_token_1.address), amount_to_deposit_1 - 23162660);
+    assert_eq!(
+        test.token_0.balance(&test.strategy_client_token_0.address),
+        amount_to_deposit_0 - 12190874
+    );
+    assert_eq!(
+        test.token_1.balance(&test.strategy_client_token_1.address),
+        amount_to_deposit_1 - 23162660
+    );
 
     // check user vault shares // should be 358023679−35353535 = 322670144
     let df_balance = defindex_contract.balance(&users[0]);
@@ -803,10 +939,18 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     let amount_to_deposit_1_new = 4222221i128;
 
     let (amounts, shares_minted) = defindex_contract.deposit(
-        &sorobanvec![&test.env, amount_to_deposit_0_new, amount_to_deposit_1_new+100],
-        &sorobanvec![&test.env, amount_to_deposit_0_new, amount_to_deposit_1_new-100],
+        &sorobanvec![
+            &test.env,
+            amount_to_deposit_0_new,
+            amount_to_deposit_1_new + 100
+        ],
+        &sorobanvec![
+            &test.env,
+            amount_to_deposit_0_new,
+            amount_to_deposit_1_new - 100
+        ],
         &users[0],
-        &false
+        &false,
     );
 
     // expected amounts
@@ -822,19 +966,30 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     assert_eq!(shares_minted, 6444443);
 
     assert_eq!(defindex_contract.total_supply(), 329115587); //358024679- 35353535 + 6444443
-    
 
     // check user balances
-    assert_eq!(test.token_0.balance(&users[0]), amount - amount_to_deposit_0 + 12190874 - 2222222);
-    assert_eq!(test.token_1.balance(&users[0]), amount - amount_to_deposit_1 + 23162660 - 4222221);
+    assert_eq!(
+        test.token_0.balance(&users[0]),
+        amount - amount_to_deposit_0 + 12190874 - 2222222
+    );
+    assert_eq!(
+        test.token_1.balance(&users[0]),
+        amount - amount_to_deposit_1 + 23162660 - 4222221
+    );
 
     // check vault balance
     assert_eq!(test.token_0.balance(&defindex_contract.address), 2222222);
     assert_eq!(test.token_1.balance(&defindex_contract.address), 4222221);
 
     // check strategies balance
-    assert_eq!(test.token_0.balance(&test.strategy_client_token_0.address), amount_to_deposit_0 - 12190874);
-    assert_eq!(test.token_1.balance(&test.strategy_client_token_1.address), amount_to_deposit_1 - 23162660);
+    assert_eq!(
+        test.token_0.balance(&test.strategy_client_token_0.address),
+        amount_to_deposit_0 - 12190874
+    );
+    assert_eq!(
+        test.token_1.balance(&test.strategy_client_token_1.address),
+        amount_to_deposit_1 - 23162660
+    );
 
     // user withdraws only from idle funds 644444 (10% of what just deposited)
     //  this should only affect idle funds
@@ -843,7 +998,6 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     let result = defindex_contract.withdraw(&amount_to_withdraw, &users[0]);
 
     assert_eq!(defindex_contract.total_supply(), 328471143); //358024679- 35353535 + 6444443 - 644444
- 
 
     // the new totqal supply was 322671144+6444443 = 329115587
     // the total managed funds for asset 0 was 2222222 (idle) + amount_to_deposit_0 - 12190874
@@ -862,17 +1016,35 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     assert_eq!(result, expected_result);
 
     // check balances
-    assert_eq!(test.token_0.balance(&users[0]), amount - amount_to_deposit_0 + 12190874 - 2222222 + 222222);
-    assert_eq!(test.token_1.balance(&users[0]), amount - amount_to_deposit_1 + 23162660 - 4222221 + 422221);
+    assert_eq!(
+        test.token_0.balance(&users[0]),
+        amount - amount_to_deposit_0 + 12190874 - 2222222 + 222222
+    );
+    assert_eq!(
+        test.token_1.balance(&users[0]),
+        amount - amount_to_deposit_1 + 23162660 - 4222221 + 422221
+    );
 
     // check vault balance
-    assert_eq!(test.token_0.balance(&defindex_contract.address), 2222222 - 222222);
-    assert_eq!(test.token_1.balance(&defindex_contract.address), 4222221 - 422221);
+    assert_eq!(
+        test.token_0.balance(&defindex_contract.address),
+        2222222 - 222222
+    );
+    assert_eq!(
+        test.token_1.balance(&defindex_contract.address),
+        4222221 - 422221
+    );
 
     // check strategies balance
 
-    assert_eq!(test.token_0.balance(&test.strategy_client_token_0.address), amount_to_deposit_0 - 12190874);
-    assert_eq!(test.token_1.balance(&test.strategy_client_token_1.address), amount_to_deposit_1 - 23162660);
+    assert_eq!(
+        test.token_0.balance(&test.strategy_client_token_0.address),
+        amount_to_deposit_0 - 12190874
+    );
+    assert_eq!(
+        test.token_1.balance(&test.strategy_client_token_1.address),
+        amount_to_deposit_1 - 23162660
+    );
 
     assert_eq!(defindex_contract.total_supply(), 328471143); //358024679- 35353535 + 6444443 - 644444
 
@@ -882,8 +1054,7 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     // // Now we will wihdraw the total remineder amount of vault shares of the user
     // // 328471143 - 1000 = 328470143
     let result = defindex_contract.withdraw(&328470143, &users[0]);
-    
-    
+
     // from the total supply 328471143, the user will take 328470143 (almost all)
     // for asset 0 this means
     // 2222222 - 222222 (idle) + amount_to_deposit_0 - 12190874
@@ -892,7 +1063,6 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     // for asset 1 this means
     // 4222221 - 422221 (idle) + amount_to_deposit_1 - 23162660
     // 3800000 + 234567890 - 23162660 = 215205230
-
 
     // amounts to withdraw
     // for asset 0: total_funds_0 * withdraw_shares / total_shares
@@ -911,7 +1081,6 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     // check vault balance
     assert_eq!(test.token_0.balance(&defindex_contract.address), 0);
     assert_eq!(test.token_1.balance(&defindex_contract.address), 0);
-    
 
     // check strategies balance, they will hold the rest
     // for asset 0: total_funds_0 * 1000 / total_shares
@@ -919,10 +1088,15 @@ fn from_strategies_two_asset_each_one_strategy_success() {
 
     // for asset 1: total_funds_1 * withdraw_shares / total_shares
     // 215205230- 215204574 = 656
-    assert_eq!(test.token_0.balance(&test.strategy_client_token_0.address), 345);
-    assert_eq!(test.token_1.balance(&test.strategy_client_token_1.address), 656);
+    assert_eq!(
+        test.token_0.balance(&test.strategy_client_token_0.address),
+        345
+    );
+    assert_eq!(
+        test.token_1.balance(&test.strategy_client_token_1.address),
+        656
+    );
 }
-
 
 // test withdraw without mock all auths
 #[test]

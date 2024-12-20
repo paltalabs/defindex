@@ -1,7 +1,9 @@
 use soroban_sdk::{Address, Env, Map, String, Vec};
 
 use crate::{
-    models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction}, report::Report, ContractError
+    models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction},
+    report::Report,
+    ContractError,
 };
 use common::models::AssetStrategySet;
 
@@ -33,7 +35,7 @@ pub trait VaultTrait {
     /// - `ContractError::StrategyDoesNotSupportAsset`: If a strategy within an asset does not support the asset’s contract.
     ///
     fn __constructor(
-        e: Env, 
+        e: Env,
         assets: Vec<AssetStrategySet>,
         manager: Address,
         emergency_manager: Address,
@@ -43,14 +45,14 @@ pub trait VaultTrait {
         defindex_protocol_rate: u32,
         factory: Address,
         soroswap_router: Address,
-        name_symbol : Vec<String>,
+        name_symbol: Vec<String>,
     );
 
     /// Handles user deposits into the DeFindex Vault.
     ///
     /// This function processes a deposit by transferring each specified asset amount from the user's address to
-    /// the vault, allocating assets according to the vault's defined strategy ratios, and minting dfTokens that 
-    /// represent the user's proportional share in the vault. The `amounts_desired` and `amounts_min` vectors should 
+    /// the vault, allocating assets according to the vault's defined strategy ratios, and minting dfTokens that
+    /// represent the user's proportional share in the vault. The `amounts_desired` and `amounts_min` vectors should
     /// align with the vault's asset order to ensure correct allocation.
     ///
     /// # Parameters
@@ -199,10 +201,9 @@ pub trait VaultTrait {
     /// * `Map<Address, i128>` - A map of asset addresses to their total idle amounts.
     fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128>;
 
-
     // Calculates the corresponding amounts of each asset per a given number of vault shares.
-    /// This function extends the contract's time-to-live and calculates how much of each asset corresponds 
-    /// per the provided number of vault shares (`vault_shares`). It provides proportional allocations for each asset 
+    /// This function extends the contract's time-to-live and calculates how much of each asset corresponds
+    /// per the provided number of vault shares (`vault_shares`). It provides proportional allocations for each asset
     /// in the vault relative to the specified shares.
     ///
     /// # Arguments
@@ -211,8 +212,11 @@ pub trait VaultTrait {
     ///
     /// # Returns
     /// * `Map<Address, i128>` - A map containing each asset address and its corresponding proportional amount.
-    fn get_asset_amounts_per_shares(e: Env, vault_shares: i128) -> Result<Map<Address, i128>, ContractError>;
-    
+    fn get_asset_amounts_per_shares(
+        e: Env,
+        vault_shares: i128,
+    ) -> Result<Map<Address, i128>, ContractError>;
+
     fn get_fees(e: Env) -> (u32, u32);
 
     /// Reports the gains or losses for all strategies in the vault based on their current balances.
@@ -223,10 +227,9 @@ pub trait VaultTrait {
     /// # Arguments
     /// * `e` - A reference to the environment.
     ///
-    /// # Returns 
+    /// # Returns
     /// * `Result<Vec<(Address, (i128, i128))>, ContractError>` - A vector of tuples containing the strategy address, current balance, and the gain or loss.
     fn report(e: Env) -> Result<Vec<Report>, ContractError>;
-
 }
 
 pub trait AdminInterfaceTrait {
@@ -302,7 +305,7 @@ pub trait VaultManagementTrait {
     ///
     /// # Arguments
     /// * `e` - The current environment reference.
-    /// * `asset_investments` - A vector of optional `AssetInvestmentAllocation` structures, where each element 
+    /// * `asset_investments` - A vector of optional `AssetInvestmentAllocation` structures, where each element
     ///   represents an allocation for a specific asset. The vector must match the number of vault assets in length.
     ///
     /// # Returns
@@ -324,8 +327,9 @@ pub trait VaultManagementTrait {
     ///
     /// # Security
     /// - Only addresses with the `Manager` role can call this function, ensuring restricted access to managing investments.
-    fn invest(e: Env, 
-        asset_investments: Vec<Option<AssetInvestmentAllocation>>
+    fn invest(
+        e: Env,
+        asset_investments: Vec<Option<AssetInvestmentAllocation>>,
     ) -> Result<(), ContractError>;
 
     /// Rebalances the vault by executing a series of instructions.

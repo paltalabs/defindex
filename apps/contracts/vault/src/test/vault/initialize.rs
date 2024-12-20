@@ -1,9 +1,9 @@
 use soroban_sdk::{vec as sorobanvec, String, Vec};
 
 use crate::test::{
-    create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1, defindex_vault::AssetStrategySet, DeFindexVaultTest
+    create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1,
+    defindex_vault::AssetStrategySet, DeFindexVaultTest,
 };
-
 
 #[test]
 fn get_roles() {
@@ -33,7 +33,11 @@ fn get_roles() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
 
     let manager_role = defindex_contract.get_manager();
@@ -44,7 +48,6 @@ fn get_roles() {
     assert_eq!(fee_receiver_role, test.vault_fee_receiver);
     assert_eq!(emergency_manager_role, test.emergency_manager);
 }
-
 
 // Test that if strategy does support other asset we get an error when initializing
 #[test]
@@ -76,7 +79,11 @@ fn deploy_unsupported_strategy() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
 }
 
@@ -100,7 +107,11 @@ fn initialize_with_empty_asset_allocation() {
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![&test.env, String::from_str(&test.env, "dfToken"), String::from_str(&test.env, "DFT")],
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
 }
 

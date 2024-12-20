@@ -172,17 +172,12 @@ pub(crate) fn emit_emergency_manager_changed_event(e: &Env, new_emergency_manage
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct FeesDistributedEvent {
-    pub distributed_fees: Vec<(Address, i128)>
+    pub distributed_fees: Vec<(Address, i128)>,
 }
 
 /// Publishes an `EmergencyManagerChangedEvent` to the event stream.
-pub(crate) fn emit_fees_distributed_event(
-    e: &Env,
-    distributed_fees: Vec<(Address, i128)>,
-) {
-    let event = FeesDistributedEvent {
-        distributed_fees,
-    };
+pub(crate) fn emit_fees_distributed_event(e: &Env, distributed_fees: Vec<(Address, i128)>) {
+    let event = FeesDistributedEvent { distributed_fees };
 
     e.events()
         .publish(("DeFindexVault", symbol_short!("dfees")), event);

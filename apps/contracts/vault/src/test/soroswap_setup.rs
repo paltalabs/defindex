@@ -1,13 +1,10 @@
 use soroban_sdk::{
-    vec, Address, BytesN, Env,
     testutils::{MockAuth, MockAuthInvoke},
-    IntoVal,
+    vec, Address, BytesN, Env, IntoVal,
 };
 
 fn pair_contract_wasm(e: &Env) -> BytesN<32> {
-    soroban_sdk::contractimport!(
-        file = "../soroswap/soroswap_pair.wasm"
-    );
+    soroban_sdk::contractimport!(file = "../soroswap/soroswap_pair.wasm");
     e.deployer().upload_contract_wasm(WASM)
 }
 
@@ -40,12 +37,19 @@ pub fn create_soroswap_router<'a>(e: &Env, factory: &Address) -> SoroswapRouterC
     router.initialize(factory);
     router
 }
- 
-pub fn create_soroswap_pool<'a>(e: &Env, router: &SoroswapRouterClient, to: &Address, token_a: &Address, token_b: &Address, amount_a: &i128, amount_b: &i128) -> (i128, i128, i128) {
 
+pub fn create_soroswap_pool<'a>(
+    e: &Env,
+    router: &SoroswapRouterClient,
+    to: &Address,
+    token_a: &Address,
+    token_b: &Address,
+    amount_a: &i128,
+    amount_b: &i128,
+) -> (i128, i128, i128) {
     let pair_address = router.router_pair_for(token_a, token_b);
-    router.mock_auths(&[
-        MockAuth {
+    router
+        .mock_auths(&[MockAuth {
             address: &to,
             invoke: &MockAuthInvoke {
                 contract: &router.address.clone(),
@@ -53,51 +57,50 @@ pub fn create_soroswap_pool<'a>(e: &Env, router: &SoroswapRouterClient, to: &Add
                 args: vec![
                     &e,
                     token_a.into_val(e),
-                    token_b.into_val(e), 
-                    amount_a.into_val(e), 
-                    amount_b.into_val(e), 
+                    token_b.into_val(e),
+                    amount_a.into_val(e),
+                    amount_b.into_val(e),
                     0i128.into_val(e),
-                    0i128.into_val(e), 
+                    0i128.into_val(e),
                     to.into_val(e),
                     (e.ledger().timestamp() + 3600).into_val(e),
                 ],
                 sub_invokes: &[
                     MockAuthInvoke {
-                                contract: &token_a.clone(),
-                                fn_name: "transfer",
-                                args: vec![
-                                    &e,
-                                    to.into_val(e),
-                                    pair_address.into_val(e),
-                                    amount_a.into_val(e)
-                                ],
-                                sub_invokes: &[],
-                            },
+                        contract: &token_a.clone(),
+                        fn_name: "transfer",
+                        args: vec![
+                            &e,
+                            to.into_val(e),
+                            pair_address.into_val(e),
+                            amount_a.into_val(e),
+                        ],
+                        sub_invokes: &[],
+                    },
                     MockAuthInvoke {
-                                contract: &token_b.clone(),
-                                fn_name: "transfer",
-                                args: vec![
-                                    &e,
-                                    to.into_val(e),
-                                    pair_address.into_val(e),
-                                    amount_b.into_val(e)
-                                ],
-                                sub_invokes: &[],
-                            },
+                        contract: &token_b.clone(),
+                        fn_name: "transfer",
+                        args: vec![
+                            &e,
+                            to.into_val(e),
+                            pair_address.into_val(e),
+                            amount_b.into_val(e),
+                        ],
+                        sub_invokes: &[],
+                    },
                 ],
             },
-        },
-        ])
-    .add_liquidity(
-        token_a, 
-        token_b, 
-        &amount_a, 
-        &amount_b, 
-        &0i128, 
-        &0i128, 
-        &to, 
-        &(e.ledger().timestamp() + 3600)
-    )
+        }])
+        .add_liquidity(
+            token_a,
+            token_b,
+            &amount_a,
+            &amount_b,
+            &0i128,
+            &0i128,
+            &to,
+            &(e.ledger().timestamp() + 3600),
+        )
 }
 
 // // SoroswapRouter Contract
@@ -110,7 +113,7 @@ pub fn create_soroswap_pool<'a>(e: &Env, router: &SoroswapRouterClient, to: &Add
 // pub fn create_soroswap_aggregator<'a>(e: &Env, admin: &Address, router: &Address) -> SoroswapAggregatorClient<'a> {
 //     let aggregator_address = &e.register(aggregator::WASM, ());
 //     let aggregator = SoroswapAggregatorClient::new(e, aggregator_address);
-    
+
 //     let adapter_vec = vec![
 //         e,
 //         Adapter {
@@ -120,6 +123,6 @@ pub fn create_soroswap_pool<'a>(e: &Env, router: &SoroswapRouterClient, to: &Add
 //         }
 //     ];
 
-//     aggregator.initialize(&admin, &adapter_vec);    
+//     aggregator.initialize(&admin, &adapter_vec);
 //     aggregator
 // }
