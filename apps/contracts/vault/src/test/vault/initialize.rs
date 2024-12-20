@@ -1,8 +1,52 @@
-use soroban_sdk::{vec as sorobanvec, String, Vec};
+use soroban_sdk::{vec as sorobanvec, String, Vec, Map, Address};
 
 use crate::test::{
-    create_defindex_vault, create_strategy_params_token0, create_strategy_params_token1, create_hodl_strategy, defindex_vault::{AssetStrategySet, Strategy}, DeFindexVaultTest
+    create_defindex_vault, create_strategy_params_token0, create_strategy_params_token1, create_hodl_strategy, defindex_vault::{AssetStrategySet, Strategy, CurrentAssetInvestmentAllocation, StrategyAllocation}, DeFindexVaultTest
 };
+
+fn create_expected_total_managed_funds(test: &DeFindexVaultTest) -> Map<Address, CurrentAssetInvestmentAllocation> {
+    let mut total_managed_funds: Map<Address, CurrentAssetInvestmentAllocation> = Map::new(&test.env);
+    
+    // Add entry for token0
+    total_managed_funds.set(
+        test.token0.address.clone(),
+        CurrentAssetInvestmentAllocation {
+            asset: test.token0.address.clone(),
+            total_amount: 0i128,
+            idle_amount: 0i128,
+            invested_amount: 0i128,
+            strategy_allocations: sorobanvec![&test.env],
+        },
+    );
+
+    // Add entry for token1
+    total_managed_funds.set(
+        test.token1.address.clone(),
+        CurrentAssetInvestmentAllocation {
+            asset: test.token1.address.clone(),
+            total_amount: 0i128,
+            idle_amount: 0i128,
+            invested_amount: 0i128,
+            strategy_allocations: sorobanvec![&test.env],
+        },
+    );
+
+    total_managed_funds
+}
+
+fn create_expected_current_invested_funds(test: &DeFindexVaultTest) -> Map<Address, i128> {
+    let mut current_invested_funds: Map<Address, i128> = Map::new(&test.env);
+    current_invested_funds.set(test.token0.address.clone(), 0i128);
+    current_invested_funds.set(test.token1.address.clone(), 0i128);
+    current_invested_funds
+}
+
+fn create_expected_current_idle_funds(test: &DeFindexVaultTest) -> Map<Address, i128> {
+    let mut current_idle_funds: Map<Address, i128> = Map::new(&test.env);
+    current_idle_funds.set(test.token0.address.clone(), 0i128);
+    current_idle_funds.set(test.token1.address.clone(), 0i128);
+    current_idle_funds
+}
 
 #[test]
 fn get_roles() {
@@ -44,17 +88,20 @@ fn get_roles() {
     let asset_1 = vault_assets.get(1).unwrap();
     
     let total_managed_funds = defindex_contract.fetch_total_managed_funds();
-    let current_invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token0.address.clone());
-    let current_idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token0.address.clone());
-    let total_amount = total_managed_funds.get(test.token0.address.clone()).unwrap().total_amount;
+    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
+    let current_idle_funds = defindex_contract.fetch_current_idle_funds();
+
+    let expected_total_managed_funds = create_expected_total_managed_funds(&test);
+    let expected_current_invested_funds = create_expected_current_invested_funds(&test);
+    let expected_current_idle_funds = create_expected_current_idle_funds(&test);
 
     assert_eq!(asset_0.address, test.token0.address);
     assert_eq!(asset_1.address, test.token1.address);
     assert_eq!(vault_assets.len(), 2);
 
-    assert_eq!(total_amount, 0i128);
-    assert_eq!(current_invested_funds, Some(0));
-    assert_eq!(current_idle_funds, Some(0));
+    assert_eq!(total_managed_funds, expected_total_managed_funds);
+    assert_eq!(current_invested_funds, expected_current_invested_funds);
+    assert_eq!(current_idle_funds, expected_current_idle_funds);
 
     assert_eq!(manager_role, test.manager);
     assert_eq!(fee_receiver_role, test.vault_fee_receiver);
@@ -176,9 +223,12 @@ fn with_one_asset_and_several_strategies() {
     let vault_strategies = asset.strategies;
     
     let total_managed_funds = defindex_contract.fetch_total_managed_funds();
-    let current_invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token0.address.clone());
-    let current_idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token0.address.clone());
-    let total_amount = total_managed_funds.get(test.token0.address.clone()).unwrap().total_amount;
+    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
+    let current_idle_funds = defindex_contract.fetch_current_idle_funds();
+
+    let expected_total_managed_funds = create_expected_total_managed_funds(&test);
+    let expected_current_invested_funds = create_expected_current_invested_funds(&test);
+    let expected_current_idle_funds = create_expected_current_idle_funds(&test);
 
     assert_eq!(manager_role, test.manager);
     assert_eq!(fee_receiver_role, test.vault_fee_receiver);
@@ -188,8 +238,8 @@ fn with_one_asset_and_several_strategies() {
     assert_eq!(vault_assets.len(), 1);
     assert_eq!(vault_strategies.len(), strategy_params.len());
 
-    assert_eq!(total_amount, 0i128);
-    assert_eq!(current_invested_funds, Some(0));
-    assert_eq!(current_idle_funds, Some(0)); 
+    assert_eq!(total_managed_funds, expected_total_managed_funds);
+    assert_eq!(current_invested_funds, expected_current_invested_funds);
+    assert_eq!(current_idle_funds, expected_current_idle_funds);
  
 }
