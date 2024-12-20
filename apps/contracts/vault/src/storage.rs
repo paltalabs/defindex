@@ -94,13 +94,6 @@ pub fn set_factory(e: &Env, address: &Address) {
         .set(&DataKey::DeFindexFactory, address);
 }
 
-pub fn get_factory(e: &Env) -> Address {
-    e.storage()
-        .instance()
-        .get(&DataKey::DeFindexFactory)
-        .unwrap()
-}
-
 // Soroswap Router
 pub fn set_soroswap_router(e: &Env, address: &Address) {
     e.storage()
@@ -115,24 +108,6 @@ pub fn get_soroswap_router(e: &Env) -> Address {
         .unwrap()
 }
 
-// Last Fee Assesment
-pub fn set_last_fee_assesment(e: &Env, timestamp: &u64) {
-    e.storage()
-        .instance()
-        .set(&DataKey::LastFeeAssessment, timestamp);
-}
-pub fn get_last_fee_assesment(e: &Env) -> u64 {
-    e.storage()
-        .instance()
-        .get(&DataKey::LastFeeAssessment)
-        .unwrap_or_else(|| {
-            let timestamp = &e.ledger().timestamp();
-            e.storage()
-                .instance()
-                .set(&DataKey::LastFeeAssessment, timestamp);
-            timestamp.clone()
-        })
-}
 
 // Vault Share
 pub fn set_vault_fee(e: &Env, vault_fee: &u32) {
