@@ -1,4 +1,5 @@
 use soroban_sdk::{vec, Address, Env, IntoVal, Symbol, Val, Vec, auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation}};
+use soroswap_library::get_reserves_with_pair;
 
 use crate::{
     // models::DexDistribution,
@@ -80,6 +81,13 @@ pub fn internal_swap_tokens_for_exact_tokens(
     if !is_supported_asset(e, token_in) || !is_supported_asset(e, token_out) {
         return Err(ContractError::UnsupportedAsset);
     }
+    let soroswap_router = get_soroswap_router(e);
+    let pair_address: Address = e.invoke_contract(
+        &soroswap_router,
+        &Symbol::new(&e, "router_pair_for"),
+        vec![e, token_in.to_val(), token_out.to_val()],
+    );
+    let (reserve_in, reserve_out) = get_reserves_with_pair(e.clone(), pair_address, *token_in, *token_out)?;
 
     let swap_args: Vec<Val> = vec![
         e,

@@ -15,7 +15,7 @@ homepage = "https://defindex.io"
 [workspace.dependencies]
 soroban-sdk = "22.0.0-rc.2.1"
 soroban-token-sdk = { version = "22.0.0-rc.2.1" }
-# soroswap-library = "0.3.0"
+soroswap-library = "2.0.0"
 defindex-strategy-core={ path="./strategies/core", package="defindex-strategy-core" }
 common={ path="./common", package="common" }
 
