@@ -11,7 +11,8 @@
     "publish-addresses": "tsc && node dist/publish_addresses.js",
     "test": "tsc && node dist/tests/mainTest.js",
     "test-blend-strategy": "tsc && node dist/tests/blend/test_strategy.js",
-    "test-blend-vault": "tsc && node dist/tests/blend/test_vault.js"
+    "test-blend-vault": "tsc && node dist/tests/blend/test_vault.js",
+    "count-lines": "tsc && node dist/count-lines.js"
   },
   "type": "module",
   "devDependencies": {
