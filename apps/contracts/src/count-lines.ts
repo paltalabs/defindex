@@ -7,6 +7,7 @@ function countLinesInFile(filePath: string): number {
     const lines = content.split('\n');
     let lineCount = 0;
     let inFunctionParams = false;
+    let inMethodChain = false;
     let openParens = 0;
 
     for (let i = 0; i < lines.length; i++) {
@@ -20,6 +21,12 @@ function countLinesInFile(filePath: string): number {
         continue;
       }
 
+      // Check if this line starts with a dot (method chaining)
+      if (trimmedLine.startsWith('.')) {
+        inMethodChain = true;
+        continue;
+      }
+
       // Count open and close parentheses
       if (trimmedLine.includes('(')) {
         openParens += trimmedLine.split('(').length - 1;
@@ -29,14 +36,24 @@ function countLinesInFile(filePath: string): number {
         openParens -= trimmedLine.split(')').length - 1;
         if (openParens <= 0) {
           inFunctionParams = false;
-          // Only count this as one line if we were in function parameters
-          lineCount++;
+          if (!inMethodChain) {
+            lineCount++;
+          }
           continue;
         }
       }
 
-      // If we're not in function parameters, count normally
-      if (!inFunctionParams) {
+      // If line ends with semicolon, it's the end of a statement
+      if (trimmedLine.endsWith(';')) {
+        inMethodChain = false;
+        if (!inFunctionParams) {
+          lineCount++;
+        }
+        continue;
+      }
+
+      // If we're not in function parameters or method chain, count normally
+      if (!inFunctionParams && !inMethodChain) {
         lineCount++;
       }
     }

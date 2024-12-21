@@ -1,12 +1,12 @@
 use common::models::AssetStrategySet;
-use soroban_sdk::{panic_with_error, token::TokenClient, Address, Env, Vec, Map};
+use soroban_sdk::{panic_with_error, token::TokenClient, Address, Env, Map, Vec};
 
 use crate::{
+    models::CurrentAssetInvestmentAllocation,
     storage::get_assets,
     token::{internal_mint, VaultToken},
     utils::{calculate_deposit_amounts_and_shares_to_mint, check_nonnegative_amount},
     ContractError, MINIMUM_LIQUIDITY,
-    models::CurrentAssetInvestmentAllocation,
 };
 
 /// Common logic for processing deposits.
@@ -31,21 +31,18 @@ pub fn process_deposit(
 
     let total_supply = VaultToken::total_supply(e.clone());
     let (amounts, shares_to_mint) = if assets_length == 1 {
-        calculate_single_asset_shares(
-            e, 
-            amounts_desired, 
-            &total_managed_funds,
-            total_supply)?
+        calculate_single_asset_shares(e, amounts_desired, &total_managed_funds, total_supply)?
     } else {
         if total_supply == 0 {
             (amounts_desired.clone(), amounts_desired.iter().sum())
         } else {
             calculate_deposit_amounts_and_shares_to_mint(
-                &e, 
-                &assets, 
+                &e,
+                &assets,
                 &total_managed_funds,
-                amounts_desired, 
-                amounts_min)?
+                amounts_desired,
+                amounts_min,
+            )?
         }
     };
 
@@ -83,7 +80,8 @@ fn calculate_single_asset_shares(
             .checked_div(
                 total_managed_funds
                     .get(get_assets(&e).get(0).unwrap().address.clone())
-                    .unwrap().total_amount,
+                    .unwrap()
+                    .total_amount,
             )
             .unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError))
     };

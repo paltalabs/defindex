@@ -1,6 +1,6 @@
 use defindex_strategy_core::DeFindexStrategyClient;
-use soroban_sdk::{Address, Env, vec, IntoVal, Symbol};
 use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
+use soroban_sdk::{vec, Address, Env, IntoVal, Symbol};
 
 use crate::report::Report;
 use crate::storage::{get_report, set_report};
@@ -140,7 +140,7 @@ pub fn unwind_from_strategy(
             report.report(result);
             set_report(e, strategy_address, &report);
             Ok(report)
-        },
+        }
         Ok(Err(_)) | Err(_) => Err(ContractError::StrategyWithdrawError),
     }
 }
@@ -165,8 +165,9 @@ pub fn invest_in_strategy(
                 args: (
                     e.current_contract_address(),
                     strategy_address,
-                    amount.clone()).into_val(e),
-                    
+                    amount.clone(),
+                )
+                    .into_val(e),
             },
             sub_invocations: vec![&e],
         }),

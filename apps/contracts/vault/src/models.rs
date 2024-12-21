@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, Address, String, Vec};
+use soroban_sdk::{contracttype, Address, Vec};
 
 // Investment Allocation in Strategies
 #[contracttype]
@@ -25,70 +25,33 @@ pub struct AssetInvestmentAllocation {
     pub asset: Address,
     pub strategy_allocations: Vec<Option<StrategyAllocation>>,
 }
-//
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Instruction {
-    pub action: ActionType,
-    pub strategy: Option<Address>,
-    pub amount: Option<i128>,
-    pub swap_details_exact_in: OptionalSwapDetailsExactIn,
-    pub swap_details_exact_out: OptionalSwapDetailsExactOut,
-    // pub zapper_instructions: Option<Vec<ZapperInstruction>>,
-}
-
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq, Copy)]
-pub enum ActionType {
-    Withdraw = 0,
-    Invest = 1,
-    SwapExactIn = 2,
-    SwapExactOut = 3,
-    Zapper = 4,
-}
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct SwapDetailsExactIn {
-    pub token_in: Address,
-    pub token_out: Address,
-    pub amount_in: i128,
-    pub amount_out_min: i128,
-    pub distribution: Vec<DexDistribution>,
-    pub deadline: u64,
-}
+pub enum Instruction {
+    /// Withdraw funds from a strategy.
+    Withdraw(Address, i128), // (strategy, amount)
 
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct SwapDetailsExactOut {
-    pub token_in: Address,
-    pub token_out: Address,
-    pub amount_out: i128,
-    pub amount_in_max: i128,
-    pub distribution: Vec<DexDistribution>,
-    pub deadline: u64,
-}
+    /// Invest funds into a strategy.
+    Invest(Address, i128), // (strategy, amount)
 
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct DexDistribution {
-    pub protocol_id: String,
-    pub path: Vec<Address>,
-    pub parts: u32,
-}
+    /// Perform a swap with an exact input amount.
+    SwapExactIn(
+        Address, // token_in
+        Address, // token_out
+        i128,    // amount_in
+        i128,    // amount_out_min
+        u64,     // deadline
+    ),
 
-// Workaround for Option<SwapDetails> as it is not supported by the contracttype macro
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum OptionalSwapDetailsExactIn {
-    Some(SwapDetailsExactIn),
-    None,
-}
-
-// Workaround for Option<SwapDetails> as it is not supported by the contracttype macro
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum OptionalSwapDetailsExactOut {
-    Some(SwapDetailsExactOut),
-    None,
+    /// Perform a swap with an exact output amount.
+    SwapExactOut(
+        Address, // token_in
+        Address, // token_out
+        i128,    // amount_out
+        i128,    // amount_in_max
+        u64,     // deadline
+    ),
+    // /// Placeholder for zap operations (commented for future use).
+    // Zapper(Vec<ZapperInstruction>), // instructions
 }

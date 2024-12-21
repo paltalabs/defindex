@@ -1,11 +1,11 @@
-use soroban_sdk::{contracttype, Env, Address};
+use soroban_sdk::{contracttype, Address, Env};
 
 #[derive(Clone)]
 #[contracttype]
 
 pub enum DataKey {
     UnderlyingAsset,
-    Balance(Address)
+    Balance(Address),
 }
 
 const DAY_IN_LEDGERS: u32 = 17280;
@@ -20,9 +20,14 @@ pub fn extend_instance_ttl(e: &Env) {
 
 // Underlying asset
 pub fn set_underlying_asset(e: &Env, address: &Address) {
-    e.storage().instance().set(&DataKey::UnderlyingAsset, &address);
+    e.storage()
+        .instance()
+        .set(&DataKey::UnderlyingAsset, &address);
 }
 
 pub fn get_underlying_asset(e: &Env) -> Address {
-    e.storage().instance().get(&DataKey::UnderlyingAsset).unwrap()
+    e.storage()
+        .instance()
+        .get(&DataKey::UnderlyingAsset)
+        .unwrap()
 }

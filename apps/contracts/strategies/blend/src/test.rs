@@ -2,11 +2,15 @@
 extern crate std;
 
 use crate::{
-    blend_pool::{self, BlendPoolClient, Request, ReserveConfig, ReserveEmissionMetadata}, storage::DAY_IN_LEDGERS, BlendStrategy
+    blend_pool::{self, BlendPoolClient, Request, ReserveConfig, ReserveEmissionMetadata},
+    storage::DAY_IN_LEDGERS,
+    BlendStrategy,
 };
 use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::{
-    testutils::{BytesN as _, Ledger as _, LedgerInfo}, token::StellarAssetClient, vec, Address, BytesN, Env, IntoVal, String, Symbol, Val, Vec
+    testutils::{BytesN as _, Ledger as _, LedgerInfo},
+    token::StellarAssetClient,
+    vec, Address, BytesN, Env, IntoVal, String, Symbol, Val, Vec,
 };
 
 mod blend_factory_pool {
@@ -25,8 +29,21 @@ mod blend_comet {
     soroban_sdk::contractimport!(file = "../external_wasms/blend/comet.wasm");
 }
 
-pub(crate) fn register_blend_strategy(e: &Env, asset: &Address, blend_pool: &Address, reserve_id: &u32, blend_token: &Address, soroswap_router: &Address) -> Address {
-    let init_args: Vec<Val>= vec![e, blend_pool.into_val(e), reserve_id.into_val(e), blend_token.into_val(e), soroswap_router.into_val(e)];
+pub(crate) fn register_blend_strategy(
+    e: &Env,
+    asset: &Address,
+    blend_pool: &Address,
+    reserve_id: &u32,
+    blend_token: &Address,
+    soroswap_router: &Address,
+) -> Address {
+    let init_args: Vec<Val> = vec![
+        e,
+        blend_pool.into_val(e),
+        reserve_id.into_val(e),
+        blend_token.into_val(e),
+        soroswap_router.into_val(e),
+    ];
 
     let args = (asset, init_args);
     e.register(BlendStrategy, args)
@@ -159,9 +176,23 @@ pub(crate) fn create_blend_pool(
 }
 
 /// Create a Blend Strategy
-pub(crate) fn create_blend_strategy(e: &Env, underlying_asset: &Address, blend_pool: &Address, reserve_id: &u32, blend_token: &Address, soroswap_router: &Address) -> Address {
-    let address = register_blend_strategy(e, underlying_asset, blend_pool, reserve_id, blend_token, soroswap_router);
-    
+pub(crate) fn create_blend_strategy(
+    e: &Env,
+    underlying_asset: &Address,
+    blend_pool: &Address,
+    reserve_id: &u32,
+    blend_token: &Address,
+    soroswap_router: &Address,
+) -> Address {
+    let address = register_blend_strategy(
+        e,
+        underlying_asset,
+        blend_pool,
+        reserve_id,
+        blend_token,
+        soroswap_router,
+    );
+
     address
 }
 
@@ -311,7 +342,8 @@ impl<'a> BlendFixture<'a> {
             .mock_all_auths()
             .initialize(&blnd, &backstop, &comet);
 
-        let backstop_client: blend_backstop::Client<'a> = blend_backstop::Client::new(env, &backstop);
+        let backstop_client: blend_backstop::Client<'a> =
+            blend_backstop::Client::new(env, &backstop);
         backstop_client.mock_all_auths().initialize(
             &comet,
             &emitter,

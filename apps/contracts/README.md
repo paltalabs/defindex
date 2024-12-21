@@ -40,6 +40,14 @@ yarn deploy-fixed <network>
 yarn deploy-blend <network>
 ```
 
+Do it all in testnet with
+```
+yarn deploy-factory testnet
+yarn deploy-hodl testnet
+yarn deploy-fixed testnet
+yarn deploy-blend testnet
+```
+
 once you have deployed all the contracts you can run all the tests by running:
 
 ```bash

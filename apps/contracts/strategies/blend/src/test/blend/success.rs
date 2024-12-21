@@ -3,13 +3,13 @@ use crate::blend_pool::{BlendPoolClient, Request};
 use crate::constants::MIN_DUST;
 use crate::storage::DAY_IN_LEDGERS;
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
+use crate::test::std;
 use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils};
 use crate::BlendStrategyClient;
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
 use soroban_sdk::{vec, Address, Env, IntoVal, Symbol};
-use crate::test::std;
 
 #[test]
 fn success() {
@@ -36,7 +36,14 @@ fn success() {
     let amount_b = 50000000_0_000_000;
     blnd_client.mint(&pool_admin, &amount_a);
     usdc_client.mint(&pool_admin, &amount_b);
-    let soroswap_router = create_soroswap_pool(&e, &pool_admin, &blnd.address(), &usdc.address(), &amount_a, &amount_b);
+    let soroswap_router = create_soroswap_pool(
+        &e,
+        &pool_admin,
+        &blnd.address(),
+        &usdc.address(),
+        &amount_a,
+        &amount_b,
+    );
     // End of setting up soroswap pool
 
     let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
@@ -46,7 +53,14 @@ fn success() {
     // emits to each reserve token evently, and starts emissions
     let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
     let pool_client = BlendPoolClient::new(&e, &pool);
-    let strategy = create_blend_strategy(&e, &usdc.address(), &pool, &0u32, &blnd.address(), &soroswap_router.address);
+    let strategy = create_blend_strategy(
+        &e,
+        &usdc.address(),
+        &pool,
+        &0u32,
+        &blnd.address(),
+        &soroswap_router.address,
+    );
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
 
     /*
@@ -64,10 +78,9 @@ fn success() {
     let user_3_balance = usdc_client.balance(&user_3);
     assert_eq!(user_3_balance, starting_balance);
 
-
     strategy_client.deposit(&starting_balance, &user_2);
     // -> verify deposit auth
-    
+
     assert_eq!(
         e.auths()[0],
         (
@@ -76,11 +89,7 @@ fn success() {
                 function: AuthorizedFunction::Contract((
                     strategy.clone(),
                     Symbol::new(&e, "deposit"),
-                    vec![
-                        &e,
-                        starting_balance.into_val(&e),
-                        user_2.to_val(),
-                    ]
+                    vec![&e, starting_balance.into_val(&e), user_2.to_val(),]
                 )),
                 sub_invocations: std::vec![AuthorizedInvocation {
                     function: AuthorizedFunction::Contract((
@@ -184,7 +193,8 @@ fn success() {
     // withdraw_amount = 100_0958904
 
     // -> verify over withdraw fails
-    let result = strategy_client.try_withdraw(&(withdraw_amount + 100_000_000_0000000), &user_3, &user_3);
+    let result =
+        strategy_client.try_withdraw(&(withdraw_amount + 100_000_000_0000000), &user_3, &user_3);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
 
     strategy_client.withdraw(&withdraw_amount, &user_2, &user_2);
@@ -238,5 +248,5 @@ fn success() {
     assert_eq!(usdc_strategy_balance, 0);
 
     let user_3_strategy_balance = strategy_client.balance(&user_3);
-    assert_eq!(user_3_strategy_balance, 1226627059);    
+    assert_eq!(user_3_strategy_balance, 1226627059);
 }

@@ -8,7 +8,8 @@ use soroban_sdk::token::StellarAssetClient;
 fn withdraw() {
     let test = FixAprStrategyTest::setup();
 
-    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
+    let strategy =
+        create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
 
     let users = FixAprStrategyTest::generate_random_users(&test.env, 1);
 
@@ -28,7 +29,8 @@ fn withdraw() {
 fn withdraw_with_harvest() {
     let test = FixAprStrategyTest::setup();
 
-    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
+    let strategy =
+        create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
 
     let users = FixAprStrategyTest::generate_random_users(&test.env, 1);
 
@@ -41,7 +43,9 @@ fn withdraw_with_harvest() {
 
     // Simulate one year passing
     let one_year_in_seconds = 31_536_000u64;
-    test.env.ledger().set_timestamp(test.env.ledger().timestamp() + one_year_in_seconds);
+    test.env
+        .ledger()
+        .set_timestamp(test.env.ledger().timestamp() + one_year_in_seconds);
 
     strategy.harvest(&users[0]);
 
@@ -58,7 +62,8 @@ fn withdraw_with_harvest() {
 fn withdraw_then_harvest_then_withdraw_again() {
     let test = FixAprStrategyTest::setup();
 
-    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
+    let strategy =
+        create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
 
     let users = FixAprStrategyTest::generate_random_users(&test.env, 1);
 
@@ -68,11 +73,13 @@ fn withdraw_then_harvest_then_withdraw_again() {
     strategy.deposit(&amount, &users[0]);
     let user_balance = test.token.balance(&users[0]);
     assert_eq!(user_balance, 0);
-    
+
     // Simulate one year passing
     let one_year_in_seconds = 31_536_000u64;
-    test.env.ledger().set_timestamp(test.env.ledger().timestamp() + one_year_in_seconds);
-    
+    test.env
+        .ledger()
+        .set_timestamp(test.env.ledger().timestamp() + one_year_in_seconds);
+
     let user_balance_before_harvest = strategy.balance(&users[0]);
     assert_eq!(user_balance_before_harvest, amount);
 
@@ -95,7 +102,8 @@ fn withdraw_then_harvest_then_withdraw_again() {
 fn withdraw_with_no_balance() {
     let test = FixAprStrategyTest::setup();
 
-    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
+    let strategy =
+        create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
 
     let users = FixAprStrategyTest::generate_random_users(&test.env, 1);
 

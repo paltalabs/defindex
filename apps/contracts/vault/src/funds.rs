@@ -1,14 +1,14 @@
 use soroban_sdk::token::TokenClient;
 use soroban_sdk::{Address, Env, Map, Vec};
 
-use common::models::AssetStrategySet;
-use crate::models::{StrategyAllocation, CurrentAssetInvestmentAllocation};
+use crate::models::{CurrentAssetInvestmentAllocation, StrategyAllocation};
 use crate::storage::{get_assets, get_report, get_vault_fee, set_report};
 use crate::strategies::get_strategy_client;
+use common::models::AssetStrategySet;
 
 /// Retrieves the idle funds for a given asset.
-/// 
-/// Idle funds represent the balance of the asset that is held by the current contract 
+///
+/// Idle funds represent the balance of the asset that is held by the current contract
 /// but not actively allocated to any strategies.
 ///
 /// # Arguments
@@ -22,9 +22,9 @@ pub fn fetch_idle_funds_for_asset(e: &Env, asset: &Address) -> i128 {
 }
 
 /// Retrieves the total funds invested in a specified strategy, excluding any locked fees.
-/// 
-/// This function performs a cross-contract call to the strategy to fetch the current balance 
-/// of the investment. It then subtracts any locked fees from the total to provide an accurate 
+///
+/// This function performs a cross-contract call to the strategy to fetch the current balance
+/// of the investment. It then subtracts any locked fees from the total to provide an accurate
 /// representation of the funds that are actively invested and available to the user.
 ///
 /// # Arguments
@@ -43,14 +43,15 @@ pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address, lock_f
         report.lock_fee(get_vault_fee(e));
         set_report(e, strategy_address, &report);
     }
-    strategy_invested_funds.checked_sub(report.locked_fee).unwrap_or(0)
+    strategy_invested_funds
+        .checked_sub(report.locked_fee)
+        .unwrap_or(0)
 }
 
-
-/// Calculates the total funds invested in strategies for a given asset and 
+/// Calculates the total funds invested in strategies for a given asset and
 /// provides a detailed breakdown of allocations.
 ///
-/// This function aggregates the balances of all strategies linked to the specified 
+/// This function aggregates the balances of all strategies linked to the specified
 /// asset and returns both the total invested amount and a detailed allocation.
 ///
 /// # Arguments
@@ -61,7 +62,11 @@ pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address, lock_f
 /// A tuple containing:
 /// * `i128`: The total funds invested across all strategies.
 /// * `Vec<StrategyAllocation>`: A vector with the allocation details for each strategy.
-pub fn fetch_invested_funds_for_asset(e: &Env, asset_strategy_set: &AssetStrategySet, lock_fees: bool) -> (i128, Vec<StrategyAllocation>){
+pub fn fetch_invested_funds_for_asset(
+    e: &Env,
+    asset_strategy_set: &AssetStrategySet,
+    lock_fees: bool,
+) -> (i128, Vec<StrategyAllocation>) {
     let mut invested_funds = 0;
     let mut strategy_allocations: Vec<StrategyAllocation> = Vec::new(e);
     for strategy in asset_strategy_set.strategies.iter() {
@@ -73,7 +78,7 @@ pub fn fetch_invested_funds_for_asset(e: &Env, asset_strategy_set: &AssetStrateg
         });
     }
     (invested_funds, strategy_allocations)
-} 
+}
 
 /// Fetches the total managed funds for all assets. This includes both idle and invested funds.
 /// It returns a map where the key is the asset's address and the value is the total managed balance
@@ -84,12 +89,16 @@ pub fn fetch_invested_funds_for_asset(e: &Env, asset_strategy_set: &AssetStrateg
 ///
 /// # Returns
 /// * A map where each entry represents an asset's address and its total managed balance.
-pub fn fetch_total_managed_funds(e: &Env, lock_fees: bool) -> Map<Address, CurrentAssetInvestmentAllocation> {
+pub fn fetch_total_managed_funds(
+    e: &Env,
+    lock_fees: bool,
+) -> Map<Address, CurrentAssetInvestmentAllocation> {
     let assets = get_assets(e);
     let mut map: Map<Address, CurrentAssetInvestmentAllocation> = Map::new(e);
     for asset in assets {
         let idle_amount = fetch_idle_funds_for_asset(e, &asset.address);
-        let (invested_amount, strategy_allocations) = fetch_invested_funds_for_asset(e, &asset, lock_fees);
+        let (invested_amount, strategy_allocations) =
+            fetch_invested_funds_for_asset(e, &asset, lock_fees);
         let total_amount = idle_amount + invested_amount;
         map.set(
             asset.address.clone(),
@@ -106,12 +115,11 @@ pub fn fetch_total_managed_funds(e: &Env, lock_fees: bool) -> Map<Address, Curre
 }
 
 /*
-    User experience functions. The following functions are not being used inernally in 
+    User experience functions. The following functions are not being used inernally in
     the contrac, but are intender to be used by the client for a better user experience.
     They create maps for better redeability
 
 */
-
 
 /// Fetches the current idle funds for all assets managed by the contract.
 /// It returns a map where the key is the asset's address and the value is the idle balance.
@@ -125,7 +133,10 @@ pub fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128> {
     let assets = get_assets(e);
     let mut map: Map<Address, i128> = Map::new(e);
     for asset in assets {
-        map.set(asset.address.clone(), fetch_idle_funds_for_asset(e, &asset.address));
+        map.set(
+            asset.address.clone(),
+            fetch_idle_funds_for_asset(e, &asset.address),
+        );
     }
     map
 }
@@ -143,10 +154,7 @@ pub fn fetch_current_invested_funds(e: &Env, lock_fees: bool) -> Map<Address, i1
     let mut map: Map<Address, i128> = Map::new(e);
     for asset in assets {
         let (invested_funds, _) = fetch_invested_funds_for_asset(e, &asset, lock_fees);
-        map.set(
-            asset.address.clone(),
-            invested_funds
-        );
+        map.set(asset.address.clone(), invested_funds);
     }
     map
 }

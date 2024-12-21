@@ -6,28 +6,28 @@ use soroban_sdk::{contracttype, symbol_short, Address, Env, Vec};
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CreateDeFindexEvent {
-    pub emergency_manager: Address, 
-    pub fee_receiver: Address, 
+    pub emergency_manager: Address,
+    pub fee_receiver: Address,
     pub manager: Address,
     pub vault_fee: u32,
-    pub assets: Vec<AssetStrategySet>
+    pub assets: Vec<AssetStrategySet>,
 }
 
 /// Publishes an `CreateDeFindexEvent` to the event stream.
 pub(crate) fn emit_create_defindex_vault(
-    e: &Env, 
-    emergency_manager: Address, 
-    fee_receiver: Address, 
+    e: &Env,
+    emergency_manager: Address,
+    fee_receiver: Address,
     manager: Address,
     vault_fee: u32,
     assets: Vec<AssetStrategySet>,
 ) {
-    let event = CreateDeFindexEvent { 
-      emergency_manager,
-      fee_receiver,
-      manager,
-      vault_fee,
-      assets,
+    let event = CreateDeFindexEvent {
+        emergency_manager,
+        fee_receiver,
+        manager,
+        vault_fee,
+        assets,
     };
 
     e.events()
@@ -56,7 +56,9 @@ pub struct NewDeFindexReceiverEvent {
 }
 
 pub(crate) fn emit_new_defindex_receiver(e: &Env, new_defindex_receiver: Address) {
-    let event = NewDeFindexReceiverEvent { new_defindex_receiver };
+    let event = NewDeFindexReceiverEvent {
+        new_defindex_receiver,
+    };
 
     e.events()
         .publish(("DeFindexFactory", symbol_short!("nreceiver")), event);

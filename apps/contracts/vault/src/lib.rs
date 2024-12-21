@@ -2,9 +2,7 @@
 use constants::MAX_BPS;
 use report::Report;
 use soroban_sdk::{
-    contract, contractimpl, panic_with_error,
-    token::TokenClient,
-    Address, Env, Map, String, Vec,
+    contract, contractimpl, panic_with_error, token::TokenClient, Address, Env, Map, String, Vec,
 };
 use soroban_token_sdk::metadata::TokenMetadata;
 
@@ -28,27 +26,23 @@ mod utils;
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use aggregator::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
 use deposit::process_deposit;
-use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds}; 
+use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds};
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::{check_and_execute_investments, generate_investment_allocations};
-use models::{
-    Instruction, OptionalSwapDetailsExactIn,
-    OptionalSwapDetailsExactOut, CurrentAssetInvestmentAllocation,
-    ActionType, AssetInvestmentAllocation,
-};
+use models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction};
 use storage::{
-    extend_instance_ttl, get_assets, get_defindex_protocol_fee_rate, get_defindex_protocol_fee_receiver, get_report, get_vault_fee, set_asset, set_defindex_protocol_fee_rate, set_defindex_protocol_fee_receiver, set_factory, set_report, set_total_assets, set_vault_fee
+    extend_instance_ttl, get_assets, get_defindex_protocol_fee_rate,
+    get_defindex_protocol_fee_receiver, get_report, get_vault_fee, set_asset,
+    set_defindex_protocol_fee_rate, set_defindex_protocol_fee_receiver, set_factory, set_report,
+    set_soroswap_router, set_total_assets, set_vault_fee,
 };
 use strategies::{
-    get_strategy_asset, get_strategy_client,
-    get_strategy_struct, invest_in_strategy, pause_strategy, unpause_strategy,
-    unwind_from_strategy,
+    get_strategy_asset, get_strategy_client, get_strategy_struct, invest_in_strategy,
+    pause_strategy, unpause_strategy, unwind_from_strategy,
 };
 use token::{internal_burn, write_metadata};
 use utils::{
-    calculate_asset_amounts_per_vault_shares,
-    check_initialized,
-    check_nonnegative_amount,
+    calculate_asset_amounts_per_vault_shares, check_initialized, check_nonnegative_amount,
 };
 
 use common::models::AssetStrategySet;
@@ -76,6 +70,7 @@ impl VaultTrait for DeFindexVault {
     /// - `vault_fee`: Vault-specific fee percentage in basis points (typically set at 0-2% APR).
     /// - `defindex_protocol_receiver`: Address receiving DeFindex’s protocol-wide fee in basis points (0.5% APR).
     /// - `factory`: Factory contract address for deployment linkage.
+    /// - `soroswap_router`: Address of the Soroswap router
     /// - `vault_name`: Name of the vault token to be displayed in metadata.
     /// - `vault_symbol`: Symbol representing the vault’s token.
     ///
@@ -97,14 +92,17 @@ impl VaultTrait for DeFindexVault {
         defindex_protocol_receiver: Address,
         defindex_protocol_rate: u32,
         factory: Address,
-        vault_name: String,
-        vault_symbol: String,
+        soroswap_router: Address,
+        name_symbol: Vec<String>,
     ) {
         let access_control = AccessControl::new(&e);
 
         access_control.set_role(&RolesDataKey::EmergencyManager, &emergency_manager);
         access_control.set_role(&RolesDataKey::VaultFeeReceiver, &vault_fee_receiver);
         access_control.set_role(&RolesDataKey::Manager, &manager);
+
+        let vault_name = name_symbol.get(0).unwrap();
+        let vault_symbol = name_symbol.get(1).unwrap();
 
         // Set Vault Fee (in basis points)
         set_vault_fee(&e, &vault_fee);
@@ -115,6 +113,9 @@ impl VaultTrait for DeFindexVault {
 
         // Set the factory address
         set_factory(&e, &factory);
+
+        // Set soroswap router
+        set_soroswap_router(&e, &soroswap_router);
 
         // Store Assets Objects
         let total_assets = assets.len();
@@ -205,27 +206,22 @@ impl VaultTrait for DeFindexVault {
 
         let assets = get_assets(&e);
 
-        let (amounts, shares_to_mint) =
-            process_deposit(
-                &e, 
-                &assets, 
-                &total_managed_funds,
-                &amounts_desired, 
-                &amounts_min, 
-                &from)?;
+        let (amounts, shares_to_mint) = process_deposit(
+            &e,
+            &assets,
+            &total_managed_funds,
+            &amounts_desired,
+            &amounts_min,
+            &from,
+        )?;
         events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone());
 
         if invest {
-            let asset_investments = generate_investment_allocations(
-                &e,
-                &assets,
-                &total_managed_funds,
-                &amounts,
-            )?;
+            let asset_investments =
+                generate_investment_allocations(&e, &assets, &total_managed_funds, &amounts)?;
             check_and_execute_investments(&e, &assets, &asset_investments)?;
         }
         Ok((amounts, shares_to_mint))
-
     }
 
     /// Handles the withdrawal process for a specified number of vault shares.
@@ -263,37 +259,33 @@ impl VaultTrait for DeFindexVault {
     /// - Implement minimum amounts for withdrawals to ensure compliance with potential restrictions.
     /// - Replace the returned vector with the original `asset_withdrawal_amounts` map for better structure.
     /// - avoid the usage of a Map, choose between using map or vector
-    fn withdraw(
-        e: Env,
-        withdraw_shares: i128,
-        from: Address,
-    ) -> Result<Vec<i128>, ContractError> {
+    fn withdraw(e: Env, withdraw_shares: i128, from: Address) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
         check_nonnegative_amount(withdraw_shares)?;
         from.require_auth();
-    
+
         // Calculate the withdrawal amounts for each asset based on the share amounts
         let total_managed_funds = fetch_total_managed_funds(&e, true);
 
-        let asset_withdrawal_amounts = calculate_asset_amounts_per_vault_shares(
-            &e,
-            withdraw_shares,
-            &total_managed_funds,
-        )?;
-    
+        let asset_withdrawal_amounts =
+            calculate_asset_amounts_per_vault_shares(&e, withdraw_shares, &total_managed_funds)?;
+
         // Burn the shares after calculating the withdrawal amounts
         // This will panic with error if the user does not have enough balance
         internal_burn(e.clone(), from.clone(), withdraw_shares);
-    
+
         let assets = get_assets(&e); // Use assets for iteration order
-        // Loop through each asset to handle the withdrawal
+                                     // Loop through each asset to handle the withdrawal
         let mut withdrawn_amounts: Vec<i128> = Vec::new(&e);
 
-        for asset in assets.iter() { // Use assets instead of asset_withdrawal_amounts
+        for asset in assets.iter() {
+            // Use assets instead of asset_withdrawal_amounts
             let asset_address = &asset.address;
 
-            if let Some(requested_withdrawal_amount) = asset_withdrawal_amounts.get(asset_address.clone()) {
+            if let Some(requested_withdrawal_amount) =
+                asset_withdrawal_amounts.get(asset_address.clone())
+            {
                 let asset_allocation = total_managed_funds
                     .get(asset_address.clone())
                     .unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength));
@@ -309,26 +301,33 @@ impl VaultTrait for DeFindexVault {
                     withdrawn_amounts.push_back(requested_withdrawal_amount);
                 } else {
                     let mut cumulative_amount_for_asset = idle_funds;
-                    let remaining_amount_to_unwind = requested_withdrawal_amount
-                        .checked_sub(idle_funds)
-                        .unwrap();
+                    let remaining_amount_to_unwind =
+                        requested_withdrawal_amount.checked_sub(idle_funds).unwrap();
 
                     let total_invested_amount = asset_allocation.invested_amount;
 
-                    for (i, strategy_allocation) in asset_allocation.strategy_allocations.iter().enumerate() {
-                        let strategy_amount_to_unwind: i128 = if i == (asset_allocation.strategy_allocations.len() as usize) - 1 {
-                            requested_withdrawal_amount
-                                .checked_sub(cumulative_amount_for_asset)
-                                .unwrap()
-                        } else {
-                            remaining_amount_to_unwind
-                                .checked_mul(strategy_allocation.amount)
-                                .and_then(|result| result.checked_div(total_invested_amount))
-                                .unwrap_or(0)
-                        };
+                    for (i, strategy_allocation) in
+                        asset_allocation.strategy_allocations.iter().enumerate()
+                    {
+                        let strategy_amount_to_unwind: i128 =
+                            if i == (asset_allocation.strategy_allocations.len() as usize) - 1 {
+                                requested_withdrawal_amount
+                                    .checked_sub(cumulative_amount_for_asset)
+                                    .unwrap()
+                            } else {
+                                remaining_amount_to_unwind
+                                    .checked_mul(strategy_allocation.amount)
+                                    .and_then(|result| result.checked_div(total_invested_amount))
+                                    .unwrap_or(0)
+                            };
 
                         if strategy_amount_to_unwind > 0 {
-                            unwind_from_strategy(&e, &strategy_allocation.strategy_address, &strategy_amount_to_unwind, &e.current_contract_address())?;
+                            unwind_from_strategy(
+                                &e,
+                                &strategy_allocation.strategy_address,
+                                &strategy_amount_to_unwind,
+                                &e.current_contract_address(),
+                            )?;
                             cumulative_amount_for_asset += strategy_amount_to_unwind;
                         }
                     }
@@ -345,11 +344,10 @@ impl VaultTrait for DeFindexVault {
             }
         }
 
-        
         // TODO: Add minimuim amounts for withdrawn_amounts
         // TODO: Return the asset_withdrawal_amounts Map instead of a vec
         events::emit_withdraw_event(&e, from, withdraw_shares, withdrawn_amounts.clone());
-    
+
         Ok(withdrawn_amounts)
     }
 
@@ -391,7 +389,12 @@ impl VaultTrait for DeFindexVault {
         let strategy_balance = strategy_client.balance(&e.current_contract_address());
 
         if strategy_balance > 0 {
-            let mut report = unwind_from_strategy(&e, &strategy_address, &strategy_balance, &e.current_contract_address())?;
+            let mut report = unwind_from_strategy(
+                &e,
+                &strategy_address,
+                &strategy_balance,
+                &e.current_contract_address(),
+            )?;
             report.reset();
             set_report(&e, &strategy_address, &report);
             //TODO: Should we check if the idle funds are corresponding to the strategy balance withdrawed?
@@ -523,8 +526,8 @@ impl VaultTrait for DeFindexVault {
     }
 
     // Calculates the corresponding amounts of each asset per a given number of vault shares.
-    /// This function extends the contract's time-to-live and calculates how much of each asset corresponds 
-    /// per the provided number of vault shares (`vault_shares`). It provides proportional allocations for each asset 
+    /// This function extends the contract's time-to-live and calculates how much of each asset corresponds
+    /// per the provided number of vault shares (`vault_shares`). It provides proportional allocations for each asset
     /// in the vault relative to the specified shares.
     ///
     /// # Arguments
@@ -533,11 +536,18 @@ impl VaultTrait for DeFindexVault {
     ///
     /// # Returns
     /// * `Map<Address, i128>` - A map containing each asset address and its corresponding proportional amount.
-    fn get_asset_amounts_per_shares(e: Env, vault_shares: i128) -> Result<Map<Address, i128>, ContractError> {
+    fn get_asset_amounts_per_shares(
+        e: Env,
+        vault_shares: i128,
+    ) -> Result<Map<Address, i128>, ContractError> {
         extend_instance_ttl(&e);
 
         let total_managed_funds = fetch_total_managed_funds(&e, true);
-        Ok(calculate_asset_amounts_per_vault_shares(&e, vault_shares, &total_managed_funds)?)
+        Ok(calculate_asset_amounts_per_vault_shares(
+            &e,
+            vault_shares,
+            &total_managed_funds,
+        )?)
     }
 
     /// Retrieves the current fee rates for the vault and the DeFindex protocol.
@@ -570,12 +580,13 @@ impl VaultTrait for DeFindexVault {
         for asset in assets.iter() {
             for strategy in asset.strategies.iter() {
                 let strategy_client = get_strategy_client(&e, strategy.address.clone());
-                let strategy_invested_funds = strategy_client.balance(&e.current_contract_address());
+                let strategy_invested_funds =
+                    strategy_client.balance(&e.current_contract_address());
 
                 let mut report = get_report(&e, &strategy.address);
                 report.report(strategy_invested_funds);
                 set_report(&e, &strategy.address, &report);
-                
+
                 reports.push_back(report);
             }
         }
@@ -729,22 +740,11 @@ impl VaultManagementTrait for DeFindexVault {
         }
 
         // Check and execute investments for each asset allocation
-        check_and_execute_investments(
-            &e, 
-            &assets, 
-            &asset_investments)?;
+        check_and_execute_investments(&e, &assets, &asset_investments)?;
 
         Ok(())
     }
 
-    /// Rebalances the vault by executing a series of instructions.
-    ///
-    /// # Arguments:
-    /// * `e` - The environment.
-    /// * `instructions` - A vector of `Instruction` structs representing actions (withdraw, invest, swap, zapper) to be taken.
-    ///
-    /// # Returns:
-    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn rebalance(e: Env, instructions: Vec<Instruction>) -> Result<(), ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
@@ -757,51 +757,54 @@ impl VaultManagementTrait for DeFindexVault {
         }
 
         for instruction in instructions.iter() {
-            match instruction.action {
-                ActionType::Withdraw => match (&instruction.strategy, &instruction.amount) {
-                    (Some(strategy_address), Some(amount)) => {
-                        unwind_from_strategy(&e, strategy_address, amount, &e.current_contract_address())?;
-                    }
-                    _ => return Err(ContractError::MissingInstructionData),
-                },
-                ActionType::Invest => match (&instruction.strategy, &instruction.amount) {
-                    (Some(strategy_address), Some(amount)) => {
-                        let asset_address = get_strategy_asset(&e, strategy_address)?;
-                        invest_in_strategy(&e, &asset_address.address, strategy_address, amount)?;
-                    }
-                    _ => return Err(ContractError::MissingInstructionData),
-                },
-                ActionType::SwapExactIn => match &instruction.swap_details_exact_in {
-                    OptionalSwapDetailsExactIn::Some(swap_details) => {
-                        internal_swap_exact_tokens_for_tokens(
-                            &e,
-                            &swap_details.token_in,
-                            &swap_details.token_out,
-                            &swap_details.amount_in,
-                            &swap_details.amount_out_min,
-                            &swap_details.distribution,
-                            &swap_details.deadline,
-                        )?;
-                    }
-                    _ => return Err(ContractError::MissingInstructionData),
-                },
-                ActionType::SwapExactOut => match &instruction.swap_details_exact_out {
-                    OptionalSwapDetailsExactOut::Some(swap_details) => {
-                        internal_swap_tokens_for_exact_tokens(
-                            &e,
-                            &swap_details.token_in,
-                            &swap_details.token_out,
-                            &swap_details.amount_out,
-                            &swap_details.amount_in_max,
-                            &swap_details.distribution,
-                            &swap_details.deadline,
-                        )?;
-                    }
-                    _ => return Err(ContractError::MissingInstructionData),
-                },
-                ActionType::Zapper => {
-                    // TODO: Implement Zapper instructions
+            match instruction {
+                Instruction::Withdraw(strategy_address, amount) => {
+                    unwind_from_strategy(
+                        &e,
+                        &strategy_address,
+                        &amount,
+                        &e.current_contract_address(),
+                    )?;
                 }
+                Instruction::Invest(strategy_address, amount) => {
+                    let asset_address = get_strategy_asset(&e, &strategy_address)?;
+                    invest_in_strategy(&e, &asset_address.address, &strategy_address, &amount)?;
+                }
+                Instruction::SwapExactIn(
+                    token_in,
+                    token_out,
+                    amount_in,
+                    amount_out_min,
+                    deadline,
+                ) => {
+                    internal_swap_exact_tokens_for_tokens(
+                        &e,
+                        &token_in,
+                        &token_out,
+                        &amount_in,
+                        &amount_out_min,
+                        &deadline,
+                    )?;
+                }
+                Instruction::SwapExactOut(
+                    token_in,
+                    token_out,
+                    amount_out,
+                    amount_in_max,
+                    deadline,
+                ) => {
+                    internal_swap_tokens_for_exact_tokens(
+                        &e,
+                        &token_in,
+                        &token_out,
+                        &amount_out,
+                        &amount_in_max,
+                        &deadline,
+                    )?;
+                } // Zapper instruction is omitted for now
+                  // Instruction::Zapper(instructions) => {
+                  //     // TODO: Implement Zapper instructions
+                  // }
             }
         }
 
@@ -847,7 +850,7 @@ impl VaultManagementTrait for DeFindexVault {
                     reports.push_back(report);
                 }
             }
-        };
+        }
 
         Ok(reports)
     }
@@ -911,17 +914,25 @@ impl VaultManagementTrait for DeFindexVault {
 
                 if report.locked_fee > 0 {
                     // Calculate shares for each receiver based on their fee proportion
-                    let numerator = report.locked_fee
-                        .checked_mul(defindex_fee as i128)
-                        .unwrap();
+                    let numerator = report.locked_fee.checked_mul(defindex_fee as i128).unwrap();
                     let defindex_fee_amount = numerator.checked_div(MAX_BPS).unwrap();
 
                     let vault_fee_amount = report.locked_fee - defindex_fee_amount;
 
                     report.prev_balance = report.prev_balance - report.locked_fee;
 
-                    unwind_from_strategy(&e, &strategy.address, &defindex_fee_amount, &defindex_protocol_receiver)?;
-                    unwind_from_strategy(&e, &strategy.address, &vault_fee_amount, &vault_fee_receiver)?;
+                    unwind_from_strategy(
+                        &e,
+                        &strategy.address,
+                        &defindex_fee_amount,
+                        &defindex_protocol_receiver,
+                    )?;
+                    unwind_from_strategy(
+                        &e,
+                        &strategy.address,
+                        &vault_fee_amount,
+                        &vault_fee_receiver,
+                    )?;
                     total_fees_distributed += report.locked_fee;
                     report.locked_fee = 0;
                     set_report(&e, &strategy.address, &report);
@@ -931,7 +942,7 @@ impl VaultManagementTrait for DeFindexVault {
             if total_fees_distributed > 0 {
                 distributed_fees.push_back((asset.address.clone(), total_fees_distributed));
             }
-        };
+        }
 
         events::emit_fees_distributed_event(&e, distributed_fees.clone());
 
