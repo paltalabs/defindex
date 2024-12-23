@@ -1,5 +1,8 @@
 use defindex_strategy_core::StrategyError;
-use soroban_sdk::{auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation}, vec, Address, Env, IntoVal, Symbol, Val, Vec};
+use soroban_sdk::{
+    auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation},
+    vec, Address, Env, IntoVal, Symbol, Val, Vec,
+};
 
 use crate::storage::Config;
 
@@ -23,7 +26,11 @@ pub fn internal_swap_exact_tokens_for_tokens(
     let pair_address: Address = e.invoke_contract(
         &config.router,
         &Symbol::new(&e, "router_pair_for"),
-        vec![&e, path.get(0).unwrap().into_val(e), path.get(1).unwrap().into_val(e)]
+        vec![
+            &e,
+            path.get(0).unwrap().into_val(e),
+            path.get(1).unwrap().into_val(e),
+        ],
     );
 
     e.authorize_as_current_contract(vec![
@@ -35,7 +42,9 @@ pub fn internal_swap_exact_tokens_for_tokens(
                 args: (
                     e.current_contract_address(),
                     pair_address,
-                    amount_in.clone()).into_val(e),
+                    amount_in.clone(),
+                )
+                    .into_val(e),
             },
             sub_invocations: vec![&e],
         }),

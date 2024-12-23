@@ -1,20 +1,21 @@
 use soroban_sdk::{vec as sorobanvec, String, Vec, Map, Address};
 
 use crate::test::{
-    create_defindex_vault, create_strategy_params_token0, create_strategy_params_token1, create_hodl_strategy, defindex_vault::{AssetStrategySet, Strategy, CurrentAssetInvestmentAllocation, StrategyAllocation}, DeFindexVaultTest
+    create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1,
+    create_hodl_strategy, defindex_vault::{AssetStrategySet, Strategy, CurrentAssetInvestmentAllocation, StrategyAllocation}, DeFindexVaultTest,
 };
 
 fn create_expected_current_invested_funds(test: &DeFindexVaultTest) -> Map<Address, i128> {
     let mut expected_current_invested_funds: Map<Address, i128> = Map::new(&test.env);
-    expected_current_invested_funds.set(test.token0.address.clone(), 0i128);
-    expected_current_invested_funds.set(test.token1.address.clone(), 0i128);
+    expected_current_invested_funds.set(test.token_0.address.clone(), 0i128);
+    expected_current_invested_funds.set(test.token_1.address.clone(), 0i128);
     expected_current_invested_funds
 }
 
 fn create_expected_current_idle_funds(test: &DeFindexVaultTest) -> Map<Address, i128> {
     let mut expected_current_idle_funds: Map<Address, i128> = Map::new(&test.env);
-    expected_current_idle_funds.set(test.token0.address.clone(), 0i128);
-    expected_current_idle_funds.set(test.token1.address.clone(), 0i128);
+    expected_current_idle_funds.set(test.token_0.address.clone(), 0i128);
+    expected_current_idle_funds.set(test.token_1.address.clone(), 0i128);
     expected_current_idle_funds
 }
 
@@ -22,17 +23,17 @@ fn create_expected_current_idle_funds(test: &DeFindexVaultTest) -> Map<Address, 
 fn get_roles() {
     let test = DeFindexVaultTest::setup();
 
-    let strategy_params_token0 = create_strategy_params_token0(&test);
-    let strategy_params_token1 = create_strategy_params_token1(&test);
+    let strategy_params_token_0 = create_strategy_params_token_0(&test);
+    let strategy_params_token_1 = create_strategy_params_token_1(&test);
     let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
         AssetStrategySet {
-            address: test.token0.address.clone(),
-            strategies: strategy_params_token0.clone()
+            address: test.token_0.address.clone(),
+            strategies: strategy_params_token_0.clone()
         },
         AssetStrategySet {
-            address: test.token1.address.clone(),
-            strategies: strategy_params_token1.clone()
+            address: test.token_1.address.clone(),
+            strategies: strategy_params_token_1.clone()
         },
     ];
 
@@ -44,9 +45,14 @@ fn get_roles() {
         test.vault_fee_receiver.clone(),
         2000u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        test.soroswap_router.address.clone(),
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
 
     let manager_role = defindex_contract.get_manager();
@@ -63,36 +69,36 @@ fn get_roles() {
 
     let mut expected_total_managed_funds: Map<Address, CurrentAssetInvestmentAllocation> = Map::new(&test.env);
     
-    // Add entry for token0
+    // Add entry for token_0
     expected_total_managed_funds.set(
-        test.token0.address.clone(),
+        test.token_0.address.clone(),
         CurrentAssetInvestmentAllocation {
-            asset: test.token0.address.clone(),
+            asset: test.token_0.address.clone(),
             total_amount: 0i128,
             idle_amount: 0i128,
             invested_amount: 0i128,
             strategy_allocations: sorobanvec![
                 &test.env,
                 StrategyAllocation {
-                    strategy_address: test.strategy_client_token0.address.clone(),
+                    strategy_address: test.strategy_client_token_0.address.clone(),
                     amount: 0i128,
                 },
             ],
         },
     );
 
-    // Add entry for token1
+    // Add entry for token_1
     expected_total_managed_funds.set(
-        test.token1.address.clone(),
+        test.token_1.address.clone(),
         CurrentAssetInvestmentAllocation {
-            asset: test.token1.address.clone(),
+            asset: test.token_1.address.clone(),
             total_amount: 0i128,
             idle_amount: 0i128,
             invested_amount: 0i128,
             strategy_allocations: sorobanvec![
                 &test.env,
                 StrategyAllocation {
-                    strategy_address: test.strategy_client_token1.address.clone(),
+                    strategy_address: test.strategy_client_token_1.address.clone(),
                     amount: 0i128,
                 },
             ],
@@ -100,15 +106,15 @@ fn get_roles() {
     );
 
     let mut expected_current_invested_funds: Map<Address, i128> = Map::new(&test.env);
-    expected_current_invested_funds.set(test.token0.address.clone(), 0i128);
-    expected_current_invested_funds.set(test.token1.address.clone(), 0i128);
+    expected_current_invested_funds.set(test.token_0.address.clone(), 0i128);
+    expected_current_invested_funds.set(test.token_1.address.clone(), 0i128);
 
     let mut expected_current_idle_funds: Map<Address, i128> = Map::new(&test.env);
-    expected_current_idle_funds.set(test.token0.address.clone(), 0i128);
-    expected_current_idle_funds.set(test.token1.address.clone(), 0i128);
+    expected_current_idle_funds.set(test.token_0.address.clone(), 0i128);
+    expected_current_idle_funds.set(test.token_1.address.clone(), 0i128);
 
-    assert_eq!(asset_0.address, test.token0.address);
-    assert_eq!(asset_1.address, test.token1.address);
+    assert_eq!(asset_0.address, test.token_0.address);
+    assert_eq!(asset_1.address, test.token_1.address);
     assert_eq!(vault_assets.len(), 2);
 
     assert_eq!(total_managed_funds, expected_total_managed_funds);
@@ -120,23 +126,22 @@ fn get_roles() {
     assert_eq!(emergency_manager_role, test.emergency_manager);
 }
 
-
 // Test that if strategy does support other asset we get an error when initializing
 #[test]
 #[should_panic(expected = "HostError: Error(Context, InvalidAction)")]
 fn deploy_unsupported_strategy() {
     let test = DeFindexVaultTest::setup();
-    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token_0 = create_strategy_params_token_0(&test);
 
     let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
         AssetStrategySet {
-            address: test.token0.address.clone(),
-            strategies: strategy_params_token0.clone()
+            address: test.token_0.address.clone(),
+            strategies: strategy_params_token_0.clone()
         },
         AssetStrategySet {
-            address: test.token1.address.clone(),
-            strategies: strategy_params_token0.clone() // Here Strategy 0 supports token0
+            address: test.token_1.address.clone(),
+            strategies: strategy_params_token_0.clone() // Here Strategy 0 supports token_0
         }
     ];
 
@@ -148,9 +153,14 @@ fn deploy_unsupported_strategy() {
         test.vault_fee_receiver.clone(),
         2000u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        test.soroswap_router.address.clone(),
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
 }
 
@@ -159,7 +169,7 @@ fn deploy_unsupported_strategy() {
 #[should_panic(expected = "HostError: Error(Context, InvalidAction)")]
 fn initialize_with_empty_asset_allocation() {
     let test = DeFindexVaultTest::setup();
-    // let strategy_params_token0 = create_strategy_params_token0(&test);
+    // let strategy_params_token_0 = create_strategy_params_token_0(&test);
 
     let assets: Vec<AssetStrategySet> = sorobanvec![&test.env];
 
@@ -171,9 +181,14 @@ fn initialize_with_empty_asset_allocation() {
         test.vault_fee_receiver.clone(),
         2000u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        test.soroswap_router.address.clone(),
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
 }
 
@@ -182,9 +197,9 @@ fn initialize_with_empty_asset_allocation() {
 fn with_one_asset_and_several_strategies() {
     let test = DeFindexVaultTest::setup();
 
-    let strategy_0 = create_hodl_strategy(&test.env, &test.token0.address.clone());
-    let strategy_1 = create_hodl_strategy(&test.env, &test.token0.address.clone());
-    let strategy_2 = create_hodl_strategy(&test.env, &test.token0.address.clone());
+    let strategy_0 = create_hodl_strategy(&test.env, &test.token_0.address.clone());
+    let strategy_1 = create_hodl_strategy(&test.env, &test.token_0.address.clone());
+    let strategy_2 = create_hodl_strategy(&test.env, &test.token_0.address.clone());
 
     let strategy_params = sorobanvec![
         &test.env,
@@ -208,7 +223,7 @@ fn with_one_asset_and_several_strategies() {
     let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
         AssetStrategySet {
-            address: test.token0.address.clone(),
+            address: test.token_0.address.clone(),
             strategies: strategy_params.clone()
         }
     ];
@@ -221,9 +236,14 @@ fn with_one_asset_and_several_strategies() {
         test.vault_fee_receiver.clone(),
         2000u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        test.soroswap_router.address.clone(),
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
 
     let manager_role = defindex_contract.get_manager();
@@ -240,9 +260,9 @@ fn with_one_asset_and_several_strategies() {
 
     let mut expected_total_managed_funds: Map<Address, CurrentAssetInvestmentAllocation> = Map::new(&test.env);
     expected_total_managed_funds.set(
-        test.token0.address.clone(),
+        test.token_0.address.clone(),
         CurrentAssetInvestmentAllocation {
-            asset: test.token0.address.clone(),
+            asset: test.token_0.address.clone(),
             total_amount: 0i128,
             idle_amount: 0i128,
             invested_amount: 0i128,
@@ -265,17 +285,17 @@ fn with_one_asset_and_several_strategies() {
     );
 
     let mut expected_current_invested_funds: Map<Address, i128> = Map::new(&test.env);
-    expected_current_invested_funds.set(test.token0.address.clone(), 0i128);
+    expected_current_invested_funds.set(test.token_0.address.clone(), 0i128);
 
     let mut expected_current_idle_funds: Map<Address, i128> = Map::new(&test.env);
-    expected_current_idle_funds.set(test.token0.address.clone(), 0i128);
+    expected_current_idle_funds.set(test.token_0.address.clone(), 0i128);
 
 
     assert_eq!(manager_role, test.manager);
     assert_eq!(fee_receiver_role, test.vault_fee_receiver);
     assert_eq!(emergency_manager_role, test.emergency_manager);
 
-    assert_eq!(asset.address, test.token0.address);
+    assert_eq!(asset.address, test.token_0.address);
     assert_eq!(vault_assets.len(), 1);
     assert_eq!(vault_strategies.len(), strategy_params.len());
 

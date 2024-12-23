@@ -1,13 +1,17 @@
 use soroban_sdk::{testutils::Ledger, token::StellarAssetClient};
 
-use crate::{calculate_yield, test::{create_fixapr_strategy, FixAprStrategyTest}};
+use crate::{
+    calculate_yield,
+    test::{create_fixapr_strategy, FixAprStrategyTest},
+};
 
 #[test]
 fn test_harvest_yields_multiple_users() {
     let test = FixAprStrategyTest::setup();
 
     let apr = 1000u32;
-    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
+    let strategy =
+        create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
 
     let users = FixAprStrategyTest::generate_random_users(&test.env, 4);
 
@@ -40,7 +44,9 @@ fn test_harvest_yields_multiple_users() {
 
     // Simulate one year passing
     let one_year_in_seconds = 31_536_000u64;
-    test.env.ledger().set_timestamp(test.env.ledger().timestamp() + one_year_in_seconds);
+    test.env
+        .ledger()
+        .set_timestamp(test.env.ledger().timestamp() + one_year_in_seconds);
 
     // Harvest for each user
     strategy.harvest(&users[0]);
@@ -54,8 +60,20 @@ fn test_harvest_yields_multiple_users() {
     let user3_expected_reward = calculate_yield(user3_amount, apr, one_year_in_seconds);
     let user4_expected_reward = calculate_yield(user4_amount, apr, one_year_in_seconds);
 
-    assert_eq!(strategy.balance(&users[0]), user1_amount + user1_expected_reward);
-    assert_eq!(strategy.balance(&users[1]), user2_amount + user2_expected_reward);
-    assert_eq!(strategy.balance(&users[2]), user3_amount + user3_expected_reward);
-    assert_eq!(strategy.balance(&users[3]), user4_amount + user4_expected_reward);
+    assert_eq!(
+        strategy.balance(&users[0]),
+        user1_amount + user1_expected_reward
+    );
+    assert_eq!(
+        strategy.balance(&users[1]),
+        user2_amount + user2_expected_reward
+    );
+    assert_eq!(
+        strategy.balance(&users[2]),
+        user3_amount + user3_expected_reward
+    );
+    assert_eq!(
+        strategy.balance(&users[3]),
+        user4_amount + user4_expected_reward
+    );
 }

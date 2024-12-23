@@ -1,32 +1,32 @@
-use soroban_sdk::{Env, Vec, panic_with_error, Map, Address};
+use soroban_sdk::{panic_with_error, Address, Env, Map, Vec};
 
 use crate::{
-    models::{AssetInvestmentAllocation, StrategyAllocation, CurrentAssetInvestmentAllocation},
+    models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, StrategyAllocation},
     strategies::invest_in_strategy,
-    utils::{check_nonnegative_amount},
+    utils::check_nonnegative_amount,
     ContractError,
 };
 use common::models::AssetStrategySet;
 
 /// Executes investment allocations for a set of assets based on the provided investment strategies.
-/// 
-/// This function ensures that the specified assets and strategies match the contract's known configuration, 
-/// then validates and processes the investment allocations for each asset and its strategies. It assumes 
-/// that the caller is responsible for ensuring the correctness of investment ratios and does not check the 
+///
+/// This function ensures that the specified assets and strategies match the contract's known configuration,
+/// then validates and processes the investment allocations for each asset and its strategies. It assumes
+/// that the caller is responsible for ensuring the correctness of investment ratios and does not check the
 /// current state of the strategies or existing investments.
 ///
 /// # Arguments
 /// * `e` - The current environment reference.
-/// * `assets` - A vector of `AssetStrategySet` representing the assets and their associated strategies 
+/// * `assets` - A vector of `AssetStrategySet` representing the assets and their associated strategies
 ///   managed by this vault.
 /// * `asset_investments` - A vector of optional investment allocations for each asset.
 ///
 /// # Returns
-/// * `Result<(), ContractError>` - Returns `Ok(())` if all investments are successful, or an appropriate 
+/// * `Result<(), ContractError>` - Returns `Ok(())` if all investments are successful, or an appropriate
 ///   `ContractError` if validation or execution fails.
 ///
 /// # Function Details
-/// 1. **Iterates Over Asset Investments**: Loops through each asset's investment allocation, processing only 
+/// 1. **Iterates Over Asset Investments**: Loops through each asset's investment allocation, processing only
 ///    defined allocations.
 /// 2. **Validation**:
 ///    - Confirms that the asset's address matches the expected address in the allocation.
@@ -43,17 +43,17 @@ use common::models::AssetStrategySet;
 ///
 /// # Notes
 /// - The function relies on the assets being ordered consistently with the investment allocations.
-/// - It allows the caller to update investment ratios freely, without verifying the current state of investments 
+/// - It allows the caller to update investment ratios freely, without verifying the current state of investments
 ///   or strategies.
 pub fn check_and_execute_investments(
-    e: &Env, 
+    e: &Env,
     assets: &Vec<AssetStrategySet>,
-    asset_investments: &Vec<Option<AssetInvestmentAllocation>>
+    asset_investments: &Vec<Option<AssetInvestmentAllocation>>,
 ) -> Result<(), ContractError> {
-
     // Iterate over each asset investment allocation
     for (i, asset_investment_opt) in asset_investments.iter().enumerate() {
-        if let Some(asset_investment) = asset_investment_opt { // Proceed only if allocation is defined
+        if let Some(asset_investment) = asset_investment_opt {
+            // Proceed only if allocation is defined
             let asset = assets.get(i as u32).unwrap();
 
             // Verify the asset address matches the specified investment allocation
@@ -67,7 +67,9 @@ pub fn check_and_execute_investments(
             }
 
             // Process each defined strategy investment for the current asset
-            for (j, strategy_investment_opt) in asset_investment.strategy_allocations.iter().enumerate() {
+            for (j, strategy_investment_opt) in
+                asset_investment.strategy_allocations.iter().enumerate()
+            {
                 if let Some(strategy_investment) = strategy_investment_opt {
                     // Validate amount is non-negative
                     check_nonnegative_amount(strategy_investment.amount)?;
@@ -82,8 +84,9 @@ pub fn check_and_execute_investments(
                     invest_in_strategy(
                         &e,
                         &asset.address,
-                        &strategy.address, 
-                        &strategy_investment.amount)?;
+                        &strategy.address,
+                        &strategy_investment.amount,
+                    )?;
                 }
             }
         }
@@ -92,10 +95,10 @@ pub fn check_and_execute_investments(
 }
 
 /// Generates investment allocations for a set of assets and their associated strategies.
-/// 
-/// This function calculates the distribution of funds across strategies for each asset based 
-/// on the current state of strategy investments. The allocations are returned as a vector, 
-/// where each entry corresponds to an asset's investment allocation or `None` if no allocation 
+///
+/// This function calculates the distribution of funds across strategies for each asset based
+/// on the current state of strategy investments. The allocations are returned as a vector,
+/// where each entry corresponds to an asset's investment allocation or `None` if no allocation
 /// is required.
 ///
 /// # Arguments
@@ -105,7 +108,7 @@ pub fn check_and_execute_investments(
 /// - `amounts` - A vector of amounts representing the funds to be allocated for each asset.
 ///
 /// # Returns
-/// - `Ok(Vec<Option<AssetInvestmentAllocation>>)` - A vector of investment allocations where each entry 
+/// - `Ok(Vec<Option<AssetInvestmentAllocation>>)` - A vector of investment allocations where each entry
 ///   represents an asset's strategy allocations. If an asset does not require allocation, its entry is `None`.
 /// - `Err(ContractError)` - If any errors occur during the allocation process, such as invalid data or calculations.
 ///
@@ -124,7 +127,6 @@ pub fn check_and_execute_investments(
 /// # Notes
 /// - This function does not execute the investments; it only prepares the allocations.
 /// - It assumes that the provided `total_managed_funds` contains valid and complete data.
-
 pub fn generate_investment_allocations(
     e: &Env,
     assets: &Vec<AssetStrategySet>,
@@ -135,7 +137,7 @@ pub fn generate_investment_allocations(
 
     for (i, amount) in amounts.iter().enumerate() {
         let asset = assets.get(i as u32).unwrap();
-        
+
         let current_asset_allocation = total_managed_funds.get(asset.address.clone()).unwrap();
         let asset_invested_funds = current_asset_allocation.invested_amount;
 
@@ -143,8 +145,8 @@ pub fn generate_investment_allocations(
         // if the amount already invested in the asset is 0,
         // this means that there is no previous investment in the asset, so we can just
         // invest, and we need to wait for the manager to execute a manual investment of the idle assets
-        // on the strategies.        
-        if amount >0 && asset_invested_funds >0  {
+        // on the strategies.
+        if amount > 0 && asset_invested_funds > 0 {
             // here the asset will be distributed amont the different strategies considering the current raio
             // of investment in each strategy.
             let mut strategy_allocations = Vec::new(&e);
@@ -171,16 +173,14 @@ pub fn generate_investment_allocations(
                 remaining_amount -= invest_amount;
 
                 // Add the strategy allocation
-                strategy_allocations.push_back(
-                    if invest_amount > 0 {
-                        Some(StrategyAllocation {
-                            strategy_address: strategy.address.clone(),
-                            amount: invest_amount,
-                        })
-                    } else {
-                        None
-                    },
-                );
+                strategy_allocations.push_back(if invest_amount > 0 {
+                    Some(StrategyAllocation {
+                        strategy_address: strategy.address.clone(),
+                        amount: invest_amount,
+                    })
+                } else {
+                    None
+                });
             }
 
             // Add the asset investment allocation
@@ -188,14 +188,9 @@ pub fn generate_investment_allocations(
                 asset: asset.address.clone(),
                 strategy_allocations,
             }));
-
-            
-            
-        }
-        else {
+        } else {
             asset_investments.push_back(None); // No investments to be executed for this asset
         }
-    
     }
     Ok(asset_investments)
 }

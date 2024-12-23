@@ -1,7 +1,6 @@
-
-use soroban_sdk::{symbol_short, testutils::Events, vec, IntoVal};
-use crate::test::{create_hodl_strategy, HodlStrategyTest};
 use crate::event::{DepositEvent, HarvestEvent, WithdrawEvent};
+use crate::test::{create_hodl_strategy, HodlStrategyTest};
+use soroban_sdk::{symbol_short, testutils::Events, vec, IntoVal};
 
 #[test]
 fn deposit() {
@@ -20,7 +19,7 @@ fn deposit() {
     assert_eq!(
         vec![&test.env, deposit_event.clone()],
         vec![
-            &test.env, 
+            &test.env,
             (
                 strategy.address.clone(),
                 ("HodlStrategy", symbol_short!("deposit")).into_val(&test.env),
@@ -38,7 +37,7 @@ fn withdraw() {
     strategy.deposit(&amount_to_deposit, &test.user);
 
     let amount_to_withdraw = 123456;
-    strategy.withdraw(&amount_to_withdraw, &test.user);
+    strategy.withdraw(&amount_to_withdraw, &test.user, &test.user);
     let withdraw_event = test.env.events().all().last().unwrap();
     let expected_withdraw_event = WithdrawEvent {
         amount: amount_to_withdraw,
@@ -48,7 +47,7 @@ fn withdraw() {
     assert_eq!(
         vec![&test.env, withdraw_event.clone()],
         vec![
-            &test.env, 
+            &test.env,
             (
                 strategy.address.clone(),
                 ("HodlStrategy", symbol_short!("withdraw")).into_val(&test.env),
@@ -56,13 +55,10 @@ fn withdraw() {
             )
         ]
     );
-
-
-
 }
 
 #[test]
-fn harvest(){
+fn harvest() {
     let test = HodlStrategyTest::setup();
     let strategy = create_hodl_strategy(&test.env, &test.token.address);
 
@@ -79,7 +75,7 @@ fn harvest(){
     assert_eq!(
         vec![&test.env, harvest_event.clone()],
         vec![
-            &test.env, 
+            &test.env,
             (
                 strategy.address.clone(),
                 ("HodlStrategy", symbol_short!("harvest")).into_val(&test.env),

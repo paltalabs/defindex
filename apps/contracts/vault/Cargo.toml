@@ -15,6 +15,7 @@ soroban-sdk = { workspace = true }
 soroban-token-sdk = { workspace = true }
 defindex-strategy-core = { workspace = true }
 common = { workspace = true }
+soroswap-library = { workspace = true }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }

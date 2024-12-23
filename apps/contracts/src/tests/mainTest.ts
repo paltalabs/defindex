@@ -1,8 +1,7 @@
 import { Address, Asset, Keypair, Networks } from "@stellar/stellar-sdk";
 import { AddressBook } from "../utils/address_book.js";
-import { airdropAccount } from "../utils/contract.js";
+import { airdropAccount, invokeCustomContract } from "../utils/contract.js";
 import {
-  ActionType,
   admin,
   AssetInvestmentAllocation,
   CreateVaultParams,
@@ -15,9 +14,8 @@ import {
   Instruction,
   investVault,
   manager,
-  mintToken,
-  rebalanceVault,
   withdrawFromVault,
+  mapInstructionsToParams,
 } from "./vault.js";
 import { checkUserBalance } from "./strategy.js";
 import { exit } from "process";
@@ -205,26 +203,30 @@ async function testVaultOneStrategy() {
   // rebalance vault
 
   console.log(purple, "---------------------------------------");
-  console.log(purple, "Rebalancing vault");
+  console.log(purple, "Rebalancing vault"); 
   console.log(purple, "---------------------------------------");
 
   const rebalanceArgs: Instruction[] = [
     {
-      action: ActionType.Invest,
+      type: "Invest",
       strategy: addressBook.getContractId("hodl_strategy"),
       amount: BigInt(7_0_000),
-      swap_details_exact_in: undefined,
-      swap_details_exact_out: undefined,
     },
     {
-      action: ActionType.Withdraw,
+      type: "Withdraw",
       strategy: addressBook.getContractId("hodl_strategy"),
       amount: BigInt(6_0_00),
-      swap_details_exact_in: undefined,
-      swap_details_exact_out: undefined,
     },
   ];
-  await rebalanceVault(vaultAddress, rebalanceArgs, manager);
+
+  const mappedParams = mapInstructionsToParams(rebalanceArgs);
+
+
+  await invokeCustomContract(
+                vaultAddress,
+                "rebalance",
+                [mappedParams],
+                manager);
 
   console.log(yellow, "---------------------------------------");
   console.log(yellow, "Fetching balances");
@@ -417,37 +419,40 @@ async function testVaultTwoStrategies() {
   console.log(purple, "---------------------------------------");
   console.log(purple, "Rebalancing vault");
   console.log(purple, "---------------------------------------");
+
   const rebalanceArgs: Instruction[] = [
-    {
-      action: ActionType.Invest,
-      strategy: addressBook.getContractId("hodl_strategy"),
-      amount: BigInt(7_0_000),
-      swap_details_exact_in: undefined,
-      swap_details_exact_out: undefined,
-    },
-    {
-      action: ActionType.Withdraw,
-      strategy: addressBook.getContractId("hodl_strategy"),
-      amount: BigInt(6_0_00),
-      swap_details_exact_in: undefined,
-      swap_details_exact_out: undefined,
-    },
-    {
-      action: ActionType.Invest,
-      strategy: addressBook.getContractId("fixed_apr_strategy"),
-      amount: BigInt(8_0_000),
-      swap_details_exact_in: undefined,
-      swap_details_exact_out: undefined,
-    },
-    {
-      action: ActionType.Withdraw,
-      strategy: addressBook.getContractId("fixed_apr_strategy"),
-      amount: BigInt(3_0_00),
-      swap_details_exact_in: undefined,
-      swap_details_exact_out: undefined,
-    },
+      {
+          type: "Invest",
+          strategy: addressBook.getContractId("hodl_strategy"),
+          amount: BigInt(7_000_000),
+      },
+      {
+          type: "Withdraw",
+          strategy: addressBook.getContractId("hodl_strategy"),
+          amount: BigInt(6_000_00),
+      },
+      {
+          type: "Invest",
+          strategy: addressBook.getContractId("fixed_apr_strategy"),
+          amount: BigInt(8_000_000),
+      },
+      {
+          type: "Withdraw",
+          strategy: addressBook.getContractId("fixed_apr_strategy"),
+          amount: BigInt(3_000_00),
+      },
   ];
-  await rebalanceVault(vaultAddress, rebalanceArgs, manager);
+
+  const mappedParams = mapInstructionsToParams(rebalanceArgs);
+
+  await invokeCustomContract(
+      vaultAddress,
+      "rebalance",
+      [mappedParams],
+      manager
+  );
+
+
   console.log(yellow, "---------------------------------------");
   console.log(yellow, "Fetching balances");
   console.log(yellow, "---------------------------------------");

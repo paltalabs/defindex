@@ -2,11 +2,11 @@ use soroban_sdk::token::{StellarAssetClient, TokenClient};
 use soroban_sdk::BytesN;
 use soroban_sdk::{testutils::Address as _, vec as sorobanvec, Address, String};
 
+use crate::factory::{AssetStrategySet, Strategy};
 use crate::fixed_strategy::{create_fixed_strategy_contract, FixedStrategyClient};
 use crate::hodl_strategy::{create_hodl_strategy_contract, HodlStrategyClient};
 use crate::test::IntegrationTest;
 use crate::token::create_token;
-use crate::factory::{AssetStrategySet, Strategy};
 use crate::vault::defindex_vault_contract::VaultContractClient;
 
 pub struct VaultOneAseetHodlStrategy<'a> {
@@ -38,7 +38,7 @@ pub fn create_vault_one_asset_hodl_strategy<'a>() -> VaultOneAseetHodlStrategy<'
     let vault_name = String::from_str(&setup.env, "HodlVault");
     let vault_symbol = String::from_str(&setup.env, "HVLT");
     let manager = Address::generate(&setup.env);
-    
+
     let assets = sorobanvec![
         &setup.env,
         AssetStrategySet {
@@ -57,14 +57,14 @@ pub fn create_vault_one_asset_hodl_strategy<'a>() -> VaultOneAseetHodlStrategy<'
     let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
-        &emergency_manager, 
-        &fee_receiver, 
-        &vault_fee, 
-        &vault_name, 
-        &vault_symbol, 
-        &manager, 
-        &assets, 
-        &salt
+        &emergency_manager,
+        &fee_receiver,
+        &vault_fee,
+        &vault_name,
+        &vault_symbol,
+        &manager,
+        &assets,
+        &salt,
     );
 
     let vault_contract = VaultContractClient::new(&setup.env, &vault_contract_address);
@@ -103,7 +103,8 @@ pub fn create_vault_one_asset_fixed_strategy<'a>() -> VaultOneAseetFixedStrategy
     let (token, token_admin_client) = create_token(&setup.env, &token_admin);
 
     setup.env.mock_all_auths();
-    let strategy_contract = create_fixed_strategy_contract(&setup.env, &token.address, 1000u32, &token_admin_client);
+    let strategy_contract =
+        create_fixed_strategy_contract(&setup.env, &token.address, 1000u32, &token_admin_client);
 
     let emergency_manager = Address::generate(&setup.env);
     let fee_receiver = Address::generate(&setup.env);
@@ -111,7 +112,7 @@ pub fn create_vault_one_asset_fixed_strategy<'a>() -> VaultOneAseetFixedStrategy
     let vault_name = String::from_str(&setup.env, "FixedVault");
     let vault_symbol = String::from_str(&setup.env, "FVLT");
     let manager = Address::generate(&setup.env);
-    
+
     let assets = sorobanvec![
         &setup.env,
         AssetStrategySet {
@@ -130,14 +131,14 @@ pub fn create_vault_one_asset_fixed_strategy<'a>() -> VaultOneAseetFixedStrategy
     let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
-        &emergency_manager, 
-        &fee_receiver, 
-        &vault_fee, 
-        &vault_name, 
-        &vault_symbol, 
-        &manager, 
-        &assets, 
-        &salt
+        &emergency_manager,
+        &fee_receiver,
+        &vault_fee,
+        &vault_name,
+        &vault_symbol,
+        &manager,
+        &assets,
+        &salt,
     );
 
     let vault_contract = VaultContractClient::new(&setup.env, &vault_contract_address);
@@ -228,11 +229,13 @@ mod tests {
                 ],
             }
         ];
-        
+
         let vault_assets = enviroment.vault_contract.get_assets();
         assert_eq!(vault_assets, assets);
 
-        let strategy_contract_balance = enviroment.token.balance(&enviroment.strategy_contract.address);
+        let strategy_contract_balance = enviroment
+            .token
+            .balance(&enviroment.strategy_contract.address);
         assert_eq!(strategy_contract_balance, 100_000_000_000_0_000_000i128);
 
         let vault_emergency_manager = enviroment.vault_contract.get_emergency_manager();
@@ -250,5 +253,4 @@ mod tests {
         let vault_symbol = enviroment.vault_contract.symbol();
         assert_eq!(vault_symbol, String::from_str(&setup.env, "FVLT"));
     }
-
 }

@@ -1,8 +1,9 @@
 use defindex_strategy_core::DeFindexStrategyClient;
-use soroban_sdk::{Address, Env, vec, IntoVal, Symbol};
 use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
+use soroban_sdk::{vec, Address, Env, IntoVal, Symbol};
 
-
+use crate::report::Report;
+use crate::storage::{get_report, set_report};
 use crate::{
     storage::{get_asset, get_assets, get_total_assets, set_asset},
     ContractError,
@@ -128,11 +129,18 @@ pub fn unwind_from_strategy(
     e: &Env,
     strategy_address: &Address,
     amount: &i128,
-) -> Result<(), ContractError> {
+    to: &Address,
+) -> Result<Report, ContractError> {
     let strategy_client = get_strategy_client(e, strategy_address.clone());
+    let mut report = get_report(e, strategy_address);
+    report.prev_balance -= amount;
 
-    match strategy_client.try_withdraw(amount, &e.current_contract_address()) {
-        Ok(Ok(_)) => Ok(()),
+    match strategy_client.try_withdraw(amount, &e.current_contract_address(), to) {
+        Ok(Ok(result)) => {
+            report.report(result);
+            set_report(e, strategy_address, &report);
+            Ok(report)
+        }
         Ok(Err(_)) | Err(_) => Err(ContractError::StrategyWithdrawError),
     }
 }
@@ -142,8 +150,10 @@ pub fn invest_in_strategy(
     asset_address: &Address,
     strategy_address: &Address,
     amount: &i128,
-) -> Result<(), ContractError> {
-    
+) -> Result<Report, ContractError> {
+    let strategy_client = get_strategy_client(&e, strategy_address.clone());
+    let mut report = get_report(e, strategy_address);
+    report.prev_balance += amount;
     // Now we will handle funds on behalf of the contract, not the caller (manager or user)
 
     e.authorize_as_current_contract(vec![
@@ -155,17 +165,20 @@ pub fn invest_in_strategy(
                 args: (
                     e.current_contract_address(),
                     strategy_address,
-                    amount.clone()).into_val(e),
-                    
+                    amount.clone(),
+                )
+                    .into_val(e),
             },
             sub_invocations: vec![&e],
         }),
     ]);
 
+    let strategy_funds = strategy_client.deposit(amount, &e.current_contract_address());
 
-    let strategy_client = get_strategy_client(&e, strategy_address.clone());
+    // Reports
+    // Store Strategy invested funds for reports
+    report.report(strategy_funds);
+    set_report(e, strategy_address, &report);
 
-    strategy_client.deposit(amount, &e.current_contract_address());
-
-    Ok(())
+    Ok(report)
 }

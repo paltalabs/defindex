@@ -81,6 +81,7 @@ export async function testBlendStrategy(user?: Keypair) {
       const withdrawParams: xdr.ScVal[] = [
         nativeToScVal(1000_0_000_000, { type: "i128" }),
         new Address(newUser.publicKey()).toScVal(),
+        new Address(newUser.publicKey()).toScVal(),
       ]
       const withdrawResult = await invokeContract(
         'blend_strategy',
