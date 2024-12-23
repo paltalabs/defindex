@@ -551,7 +551,7 @@ fn several_assets_success() {
     // check deposit result
     assert_eq!(
         deposit_result,
-        (sorobanvec![&test.env, amount0, amount1], amount0 + amount1)
+        (sorobanvec![&test.env, amount0, amount1], amount0 + amount1, None)
     );
 
     // check balances after deposit
@@ -662,7 +662,8 @@ fn several_assets_success() {
         deposit_result,
         (
             sorobanvec![&test.env, amount0 * 2, amount1 * 2],
-            amount0 * 2 + amount1 * 2
+            amount0 * 2 + amount1 * 2,
+            None
         )
     );
 
@@ -767,7 +768,8 @@ fn several_assets_success() {
         deposit_result,
         (
             sorobanvec![&test.env, amount0 * 2, amount1 * 2],
-            amount0 * 2 + amount1 * 2
+            amount0 * 2 + amount1 * 2,
+            None
         )
     );
 }

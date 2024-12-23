@@ -197,7 +197,7 @@ impl VaultTrait for DeFindexVault {
         amounts_min: Vec<i128>,
         from: Address,
         invest: bool,
-    ) -> Result<(Vec<i128>, i128), ContractError> {
+    ) -> Result<(Vec<i128>, i128, Option<Vec<Option<AssetInvestmentAllocation>>>), ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
         from.require_auth();
@@ -216,12 +216,14 @@ impl VaultTrait for DeFindexVault {
         )?;
         events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone());
 
-        if invest {
-            let asset_investments =
-                generate_investment_allocations(&e, &assets, &total_managed_funds, &amounts)?;
-            check_and_execute_investments(&e, &assets, &asset_investments)?;
-        }
-        Ok((amounts, shares_to_mint))
+        let asset_investments = if invest {
+            let allocations = generate_investment_allocations(&e, &assets, &total_managed_funds, &amounts)?;
+            check_and_execute_investments(&e, &assets, &allocations)?;
+            Some(allocations)
+        } else {
+            None
+        };
+        Ok((amounts, shares_to_mint, asset_investments))
     }
 
     /// Handles the withdrawal process for a specified number of vault shares.

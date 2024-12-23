@@ -429,13 +429,17 @@ fn several_assets_no_previous_investment() {
         &sorobanvec![&test.env, amount0, amount1],
         &sorobanvec![&test.env, amount0, amount1],
         &users[0],
-        &true,
+        &false,
     );
 
     // check deposit result
     assert_eq!(
         deposit_result,
-        (sorobanvec![&test.env, amount0, amount1], amount0 + amount1)
+        (sorobanvec![
+            &test.env, amount0, amount1], 
+            amount0 + amount1, 
+            None
+        )
     );
 
     // check balances after deposit
@@ -540,7 +544,8 @@ fn several_assets_no_previous_investment() {
         deposit_result,
         (
             sorobanvec![&test.env, amount0 * 2, amount1 * 2],
-            amount0 * 2 + amount1 * 2
+            amount0 * 2 + amount1 * 2,
+            Some(sorobanvec![&test.env, None, None])
         )
     );
 
@@ -757,7 +762,8 @@ fn several_assets_wih_previous_investment_success() {
         deposit_result,
         (
             sorobanvec![&test.env, amount0 * 2, amount1 * 2],
-            amount0 * 2 + amount1 * 2
+            amount0 * 2 + amount1 * 2,
+            None
         )
     );
 
