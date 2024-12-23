@@ -25,6 +25,7 @@
 ## Developer Guides
 * [Flutter SDK](11-developer-guides/01-fluter-sdk.md)
 * [Typescript SDK](11-developer-guides/02-typescript-sdk.md)
+* [Building the Blend Strategy](11-developer-guides/03-how-to-create-a-strategy.md)
 
 ## Tutorials
 * [Test Defindex dApp on Tesnet](12-tutorials/01-test-defindex-testnet.md)
