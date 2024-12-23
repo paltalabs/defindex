@@ -17,4 +17,3 @@ pub enum StrategyError {
     DeadlineExpired = 421,
     ExternalError = 422,
 }
-

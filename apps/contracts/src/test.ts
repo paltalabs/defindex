@@ -80,16 +80,22 @@ export async function test_factory(addressBook: AddressBook) {
       }),
     ]);
   });
+ 
+  const nameSymbol = xdr.ScVal.scvVec([
+    nativeToScVal("Test Vault", { type: "string" }), // name
+    nativeToScVal("DFT-Test-Vault", { type: "string" }),
+  ]);
+
 
   const createDeFindexParams: xdr.ScVal[] = [
-    new Address(emergencyManager.publicKey()).toScVal(),
-    new Address(feeReceiver.publicKey()).toScVal(),
+    new Address(emergencyManager.publicKey()).toScVal(), //     emergency_manager: Address, 
+    new Address(feeReceiver.publicKey()).toScVal(), //     fee_receiver: Address, 
     nativeToScVal(100, { type: "u32" }),  // Setting vault_fee as 100 bps for demonstration
-    nativeToScVal("Test Vault", { type: "string" }),
-    nativeToScVal("DFT-Test-Vault", { type: "string" }),
-    new Address(manager.publicKey()).toScVal(),
-    xdr.ScVal.scvVec(assetAllocations),
-    nativeToScVal(randomBytes(32)),
+    new Address(manager.publicKey()).toScVal(), //     manager: Address,
+    xdr.ScVal.scvVec(assetAllocations), //     assets: Vec<AssetStrategySet>,
+    nativeToScVal(randomBytes(32)), //     salt: BytesN<32>,
+    new Address(emergencyManager.publicKey()).toScVal(), //     soroswap_router: Address, 
+    nameSymbol, //     name_symbol: Vec<ScVal>,
   ];
 
   const result = await invokeContract(

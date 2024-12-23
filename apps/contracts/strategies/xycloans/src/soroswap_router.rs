@@ -1,18 +1,14 @@
+use crate::storage::{get_soroswap_factory_address, get_soroswap_router_address};
 use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
 use soroban_sdk::crypto::Hash;
 use soroban_sdk::{vec, Address, Env, IntoVal, Symbol, Val, Vec};
 use soroban_sdk::{xdr::ToXdr, Bytes};
-use crate::storage::{get_soroswap_factory_address, get_soroswap_router_address};
 
-soroban_sdk::contractimport!(
-  file = "../external_wasms/soroswap/soroswap_router.optimized.wasm"
-);
+soroban_sdk::contractimport!(file = "../external_wasms/soroswap/soroswap_router.optimized.wasm");
 pub type SoroswapRouterClient<'a> = Client<'a>;
 
 mod pair {
-    soroban_sdk::contractimport!(
-        file = "../external_wasms/soroswap/soroswap_pair.optimized.wasm"
-    );
+    soroban_sdk::contractimport!(file = "../external_wasms/soroswap/soroswap_pair.optimized.wasm");
 }
 use pair::Client as SoroswapPairClient;
 
@@ -48,7 +44,10 @@ fn pair_salt(e: &Env, token_a: Address, token_b: Address) -> Hash<32> {
 /// # Returns
 ///
 /// Returns `Result<(Address, Address), SoroswapLibraryError>` where `Ok` contains a tuple with the sorted token addresses, and `Err` indicates an error such as identical tokens.
-pub fn sort_tokens(token_a: Address, token_b: Address) -> Result<(Address, Address), SoroswapLibraryError> {
+pub fn sort_tokens(
+    token_a: Address,
+    token_b: Address,
+) -> Result<(Address, Address), SoroswapLibraryError> {
     if token_a == token_b {
         return Err(SoroswapLibraryError::SortIdenticalTokens);
     }
@@ -73,7 +72,12 @@ pub fn sort_tokens(token_a: Address, token_b: Address) -> Result<(Address, Addre
 /// # Returns
 ///
 /// Returns `Result<Address, SoroswapLibraryError>` where `Ok` contains the deterministic address for the pair, and `Err` indicates an error such as identical tokens or an issue with sorting.
-pub fn pair_for(e: Env, factory: Address, token_a: Address, token_b: Address) -> Result<Address, SoroswapLibraryError> {
+pub fn pair_for(
+    e: Env,
+    factory: Address,
+    token_a: Address,
+    token_b: Address,
+) -> Result<Address, SoroswapLibraryError> {
     let (token_0, token_1) = sort_tokens(token_a, token_b)?;
     let salt = pair_salt(&e, token_0, token_1);
     let deployer_with_address = e.deployer().with_address(factory.clone(), salt);
@@ -93,17 +97,22 @@ pub fn pair_for(e: Env, factory: Address, token_a: Address, token_b: Address) ->
 /// # Returns
 ///
 /// Returns `Result<(i128, i128), SoroswapLibraryError>` where `Ok` contains a tuple of sorted reserves, and `Err` indicates an error such as identical tokens or an issue with sorting.
-pub fn get_reserves(e: Env,factory: Address, token_a: Address, token_b: Address) -> Result<(i128,i128), SoroswapLibraryError>{
-    let (token_0,token_1) = sort_tokens(token_a.clone(), token_b.clone())?;
+pub fn get_reserves(
+    e: Env,
+    factory: Address,
+    token_a: Address,
+    token_b: Address,
+) -> Result<(i128, i128), SoroswapLibraryError> {
+    let (token_0, token_1) = sort_tokens(token_a.clone(), token_b.clone())?;
     let pair_address = pair_for(e.clone(), factory, token_0.clone(), token_1.clone())?;
     let pair_client = SoroswapPairClient::new(&e, &pair_address);
     let (reserve_0, reserve_1) = pair_client.get_reserves();
-    
-    let (reserve_a, reseve_b) =
-        if token_a == token_0 {
-            (reserve_0, reserve_1) 
-        } else {
-            (reserve_1, reserve_0) };
+
+    let (reserve_a, reseve_b) = if token_a == token_0 {
+        (reserve_0, reserve_1)
+    } else {
+        (reserve_1, reserve_0)
+    };
 
     Ok((reserve_a, reseve_b))
 }
@@ -119,40 +128,52 @@ pub fn get_reserves(e: Env,factory: Address, token_a: Address, token_b: Address)
 /// # Returns
 ///
 /// Returns `Result<i128, SoroswapLibraryError>` where `Ok` contains the calculated maximum output amount, and `Err` indicates an error such as insufficient input amount or liquidity.
-pub fn get_amount_out(amount_in: i128, reserve_in: i128, reserve_out: i128) -> Result<i128, SoroswapLibraryError> {
-  if amount_in <= 0 {
-      return Err(SoroswapLibraryError::InsufficientInputAmount);
-  }
-  if reserve_in <= 0 || reserve_out <= 0 {
-      return Err(SoroswapLibraryError::InsufficientLiquidity);
-  }
+pub fn get_amount_out(
+    amount_in: i128,
+    reserve_in: i128,
+    reserve_out: i128,
+) -> Result<i128, SoroswapLibraryError> {
+    if amount_in <= 0 {
+        return Err(SoroswapLibraryError::InsufficientInputAmount);
+    }
+    if reserve_in <= 0 || reserve_out <= 0 {
+        return Err(SoroswapLibraryError::InsufficientLiquidity);
+    }
 
-  let fee = (amount_in.checked_mul(3).unwrap()).checked_ceiling_div(1000).unwrap();
+    let fee = (amount_in.checked_mul(3).unwrap())
+        .checked_ceiling_div(1000)
+        .unwrap();
 
-  let amount_in_less_fee = amount_in.checked_sub(fee).unwrap();
-  let numerator = amount_in_less_fee.checked_mul(reserve_out).unwrap();
+    let amount_in_less_fee = amount_in.checked_sub(fee).unwrap();
+    let numerator = amount_in_less_fee.checked_mul(reserve_out).unwrap();
 
-  let denominator = reserve_in.checked_add(amount_in_less_fee).unwrap();
+    let denominator = reserve_in.checked_add(amount_in_less_fee).unwrap();
 
-  Ok(numerator.checked_div(denominator).unwrap())
+    Ok(numerator.checked_div(denominator).unwrap())
 }
 
 pub trait CheckedCeilingDiv {
-  fn checked_ceiling_div(self, divisor: i128) -> Option<i128>;
+    fn checked_ceiling_div(self, divisor: i128) -> Option<i128>;
 }
 
 impl CheckedCeilingDiv for i128 {
-  fn checked_ceiling_div(self, divisor: i128) -> Option<i128> {
-      let result = self.checked_div(divisor)?;
-      if self % divisor != 0 {
-          result.checked_add(1)
-      } else {
-          Some(result)
-      }
-  }
+    fn checked_ceiling_div(self, divisor: i128) -> Option<i128> {
+        let result = self.checked_div(divisor)?;
+        if self % divisor != 0 {
+            result.checked_add(1)
+        } else {
+            Some(result)
+        }
+    }
 }
 
-pub fn swap(e: &Env, from: &Address, token_in: &Address, token_out: &Address, amount_in: &i128) -> i128 {
+pub fn swap(
+    e: &Env,
+    from: &Address,
+    token_in: &Address,
+    token_out: &Address,
+    amount_in: &i128,
+) -> i128 {
     // Setting up Soroswap router client
     let soroswap_router_address = get_soroswap_router_address(e);
     let soroswap_router_client = SoroswapRouterClient::new(e, &soroswap_router_address);
@@ -160,10 +181,10 @@ pub fn swap(e: &Env, from: &Address, token_in: &Address, token_out: &Address, am
     // This could be hardcoded to perform less instructions
     let soroswap_pair_address = get_soroswap_factory_address(e);
     let pair_address = pair_for(
-        e.clone(), 
-        soroswap_pair_address.clone(), 
-        token_out.clone(), 
-        token_in.clone()
+        e.clone(),
+        soroswap_pair_address.clone(),
+        token_out.clone(),
+        token_in.clone(),
     );
 
     let mut path: Vec<Address> = Vec::new(e);
@@ -177,14 +198,14 @@ pub fn swap(e: &Env, from: &Address, token_in: &Address, token_out: &Address, am
 
     e.authorize_as_current_contract(vec![
         &e,
-        InvokerContractAuthEntry::Contract( SubContractInvocation {
+        InvokerContractAuthEntry::Contract(SubContractInvocation {
             context: ContractContext {
                 contract: token_in.clone(),
                 fn_name: Symbol::new(&e, "transfer"),
                 args: args.clone(),
             },
-            sub_invocations: vec![&e]
-        })
+            sub_invocations: vec![&e],
+        }),
     ]);
 
     // let swap_amount = amount_in/2;

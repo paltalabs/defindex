@@ -31,11 +31,16 @@ pub fn is_initialized(e: &Env) -> bool {
 
 // Underlying asset
 pub fn set_underlying_asset(e: &Env, address: &Address) {
-    e.storage().instance().set(&DataKey::UnderlyingAsset, &address);
+    e.storage()
+        .instance()
+        .set(&DataKey::UnderlyingAsset, &address);
 }
 
 pub fn get_underlying_asset(e: &Env) -> Address {
-    e.storage().instance().get(&DataKey::UnderlyingAsset).unwrap()
+    e.storage()
+        .instance()
+        .get(&DataKey::UnderlyingAsset)
+        .unwrap()
 }
 
 // Apr
@@ -49,9 +54,14 @@ pub fn get_apr(e: &Env) -> u32 {
 
 // Last harvest time
 pub fn set_last_harvest_time(e: &Env, timestamp: u64, from: Address) {
-    e.storage().instance().set(&DataKey::LastHarvestTime(from), &timestamp);
+    e.storage()
+        .instance()
+        .set(&DataKey::LastHarvestTime(from), &timestamp);
 }
 
 pub fn get_last_harvest_time(e: &Env, from: Address) -> u64 {
-    e.storage().instance().get(&DataKey::LastHarvestTime(from)).unwrap_or(0)
+    e.storage()
+        .instance()
+        .get(&DataKey::LastHarvestTime(from))
+        .unwrap_or(0)
 }

@@ -5,47 +5,58 @@ use common::models::{AssetStrategySet, Strategy};
 use soroban_sdk::token::{
     StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient,
 };
+use soroban_sdk::{testutils::Address as _, vec as sorobanvec, Address, Env, String, Vec};
 use soroban_sdk::{BytesN, Val};
-use soroban_sdk::{
-    Env, 
-    Address, 
-    testutils::Address as _,
-    Vec,
-    vec as sorobanvec,
-    String
-};
 use std::vec;
 
 // DeFindex Hodl Strategy Contract
 mod hodl_strategy {
-    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/hodl_strategy.optimized.wasm");
+    soroban_sdk::contractimport!(
+        file = "../target/wasm32-unknown-unknown/release/hodl_strategy.optimized.wasm"
+    );
     pub type StrategyContractClient<'a> = Client<'a>;
 }
 
 use hodl_strategy::StrategyContractClient;
 
-fn create_strategy_contract<'a>(e: &Env, asset: &Address, init_args: &Vec<Val>) -> StrategyContractClient<'a> {
+fn create_strategy_contract<'a>(
+    e: &Env,
+    asset: &Address,
+    init_args: &Vec<Val>,
+) -> StrategyContractClient<'a> {
     let args = (asset.clone(), init_args.clone());
 
     let address = &e.register(hodl_strategy::WASM, args);
-    let strategy = StrategyContractClient::new(e, address); 
+    let strategy = StrategyContractClient::new(e, address);
     strategy
-}  
+}
 
 // DeFindex Vault Contract
-fn create_defindex_factory<'a>(e: &Env, admin: &Address, defindex_receiver: &Address, defindex_fee: u32, defindex_wasm_hash: &BytesN<32>) -> DeFindexFactoryClient<'a> {
+fn create_defindex_factory<'a>(
+    e: &Env,
+    admin: &Address,
+    defindex_receiver: &Address,
+    defindex_fee: u32,
+    defindex_wasm_hash: &BytesN<32>,
+) -> DeFindexFactoryClient<'a> {
     let args = (admin, defindex_receiver, defindex_fee, defindex_wasm_hash);
     DeFindexFactoryClient::new(e, &e.register(DeFindexFactory, args))
 }
 
 // DeFindex Vault Contract
 mod defindex_vault_contract {
-  soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/defindex_vault.optimized.wasm");
+    soroban_sdk::contractimport!(
+        file = "../target/wasm32-unknown-unknown/release/defindex_vault.optimized.wasm"
+    );
 }
 
 // Create Test Token
 pub(crate) fn create_token_contract<'a>(e: &Env, admin: &Address) -> SorobanTokenClient<'a> {
-    SorobanTokenClient::new(e, &e.register_stellar_asset_contract_v2(admin.clone()).address())
+    SorobanTokenClient::new(
+        e,
+        &e.register_stellar_asset_contract_v2(admin.clone())
+            .address(),
+    )
 }
 
 pub(crate) fn get_token_admin_client<'a>(
@@ -105,13 +116,21 @@ impl<'a> DeFindexFactoryTest<'a> {
         let env = Env::default();
         env.budget().reset_unlimited();
         // env.mock_all_auths();
-        
+
         let admin = Address::generate(&env);
         let defindex_receiver = Address::generate(&env);
 
-        let defindex_wasm_hash = env.deployer().upload_contract_wasm(defindex_vault_contract::WASM);
+        let defindex_wasm_hash = env
+            .deployer()
+            .upload_contract_wasm(defindex_vault_contract::WASM);
 
-        let factory_contract = create_defindex_factory(&env, &admin, &defindex_receiver, 100u32, &defindex_wasm_hash);
+        let factory_contract = create_defindex_factory(
+            &env,
+            &admin,
+            &defindex_receiver,
+            100u32,
+            &defindex_wasm_hash,
+        );
 
         let emergency_manager = Address::generate(&env);
         let fee_receiver = Address::generate(&env);
@@ -122,14 +141,15 @@ impl<'a> DeFindexFactoryTest<'a> {
 
         let token1_admin = Address::generate(&env);
         let token1 = create_token_contract(&env, &token1_admin);
-        
+
         let token0_admin_client = get_token_admin_client(&env, &token0.address.clone());
         let token1_admin_client = get_token_admin_client(&env, &token1.address.clone());
 
-
         // TODO: Add a strategy adapter, this is a mockup
-        let strategy_contract_token0 = create_strategy_contract(&env, &token0.address, &Vec::new(&env));
-        let strategy_contract_token1 = create_strategy_contract(&env, &token1.address, &Vec::new(&env));
+        let strategy_contract_token0 =
+            create_strategy_contract(&env, &token0.address, &Vec::new(&env));
+        let strategy_contract_token1 =
+            create_strategy_contract(&env, &token1.address, &Vec::new(&env));
 
         DeFindexFactoryTest {
             env,
@@ -145,10 +165,10 @@ impl<'a> DeFindexFactoryTest<'a> {
             token1_admin_client,
             token1,
             strategy_contract_token0,
-            strategy_contract_token1
+            strategy_contract_token1,
         }
     }
-    
+
     pub(crate) fn generate_random_users(e: &Env, users_count: u32) -> vec::Vec<Address> {
         let mut users = vec![];
         for _c in 0..users_count {

@@ -6,7 +6,7 @@ fn get_storage() {
 
     let factory_admin = test.factory_contract.admin();
     let factory_defindex_receiver = test.factory_contract.defindex_receiver();
-  
+
     assert_eq!(factory_admin, test.admin);
     assert_eq!(factory_defindex_receiver, test.defindex_receiver);
 }

@@ -3,7 +3,7 @@ import { Address, nativeToScVal, xdr } from '@stellar/stellar-sdk'
 import { useSorobanReact } from '@soroban-react/core'
 
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { setVaultTVL, setVaultUserBalance, updateVaultData } from '@/store/lib/features/walletStore'
+import { updateVaultData } from '@/store/lib/features/walletStore'
 import { Strategy, VaultData } from '@/store/lib/types'
 
 import { VaultMethod, useVaultCallback, useVault } from '@/hooks/useVault'
@@ -31,6 +31,7 @@ export const InteractWithVault = () => {
   const vaultMethod = selectedVault?.method
 
   const { address } = useSorobanReact();
+  const [selectedStrategy, setSelectedStrategy] = useState<string | undefined>(undefined)
   const vaultCB = useVaultCallback()
   const vault = useVault()
   const dispatch = useAppDispatch()
@@ -38,7 +39,7 @@ export const InteractWithVault = () => {
 
   const vaultOperation = async () => {
     if (!address || !vaultMethod || !selectedVault.address) return;
-    if (!amount) throw new Error('Amount is required');
+    if (!amount && vaultMethod != VaultMethod.EMERGENCY_WITHDRAW) throw new Error('Amount is required');
     const parsedAmount = parseFloat(amount.toString())
     const convertedAmount = parsedAmount * Math.pow(10, 7)
     statusModal.initModal()
@@ -48,6 +49,7 @@ export const InteractWithVault = () => {
         xdr.ScVal.scvVec([nativeToScVal(parseFloat(convertedAmount.toString()), { type: "i128" })]),
         xdr.ScVal.scvVec([nativeToScVal((convertedAmount * 0.9), { type: "i128" })]),
         new Address(address).toScVal(),
+        xdr.ScVal.scvBool(false)
       ]
       params = depositParams
     };
@@ -61,6 +63,15 @@ export const InteractWithVault = () => {
       ]
       params = withdrawParams
     };
+    if (vaultMethod === VaultMethod.EMERGENCY_WITHDRAW) {
+      if (!selectedStrategy) throw new Error('Strategy is required')
+      console.log(selectedStrategy)
+      const emergencyWithdrawParams: xdr.ScVal[] = [
+        new Address(selectedStrategy!).toScVal(),
+        new Address(address).toScVal(),
+      ]
+      params = emergencyWithdrawParams
+    }
     try {
       const result = await vaultCB(
         vaultMethod!,
@@ -160,7 +171,8 @@ export const InteractWithVault = () => {
                 </GridItem>
                 <GridItem colSpan={6} colEnd={13} textAlign={'end'} >
                   <NativeSelectRoot>
-                    <NativeSelectField>
+                    <NativeSelectField value={selectedStrategy} onChange={(e) => setSelectedStrategy(e.currentTarget.value)}>
+                      <option value={undefined}>Select option</option>
                       {selectedVault?.assets[0]?.strategies.map((strategy: Strategy) => {
                         return (
                           <option key={strategy.address} value={strategy.address}>{strategy.name}</option>
@@ -173,7 +185,10 @@ export const InteractWithVault = () => {
             }
           </Grid>
           <Button
-            disabled={vaultMethod != VaultMethod.EMERGENCY_WITHDRAW && amount < 0.0000001}
+            disabled={
+              vaultMethod != VaultMethod.EMERGENCY_WITHDRAW && amount < 0.0000001 ||
+              vaultMethod === VaultMethod.EMERGENCY_WITHDRAW && !selectedStrategy
+            }
             my={4}
             w={'full'}
             colorScheme='green'

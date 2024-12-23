@@ -1,6 +1,6 @@
 use crate::token::storage_types::{DataKey, BALANCE_BUMP_AMOUNT, BALANCE_LIFETIME_THRESHOLD};
 use crate::ContractError;
-use soroban_sdk::{Address, Env, panic_with_error};
+use soroban_sdk::{panic_with_error, Address, Env};
 
 pub fn read_balance(e: &Env, addr: Address) -> i128 {
     let key = DataKey::Balance(addr);

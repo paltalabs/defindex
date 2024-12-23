@@ -1,16 +1,18 @@
 #![no_std]
 
-mod storage;
 mod soroswap_router;
+mod storage;
 mod xycloans_pool;
 
+use defindex_strategy_core::{DeFindexStrategyTrait, StrategyError};
 use soroban_sdk::{contract, contractimpl, Address, Env, IntoVal, Val, Vec};
-use storage::{
-    extend_instance_ttl, get_pool_token, get_token_in, get_xycloans_pool_address, set_soroswap_router_address, set_pool_token, set_token_in, set_xycloans_pool_address, set_soroswap_factory_address, get_soroswap_factory_address
-};
 use soroswap_router::{get_amount_out, get_reserves, swap};
+use storage::{
+    extend_instance_ttl, get_pool_token, get_soroswap_factory_address, get_token_in,
+    get_xycloans_pool_address, set_pool_token, set_soroswap_factory_address,
+    set_soroswap_router_address, set_token_in, set_xycloans_pool_address,
+};
 use xycloans_pool::XycloansPoolClient;
-use defindex_strategy_core::{StrategyError, DeFindexStrategyTrait};
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
     if amount < 0 {
@@ -27,17 +29,33 @@ struct XycloansAdapter;
 
 #[contractimpl]
 impl DeFindexStrategyTrait for XycloansAdapter {
-    fn __constructor(
-        e: Env,
-        _asset: Address,
-        init_args: Vec<Val>,
-    ) {
-        let soroswap_router_address = init_args.get(0).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
-        let soroswap_factory_address = init_args.get(1).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
-        let xycloans_pool_address = init_args.get(2).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
-        let pool_token = init_args.get(3).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
-        let token_in = init_args.get(4).ok_or(StrategyError::InvalidArgument).unwrap().into_val(&e);
-    
+    fn __constructor(e: Env, _asset: Address, init_args: Vec<Val>) {
+        let soroswap_router_address = init_args
+            .get(0)
+            .ok_or(StrategyError::InvalidArgument)
+            .unwrap()
+            .into_val(&e);
+        let soroswap_factory_address = init_args
+            .get(1)
+            .ok_or(StrategyError::InvalidArgument)
+            .unwrap()
+            .into_val(&e);
+        let xycloans_pool_address = init_args
+            .get(2)
+            .ok_or(StrategyError::InvalidArgument)
+            .unwrap()
+            .into_val(&e);
+        let pool_token = init_args
+            .get(3)
+            .ok_or(StrategyError::InvalidArgument)
+            .unwrap()
+            .into_val(&e);
+        let token_in = init_args
+            .get(4)
+            .ok_or(StrategyError::InvalidArgument)
+            .unwrap()
+            .into_val(&e);
+
         set_soroswap_router_address(&e, soroswap_router_address);
         set_soroswap_factory_address(&e, soroswap_factory_address);
         set_xycloans_pool_address(&e, xycloans_pool_address);
@@ -51,11 +69,7 @@ impl DeFindexStrategyTrait for XycloansAdapter {
         Ok(get_token_in(&e))
     }
 
-    fn deposit(
-        e: Env,
-        amount: i128,
-        from: Address,
-    ) -> Result<(), StrategyError> {
+    fn deposit(e: Env, amount: i128, from: Address) -> Result<i128, StrategyError> {
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
         from.require_auth();
@@ -70,7 +84,7 @@ impl DeFindexStrategyTrait for XycloansAdapter {
         let xycloans_pool_client = XycloansPoolClient::new(&e, &xycloans_address);
         xycloans_pool_client.deposit(&from, &total_swapped_amount);
 
-        Ok(())
+        Ok(0)
     }
 
     fn harvest(e: Env, _from: Address) -> Result<(), StrategyError> {
@@ -79,17 +93,13 @@ impl DeFindexStrategyTrait for XycloansAdapter {
         Ok(())
     }
 
-    fn withdraw(
-        e: Env,
-        _amount: i128,
-        from: Address,
-    ) -> Result<i128, StrategyError> {
+    fn withdraw(e: Env, _amount: i128, from: Address, _to: Address) -> Result<i128, StrategyError> {
         from.require_auth();
         extend_instance_ttl(&e);
 
         let xycloans_address = get_xycloans_pool_address(&e);
         let xycloans_pool_client = XycloansPoolClient::new(&e, &xycloans_address);
-        
+
         let shares: i128 = xycloans_pool_client.shares(&from);
         xycloans_pool_client.withdraw(&from, &shares);
 
@@ -108,39 +118,37 @@ impl DeFindexStrategyTrait for XycloansAdapter {
         Ok(result)
     }
 
-    fn balance(
-        e: Env,
-        from: Address,
-    ) -> Result<i128, StrategyError> {
-
+    fn balance(e: Env, from: Address) -> Result<i128, StrategyError> {
         let xycloans_address = get_xycloans_pool_address(&e);
         let xycloans_pool_client = XycloansPoolClient::new(&e, &xycloans_address);
-        
+
         let shares: i128 = xycloans_pool_client.shares(&from);
         let matured: i128 = xycloans_pool_client.matured(&from);
-        
+
         let total: i128 = shares.checked_add(matured).unwrap();
 
         // If total is zero, return it
         if total == 0 {
             return Ok(total);
         }
-        
+
         // XLM TO USDC QUOTE from SOROSWAP
         let soroswap_factory = get_soroswap_factory_address(&e);
         let pool_token = get_pool_token(&e);
         let token_in = get_token_in(&e);
-        
+
         // Setting up Soroswap router client
         let (reserve_0, reserve_1) = get_reserves(
             e.clone(),
             soroswap_factory.clone(),
             pool_token.clone(),
             token_in.clone(),
-        ).map_err(|_| StrategyError::ProtocolAddressNotFound)?;
-        
-        let amount_out = get_amount_out(total, reserve_0, reserve_1).map_err(|_| StrategyError::ExternalError)?;
-    
+        )
+        .map_err(|_| StrategyError::ProtocolAddressNotFound)?;
+
+        let amount_out = get_amount_out(total, reserve_0, reserve_1)
+            .map_err(|_| StrategyError::ExternalError)?;
+
         Ok(amount_out)
     }
 }

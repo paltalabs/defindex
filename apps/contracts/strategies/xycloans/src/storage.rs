@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, Env, Address};
+use soroban_sdk::{contracttype, Address, Env};
 
 #[derive(Clone)]
 #[contracttype]
@@ -8,7 +8,7 @@ enum DataKey {
     SoroswapFactoryAddress,
     XycloansPoolAddress,
     Token0,
-    Token1
+    Token1,
 }
 
 const DAY_IN_LEDGERS: u32 = 17280;
@@ -23,29 +23,44 @@ pub fn extend_instance_ttl(e: &Env) {
 
 // Soroswap Router Address
 pub fn set_soroswap_router_address(e: &Env, address: Address) {
-    e.storage().instance().set(&DataKey::SoroswapRouterAddress, &address);
+    e.storage()
+        .instance()
+        .set(&DataKey::SoroswapRouterAddress, &address);
 }
 
 pub fn get_soroswap_router_address(e: &Env) -> Address {
-    e.storage().instance().get(&DataKey::SoroswapRouterAddress).unwrap()
+    e.storage()
+        .instance()
+        .get(&DataKey::SoroswapRouterAddress)
+        .unwrap()
 }
 
 // Soroswap Factory Address
 pub fn set_soroswap_factory_address(e: &Env, address: Address) {
-    e.storage().instance().set(&DataKey::SoroswapFactoryAddress, &address);
+    e.storage()
+        .instance()
+        .set(&DataKey::SoroswapFactoryAddress, &address);
 }
 
 pub fn get_soroswap_factory_address(e: &Env) -> Address {
-    e.storage().instance().get(&DataKey::SoroswapFactoryAddress).unwrap()
+    e.storage()
+        .instance()
+        .get(&DataKey::SoroswapFactoryAddress)
+        .unwrap()
 }
 
 // Xycloans Pool Address
 pub fn set_xycloans_pool_address(e: &Env, address: Address) {
-    e.storage().instance().set(&DataKey::XycloansPoolAddress, &address);
+    e.storage()
+        .instance()
+        .set(&DataKey::XycloansPoolAddress, &address);
 }
 
 pub fn get_xycloans_pool_address(e: &Env) -> Address {
-    e.storage().instance().get(&DataKey::XycloansPoolAddress).unwrap()
+    e.storage()
+        .instance()
+        .get(&DataKey::XycloansPoolAddress)
+        .unwrap()
 }
 
 // Tokens

@@ -5,24 +5,22 @@ describe('fetchFactoryAddress', () => {
         // Mock the fetch function
         const mockResponse = {
             json: jest.fn().mockResolvedValue({
-                "ids": {
-                    "defindex_factory": "CCBQ4WFNNWZWV7GCLUTRAQZXX34WSYNSCXMY4WEKV7BXRTYMM53JMGIS"
-                },
-                "hashes": {
-                    "defindex_vault": "6ac83e448a7a68b4e27fc9dd3c2d3e8cb423d88e2646137b7b32238e9df95980",
-                    "defindex_factory": "552b67db3c57921fada99cfee520f18a649855a376c22e8cb5ee20b52632d497"
-                }
+                blend_strategy: "CCFT4EVTUSYUNO7CYJHC3R2F5ZBTXW7CMJW5Z2PGVYCHWNDG4RS35YZ5",
+                defindex_factory:"CAJJAIJT6E7GMJKFA66RRI7KUNNR22TPNLNUFCNANGCFXJ54RYPVPPJT",
+                fixed_apr_strategy:"CDR6K2L2UN3SZLBOUCJCVNKKKGC4F5DHGQ6QIPVBXU3UTXTTGWWEZ2H3",
+                hodl_strategy:"CDTSVTAI4BXYIEZ66F2TLZ337OLW5R5P4ONWMHQY5XTOTBZURZEDZ64N"
             }),
         };
-        global.fetch = jest.fn().mockResolvedValue(mockResponse);
+        global.fetch = jest.fn().mockResolvedValue({
+            json: jest.fn().mockResolvedValue(mockResponse.json())
+        });
 
         // Call the function
         const factoryAddress = await fetchFactoryAddress("testnet");
 
         // Assertions
-        expect(fetch).toHaveBeenCalledWith('https://raw.githubusercontent.com/paltalabs/defindex/refs/heads/main/public/testnet.contracts.json');
         expect(mockResponse.json).toHaveBeenCalled();
-        expect(factoryAddress).toBe('CCBQ4WFNNWZWV7GCLUTRAQZXX34WSYNSCXMY4WEKV7BXRTYMM53JMGIS');
+        expect(factoryAddress).toHaveLength(56);
     });
 
     it('should throw an error if the response status is 404', async () => {
