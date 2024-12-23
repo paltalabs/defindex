@@ -926,15 +926,15 @@ fn without_mock_all_auths() {
 fn one_asset_several_strategies() { 
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
-    let strategy_client_1 = create_hodl_strategy(&test.env, &test.token0.address.clone());
-    let strategy_client_2 = create_hodl_strategy(&test.env, &test.token0.address.clone());
-    let strategy_client_3 = create_hodl_strategy(&test.env, &test.token0.address.clone());
+    let strategy_client_1 = create_hodl_strategy(&test.env, &test.token_0.address.clone());
+    let strategy_client_2 = create_hodl_strategy(&test.env, &test.token_0.address.clone());
+    let strategy_client_3 = create_hodl_strategy(&test.env, &test.token_0.address.clone());
     
     let strategy_params = sorobanvec![
         &test.env, 
         Strategy {
             name: String::from_str(&test.env, "strategy1"),
-            address: test.strategy_client_token0.address.clone(),
+            address: test.strategy_client_token_0.address.clone(),
             paused: false,
         },
         Strategy {
@@ -958,7 +958,7 @@ fn one_asset_several_strategies() {
     let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
         AssetStrategySet {
-            address: test.token0.address.clone(),
+            address: test.token_0.address.clone(),
             strategies: strategy_params.clone(),
         }
     ];
@@ -970,9 +970,14 @@ fn one_asset_several_strategies() {
         test.vault_fee_receiver.clone(),
         2000u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        test.soroswap_router.address.clone(),
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
     let assets = defindex_contract.get_assets();
     assert_eq!(assets.len(), 1);
@@ -984,7 +989,7 @@ fn one_asset_several_strategies() {
     let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
 
     // Balances before deposit
-    test.token0_admin_client.mint(&users[0], &amount0);
+    test.token_0_admin_client.mint(&users[0], &amount0);
    
     let deposit_amount = 10_0_000_000i128;
     // deposit with no previous investment
@@ -994,8 +999,8 @@ fn one_asset_several_strategies() {
         &users[0],
         &true,
     );
-    let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token0.address.clone()).unwrap();
-    let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token0.address.clone()).unwrap();
+    let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
+    let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
 
     assert_eq!(invested_funds, 0);
     assert_eq!(idle_funds, deposit_amount);
@@ -1005,10 +1010,10 @@ fn one_asset_several_strategies() {
         &test.env, 
         Some(
             AssetInvestmentAllocation {
-                asset: test.token0.address.clone(),
+                asset: test.token_0.address.clone(),
                 strategy_allocations: sorobanvec![&test.env,
                     Some(StrategyAllocation {
-                        strategy_address: test.strategy_client_token0.address.clone(),
+                        strategy_address: test.strategy_client_token_0.address.clone(),
                         amount: 1_0_000_000,
                     }),
                     Some(StrategyAllocation {
@@ -1034,10 +1039,10 @@ fn one_asset_several_strategies() {
         &test.env, 
         Some(
             AssetInvestmentAllocation {
-                asset: test.token0.address.clone(),
+                asset: test.token_0.address.clone(),
                 strategy_allocations: sorobanvec![&test.env,
                     Some(StrategyAllocation {
-                        strategy_address: test.strategy_client_token0.address.clone(),
+                        strategy_address: test.strategy_client_token_0.address.clone(),
                         amount: 1_0_000_000,
                     }),
                 ]
@@ -1045,10 +1050,10 @@ fn one_asset_several_strategies() {
         ), 
         Some(
             AssetInvestmentAllocation {
-                asset: test.token0.address.clone(),
+                asset: test.token_0.address.clone(),
                 strategy_allocations: sorobanvec![&test.env,
                     Some(StrategyAllocation {
-                        strategy_address: test.strategy_client_token0.address.clone(),
+                        strategy_address: test.strategy_client_token_0.address.clone(),
                         amount: 1_0_000_000,
                     }),
                 ]
@@ -1066,10 +1071,10 @@ fn one_asset_several_strategies() {
         &test.env, 
         Some(
             AssetInvestmentAllocation {
-                asset: test.token0.address.clone(),
+                asset: test.token_0.address.clone(),
                 strategy_allocations: sorobanvec![&test.env,
                     Some(StrategyAllocation {
-                        strategy_address: test.strategy_client_token0.address.clone(),
+                        strategy_address: test.strategy_client_token_0.address.clone(),
                         amount: deposit_amount,
                     }),
                     Some(StrategyAllocation {
@@ -1098,10 +1103,10 @@ fn one_asset_several_strategies() {
         &test.env, 
         Some(
             AssetInvestmentAllocation {
-                asset: test.token0.address.clone(),
+                asset: test.token_0.address.clone(),
                 strategy_allocations: sorobanvec![&test.env,
                     Some(StrategyAllocation {
-                        strategy_address: test.strategy_client_token0.address.clone(),
+                        strategy_address: test.strategy_client_token_0.address.clone(),
                         amount: 1_0_000_000,
                     }),
                     Some(StrategyAllocation {
@@ -1122,14 +1127,14 @@ fn one_asset_several_strategies() {
     ];
 
     defindex_contract.invest(asset_investments);
-    let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token0.address.clone()).unwrap();
-    let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token0.address.clone()).unwrap();
+    let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
+    let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
     assert_eq!(invested_funds, 4_0_000_000);
     assert_eq!(idle_funds, deposit_amount - 4_0_000_000);
 
-    //withdraw from strategy
-    let withdraw_amount =  2_00_000;
-    let withdraw_result = strategy_client_1.withdraw(&withdraw_amount, &defindex_contract.address);
-    assert_eq!(withdraw_result, withdraw_amount);
+    //success withdraw from strategy
+    let withdraw_amount =  2_0_000_000i128;
+    let withdraw_result = defindex_contract.withdraw(&withdraw_amount, &users[0]);
+    
+    assert_eq!(withdraw_result, sorobanvec![&test.env, withdraw_amount.clone()]);
 }
-

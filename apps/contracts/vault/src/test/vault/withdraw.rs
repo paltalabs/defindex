@@ -689,13 +689,13 @@ fn from_strategy_one_asset_one_strategy_success() {
 fn from_strategies_one_asset_two_strategies_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
-    let strategy_client_1 = create_hodl_strategy(&test.env, &test.token0.address.clone());
+    let strategy_client_1 = create_hodl_strategy(&test.env, &test.token_0.address.clone());
 
     let strategy_params = sorobanvec![
         &test.env, 
         Strategy {
             name: String::from_str(&test.env, "strategy1"),
-            address: test.strategy_client_token0.address.clone(),
+            address: test.strategy_client_token_0.address.clone(),
             paused: false,
         },
         Strategy {
@@ -707,7 +707,7 @@ fn from_strategies_one_asset_two_strategies_success() {
     let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
         AssetStrategySet {
-            address: test.token0.address.clone(),
+            address: test.token_0.address.clone(),
             strategies: strategy_params.clone(),
         }
     ];
@@ -720,9 +720,14 @@ fn from_strategies_one_asset_two_strategies_success() {
         test.vault_fee_receiver.clone(),
         10u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        test.soroswap_router.address.clone(),
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT"),
+        ],
     );
 
     let assets = defindex_contract.get_assets();
@@ -758,11 +763,11 @@ fn from_strategies_one_asset_two_strategies_success() {
     let investments = sorobanvec![
         &test.env,
         Some(AssetInvestmentAllocation {
-            asset: test.token0.address.clone(),
+            asset: test.token_0.address.clone(),
             strategy_allocations: sorobanvec![
                 &test.env,
                 Some(StrategyAllocation {
-                strategy_address: test.strategy_client_token0.address.clone(),
+                strategy_address: test.strategy_client_token_0.address.clone(),
                 amount: amount_to_invest,
                 }),
                 Some(StrategyAllocation {
@@ -775,7 +780,7 @@ fn from_strategies_one_asset_two_strategies_success() {
 
     defindex_contract.invest(&investments);
 
-    let vault_balance = test.token0.balance(&defindex_contract.address);
+    let vault_balance = test.token_0.balance(&defindex_contract.address);
     assert_eq!(vault_balance, 0);
 
     defindex_contract.withdraw(&df_balance, &users[0]);
@@ -783,7 +788,7 @@ fn from_strategies_one_asset_two_strategies_success() {
     let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
 
-    let user_balance = test.token0.balance(&users[0]);
+    let user_balance = test.token_0.balance(&users[0]);
     assert_eq!(user_balance, amount - 1000);
 }
 
@@ -1150,14 +1155,14 @@ fn from_strategies_two_asset_each_one_strategy_success() {
 #[test]
 fn from_strategy_success_no_mock_all_auths() {
     let test = DeFindexVaultTest::setup();
-    let strategy_params_token0 = create_strategy_params_token0(&test);
+    let strategy_params_token_0 = create_strategy_params_token_0(&test);
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
     let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
         AssetStrategySet {
-            address: test.token0.address.clone(),
-            strategies: strategy_params_token0.clone()
+            address: test.token_0.address.clone(),
+            strategies: strategy_params_token_0.clone()
         }
     ];
     let defindex_contract = create_defindex_vault(
@@ -1168,17 +1173,22 @@ fn from_strategy_success_no_mock_all_auths() {
         test.vault_fee_receiver.clone(),
         200u32,
         test.defindex_protocol_receiver.clone(),
+        2500u32,
         test.defindex_factory.clone(),
-        String::from_str(&test.env, "dfToken"),
-        String::from_str(&test.env, "DFT"),
+        test.soroswap_router.address.clone(),
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
     );
 
     // mint 
     let amount = 987654321i128;
-    let mocked_token_client = test.token0_admin_client.mock_all_auths();
+    let mocked_token_client = test.token_0_admin_client.mock_all_auths();
     mocked_token_client.mint(&users[0], &amount);
 
-    assert_eq!(test.token0.balance(&users[0]), amount);
+    assert_eq!(test.token_0.balance(&users[0]), amount);
 
     let assets = defindex_contract.get_assets();
     assert_eq!(assets.len(), 1);
@@ -1220,8 +1230,8 @@ fn from_strategy_success_no_mock_all_auths() {
     }
     ]).deposit(&amounts_desired, &amounts_min, &from, &invest); 
 
-    let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token0.address.clone()).unwrap();
-    let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token0.address.clone()).unwrap();
+    let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
+    let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
 
     assert_eq!(idle_funds, deposit_amount);
     assert_eq!(invested_funds, 0);
@@ -1241,8 +1251,8 @@ fn from_strategy_success_no_mock_all_auths() {
     }
     ]).withdraw(&withdraw_amount, &from.clone());
 
-    let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token0.address.clone()).unwrap();
-    let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token0.address.clone()).unwrap();
+    let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
+    let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
 
     assert_eq!(idle_funds, deposit_amount - withdraw_amount);
     assert_eq!(invested_funds, 0);    

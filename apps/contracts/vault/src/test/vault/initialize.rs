@@ -2,7 +2,7 @@ use soroban_sdk::{vec as sorobanvec, String, Vec, Map, Address};
 
 use crate::test::{
     create_defindex_vault, create_hodl_strategy, create_strategy_params_token_0, create_strategy_params_token_1,
-    create_hodl_strategy, defindex_vault::{{AssetStrategySet, Strategy}, Strategy, CurrentAssetInvestmentAllocation, StrategyAllocation}, DeFindexVaultTest,
+    defindex_vault::{{AssetStrategySet, Strategy}, CurrentAssetInvestmentAllocation, StrategyAllocation}, DeFindexVaultTest,
 };
 
 fn create_expected_current_invested_funds(test: &DeFindexVaultTest) -> Map<Address, i128> {
