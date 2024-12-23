@@ -980,6 +980,19 @@ fn one_asset_several_strategies() {
     assert_eq!(invested_funds, (amount_to_invest * 4));
     assert_eq!(idle_funds, deposit_amount - (amount_to_invest * 4));
 
+    // deposit with invest
+    let deposit_amount_2 = 1_000_000i128;
+    let _deposit1 = defindex_contract.deposit(
+        &sorobanvec![&test.env, deposit_amount_2],
+        &sorobanvec![&test.env, deposit_amount_2],
+        &users[0],
+        &true,
+    );
+    let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
+    let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
+
+    assert_eq!(invested_funds, (amount_to_invest * 4) + deposit_amount_2);
+    assert_eq!(idle_funds, (deposit_amount + deposit_amount_2) - (amount_to_invest * 4) - deposit_amount_2);
 
 }
 
@@ -1116,6 +1129,23 @@ fn deposit_simple_then_deposit_and_invest() {
     let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
     let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
 
+    assert_eq!(invested_funds, total_invested);
+    assert_eq!(idle_funds, total_deposit - total_invested);
+    let deposit_amount_3 = 1_000_000i128;
+
+    let _ = defindex_contract.deposit(
+        &sorobanvec![&test.env, deposit_amount_3],
+        &sorobanvec![&test.env, deposit_amount_3],
+        &users[0],
+        &false,
+    );
+    total_deposit += deposit_amount_3;
+    let expected_idle_funds = idle_funds + deposit_amount_3;
+    
+
+    let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
+    let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
+    
     assert_eq!(invested_funds, total_invested);
     assert_eq!(idle_funds, total_deposit - total_invested);
 
