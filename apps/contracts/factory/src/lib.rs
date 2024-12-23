@@ -1,43 +1,47 @@
 #![no_std]
 
-mod vault;
+mod error;
 mod events;
 mod storage;
-mod error;
+mod vault;
 
 use common::models::AssetStrategySet;
-use soroban_sdk::{
-    contract, contractimpl, vec, Address, BytesN, Env, Map, String, Symbol, Val, Vec, IntoVal
-};
 use error::FactoryError;
+use soroban_sdk::{
+    contract, contractimpl, vec, Address, BytesN, Env, IntoVal, Map, String, Symbol, Val, Vec,
+};
+use storage::{
+    add_new_defindex, extend_instance_ttl, get_admin, get_defindex_receiver,
+    get_deployed_defindexes, get_fee_rate, get_vault_wasm_hash, has_admin, put_admin,
+    put_defindex_fee, put_defindex_receiver, put_vault_wasm_hash,
+};
 pub use vault::create_contract;
-use storage::{ add_new_defindex, extend_instance_ttl, get_admin, get_vault_wasm_hash, get_defindex_receiver, get_deployed_defindexes, get_fee_rate, has_admin, put_admin, put_vault_wasm_hash, put_defindex_receiver, put_defindex_fee };
 
 fn check_initialized(e: &Env) -> Result<(), FactoryError> {
     if !has_admin(e) {
         return Err(FactoryError::NotInitialized);
-    } 
+    }
     Ok(())
 }
 
 pub trait FactoryTrait {
     /// Initializes the factory contract with the given parameters.
-    /// 
+    ///
     /// # Arguments
     /// * `e` - The environment in which the contract is running.
     /// * `admin` - The address of the contract administrator, who can manage settings.
     /// * `defindex_receiver` - The default address designated to receive a portion of fees.
     /// * `defindex_fee` - The initial annual fee rate (in basis points).
     /// * `vault_wasm_hash` - The hash of the DeFindex Vault's WASM file for deploying new vaults.
-    /// 
+    ///
     /// # Returns
     /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, otherwise an error.
     fn __constructor(
-        e: Env, 
+        e: Env,
         admin: Address,
         defindex_receiver: Address,
         defindex_fee: u32,
-        vault_wasm_hash: BytesN<32>
+        vault_wasm_hash: BytesN<32>,
     );
 
     /// Creates a new DeFindex Vault with specified parameters.
@@ -56,15 +60,15 @@ pub trait FactoryTrait {
     /// # Returns
     /// * `Result<Address, FactoryError>` - Returns the address of the new vault, or an error if unsuccessful.
     fn create_defindex_vault(
-        e: Env, 
-        emergency_manager: Address, 
-        fee_receiver: Address, 
+        e: Env,
+        emergency_manager: Address,
+        fee_receiver: Address,
         vault_fee: u32,
-        vault_name: String,
-        vault_symbol: String,
         manager: Address,
         assets: Vec<AssetStrategySet>,
-        salt: BytesN<32>
+        salt: BytesN<32>,
+        soroswap_router: Address,
+        name_symbol: Vec<String>,
     ) -> Result<Address, FactoryError>;
 
     /// Creates a new DeFindex Vault with specified parameters and makes the first deposit to set ratios.
@@ -84,21 +88,21 @@ pub trait FactoryTrait {
     /// # Returns
     /// * `Result<Address, FactoryError>` - Returns the address of the new vault, or an error if unsuccessful.
     fn create_defindex_vault_deposit(
-        e: Env, 
+        e: Env,
         caller: Address,
-        emergency_manager: Address, 
-        fee_receiver: Address, 
+        emergency_manager: Address,
+        fee_receiver: Address,
         vault_fee: u32,
-        vault_name: String,
-        vault_symbol: String,
         manager: Address,
         assets: Vec<AssetStrategySet>,
+        salt: BytesN<32>,
+        soroswap_router: Address,
+        name_symbol: Vec<String>,
         amounts: Vec<i128>,
-        salt: BytesN<32>
     ) -> Result<Address, FactoryError>;
 
     // --- Admin Functions ---
-    
+
     /// Sets a new admin address.
     ///
     /// # Arguments
@@ -128,7 +132,7 @@ pub trait FactoryTrait {
     /// # Returns
     /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, or an error if not authorized.
     fn set_defindex_fee(e: Env, new_fee_rate: u32) -> Result<(), FactoryError>;
-    
+
     // --- Read Methods ---
 
     /// Retrieves the current admin's address.
@@ -139,7 +143,7 @@ pub trait FactoryTrait {
     /// # Returns
     /// * `Result<Address, FactoryError>` - Returns the admin's address or an error if not found.
     fn admin(e: Env) -> Result<Address, FactoryError>;
-    
+
     /// Retrieves the current DeFindex receiver's address.
     ///
     /// # Arguments
@@ -173,13 +177,12 @@ struct DeFindexFactory;
 
 #[contractimpl]
 impl FactoryTrait for DeFindexFactory {
-
     fn __constructor(
-        e: Env, 
+        e: Env,
         admin: Address,
         defindex_receiver: Address,
         defindex_fee: u32,
-        vault_wasm_hash: BytesN<32>
+        vault_wasm_hash: BytesN<32>,
     ) {
         put_admin(&e, &admin);
         put_defindex_receiver(&e, &defindex_receiver);
@@ -190,19 +193,19 @@ impl FactoryTrait for DeFindexFactory {
     }
 
     /// Initializes the factory contract with the given parameters.
-    /// 
+    ///
     /// # Arguments
     /// * `e` - The environment in which the contract is running.
     /// * `admin` - The address of the contract administrator, who can manage settings.
     /// * `defindex_receiver` - The default address designated to receive a portion of fees.
     /// * `defindex_fee` - The initial annual fee rate (in basis points).
     /// * `vault_wasm_hash` - The hash of the DeFindex Vault's WASM file for deploying new vaults.
-    /// 
+    ///
     /// # Returns
     /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, otherwise an error.
     // fn initialize(
-    //     e: Env, 
-    //     admin: Address, 
+    //     e: Env,
+    //     admin: Address,
     //     defindex_receiver: Address,
     //     defindex_fee: u32,
     //     vault_wasm_hash: BytesN<32>
@@ -235,22 +238,21 @@ impl FactoryTrait for DeFindexFactory {
     /// # Returns
     /// * `Result<Address, FactoryError>` - Returns the address of the new vault, or an error if unsuccessful.
     fn create_defindex_vault(
-        e: Env, 
-        emergency_manager: Address, 
-        fee_receiver: Address, 
+        e: Env,
+        emergency_manager: Address,
+        fee_receiver: Address,
         vault_fee: u32,
-        vault_name: String,
-        vault_symbol: String,
         manager: Address,
         assets: Vec<AssetStrategySet>,
-        salt: BytesN<32>
+        salt: BytesN<32>,
+        soroswap_router: Address,
+        name_symbol: Vec<String>,
     ) -> Result<Address, FactoryError> {
         extend_instance_ttl(&e);
 
         let current_contract = e.current_contract_address();
 
         let vault_wasm_hash = get_vault_wasm_hash(&e)?;
-        
 
         let defindex_receiver = get_defindex_receiver(&e);
         let defindex_fee = get_fee_rate(&e);
@@ -264,14 +266,21 @@ impl FactoryTrait for DeFindexFactory {
         init_args.push_back(defindex_receiver.to_val());
         init_args.push_back(defindex_fee.into_val(&e));
         init_args.push_back(current_contract.to_val());
-        init_args.push_back(vault_name.to_val());
-        init_args.push_back(vault_symbol.to_val());
+        init_args.push_back(soroswap_router.to_val());
+        init_args.push_back(name_symbol.to_val());
 
         // e.invoke_contract::<Val>(&defindex_address, &Symbol::new(&e, "initialize"), init_args);
         let defindex_address = create_contract(&e, vault_wasm_hash, init_args, salt);
 
         add_new_defindex(&e, defindex_address.clone());
-        events::emit_create_defindex_vault(&e, emergency_manager, fee_receiver, manager, vault_fee, assets);
+        events::emit_create_defindex_vault(
+            &e,
+            emergency_manager,
+            fee_receiver,
+            manager,
+            vault_fee,
+            assets,
+        );
         Ok(defindex_address)
     }
 
@@ -292,17 +301,17 @@ impl FactoryTrait for DeFindexFactory {
     /// # Returns
     /// * `Result<Address, FactoryError>` - Returns the address of the new vault, or an error if unsuccessful.
     fn create_defindex_vault_deposit(
-        e: Env, 
+        e: Env,
         caller: Address,
-        emergency_manager: Address, 
-        fee_receiver: Address, 
+        emergency_manager: Address,
+        fee_receiver: Address,
         vault_fee: u32,
-        vault_name: String,
-        vault_symbol: String,
         manager: Address,
         assets: Vec<AssetStrategySet>,
+        salt: BytesN<32>,
+        soroswap_router: Address,
+        name_symbol: Vec<String>,
         amounts: Vec<i128>,
-        salt: BytesN<32>
     ) -> Result<Address, FactoryError> {
         extend_instance_ttl(&e);
         caller.require_auth();
@@ -327,8 +336,8 @@ impl FactoryTrait for DeFindexFactory {
         init_args.push_back(defindex_receiver.to_val());
         init_args.push_back(defindex_fee.into_val(&e));
         init_args.push_back(current_contract.to_val());
-        init_args.push_back(vault_name.to_val());
-        init_args.push_back(vault_symbol.to_val());
+        init_args.push_back(soroswap_router.to_val());
+        init_args.push_back(name_symbol.to_val());
 
         let defindex_address = create_contract(&e, vault_wasm_hash, init_args, salt);
 
@@ -342,16 +351,23 @@ impl FactoryTrait for DeFindexFactory {
         deposit_args.push_back(amounts_min.to_val());
         deposit_args.push_back(caller.to_val());
         deposit_args.push_back(false.into_val(&e));
-        
+
         e.invoke_contract::<Val>(&defindex_address, &Symbol::new(&e, "deposit"), deposit_args);
 
         add_new_defindex(&e, defindex_address.clone());
-        events::emit_create_defindex_vault(&e, emergency_manager, fee_receiver, manager, vault_fee, assets);
+        events::emit_create_defindex_vault(
+            &e,
+            emergency_manager,
+            fee_receiver,
+            manager,
+            vault_fee,
+            assets,
+        );
         Ok(defindex_address)
     }
 
     // --- Admin Functions ---
-    
+
     /// Sets a new admin address.
     ///
     /// # Arguments
@@ -436,7 +452,7 @@ impl FactoryTrait for DeFindexFactory {
         extend_instance_ttl(&e);
         Ok(get_defindex_receiver(&e))
     }
-    
+
     /// Retrieves a map of all deployed DeFindex vaults.
     ///
     /// # Arguments

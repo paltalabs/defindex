@@ -1,6 +1,5 @@
-
 // test fees are correctly calculated and harvested (todo)
-#[test] 
+#[test]
 fn test_fees() {
     todo!();
 }

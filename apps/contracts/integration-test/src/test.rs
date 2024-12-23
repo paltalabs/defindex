@@ -1,10 +1,9 @@
 extern crate std;
 use crate::factory::DeFindexFactoryClient;
 use soroban_sdk::{
-    testutils::{LedgerInfo, Ledger},
-    Env, 
-    Address, 
     testutils::Address as _,
+    testutils::{Ledger, LedgerInfo},
+    Address, Env,
 };
 use std::vec as std_vec;
 
@@ -20,7 +19,7 @@ pub struct IntegrationTest<'a> {
     pub factory_contract: DeFindexFactoryClient<'a>,
     pub admin: Address,
     pub defindex_receiver: Address,
-    pub defindex_fee: u32
+    pub defindex_fee: u32,
 }
 
 pub trait EnvTestUtils {
@@ -28,7 +27,6 @@ pub trait EnvTestUtils {
     fn jump(&self, ledgers: u32);
     /// Jump the env by the given amount of seconds. Incremends the sequence by 1.
     fn jump_time(&self, seconds: u64);
-
 }
 
 impl EnvTestUtils for Env {
@@ -44,7 +42,6 @@ impl EnvTestUtils for Env {
             max_entry_ttl: 365 * DAY_IN_LEDGERS,
         });
     }
-
 
     fn jump_time(&self, seconds: u64) {
         self.ledger().set(LedgerInfo {
@@ -63,14 +60,22 @@ impl EnvTestUtils for Env {
 impl<'a> IntegrationTest<'a> {
     pub fn setup() -> Self {
         let env = Env::default();
-        
+
         let admin = Address::generate(&env);
         let defindex_receiver = Address::generate(&env);
 
-        let vault_wasm_hash = env.deployer().upload_contract_wasm(defindex_vault_contract::WASM);
+        let vault_wasm_hash = env
+            .deployer()
+            .upload_contract_wasm(defindex_vault_contract::WASM);
         let defindex_fee = DEFINDEX_FEE;
 
-        let factory_contract = create_factory_contract(&env, &admin, &defindex_receiver, &defindex_fee, &vault_wasm_hash);
+        let factory_contract = create_factory_contract(
+            &env,
+            &admin,
+            &defindex_receiver,
+            &defindex_fee,
+            &vault_wasm_hash,
+        );
 
         env.budget().reset_unlimited();
 
@@ -79,10 +84,10 @@ impl<'a> IntegrationTest<'a> {
             factory_contract,
             admin,
             defindex_receiver,
-            defindex_fee
+            defindex_fee,
         }
     }
-    
+
     pub fn generate_random_users(e: &Env, users_count: u32) -> std_vec::Vec<Address> {
         let mut users = std_vec![];
         for _c in 0..users_count {
@@ -93,5 +98,5 @@ impl<'a> IntegrationTest<'a> {
 }
 
 // #[cfg(test)]
-mod vault_one_hodl_strategy;
 mod vault_one_fixed_strategy;
+mod vault_one_hodl_strategy;

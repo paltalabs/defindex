@@ -1,19 +1,25 @@
-use soroban_sdk::token::{StellarAssetClient, TokenClient};
-use soroban_sdk::BytesN;
-use soroban_sdk::{testutils::Address as _, vec as sorobanvec, Address, String};
+use soroban_sdk::{
+    testutils::{Address as _, MockAuth, MockAuthInvoke},
+    token::{StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient},
+    IntoVal, BytesN, Env, vec as sorobanvec, String, Address
+};
 
+mod soroswap_setup;
+use soroswap_setup::{
+    create_soroswap_factory, create_soroswap_router
+};
+use crate::factory::{AssetStrategySet, Strategy};
 use crate::fixed_strategy::{create_fixed_strategy_contract, FixedStrategyClient};
 use crate::hodl_strategy::{create_hodl_strategy_contract, HodlStrategyClient};
 use crate::test::IntegrationTest;
 use crate::token::create_token;
-use crate::factory::{AssetStrategySet, Strategy};
 use crate::vault::defindex_vault_contract::VaultContractClient;
 
 pub struct VaultOneAseetHodlStrategy<'a> {
     pub setup: IntegrationTest<'a>,
-    pub token: TokenClient<'a>,
+    pub token: SorobanTokenClient<'a>,
     pub token_admin: Address,
-    pub token_admin_client: StellarAssetClient<'a>,
+    pub token_admin_client: SorobanTokenAdminClient<'a>,
     pub strategy_contract: HodlStrategyClient<'a>,
     pub vault_contract: VaultContractClient<'a>,
     pub manager: Address,
@@ -24,11 +30,53 @@ pub struct VaultOneAseetHodlStrategy<'a> {
 
 pub static VAULT_FEE: u32 = 100;
 
+//Soroswap setup
+pub fn mock_mint(
+    env: &Env,
+    token_admin_client: &SorobanTokenAdminClient,
+    token_admin: &Address,
+    to: &Address,
+    amount: &i128,
+) {
+    token_admin_client
+        .mock_auths(&[MockAuth {
+            address: &token_admin,
+            invoke: &MockAuthInvoke {
+                contract: &token_admin_client.address.clone(),
+                fn_name: "mint",
+                args: sorobanvec![&env, to.into_val(env), amount.into_val(env)],
+                sub_invokes: &[],
+            },
+        }])
+        .mint(&to, &amount);
+}
+
 pub fn create_vault_one_asset_hodl_strategy<'a>() -> VaultOneAseetHodlStrategy<'a> {
     let setup = IntegrationTest::setup();
 
     let token_admin = Address::generate(&setup.env);
     let (token, token_admin_client) = create_token(&setup.env, &token_admin);
+
+     // Soroswap Setup
+     let soroswap_admin = Address::generate(&setup.env);
+
+     let amount_0: i128 = 1_000_000_000_000_000_000;
+
+     mock_mint(
+         &setup.env,
+         &token_admin_client,
+         &token_admin,
+         &soroswap_admin,
+         &amount_0,
+     );
+
+     let soroswap_factory = create_soroswap_factory(&setup.env, &soroswap_admin);
+     let soroswap_router = create_soroswap_router(&setup.env, &soroswap_factory.address);
+
+    
+     // let soroswap_pair = soroswap_factory.get_pair(&token_0.address, &token_1.address);
+
+     setup.env.budget().reset_unlimited();
 
     let strategy_contract = create_hodl_strategy_contract(&setup.env, &token.address);
 
@@ -38,7 +86,7 @@ pub fn create_vault_one_asset_hodl_strategy<'a>() -> VaultOneAseetHodlStrategy<'
     let vault_name = String::from_str(&setup.env, "HodlVault");
     let vault_symbol = String::from_str(&setup.env, "HVLT");
     let manager = Address::generate(&setup.env);
-    
+
     let assets = sorobanvec![
         &setup.env,
         AssetStrategySet {
@@ -56,15 +104,16 @@ pub fn create_vault_one_asset_hodl_strategy<'a>() -> VaultOneAseetHodlStrategy<'
 
     let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
+    let name_symbol = sorobanvec!(&setup.env, vault_name.clone(), vault_symbol.clone());
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
-        &emergency_manager, 
-        &fee_receiver, 
-        &vault_fee, 
-        &vault_name, 
-        &vault_symbol, 
-        &manager, 
-        &assets, 
-        &salt
+        &emergency_manager,
+        &fee_receiver,
+        &vault_fee,
+        &manager,
+        &assets,
+        &salt,
+        &soroswap_router.address,
+        &name_symbol
     );
 
     let vault_contract = VaultContractClient::new(&setup.env, &vault_contract_address);
@@ -85,9 +134,9 @@ pub fn create_vault_one_asset_hodl_strategy<'a>() -> VaultOneAseetHodlStrategy<'
 
 pub struct VaultOneAseetFixedStrategy<'a> {
     pub setup: IntegrationTest<'a>,
-    pub token: TokenClient<'a>,
+    pub token: SorobanTokenClient<'a>,
     pub token_admin: Address,
-    pub token_admin_client: StellarAssetClient<'a>,
+    pub token_admin_client: SorobanTokenAdminClient<'a>,
     pub strategy_contract: FixedStrategyClient<'a>,
     pub vault_contract: VaultContractClient<'a>,
     pub manager: Address,
@@ -102,8 +151,31 @@ pub fn create_vault_one_asset_fixed_strategy<'a>() -> VaultOneAseetFixedStrategy
     let token_admin = Address::generate(&setup.env);
     let (token, token_admin_client) = create_token(&setup.env, &token_admin);
 
+    // Soroswap Setup
+    let soroswap_admin = Address::generate(&setup.env);
+
+    let amount_0: i128 = 1_000_000_000_000_000_000;
+
+    mock_mint(
+        &setup.env,
+        &token_admin_client,
+        &token_admin,
+        &soroswap_admin,
+        &amount_0,
+    );
+
+    let soroswap_factory = create_soroswap_factory(&setup.env, &soroswap_admin);
+    let soroswap_router = create_soroswap_router(&setup.env, &soroswap_factory.address);
+
+
+    // let soroswap_pair = soroswap_factory.get_pair(&token_0.address, &token_1.address);
+
+    setup.env.budget().reset_unlimited();
+
+
     setup.env.mock_all_auths();
-    let strategy_contract = create_fixed_strategy_contract(&setup.env, &token.address, 1000u32, &token_admin_client);
+    let strategy_contract =
+        create_fixed_strategy_contract(&setup.env, &token.address, 1000u32, &token_admin_client);
 
     let emergency_manager = Address::generate(&setup.env);
     let fee_receiver = Address::generate(&setup.env);
@@ -111,7 +183,7 @@ pub fn create_vault_one_asset_fixed_strategy<'a>() -> VaultOneAseetFixedStrategy
     let vault_name = String::from_str(&setup.env, "FixedVault");
     let vault_symbol = String::from_str(&setup.env, "FVLT");
     let manager = Address::generate(&setup.env);
-    
+
     let assets = sorobanvec![
         &setup.env,
         AssetStrategySet {
@@ -129,15 +201,16 @@ pub fn create_vault_one_asset_fixed_strategy<'a>() -> VaultOneAseetFixedStrategy
 
     let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
+    let name_symbol = sorobanvec!(&setup.env, vault_name.clone(), vault_symbol.clone());
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
-        &emergency_manager, 
-        &fee_receiver, 
-        &vault_fee, 
-        &vault_name, 
-        &vault_symbol, 
-        &manager, 
-        &assets, 
-        &salt
+        &emergency_manager,
+        &fee_receiver,
+        &vault_fee,
+        &manager,
+        &assets,
+        &salt,
+        &soroswap_router.address,
+        &name_symbol
     );
 
     let vault_contract = VaultContractClient::new(&setup.env, &vault_contract_address);
@@ -228,11 +301,13 @@ mod tests {
                 ],
             }
         ];
-        
+
         let vault_assets = enviroment.vault_contract.get_assets();
         assert_eq!(vault_assets, assets);
 
-        let strategy_contract_balance = enviroment.token.balance(&enviroment.strategy_contract.address);
+        let strategy_contract_balance = enviroment
+            .token
+            .balance(&enviroment.strategy_contract.address);
         assert_eq!(strategy_contract_balance, 100_000_000_000_0_000_000i128);
 
         let vault_emergency_manager = enviroment.vault_contract.get_emergency_manager();
@@ -250,5 +325,5 @@ mod tests {
         let vault_symbol = enviroment.vault_contract.symbol();
         assert_eq!(vault_symbol, String::from_str(&setup.env, "FVLT"));
     }
-
 }
+

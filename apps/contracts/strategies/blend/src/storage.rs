@@ -16,7 +16,7 @@ pub struct Config {
 pub enum DataKey {
     Config,
     Reserves,
-    VaultPos(Address) // Vaults Positions
+    VaultPos(Address), // Vaults Positions
 }
 
 pub const DAY_IN_LEDGERS: u32 = 17280;
@@ -56,12 +56,17 @@ pub fn set_vault_shares(e: &Env, address: &Address, shares: i128) {
 
 /// Get the number of strategy shares a user owns. Shares are stored with 7 decimal places of precision.
 pub fn get_vault_shares(e: &Env, address: &Address) -> i128 {
-    let result = e.storage().persistent().get::<DataKey, i128>(&DataKey::VaultPos(address.clone()));
+    let result = e
+        .storage()
+        .persistent()
+        .get::<DataKey, i128>(&DataKey::VaultPos(address.clone()));
     match result {
         Some(shares) => {
-            e.storage()
-                .persistent()
-                .extend_ttl(&DataKey::VaultPos(address.clone()), LEDGER_THRESHOLD, LEDGER_BUMP);
+            e.storage().persistent().extend_ttl(
+                &DataKey::VaultPos(address.clone()),
+                LEDGER_THRESHOLD,
+                LEDGER_BUMP,
+            );
             shares
         }
         None => 0,
@@ -70,16 +75,18 @@ pub fn get_vault_shares(e: &Env, address: &Address) -> i128 {
 
 // Strategy Reserves
 pub fn set_strategy_reserves(e: &Env, new_reserves: StrategyReserves) {
-    e.storage().instance().set(&DataKey::Reserves, &new_reserves);
+    e.storage()
+        .instance()
+        .set(&DataKey::Reserves, &new_reserves);
 }
 
 pub fn get_strategy_reserves(e: &Env) -> StrategyReserves {
-    e.storage().instance().get(&DataKey::Reserves).unwrap_or(
-        StrategyReserves {
+    e.storage()
+        .instance()
+        .get(&DataKey::Reserves)
+        .unwrap_or(StrategyReserves {
             total_shares: 0,
             total_b_tokens: 0,
             b_rate: 0,
-        }
-    )
+        })
 }
-

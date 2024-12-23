@@ -412,6 +412,7 @@ dependencies = [
  "defindex-strategy-core",
  "soroban-sdk",
  "soroban-token-sdk",
+ "soroswap-library",
 ]
 
 [[package]]
@@ -1328,6 +1329,16 @@ dependencies = [
  "wasmi_arena",
  "wasmi_core",
  "wasmparser-nostd",
+]
+
+[[package]]
+name = "soroswap-library"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4365cc0e03f153852d78228a5ea488447b69c974ec35084830c03f5aebb74a3f"
+dependencies = [
+ "num-integer",
+ "soroban-sdk",
 ]
 
 [[package]]

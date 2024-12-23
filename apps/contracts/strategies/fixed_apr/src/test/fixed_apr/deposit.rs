@@ -8,7 +8,8 @@ use soroban_sdk::token::StellarAssetClient;
 fn deposit_with_negative_amount() {
     let test = FixAprStrategyTest::setup();
 
-    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
+    let strategy =
+        create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
 
     let users = FixAprStrategyTest::generate_random_users(&test.env, 1);
 
@@ -23,7 +24,8 @@ fn deposit_with_negative_amount() {
 fn deposit_with_zero_amount() {
     let test = FixAprStrategyTest::setup();
 
-    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
+    let strategy =
+        create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
 
     let users = FixAprStrategyTest::generate_random_users(&test.env, 1);
 
@@ -36,8 +38,9 @@ fn deposit_with_zero_amount() {
 #[test]
 fn deposit() {
     let test = FixAprStrategyTest::setup();
-    
-    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
+
+    let strategy =
+        create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
 
     let users = FixAprStrategyTest::generate_random_users(&test.env, 1);
 
@@ -55,12 +58,14 @@ fn deposit() {
 fn deposit_with_exceeding_balance() {
     let test = FixAprStrategyTest::setup();
 
-    let strategy = create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
+    let strategy =
+        create_fixapr_strategy(&test.env, &test.token.address, 1000u32, &test.token.address);
 
     let users = FixAprStrategyTest::generate_random_users(&test.env, 1);
 
     let amount = 1_000_0_00_000;
-    StellarAssetClient::new(&test.env, &test.token.address).mint(&users[0], &(&amount - 100_0_000_000));
+    StellarAssetClient::new(&test.env, &test.token.address)
+        .mint(&users[0], &(&amount - 100_0_000_000));
 
     strategy.deposit(&amount, &users[0]);
 }

@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, Env, Address};
+use soroban_sdk::{contracttype, Address, Env};
 
 #[derive(Clone)]
 #[contracttype]
@@ -23,9 +23,14 @@ pub fn has_soroswap_router_address(e: &Env) -> bool {
 
 // Soroswap Router Address
 pub fn set_soroswap_router_address(e: &Env, address: Address) {
-    e.storage().instance().set(&DataKey::SoroswapRouterAddress, &address);
+    e.storage()
+        .instance()
+        .set(&DataKey::SoroswapRouterAddress, &address);
 }
 
 pub fn get_soroswap_router_address(e: &Env) -> Address {
-    e.storage().instance().get(&DataKey::SoroswapRouterAddress).unwrap()
+    e.storage()
+        .instance()
+        .get(&DataKey::SoroswapRouterAddress)
+        .unwrap()
 }

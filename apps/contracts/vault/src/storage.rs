@@ -16,41 +16,33 @@ pub fn extend_instance_ttl(e: &Env) {
         .extend_ttl(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
 }
 
-
 #[derive(Clone)]
 #[contracttype]
 enum DataKey {
+    TotalAssets,           // Total number of tokens
     AssetStrategySet(u32), // AssetStrategySet Addresse by index
-    TotalAssets,          // Total number of tokens
     DeFindexProtocolFeeReceiver,
+    DeFindexFactory,
+    LastFeeAssessment,
+    VaultFee,
+    SoroswapRouter,
     DeFindexProtocolFeeRate,
     Factory,
-    VaultFee,
-    Report(Address)
+    Report(Address),
 }
 
-// Assets Management
+// AssetStrategySet(index)
 pub fn set_asset(e: &Env, index: u32, asset: &AssetStrategySet) {
     e.storage()
         .instance()
         .set(&DataKey::AssetStrategySet(index), asset);
 }
-
 pub fn get_asset(e: &Env, index: u32) -> AssetStrategySet {
     e.storage()
         .instance()
         .get(&DataKey::AssetStrategySet(index))
         .unwrap()
 }
-
-pub fn set_total_assets(e: &Env, n: u32) {
-    e.storage().instance().set(&DataKey::TotalAssets, &n);
-}
-
-pub fn get_total_assets(e: &Env) -> u32 {
-    e.storage().instance().get(&DataKey::TotalAssets).unwrap()
-}
-
 pub fn get_assets(e: &Env) -> Vec<AssetStrategySet> {
     let total_assets = get_total_assets(e);
     let mut assets = Vec::new(e);
@@ -58,6 +50,13 @@ pub fn get_assets(e: &Env) -> Vec<AssetStrategySet> {
         assets.push_back(get_asset(e, i));
     }
     assets
+}
+pub fn set_total_assets(e: &Env, n: u32) {
+    e.storage().instance().set(&DataKey::TotalAssets, &n);
+}
+
+pub fn get_total_assets(e: &Env) -> u32 {
+    e.storage().instance().get(&DataKey::TotalAssets).unwrap()
 }
 
 // DeFindex Fee Receiver
@@ -88,34 +87,43 @@ pub fn get_defindex_protocol_fee_rate(e: &Env) -> u32 {
         .unwrap()
 }
 
-
 // DeFindex Factory
 pub fn set_factory(e: &Env, address: &Address) {
-    e.storage().instance().set(&DataKey::Factory, address);
+    e.storage()
+        .instance()
+        .set(&DataKey::DeFindexFactory, address);
 }
 
-pub fn get_factory(e: &Env) -> Address {
-    e.storage().instance().get(&DataKey::Factory).unwrap()
+// Soroswap Router
+pub fn set_soroswap_router(e: &Env, address: &Address) {
+    e.storage()
+        .instance()
+        .set(&DataKey::SoroswapRouter, address);
 }
+
+pub fn get_soroswap_router(e: &Env) -> Address {
+    e.storage()
+        .instance()
+        .get(&DataKey::SoroswapRouter)
+        .unwrap()
+}
+
 
 // Vault Share
 pub fn set_vault_fee(e: &Env, vault_fee: &u32) {
-    e.storage()
-        .instance()
-        .set(&DataKey::VaultFee, vault_fee);
+    e.storage().instance().set(&DataKey::VaultFee, vault_fee);
 }
 
 pub fn get_vault_fee(e: &Env) -> u32 {
-    e.storage()
-        .instance()
-        .get(&DataKey::VaultFee)
-        .unwrap()
+    e.storage().instance().get(&DataKey::VaultFee).unwrap()
 }
 
 // Strategy Previous Balance
 pub fn set_report(e: &Env, strategy_address: &Address, report: &Report) {
     let key = DataKey::Report(strategy_address.clone());
-    e.storage().persistent().set::<DataKey, Report>(&key, report);
+    e.storage()
+        .persistent()
+        .set::<DataKey, Report>(&key, report);
     e.storage()
         .persistent()
         .extend_ttl(&key, LEDGER_THRESHOLD, LEDGER_BUMP);
@@ -131,6 +139,10 @@ pub fn get_report(e: &Env, strategy_address: &Address) -> Report {
                 .extend_ttl(&key, LEDGER_THRESHOLD, LEDGER_BUMP);
             report
         }
-        None => Report { prev_balance: 0, gains_or_losses: 0, locked_fee: 0 },
+        None => Report {
+            prev_balance: 0,
+            gains_or_losses: 0,
+            locked_fee: 0,
+        },
     }
 }
