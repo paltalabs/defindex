@@ -726,7 +726,8 @@ impl VaultManagementTrait for DeFindexVault {
     fn invest(
         e: Env,
         asset_investments: Vec<Option<AssetInvestmentAllocation>>,
-    ) -> Result<(), ContractError> {
+    ) -> Result<Vec<Option<AssetInvestmentAllocation>>, ContractError> {
+        //-> Result<(Vec<i128>, i128, Option<Vec<Option<AssetInvestmentAllocation>>>), ContractError> 
         extend_instance_ttl(&e);
         check_initialized(&e)?;
 
@@ -744,7 +745,7 @@ impl VaultManagementTrait for DeFindexVault {
         // Check and execute investments for each asset allocation
         check_and_execute_investments(&e, &assets, &asset_investments)?;
 
-        Ok(())
+        Ok(asset_investments.clone())
     }
 
     fn rebalance(e: Env, instructions: Vec<Instruction>) -> Result<(), ContractError> {

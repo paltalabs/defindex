@@ -330,7 +330,7 @@ pub trait VaultManagementTrait {
     fn invest(
         e: Env,
         asset_investments: Vec<Option<AssetInvestmentAllocation>>,
-    ) -> Result<(), ContractError>;
+    ) -> Result<Vec<Option<AssetInvestmentAllocation>>, ContractError>;
 
     /// Rebalances the vault by executing a series of instructions.
     ///
