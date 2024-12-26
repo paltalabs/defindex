@@ -1,4 +1,4 @@
-use soroban_sdk::{vec as sorobanvec, Address, IntoVal, Map, String, Vec};
+use soroban_sdk::{vec as sorobanvec, Address, Map, String, Vec};
 
 use crate::test::{
     create_defindex_vault, create_hodl_strategy, create_strategy_params_token_0, create_strategy_params_token_1,

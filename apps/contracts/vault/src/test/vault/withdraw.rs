@@ -1010,6 +1010,7 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     // expected amounts
     let expected_amounts = sorobanvec![&test.env, 2222222, 4222221];
     assert_eq!(amounts, expected_amounts);
+    assert_eq!(asset_allocation, None);
 
     // expected shares minted
     // total supply was 123456789+234567890 = 358024679
