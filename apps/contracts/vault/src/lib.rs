@@ -104,23 +104,17 @@ impl VaultTrait for DeFindexVault {
         let vault_name = name_symbol.get(0).unwrap();
         let vault_symbol = name_symbol.get(1).unwrap();
 
-        // Set Vault Fee (in basis points)
         set_vault_fee(&e, &vault_fee);
 
-        // Set Paltalabs Fee Receiver
         set_defindex_protocol_fee_receiver(&e, &defindex_protocol_receiver);
         set_defindex_protocol_fee_rate(&e, &defindex_protocol_rate);
 
-        // Set the factory address
         set_factory(&e, &factory);
 
-        // Set soroswap router
         set_soroswap_router(&e, &soroswap_router);
 
-        // Store Assets Objects
         let total_assets = assets.len();
 
-        // fails if the total assets is 0
         if total_assets == 0 {
             panic_with_error!(&e, ContractError::NoAssetAllocation);
         }
@@ -138,8 +132,6 @@ impl VaultTrait for DeFindexVault {
             set_asset(&e, i as u32, &asset);
         }
 
-        // Metadata for the contract's token (unchanged)
-        // TODO: Name should be concatenated with some other name giving when initializing. Check how soroswap pairs token are called.
         let decimal: u32 = 7;
 
         write_metadata(
