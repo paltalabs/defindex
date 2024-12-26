@@ -1,17 +1,17 @@
 use soroban_sdk::{
     testutils::{MockAuth, MockAuthInvoke},
-    IntoVal,
+    vec as sorobanvec, vec, InvokeError, Map, String, Vec, IntoVal,
 };
-use soroban_sdk::{vec as sorobanvec, vec, Map, String, Vec};
 
 use crate::test::defindex_vault::{
     AssetInvestmentAllocation, AssetStrategySet, ContractError, CurrentAssetInvestmentAllocation,
     Strategy, StrategyAllocation,
 };
 use crate::test::{
-    create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1,
+    create_defindex_vault, create_hodl_strategy, create_strategy_params_token_0, create_strategy_params_token_1,
     DeFindexVaultTest,
 };
+
 
 // try to invest with a wrong AssetInvestmentAllocation length
 #[test]
@@ -923,4 +923,218 @@ fn without_mock_all_auths() {
 }
 
 #[test]
-fn one_asset_several_strategies() {}
+fn one_asset_several_strategies() { 
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let strategy_client_1 = create_hodl_strategy(&test.env, &test.token_0.address.clone());
+    let strategy_client_2 = create_hodl_strategy(&test.env, &test.token_0.address.clone());
+    let strategy_client_3 = create_hodl_strategy(&test.env, &test.token_0.address.clone());
+    
+    let strategy_params = sorobanvec![
+        &test.env, 
+        Strategy {
+            name: String::from_str(&test.env, "strategy1"),
+            address: test.strategy_client_token_0.address.clone(),
+            paused: false,
+        },
+        Strategy {
+            name: String::from_str(&test.env, "strategy2"),
+            address: strategy_client_1.address.clone(),
+            paused: false,
+        },
+        Strategy {
+            name: String::from_str(&test.env, "strategy3"),
+            address: strategy_client_2.address.clone(),
+            paused: false,
+        },
+        Strategy {
+            name: String::from_str(&test.env, "strategy4"),
+            address: strategy_client_3.address.clone(),
+            paused: false,
+        },
+    ];
+
+    // initialize with 1 asset, 3 strategies
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: strategy_params.clone(),
+        }
+    ];
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
+    );
+    let assets = defindex_contract.get_assets();
+    assert_eq!(assets.len(), 1);
+    let asset = assets.get(0).unwrap();
+    assert_eq!(asset.strategies.len(), strategy_params.len());
+
+    let amount0 = 100_0_000_000i128;
+
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
+
+    // Balances before deposit
+    test.token_0_admin_client.mint(&users[0], &amount0);
+   
+    let deposit_amount = 10_0_000_000i128;
+    // deposit with no previous investment
+    let _deposit0 = defindex_contract.deposit(
+        &sorobanvec![&test.env, deposit_amount],
+        &sorobanvec![&test.env, deposit_amount],
+        &users[0],
+        &true,
+    );
+    let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
+    let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
+
+    assert_eq!(invested_funds, 0);
+    assert_eq!(idle_funds, deposit_amount);
+
+    //Wrong strategy_allocation length
+    let asset_investments = &sorobanvec![
+        &test.env, 
+        Some(
+            AssetInvestmentAllocation {
+                asset: test.token_0.address.clone(),
+                strategy_allocations: sorobanvec![&test.env,
+                    Some(StrategyAllocation {
+                        strategy_address: test.strategy_client_token_0.address.clone(),
+                        amount: 1_0_000_000,
+                    }),
+                    Some(StrategyAllocation {
+                        strategy_address: strategy_client_1.address.clone(),
+                        amount: 1_0_000_000,
+                    }),
+                    Some(StrategyAllocation {
+                        strategy_address: strategy_client_2.address.clone(),
+                        amount: 1_0_000_000,
+                    }),
+                ]
+            }
+        ), 
+    ];
+
+    let invest_result = defindex_contract.try_invest(asset_investments);
+    assert_eq!(invested_funds, 0);
+    assert_eq!(idle_funds, deposit_amount);
+    assert_eq!(invest_result, Err(Ok(ContractError::WrongStrategiesLength)));
+    
+    //Wrong asset_allocation length
+    let asset_investments = &sorobanvec![
+        &test.env, 
+        Some(
+            AssetInvestmentAllocation {
+                asset: test.token_0.address.clone(),
+                strategy_allocations: sorobanvec![&test.env,
+                    Some(StrategyAllocation {
+                        strategy_address: test.strategy_client_token_0.address.clone(),
+                        amount: 1_0_000_000,
+                    }),
+                ]
+            }
+        ), 
+        Some(
+            AssetInvestmentAllocation {
+                asset: test.token_0.address.clone(),
+                strategy_allocations: sorobanvec![&test.env,
+                    Some(StrategyAllocation {
+                        strategy_address: test.strategy_client_token_0.address.clone(),
+                        amount: 1_0_000_000,
+                    }),
+                ]
+            }
+        ), 
+    ];
+
+    let invest_result = defindex_contract.try_invest(asset_investments);
+    assert_eq!(invested_funds, 0);
+    assert_eq!(idle_funds, deposit_amount);
+    assert_eq!(invest_result, Err(Ok(ContractError::WrongInvestmentLength)));
+
+    //More than idle funds
+    let asset_investments = &sorobanvec![
+        &test.env, 
+        Some(
+            AssetInvestmentAllocation {
+                asset: test.token_0.address.clone(),
+                strategy_allocations: sorobanvec![&test.env,
+                    Some(StrategyAllocation {
+                        strategy_address: test.strategy_client_token_0.address.clone(),
+                        amount: deposit_amount,
+                    }),
+                    Some(StrategyAllocation {
+                        strategy_address: strategy_client_1.address.clone(),
+                        amount: deposit_amount,
+                    }),
+                    Some(StrategyAllocation {
+                        strategy_address: strategy_client_2.address.clone(),
+                        amount: deposit_amount,
+                    }),
+                    Some(StrategyAllocation {
+                        strategy_address: strategy_client_3.address.clone(),
+                        amount: deposit_amount,
+                    }),
+                ]
+            }
+        ), 
+    ];
+
+    let invest_result = defindex_contract.try_invest(asset_investments);
+        
+    assert_eq!(invest_result, Err(Err(InvokeError::Contract(10))));
+
+    //success invest
+    let asset_investments = &sorobanvec![
+        &test.env, 
+        Some(
+            AssetInvestmentAllocation {
+                asset: test.token_0.address.clone(),
+                strategy_allocations: sorobanvec![&test.env,
+                    Some(StrategyAllocation {
+                        strategy_address: test.strategy_client_token_0.address.clone(),
+                        amount: 1_0_000_000,
+                    }),
+                    Some(StrategyAllocation {
+                        strategy_address: strategy_client_1.address.clone(),
+                        amount: 1_0_000_000,
+                    }),
+                    Some(StrategyAllocation {
+                        strategy_address: strategy_client_2.address.clone(),
+                        amount: 1_0_000_000,
+                    }),
+                    Some(StrategyAllocation {
+                        strategy_address: strategy_client_3.address.clone(),
+                        amount: 1_0_000_000,
+                    }),
+                ]
+            }
+        ), 
+    ];
+
+    defindex_contract.invest(asset_investments);
+    let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
+    let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
+    assert_eq!(invested_funds, 4_0_000_000);
+    assert_eq!(idle_funds, deposit_amount - 4_0_000_000);
+
+    //success withdraw from strategy
+    let withdraw_amount =  2_0_000_000i128;
+    let withdraw_result = defindex_contract.withdraw(&withdraw_amount, &users[0]);
+    
+    assert_eq!(withdraw_result, sorobanvec![&test.env, withdraw_amount.clone()]);
+}

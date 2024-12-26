@@ -1,9 +1,9 @@
-use soroban_sdk::{vec as sorobanvec, Map, String, Vec};
+use soroban_sdk::{testutils::{MockAuth, MockAuthInvoke}, vec as sorobanvec, IntoVal, Map, String, Vec};
 
 // use super::hodl_strategy::StrategyError;
 use crate::test::{
     create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1,
-    defindex_vault::{
+    create_hodl_strategy, defindex_vault::{
         AssetInvestmentAllocation, AssetStrategySet, ContractError,
         CurrentAssetInvestmentAllocation, Strategy, StrategyAllocation,
     },
@@ -687,56 +687,109 @@ fn from_strategy_one_asset_one_strategy_success() {
 
 #[test]
 fn from_strategies_one_asset_two_strategies_success() {
-    todo!();
-    // let test = DeFindexVaultTest::setup();
-    // test.env.mock_all_auths();
-    // let assets: Vec<AssetStrategySet> = sorobanvec![
-    //     &test.env,
-    //     AssetStrategySet {
-    //         address: test.token_0.address.clone(),
-    //         strategies: sorobanvec![
-    //             &test.env,
-    //             Strategy {
-    //                 name: String::from_str(&test.env, "Strategy 1"),
-    //                 address: test.strategy_client_token_0.address.clone(),
-    //                 paused: false,
-    //             }
-    //         ]
-    //     }
-    // ];
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let strategy_client_1 = create_hodl_strategy(&test.env, &test.token_0.address.clone());
 
-    // defindex_contract.initialize(
-    //     &assets,
-    //     &test.manager,
-    //     &test.emergency_manager,
-    //     &test.vault_fee_receiver,
-    //     &2000u32,
-    //     &test.defindex_protocol_receiver,
-    //     &test.defindex_factory,
-    //     &String::from_str(&test.env, "dfToken"),
-    //     &String::from_str(&test.env, "DFT"),
-    // );
-    // let amount = 1234567890000000i128;
+    let strategy_params = sorobanvec![
+        &test.env, 
+        Strategy {
+            name: String::from_str(&test.env, "strategy1"),
+            address: test.strategy_client_token_0.address.clone(),
+            paused: false,
+        },
+        Strategy {
+            name: String::from_str(&test.env, "strategy2"),
+            address: strategy_client_1.address.clone(),
+            paused: false,
+        },
+    ];
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: strategy_params.clone(),
+        }
+    ];
 
-    // let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        10u32,
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT"),
+        ],
+    );
 
-    // test.token_0_admin_client.mint(&users[0], &amount);
-    // assert_eq!(test.token_0.balance(&users[0]), amount);
+    let assets = defindex_contract.get_assets();
+    assert_eq!(assets.len(), 1);
+    let asset = assets.get(0).unwrap();
+    assert_eq!(asset.strategies.len(), strategy_params.len());
 
-    // let df_balance = defindex_contract.balance(&users[0]);
-    // assert_eq!(df_balance, 0i128);
+    let amount = 10_0_000_000i128;
 
-    // // Deposit
-    // let amount_to_deposit = 987654321i128;
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
-    // defindex_contract.deposit(
-    //     &sorobanvec![&test.env, amount_to_deposit],
-    //     &sorobanvec![&test.env, amount_to_deposit],
-    //     &users[0],
-    //     &false
-    // );
+    test.token_0_admin_client.mint(&users[0], &amount);
+    let user_balance = test.token_0.balance(&users[0]);
+    assert_eq!(user_balance, amount);
+    // here youll need to create a client for a token with the same address
 
-    // FIX invest in 2 stretegies for the same asset
+    let df_balance = defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, 0i128);
+
+    defindex_contract.deposit(
+        &sorobanvec![&test.env, amount],
+        &sorobanvec![&test.env, amount],
+        &users[0],
+        &false,
+    );
+
+    let df_balance = defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, amount - 1000);
+
+
+    let amount_to_invest = 5_0_000_000i128;
+
+    let investments = sorobanvec![
+        &test.env,
+        Some(AssetInvestmentAllocation {
+            asset: test.token_0.address.clone(),
+            strategy_allocations: sorobanvec![
+                &test.env,
+                Some(StrategyAllocation {
+                strategy_address: test.strategy_client_token_0.address.clone(),
+                amount: amount_to_invest,
+                }),
+                Some(StrategyAllocation {
+                strategy_address: strategy_client_1.address.clone(),
+                amount: amount_to_invest,
+                }),
+            ],
+        })
+    ];
+
+    defindex_contract.invest(&investments);
+
+    let vault_balance = test.token_0.balance(&defindex_contract.address);
+    assert_eq!(vault_balance, 0);
+
+    defindex_contract.withdraw(&df_balance, &users[0]);
+
+    let df_balance = defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, 0i128);
+
+    let user_balance = test.token_0.balance(&users[0]);
+    assert_eq!(user_balance, amount - 1000);
 }
 
 #[test]
@@ -1102,5 +1155,106 @@ fn from_strategies_two_asset_each_one_strategy_success() {
 // test withdraw without mock all auths
 #[test]
 fn from_strategy_success_no_mock_all_auths() {
-    todo!();
+    let test = DeFindexVaultTest::setup();
+    let strategy_params_token_0 = create_strategy_params_token_0(&test);
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: strategy_params_token_0.clone()
+        }
+    ];
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        test.manager.clone(),
+        test.emergency_manager.clone(),
+        test.vault_fee_receiver.clone(),
+        200u32,
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
+        sorobanvec![
+            &test.env,
+            String::from_str(&test.env, "dfToken"),
+            String::from_str(&test.env, "DFT")
+        ],
+    );
+
+    // mint 
+    let amount = 987654321i128;
+    let mocked_token_client = test.token_0_admin_client.mock_all_auths();
+    mocked_token_client.mint(&users[0], &amount);
+
+    assert_eq!(test.token_0.balance(&users[0]), amount);
+
+    let assets = defindex_contract.get_assets();
+    assert_eq!(assets.len(), 1);
+    let asset = assets.get(0).unwrap();
+    assert_eq!(asset.strategies.len(), 1);
+
+
+    let deposit_amount = 1_0_000_000i128;
+
+
+    let amounts_desired = sorobanvec![&test.env, deposit_amount];
+    let amounts_min = sorobanvec![&test.env, deposit_amount];
+    let from =  &users[0].clone();
+    let invest = false;
+
+    defindex_contract.mock_auths(&[MockAuth {
+        address: &from.clone(),
+        invoke: &MockAuthInvoke {
+            contract: &defindex_contract.address.clone(),
+            fn_name: "deposit",
+            args: (
+                Vec::from_array(&test.env, [deposit_amount]),
+                Vec::from_array(&test.env, [deposit_amount]),
+                from.clone(),
+                false
+            ).into_val(&test.env),
+            sub_invokes: &[MockAuthInvoke {
+                contract: &mocked_token_client.address.clone(),
+                fn_name: "transfer",
+                args: sorobanvec![
+                    &test.env,
+                    from.clone().into_val(&test.env),
+                    (defindex_contract.address).into_val(&test.env),
+                    deposit_amount.into_val(&test.env),
+                ],
+                sub_invokes: &[],
+            }],
+        },
+    }
+    ]).deposit(&amounts_desired, &amounts_min, &from, &invest); 
+
+    let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
+    let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
+
+    assert_eq!(idle_funds, deposit_amount);
+    assert_eq!(invested_funds, 0);
+
+    let withdraw_amount = deposit_amount/2;
+    defindex_contract.mock_auths(&[MockAuth {
+        address: &from.clone(),
+        invoke: &MockAuthInvoke {
+            contract: &defindex_contract.address.clone(),
+            fn_name: "withdraw",
+            args: (
+                withdraw_amount,
+                from,
+            ).into_val(&test.env),
+            sub_invokes: &[],
+        },
+    }
+    ]).withdraw(&withdraw_amount, &from.clone());
+
+    let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
+    let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
+
+    assert_eq!(idle_funds, deposit_amount - withdraw_amount);
+    assert_eq!(invested_funds, 0);    
 }
