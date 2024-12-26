@@ -855,7 +855,8 @@ fn from_strategies_two_asset_each_one_strategy_success() {
         deposit_result,
         (
             sorobanvec![&test.env, amount_to_deposit_0, amount_to_deposit_1],
-            358024679
+            358024679,
+            None
         )
     );
 
@@ -991,7 +992,7 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     let amount_to_deposit_0_new = 2222222i128;
     let amount_to_deposit_1_new = 4222221i128;
 
-    let (amounts, shares_minted) = defindex_contract.deposit(
+    let (amounts, shares_minted, asset_allocation) = defindex_contract.deposit(
         &sorobanvec![
             &test.env,
             amount_to_deposit_0_new,
@@ -1009,6 +1010,7 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     // expected amounts
     let expected_amounts = sorobanvec![&test.env, 2222222, 4222221];
     assert_eq!(amounts, expected_amounts);
+    assert_eq!(asset_allocation, None);
 
     // expected shares minted
     // total supply was 123456789+234567890 = 358024679

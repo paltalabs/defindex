@@ -433,7 +433,11 @@ fn several_assets_no_previous_investment() {
     // check deposit result
     assert_eq!(
         deposit_result,
-        (sorobanvec![&test.env, amount0, amount1], amount0 + amount1)
+        (
+            sorobanvec![&test.env, amount0, amount1], 
+            amount0 + amount1, 
+            Some(sorobanvec![&test.env, None, None])
+        )
     );
 
     // check balances after deposit
@@ -538,7 +542,8 @@ fn several_assets_no_previous_investment() {
         deposit_result,
         (
             sorobanvec![&test.env, amount0 * 2, amount1 * 2],
-            amount0 * 2 + amount1 * 2
+            amount0 * 2 + amount1 * 2,
+            Some(sorobanvec![&test.env, None, None])
         )
     );
 
@@ -755,7 +760,30 @@ fn several_assets_wih_previous_investment_success() {
         deposit_result,
         (
             sorobanvec![&test.env, amount0 * 2, amount1 * 2],
-            amount0 * 2 + amount1 * 2
+            amount0 * 2 + amount1 * 2,
+            Some(sorobanvec![
+                &test.env,
+                Some(AssetInvestmentAllocation{
+                    asset: test.token_0.address.clone(),
+                    strategy_allocations: vec![
+                        &test.env,
+                        Some(StrategyAllocation {
+                            strategy_address: test.strategy_client_token_0.address.clone(),
+                            amount: (amount0_new-100),
+                        }),
+                    ],
+                }),
+                Some(AssetInvestmentAllocation{
+                    asset: test.token_1.address.clone(),
+                    strategy_allocations: vec![
+                        &test.env,
+                        Some(StrategyAllocation {
+                            strategy_address: test.strategy_client_token_1.address.clone(),
+                            amount: amount1_new,
+                        }),
+                    ],
+                }),
+            ])
         )
     );
 

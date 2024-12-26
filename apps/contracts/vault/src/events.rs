@@ -1,5 +1,8 @@
 //! Definition of the Events used in the DeFindex Vault contract
+use common::models::AssetStrategySet;
 use soroban_sdk::{contracttype, symbol_short, Address, Env, Vec};
+
+use crate::models::AssetInvestmentAllocation;
 
 // DEPOSIT EVENT
 #[contracttype]
@@ -181,4 +184,26 @@ pub(crate) fn emit_fees_distributed_event(e: &Env, distributed_fees: Vec<(Addres
 
     e.events()
         .publish(("DeFindexVault", symbol_short!("dfees")), event);
+}
+// EXECUTE INVESTMENT EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ExecuteInvestmentEvent {
+    pub assets: Vec<AssetStrategySet>,
+    pub asset_investments: Vec<Option<AssetInvestmentAllocation>>,
+}
+
+/// Publishes an `ExecuteInvestmentEvent` to the event stream.
+pub(crate) fn emit_execute_investment_event(
+    e: &Env,
+    assets: Vec<AssetStrategySet>,
+    asset_investments: Vec<Option<AssetInvestmentAllocation>>,
+) {
+    let event = ExecuteInvestmentEvent {
+        assets: assets,
+        asset_investments: asset_investments,
+    };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("execinv")), event);
 }
