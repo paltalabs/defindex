@@ -1,9 +1,7 @@
 use soroban_sdk::{Address, Env, Map, String, Vec};
 
 use crate::{
-    models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction},
-    report::Report,
-    ContractError,
+    access::RolesDataKey, models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction}, report::Report, ContractError
 };
 use common::models::AssetStrategySet;
 
@@ -37,15 +35,13 @@ pub trait VaultTrait {
     fn __constructor(
         e: Env,
         assets: Vec<AssetStrategySet>,
-        manager: Address,
-        emergency_manager: Address,
-        vault_fee_receiver: Address,
+        roles: Map<RolesDataKey, Address>,
         vault_fee: u32,
         defindex_protocol_receiver: Address,
         defindex_protocol_rate: u32,
         factory: Address,
         soroswap_router: Address,
-        name_symbol: Vec<String>,
+        name_symbol: Map<String, String>,
     );
 
     /// Handles user deposits into the DeFindex Vault.

@@ -85,24 +85,22 @@ impl VaultTrait for DeFindexVault {
     fn __constructor(
         e: Env,
         assets: Vec<AssetStrategySet>,
-        manager: Address,
-        emergency_manager: Address,
-        vault_fee_receiver: Address,
+        roles: Map<RolesDataKey, Address>,
         vault_fee: u32,
         defindex_protocol_receiver: Address,
         defindex_protocol_rate: u32,
         factory: Address,
         soroswap_router: Address,
-        name_symbol: Vec<String>,
+        name_symbol: Map<String, String>,
     ) {
         let access_control = AccessControl::new(&e);
 
-        access_control.set_role(&RolesDataKey::EmergencyManager, &emergency_manager);
-        access_control.set_role(&RolesDataKey::VaultFeeReceiver, &vault_fee_receiver);
-        access_control.set_role(&RolesDataKey::Manager, &manager);
-
-        let vault_name = name_symbol.get(0).unwrap();
-        let vault_symbol = name_symbol.get(1).unwrap();
+        access_control.set_role(&RolesDataKey::EmergencyManager, &roles.get(RolesDataKey::EmergencyManager).unwrap_or_else(|| panic_with_error!(&e, ContractError::RolesIncomplete)));
+        access_control.set_role(&RolesDataKey::VaultFeeReceiver, &roles.get(RolesDataKey::VaultFeeReceiver).unwrap_or_else(|| panic_with_error!(&e, ContractError::RolesIncomplete)));
+        access_control.set_role(&RolesDataKey::Manager, &roles.get(RolesDataKey::Manager).unwrap_or_else(|| panic_with_error!(&e, ContractError::RolesIncomplete)));
+        
+        let vault_name = name_symbol.get(String::from_str(&e, "name")).unwrap_or_else(|| panic_with_error!(&e, ContractError::MetadataIncomplete));
+        let vault_symbol = name_symbol.get(String::from_str(&e, "symbol")).unwrap_or_else(|| panic_with_error!(&e, ContractError::MetadataIncomplete));
 
         set_vault_fee(&e, &vault_fee);
 

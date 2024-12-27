@@ -1,8 +1,8 @@
-use soroban_sdk::{vec as sorobanvec, String, Vec};
+use soroban_sdk::{vec as sorobanvec, Address, Map, String, Vec};
 
 use crate::test::{
     create_defindex_vault, create_strategy_params_token_0,
-    defindex_vault::{AssetInvestmentAllocation, AssetStrategySet, StrategyAllocation},
+    defindex_vault::{AssetInvestmentAllocation, AssetStrategySet, RolesDataKey, StrategyAllocation},
     DeFindexVaultTest,
 };
 
@@ -19,22 +19,25 @@ fn withdraw_success() {
         }
     ];
 
+    let mut roles: Map<RolesDataKey, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
     let defindex_contract = create_defindex_vault(
         &test.env,
         assets,
-        test.manager.clone(),
-        test.emergency_manager.clone(),
-        test.vault_fee_receiver.clone(),
+        roles,
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![
-            &test.env,
-            String::from_str(&test.env, "dfToken"),
-            String::from_str(&test.env, "DFT")
-        ],
+        name_symbol,
     );
 
     let amount = 987654321i128;

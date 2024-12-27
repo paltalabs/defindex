@@ -1,9 +1,7 @@
 #![cfg(test)]
 extern crate std;
 use soroban_sdk::{
-    testutils::{Address as _, MockAuth, MockAuthInvoke},
-    token::{StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient},
-    vec as sorobanvec, Address, Env, IntoVal, String, Val, Vec,
+    testutils::{Address as _, MockAuth, MockAuthInvoke}, token::{StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient}, vec as sorobanvec, Address, Env, IntoVal, Map, String, Val, Vec
 };
 use std::vec;
 
@@ -33,26 +31,22 @@ pub mod defindex_vault {
     );
     pub type DeFindexVaultClient<'a> = Client<'a>;
 }
-use defindex_vault::{AssetStrategySet, DeFindexVaultClient, Strategy};
+use defindex_vault::{AssetStrategySet, DeFindexVaultClient, RolesDataKey, Strategy};
 
 pub fn create_defindex_vault<'a>(
     e: &Env,
     assets: Vec<AssetStrategySet>,
-    manager: Address,
-    emergency_manager: Address,
-    vault_fee_receiver: Address,
+    roles: Map<RolesDataKey, Address>,
     vault_fee: u32,
     defindex_protocol_receiver: Address,
     defindex_protocol_rate: u32,
     factory: Address,
     soroswap_router: Address,
-    name_symbol: Vec<String>,
+    name_symbol: Map<String, String>,
 ) -> DeFindexVaultClient<'a> {
     let args = (
         assets,
-        manager,
-        emergency_manager,
-        vault_fee_receiver,
+        roles,
         vault_fee,
         defindex_protocol_receiver,
         defindex_protocol_rate,
