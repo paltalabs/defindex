@@ -161,7 +161,7 @@ pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError>
     )?;
     let amount_out: i128 = swapped_amounts
         .get(1)
-        .ok_or(StrategyError::InvalidArgument)?
+        .ok_or(StrategyError::InternalSwapError)?
         .into_val(e);
 
     // Supplying underlying asset into blend pool
