@@ -1,5 +1,8 @@
 use soroban_sdk::testutils::Events;
-use soroban_sdk::{symbol_short, vec as sorobanvec, FromVal, String, Symbol, TryIntoVal, Vec};
+use soroban_sdk::{symbol_short, vec as sorobanvec, FromVal, IntoVal, String, Symbol, Vec};
+use crate::events::InvestEvent;
+use crate::models;
+use crate::report::Report;
 use crate::test::defindex_vault::{
   AssetInvestmentAllocation, AssetStrategySet, StrategyAllocation
 };
@@ -79,11 +82,61 @@ fn check_and_execute_investments(){
 
   let event = test.env.events().all().last().unwrap();
 
-  let event_key = Symbol::from_val(&test.env, &event.1.get(1).unwrap().clone());
+  let investment = models::AssetInvestmentAllocation {
+    asset: test.token_0.address.clone(),
+    strategy_allocations: sorobanvec![&test.env, Some(models::StrategyAllocation {
+        strategy_address: test.strategy_client_token_0.address.clone(),
+        amount: amount_to_invest.clone(),
+    })],
+};
+  let expected_event_2 = InvestEvent { 
+    asset_investments: sorobanvec![&test.env, investment.clone()],
+    rebalance_method: symbol_short!("rebalance"), 
+    report: Report {
+      prev_balance: 0,
+      gains_or_losses: 0,
+      locked_fee: 0,
+    }
+  };
 
-  let expected_key = symbol_short!("invest");
+  let expected_event =    sorobanvec![
+    &test.env,
+    (
+        defindex_contract.address.clone(),
+        (String::from_str(&test.env, "DeFindexVault"), symbol_short!("rebalance")).into_val(&test.env),
+        (expected_event_2).into_val(&test.env)
+    ),
+  ];
 
-  assert_eq!(event_key, expected_key);
+  assert_eq!(sorobanvec![&test.env, event.clone()], expected_event);
+  /* 
+
+     left: Vec(Ok((Contract(CAQ5UHPIIQ2LXWNVOLLZFEQOUYIWGPGDEMNH4WJQCX3C4LPOI6EKQH5V), Vec(Ok(String(obj#2789)), Ok(Symbol(rebalance))), Map(obj#2829))))
+    right: Vec(Ok((Contract(CAQ5UHPIIQ2LXWNVOLLZFEQOUYIWGPGDEMNH4WJQCX3C4LPOI6EKQH5V), Vec(Ok(String(obj#2847)), Ok(Symbol(rebalance))), Map(obj#2863))))
+
+    pub struct InvestEvent {
+      pub asset_investments: Vec<AssetInvestmentAllocation>,
+      pub rebalance_method: Symbol,
+      pub report: Report,
+    }
+
+    let investment = AssetInvestmentAllocation {
+      asset: asset_address.clone(),
+      strategy_allocations: vec![&e, Some(StrategyAllocation {
+          strategy_address: strategy_address.clone(),
+          amount: amount.clone(),
+      })],
+    };
+    pub struct Report {
+    pub prev_balance: i128,
+    pub gains_or_losses: i128,
+    pub locked_fee: i128,
+}
+   */
+  //let invest_event: InvestEvent = FromVal::from_val(&test.env, &event.2);
+  //std::println!("🟢0{:?}", invest_event);
+
+
 
   //Withdraw event
 
