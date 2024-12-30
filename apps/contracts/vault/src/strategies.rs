@@ -1,7 +1,9 @@
 use defindex_strategy_core::DeFindexStrategyClient;
 use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
-use soroban_sdk::{vec, Address, Env, IntoVal, Symbol};
+use soroban_sdk::{vec, Address, Env, IntoVal, Symbol, Vec};
 
+use crate::events::{emit_rebalance_invest_event, emit_rebalance_unwind_event};
+use crate::models::{AssetInvestmentAllocation, StrategyAllocation};
 use crate::report::Report;
 use crate::storage::{get_report, set_report};
 use crate::{
@@ -135,6 +137,9 @@ pub fn unwind_from_strategy(
     let mut report = get_report(e, strategy_address);
     report.prev_balance -= amount;
 
+    let call_params:Vec<(Address, i128, Address)>  = vec![&e,(strategy_address.clone(), amount.clone(), to.clone())];
+    emit_rebalance_unwind_event(e, call_params, report.clone());
+   
     match strategy_client.try_withdraw(amount, &e.current_contract_address(), to) {
         Ok(Ok(result)) => {
             report.report(result);
@@ -179,6 +184,15 @@ pub fn invest_in_strategy(
     // Store Strategy invested funds for reports
     report.report(strategy_funds);
     set_report(e, strategy_address, &report);
+
+    let investment = AssetInvestmentAllocation {
+        asset: asset_address.clone(),
+        strategy_allocations: vec![&e, Some(StrategyAllocation {
+            strategy_address: strategy_address.clone(),
+            amount: amount.clone(),
+        })],
+    };
+    emit_rebalance_invest_event(&e, vec![&e, investment], report.clone());
 
     Ok(report)
 }
