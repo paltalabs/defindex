@@ -38,7 +38,7 @@ pub fn create_soroswap_router<'a>(e: &Env, factory: &Address) -> SoroswapRouterC
     router
 }
 
-pub fn _create_soroswap_pool<'a>(
+pub fn create_soroswap_pool<'a>(
     e: &Env,
     router: &SoroswapRouterClient,
     to: &Address,
