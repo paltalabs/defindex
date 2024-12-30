@@ -5,10 +5,10 @@ use soroban_sdk::{contracttype, panic_with_error, Address, Env};
 #[contracttype]
 #[derive(Clone)]
 pub enum RolesDataKey {
-    EmergencyManager, // Role: Emergency Manager
-    VaultFeeReceiver, // Role: Fee Receiver
-    Manager,          // Role: Manager
-    RebalanceManager, // Role: Rebalance Manager
+    EmergencyManager, // Role: 0 Emergency Manager
+    VaultFeeReceiver, // Role: 1 Fee Receiver
+    Manager,          // Role: 2 Manager
+    RebalanceManager, // Role: 3 Rebalance Manager
 }
 
 #[derive(Clone)]
