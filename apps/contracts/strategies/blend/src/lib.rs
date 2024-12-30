@@ -88,7 +88,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
         // protect against rouding of reserve_vault::update_rate, as small amounts
         // can cause incorrect b_rate calculations due to the pool rounding
         if amount < MIN_DUST {
-            return Err(StrategyError::InvalidArgument); //TODO: create a new error type for this
+            return Err(StrategyError::AmountBelowMinDust);
         }
 
         let config = storage::get_config(&e);
