@@ -1,7 +1,7 @@
 extern crate std;
 
 use crate::test::{create_asset_params, create_defindex_factory, DeFindexFactoryTest};
-use soroban_sdk::{vec, BytesN, String, Vec};
+use soroban_sdk::{vec, Address, BytesN, Map, String, Vec};
 
 #[test]
 fn budget() {
@@ -32,19 +32,23 @@ fn budget() {
 
     let salt = BytesN::from_array(&test.env, &[0; 32]);
 
-    let _ = factory_contract.create_defindex_vault(
-        &test.emergency_manager,
-        &test.fee_receiver,
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(0u32, test.emergency_manager.clone());
+    roles.set(1u32, test.fee_receiver.clone());
+    roles.set(2u32, test.manager.clone());
+    roles.set(3u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+    factory_contract.create_defindex_vault(
+        &roles,
         &2000u32,
-        &test.manager,
         &asset_params,
         &salt,
         &test.emergency_manager, //soroswap_router,
-        &vec![
-            &test.env,
-            String::from_str(&test.env, "dfToken"),
-            String::from_str(&test.env, "DFT"),
-        ],
+        &name_symbol
     );
 
     let mem = test.env.budget().memory_bytes_cost();
@@ -67,18 +71,12 @@ fn budget() {
 
     test.factory_contract.create_defindex_vault_deposit(
         &test.manager,
-        &test.emergency_manager,
-        &test.fee_receiver,
+        &roles,
         &2000u32,
-        &test.manager,
         &asset_params,
         &salt,
         &test.emergency_manager, //soroswap_router,
-        &vec![
-            &test.env,
-            String::from_str(&test.env, "dfToken"),
-            String::from_str(&test.env, "DFT"),
-        ],
+        &name_symbol,
         &amounts,
     );
 

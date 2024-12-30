@@ -2,8 +2,8 @@ use crate::error::ContractError;
 use crate::utils::bump_instance;
 use soroban_sdk::{contracttype, panic_with_error, Address, Env};
 
-#[derive(Clone)]
 #[contracttype]
+#[derive(Clone)]
 pub enum RolesDataKey {
     EmergencyManager, // Role: Emergency Manager
     VaultFeeReceiver, // Role: Fee Receiver

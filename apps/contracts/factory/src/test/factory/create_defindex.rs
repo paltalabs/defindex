@@ -1,4 +1,4 @@
-use soroban_sdk::{vec, BytesN, String, Vec};
+use soroban_sdk::{vec, Address, BytesN, Map, String, Vec};
 
 use crate::test::{create_asset_params, DeFindexFactoryTest};
 
@@ -10,19 +10,24 @@ fn create_success() {
 
     let salt = BytesN::from_array(&test.env, &[0; 32]);
 
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(0u32, test.emergency_manager.clone());
+    roles.set(1u32, test.fee_receiver.clone());
+    roles.set(2u32, test.manager.clone());
+    roles.set(3u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+
     test.factory_contract.create_defindex_vault(
-        &test.emergency_manager,
-        &test.fee_receiver,
+        &roles,
         &2000u32,
-        &test.manager,
         &asset_params,
         &salt,
         &test.emergency_manager, //soroswap_router,
-        &vec![
-            &test.env,
-            String::from_str(&test.env, "dfToken"),
-            String::from_str(&test.env, "DFT"),
-        ],
+        &name_symbol
     );
 
     let deployed_defindexes = test.factory_contract.deployed_defindexes();
@@ -46,21 +51,34 @@ fn create_and_deposit_success() {
     test.token0_admin_client.mint(&test.manager, &amount_0);
     test.token1_admin_client.mint(&test.manager, &amount_1);
 
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(0u32, test.emergency_manager.clone());
+    roles.set(1u32, test.fee_receiver.clone());
+    roles.set(2u32, test.manager.clone());
+    roles.set(3u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
     test.factory_contract.create_defindex_vault_deposit(
         &test.manager,
-        &test.emergency_manager,
-        &test.fee_receiver,
+        &roles,
         &2000u32,
-        &test.manager,
         &asset_params,
         &salt,
         &test.emergency_manager, //soroswap_router,
-        &vec![
-            &test.env,
-            String::from_str(&test.env, "dfToken"),
-            String::from_str(&test.env, "DFT"),
-        ],
+        &name_symbol,
         &amounts,
+    );
+
+    test.factory_contract.create_defindex_vault(
+        &roles,
+        &2000u32,
+        &asset_params,
+        &salt,
+        &test.emergency_manager, //soroswap_router,
+        &name_symbol
     );
 
     let deployed_defindexes = test.factory_contract.deployed_defindexes();

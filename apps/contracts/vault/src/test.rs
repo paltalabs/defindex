@@ -36,7 +36,7 @@ use defindex_vault::{AssetStrategySet, DeFindexVaultClient, RolesDataKey, Strate
 pub fn create_defindex_vault<'a>(
     e: &Env,
     assets: Vec<AssetStrategySet>,
-    roles: Map<RolesDataKey, Address>,
+    roles: Map<u32, Address>,
     vault_fee: u32,
     defindex_protocol_receiver: Address,
     defindex_protocol_rate: u32,

@@ -1,7 +1,7 @@
 use soroban_sdk::{Address, Env, Map, String, Vec};
 
 use crate::{
-    access::RolesDataKey, models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction}, report::Report, ContractError
+    models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction}, report::Report, ContractError
 };
 use common::models::AssetStrategySet;
 
@@ -35,7 +35,7 @@ pub trait VaultTrait {
     fn __constructor(
         e: Env,
         assets: Vec<AssetStrategySet>,
-        roles: Map<RolesDataKey, Address>,
+        roles: Map<u32, Address>,
         vault_fee: u32,
         defindex_protocol_receiver: Address,
         defindex_protocol_rate: u32,

@@ -31,11 +31,11 @@ fn wrong_asset_investment_length() {
         }
     ];
 
-    let mut roles: Map<RolesDataKey, Address> = Map::new(&test.env);
-    roles.set(RolesDataKey::Manager, test.manager.clone());
-    roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
-    roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
-    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -130,11 +130,11 @@ fn wrong_strategy_length() {
         }
     ];
 
-    let mut roles: Map<RolesDataKey, Address> = Map::new(&test.env);
-    roles.set(RolesDataKey::Manager, test.manager.clone());
-    roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
-    roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
-    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -227,11 +227,11 @@ fn wrong_asset_address() {
         }
     ];
 
-    let mut roles: Map<RolesDataKey, Address> = Map::new(&test.env);
-    roles.set(RolesDataKey::Manager, test.manager.clone());
-    roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
-    roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
-    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -292,11 +292,11 @@ fn negative_amount() {
         }
     ];
 
-    let mut roles: Map<RolesDataKey, Address> = Map::new(&test.env);
-    roles.set(RolesDataKey::Manager, test.manager.clone());
-    roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
-    roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
-    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -357,11 +357,11 @@ fn paused_strategy() {
         }
     ];
 
-    let mut roles: Map<RolesDataKey, Address> = Map::new(&test.env);
-    roles.set(RolesDataKey::Manager, test.manager.clone());
-    roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
-    roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
-    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -421,11 +421,11 @@ fn in_strategy() {
         }
     ];
 
-    let mut roles: Map<RolesDataKey, Address> = Map::new(&test.env);
-    roles.set(RolesDataKey::Manager, test.manager.clone());
-    roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
-    roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
-    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -662,11 +662,11 @@ fn more_than_idle_funds() {
         }
     ];
 
-    let mut roles: Map<RolesDataKey, Address> = Map::new(&test.env);
-    roles.set(RolesDataKey::Manager, test.manager.clone());
-    roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
-    roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
-    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -763,11 +763,11 @@ fn without_mock_all_auths() {
         }
     ];
 
-    let mut roles: Map<RolesDataKey, Address> = Map::new(&test.env);
-    roles.set(RolesDataKey::Manager, test.manager.clone());
-    roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
-    roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
-    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -992,11 +992,11 @@ fn one_asset_several_strategies() {
             strategies: strategy_params.clone(),
         }
     ];
-    let mut roles: Map<RolesDataKey, Address> = Map::new(&test.env);
-    roles.set(RolesDataKey::Manager, test.manager.clone());
-    roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
-    roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
-    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
