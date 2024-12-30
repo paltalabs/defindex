@@ -636,7 +636,7 @@ export function mapInstructionsToParams(
 //         const investResult = await invokeCustomContract(
 //             deployedVault,
 //             "rebalance",
-//             [mappedInstructions],
+//             [new Address(manager.publicKey()).toScVal(), mappedInstructions],
 //             manager
 //         );
 //         console.log("Rebalance successful:", scValToNative(investResult.returnValue));

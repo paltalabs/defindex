@@ -1,6 +1,11 @@
-import { Address, Asset, Keypair, Networks } from "@stellar/stellar-sdk";
+import { Address, Asset, Keypair } from "@stellar/stellar-sdk";
+import { exit } from "process";
 import { AddressBook } from "../utils/address_book.js";
 import { airdropAccount, invokeCustomContract } from "../utils/contract.js";
+import { config } from "../utils/env_config.js";
+import { testBlendStrategy } from "./blend/test_strategy.js";
+import { testBlendVault } from "./blend/test_vault.js";
+import { checkUserBalance } from "./strategy.js";
 import {
   admin,
   AssetInvestmentAllocation,
@@ -14,14 +19,9 @@ import {
   Instruction,
   investVault,
   manager,
-  withdrawFromVault,
   mapInstructionsToParams,
+  withdrawFromVault,
 } from "./vault.js";
-import { checkUserBalance } from "./strategy.js";
-import { exit } from "process";
-import { testBlendVault } from "./blend/test_vault.js";
-import { testBlendStrategy } from "./blend/test_strategy.js";
-import { config } from "../utils/env_config.js";
 
 const args = process.argv.slice(2);
 const network = args[0];
@@ -225,7 +225,7 @@ async function testVaultOneStrategy() {
   await invokeCustomContract(
                 vaultAddress,
                 "rebalance",
-                [mappedParams],
+                [new Address(manager.publicKey()).toScVal(), mappedParams],
                 manager);
 
   console.log(yellow, "---------------------------------------");
@@ -448,7 +448,7 @@ async function testVaultTwoStrategies() {
   await invokeCustomContract(
       vaultAddress,
       "rebalance",
-      [mappedParams],
+      [new Address(manager.publicKey()).toScVal(), mappedParams],
       manager
   );
 
