@@ -163,7 +163,7 @@ fn budget() {
         &test.env,
         Instruction::Withdraw(test.strategy_client_token_0.address.clone(), 100),
     ];
-    let _ = defindex_contract.rebalance(&withdraw_instructions);
+    let _ = defindex_contract.rebalance(&test.rebalance_manager, &withdraw_instructions);
     let mem = test.env.budget().memory_bytes_cost();
     let cpu = test.env.budget().cpu_instruction_cost();
     std::println!(
@@ -181,7 +181,7 @@ fn budget() {
         Instruction::Invest(test.strategy_client_token_0.address.clone(), 100),
     ];
 
-    let _ = defindex_contract.rebalance(&invest_instructions);
+    let _ = defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
     let mem = test.env.budget().memory_bytes_cost();
     let cpu = test.env.budget().cpu_instruction_cost();
     std::println!(
@@ -202,7 +202,7 @@ fn budget() {
         Instruction::Invest(test.strategy_client_token_0.address.clone(), 100),
     ];
 
-    let _ = defindex_contract.rebalance(&several_instructions_one_strategy);
+    let _ = defindex_contract.rebalance(&test.rebalance_manager, &several_instructions_one_strategy);
     let mem = test.env.budget().memory_bytes_cost();
     let cpu = test.env.budget().cpu_instruction_cost();
     std::println!(
@@ -223,7 +223,7 @@ fn budget() {
         Instruction::Invest(test.strategy_client_token_0.address.clone(), 100),
     ];
 
-    let _ = defindex_contract.rebalance(&several_instructions_two_strategy);
+    let _ = defindex_contract.rebalance(&test.rebalance_manager, &several_instructions_two_strategy);
     let mem = test.env.budget().memory_bytes_cost();
     let cpu = test.env.budget().cpu_instruction_cost();
     std::println!(

@@ -357,7 +357,7 @@ pub trait VaultManagementTrait {
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn rebalance(e: Env, instructions: Vec<Instruction>) -> Result<(), ContractError>;
+    fn rebalance(e: Env, caller: Address, instructions: Vec<Instruction>) -> Result<(), ContractError>;
 
     /// Locks fees for all assets and their strategies.
     ///

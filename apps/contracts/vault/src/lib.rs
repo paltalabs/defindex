@@ -770,12 +770,15 @@ impl VaultManagementTrait for DeFindexVault {
         Ok(asset_investments.clone())
     }
 
-    fn rebalance(e: Env, instructions: Vec<Instruction>) -> Result<(), ContractError> {
+    fn rebalance(e: Env, caller: Address, instructions: Vec<Instruction>) -> Result<(), ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
 
         let access_control = AccessControl::new(&e);
-        access_control.require_role(&RolesDataKey::RebalanceManager);
+        access_control.require_any_role(
+            &[RolesDataKey::RebalanceManager, RolesDataKey::Manager],
+            &caller,
+        );
 
         if instructions.is_empty() {
             panic_with_error!(&e, ContractError::NoInstructions);
