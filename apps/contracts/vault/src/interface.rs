@@ -292,6 +292,27 @@ pub trait AdminInterfaceTrait {
     /// # Returns:
     /// * `Result<Address, ContractError>` - The emergency manager address if successful, otherwise returns a ContractError.
     fn get_emergency_manager(e: Env) -> Result<Address, ContractError>;
+
+    /// Sets the rebalance manager for the vault.
+    ///
+    /// This function allows the current manager to set a new rebalance manager for the vault.
+    ///
+    /// # Arguments:
+    /// * `e` - The environment.
+    /// * `new_rebalance_manager` - The new rebalance manager address.
+    ///
+    /// # Returns:
+    /// * `()` - No return value.
+    fn set_rebalance_manager(e: Env, new_rebalance_manager: Address);
+
+    /// Retrieves the current rebalance manager address for the vault.
+    ///
+    /// # Arguments:
+    /// * `e` - The environment.
+    ///
+    /// # Returns:
+    /// * `Result<Address, ContractError>` - The rebalance manager address if successful, otherwise returns a ContractError.
+    fn get_rebalance_manager(e: Env) -> Result<Address, ContractError>;
 }
 
 pub trait VaultManagementTrait {

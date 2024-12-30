@@ -8,6 +8,7 @@ pub enum RolesDataKey {
     EmergencyManager, // Role: Emergency Manager
     VaultFeeReceiver, // Role: Fee Receiver
     Manager,          // Role: Manager
+    RebalanceManager, // Role: Rebalance Manager
 }
 
 #[derive(Clone)]
@@ -110,5 +111,14 @@ impl AccessControl {
 
     pub fn get_emergency_manager(&self) -> Result<Address, ContractError> {
         self.check_role(&RolesDataKey::EmergencyManager)
+    }
+
+    pub fn set_rebalance_manager(&self, rebalance_manager: &Address) {
+        self.require_role(&RolesDataKey::Manager);
+        self.set_role(&RolesDataKey::RebalanceManager, rebalance_manager);
+    }
+
+    pub fn get_rebalance_manager(&self) -> Result<Address, ContractError> {
+        self.check_role(&RolesDataKey::RebalanceManager)
     }
 }

@@ -32,6 +32,7 @@ fn set_new_fee_receiver_by_fee_receiver() {
     roles.set(RolesDataKey::Manager, test.manager.clone());
     roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
     roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -107,6 +108,7 @@ fn set_new_fee_receiver_by_manager() {
     roles.set(RolesDataKey::Manager, test.manager.clone());
     roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
     roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -180,6 +182,7 @@ fn set_new_fee_receiver_by_emergency_manager() {
     roles.set(RolesDataKey::Manager, test.manager.clone());
     roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
     roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -227,6 +230,7 @@ fn set_new_fee_receiver_invalid_sender() {
     roles.set(RolesDataKey::Manager, test.manager.clone());
     roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
     roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -272,6 +276,7 @@ fn set_new_manager_by_manager() {
     roles.set(RolesDataKey::Manager, test.manager.clone());
     roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
     roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));

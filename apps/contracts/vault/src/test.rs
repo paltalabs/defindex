@@ -130,6 +130,7 @@ pub struct DeFindexVaultTest<'a> {
     vault_fee_receiver: Address,
     defindex_protocol_receiver: Address,
     manager: Address,
+    rebalance_manager: Address,
     strategy_client_token_0: HodlStrategyClient<'a>,
     strategy_client_token_1: HodlStrategyClient<'a>,
     soroswap_router: SoroswapRouterClient<'a>,
@@ -149,6 +150,7 @@ impl<'a> DeFindexVaultTest<'a> {
         let vault_fee_receiver = Address::generate(&env);
         let defindex_protocol_receiver = Address::generate(&env);
         let manager = Address::generate(&env);
+        let rebalance_manager = Address::generate(&env);
 
         let token_0_admin = Address::generate(&env);
         let token_0 = create_token_contract(&env, &token_0_admin);
@@ -216,6 +218,7 @@ impl<'a> DeFindexVaultTest<'a> {
             vault_fee_receiver,
             defindex_protocol_receiver,
             manager,
+            rebalance_manager,
             strategy_client_token_0,
             strategy_client_token_1,
             soroswap_router,

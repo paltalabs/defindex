@@ -32,6 +32,7 @@ fn amounts_desired_less_length() {
     roles.set(RolesDataKey::Manager, test.manager.clone());
     roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
     roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -84,6 +85,7 @@ fn amounts_desired_more_length() {
     roles.set(RolesDataKey::Manager, test.manager.clone());
     roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
     roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -140,6 +142,7 @@ fn amounts_min_less_length() {
     roles.set(RolesDataKey::Manager, test.manager.clone());
     roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
     roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -196,6 +199,7 @@ fn amounts_min_more_length() {
     roles.set(RolesDataKey::Manager, test.manager.clone());
     roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
     roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -252,6 +256,7 @@ fn amounts_desired_negative() {
     roles.set(RolesDataKey::Manager, test.manager.clone());
     roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
     roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -303,6 +308,7 @@ fn one_asset_success() {
     roles.set(RolesDataKey::Manager, test.manager.clone());
     roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
     roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -474,6 +480,7 @@ fn one_asset_min_more_than_desired() {
     roles.set(RolesDataKey::Manager, test.manager.clone());
     roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
     roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -539,6 +546,7 @@ fn several_assets_success() {
     roles.set(RolesDataKey::Manager, test.manager.clone());
     roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
     roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -831,6 +839,7 @@ fn several_assets_min_greater_than_optimal() {
     roles.set(RolesDataKey::Manager, test.manager.clone());
     roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
     roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -933,6 +942,7 @@ fn amounts_min_greater_than_amounts_desired() {
     roles.set(RolesDataKey::Manager, test.manager.clone());
     roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
     roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -1003,6 +1013,7 @@ fn transfers_tokens_from_user_to_vault() {
     roles.set(RolesDataKey::Manager, test.manager.clone());
     roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
     roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -1071,6 +1082,7 @@ fn arithmetic_error() {
     roles.set(RolesDataKey::Manager, test.manager.clone());
     roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
     roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -1143,6 +1155,7 @@ fn amounts_desired_zero() {
     roles.set(RolesDataKey::Manager, test.manager.clone());
     roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
     roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -1215,6 +1228,7 @@ fn insufficient_funds_with_error_message() {
     roles.set(RolesDataKey::Manager, test.manager.clone());
     roles.set(RolesDataKey::EmergencyManager, test.emergency_manager.clone());
     roles.set(RolesDataKey::VaultFeeReceiver, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager, test.rebalance_manager.clone());
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));

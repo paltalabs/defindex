@@ -98,6 +98,7 @@ impl VaultTrait for DeFindexVault {
         access_control.set_role(&RolesDataKey::EmergencyManager, &roles.get(RolesDataKey::EmergencyManager).unwrap_or_else(|| panic_with_error!(&e, ContractError::RolesIncomplete)));
         access_control.set_role(&RolesDataKey::VaultFeeReceiver, &roles.get(RolesDataKey::VaultFeeReceiver).unwrap_or_else(|| panic_with_error!(&e, ContractError::RolesIncomplete)));
         access_control.set_role(&RolesDataKey::Manager, &roles.get(RolesDataKey::Manager).unwrap_or_else(|| panic_with_error!(&e, ContractError::RolesIncomplete)));
+        access_control.set_role(&RolesDataKey::RebalanceManager, &roles.get(RolesDataKey::RebalanceManager).unwrap_or_else(|| panic_with_error!(&e, ContractError::RolesIncomplete)));
         
         let vault_name = name_symbol.get(String::from_str(&e, "name")).unwrap_or_else(|| panic_with_error!(&e, ContractError::MetadataIncomplete));
         let vault_symbol = name_symbol.get(String::from_str(&e, "symbol")).unwrap_or_else(|| panic_with_error!(&e, ContractError::MetadataIncomplete));
@@ -681,6 +682,37 @@ impl AdminInterfaceTrait for DeFindexVault {
         let access_control = AccessControl::new(&e);
         access_control.get_emergency_manager()
     }
+
+    /// Sets the rebalance manager for the vault.
+    ///
+    /// This function allows the current manager to set a new rebalance manager for the vault.
+    ///
+    /// # Arguments:
+    /// * `e` - The environment.
+    /// * `new_rebalance_manager` - The new rebalance manager address.
+    ///
+    /// # Returns:
+    /// * `()` - No return value.
+    fn set_rebalance_manager(e: Env, new_rebalance_manager: Address) {
+        extend_instance_ttl(&e);
+        let access_control = AccessControl::new(&e);
+        access_control.set_rebalance_manager(&new_rebalance_manager);
+
+        events::emit_rebalance_manager_changed_event(&e, new_rebalance_manager);
+    }
+
+    /// Retrieves the current rebalance manager address for the vault.
+    ///
+    /// # Arguments:
+    /// * `e` - The environment.
+    ///
+    /// # Returns:
+    /// * `Result<Address, ContractError>` - The rebalance manager address if successful, otherwise returns a ContractError.
+    fn get_rebalance_manager(e: Env) -> Result<Address, ContractError> {
+        extend_instance_ttl(&e);
+        let access_control = AccessControl::new(&e);
+        access_control.get_rebalance_manager()
+    }
 }
 
 #[contractimpl]
@@ -743,7 +775,7 @@ impl VaultManagementTrait for DeFindexVault {
         check_initialized(&e)?;
 
         let access_control = AccessControl::new(&e);
-        access_control.require_role(&RolesDataKey::Manager);
+        access_control.require_role(&RolesDataKey::RebalanceManager);
 
         if instructions.is_empty() {
             panic_with_error!(&e, ContractError::NoInstructions);

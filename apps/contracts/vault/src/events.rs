@@ -171,6 +171,23 @@ pub(crate) fn emit_emergency_manager_changed_event(e: &Env, new_emergency_manage
         .publish(("DeFindexVault", symbol_short!("nemanager")), event);
 }
 
+// REBALANCE MANAGER CHANGED EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RebalanceManagerChangedEvent {
+    pub new_rebalance_manager: Address,
+}
+
+/// Publishes a `RebalanceManagerChangedEvent` to the event stream.
+pub(crate) fn emit_rebalance_manager_changed_event(e: &Env, new_rebalance_manager: Address) {
+    let event = RebalanceManagerChangedEvent {
+        new_rebalance_manager,
+    };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("rbmanager")), event);
+}
+
 // FEES DISTRIBUTED EVENT
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
