@@ -1,5 +1,5 @@
 use soroban_sdk::testutils::Events;
-use soroban_sdk::{symbol_short, vec as sorobanvec, FromVal, String, Symbol, Vec};
+use soroban_sdk::{symbol_short, vec as sorobanvec, FromVal, String, Symbol, TryIntoVal, Vec};
 use crate::test::defindex_vault::{
   AssetInvestmentAllocation, AssetStrategySet, StrategyAllocation
 };
@@ -47,16 +47,18 @@ fn check_and_execute_investments(){
   // Mint before deposit
   test.token_0_admin_client.mint(&users[0], &amount);
 
+  let deposit_amount = 10_0_000_000i128;
+
   // Deposit
   defindex_contract.deposit(
-      &sorobanvec![&test.env, amount],
-      &sorobanvec![&test.env, amount],
+      &sorobanvec![&test.env, deposit_amount],
+      &sorobanvec![&test.env, deposit_amount],
       &users[0],
       &true,
   );
 
      // Invest
-     let amount_to_invest = 10_0_000_000i128;
+     let amount_to_invest = 5_000_000i128;
      let asset_investments = sorobanvec![
       &test.env,
       Some(AssetInvestmentAllocation {
@@ -79,7 +81,24 @@ fn check_and_execute_investments(){
 
   let event_key = Symbol::from_val(&test.env, &event.1.get(1).unwrap().clone());
 
-  let expected_key = symbol_short!("execinv");
+  let expected_key = symbol_short!("invest");
+
+  assert_eq!(event_key, expected_key);
+
+  //Withdraw event
+
+  let amount_to_withdraw = 5_000_000i128;
+
+
+  let withdraw_result = defindex_contract.withdraw(&amount_to_withdraw, &users[0]);
+
+  assert_eq!(withdraw_result.clone(), sorobanvec!(&test.env, amount_to_withdraw));
+
+  let event = test.env.events().all().last().unwrap();
+
+  let event_key = Symbol::from_val(&test.env, &event.1.get(1).unwrap().clone());
+
+  let expected_key = symbol_short!("withdraw");
 
   assert_eq!(event_key, expected_key);
 
@@ -107,7 +126,6 @@ fn check_and_execute_investments(){
       ),
     ]
   )  */
-
 
 }
 
