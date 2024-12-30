@@ -16,4 +16,11 @@ pub enum StrategyError {
     ProtocolAddressNotFound = 420,
     DeadlineExpired = 421,
     ExternalError = 422,
+
+    //Blend Errors
+    AmountBelowMinDust = 451,
+    UnderlyingAmountBelowMin = 452,
+    BTokensAmountBelowMin = 453,
+    InternalSwapError = 454,
+
 }
