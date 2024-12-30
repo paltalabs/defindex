@@ -11,15 +11,14 @@ fn create_success() {
     let salt = BytesN::from_array(&test.env, &[0; 32]);
 
     let mut roles: Map<u32, Address> = Map::new(&test.env);
-    roles.set(0u32, test.emergency_manager.clone());
-    roles.set(1u32, test.fee_receiver.clone());
-    roles.set(2u32, test.manager.clone());
-    roles.set(3u32, test.rebalance_manager.clone());
+    roles.set(0u32, test.emergency_manager.clone()); // EmergencyManager enum = 0
+    roles.set(1u32, test.fee_receiver.clone()); // VaultFeeReceiver enum = 1
+    roles.set(2u32, test.manager.clone()); // Manager enum = 2
+    roles.set(3u32, test.rebalance_manager.clone()); // RebalanceManager enum = 3
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
     name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
-
 
     test.factory_contract.create_defindex_vault(
         &roles,
@@ -52,10 +51,10 @@ fn create_and_deposit_success() {
     test.token1_admin_client.mint(&test.manager, &amount_1);
 
     let mut roles: Map<u32, Address> = Map::new(&test.env);
-    roles.set(0u32, test.emergency_manager.clone());
-    roles.set(1u32, test.fee_receiver.clone());
-    roles.set(2u32, test.manager.clone());
-    roles.set(3u32, test.rebalance_manager.clone());
+    roles.set(0u32, test.emergency_manager.clone()); // EmergencyManager enum = 0
+    roles.set(1u32, test.fee_receiver.clone()); // VaultFeeReceiver enum = 1
+    roles.set(2u32, test.manager.clone()); // Manager enum = 2
+    roles.set(3u32, test.rebalance_manager.clone()); // RebalanceManager enum = 3
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
@@ -70,15 +69,6 @@ fn create_and_deposit_success() {
         &test.emergency_manager, //soroswap_router,
         &name_symbol,
         &amounts,
-    );
-
-    test.factory_contract.create_defindex_vault(
-        &roles,
-        &2000u32,
-        &asset_params,
-        &salt,
-        &test.emergency_manager, //soroswap_router,
-        &name_symbol
     );
 
     let deployed_defindexes = test.factory_contract.deployed_defindexes();

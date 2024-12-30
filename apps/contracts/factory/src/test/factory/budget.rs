@@ -33,10 +33,10 @@ fn budget() {
     let salt = BytesN::from_array(&test.env, &[0; 32]);
 
     let mut roles: Map<u32, Address> = Map::new(&test.env);
-    roles.set(0u32, test.emergency_manager.clone());
-    roles.set(1u32, test.fee_receiver.clone());
-    roles.set(2u32, test.manager.clone());
-    roles.set(3u32, test.rebalance_manager.clone());
+    roles.set(0u32, test.emergency_manager.clone()); // EmergencyManager enum = 0
+    roles.set(1u32, test.fee_receiver.clone()); // VaultFeeReceiver enum = 1
+    roles.set(2u32, test.manager.clone()); // Manager enum = 2
+    roles.set(3u32, test.rebalance_manager.clone()); // RebalanceManager enum = 3
 
     let mut name_symbol: Map<String, String> = Map::new(&test.env);
     name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
