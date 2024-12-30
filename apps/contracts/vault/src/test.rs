@@ -31,7 +31,7 @@ pub mod defindex_vault {
     );
     pub type DeFindexVaultClient<'a> = Client<'a>;
 }
-use defindex_vault::{AssetStrategySet, DeFindexVaultClient, RolesDataKey, Strategy};
+use defindex_vault::{AssetStrategySet, DeFindexVaultClient, Strategy};
 
 pub fn create_defindex_vault<'a>(
     e: &Env,
