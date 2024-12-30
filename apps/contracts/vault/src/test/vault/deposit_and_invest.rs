@@ -1167,7 +1167,6 @@ fn deposit_simple_then_deposit_and_invest() {
         &users[0],
         &false,
     );
-    total_deposit += deposit_amount_3;
     let expected_idle_funds = idle_funds + deposit_amount_3;
     
 
@@ -1175,6 +1174,6 @@ fn deposit_simple_then_deposit_and_invest() {
     let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
     
     assert_eq!(invested_funds, total_invested);
-    assert_eq!(idle_funds, total_deposit - total_invested);
+    assert_eq!(idle_funds, expected_idle_funds);
 
 }
