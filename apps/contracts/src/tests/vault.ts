@@ -64,6 +64,7 @@ export async function mintToken(user: Keypair, amount: number) {
  * Generates the parameters required to create a DeFindex vault.
  *
  * @param {Keypair} emergencyManager - The keypair of the emergency manager.
+ * @param {Keypair} rebalanceManager - The keypair of the rebalance manager.
  * @param {Keypair} feeReceiver - The keypair of the fee receiver.
  * @param {Keypair} manager - The keypair of the manager.
  * @param {string} vaultName - The name of the vault.
@@ -71,14 +72,15 @@ export async function mintToken(user: Keypair, amount: number) {
  * @param {xdr.ScVal[]} assetAllocations - The asset allocations for the vault.
  * @returns {xdr.ScVal[]} An array of ScVal objects representing the parameters.
  */
-function getCreateDeFindexParams(
+export function getCreateDeFindexParams(
   emergencyManager: Keypair,
   rebalanceManager: Keypair,
   feeReceiver: Keypair,
   manager: Keypair,
   vaultName: string,
   vaultSymbol: string,
-  assetAllocations: xdr.ScVal[]
+  assetAllocations: xdr.ScVal[],
+  upgradable: boolean,
 ): xdr.ScVal[] {
   const roles = xdr.ScVal.scvMap([
     new xdr.ScMapEntry({
@@ -117,6 +119,7 @@ function getCreateDeFindexParams(
     nativeToScVal(randomBytes(32)), //salt
     new Address(emergencyManager.publicKey()).toScVal(), //TODO: add soroswap_rouer
     nameSymbol,
+    nativeToScVal(upgradable, { type: "bool" })
   ];
 }
 
@@ -193,7 +196,8 @@ export async function deployVault(
     manager,
     vaultName,
     vaultSymbol,
-    assetAllocations
+    assetAllocations,
+    true,
   );
   try {
     const result = await invokeContract(
