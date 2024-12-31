@@ -1,6 +1,6 @@
 //! Definition of the Events used in the DeFindex Vault contract
 use common::models::AssetStrategySet;
-use soroban_sdk::{contracttype, symbol_short, Address, Env, String, Symbol, Val, Vec};
+use soroban_sdk::{contracttype, symbol_short, Address, Env, Symbol, Val, Vec};
 
 use crate::{models::AssetInvestmentAllocation, report::Report};
 

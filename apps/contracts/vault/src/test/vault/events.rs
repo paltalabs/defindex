@@ -1,5 +1,5 @@
 use soroban_sdk::testutils::Events;
-use soroban_sdk::{symbol_short, vec as sorobanvec, Address, FromVal, IntoVal, Map, String, Symbol, Val, Vec};
+use soroban_sdk::{symbol_short, vec as sorobanvec, Address, FromVal, IntoVal, Map, String, Val, Vec};
 use crate::events::{ExecuteInvestmentEvent, InvestEvent, SwapExactInEvent};
 
 use crate::{models, report};
@@ -163,7 +163,7 @@ fn check_rebalance_events(){
         ),
 
     ];
-  defindex_contract.rebalance(&instructions.clone());
+  defindex_contract.rebalance(&test.rebalance_manager, &instructions.clone());
 
   let events = test.env.events().all();
 
@@ -201,7 +201,7 @@ fn check_rebalance_events(){
         ),
 
     ];
-  defindex_contract.rebalance(&instructions.clone());
+  defindex_contract.rebalance(&test.rebalance_manager, &instructions.clone());
 
   let events = test.env.events().all();
   let rebalance_events: std::vec::Vec<(soroban_sdk::Address, soroban_sdk::Vec<soroban_sdk::Val>, soroban_sdk::Val)> = 
@@ -249,7 +249,7 @@ fn check_rebalance_events(){
     ),
 ];
 
-  defindex_contract.rebalance(&instructions);
+  defindex_contract.rebalance(&test.rebalance_manager, &instructions);
 
   let events = test.env.events().all();
   let rebalance_events: std::vec::Vec<(soroban_sdk::Address, soroban_sdk::Vec<soroban_sdk::Val>, soroban_sdk::Val)> = 
@@ -290,7 +290,7 @@ fn check_rebalance_events(){
         test.env.ledger().timestamp() + 3600u64
     )];
 
-  defindex_contract.rebalance(&swap_exact_out_instructions);
+  defindex_contract.rebalance(&test.rebalance_manager, &swap_exact_out_instructions);
 
   let events = test.env.events().all();
   let rebalance_events: std::vec::Vec<(soroban_sdk::Address, soroban_sdk::Vec<soroban_sdk::Val>, soroban_sdk::Val)> = 
