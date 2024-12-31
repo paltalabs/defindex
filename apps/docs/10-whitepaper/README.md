@@ -41,7 +41,7 @@ The protocol comprises three main components:
 To ensure robust functionality and security, DeFindex implements a role-based management system:  
 
 - **Manager:** Oversees strategies and the assets within Vaults.  
-- **Emergency Manager:** Handles emergency withdrawals.  
+- **Emergency Manager:** Handles rescues.  
 - **Fee Receiver:** Collects and manages strategy-related fees.  
 
 By combining simplicity for newcomers with advanced features for seasoned users, DeFindex aims to make DeFi more accessible and efficient on the Stellar Blockchain.
