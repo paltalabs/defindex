@@ -101,6 +101,7 @@ pub struct DeFindexFactoryTest<'a> {
     admin: Address,
     defindex_receiver: Address,
     emergency_manager: Address,
+    rebalance_manager: Address,
     fee_receiver: Address,
     manager: Address,
     token0_admin_client: SorobanTokenAdminClient<'a>,
@@ -133,6 +134,7 @@ impl<'a> DeFindexFactoryTest<'a> {
         );
 
         let emergency_manager = Address::generate(&env);
+        let rebalance_manager = Address::generate(&env);
         let fee_receiver = Address::generate(&env);
         let manager = Address::generate(&env);
 
@@ -158,6 +160,7 @@ impl<'a> DeFindexFactoryTest<'a> {
             defindex_wasm_hash,
             defindex_receiver,
             emergency_manager,
+            rebalance_manager,
             fee_receiver,
             manager,
             token0_admin_client,
