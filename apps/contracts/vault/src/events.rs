@@ -208,7 +208,7 @@ pub(crate) fn emit_execute_investment_event(
     };
 
     e.events()
-        .publish(("DeFindexVault", symbol_short!("rebalance")), event);
+        .publish(("DeFindexVault", symbol_short!("invest")), event);
 }
 
 
@@ -227,7 +227,7 @@ pub(crate) fn emit_rebalance_unwind_event(
     call_params: Vec<(Address, i128, Address)>,
     report: Report,
 ) {
-    let rebalance_method = symbol_short!("withdraw");
+    let rebalance_method = symbol_short!("unwind");
     let event = UnwindEvent {
         call_params,
         rebalance_method,
@@ -251,7 +251,7 @@ pub(crate) fn emit_rebalance_invest_event(
     asset_investments: Vec<AssetInvestmentAllocation>,
     report: Report,
 ) {
-    let rebalance_method = symbol_short!("Invest");
+    let rebalance_method = symbol_short!("invest");
     let event = InvestEvent {
         asset_investments,
         rebalance_method,
@@ -259,7 +259,8 @@ pub(crate) fn emit_rebalance_invest_event(
     };
 
     e.events()
-        .publish(("DeFindexVault", symbol_short!("rebalance")), event);
+        .publish(("DeFindexVault", symbol_short!("rebalance")),event);
+        //.publish(("DeFindexVault", symbol_short!("rebalance")), event);
 }
 
 // SWAP EXACT IN EVENT

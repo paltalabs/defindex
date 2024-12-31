@@ -1,34 +1,38 @@
 use soroban_sdk::testutils::Events;
-use soroban_sdk::{symbol_short, vec as sorobanvec, FromVal, IntoVal, String, Symbol, Vec};
-use crate::events::InvestEvent;
-use crate::models;
-use crate::report::Report;
+use soroban_sdk::{symbol_short, vec as sorobanvec, FromVal, IntoVal, String, Symbol, Val, Vec};
+use crate::events::{ExecuteInvestmentEvent, InvestEvent, SwapExactInEvent};
+
+use crate::{models, report};
 use crate::test::defindex_vault::{
-  AssetInvestmentAllocation, AssetStrategySet, StrategyAllocation
+  AssetInvestmentAllocation, AssetStrategySet, Instruction, Report, StrategyAllocation, UnwindEvent,
 };
 use crate::test::{
-  create_defindex_vault, create_strategy_params_token_0,
-  DeFindexVaultTest,
+  create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1, DeFindexVaultTest
 };
 
 extern crate std;
 #[test]
-fn check_and_execute_investments(){
+fn check_rebalance_events(){
   let test = DeFindexVaultTest::setup();
   test.env.mock_all_auths();
   let strategy_params_token_0 = create_strategy_params_token_0(&test);
+  let strategy_params_token_1 = create_strategy_params_token_1(&test);
   // initialize with 1 assets
   let assets: Vec<AssetStrategySet> = sorobanvec![
     &test.env,
     AssetStrategySet {
         address: test.token_0.address.clone(),
         strategies: strategy_params_token_0.clone()
-    }
+    },
+    AssetStrategySet {
+        address: test.token_1.address.clone(),
+        strategies: strategy_params_token_1.clone()
+    },
 ];
 
   let defindex_contract = create_defindex_vault(
       &test.env,
-      assets,
+      assets.clone(),
       test.manager.clone(),
       test.emergency_manager.clone(),
       test.vault_fee_receiver.clone(),
@@ -49,115 +53,23 @@ fn check_and_execute_investments(){
 
   // Mint before deposit
   test.token_0_admin_client.mint(&users[0], &amount);
+  test.token_1_admin_client.mint(&users[0], &amount);
 
   let deposit_amount = 10_0_000_000i128;
 
   // Deposit
   defindex_contract.deposit(
-      &sorobanvec![&test.env, deposit_amount],
-      &sorobanvec![&test.env, deposit_amount],
+      &sorobanvec![&test.env, deposit_amount, deposit_amount],
+      &sorobanvec![&test.env, deposit_amount, deposit_amount],
       &users[0],
       &true,
   );
 
-     // Invest
-     let amount_to_invest = 5_000_000i128;
-     let asset_investments = sorobanvec![
-      &test.env,
-      Some(AssetInvestmentAllocation {
-          asset: test.token_0.address.clone(),
-          strategy_allocations: sorobanvec![
-              &test.env,
-              Some(StrategyAllocation {
-                  strategy_address: test.strategy_client_token_0.address.clone(),
-                  amount: amount_to_invest,
-              }),
-          ],
-      }),
-  ];
-
-  let invest_result = defindex_contract.invest(&asset_investments);
-
-  assert_eq!(invest_result.clone(), asset_investments);
-
-  let event = test.env.events().all().last().unwrap();
-
-  let investment = models::AssetInvestmentAllocation {
-    asset: test.token_0.address.clone(),
-    strategy_allocations: sorobanvec![&test.env, Some(models::StrategyAllocation {
-        strategy_address: test.strategy_client_token_0.address.clone(),
-        amount: amount_to_invest.clone(),
-    })],
-};
-  let expected_event_2 = InvestEvent { 
-    asset_investments: sorobanvec![&test.env, investment.clone()],
-    rebalance_method: symbol_short!("rebalance"), 
-    report: Report {
-      prev_balance: 0,
-      gains_or_losses: 0,
-      locked_fee: 0,
-    }
-  };
-
-  let expected_event =    sorobanvec![
+  // Invest
+  let amount_to_invest = 5_000_000i128;
+  let asset_investments = sorobanvec![
     &test.env,
-    (
-        defindex_contract.address.clone(),
-        (String::from_str(&test.env, "DeFindexVault"), symbol_short!("rebalance")).into_val(&test.env),
-        (expected_event_2).into_val(&test.env)
-    ),
-  ];
-
-  assert_eq!(sorobanvec![&test.env, event.clone()], expected_event);
-  /* 
-
-     left: Vec(Ok((Contract(CAQ5UHPIIQ2LXWNVOLLZFEQOUYIWGPGDEMNH4WJQCX3C4LPOI6EKQH5V), Vec(Ok(String(obj#2789)), Ok(Symbol(rebalance))), Map(obj#2829))))
-    right: Vec(Ok((Contract(CAQ5UHPIIQ2LXWNVOLLZFEQOUYIWGPGDEMNH4WJQCX3C4LPOI6EKQH5V), Vec(Ok(String(obj#2847)), Ok(Symbol(rebalance))), Map(obj#2863))))
-
-    pub struct InvestEvent {
-      pub asset_investments: Vec<AssetInvestmentAllocation>,
-      pub rebalance_method: Symbol,
-      pub report: Report,
-    }
-
-    let investment = AssetInvestmentAllocation {
-      asset: asset_address.clone(),
-      strategy_allocations: vec![&e, Some(StrategyAllocation {
-          strategy_address: strategy_address.clone(),
-          amount: amount.clone(),
-      })],
-    };
-    pub struct Report {
-    pub prev_balance: i128,
-    pub gains_or_losses: i128,
-    pub locked_fee: i128,
-}
-   */
-  //let invest_event: InvestEvent = FromVal::from_val(&test.env, &event.2);
-  //std::println!("🟢0{:?}", invest_event);
-
-
-
-  //Withdraw event
-
-  let amount_to_withdraw = 5_000_000i128;
-
-
-  let withdraw_result = defindex_contract.withdraw(&amount_to_withdraw, &users[0]);
-
-  assert_eq!(withdraw_result.clone(), sorobanvec!(&test.env, amount_to_withdraw));
-
-  let event = test.env.events().all().last().unwrap();
-
-  let event_key = Symbol::from_val(&test.env, &event.1.get(1).unwrap().clone());
-
-  let expected_key = symbol_short!("withdraw");
-
-  assert_eq!(event_key, expected_key);
-
-  /* let expected_event_data = sorobanvec![
-    &test.env,
-    AssetInvestmentAllocation {
+    Some(AssetInvestmentAllocation {
         asset: test.token_0.address.clone(),
         strategy_allocations: sorobanvec![
             &test.env,
@@ -166,19 +78,241 @@ fn check_and_execute_investments(){
                 amount: amount_to_invest,
             }),
         ],
-    }];
+    }),
+    Some(AssetInvestmentAllocation {
+        asset: test.token_1.address.clone(),
+        strategy_allocations: sorobanvec![
+            &test.env,
+            Some(StrategyAllocation {
+                strategy_address: test.strategy_client_token_1.address.clone(),
+                amount: amount_to_invest,
+            }),
+        ],
+    }),
+  ];
 
-  assert_eq!(
-    sorobanvec![&test.env, event.clone()],
-    sorobanvec![
-      &test.env,
-      (
-        defindex_contract.address.clone(),
-        (String::from_str(&test.env,"DeFindexVault"), symbol_short!("execinv")).into_val(&test.env),
-        expected_event_data.into_val(&test.env),
-      ),
-    ]
-  )  */
+  let invest_result = defindex_contract.invest(&asset_investments.clone());
+
+  assert_eq!(invest_result.clone(), asset_investments.clone());
+
+  let event = test.env.events().all().last().unwrap();
+
+  let invest_event: ExecuteInvestmentEvent = FromVal::from_val(&test.env, &event.2);
+
+  let expected_asset_investment: models::AssetInvestmentAllocation = models::AssetInvestmentAllocation {
+    asset: test.token_0.address.clone(),
+    strategy_allocations: sorobanvec![
+        &test.env,
+        Some(models::StrategyAllocation {
+            strategy_address: test.strategy_client_token_0.address.clone(),
+            amount: amount_to_invest,
+        }),
+    ],
+  };
+  let expected_asset_1_investment: models::AssetInvestmentAllocation = models::AssetInvestmentAllocation {
+    asset: test.token_1.address.clone(),
+    strategy_allocations: sorobanvec![
+        &test.env,
+        Some(models::StrategyAllocation {
+            strategy_address: test.strategy_client_token_1.address.clone(),
+            amount: amount_to_invest,
+        }),
+    ],
+  };
+
+  let expected_assets: Vec<common::models::AssetStrategySet> = sorobanvec![
+    &test.env,
+    common::models::AssetStrategySet {
+        address: test.token_0.address.clone(),
+        strategies: sorobanvec![
+            &test.env,
+            common::models::Strategy {
+                address: test.strategy_client_token_0.address.clone(),
+                name: String::from_str(&test.env, "Strategy 1"),
+                paused: false,
+            },
+        ],
+    },
+    common::models::AssetStrategySet {
+        address: test.token_1.address.clone(),
+        strategies: sorobanvec![
+            &test.env,
+            common::models::Strategy {
+                address: test.strategy_client_token_1.address.clone(),
+                name: String::from_str(&test.env, "Strategy 1"),
+                paused: false,
+            },
+        ],
+    },
+  ];
+  assert_eq!(invest_event.rebalance_method, symbol_short!("invest"));
+  assert_eq!(invest_event.asset_investments, sorobanvec![&test.env, Some(expected_asset_investment), Some(expected_asset_1_investment)]);
+  assert_eq!(invest_event.assets, expected_assets);
+
+  let instruction_amount_0 = 2_000i128;
+  let instructions = sorobanvec![
+        &test.env,
+        Instruction::Withdraw(
+            test.strategy_client_token_0.address.clone(),
+            instruction_amount_0
+        ),
+
+    ];
+  defindex_contract.rebalance(&instructions.clone());
+
+  let events = test.env.events().all();
+
+  let rebalance_events: std::vec::Vec<(soroban_sdk::Address, soroban_sdk::Vec<soroban_sdk::Val>, soroban_sdk::Val)> = 
+    events.iter().filter(
+      | event| event.1 == 
+        sorobanvec![&test.env, String::from_str(&test.env, "DeFindexVault").into_val(&test.env), 
+        symbol_short!("rebalance").into_val(&test.env)]
+      ).collect();
+
+  let  withdraw_event: UnwindEvent = FromVal::from_val(&test.env, &rebalance_events.last().unwrap().2); 
+
+  let expected_call_params = sorobanvec![
+    &test.env,
+    (test.strategy_client_token_0.address.clone(), instruction_amount_0, defindex_contract.address.clone()),
+  ];
+
+  let expected_report = Report {
+    prev_balance: amount_to_invest- instruction_amount_0,
+    gains_or_losses: 0,
+    locked_fee:0
+  };
+
+  assert_eq!(withdraw_event.rebalance_method, symbol_short!("unwind"));
+  assert_eq!(withdraw_event.call_params, expected_call_params);
+  assert_eq!(withdraw_event.report, expected_report);
+
+  let instruction_amount_1 = 1_000_000i128;
+
+  let instructions = sorobanvec![
+        &test.env,
+        Instruction::Invest(
+            test.strategy_client_token_0.address.clone(),
+            instruction_amount_1
+        ),
+
+    ];
+  defindex_contract.rebalance(&instructions.clone());
+
+  let events = test.env.events().all();
+  let rebalance_events: std::vec::Vec<(soroban_sdk::Address, soroban_sdk::Vec<soroban_sdk::Val>, soroban_sdk::Val)> = 
+    events.iter().filter(
+      | event| event.1 == 
+        sorobanvec![&test.env, String::from_str(&test.env, "DeFindexVault").into_val(&test.env), 
+        symbol_short!("rebalance").into_val(&test.env)]
+      ).collect();
+
+  let  invest_event: InvestEvent = FromVal::from_val(&test.env, &rebalance_events.last().unwrap().2); 
+
+  let expected_asset_investment = sorobanvec![
+    &test.env,
+    models::AssetInvestmentAllocation {
+        asset: test.token_0.address.clone(),
+        strategy_allocations: sorobanvec![
+            &test.env,
+            Some(models::StrategyAllocation {
+                strategy_address: test.strategy_client_token_0.address.clone(),
+                amount: instruction_amount_1,
+            }),
+        ],
+    },
+  ];
+
+  let expected_report = report::Report {
+    prev_balance: amount_to_invest - instruction_amount_0 + instruction_amount_1,
+    gains_or_losses: 0,
+    locked_fee:0
+  };
+
+  assert_eq!(invest_event.rebalance_method, symbol_short!("invest"));
+  assert_eq!(invest_event.asset_investments, expected_asset_investment);
+  assert_eq!(invest_event.report, expected_report);
+
+  let amount_in = 1_000_000;
+  let instructions = sorobanvec![
+    &test.env,
+    Instruction::SwapExactIn(
+        test.token_0.address.clone(),
+        test.token_1.address.clone(),
+        amount_in,
+        amount_in,
+        test.env.ledger().timestamp() + 3600u64
+    ),
+];
+
+  defindex_contract.rebalance(&instructions);
+
+  let events = test.env.events().all();
+  let rebalance_events: std::vec::Vec<(soroban_sdk::Address, soroban_sdk::Vec<soroban_sdk::Val>, soroban_sdk::Val)> = 
+    events.iter().filter(
+      | event| event.1 == 
+        sorobanvec![&test.env, String::from_str(&test.env, "DeFindexVault").into_val(&test.env), 
+        symbol_short!("rebalance").into_val(&test.env)]
+      ).collect();
+
+  let swap_exact_in_event: SwapExactInEvent = FromVal::from_val(&test.env, &rebalance_events.last().unwrap().2);
+  
+  let expected_path: Vec<Val> = sorobanvec![
+    &test.env,
+    test.token_0.address.clone().into_val(&test.env),
+    test.token_1.address.clone().into_val(&test.env)
+  ];
+  let expected_swap_args:Vec<Val> = sorobanvec![
+    &test.env,
+    amount_in.into_val(&test.env),
+    amount_in.into_val(&test.env),
+    expected_path.into_val(&test.env),
+    defindex_contract.address.clone().into_val(&test.env),
+    (test.env.ledger().timestamp() + 3600u64).into_val(&test.env),
+  ];
+
+  assert_eq!(swap_exact_in_event.rebalance_method, symbol_short!("SwapEIn"));
+  assert_eq!(swap_exact_in_event.swap_args, expected_swap_args);
+
+
+  let amount_out = 1_000_000i128;
+  let swap_exact_out_instructions = sorobanvec![
+    &test.env,
+    Instruction::SwapExactOut(
+      test.token_0.address.clone(),
+      test.token_1.address.clone(),
+        amount_out,
+        amount_out,
+        test.env.ledger().timestamp() + 3600u64
+    )];
+
+  defindex_contract.rebalance(&swap_exact_out_instructions);
+
+  let events = test.env.events().all();
+  let rebalance_events: std::vec::Vec<(soroban_sdk::Address, soroban_sdk::Vec<soroban_sdk::Val>, soroban_sdk::Val)> = 
+    events.iter().filter(
+      | event| event.1 == 
+        sorobanvec![&test.env, String::from_str(&test.env, "DeFindexVault").into_val(&test.env), 
+        symbol_short!("rebalance").into_val(&test.env)]
+      ).collect();
+
+  let swap_exact_out_event: SwapExactInEvent = FromVal::from_val(&test.env, &rebalance_events.last().unwrap().2);
+
+  let expected_path: Vec<Val> = sorobanvec![
+    &test.env,
+    test.token_0.address.clone().into_val(&test.env),
+    test.token_1.address.clone().into_val(&test.env),
+  ];
+  let expected_swap_args:Vec<Val> = sorobanvec![
+    &test.env,
+    amount_out.into_val(&test.env),
+    amount_out.into_val(&test.env),
+    expected_path.into_val(&test.env),
+    defindex_contract.address.clone().into_val(&test.env),
+    (test.env.ledger().timestamp() + 3600u64).into_val(&test.env),
+  ];
+
+  assert_eq!(swap_exact_out_event.rebalance_method, symbol_short!("SwapEOut"));
+  assert_eq!(swap_exact_out_event.swap_args, expected_swap_args);
 
 }
 
