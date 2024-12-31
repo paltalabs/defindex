@@ -1,6 +1,6 @@
 use soroban_sdk::{vec as sorobanvec, Address, InvokeError, Map, String, Vec};
 
-use crate::test::defindex_vault::ContractError;
+use crate::test::defindex_vault::{ContractError, RolesDataKey};
 use crate::test::{
     create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1,
     defindex_vault::{
@@ -23,23 +23,28 @@ fn multi_instructions() {
         }
     ];
 
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
     let defindex_contract = create_defindex_vault(
         &test.env,
         assets,
-        test.manager.clone(),
-        test.emergency_manager.clone(),
-        test.vault_fee_receiver.clone(),
+        roles,
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![
-            &test.env,
-            String::from_str(&test.env, "dfToken"),
-            String::from_str(&test.env, "DFT")
-        ],
+        name_symbol,
     );
+    
     let amount = 987654321i128;
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -97,7 +102,7 @@ fn multi_instructions() {
         ),
     ];
 
-    defindex_contract.rebalance(&instructions);
+    defindex_contract.rebalance(&test.rebalance_manager, &instructions);
 
     let vault_balance = test.token_0.balance(&defindex_contract.address);
     assert_eq!(vault_balance, instruction_amount_1);
@@ -116,23 +121,28 @@ fn one_instruction() {
         }
     ];
 
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
     let defindex_contract = create_defindex_vault(
         &test.env,
         assets,
-        test.manager.clone(),
-        test.emergency_manager.clone(),
-        test.vault_fee_receiver.clone(),
+        roles,
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![
-            &test.env,
-            String::from_str(&test.env, "dfToken"),
-            String::from_str(&test.env, "DFT")
-        ],
+        name_symbol,
     );
+    
     let amount = 987654321i128;
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -185,7 +195,7 @@ fn one_instruction() {
         ),
     ];
 
-    defindex_contract.rebalance(&instructions);
+    defindex_contract.rebalance(&test.rebalance_manager, &instructions);
 
     let vault_balance = test.token_0.balance(&defindex_contract.address);
     assert_eq!(vault_balance, instruction_amount_0);
@@ -204,23 +214,28 @@ fn empty_instructions() {
             strategies: strategy_params_token_0.clone()
         }
     ];
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
     let defindex_contract = create_defindex_vault(
         &test.env,
         assets,
-        test.manager.clone(),
-        test.emergency_manager.clone(),
-        test.vault_fee_receiver.clone(),
+        roles,
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![
-            &test.env,
-            String::from_str(&test.env, "dfToken"),
-            String::from_str(&test.env, "DFT")
-        ],
+        name_symbol,
     );
+    
     let amount: i128 = 987654321;
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
     test.token_0_admin_client.mint(&users[0], &amount);
@@ -250,23 +265,28 @@ fn no_instructions() {
             strategies: strategy_params_token_0.clone()
         }
     ];
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
     let defindex_contract = create_defindex_vault(
         &test.env,
         assets,
-        test.manager.clone(),
-        test.emergency_manager.clone(),
-        test.vault_fee_receiver.clone(),
+        roles,
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![
-            &test.env,
-            String::from_str(&test.env, "dfToken"),
-            String::from_str(&test.env, "DFT")
-        ],
+        name_symbol,
     );
+    
     let amount: i128 = 987654321;
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
     test.token_0_admin_client.mint(&users[0], &amount);
@@ -282,7 +302,7 @@ fn no_instructions() {
     let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount - 1000);
 
-    let rebalance = defindex_contract.try_rebalance(&sorobanvec![&test.env]);
+    let rebalance = defindex_contract.try_rebalance(&test.rebalance_manager, &sorobanvec![&test.env]);
     assert_eq!(rebalance, Err(Ok(ContractError::NoInstructions)));
 }
 
@@ -299,23 +319,28 @@ fn insufficient_balance() {
             strategies: strategy_params_token_0.clone()
         }
     ];
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
     let defindex_contract = create_defindex_vault(
         &test.env,
         assets,
-        test.manager.clone(),
-        test.emergency_manager.clone(),
-        test.vault_fee_receiver.clone(),
+        roles,
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![
-            &test.env,
-            String::from_str(&test.env, "dfToken"),
-            String::from_str(&test.env, "DFT")
-        ],
+        name_symbol,
     );
+    
     let amount: i128 = 987654321;
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
     test.token_0_admin_client.mint(&users[0], &amount);
@@ -330,7 +355,7 @@ fn insufficient_balance() {
         Instruction::Withdraw(test.strategy_client_token_0.address.clone(), amount + 1),
     ];
 
-    let withdraw_no_funds = defindex_contract.try_rebalance(&withdraw_no_funds_instructions);
+    let withdraw_no_funds = defindex_contract.try_rebalance(&test.rebalance_manager, &withdraw_no_funds_instructions);
     assert_eq!(
         withdraw_no_funds,
         Err(Ok(ContractError::StrategyWithdrawError))
@@ -341,7 +366,7 @@ fn insufficient_balance() {
         Instruction::Invest(test.strategy_client_token_0.address.clone(), 1),
     ];
 
-    let invest_no_funds = defindex_contract.try_rebalance(&invest_no_funds_instructions);
+    let invest_no_funds = defindex_contract.try_rebalance(&test.rebalance_manager, &invest_no_funds_instructions);
 
     //Contract should fail with error #10 no balance or panic the test
     if invest_no_funds != Err(Err(InvokeError::Contract(10))) {
@@ -364,7 +389,7 @@ fn insufficient_balance() {
         Instruction::Withdraw(test.strategy_client_token_0.address.clone(), amount + 1),
     ];
 
-    let rebalance = defindex_contract.try_rebalance(&withdraw_instructions);
+    let rebalance = defindex_contract.try_rebalance(&test.rebalance_manager, &withdraw_instructions);
     assert_eq!(rebalance, Err(Ok(ContractError::StrategyWithdrawError)));
 
     let invest_instructions = sorobanvec![
@@ -373,7 +398,7 @@ fn insufficient_balance() {
     ];
 
     //Contract should fail with error #10 no balance
-    let rebalance = defindex_contract.try_rebalance(&invest_instructions);
+    let rebalance = defindex_contract.try_rebalance(&test.rebalance_manager, &invest_instructions);
     if rebalance == Err(Err(InvokeError::Contract(10))) {
         return;
     } else {
@@ -401,23 +426,28 @@ fn swap_exact_in() {
         }
     ];
 
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
     let defindex_contract = create_defindex_vault(
         &test.env,
         assets,
-        test.manager.clone(),
-        test.emergency_manager.clone(),
-        test.vault_fee_receiver.clone(),
+        roles,
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![
-            &test.env,
-            String::from_str(&test.env, "dfToken"),
-            String::from_str(&test.env, "DFT")
-        ],
+        name_symbol,
     );
+    
     let amount0 = 123456789i128;
     let amount1 = 987654321i128;
 
@@ -493,7 +523,7 @@ fn swap_exact_in() {
         ),
     ];
 
-    defindex_contract.rebalance(&instructions);
+    defindex_contract.rebalance(&test.rebalance_manager, &instructions);
 
     // check total managed funds
     let mut total_managed_funds_expected = Map::new(&test.env);
@@ -555,23 +585,28 @@ fn swap_exact_out() {
         }
     ];
 
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
     let defindex_contract = create_defindex_vault(
         &test.env,
         assets,
-        test.manager.clone(),
-        test.emergency_manager.clone(),
-        test.vault_fee_receiver.clone(),
+        roles,
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![
-            &test.env,
-            String::from_str(&test.env, "dfToken"),
-            String::from_str(&test.env, "DFT")
-        ],
+        name_symbol,
     );
+    
     let amount0 = 123456789i128;
     let amount1 = 987654321i128;
 
@@ -649,7 +684,7 @@ fn swap_exact_out() {
         ),
     ];
 
-    defindex_contract.rebalance(&instructions);
+    defindex_contract.rebalance(&test.rebalance_manager, &instructions);
 
     // check total managed funds
     let mut total_managed_funds_expected = Map::new(&test.env);

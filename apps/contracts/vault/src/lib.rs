@@ -2,7 +2,7 @@
 use constants::MAX_BPS;
 use report::Report;
 use soroban_sdk::{
-    contract, contractimpl, panic_with_error, token::TokenClient, Address, Env, Map, String, Vec,
+    contract, contractimpl, panic_with_error, token::TokenClient, Address, Env, Map, String, Vec
 };
 use soroban_token_sdk::metadata::TokenMetadata;
 
@@ -85,24 +85,23 @@ impl VaultTrait for DeFindexVault {
     fn __constructor(
         e: Env,
         assets: Vec<AssetStrategySet>,
-        manager: Address,
-        emergency_manager: Address,
-        vault_fee_receiver: Address,
+        roles: Map<u32, Address>,
         vault_fee: u32,
         defindex_protocol_receiver: Address,
         defindex_protocol_rate: u32,
         factory: Address,
         soroswap_router: Address,
-        name_symbol: Vec<String>,
+        name_symbol: Map<String, String>,
     ) {
         let access_control = AccessControl::new(&e);
 
-        access_control.set_role(&RolesDataKey::EmergencyManager, &emergency_manager);
-        access_control.set_role(&RolesDataKey::VaultFeeReceiver, &vault_fee_receiver);
-        access_control.set_role(&RolesDataKey::Manager, &manager);
-
-        let vault_name = name_symbol.get(0).unwrap();
-        let vault_symbol = name_symbol.get(1).unwrap();
+        access_control.set_role(&RolesDataKey::EmergencyManager, &roles.get(RolesDataKey::EmergencyManager as u32).unwrap_or_else(|| panic_with_error!(&e, ContractError::RolesIncomplete)));
+        access_control.set_role(&RolesDataKey::VaultFeeReceiver, &roles.get(RolesDataKey::VaultFeeReceiver as u32).unwrap_or_else(|| panic_with_error!(&e, ContractError::RolesIncomplete)));
+        access_control.set_role(&RolesDataKey::Manager, &roles.get(RolesDataKey::Manager as u32).unwrap_or_else(|| panic_with_error!(&e, ContractError::RolesIncomplete)));
+        access_control.set_role(&RolesDataKey::RebalanceManager, &roles.get(RolesDataKey::RebalanceManager as u32).unwrap_or_else(|| panic_with_error!(&e, ContractError::RolesIncomplete)));
+        
+        let vault_name = name_symbol.get(String::from_str(&e, "name")).unwrap_or_else(|| panic_with_error!(&e, ContractError::MetadataIncomplete));
+        let vault_symbol = name_symbol.get(String::from_str(&e, "symbol")).unwrap_or_else(|| panic_with_error!(&e, ContractError::MetadataIncomplete));
 
         set_vault_fee(&e, &vault_fee);
 
@@ -683,6 +682,37 @@ impl AdminInterfaceTrait for DeFindexVault {
         let access_control = AccessControl::new(&e);
         access_control.get_emergency_manager()
     }
+
+    /// Sets the rebalance manager for the vault.
+    ///
+    /// This function allows the current manager to set a new rebalance manager for the vault.
+    ///
+    /// # Arguments:
+    /// * `e` - The environment.
+    /// * `new_rebalance_manager` - The new rebalance manager address.
+    ///
+    /// # Returns:
+    /// * `()` - No return value.
+    fn set_rebalance_manager(e: Env, new_rebalance_manager: Address) {
+        extend_instance_ttl(&e);
+        let access_control = AccessControl::new(&e);
+        access_control.set_rebalance_manager(&new_rebalance_manager);
+
+        events::emit_rebalance_manager_changed_event(&e, new_rebalance_manager);
+    }
+
+    /// Retrieves the current rebalance manager address for the vault.
+    ///
+    /// # Arguments:
+    /// * `e` - The environment.
+    ///
+    /// # Returns:
+    /// * `Result<Address, ContractError>` - The rebalance manager address if successful, otherwise returns a ContractError.
+    fn get_rebalance_manager(e: Env) -> Result<Address, ContractError> {
+        extend_instance_ttl(&e);
+        let access_control = AccessControl::new(&e);
+        access_control.get_rebalance_manager()
+    }
 }
 
 #[contractimpl]
@@ -740,12 +770,15 @@ impl VaultManagementTrait for DeFindexVault {
         Ok(asset_investments.clone())
     }
 
-    fn rebalance(e: Env, instructions: Vec<Instruction>) -> Result<(), ContractError> {
+    fn rebalance(e: Env, caller: Address, instructions: Vec<Instruction>) -> Result<(), ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
 
         let access_control = AccessControl::new(&e);
-        access_control.require_role(&RolesDataKey::Manager);
+        access_control.require_any_role(
+            &[RolesDataKey::RebalanceManager, RolesDataKey::Manager],
+            &caller,
+        );
 
         if instructions.is_empty() {
             panic_with_error!(&e, ContractError::NoInstructions);

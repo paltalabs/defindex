@@ -1,9 +1,7 @@
 use soroban_sdk::{Address, Env, Map, String, Vec};
 
 use crate::{
-    models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction},
-    report::Report,
-    ContractError,
+    models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction}, report::Report, ContractError
 };
 use common::models::AssetStrategySet;
 
@@ -37,15 +35,13 @@ pub trait VaultTrait {
     fn __constructor(
         e: Env,
         assets: Vec<AssetStrategySet>,
-        manager: Address,
-        emergency_manager: Address,
-        vault_fee_receiver: Address,
+        roles: Map<u32, Address>,
         vault_fee: u32,
         defindex_protocol_receiver: Address,
         defindex_protocol_rate: u32,
         factory: Address,
         soroswap_router: Address,
-        name_symbol: Vec<String>,
+        name_symbol: Map<String, String>,
     );
 
     /// Handles user deposits into the DeFindex Vault.
@@ -296,6 +292,27 @@ pub trait AdminInterfaceTrait {
     /// # Returns:
     /// * `Result<Address, ContractError>` - The emergency manager address if successful, otherwise returns a ContractError.
     fn get_emergency_manager(e: Env) -> Result<Address, ContractError>;
+
+    /// Sets the rebalance manager for the vault.
+    ///
+    /// This function allows the current manager to set a new rebalance manager for the vault.
+    ///
+    /// # Arguments:
+    /// * `e` - The environment.
+    /// * `new_rebalance_manager` - The new rebalance manager address.
+    ///
+    /// # Returns:
+    /// * `()` - No return value.
+    fn set_rebalance_manager(e: Env, new_rebalance_manager: Address);
+
+    /// Retrieves the current rebalance manager address for the vault.
+    ///
+    /// # Arguments:
+    /// * `e` - The environment.
+    ///
+    /// # Returns:
+    /// * `Result<Address, ContractError>` - The rebalance manager address if successful, otherwise returns a ContractError.
+    fn get_rebalance_manager(e: Env) -> Result<Address, ContractError>;
 }
 
 pub trait VaultManagementTrait {
@@ -340,7 +357,7 @@ pub trait VaultManagementTrait {
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn rebalance(e: Env, instructions: Vec<Instruction>) -> Result<(), ContractError>;
+    fn rebalance(e: Env, caller: Address, instructions: Vec<Instruction>) -> Result<(), ContractError>;
 
     /// Locks fees for all assets and their strategies.
     ///

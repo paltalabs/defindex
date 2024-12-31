@@ -1,7 +1,7 @@
-use soroban_sdk::{vec as sorobanvec, vec, Map, String, Vec};
+use soroban_sdk::{vec as sorobanvec, vec, Address, Map, String, Vec};
 
 use crate::test::defindex_vault::{
-    AssetInvestmentAllocation, AssetStrategySet, CurrentAssetInvestmentAllocation, StrategyAllocation, Strategy,
+    AssetInvestmentAllocation, AssetStrategySet, CurrentAssetInvestmentAllocation, RolesDataKey, Strategy, StrategyAllocation
 };
 use crate::test::{
     create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1,
@@ -23,23 +23,28 @@ fn one_asset_no_previous_investment() {
         }
     ];
 
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
     let defindex_contract = create_defindex_vault(
         &test.env,
         assets,
-        test.manager.clone(),
-        test.emergency_manager.clone(),
-        test.vault_fee_receiver.clone(),
+        roles,
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![
-            &test.env,
-            String::from_str(&test.env, "dfToken"),
-            String::from_str(&test.env, "DFT")
-        ],
+        name_symbol,
     );
+    
     let amount = 123456789i128;
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -184,23 +189,28 @@ fn one_asset_previous_investment_success() {
         }
     ];
 
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
     let defindex_contract = create_defindex_vault(
         &test.env,
         assets,
-        test.manager.clone(),
-        test.emergency_manager.clone(),
-        test.vault_fee_receiver.clone(),
+        roles,
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![
-            &test.env,
-            String::from_str(&test.env, "dfToken"),
-            String::from_str(&test.env, "DFT")
-        ],
+        name_symbol,
     );
+    
 
     let amount = 123456789i128;
 
@@ -389,23 +399,28 @@ fn several_assets_no_previous_investment() {
         }
     ];
 
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
     let defindex_contract = create_defindex_vault(
         &test.env,
         assets,
-        test.manager.clone(),
-        test.emergency_manager.clone(),
-        test.vault_fee_receiver.clone(),
+        roles,
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![
-            &test.env,
-            String::from_str(&test.env, "dfToken"),
-            String::from_str(&test.env, "DFT")
-        ],
+        name_symbol,
     );
+    
     let amount0 = 123456789i128;
     let amount1 = 987654321i128;
 
@@ -623,23 +638,28 @@ fn several_assets_wih_previous_investment_success() {
             strategies: strategy_params_token_1.clone()
         }
     ];
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
     let defindex_contract = create_defindex_vault(
         &test.env,
         assets,
-        test.manager.clone(),
-        test.emergency_manager.clone(),
-        test.vault_fee_receiver.clone(),
+        roles,
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![
-            &test.env,
-            String::from_str(&test.env, "dfToken"),
-            String::from_str(&test.env, "DFT")
-        ],
+        name_symbol,
     );
+    
 
     let amount0 = 123456789i128;
     let amount1 = 987654321i128;
@@ -930,23 +950,28 @@ fn one_asset_several_strategies() {
             strategies: strategy_params.clone(),
         }
     ];
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
     let defindex_contract = create_defindex_vault(
         &test.env,
         assets,
-        test.manager.clone(),
-        test.emergency_manager.clone(),
-        test.vault_fee_receiver.clone(),
+        roles,
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![
-            &test.env,
-            String::from_str(&test.env, "dfToken"),
-            String::from_str(&test.env, "DFT")
-        ],
+        name_symbol,
     );
+    
     let assets = defindex_contract.get_assets();
     assert_eq!(assets.len(), 1);
     let asset = assets.get(0).unwrap();
@@ -1043,24 +1068,29 @@ fn deposit_simple_then_deposit_and_invest() {
             strategies: strategy_params.clone(),
         }
     ];
+    
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
     let defindex_contract = create_defindex_vault(
         &test.env,
         assets,
-        test.manager.clone(),
-        test.emergency_manager.clone(),
-        test.vault_fee_receiver.clone(),
+        roles,
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
-        sorobanvec![
-            &test.env,
-            String::from_str(&test.env, "dfToken"),
-            String::from_str(&test.env, "DFT")
-        ],
-     
+        name_symbol,
     );
+
     let assets = defindex_contract.get_assets();
     assert_eq!(assets.len(), 1);
     let asset = assets.get(0).unwrap();
@@ -1169,7 +1199,6 @@ fn deposit_simple_then_deposit_and_invest() {
     );
     let expected_idle_funds = idle_funds + deposit_amount_3;
     
-
     let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
     let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
     

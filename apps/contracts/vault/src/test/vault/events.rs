@@ -1,10 +1,10 @@
 use soroban_sdk::testutils::Events;
-use soroban_sdk::{symbol_short, vec as sorobanvec, FromVal, IntoVal, String, Symbol, Val, Vec};
+use soroban_sdk::{symbol_short, vec as sorobanvec, Address, FromVal, IntoVal, Map, String, Symbol, Val, Vec};
 use crate::events::{ExecuteInvestmentEvent, InvestEvent, SwapExactInEvent};
 
 use crate::{models, report};
 use crate::test::defindex_vault::{
-  AssetInvestmentAllocation, AssetStrategySet, Instruction, Report, StrategyAllocation, UnwindEvent,
+  AssetInvestmentAllocation, AssetStrategySet, Instruction, Report, RolesDataKey, StrategyAllocation, UnwindEvent,
 };
 use crate::test::{
   create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1, DeFindexVaultTest
@@ -28,25 +28,30 @@ fn check_rebalance_events(){
         address: test.token_1.address.clone(),
         strategies: strategy_params_token_1.clone()
     },
-];
+  ];
+
+  let mut roles: Map<u32, Address> = Map::new(&test.env);
+  roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+  roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+  roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+  roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+  let mut name_symbol: Map<String, String> = Map::new(&test.env);
+  name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+  name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
 
   let defindex_contract = create_defindex_vault(
       &test.env,
       assets.clone(),
-      test.manager.clone(),
-      test.emergency_manager.clone(),
-      test.vault_fee_receiver.clone(),
+      roles,
       2000u32,
       test.defindex_protocol_receiver.clone(),
       2500u32,
       test.defindex_factory.clone(),
       test.soroswap_router.address.clone(),
-      sorobanvec![
-          &test.env,
-          String::from_str(&test.env, "dfToken"),
-          String::from_str(&test.env, "DFT")
-      ],
+      name_symbol,
   );
+
   let amount = 12_3_456_789i128;
 
   let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
