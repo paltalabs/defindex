@@ -1,4 +1,4 @@
-use soroban_sdk::{Address, Env, Map, String, Vec};
+use soroban_sdk::{Address, BytesN, Env, Map, String, Vec};
 
 use crate::{
     models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction}, report::Report, ContractError
@@ -42,6 +42,7 @@ pub trait VaultTrait {
         factory: Address,
         soroswap_router: Address,
         name_symbol: Map<String, String>,
+        upgradable: bool,
     );
 
     /// Handles user deposits into the DeFindex Vault.
@@ -313,6 +314,17 @@ pub trait AdminInterfaceTrait {
     /// # Returns:
     /// * `Result<Address, ContractError>` - The rebalance manager address if successful, otherwise returns a ContractError.
     fn get_rebalance_manager(e: Env) -> Result<Address, ContractError>;
+
+    /// Upgrades the contract with new WebAssembly (WASM) code.
+    ///
+    /// This function updates the contract with new WASM code provided by the `new_wasm_hash`.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The runtime environment.
+    /// * `new_wasm_hash` - The hash of the new WASM code to upgrade the contract to.
+    ///
+    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), ContractError>;
 }
 
 pub trait VaultManagementTrait {

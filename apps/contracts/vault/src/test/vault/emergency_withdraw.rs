@@ -39,6 +39,7 @@ fn withdraw_success() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let amount = 987654321i128;
