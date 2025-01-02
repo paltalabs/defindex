@@ -37,6 +37,9 @@ export interface CreateVaultParams {
     paused: boolean;
   }>;
 }
+export const soroswapUSDC = new Address(
+  "CARDT45FED2I3FKESPMHDFV3ZMR6VH5ZHCFIOPH6TPSU35GPB6QBBCSU"
+);
 
 /**
  * Mints a specified amount of tokens for a given user.
@@ -45,12 +48,10 @@ export interface CreateVaultParams {
  * @param amount - The amount of tokens to mint.
  * @returns A promise that resolves when the minting operation is complete.
  */
-export async function mintToken(user: Keypair, amount: number) {
-  const soroswapUSDC = new Address(
-    "CAAFIHB4I7WQMJMKC22CZVQNNX7EONWSOMT6SUXK6I3G3F6J4XFRWNDI"
-  );
+export async function mintToken(user: Keypair, amount: number, tokenAddress?: Address) {
   await invokeCustomContract(
-    soroswapUSDC.toString(),
+
+    tokenAddress ? tokenAddress.toString() : soroswapUSDC.toString(),
     "mint",
     [
       new Address(user.publicKey()).toScVal(),
@@ -69,6 +70,7 @@ export async function mintToken(user: Keypair, amount: number) {
  * @param {string} vaultName - The name of the vault.
  * @param {string} vaultSymbol - The symbol of the vault.
  * @param {xdr.ScVal[]} assetAllocations - The asset allocations for the vault.
+ * @param {Address} router_address - The address of the Soroswap router.
  * @returns {xdr.ScVal[]} An array of ScVal objects representing the parameters.
  */
 function getCreateDeFindexParams(
@@ -78,7 +80,8 @@ function getCreateDeFindexParams(
   manager: Keypair,
   vaultName: string,
   vaultSymbol: string,
-  assetAllocations: xdr.ScVal[]
+  assetAllocations: xdr.ScVal[],
+  router_address: Address,
 ): xdr.ScVal[] {
   const roles = xdr.ScVal.scvMap([
     new xdr.ScMapEntry({
@@ -110,12 +113,24 @@ function getCreateDeFindexParams(
     }),
   ])
 
+
+    /* 
+     fn create_defindex_vault(
+        e: Env,
+        roles: Map<u32, Address>,
+        vault_fee: u32,
+        assets: Vec<AssetStrategySet>,
+        salt: BytesN<32>,
+        soroswap_router: Address,
+        name_symbol: Map<String, String>,
+    ) -> Result<Address, FactoryError>;
+  */
   return [
     roles,
     nativeToScVal(100, { type: "u32" }), // Setting vault_fee as 100 bps for demonstration
     xdr.ScVal.scvVec(assetAllocations),
     nativeToScVal(randomBytes(32)), //salt
-    new Address(emergencyManager.publicKey()).toScVal(), //TODO: add soroswap_rouer
+    router_address.toScVal(), //TODO: add soroswap_rouer
     nameSymbol,
   ];
 }
@@ -186,6 +201,7 @@ export async function deployVault(
   const assets: CreateVaultParams[] = createVaultParams;
   const assetAllocations = getAssetAllocations(assets);
 
+  const soroswap_router = new Address("CC6WRJYMZA574TOXNO2ZWU4HIXJ5OLKGB7JF556RKMZPSV2V62SLBTPK")
   const createDeFindexParams: xdr.ScVal[] = getCreateDeFindexParams(
     emergencyManager,
     rebalanceManager,
@@ -193,7 +209,8 @@ export async function deployVault(
     manager,
     vaultName,
     vaultSymbol,
-    assetAllocations
+    assetAllocations,
+    soroswap_router
   );
   try {
     const result = await invokeContract(
