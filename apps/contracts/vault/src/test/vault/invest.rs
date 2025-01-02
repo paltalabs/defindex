@@ -51,6 +51,7 @@ fn wrong_asset_investment_length() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     // now will try to invest with less lengh (only one instead of 2)
@@ -150,6 +151,7 @@ fn wrong_strategy_length() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     // now will try to invest with more strategy length for asset 0
@@ -247,6 +249,7 @@ fn wrong_asset_address() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     // now will try to invest with wrong asset address
@@ -312,6 +315,7 @@ fn negative_amount() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     // now will try to invest with negative amount
@@ -377,6 +381,7 @@ fn paused_strategy() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     // now will try to invest with some amount
@@ -441,6 +446,7 @@ fn in_strategy() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -682,6 +688,7 @@ fn more_than_idle_funds() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -783,6 +790,7 @@ fn without_mock_all_auths() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -1012,6 +1020,7 @@ fn one_asset_several_strategies() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     let assets = defindex_contract.get_assets();
     assert_eq!(assets.len(), 1);

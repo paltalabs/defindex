@@ -48,6 +48,7 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let amount0 = 123456789i128;
@@ -214,6 +215,7 @@ fn deposit_and_invest_several_assets_get_asset_amounts_per_shares() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let amount0 = 123456789i128;

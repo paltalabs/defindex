@@ -1,10 +1,8 @@
 import { Address, Asset, Keypair, nativeToScVal, Networks, scValToNative, xdr } from "@stellar/stellar-sdk";
-import { randomBytes } from "crypto";
-import { exit } from "process";
 import { AddressBook } from "../../utils/address_book.js";
 import { airdropAccount, invokeContract } from "../../utils/contract.js";
 import { config } from "../../utils/env_config.js";
-import { AssetInvestmentAllocation, depositToVault, investVault } from "../vault.js";
+import { AssetInvestmentAllocation, depositToVault, getCreateDeFindexParams, investVault, rebalanceManager } from "../vault.js";
 
 const network = process.argv[2];
 const loadedConfig = config(network);
@@ -97,23 +95,16 @@ export async function testBlendVault(user?: Keypair) {
     ]);
   });
 
-  const nameSymbol = xdr.ScVal.scvVec([
-    nativeToScVal("BLND Vault", { type: "string" }), // name
-    nativeToScVal("BLNVLT", { type: "string" }),
-  ]);
-
-  const createDeFindexParams: xdr.ScVal[] = [
-    new Address(emergencyManager.publicKey()).toScVal(),
-    new Address(feeReceiver.publicKey()).toScVal(),
-    nativeToScVal(100, { type: "u32" }), 
-    new Address(manager.publicKey()).toScVal(),
-    xdr.ScVal.scvVec(assetAllocations),
-    nativeToScVal(randomBytes(32)),
-    new Address(emergencyManager.publicKey()).toScVal(), //     soroswap_router: Address, 
-    nameSymbol, //     name_symbol: Vec<ScVal>,
-  ];
-
-    
+  const createDeFindexParams: xdr.ScVal[] = getCreateDeFindexParams(
+    emergencyManager,
+    rebalanceManager,
+    feeReceiver,
+    manager,
+    "BLND Vault",
+    "BLNVLT",
+    assetAllocations,
+    true,
+  )
 
   const initialAmount = 100_0_000_000;
   let blendVaultAddress: string = "";

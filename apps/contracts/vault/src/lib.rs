@@ -2,7 +2,7 @@
 use constants::MAX_BPS;
 use report::Report;
 use soroban_sdk::{
-    contract, contractimpl, panic_with_error, token::TokenClient, Address, Env, Map, String, Vec
+    contract, contractimpl, panic_with_error, token::TokenClient, Address, BytesN, Env, Map, String, Vec
 };
 use soroban_token_sdk::metadata::TokenMetadata;
 
@@ -31,10 +31,7 @@ use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::{check_and_execute_investments, generate_investment_allocations};
 use models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction};
 use storage::{
-    extend_instance_ttl, get_assets, get_defindex_protocol_fee_rate,
-    get_defindex_protocol_fee_receiver, get_report, get_vault_fee, set_asset,
-    set_defindex_protocol_fee_rate, set_defindex_protocol_fee_receiver, set_factory, set_report,
-    set_soroswap_router, set_total_assets, set_vault_fee,
+    extend_instance_ttl, get_assets, get_defindex_protocol_fee_rate, get_defindex_protocol_fee_receiver, get_report, get_vault_fee, set_asset, set_defindex_protocol_fee_rate, set_defindex_protocol_fee_receiver, set_factory, set_is_upgradable, set_report, set_soroswap_router, set_total_assets, set_vault_fee
 };
 use strategies::{
     get_strategy_asset, get_strategy_client, get_strategy_struct, invest_in_strategy,
@@ -92,6 +89,7 @@ impl VaultTrait for DeFindexVault {
         factory: Address,
         soroswap_router: Address,
         name_symbol: Map<String, String>,
+        upgradable: bool,
     ) {
         let access_control = AccessControl::new(&e);
 
@@ -109,6 +107,7 @@ impl VaultTrait for DeFindexVault {
         set_defindex_protocol_fee_rate(&e, &defindex_protocol_rate);
 
         set_factory(&e, &factory);
+        set_is_upgradable(&e, &upgradable);
 
         set_soroswap_router(&e, &soroswap_router);
 
@@ -712,6 +711,27 @@ impl AdminInterfaceTrait for DeFindexVault {
         extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         access_control.get_rebalance_manager()
+    }
+
+    /// Upgrades the contract with new WebAssembly (WASM) code.
+    ///
+    /// This function updates the contract with new WASM code provided by the `new_wasm_hash`.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The runtime environment.
+    /// * `new_wasm_hash` - The hash of the new WASM code to upgrade the contract to.
+    ///
+    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), ContractError> {
+        if !storage::is_upgradable(&e) {
+            return Err(ContractError::NotUpgradable);
+        }
+        
+        let access_control = AccessControl::new(&e);
+        access_control.require_role(&RolesDataKey::Manager);
+        
+        e.deployer().update_current_contract_wasm(new_wasm_hash);
+        Ok(())
     }
 }
 

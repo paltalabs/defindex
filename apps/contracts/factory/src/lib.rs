@@ -67,6 +67,7 @@ pub trait FactoryTrait {
         salt: BytesN<32>,
         soroswap_router: Address,
         name_symbol: Map<String, String>,
+        upgradable: bool,
     ) -> Result<Address, FactoryError>;
 
     /// Creates a new DeFindex Vault with specified parameters and makes the first deposit to set ratios.
@@ -94,6 +95,7 @@ pub trait FactoryTrait {
         salt: BytesN<32>,
         soroswap_router: Address,
         name_symbol: Map<String, String>,
+        upgradable: bool,
         amounts: Vec<i128>,
     ) -> Result<Address, FactoryError>;
 
@@ -241,6 +243,7 @@ impl FactoryTrait for DeFindexFactory {
         salt: BytesN<32>,
         soroswap_router: Address,
         name_symbol: Map<String, String>,
+        upgradable: bool,
     ) -> Result<Address, FactoryError> {
         extend_instance_ttl(&e);
 
@@ -260,6 +263,7 @@ impl FactoryTrait for DeFindexFactory {
         init_args.push_back(current_contract.to_val());
         init_args.push_back(soroswap_router.to_val());
         init_args.push_back(name_symbol.to_val());
+        init_args.push_back(upgradable.into_val(&e));
 
         let defindex_address = create_contract(&e, vault_wasm_hash, init_args, salt);
 
@@ -298,6 +302,7 @@ impl FactoryTrait for DeFindexFactory {
         salt: BytesN<32>,
         soroswap_router: Address,
         name_symbol: Map<String, String>,
+        upgradable: bool,
         amounts: Vec<i128>,
     ) -> Result<Address, FactoryError> {
         extend_instance_ttl(&e);
@@ -323,6 +328,7 @@ impl FactoryTrait for DeFindexFactory {
         init_args.push_back(current_contract.to_val());
         init_args.push_back(soroswap_router.to_val());
         init_args.push_back(name_symbol.to_val());
+        init_args.push_back(upgradable.into_val(&e));
 
         let defindex_address = create_contract(&e, vault_wasm_hash, init_args, salt);
 

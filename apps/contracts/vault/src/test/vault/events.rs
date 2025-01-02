@@ -43,6 +43,7 @@ fn check_and_execute_investments(){
       test.defindex_factory.clone(),
       test.soroswap_router.address.clone(),
       name_symbol,
+      true,
   );
 
   let amount = 12_3_456_789i128;

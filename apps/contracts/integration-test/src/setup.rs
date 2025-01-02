@@ -119,7 +119,8 @@ pub fn create_vault_one_asset_hodl_strategy<'a>() -> VaultOneAseetHodlStrategy<'
         &assets,
         &salt,
         &soroswap_router.address,
-        &name_symbol
+        &name_symbol,
+        &true,
     );
 
     let vault_contract = VaultContractClient::new(&setup.env, &vault_contract_address);
@@ -225,7 +226,8 @@ pub fn create_vault_one_asset_fixed_strategy<'a>() -> VaultOneAseetFixedStrategy
         &assets,
         &salt,
         &soroswap_router.address,
-        &name_symbol
+        &name_symbol,
+        &true
     );
 
     let vault_contract = VaultContractClient::new(&setup.env, &vault_contract_address);

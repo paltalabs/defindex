@@ -43,6 +43,7 @@ fn multi_instructions() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount = 987654321i128;
@@ -141,6 +142,7 @@ fn one_instruction() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount = 987654321i128;
@@ -234,6 +236,7 @@ fn empty_instructions() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount: i128 = 987654321;
@@ -285,6 +288,7 @@ fn no_instructions() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount: i128 = 987654321;
@@ -339,6 +343,7 @@ fn insufficient_balance() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount: i128 = 987654321;
@@ -446,6 +451,7 @@ fn swap_exact_in() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount0 = 123456789i128;
@@ -605,6 +611,7 @@ fn swap_exact_out() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount0 = 123456789i128;

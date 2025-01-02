@@ -43,6 +43,7 @@ pub fn create_defindex_vault<'a>(
     factory: Address,
     soroswap_router: Address,
     name_symbol: Map<String, String>,
+    upgradable: bool,
 ) -> DeFindexVaultClient<'a> {
     let args = (
         assets,
@@ -53,6 +54,7 @@ pub fn create_defindex_vault<'a>(
         factory,
         soroswap_router,
         name_symbol,
+        upgradable
     );
     let address = &e.register(defindex_vault::WASM, args);
     let client = DeFindexVaultClient::new(e, address);

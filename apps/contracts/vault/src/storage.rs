@@ -23,7 +23,7 @@ enum DataKey {
     AssetStrategySet(u32), // AssetStrategySet Addresse by index
     DeFindexProtocolFeeReceiver,
     DeFindexFactory,
-    LastFeeAssessment,
+    Upgradable,
     VaultFee,
     SoroswapRouter,
     DeFindexProtocolFeeRate,
@@ -145,4 +145,13 @@ pub fn get_report(e: &Env, strategy_address: &Address) -> Report {
             locked_fee: 0,
         },
     }
+}
+
+// Upgradable
+pub fn set_is_upgradable(e: &Env, value: &bool) {
+    e.storage().instance().set(&DataKey::Upgradable, value);
+}
+
+pub fn is_upgradable(e: &Env) -> bool {
+    e.storage().instance().get(&DataKey::Upgradable).unwrap_or(true)
 }
