@@ -35,6 +35,14 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
     }
 }
 
+pub fn check_min_amount(amount: i128, min_amount: i128) -> Result<(), ContractError> {
+    if amount < min_amount {
+        Err(ContractError::InsufficientAmount)
+    } else {
+        Ok(())
+    }
+}
+
 // /// From an amount, calculates how much to withdraw from each strategy;
 // /// returns a map of strategy address to token amount
 // pub fn calculate_withdrawal_amounts(
