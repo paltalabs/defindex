@@ -277,7 +277,6 @@ pub(crate) fn emit_rebalance_invest_event(
 
     e.events()
         .publish(("DeFindexVault", symbol_short!("rebalance")),event);
-        //.publish(("DeFindexVault", symbol_short!("rebalance")), event);
 }
 
 // SWAP EXACT IN EVENT
