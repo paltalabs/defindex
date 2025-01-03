@@ -2,10 +2,11 @@ use soroban_sdk::{vec as sorobanvec, Address, Map, String, Vec};
 
 use crate::test::{
     create_defindex_vault, create_strategy_params_token_0,
-    defindex_vault::{AssetInvestmentAllocation, AssetStrategySet, RolesDataKey, StrategyAllocation},
+    defindex_vault::{AssetInvestmentAllocation, AssetStrategySet, ContractError, RolesDataKey, StrategyAllocation},
     DeFindexVaultTest,
 };
 
+extern crate std;
 #[test]
 fn rescue_success() {
     let test = DeFindexVaultTest::setup();
@@ -111,4 +112,97 @@ fn rescue_success() {
     // check if strategy is paused
     let asset = defindex_contract.get_assets().first().unwrap();
     assert_eq!(asset.strategies.first().unwrap().paused, true);
+}
+
+#[test]
+fn rescue_errors() {
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let strategy_params_token_0 = create_strategy_params_token_0(&test);
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: strategy_params_token_0.clone()
+        }
+    ];
+
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        roles,
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
+        name_symbol,
+    );
+
+    let amount = 987654321i128;
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+
+    test.token_0_admin_client.mint(&users[0], &amount);
+
+    // Deposit
+    defindex_contract.deposit(
+        &sorobanvec![&test.env, amount],
+        &sorobanvec![&test.env, amount],
+        &users[0],
+        &false,
+    );
+
+    let investments = sorobanvec![
+        &test.env,
+        Some(AssetInvestmentAllocation {
+            asset: test.token_0.address.clone(),
+            strategy_allocations: sorobanvec![
+                &test.env,
+                Some(StrategyAllocation {
+                    strategy_address: test.strategy_client_token_0.address.clone(),
+                    amount: amount,
+                }),
+            ],
+        }),
+    ];
+
+    defindex_contract.invest(&investments);
+
+    // rescue with wrong strategy address
+    let result = defindex_contract.try_rescue(
+        &users[0],
+        &test.emergency_manager,
+    );
+
+    assert_eq!(result.is_err(), true);
+    assert_eq!(result, Err(Ok(ContractError::StrategyNotFound)));
+
+    // rescue with wrong caller
+    let result = defindex_contract.try_rescue(
+        &strategy_params_token_0.first().unwrap().address,
+        &users[0],
+    );
+
+    assert_eq!(result.is_err(), true);
+    assert_eq!(result, Err(Ok(ContractError::Unauthorized)));
+
+    // rescue paused strategy
+    defindex_contract.pause_strategy(&strategy_params_token_0.first().unwrap().address, &test.emergency_manager);
+    let result = defindex_contract.try_rescue(
+        &strategy_params_token_0.first().unwrap().address,
+        &test.emergency_manager,
+    );
+
+    assert_eq!(result.is_err(), true);
+    assert_eq!(result, Err(Ok(ContractError::StrategyPaused)));
 }
