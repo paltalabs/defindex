@@ -157,7 +157,7 @@ fn check_rebalance_events(){
   let instruction_amount_0 = 2_000i128;
   let instructions = sorobanvec![
         &test.env,
-        Instruction::Withdraw(
+        Instruction::Unwind(
             test.strategy_client_token_0.address.clone(),
             instruction_amount_0
         ),
