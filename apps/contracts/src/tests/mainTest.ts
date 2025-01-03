@@ -213,7 +213,7 @@ async function testVaultOneStrategy() {
       amount: BigInt(7_0_000),
     },
     {
-      type: "Withdraw",
+      type: "Unwind",
       strategy: addressBook.getContractId("hodl_strategy"),
       amount: BigInt(6_0_00),
     },
@@ -427,7 +427,7 @@ async function testVaultTwoStrategies() {
           amount: BigInt(7_000_000),
       },
       {
-          type: "Withdraw",
+          type: "Unwind",
           strategy: addressBook.getContractId("hodl_strategy"),
           amount: BigInt(6_000_00),
       },
@@ -437,7 +437,7 @@ async function testVaultTwoStrategies() {
           amount: BigInt(8_000_000),
       },
       {
-          type: "Withdraw",
+          type: "Unwind",
           strategy: addressBook.getContractId("fixed_apr_strategy"),
           amount: BigInt(3_000_00),
       },

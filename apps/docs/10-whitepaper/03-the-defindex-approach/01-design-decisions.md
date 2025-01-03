@@ -14,11 +14,11 @@ To understand better why we decide this please check the [Why we can`t swap on d
 
 ## IDLE funds.
 IDLE funds are funds that are not being used for any strategy. But they are protected by being held inside the DeFindex Smart Contracts.
-- Security: Enables emergency withdrawal. This means that if a DeFi protocol gets too risky, the users won't lose their funds because they can be withdrawn from the DeFi protocol to the DeFindex Smart Contracts.
+- Security: Enables `rescue`. This means that if a DeFi protocol gets too risky, the users won't lose their funds because they can be withdrawn from the DeFi protocol to the DeFindex Smart Contracts.
 - Performance: Enable multi transaction movements.
 - Transaction Cost: Enable small transactions that wont be affected by costly txs.
 
-## Emergency Withdrawal
+## Rescue
 - It allows the Emergency Manager to rescue funds in case of an emergency. These are held in the DeFindex Smart Contracts. Thus, the users won't lose their funds and they will be able to withdraw them anytime.
 
 ## Roles

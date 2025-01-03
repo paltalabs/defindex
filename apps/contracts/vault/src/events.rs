@@ -66,7 +66,7 @@ pub struct EmergencyWithdrawEvent {
 }
 
 /// Publishes an `EmergencyWithdrawEvent` to the event stream.
-pub(crate) fn emit_emergency_withdraw_event(
+pub(crate) fn emit_rescue_event(
     e: &Env,
     caller: Address,
     strategy_address: Address,
@@ -79,7 +79,7 @@ pub(crate) fn emit_emergency_withdraw_event(
     };
 
     e.events()
-        .publish(("DeFindexVault", symbol_short!("ewithdraw")), event);
+        .publish(("DeFindexVault", symbol_short!("rescue")), event);
 }
 
 // STRATEGY PAUSED EVENT
