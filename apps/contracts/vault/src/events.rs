@@ -1,8 +1,8 @@
 //! Definition of the Events used in the DeFindex Vault contract
 use common::models::AssetStrategySet;
-use soroban_sdk::{contracttype, symbol_short, Address, Env, Vec};
+use soroban_sdk::{contracttype, symbol_short, Address, Env, Symbol, Val, Vec};
 
-use crate::models::AssetInvestmentAllocation;
+use crate::{models::AssetInvestmentAllocation, report::Report};
 
 // DEPOSIT EVENT
 #[contracttype]
@@ -207,6 +207,7 @@ pub(crate) fn emit_fees_distributed_event(e: &Env, distributed_fees: Vec<(Addres
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ExecuteInvestmentEvent {
     pub assets: Vec<AssetStrategySet>,
+    pub rebalance_method: Symbol,
     pub asset_investments: Vec<Option<AssetInvestmentAllocation>>,
 }
 
@@ -216,11 +217,133 @@ pub(crate) fn emit_execute_investment_event(
     assets: Vec<AssetStrategySet>,
     asset_investments: Vec<Option<AssetInvestmentAllocation>>,
 ) {
+    let rebalance_method = symbol_short!("invest");
     let event = ExecuteInvestmentEvent {
         assets: assets,
+        rebalance_method,
         asset_investments: asset_investments,
     };
 
     e.events()
-        .publish(("DeFindexVault", symbol_short!("execinv")), event);
+        .publish(("DeFindexVault", symbol_short!("invest")), event);
 }
+
+
+// REBALANCE WITHDRAW EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct UnwindEvent {
+    pub call_params: Vec<(Address, i128, Address)>,
+    pub rebalance_method: Symbol,
+    pub report: Report,
+
+}
+
+pub(crate) fn emit_rebalance_unwind_event(
+    e: &Env,
+    call_params: Vec<(Address, i128, Address)>,
+    report: Report,
+) {
+    let rebalance_method = symbol_short!("unwind");
+    let event = UnwindEvent {
+        call_params,
+        rebalance_method,
+        report,
+    };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("rebalance")), event);
+}
+
+// REBALANCE INVEST EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct InvestEvent {
+    pub asset_investments: Vec<AssetInvestmentAllocation>,
+    pub rebalance_method: Symbol,
+    pub report: Report,
+}
+pub(crate) fn emit_rebalance_invest_event(
+    e: &Env, 
+    asset_investments: Vec<AssetInvestmentAllocation>,
+    report: Report,
+) {
+    let rebalance_method = symbol_short!("invest");
+    let event = InvestEvent {
+        asset_investments,
+        rebalance_method,
+        report,
+    };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("rebalance")),event);
+}
+
+// SWAP EXACT IN EVENT
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+
+pub struct SwapExactInEvent {
+    pub swap_args: Vec<Val>,
+    pub rebalance_method: Symbol,
+}
+pub(crate) fn emit_rebalance_swap_exact_in_event(
+    e: &Env, 
+    swap_args: Vec<Val>,
+) {
+    let rebalance_method = symbol_short!("SwapEIn");
+    let event: SwapExactInEvent = SwapExactInEvent {
+        swap_args,
+        rebalance_method,
+    };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("rebalance")), event);
+}
+
+// SWAP EXACT OUT EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SwapExactOutEvent {
+    pub swap_args: Vec<Val>,
+    pub rebalance_method: Symbol,
+}
+pub(crate) fn emit_rebalance_swap_exact_out_event(
+    e: &Env, 
+    swap_args: Vec<Val>,
+) {
+    let rebalance_method = symbol_short!("SwapEOut");
+    let event = SwapExactOutEvent {
+        swap_args,
+        rebalance_method,
+    };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("rebalance")), event);
+}
+
+// ZAPPER EVENT
+//Waiting for zapper implementation
+/* #[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ZapperEvent {
+    pub zap_args: Vec<Val>,
+    pub rebalance_method: Symbol,
+    pub report: Report,
+}
+pub(crate) fn emit_rebalance_zapper_event(
+    e: &Env, 
+    zap_args: Vec<Val>,
+    report: Report,
+) {
+    let rebalance_method = symbol_short!("Zapper");
+    let event = ZapperEvent {
+        zap_args,
+        rebalance_method,
+        report,
+    };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("rebalance")), event);
+} */
