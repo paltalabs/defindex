@@ -7,7 +7,7 @@ use crate::test::{
 };
 
 #[test]
-fn withdraw_success() {
+fn rescue_success() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token_0 = create_strategy_params_token_0(&test);
@@ -93,7 +93,7 @@ fn withdraw_success() {
         .balance(&defindex_contract.address);
     assert_eq!(strategy_balance, amount);
 
-    defindex_contract.emergency_withdraw(
+    defindex_contract.rescue(
         &strategy_params_token_0.first().unwrap().address,
         &test.emergency_manager,
     );
