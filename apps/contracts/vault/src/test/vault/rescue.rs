@@ -6,7 +6,6 @@ use crate::test::{
     DeFindexVaultTest,
 };
 
-extern crate std;
 #[test]
 fn rescue_success() {
     let test = DeFindexVaultTest::setup();
