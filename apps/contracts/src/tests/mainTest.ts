@@ -800,6 +800,7 @@ switch (tests) {
        -a  all tests,
        -os one strategy tests,
        -ts two strategy tests, 
+       -taos two assets one strategy test,
        -bs blend strategy tests,
        -bv blend vault tests`       
     );
@@ -810,6 +811,7 @@ switch (tests) {
       await prepareEnvironment();
       const oneStrategy = await testVaultOneStrategy();
       const twoStrategies = await testVaultTwoStrategies();
+      const twoAssetsOneStrategy = await testVaultTwoAssetsOneStrategy();
       const blendStrategy = await testBlendStrategy();
       const blendVault = await testBlendVault();
       console.log(yellow, "----------------------------------------------------------------------------------------------------------------------------------------------")
@@ -823,6 +825,11 @@ switch (tests) {
       console.log("");
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log(green, "Two strategies results");
+      console.table(twoStrategies);
+      console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
+      console.log("");
+      console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
+      console.log(green, "Two asssets one strategy results");
       console.table(twoStrategies);
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log("");
