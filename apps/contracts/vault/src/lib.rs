@@ -1,5 +1,5 @@
 #![no_std]
-use constants::MAX_BPS;
+use constants::{MAX_BPS, MIN_WITHDRAW_AMOUNT};
 use report::Report;
 use soroban_sdk::{
     contract, contractimpl, panic_with_error, token::TokenClient, Address, Env, Map, String, Vec
@@ -258,8 +258,7 @@ impl VaultTrait for DeFindexVault {
         check_nonnegative_amount(withdraw_shares)?;
         from.require_auth();
 
-        let minimum_amount = 100i128;
-        check_min_amount(withdraw_shares, minimum_amount)?;
+        check_min_amount(withdraw_shares, MIN_WITHDRAW_AMOUNT)?;
         // Calculate the withdrawal amounts for each asset based on the share amounts
         let total_managed_funds = fetch_total_managed_funds(&e, true);
 
