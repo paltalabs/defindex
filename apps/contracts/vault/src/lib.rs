@@ -2,7 +2,7 @@
 use constants::{MAX_BPS, MIN_WITHDRAW_AMOUNT};
 use report::Report;
 use soroban_sdk::{
-    contract, contractimpl, panic_with_error, token::TokenClient, Address, Env, Map, String, Vec
+    contract, contractimpl, panic_with_error, token::TokenClient, vec, Address, Env, Map, String, Vec
 };
 use soroban_token_sdk::metadata::TokenMetadata;
 
@@ -621,6 +621,35 @@ impl AdminInterfaceTrait for DeFindexVault {
         extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         access_control.get_fee_receiver()
+    }
+
+    // Sets the manager queue for the vault config.
+    fn queue_manager(e: Env, manager: Address) -> Result<Address, ContractError> {
+        extend_instance_ttl(&e);
+        
+        let current_timestamp:u64 = e.ledger().timestamp();
+        let manager_data: Vec<(u64, Address)> = vec![&e, (current_timestamp, manager.clone())];
+
+        let access_control = AccessControl::new(&e);
+        access_control.queue_manager(&manager_data);
+        Ok(manager)
+    }
+
+    // Retrieves the manager queue for the vault config.
+    fn get_queued_manager(e: Env) -> Result<Address, ContractError> {
+        extend_instance_ttl(&e);
+        let access_control = AccessControl::new(&e);
+        let queued_manager = access_control.get_queued_manager();
+        let queued_adress: Address = queued_manager.get(0).unwrap().1;
+        Ok(queued_adress)
+    }
+
+    // clear the manager queue for the vault config.
+    fn clear_queue(e: Env) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
+        let access_control = AccessControl::new(&e);
+        access_control.clear_queued_manager();
+        Ok(())
     }
 
     /// Sets the manager for the vault.
