@@ -22,6 +22,6 @@
 1.    Access the Vault: Click on the desired vault to view interaction options.
 2.    Select an Action:
     - Deposit: Add funds to the vault, which will automatically be invested according to the vault’s strategy.
-    - Emergency Withdraw: Withdraw investments from strategies and keep them as idle funds in the vault. (Only accessible to the Manager or Emergency Manager.)
+    - Rescue: Withdraw investments from strategies and keep them as idle funds in the vault. (Only accessible to the Manager or Emergency Manager.)
     - Withdraw: Withdraw your position (dfTokens) from the vault.
 3.    Follow On-Screen Instructions: Each action will guide you through the necessary steps to complete the process.

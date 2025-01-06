@@ -359,7 +359,7 @@ impl VaultTrait for DeFindexVault {
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn emergency_withdraw(
+    fn rescue(
         e: Env,
         strategy_address: Address,
         caller: Address,
@@ -398,7 +398,7 @@ impl VaultTrait for DeFindexVault {
         // Pause the strategy
         pause_strategy(&e, strategy_address.clone())?;
 
-        events::emit_emergency_withdraw_event(&e, caller, strategy_address, strategy_balance);
+        events::emit_rescue_event(&e, caller, strategy_address, strategy_balance);
         Ok(())
     }
 
@@ -788,7 +788,7 @@ impl VaultManagementTrait for DeFindexVault {
 
         for instruction in instructions.iter() {
             match instruction {
-                Instruction::Withdraw(strategy_address, amount) => {
+                Instruction::Unwind(strategy_address, amount) => {
                     unwind_from_strategy(
                         &e,
                         &strategy_address,

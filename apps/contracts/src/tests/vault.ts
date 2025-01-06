@@ -529,7 +529,7 @@ export type Option<T> = T | undefined;
 // export type u64 = number; // Simplified as a number for UNIX timestamps
 
 export type Instruction =
-  | { type: "Withdraw"; strategy: string; amount: i128 }
+  | { type: "Unwind"; strategy: string; amount: i128 }
   | { type: "Invest"; strategy: string; amount: i128 }
   | {
       type: "SwapExactIn";
@@ -555,7 +555,7 @@ export function mapInstructionsToParams(
     instructions.map((instruction) => {
       switch (instruction.type) {
         case "Invest":
-        case "Withdraw":
+        case "Unwind":
           // Handle Invest and Withdraw actions
           return xdr.ScVal.scvVec([
             xdr.ScVal.scvSymbol(instruction.type), // "Invest" or "Withdraw"
