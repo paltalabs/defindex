@@ -41,6 +41,7 @@ fn negative_amount() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -83,6 +84,7 @@ fn below_min() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     
@@ -134,6 +136,7 @@ fn zero_total_supply() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
@@ -176,6 +179,7 @@ fn not_enough_balance() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     // We need to generate 2 users, to have more total supply than the amount to withdraw
@@ -253,6 +257,7 @@ fn from_idle_one_asset_one_strategy_success() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     let amount = 1234567890i128;
 
@@ -449,6 +454,7 @@ fn from_idle_two_assets_success() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     let amount = 1234567890i128;
 
@@ -706,6 +712,7 @@ fn from_strategy_one_asset_one_strategy_success() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     let amount = 1_0_000_000i128;
 
@@ -804,6 +811,7 @@ fn from_strategies_one_asset_two_strategies_success() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let assets = defindex_contract.get_assets();
@@ -907,6 +915,7 @@ fn from_strategies_two_asset_each_one_strategy_success() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     // mint
     let amount = 987654321i128;
@@ -1268,6 +1277,7 @@ fn from_strategy_success_no_mock_all_auths() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     // mint 

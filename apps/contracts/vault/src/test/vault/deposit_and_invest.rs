@@ -43,6 +43,7 @@ fn one_asset_no_previous_investment() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount = 123456789i128;
@@ -209,6 +210,7 @@ fn one_asset_previous_investment_success() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
 
@@ -419,6 +421,7 @@ fn several_assets_no_previous_investment() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount0 = 123456789i128;
@@ -658,6 +661,7 @@ fn several_assets_wih_previous_investment_success() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
 
@@ -970,6 +974,7 @@ fn one_asset_several_strategies() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let assets = defindex_contract.get_assets();
@@ -1089,6 +1094,7 @@ fn deposit_simple_then_deposit_and_invest() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let assets = defindex_contract.get_assets();
