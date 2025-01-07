@@ -1,9 +1,10 @@
 #![no_std]
 use constants::{MAX_BPS, MIN_WITHDRAW_AMOUNT, ONE_DAY_IN_SECONDS};
 use events::{emit_clear_manager_queue_event, emit_queued_manager_event};
+use events::{emit_rebalance_invest_event, emit_rebalance_swap_exact_in_event, emit_rebalance_swap_exact_out_event, emit_rebalance_unwind_event};
 use report::Report;
-use soroban_sdk::{
-    contract, contractimpl, panic_with_error, token::TokenClient, vec, Address, Env, Map, String, Vec
+use soroban_sdk::{IntoVal,
+    contract, contractimpl, panic_with_error, token::TokenClient, vec, vec, Address, Env, Map, String, Val, Vec
 };
 use soroban_token_sdk::metadata::TokenMetadata;
 
@@ -30,7 +31,7 @@ use deposit::process_deposit;
 use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds};
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::{check_and_execute_investments, generate_investment_allocations};
-use models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction};
+use models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction, StrategyAllocation};
 use storage::{
     extend_instance_ttl, get_assets, get_defindex_protocol_fee_rate,
     get_defindex_protocol_fee_receiver, get_report, get_vault_fee, set_asset,
@@ -854,16 +855,26 @@ impl VaultManagementTrait for DeFindexVault {
         for instruction in instructions.iter() {
             match instruction {
                 Instruction::Unwind(strategy_address, amount) => {
-                    unwind_from_strategy(
+                    let report = unwind_from_strategy(
                         &e,
                         &strategy_address,
                         &amount,
                         &e.current_contract_address(),
                     )?;
+                    let call_params = vec![&e, (strategy_address, amount, e.current_contract_address())];
+                    emit_rebalance_unwind_event(&e, call_params, report);
                 }
                 Instruction::Invest(strategy_address, amount) => {
                     let asset_address = get_strategy_asset(&e, &strategy_address)?;
-                    invest_in_strategy(&e, &asset_address.address, &strategy_address, &amount)?;
+                    let report = invest_in_strategy(&e, &asset_address.address, &strategy_address, &amount)?;
+                    let call_params = AssetInvestmentAllocation {
+                        asset: asset_address.address.clone(),
+                        strategy_allocations: vec![&e, Some(StrategyAllocation {
+                            strategy_address: strategy_address.clone(),
+                            amount: amount.clone(),
+                        })],
+                    };
+                    emit_rebalance_invest_event(&e, vec![&e, call_params], report);
                 }
                 Instruction::SwapExactIn(
                     token_in,
@@ -880,6 +891,15 @@ impl VaultManagementTrait for DeFindexVault {
                         &amount_out_min,
                         &deadline,
                     )?;
+                    let swap_args: Vec<Val> = vec![
+                        &e,
+                        amount_in.into_val(&e),
+                        amount_out_min.into_val(&e),
+                        vec![&e, token_in.to_val(), token_out.to_val()].into_val(&e), // path
+                        e.current_contract_address().to_val(),
+                        deadline.into_val(&e),
+                    ];
+                    emit_rebalance_swap_exact_in_event(&e, swap_args);
                 }
                 Instruction::SwapExactOut(
                     token_in,
@@ -896,6 +916,15 @@ impl VaultManagementTrait for DeFindexVault {
                         &amount_in_max,
                         &deadline,
                     )?;
+                    let swap_args: Vec<Val> = vec![
+                        &e,
+                        amount_out.into_val(&e),
+                        amount_in_max.into_val(&e),
+                        vec![&e, token_in.to_val(), token_out.to_val()].into_val(&e), // path
+                        e.current_contract_address().to_val(),
+                        deadline.into_val(&e),
+                    ];
+                    emit_rebalance_swap_exact_out_event(&e, swap_args);
                 } // Zapper instruction is omitted for now
                   // Instruction::Zapper(instructions) => {
                   //     // TODO: Implement Zapper instructions
