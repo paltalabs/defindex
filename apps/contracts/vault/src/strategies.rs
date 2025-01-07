@@ -59,7 +59,7 @@ pub fn get_strategy_struct(
     asset
         .strategies
         .iter()
-        .find(|strategy| &strategy.address == strategy_address && !strategy.paused)
+        .find(|strategy| &strategy.address == strategy_address)
         .ok_or(ContractError::StrategyNotFound)
 }
 
