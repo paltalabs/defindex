@@ -1,8 +1,8 @@
 #![no_std]
-use constants::MAX_BPS;
+use constants::{MAX_BPS, MIN_WITHDRAW_AMOUNT};
+use events::{emit_rebalance_invest_event, emit_rebalance_swap_exact_in_event, emit_rebalance_swap_exact_out_event, emit_rebalance_unwind_event};
 use report::Report;
-use soroban_sdk::{
-    contract, contractimpl, panic_with_error, token::TokenClient, Address, Env, Map, String, Vec,
+use soroban_sdk::{contract, contractimpl, panic_with_error, token::TokenClient, vec, Address, BytesN, Env, IntoVal, Map, String, Val, Vec
 };
 use soroban_token_sdk::metadata::TokenMetadata;
 
@@ -29,12 +29,9 @@ use deposit::process_deposit;
 use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds};
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::{check_and_execute_investments, generate_investment_allocations};
-use models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction};
+use models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction, StrategyAllocation};
 use storage::{
-    extend_instance_ttl, get_assets, get_defindex_protocol_fee_rate,
-    get_defindex_protocol_fee_receiver, get_report, get_vault_fee, set_asset,
-    set_defindex_protocol_fee_rate, set_defindex_protocol_fee_receiver, set_factory, set_report,
-    set_soroswap_router, set_total_assets, set_vault_fee,
+    extend_instance_ttl, get_assets, get_defindex_protocol_fee_rate, get_defindex_protocol_fee_receiver, get_report, get_vault_fee, set_asset, set_defindex_protocol_fee_rate, set_defindex_protocol_fee_receiver, set_factory, set_is_upgradable, set_report, set_soroswap_router, set_total_assets, set_vault_fee
 };
 use strategies::{
     get_strategy_asset, get_strategy_client, get_strategy_struct, invest_in_strategy,
@@ -42,7 +39,7 @@ use strategies::{
 };
 use token::{internal_burn, write_metadata};
 use utils::{
-    calculate_asset_amounts_per_vault_shares, check_initialized, check_nonnegative_amount,
+    calculate_asset_amounts_per_vault_shares, check_initialized, check_min_amount, check_nonnegative_amount
 };
 
 use common::models::AssetStrategySet;
@@ -85,42 +82,37 @@ impl VaultTrait for DeFindexVault {
     fn __constructor(
         e: Env,
         assets: Vec<AssetStrategySet>,
-        manager: Address,
-        emergency_manager: Address,
-        vault_fee_receiver: Address,
+        roles: Map<u32, Address>,
         vault_fee: u32,
         defindex_protocol_receiver: Address,
         defindex_protocol_rate: u32,
         factory: Address,
         soroswap_router: Address,
-        name_symbol: Vec<String>,
+        name_symbol: Map<String, String>,
+        upgradable: bool,
     ) {
         let access_control = AccessControl::new(&e);
 
-        access_control.set_role(&RolesDataKey::EmergencyManager, &emergency_manager);
-        access_control.set_role(&RolesDataKey::VaultFeeReceiver, &vault_fee_receiver);
-        access_control.set_role(&RolesDataKey::Manager, &manager);
+        access_control.set_role(&RolesDataKey::EmergencyManager, &roles.get(RolesDataKey::EmergencyManager as u32).unwrap_or_else(|| panic_with_error!(&e, ContractError::RolesIncomplete)));
+        access_control.set_role(&RolesDataKey::VaultFeeReceiver, &roles.get(RolesDataKey::VaultFeeReceiver as u32).unwrap_or_else(|| panic_with_error!(&e, ContractError::RolesIncomplete)));
+        access_control.set_role(&RolesDataKey::Manager, &roles.get(RolesDataKey::Manager as u32).unwrap_or_else(|| panic_with_error!(&e, ContractError::RolesIncomplete)));
+        access_control.set_role(&RolesDataKey::RebalanceManager, &roles.get(RolesDataKey::RebalanceManager as u32).unwrap_or_else(|| panic_with_error!(&e, ContractError::RolesIncomplete)));
+        
+        let vault_name = name_symbol.get(String::from_str(&e, "name")).unwrap_or_else(|| panic_with_error!(&e, ContractError::MetadataIncomplete));
+        let vault_symbol = name_symbol.get(String::from_str(&e, "symbol")).unwrap_or_else(|| panic_with_error!(&e, ContractError::MetadataIncomplete));
 
-        let vault_name = name_symbol.get(0).unwrap();
-        let vault_symbol = name_symbol.get(1).unwrap();
-
-        // Set Vault Fee (in basis points)
         set_vault_fee(&e, &vault_fee);
 
-        // Set Paltalabs Fee Receiver
         set_defindex_protocol_fee_receiver(&e, &defindex_protocol_receiver);
         set_defindex_protocol_fee_rate(&e, &defindex_protocol_rate);
 
-        // Set the factory address
         set_factory(&e, &factory);
+        set_is_upgradable(&e, &upgradable);
 
-        // Set soroswap router
         set_soroswap_router(&e, &soroswap_router);
 
-        // Store Assets Objects
         let total_assets = assets.len();
 
-        // fails if the total assets is 0
         if total_assets == 0 {
             panic_with_error!(&e, ContractError::NoAssetAllocation);
         }
@@ -138,8 +130,6 @@ impl VaultTrait for DeFindexVault {
             set_asset(&e, i as u32, &asset);
         }
 
-        // Metadata for the contract's token (unchanged)
-        // TODO: Name should be concatenated with some other name giving when initializing. Check how soroswap pairs token are called.
         let decimal: u32 = 7;
 
         write_metadata(
@@ -197,7 +187,7 @@ impl VaultTrait for DeFindexVault {
         amounts_min: Vec<i128>,
         from: Address,
         invest: bool,
-    ) -> Result<(Vec<i128>, i128), ContractError> {
+    ) -> Result<(Vec<i128>, i128, Option<Vec<Option<AssetInvestmentAllocation>>>), ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
         from.require_auth();
@@ -216,12 +206,14 @@ impl VaultTrait for DeFindexVault {
         )?;
         events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone());
 
-        if invest {
-            let asset_investments =
-                generate_investment_allocations(&e, &assets, &total_managed_funds, &amounts)?;
-            check_and_execute_investments(&e, &assets, &asset_investments)?;
-        }
-        Ok((amounts, shares_to_mint))
+        let asset_investments = if invest {
+            let allocations = generate_investment_allocations(&e, &assets, &total_managed_funds, &amounts)?;
+            check_and_execute_investments(&e, &assets, &allocations)?;
+            Some(allocations)
+        } else {
+            None
+        };
+        Ok((amounts, shares_to_mint, asset_investments))
     }
 
     /// Handles the withdrawal process for a specified number of vault shares.
@@ -265,6 +257,7 @@ impl VaultTrait for DeFindexVault {
         check_nonnegative_amount(withdraw_shares)?;
         from.require_auth();
 
+        check_min_amount(withdraw_shares, MIN_WITHDRAW_AMOUNT)?;
         // Calculate the withdrawal amounts for each asset based on the share amounts
         let total_managed_funds = fetch_total_managed_funds(&e, true);
 
@@ -364,7 +357,7 @@ impl VaultTrait for DeFindexVault {
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn emergency_withdraw(
+    fn rescue(
         e: Env,
         strategy_address: Address,
         caller: Address,
@@ -403,7 +396,7 @@ impl VaultTrait for DeFindexVault {
         // Pause the strategy
         pause_strategy(&e, strategy_address.clone())?;
 
-        events::emit_emergency_withdraw_event(&e, caller, strategy_address, strategy_balance);
+        events::emit_rescue_event(&e, caller, strategy_address, strategy_balance);
         Ok(())
     }
 
@@ -689,6 +682,58 @@ impl AdminInterfaceTrait for DeFindexVault {
         let access_control = AccessControl::new(&e);
         access_control.get_emergency_manager()
     }
+
+    /// Sets the rebalance manager for the vault.
+    ///
+    /// This function allows the current manager to set a new rebalance manager for the vault.
+    ///
+    /// # Arguments:
+    /// * `e` - The environment.
+    /// * `new_rebalance_manager` - The new rebalance manager address.
+    ///
+    /// # Returns:
+    /// * `()` - No return value.
+    fn set_rebalance_manager(e: Env, new_rebalance_manager: Address) {
+        extend_instance_ttl(&e);
+        let access_control = AccessControl::new(&e);
+        access_control.set_rebalance_manager(&new_rebalance_manager);
+
+        events::emit_rebalance_manager_changed_event(&e, new_rebalance_manager);
+    }
+
+    /// Retrieves the current rebalance manager address for the vault.
+    ///
+    /// # Arguments:
+    /// * `e` - The environment.
+    ///
+    /// # Returns:
+    /// * `Result<Address, ContractError>` - The rebalance manager address if successful, otherwise returns a ContractError.
+    fn get_rebalance_manager(e: Env) -> Result<Address, ContractError> {
+        extend_instance_ttl(&e);
+        let access_control = AccessControl::new(&e);
+        access_control.get_rebalance_manager()
+    }
+
+    /// Upgrades the contract with new WebAssembly (WASM) code.
+    ///
+    /// This function updates the contract with new WASM code provided by the `new_wasm_hash`.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The runtime environment.
+    /// * `new_wasm_hash` - The hash of the new WASM code to upgrade the contract to.
+    ///
+    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), ContractError> {
+        if !storage::is_upgradable(&e) {
+            return Err(ContractError::NotUpgradable);
+        }
+        
+        let access_control = AccessControl::new(&e);
+        access_control.require_role(&RolesDataKey::Manager);
+        
+        e.deployer().update_current_contract_wasm(new_wasm_hash);
+        Ok(())
+    }
 }
 
 #[contractimpl]
@@ -724,7 +769,8 @@ impl VaultManagementTrait for DeFindexVault {
     fn invest(
         e: Env,
         asset_investments: Vec<Option<AssetInvestmentAllocation>>,
-    ) -> Result<(), ContractError> {
+    ) -> Result<Vec<Option<AssetInvestmentAllocation>>, ContractError> {
+        //-> Result<(Vec<i128>, i128, Option<Vec<Option<AssetInvestmentAllocation>>>), ContractError> 
         extend_instance_ttl(&e);
         check_initialized(&e)?;
 
@@ -742,15 +788,18 @@ impl VaultManagementTrait for DeFindexVault {
         // Check and execute investments for each asset allocation
         check_and_execute_investments(&e, &assets, &asset_investments)?;
 
-        Ok(())
+        Ok(asset_investments.clone())
     }
 
-    fn rebalance(e: Env, instructions: Vec<Instruction>) -> Result<(), ContractError> {
+    fn rebalance(e: Env, caller: Address, instructions: Vec<Instruction>) -> Result<(), ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
 
         let access_control = AccessControl::new(&e);
-        access_control.require_role(&RolesDataKey::Manager);
+        access_control.require_any_role(
+            &[RolesDataKey::RebalanceManager, RolesDataKey::Manager],
+            &caller,
+        );
 
         if instructions.is_empty() {
             panic_with_error!(&e, ContractError::NoInstructions);
@@ -758,17 +807,27 @@ impl VaultManagementTrait for DeFindexVault {
 
         for instruction in instructions.iter() {
             match instruction {
-                Instruction::Withdraw(strategy_address, amount) => {
-                    unwind_from_strategy(
+                Instruction::Unwind(strategy_address, amount) => {
+                    let report = unwind_from_strategy(
                         &e,
                         &strategy_address,
                         &amount,
                         &e.current_contract_address(),
                     )?;
+                    let call_params = vec![&e, (strategy_address, amount, e.current_contract_address())];
+                    emit_rebalance_unwind_event(&e, call_params, report);
                 }
                 Instruction::Invest(strategy_address, amount) => {
                     let asset_address = get_strategy_asset(&e, &strategy_address)?;
-                    invest_in_strategy(&e, &asset_address.address, &strategy_address, &amount)?;
+                    let report = invest_in_strategy(&e, &asset_address.address, &strategy_address, &amount)?;
+                    let call_params = AssetInvestmentAllocation {
+                        asset: asset_address.address.clone(),
+                        strategy_allocations: vec![&e, Some(StrategyAllocation {
+                            strategy_address: strategy_address.clone(),
+                            amount: amount.clone(),
+                        })],
+                    };
+                    emit_rebalance_invest_event(&e, vec![&e, call_params], report);
                 }
                 Instruction::SwapExactIn(
                     token_in,
@@ -785,6 +844,15 @@ impl VaultManagementTrait for DeFindexVault {
                         &amount_out_min,
                         &deadline,
                     )?;
+                    let swap_args: Vec<Val> = vec![
+                        &e,
+                        amount_in.into_val(&e),
+                        amount_out_min.into_val(&e),
+                        vec![&e, token_in.to_val(), token_out.to_val()].into_val(&e), // path
+                        e.current_contract_address().to_val(),
+                        deadline.into_val(&e),
+                    ];
+                    emit_rebalance_swap_exact_in_event(&e, swap_args);
                 }
                 Instruction::SwapExactOut(
                     token_in,
@@ -801,6 +869,15 @@ impl VaultManagementTrait for DeFindexVault {
                         &amount_in_max,
                         &deadline,
                     )?;
+                    let swap_args: Vec<Val> = vec![
+                        &e,
+                        amount_out.into_val(&e),
+                        amount_in_max.into_val(&e),
+                        vec![&e, token_in.to_val(), token_out.to_val()].into_val(&e), // path
+                        e.current_contract_address().to_val(),
+                        deadline.into_val(&e),
+                    ];
+                    emit_rebalance_swap_exact_out_event(&e, swap_args);
                 } // Zapper instruction is omitted for now
                   // Instruction::Zapper(instructions) => {
                   //     // TODO: Implement Zapper instructions

@@ -10,6 +10,8 @@ pub enum ContractError {
     InvalidRatio = 101,
     StrategyDoesNotSupportAsset = 102,
     NoAssetAllocation = 103,
+    RolesIncomplete = 104,
+    MetadataIncomplete = 105,
 
     // Validation Errors (11x)
     NegativeNotAllowed = 110,
@@ -26,6 +28,7 @@ pub enum ContractError {
     WrongStrategiesLength = 123,
     AmountOverTotalSupply = 124,
     NoInstructions = 125,
+    NotUpgradable = 126,
 
     // Arithmetic Errors (12x)
     ArithmeticError = 120,

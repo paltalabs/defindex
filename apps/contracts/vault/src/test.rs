@@ -1,9 +1,7 @@
 #![cfg(test)]
 extern crate std;
 use soroban_sdk::{
-    testutils::{Address as _, MockAuth, MockAuthInvoke},
-    token::{StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient},
-    vec as sorobanvec, Address, Env, IntoVal, String, Val, Vec,
+    testutils::{Address as _, MockAuth, MockAuthInvoke}, token::{StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient}, vec as sorobanvec, Address, Env, IntoVal, Map, String, Val, Vec
 };
 use std::vec;
 
@@ -38,27 +36,25 @@ use defindex_vault::{AssetStrategySet, DeFindexVaultClient, Strategy};
 pub fn create_defindex_vault<'a>(
     e: &Env,
     assets: Vec<AssetStrategySet>,
-    manager: Address,
-    emergency_manager: Address,
-    vault_fee_receiver: Address,
+    roles: Map<u32, Address>,
     vault_fee: u32,
     defindex_protocol_receiver: Address,
     defindex_protocol_rate: u32,
     factory: Address,
     soroswap_router: Address,
-    name_symbol: Vec<String>,
+    name_symbol: Map<String, String>,
+    upgradable: bool,
 ) -> DeFindexVaultClient<'a> {
     let args = (
         assets,
-        manager,
-        emergency_manager,
-        vault_fee_receiver,
+        roles,
         vault_fee,
         defindex_protocol_receiver,
         defindex_protocol_rate,
         factory,
         soroswap_router,
         name_symbol,
+        upgradable
     );
     let address = &e.register(defindex_vault::WASM, args);
     let client = DeFindexVaultClient::new(e, address);
@@ -136,6 +132,7 @@ pub struct DeFindexVaultTest<'a> {
     vault_fee_receiver: Address,
     defindex_protocol_receiver: Address,
     manager: Address,
+    rebalance_manager: Address,
     strategy_client_token_0: HodlStrategyClient<'a>,
     strategy_client_token_1: HodlStrategyClient<'a>,
     soroswap_router: SoroswapRouterClient<'a>,
@@ -155,6 +152,7 @@ impl<'a> DeFindexVaultTest<'a> {
         let vault_fee_receiver = Address::generate(&env);
         let defindex_protocol_receiver = Address::generate(&env);
         let manager = Address::generate(&env);
+        let rebalance_manager = Address::generate(&env);
 
         let token_0_admin = Address::generate(&env);
         let token_0 = create_token_contract(&env, &token_0_admin);
@@ -222,6 +220,7 @@ impl<'a> DeFindexVaultTest<'a> {
             vault_fee_receiver,
             defindex_protocol_receiver,
             manager,
+            rebalance_manager,
             strategy_client_token_0,
             strategy_client_token_1,
             soroswap_router,

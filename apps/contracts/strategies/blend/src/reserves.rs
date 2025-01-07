@@ -62,11 +62,11 @@ pub fn deposit(
     b_tokens_amount: i128,
 ) -> i128 {
     if underlying_amount <= 0 {
-        panic_with_error!(e, StrategyError::InvalidArgument); //TODO: create a new error type for this
+        panic_with_error!(e, StrategyError::UnderlyingAmountBelowMin); 
     }
 
     if b_tokens_amount <= 0 {
-        panic_with_error!(e, StrategyError::InvalidArgument); //TODO: create a new error type for this
+        panic_with_error!(e, StrategyError::BTokensAmountBelowMin); 
     }
 
     reserves.update_rate(underlying_amount, b_tokens_amount);

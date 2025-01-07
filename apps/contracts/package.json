@@ -7,6 +7,8 @@
     "deploy-factory": "tsc && node dist/deploy_factory.js",
     "deploy-hodl": "tsc && node dist/strategies/deploy_hodl.js",
     "deploy-fixed": "tsc && node dist/strategies/deploy_fixed.js",
+    "deploy-fixed-usdc": "tsc && node dist/strategies/deploy_fixed_usdc.js",
+    "deploy-fixed-xtar": "tsc && node dist/strategies/deploy_fixed_xtar.js",
     "deploy-blend": "tsc && node dist/strategies/deploy_blend.js",
     "publish-addresses": "tsc && node dist/publish_addresses.js",
     "test": "tsc && node dist/tests/mainTest.js",

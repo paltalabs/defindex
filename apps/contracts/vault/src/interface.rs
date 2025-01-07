@@ -1,9 +1,7 @@
-use soroban_sdk::{Address, Env, Map, String, Vec};
+use soroban_sdk::{Address, BytesN, Env, Map, String, Vec};
 
 use crate::{
-    models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction},
-    report::Report,
-    ContractError,
+    models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction}, report::Report, ContractError
 };
 use common::models::AssetStrategySet;
 
@@ -37,15 +35,14 @@ pub trait VaultTrait {
     fn __constructor(
         e: Env,
         assets: Vec<AssetStrategySet>,
-        manager: Address,
-        emergency_manager: Address,
-        vault_fee_receiver: Address,
+        roles: Map<u32, Address>,
         vault_fee: u32,
         defindex_protocol_receiver: Address,
         defindex_protocol_rate: u32,
         factory: Address,
         soroswap_router: Address,
-        name_symbol: Vec<String>,
+        name_symbol: Map<String, String>,
+        upgradable: bool,
     );
 
     /// Handles user deposits into the DeFindex Vault.
@@ -84,7 +81,7 @@ pub trait VaultTrait {
         amounts_min: Vec<i128>,
         from: Address,
         invest: bool,
-    ) -> Result<(Vec<i128>, i128), ContractError>;
+    ) -> Result<(Vec<i128>, i128, Option<Vec<Option<AssetInvestmentAllocation>>>), ContractError>;
 
     /// Withdraws assets from the DeFindex Vault by burning dfTokens.
     ///
@@ -114,7 +111,7 @@ pub trait VaultTrait {
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn emergency_withdraw(
+    fn rescue(
         e: Env,
         strategy_address: Address,
         caller: Address,
@@ -296,6 +293,38 @@ pub trait AdminInterfaceTrait {
     /// # Returns:
     /// * `Result<Address, ContractError>` - The emergency manager address if successful, otherwise returns a ContractError.
     fn get_emergency_manager(e: Env) -> Result<Address, ContractError>;
+
+    /// Sets the rebalance manager for the vault.
+    ///
+    /// This function allows the current manager to set a new rebalance manager for the vault.
+    ///
+    /// # Arguments:
+    /// * `e` - The environment.
+    /// * `new_rebalance_manager` - The new rebalance manager address.
+    ///
+    /// # Returns:
+    /// * `()` - No return value.
+    fn set_rebalance_manager(e: Env, new_rebalance_manager: Address);
+
+    /// Retrieves the current rebalance manager address for the vault.
+    ///
+    /// # Arguments:
+    /// * `e` - The environment.
+    ///
+    /// # Returns:
+    /// * `Result<Address, ContractError>` - The rebalance manager address if successful, otherwise returns a ContractError.
+    fn get_rebalance_manager(e: Env) -> Result<Address, ContractError>;
+
+    /// Upgrades the contract with new WebAssembly (WASM) code.
+    ///
+    /// This function updates the contract with new WASM code provided by the `new_wasm_hash`.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The runtime environment.
+    /// * `new_wasm_hash` - The hash of the new WASM code to upgrade the contract to.
+    ///
+    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), ContractError>;
 }
 
 pub trait VaultManagementTrait {
@@ -330,7 +359,7 @@ pub trait VaultManagementTrait {
     fn invest(
         e: Env,
         asset_investments: Vec<Option<AssetInvestmentAllocation>>,
-    ) -> Result<(), ContractError>;
+    ) -> Result<Vec<Option<AssetInvestmentAllocation>>, ContractError>;
 
     /// Rebalances the vault by executing a series of instructions.
     ///
@@ -340,7 +369,7 @@ pub trait VaultManagementTrait {
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn rebalance(e: Env, instructions: Vec<Instruction>) -> Result<(), ContractError>;
+    fn rebalance(e: Env, caller: Address, instructions: Vec<Instruction>) -> Result<(), ContractError>;
 
     /// Locks fees for all assets and their strategies.
     ///
