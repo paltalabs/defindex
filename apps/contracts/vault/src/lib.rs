@@ -1,5 +1,6 @@
 #![no_std]
 use constants::{MAX_BPS, MIN_WITHDRAW_AMOUNT};
+use events::{emit_clear_manager_queue_event, emit_queued_manager_event};
 use report::Report;
 use soroban_sdk::{
     contract, contractimpl, panic_with_error, token::TokenClient, vec, Address, Env, Map, String, Vec
@@ -624,6 +625,15 @@ impl AdminInterfaceTrait for DeFindexVault {
     }
 
     // Sets the manager queue for the vault config.
+    //
+    // This function allows the current manager to add to queue a new manager for the vault.
+    //
+    // # Arguments:
+    // * `e` - The environment.
+    // * `manager` - The new manager address.
+    //
+    // # Returns:
+    // * `Result<Address, ContractError>` - The manager address if successful, otherwise returns a ContractError.
     fn queue_manager(e: Env, manager: Address) -> Result<Address, ContractError> {
         extend_instance_ttl(&e);
         
@@ -632,10 +642,19 @@ impl AdminInterfaceTrait for DeFindexVault {
 
         let access_control = AccessControl::new(&e);
         access_control.queue_manager(&manager_data);
+        emit_queued_manager_event(&e, manager_data);
         Ok(manager)
     }
 
     // Retrieves the manager queue for the vault config.
+    //
+    // This function allows the anyone to retrieve the manager queue for the vault.
+    //
+    // # Arguments:
+    // * `e` - The environment.
+    //
+    // # Returns:
+    // * `Result<Address, ContractError>` - The manager address if successful, otherwise returns a ContractError.
     fn get_queued_manager(e: Env) -> Result<Address, ContractError> {
         extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
@@ -645,10 +664,19 @@ impl AdminInterfaceTrait for DeFindexVault {
     }
 
     // clear the manager queue for the vault config.
+    // This function allows the current manager clear the manager queue for the vault.
+    //
+    // # Arguments:
+    // * `e` - The environment.
+    //
+    // # Returns:
+    // * `()` - No return value.
     fn clear_queue(e: Env) -> Result<(), ContractError> {
         extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         access_control.clear_queued_manager();
+        let current_timestamp:u64 = e.ledger().timestamp();
+        emit_clear_manager_queue_event(&e, current_timestamp);
         Ok(())
     }
 

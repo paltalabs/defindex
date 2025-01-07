@@ -139,6 +139,35 @@ pub(crate) fn emit_fee_receiver_changed_event(e: &Env, new_fee_receiver: Address
         .publish(("DeFindexVault", symbol_short!("nreceiver")), event);
 }
 
+// MANAGER QUEUE CHANGED EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ManagerQueuedEvent {
+    pub new_manager_data: Vec<(u64, Address)>,
+}
+
+/// Publishes a `ManagerChangedEvent` to the event stream.
+pub(crate) fn emit_queued_manager_event(e: &Env, new_manager_data: Vec<(u64, Address)>) {
+    let event = ManagerQueuedEvent { new_manager_data };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("qmanager")), event);
+}
+// MANAGER QUEUE CLEAR EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ManagerQueueClearEvent {
+    pub timestamp: u64,
+}
+
+/// Publishes a `ManagerChangedEvent` to the event stream.
+pub(crate) fn emit_clear_manager_queue_event(e: &Env, timestamp: u64) {
+    let event = ManagerQueueClearEvent { timestamp };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("qmanager")), event);
+}
+
 // MANAGER CHANGED EVENT
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]

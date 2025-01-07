@@ -321,3 +321,7 @@ fn check_rebalance_events(){
 
 }
 
+#[test]
+fn queue_events(){
+  todo!()
+}
