@@ -4,7 +4,7 @@ use events::{emit_clear_manager_queue_event, emit_queued_manager_event};
 use events::{emit_rebalance_invest_event, emit_rebalance_swap_exact_in_event, emit_rebalance_swap_exact_out_event, emit_rebalance_unwind_event};
 use report::Report;
 use soroban_sdk::{IntoVal,
-    contract, contractimpl, panic_with_error, token::TokenClient, vec, vec, Address, Env, Map, String, Val, Vec
+    contract, contractimpl, panic_with_error, token::TokenClient, vec, Address, Env, Map, String, Val, Vec
 };
 use soroban_token_sdk::metadata::TokenMetadata;
 
