@@ -1,5 +1,5 @@
 use soroban_sdk::testutils::{MockAuth, MockAuthInvoke};
-use soroban_sdk::{vec as sorobanvec, Address, IntoVal, Map, String, Vec};
+use soroban_sdk::{vec as sorobanvec, Address, Map, String, Vec};
 
 use crate::test::defindex_vault::{
     self, AssetStrategySet, ContractError, RolesDataKey

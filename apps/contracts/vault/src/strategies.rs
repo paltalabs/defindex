@@ -59,7 +59,7 @@ pub fn get_strategy_struct(
     asset
         .strategies
         .iter()
-        .find(|strategy| &strategy.address == strategy_address && !strategy.paused)
+        .find(|strategy| &strategy.address == strategy_address)
         .ok_or(ContractError::StrategyNotFound)
 }
 
@@ -134,7 +134,7 @@ pub fn unwind_from_strategy(
     let strategy_client = get_strategy_client(e, strategy_address.clone());
     let mut report = get_report(e, strategy_address);
     report.prev_balance -= amount;
-
+   
     match strategy_client.try_withdraw(amount, &e.current_contract_address(), to) {
         Ok(Ok(result)) => {
             report.report(result);
@@ -179,6 +179,7 @@ pub fn invest_in_strategy(
     // Store Strategy invested funds for reports
     report.report(strategy_funds);
     set_report(e, strategy_address, &report);
+
 
     Ok(report)
 }

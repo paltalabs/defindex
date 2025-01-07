@@ -93,7 +93,7 @@ fn multi_instructions() {
 
     let instructions = sorobanvec![
         &test.env,
-        Instruction::Withdraw(
+        Instruction::Unwind(
             test.strategy_client_token_0.address.clone(),
             instruction_amount_0
         ),
@@ -191,7 +191,7 @@ fn one_instruction() {
 
     let instructions = sorobanvec![
         &test.env,
-        Instruction::Withdraw(
+        Instruction::Unwind(
             test.strategy_client_token_0.address.clone(),
             instruction_amount_0
         ),
@@ -357,7 +357,7 @@ fn insufficient_balance() {
     //Withdraw with no funds
     let withdraw_no_funds_instructions = sorobanvec![
         &test.env,
-        Instruction::Withdraw(test.strategy_client_token_0.address.clone(), amount + 1),
+        Instruction::Unwind(test.strategy_client_token_0.address.clone(), amount + 1),
     ];
 
     let withdraw_no_funds = defindex_contract.try_rebalance(&test.rebalance_manager, &withdraw_no_funds_instructions);
@@ -391,7 +391,7 @@ fn insufficient_balance() {
     //Withdraw more than available
     let withdraw_instructions = sorobanvec![
         &test.env,
-        Instruction::Withdraw(test.strategy_client_token_0.address.clone(), amount + 1),
+        Instruction::Unwind(test.strategy_client_token_0.address.clone(), amount + 1),
     ];
 
     let rebalance = defindex_contract.try_rebalance(&test.rebalance_manager, &withdraw_instructions);

@@ -111,7 +111,7 @@ pub trait VaultTrait {
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn emergency_withdraw(
+    fn rescue(
         e: Env,
         strategy_address: Address,
         caller: Address,

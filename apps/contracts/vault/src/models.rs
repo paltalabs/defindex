@@ -30,7 +30,7 @@ pub struct AssetInvestmentAllocation {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Instruction {
     /// Withdraw funds from a strategy.
-    Withdraw(Address, i128), // (strategy, amount)
+    Unwind(Address, i128), // (strategy, amount)
 
     /// Invest funds into a strategy.
     Invest(Address, i128), // (strategy, amount)
