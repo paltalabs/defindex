@@ -293,7 +293,7 @@ pub trait AdminInterfaceTrait {
     ///
     /// # Returns:
     /// * `()` - No return value.
-    fn set_manager(e: Env, new_manager: Address);
+    fn set_manager(e: Env, new_manager: Address) -> Result<(), ContractError>;
 
     /// Retrieves the current manager address for the vault.
     ///

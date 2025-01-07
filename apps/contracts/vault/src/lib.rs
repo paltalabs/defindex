@@ -1,5 +1,5 @@
 #![no_std]
-use constants::{MAX_BPS, MIN_WITHDRAW_AMOUNT};
+use constants::{MAX_BPS, MIN_WITHDRAW_AMOUNT, ONE_DAY_IN_SECONDS};
 use events::{emit_clear_manager_queue_event, emit_queued_manager_event};
 use report::Report;
 use soroban_sdk::{
@@ -690,12 +690,21 @@ impl AdminInterfaceTrait for DeFindexVault {
     ///
     /// # Returns:
     /// * `()` - No return value.
-    fn set_manager(e: Env, manager: Address) {
+    fn set_manager(e: Env, manager: Address) -> Result<(), ContractError> {
         extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
+        let current_timestamp = e.ledger().timestamp();
+        let manager_data = access_control.get_queued_manager().get(0).unwrap();
+        if manager_data.1 != manager.clone(){
+            panic_with_error!(&e, ContractError::ManagerNotInQueue);
+        }
+        let seven_days: u64 = ONE_DAY_IN_SECONDS * 7u64;
+        if (current_timestamp - manager_data.0) < (seven_days) {
+            panic_with_error!(&e, ContractError::SetManagerBeforeTime);
+        }
         access_control.set_manager(&manager);
-
         events::emit_manager_changed_event(&e, manager);
+        Ok(())
     }
 
     /// Retrieves the current manager address for the vault.

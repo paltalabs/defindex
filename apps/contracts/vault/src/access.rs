@@ -56,7 +56,7 @@ impl AccessControlTrait for AccessControl {
 
     fn queued_manager(&self) -> Vec<(u64, Address)> {
         if !self.has_role(&RolesDataKey::QueuedManager) {
-            panic_with_error!(&self.0, ContractError::RoleNotFound);
+            panic_with_error!(&self.0, ContractError::QueueEmpty);
         }
         self.0.storage().instance().get(&RolesDataKey::QueuedManager).unwrap()
     }
