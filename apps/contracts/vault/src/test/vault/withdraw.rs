@@ -707,7 +707,7 @@ fn from_strategy_one_asset_one_strategy_success() {
         test.soroswap_router.address.clone(),
         name_symbol,
     );
-    let amount = 1000i128;
+    let amount = 1_0_000_000i128;
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
