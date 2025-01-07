@@ -268,7 +268,7 @@ pub struct VaultOneBlendStrategy<'a> {
 pub fn create_vault_one_blend_strategy<'a>() -> VaultOneBlendStrategy<'a> {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
-
+    
     // Soroswap Setup
     let soroswap_admin = Address::generate(&setup.env);
 
