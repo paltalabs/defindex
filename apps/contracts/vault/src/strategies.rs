@@ -1,9 +1,7 @@
 use defindex_strategy_core::DeFindexStrategyClient;
 use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
-use soroban_sdk::{vec, Address, Env, IntoVal, Symbol, Vec};
+use soroban_sdk::{vec, Address, Env, IntoVal, Symbol};
 
-use crate::events::{emit_rebalance_invest_event, emit_rebalance_unwind_event};
-use crate::models::{AssetInvestmentAllocation, StrategyAllocation};
 use crate::report::Report;
 use crate::storage::{get_report, set_report};
 use crate::{
