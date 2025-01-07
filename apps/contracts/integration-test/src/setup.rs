@@ -313,6 +313,7 @@ pub fn create_vault_one_blend_strategy<'a>() -> VaultOneBlendStrategy<'a> {
     let strategy_contract = BlendStrategyClient::new(&setup.env, &strategy);
 
     let emergency_manager = Address::generate(&setup.env);
+    let rebalance_manager = Address::generate(&setup.env);
     let fee_receiver = Address::generate(&setup.env);
     let vault_fee = VAULT_FEE;
     let vault_name = String::from_str(&setup.env, "BlendVault");
@@ -336,16 +337,24 @@ pub fn create_vault_one_blend_strategy<'a>() -> VaultOneBlendStrategy<'a> {
 
     let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
-    let name_symbol = sorobanvec!(&setup.env, vault_name.clone(), vault_symbol.clone());
+    let mut roles: Map<u32, Address> = Map::new(&setup.env);
+    roles.set(0u32, emergency_manager.clone()); // EmergencyManager enum = 0
+    roles.set(1u32, fee_receiver.clone()); // VaultFeeReceiver enum = 1
+    roles.set(2u32, manager.clone()); // Manager enum = 2
+    roles.set(3u32, rebalance_manager.clone()); // RebalanceManager enum = 3
+
+    let mut name_symbol: Map<String, String> = Map::new(&setup.env);
+    name_symbol.set(String::from_str(&setup.env, "name"), vault_name);
+    name_symbol.set(String::from_str(&setup.env, "symbol"), vault_symbol);
+
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
-        &emergency_manager,
-        &fee_receiver,
+        &roles,
         &vault_fee,
-        &manager,
         &assets,
         &salt,
         &soroswap_router.address,
-        &name_symbol
+        &name_symbol,
+        &true
     );
 
     let vault_contract = VaultContractClient::new(&setup.env, &vault_contract_address);
