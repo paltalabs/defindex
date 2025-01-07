@@ -350,7 +350,37 @@ fn set_new_manager_by_manager() {
         .try_set_manager(&users[0]);
     assert_eq!(response, Err(Ok(ContractError::SetManagerBeforeTime)));
 
-    test.env.jump_time(ONE_DAY_IN_SECONDS * 7);
+    test.env.jump_time(ONE_DAY_IN_SECONDS * 3);
+
+    let response = defindex_contract
+        .mock_auths(&[MockAuth {
+            address: &test.manager.clone(),
+            invoke: &MockAuthInvoke {
+                contract: &defindex_contract.address.clone(),
+                fn_name: "set_manager",
+                args: (&users[0],).into_val(&test.env),
+                sub_invokes: &[],
+            },
+        }])
+        .try_set_manager(&users[0]);
+    assert_eq!(response, Err(Ok(ContractError::SetManagerBeforeTime)));
+
+    test.env.jump_time(ONE_DAY_IN_SECONDS * 3);
+
+    let response = defindex_contract
+        .mock_auths(&[MockAuth {
+            address: &test.manager.clone(),
+            invoke: &MockAuthInvoke {
+                contract: &defindex_contract.address.clone(),
+                fn_name: "set_manager",
+                args: (&users[0],).into_val(&test.env),
+                sub_invokes: &[],
+            },
+        }])
+        .try_set_manager(&users[0]);
+    assert_eq!(response, Err(Ok(ContractError::SetManagerBeforeTime)));
+
+    test.env.jump_time(ONE_DAY_IN_SECONDS * 1);
 
     defindex_contract
         .mock_auths(&[MockAuth {
