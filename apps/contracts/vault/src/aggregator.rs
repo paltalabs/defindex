@@ -5,8 +5,7 @@ use soroban_sdk::{
 use soroswap_library::{get_amount_in, get_reserves_with_pair};
 
 use crate::{
-    // models::DexDistribution,
-    events::{emit_rebalance_swap_exact_in_event, emit_rebalance_swap_exact_out_event}, storage::{get_assets, get_soroswap_router}, ContractError
+    storage::{get_assets, get_soroswap_router}, ContractError
 };
 
 fn is_supported_asset(e: &Env, token: &Address) -> bool {
@@ -65,8 +64,6 @@ pub fn internal_swap_exact_tokens_for_tokens(
         &Symbol::new(&e, "swap_exact_tokens_for_tokens"),
         swap_args.clone(),
     );
-
-    emit_rebalance_swap_exact_in_event(e, swap_args);
     Ok(())
     // TODO: Do something with the result
 }
@@ -128,6 +125,5 @@ pub fn internal_swap_tokens_for_exact_tokens(
         &Symbol::new(&e, "swap_tokens_for_exact_tokens"),
         swap_args.clone(),
     );
-    emit_rebalance_swap_exact_out_event(e, swap_args);
     Ok(())
 }
