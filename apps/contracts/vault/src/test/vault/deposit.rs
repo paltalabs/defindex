@@ -48,6 +48,7 @@ fn amounts_desired_less_length() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount = 1000i128;
@@ -101,6 +102,7 @@ fn amounts_desired_more_length() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount = 1000i128;
@@ -158,6 +160,7 @@ fn amounts_min_less_length() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount = 1000i128;
@@ -215,6 +218,7 @@ fn amounts_min_more_length() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount = 1000i128;
@@ -272,6 +276,7 @@ fn amounts_desired_negative() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount = 1000i128;
@@ -324,6 +329,7 @@ fn one_asset_success() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount = 123456789i128;
@@ -496,6 +502,7 @@ fn one_asset_min_more_than_desired() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount = 123456789i128;
@@ -562,6 +569,7 @@ fn several_assets_success() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount0 = 123456789i128;
@@ -855,6 +863,7 @@ fn several_assets_min_greater_than_optimal() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount0 = 123456789i128;
@@ -958,6 +967,7 @@ fn amounts_min_greater_than_amounts_desired() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount0 = 123456789i128;
@@ -1029,6 +1039,7 @@ fn transfers_tokens_from_user_to_vault() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount0 = 123456789i128;
@@ -1098,6 +1109,7 @@ fn arithmetic_error() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
 
@@ -1171,6 +1183,7 @@ fn amounts_desired_zero() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
 
@@ -1244,6 +1257,7 @@ fn insufficient_funds_with_error_message() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
 

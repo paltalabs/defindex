@@ -26,7 +26,8 @@ fn create_success() {
         &asset_params,
         &salt,
         &test.emergency_manager, //soroswap_router,
-        &name_symbol
+        &name_symbol,
+        &true
     );
 
     let deployed_defindexes = test.factory_contract.deployed_defindexes();
@@ -68,6 +69,7 @@ fn create_and_deposit_success() {
         &salt,
         &test.emergency_manager, //soroswap_router,
         &name_symbol,
+        &true,
         &amounts,
     );
 

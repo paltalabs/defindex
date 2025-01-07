@@ -39,6 +39,7 @@ fn rescue_success() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true,
     );
 
     let amount = 987654321i128;
@@ -146,6 +147,7 @@ fn rescue_errors() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let amount = 987654321i128;
@@ -229,6 +231,7 @@ fn pause_then_rescue() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let amount = 987654321i128;

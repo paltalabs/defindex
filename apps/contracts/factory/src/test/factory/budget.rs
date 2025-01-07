@@ -48,7 +48,8 @@ fn budget() {
         &asset_params,
         &salt,
         &test.emergency_manager, //soroswap_router,
-        &name_symbol
+        &name_symbol,
+        &true
     );
 
     let mem = test.env.budget().memory_bytes_cost();
@@ -77,6 +78,7 @@ fn budget() {
         &salt,
         &test.emergency_manager, //soroswap_router,
         &name_symbol,
+        &true,
         &amounts,
     );
 

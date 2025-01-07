@@ -50,6 +50,7 @@ fn check_rebalance_events(){
       test.defindex_factory.clone(),
       test.soroswap_router.address.clone(),
       name_symbol,
+      true,
   );
 
   let amount = 12_3_456_789i128;
