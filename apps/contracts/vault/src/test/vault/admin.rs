@@ -422,7 +422,7 @@ fn queue_manager(){
     // Manager is queuing the new manager
 
     let queued_manager = defindex_contract.try_get_queued_manager();
-    assert_eq!(queued_manager, Err(Ok(ContractError::RoleNotFound)));
+    assert_eq!(queued_manager, Err(Ok(ContractError::QueueEmpty)));
 
     let unauthorized_queue = defindex_contract.try_queue_manager(&users[0]);
     assert_eq!(unauthorized_queue.is_err(), true);
@@ -457,5 +457,5 @@ fn queue_manager(){
     ).clear_queue();
 
     let queued_manager = defindex_contract.try_get_queued_manager();
-    assert_eq!(queued_manager, Err(Ok(ContractError::RoleNotFound)));
+    assert_eq!(queued_manager, Err(Ok(ContractError::QueueEmpty)));
 }
