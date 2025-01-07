@@ -2,10 +2,10 @@ use soroban_sdk::{
     testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke}, vec as sorobanvec, Address, IntoVal, Map, String, Symbol, Vec
 };
 
-use crate::test::{
+use crate::{constants::ONE_DAY_IN_SECONDS, test::{
     create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1,
-    defindex_vault::{AssetStrategySet, ContractError, RolesDataKey}, DeFindexVaultTest,
-};
+    defindex_vault::{AssetStrategySet, ContractError, RolesDataKey}, DeFindexVaultTest, EnvTestUtils,
+}};
 
 extern crate alloc;
 use alloc::vec;
@@ -296,8 +296,62 @@ fn set_new_manager_by_manager() {
     let manager_role = defindex_contract.get_manager();
     assert_eq!(manager_role, test.manager);
 
-    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
     // Manager is setting the new manager
+    let response = defindex_contract
+        .mock_auths(&[MockAuth {
+            address: &test.manager.clone(),
+            invoke: &MockAuthInvoke {
+                contract: &defindex_contract.address.clone(),
+                fn_name: "set_manager",
+                args: (&users[0],).into_val(&test.env),
+                sub_invokes: &[],
+            },
+        }])
+        .try_set_manager(&users[0]);
+
+    assert_eq!(response, Err(Ok(ContractError::QueueEmpty)));
+    
+    defindex_contract.mock_auths(
+        &[MockAuth {
+            address: &test.manager.clone(),
+            invoke: &MockAuthInvoke {
+                contract: &defindex_contract.address.clone(),
+                fn_name: "queue_manager",
+                args: (&users[0].clone(),).into_val(&test.env),
+                sub_invokes: &[],
+            },
+        }]
+    ).queue_manager(&users[0]);
+
+    let response = defindex_contract
+        .mock_auths(&[MockAuth {
+            address: &test.manager.clone(),
+            invoke: &MockAuthInvoke {
+                contract: &defindex_contract.address.clone(),
+                fn_name: "set_manager",
+                args: (&users[0],).into_val(&test.env),
+                sub_invokes: &[],
+            },
+        }])
+        .try_set_manager(&users[1]);
+    assert_eq!(response, Err(Ok(ContractError::ManagerNotInQueue)));
+
+    let response = defindex_contract
+        .mock_auths(&[MockAuth {
+            address: &test.manager.clone(),
+            invoke: &MockAuthInvoke {
+                contract: &defindex_contract.address.clone(),
+                fn_name: "set_manager",
+                args: (&users[0],).into_val(&test.env),
+                sub_invokes: &[],
+            },
+        }])
+        .try_set_manager(&users[0]);
+    assert_eq!(response, Err(Ok(ContractError::SetManagerBeforeTime)));
+
+    test.env.jump_time(ONE_DAY_IN_SECONDS * 7);
+
     defindex_contract
         .mock_auths(&[MockAuth {
             address: &test.manager.clone(),
