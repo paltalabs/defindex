@@ -136,9 +136,6 @@ pub fn unwind_from_strategy(
     let strategy_client = get_strategy_client(e, strategy_address.clone());
     let mut report = get_report(e, strategy_address);
     report.prev_balance -= amount;
-
-    let call_params:Vec<(Address, i128, Address)>  = vec![&e,(strategy_address.clone(), amount.clone(), to.clone())];
-    emit_rebalance_unwind_event(e, call_params, report.clone());
    
     match strategy_client.try_withdraw(amount, &e.current_contract_address(), to) {
         Ok(Ok(result)) => {
@@ -185,14 +182,6 @@ pub fn invest_in_strategy(
     report.report(strategy_funds);
     set_report(e, strategy_address, &report);
 
-    let investment = AssetInvestmentAllocation {
-        asset: asset_address.clone(),
-        strategy_allocations: vec![&e, Some(StrategyAllocation {
-            strategy_address: strategy_address.clone(),
-            amount: amount.clone(),
-        })],
-    };
-    emit_rebalance_invest_event(&e, vec![&e, investment], report.clone());
 
     Ok(report)
 }
