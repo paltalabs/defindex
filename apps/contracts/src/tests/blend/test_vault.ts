@@ -1,4 +1,5 @@
 import { Address, Asset, Keypair, nativeToScVal, Networks, scValToNative, xdr } from "@stellar/stellar-sdk";
+import { SOROSWAP_ROUTER } from "../../constants.js";
 import { AddressBook } from "../../utils/address_book.js";
 import { airdropAccount, invokeContract } from "../../utils/contract.js";
 import { config } from "../../utils/env_config.js";
@@ -103,6 +104,7 @@ export async function testBlendVault(user?: Keypair) {
     "BLND Vault",
     "BLNVLT",
     assetAllocations,
+    new Address(SOROSWAP_ROUTER),
     true,
   )
 

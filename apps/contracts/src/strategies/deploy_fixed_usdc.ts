@@ -1,4 +1,6 @@
-import { Address, Asset, Keypair, nativeToScVal, xdr } from "@stellar/stellar-sdk";
+import { Address, Keypair, nativeToScVal, xdr } from "@stellar/stellar-sdk";
+import { SOROSWAP_USDC } from "../constants.js";
+import { mintToken } from "../tests/vault.js";
 import { AddressBook } from "../utils/address_book.js";
 import {
   airdropAccount,
@@ -7,7 +9,6 @@ import {
   invokeCustomContract
 } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
-import { mintToken } from "../tests/vault.js";
 
 export async function deployFixedAPRStrategy(addressBook: AddressBook) {
   if (network == "standalone") {
@@ -32,7 +33,7 @@ export async function deployFixedAPRStrategy(addressBook: AddressBook) {
   console.log("-------------------------------------------------------");
   await installContract("fixed_apr_strategy", addressBook, loadedConfig.admin);
 
-  const usdcAddress = new Address('CARDT45FED2I3FKESPMHDFV3ZMR6VH5ZHCFIOPH6TPSU35GPB6QBBCSU');
+  const usdcAddress = new Address(SOROSWAP_USDC);
   
   const initArgs = xdr.ScVal.scvVec([
     nativeToScVal(1000, { type: "u32" }), // 10% APR
