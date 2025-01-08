@@ -50,6 +50,7 @@ fn budget() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let mem = test.env.budget().memory_bytes_cost();

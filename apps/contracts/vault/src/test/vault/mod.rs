@@ -10,3 +10,4 @@ mod initialize;
 mod invest;
 mod rebalance;
 mod withdraw;
+mod upgrade;
