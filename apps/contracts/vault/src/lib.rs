@@ -6,7 +6,7 @@ use soroban_sdk::{contract, contractimpl, panic_with_error, token::TokenClient, 
 use soroban_token_sdk::metadata::TokenMetadata;
 
 mod access;
-mod aggregator;
+mod router;
 mod constants;
 mod deposit;
 mod error;
@@ -23,7 +23,7 @@ mod token;
 mod utils;
 
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
-use aggregator::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
+use router::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
 use deposit::process_deposit;
 use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds};
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
