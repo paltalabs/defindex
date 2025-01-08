@@ -35,4 +35,8 @@ jobs:
         run: cd apps/contracts && make build
 
       - name: test contracts
-        run: bash run_workflow.sh remote || exit 1
+        run: bash run_workflow.sh remote || exit 1 
+            if steps.test_contracts.outcome = 'success'; then
+              exit 1
+            fi
+        continue-on-error: false
