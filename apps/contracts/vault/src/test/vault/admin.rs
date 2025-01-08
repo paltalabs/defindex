@@ -324,3 +324,9 @@ fn set_new_manager_by_manager() {
     let new_manager_role = defindex_contract.get_manager();
     assert_eq!(new_manager_role, users[0]);
 }
+
+
+#[test]
+fn fail() {
+    assert_eq!(1, 2);
+}
