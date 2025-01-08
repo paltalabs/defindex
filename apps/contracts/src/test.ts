@@ -7,6 +7,7 @@ import {
   scValToNative,
   xdr
 } from "@stellar/stellar-sdk";
+import { SOROSWAP_ROUTER } from "./constants.js";
 import { checkUserBalance, depositToStrategy, withdrawFromStrategy } from "./tests/strategy.js";
 import { depositToVault, getCreateDeFindexParams, rebalanceManager, withdrawFromVault } from "./tests/vault.js";
 import { AddressBook } from "./utils/address_book.js";
@@ -88,6 +89,7 @@ export async function test_factory(addressBook: AddressBook) {
     "Test Vault",
     "DFT-Test-Vault",
     assetAllocations,
+    new Address(SOROSWAP_ROUTER),
     true,
   )
 
