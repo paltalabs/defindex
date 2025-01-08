@@ -28,6 +28,7 @@ pub enum ContractError {
     WrongStrategiesLength = 123,
     AmountOverTotalSupply = 124,
     NoInstructions = 125,
+    NotUpgradable = 126,
 
     // Arithmetic Errors (12x)
     ArithmeticError = 120,

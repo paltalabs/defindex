@@ -50,6 +50,7 @@ fn budget() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let mem = test.env.budget().memory_bytes_cost();
@@ -161,7 +162,7 @@ fn budget() {
     // rebalance withdraw
     let withdraw_instructions = sorobanvec![
         &test.env,
-        Instruction::Withdraw(test.strategy_client_token_0.address.clone(), 100),
+        Instruction::Unwind(test.strategy_client_token_0.address.clone(), 100),
     ];
     let _ = defindex_contract.rebalance(&test.rebalance_manager, &withdraw_instructions);
     let mem = test.env.budget().memory_bytes_cost();
