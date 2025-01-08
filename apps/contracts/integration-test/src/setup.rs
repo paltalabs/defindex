@@ -480,41 +480,41 @@ mod tests {
         let setup = enviroment.setup;
         assert_eq!(setup.factory_contract.deployed_defindexes().len(), 1);
 
-        // let strategy_token = enviroment.strategy_contract.asset();
-        // assert_eq!(strategy_token, enviroment.usdc.address);
+        let strategy_token = enviroment.strategy_contract.asset();
+        assert_eq!(strategy_token, enviroment.usdc.address);
 
-        // let assets = sorobanvec![
-        //     &setup.env,
-        //     VaultAssetStrategySet {
-        //         address: enviroment.usdc.address.clone(),
-        //         strategies: sorobanvec![
-        //             &setup.env,
-        //             VaultStrategy {
-        //                 address: enviroment.strategy_contract.address.clone(),
-        //                 name: String::from_str(&setup.env, "Blend Strategy"),
-        //                 paused: false,
-        //             }
-        //         ],
-        //     }
-        // ];
+        let assets = sorobanvec![
+            &setup.env,
+            VaultAssetStrategySet {
+                address: enviroment.usdc.address.clone(),
+                strategies: sorobanvec![
+                    &setup.env,
+                    VaultStrategy {
+                        address: enviroment.strategy_contract.address.clone(),
+                        name: String::from_str(&setup.env, "Blend Strategy"),
+                        paused: false,
+                    }
+                ],
+            }
+        ];
 
-        // let vault_assets = enviroment.vault_contract.get_assets();
-        // assert_eq!(vault_assets, assets);
+        let vault_assets = enviroment.vault_contract.get_assets();
+        assert_eq!(vault_assets, assets);
 
-        // let vault_emergency_manager = enviroment.vault_contract.get_emergency_manager();
-        // assert_eq!(vault_emergency_manager, enviroment.emergency_manager);
+        let vault_emergency_manager = enviroment.vault_contract.get_emergency_manager();
+        assert_eq!(vault_emergency_manager, enviroment.emergency_manager);
 
-        // let vault_fee_receiver = enviroment.vault_contract.get_fee_receiver();
-        // assert_eq!(vault_fee_receiver, enviroment.fee_receiver);
+        let vault_fee_receiver = enviroment.vault_contract.get_fee_receiver();
+        assert_eq!(vault_fee_receiver, enviroment.fee_receiver);
 
-        // let vault_manager = enviroment.vault_contract.get_manager();
-        // assert_eq!(vault_manager, enviroment.manager);
+        let vault_manager = enviroment.vault_contract.get_manager();
+        assert_eq!(vault_manager, enviroment.manager);
 
-        // let vault_name = enviroment.vault_contract.name();
-        // assert_eq!(vault_name, String::from_str(&setup.env, "BlendVault"));
+        let vault_name = enviroment.vault_contract.name();
+        assert_eq!(vault_name, String::from_str(&setup.env, "BlendVault"));
 
-        // let vault_symbol = enviroment.vault_contract.symbol();
-        // assert_eq!(vault_symbol, String::from_str(&setup.env, "BLNDVLT"));
+        let vault_symbol = enviroment.vault_contract.symbol();
+        assert_eq!(vault_symbol, String::from_str(&setup.env, "BLNDVLT"));
     }
 }
 
