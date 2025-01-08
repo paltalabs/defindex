@@ -10,11 +10,15 @@ permissions:
   packages: none
 
 jobs:
-  build:
+  build_and_test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.1.1
-      
+      - uses: actions/cache@v3
+        with:
+          path:  |
+            apps/contracts/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -31,4 +35,4 @@ jobs:
         run: cd apps/contracts && make build
 
       - name: test contracts
-        run: cd apps/contracts && make test
+        run: bash run_workflow.sh remote || exit 1
