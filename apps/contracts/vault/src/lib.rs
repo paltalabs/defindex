@@ -1,7 +1,5 @@
 #![no_std]
 use constants::{MIN_WITHDRAW_AMOUNT, ONE_DAY_IN_SECONDS};
-use events::{emit_clear_manager_queue_event, emit_queued_manager_event};
-use events::{emit_rebalance_invest_event, emit_rebalance_swap_exact_in_event, emit_rebalance_swap_exact_out_event, emit_rebalance_unwind_event};
 use report::Report;
 use soroban_sdk::{contract, contractimpl, panic_with_error, token::TokenClient, vec, Address, BytesN, Env, IntoVal, Map, String, Val, Vec
 };
@@ -651,7 +649,7 @@ impl AdminInterfaceTrait for DeFindexVault {
 
         let access_control = AccessControl::new(&e);
         access_control.queue_manager(&manager_data);
-        emit_queued_manager_event(&e, manager_data);
+        events::emit_queued_manager_event(&e, manager_data);
         Ok(manager)
     }
 
@@ -685,7 +683,7 @@ impl AdminInterfaceTrait for DeFindexVault {
         let access_control = AccessControl::new(&e);
         access_control.clear_queued_manager();
         let current_timestamp:u64 = e.ledger().timestamp();
-        emit_clear_manager_queue_event(&e, current_timestamp);
+        events::emit_clear_manager_queue_event(&e, current_timestamp);
         Ok(())
     }
 

@@ -451,6 +451,7 @@ fn queue_manager(){
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
