@@ -1,6 +1,5 @@
 #![no_std]
-use constants::{MAX_BPS, MIN_WITHDRAW_AMOUNT};
-use events::{emit_rebalance_invest_event, emit_rebalance_swap_exact_in_event, emit_rebalance_swap_exact_out_event, emit_rebalance_unwind_event};
+use constants::MIN_WITHDRAW_AMOUNT;
 use report::Report;
 use soroban_sdk::{contract, contractimpl, panic_with_error, token::TokenClient, vec, Address, BytesN, Env, IntoVal, Map, String, Val, Vec
 };
@@ -31,7 +30,10 @@ use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::{check_and_execute_investments, generate_investment_allocations};
 use models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction, StrategyAllocation};
 use storage::{
-    extend_instance_ttl, get_assets, get_defindex_protocol_fee_rate, get_defindex_protocol_fee_receiver, get_report, get_vault_fee, set_asset, set_defindex_protocol_fee_rate, set_defindex_protocol_fee_receiver, set_factory, set_is_upgradable, set_report, set_soroswap_router, set_total_assets, set_vault_fee
+    extend_instance_ttl, get_assets, get_defindex_protocol_fee_rate,
+    get_report, get_vault_fee, set_asset,
+    set_defindex_protocol_fee_rate, set_defindex_protocol_fee_receiver, set_factory, set_report,
+    set_soroswap_router, set_total_assets, set_vault_fee, set_is_upgradable
 };
 use strategies::{
     get_strategy_asset, get_strategy_client, get_strategy_struct, invest_in_strategy,
@@ -376,6 +378,13 @@ impl VaultTrait for DeFindexVault {
         let asset = get_strategy_asset(&e, &strategy_address)?;
         // This ensures that the vault has this strategy in its list of assets
         let strategy = get_strategy_struct(&strategy_address, &asset)?;
+
+        let distribution_result = report::distribute_strategy_fees(&e, &strategy.address, &access_control)?;
+        if distribution_result > 0 {
+            let mut distributed_fees: Vec<(Address, i128)> = Vec::new(&e);
+            distributed_fees.push_back((asset.address.clone(), distribution_result));
+            events::emit_fees_distributed_event(&e, distributed_fees.clone());
+        }
 
         // Withdraw all assets from the strategy
         let strategy_client = get_strategy_client(&e, strategy.address.clone());
@@ -815,7 +824,7 @@ impl VaultManagementTrait for DeFindexVault {
                         &e.current_contract_address(),
                     )?;
                     let call_params = vec![&e, (strategy_address, amount, e.current_contract_address())];
-                    emit_rebalance_unwind_event(&e, call_params, report);
+                    events::emit_rebalance_unwind_event(&e, call_params, report);
                 }
                 Instruction::Invest(strategy_address, amount) => {
                     let asset_address = get_strategy_asset(&e, &strategy_address)?;
@@ -827,7 +836,7 @@ impl VaultManagementTrait for DeFindexVault {
                             amount: amount.clone(),
                         })],
                     };
-                    emit_rebalance_invest_event(&e, vec![&e, call_params], report);
+                    events::emit_rebalance_invest_event(&e, vec![&e, call_params], report);
                 }
                 Instruction::SwapExactIn(
                     token_in,
@@ -852,7 +861,7 @@ impl VaultManagementTrait for DeFindexVault {
                         e.current_contract_address().to_val(),
                         deadline.into_val(&e),
                     ];
-                    emit_rebalance_swap_exact_in_event(&e, swap_args);
+                    events::emit_rebalance_swap_exact_in_event(&e, swap_args);
                 }
                 Instruction::SwapExactOut(
                     token_in,
@@ -877,7 +886,7 @@ impl VaultManagementTrait for DeFindexVault {
                         e.current_contract_address().to_val(),
                         deadline.into_val(&e),
                     ];
-                    emit_rebalance_swap_exact_out_event(&e, swap_args);
+                    events::emit_rebalance_swap_exact_out_event(&e, swap_args);
                 } // Zapper instruction is omitted for now
                   // Instruction::Zapper(instructions) => {
                   //     // TODO: Implement Zapper instructions
@@ -976,10 +985,6 @@ impl VaultManagementTrait for DeFindexVault {
         // Get all assets and their strategies
         let assets = get_assets(&e);
 
-        let vault_fee_receiver = access_control.get_fee_receiver()?;
-        let defindex_protocol_receiver = get_defindex_protocol_fee_receiver(&e);
-        let defindex_fee = get_defindex_protocol_fee_rate(&e);
-
         let mut distributed_fees: Vec<(Address, i128)> = Vec::new(&e);
 
         // Loop through each asset and its strategies to lock the fees
@@ -987,33 +992,7 @@ impl VaultManagementTrait for DeFindexVault {
             let mut total_fees_distributed: i128 = 0;
 
             for strategy in asset.strategies.iter() {
-                let mut report = get_report(&e, &strategy.address);
-
-                if report.locked_fee > 0 {
-                    // Calculate shares for each receiver based on their fee proportion
-                    let numerator = report.locked_fee.checked_mul(defindex_fee as i128).unwrap();
-                    let defindex_fee_amount = numerator.checked_div(MAX_BPS).unwrap();
-
-                    let vault_fee_amount = report.locked_fee - defindex_fee_amount;
-
-                    report.prev_balance = report.prev_balance - report.locked_fee;
-
-                    unwind_from_strategy(
-                        &e,
-                        &strategy.address,
-                        &defindex_fee_amount,
-                        &defindex_protocol_receiver,
-                    )?;
-                    unwind_from_strategy(
-                        &e,
-                        &strategy.address,
-                        &vault_fee_amount,
-                        &vault_fee_receiver,
-                    )?;
-                    total_fees_distributed += report.locked_fee;
-                    report.locked_fee = 0;
-                    set_report(&e, &strategy.address, &report);
-                }
+                total_fees_distributed += report::distribute_strategy_fees(&e, &strategy.address, &access_control)?;
             }
 
             if total_fees_distributed > 0 {
