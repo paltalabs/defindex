@@ -4,7 +4,6 @@ mod blend_strategy {
     pub type BlendStrategyClient<'a> = Client<'a>;
 }
 
-
 pub use blend_strategy::BlendStrategyClient;
 use soroban_sdk::{vec, Address, Env, IntoVal, Val, Vec};
 

@@ -1,4 +1,4 @@
-mod blend_setup;
+pub mod blend_setup;
 use blend_setup::{create_blend_pool, BlendFixture, BlendPoolClient};
 use soroban_sdk::{
     testutils::{Address as _, MockAuth, MockAuthInvoke}, token::{StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient}, vec as sorobanvec, Address, BytesN, Env, IntoVal, Map, String
@@ -263,6 +263,7 @@ pub struct VaultOneBlendStrategy<'a> {
     pub fee_receiver: Address,
     pub vault_fee: u32,
     pub blend_pool_client: BlendPoolClient<'a>,
+    pub admin: Address,
 }
 
 pub fn create_vault_one_blend_strategy<'a>() -> VaultOneBlendStrategy<'a> {
@@ -373,7 +374,8 @@ pub fn create_vault_one_blend_strategy<'a>() -> VaultOneBlendStrategy<'a> {
         emergency_manager,
         fee_receiver,
         vault_fee,
-        blend_pool_client: pool_client
+        blend_pool_client: pool_client,
+        admin
     }
 }
 
