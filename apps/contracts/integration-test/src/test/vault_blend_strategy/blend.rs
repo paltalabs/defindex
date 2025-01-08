@@ -21,6 +21,7 @@ fn success() {
      * -> verify a deposit into an uninitialized vault fails
      */
     let pool_usdc_balace_start = usdc.balance(&enviroment.blend_pool_client.address);
+    println!("Pool USDC Balance: {}", pool_usdc_balace_start);
     let starting_balance = 100_0000000;
     usdc_client.mint(&users[0], &starting_balance);
     usdc_client.mint(&users[1], &starting_balance);
@@ -31,6 +32,10 @@ fn success() {
     let user_1_balance = usdc.balance(&users[1]);
     assert_eq!(user_1_balance, starting_balance);
 
+    println!("USDC Vault Balance: {}", usdc.balance(&vault_contract.address));
+    println!("Vault Balance on Strategy: {}", enviroment.strategy_contract.balance(&vault_contract.address));
+
+    println!("--- Depositing user0 ---");
     vault_contract.deposit(
         &svec!(&setup.env, starting_balance.clone()),
         &svec!(&setup.env, starting_balance.clone()),
@@ -72,7 +77,10 @@ fn success() {
         )
     );
 
-    println!("--- Depositing ---");
+    println!("USDC Vault Balance: {}", usdc.balance(&vault_contract.address));
+    println!("Vault Balance on Strategy: {}", enviroment.strategy_contract.balance(&vault_contract.address));
+
+    println!("--- Depositing user1 ---");
     vault_contract.deposit(
         &svec!(&setup.env, starting_balance.clone()),
         &svec!(&setup.env, starting_balance.clone()),
@@ -84,7 +92,13 @@ fn success() {
     assert_eq!(usdc.balance(&users[0]), 0);
     assert_eq!(usdc.balance(&users[1]), 0);
     assert_eq!(usdc.balance(&vault_contract.address), starting_balance * 2);
+
     println!("Vault USDC Balance: {}", usdc.balance(&vault_contract.address));
+    println!("Vault Balance on Strategy: {}", enviroment.strategy_contract.balance(&vault_contract.address));
+
+    println!("--report before investing--");
+    let report = vault_contract.report();
+    println!("{:?}", report);
 
     let investments = svec![
         &setup.env,
@@ -103,7 +117,12 @@ fn success() {
     println!("--- Investing ---");
     vault_contract.invest(&investments);
 
+    println!("--report after investing 0 0 2 --");
+    let report = vault_contract.report();
+    println!("{:?}", report);
+
     println!("Vault USDC Balance: {}", usdc.balance(&vault_contract.address));
+    println!("Vault Balance on Strategy: {}", enviroment.strategy_contract.balance(&vault_contract.address));
 
     assert_eq!(
         usdc.balance(&enviroment.blend_pool_client.address),
@@ -184,7 +203,7 @@ fn success() {
     let user_2_profit = user_2_final_balance - user_2_starting_balance;
 
     // withdraw from blend strategy for users[0] and users[1]
-    // they are expected to receive half of the profit of users[2]
+    // they are expected to receive half of the profit of users[2] minus the vault fees
     let expected_user_2_profit = user_2_profit / 2;
     let withdraw_amount = starting_balance + expected_user_2_profit;
     // withdraw_amount = 100_0958904
@@ -193,14 +212,32 @@ fn success() {
     println!("users[0] vault balance before report= {}", vault_contract.balance(&users[0]));
     println!("users[1] vault balance before report= {}", vault_contract.balance(&users[1]));
 
+    std::println!("-- Harvesting --");
+    enviroment.strategy_contract.harvest(&enviroment.manager);
+
     let report = vault_contract.report();
     println!("report = {:?}", report);
 
     let lock_fees = vault_contract.lock_fees(&None);
     println!("locked_fees = {:?}", lock_fees);
 
-    println!("users[0] vault balance after report= {}", vault_contract.balance(&users[0]));
-    println!("users[1] vault balance after report= {}", vault_contract.balance(&users[1]));
+
+    println!("Pool USDC Balance: {}", usdc.balance(&enviroment.blend_pool_client.address));
+    println!("Vault Balance on Strategy: {}", enviroment.strategy_contract.balance(&vault_contract.address));
+
+    println!("-- Distributing Fees --");
+    vault_contract.distribute_fees();
+
+    println!("Pool USDC Balance: {}", usdc.balance(&enviroment.blend_pool_client.address));
+    println!("Vault Balance on Strategy: {}", enviroment.strategy_contract.balance(&vault_contract.address));
+
+    
+
+    let report = vault_contract.report();
+    println!("report = {:?}", report);
+
+    let lock_fees = vault_contract.lock_fees(&None);
+    println!("locked_fees = {:?}", lock_fees);
 
     // -> verify over withdraw fails
     // let result =

@@ -48,7 +48,7 @@ impl Report {
 }
 
 pub fn distribute_strategy_fees(e: &Env, strategy_address: &Address, access_control: &AccessControl) -> Result<i128, ContractError> {
-    let mut report = get_report(&e, &strategy_address);
+    let report = get_report(&e, &strategy_address);
     
     let defindex_fee = get_defindex_protocol_fee_rate(&e);
     let defindex_protocol_receiver = get_defindex_protocol_fee_receiver(&e);
@@ -63,15 +63,13 @@ pub fn distribute_strategy_fees(e: &Env, strategy_address: &Address, access_cont
 
         let vault_fee_amount = report.locked_fee - defindex_fee_amount;
 
-        report.prev_balance = report.prev_balance - report.locked_fee;
-
         unwind_from_strategy(
             &e,
             &strategy_address,
             &defindex_fee_amount,
             &defindex_protocol_receiver,
         )?;
-        unwind_from_strategy(
+        let mut report = unwind_from_strategy(
             &e,
             &strategy_address,
             &vault_fee_amount,

@@ -103,7 +103,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
         let b_tokens_minted = blend_pool::supply(&e, &from, &amount, &config);
 
         // Keeping track of the total deposited amount and the total bTokens owned by the strategy depositors
-        let vault_shares = reserves::deposit(&e, reserves.clone(), &from, amount, b_tokens_minted);
+        let (vault_shares, reserves) = reserves::deposit(&e, reserves.clone(), &from, amount, b_tokens_minted);
 
         let underlying_balance = shares_to_underlying(vault_shares, reserves);
 
@@ -147,7 +147,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         let (tokens_withdrawn, b_tokens_burnt) = blend_pool::withdraw(&e, &to, &amount, &config);
 
-        let vault_shares = reserves::withdraw(
+        let (vault_shares, reserves) = reserves::withdraw(
             &e,
             reserves.clone(),
             &from,

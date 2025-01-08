@@ -78,7 +78,8 @@ fn success() {
     let user_3_balance = usdc_client.balance(&user_3);
     assert_eq!(user_3_balance, starting_balance);
 
-    strategy_client.deposit(&starting_balance, &user_2);
+    let deposit_result_0 = strategy_client.deposit(&starting_balance, &user_2);
+    assert_eq!(deposit_result_0, starting_balance);
     // -> verify deposit auth
 
     assert_eq!(
@@ -108,7 +109,8 @@ fn success() {
         )
     );
 
-    strategy_client.deposit(&starting_balance, &user_3);
+    let deposit_result_1 = strategy_client.deposit(&starting_balance, &user_3);
+    assert_eq!(deposit_result_1, starting_balance);
 
     // verify deposit (pool b_rate still 1 as no time has passed)
     assert_eq!(usdc_client.balance(&user_2), 0);
