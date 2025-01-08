@@ -48,6 +48,7 @@ fn set_new_fee_receiver_by_fee_receiver() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     let fee_receiver_role = defindex_contract.get_fee_receiver();
     assert_eq!(fee_receiver_role, test.vault_fee_receiver);
@@ -124,6 +125,7 @@ fn set_new_fee_receiver_by_manager() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     let fee_receiver_role = defindex_contract.get_fee_receiver();
     assert_eq!(fee_receiver_role, test.vault_fee_receiver);
@@ -198,6 +200,7 @@ fn set_new_fee_receiver_by_emergency_manager() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     let fee_receiver_role = defindex_contract.get_fee_receiver();
     assert_eq!(fee_receiver_role, test.vault_fee_receiver);
@@ -246,6 +249,7 @@ fn set_new_fee_receiver_invalid_sender() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     let fee_receiver_role = defindex_contract.get_fee_receiver();
     assert_eq!(fee_receiver_role, test.vault_fee_receiver);
@@ -292,6 +296,7 @@ fn set_new_manager_by_manager() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     let manager_role = defindex_contract.get_manager();
     assert_eq!(manager_role, test.manager);

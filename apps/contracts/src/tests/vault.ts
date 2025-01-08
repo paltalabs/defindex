@@ -7,6 +7,7 @@ import {
 } from "@stellar/stellar-sdk";
 import { i128, u64 } from "@stellar/stellar-sdk/contract";
 import { randomBytes } from "crypto";
+import { SOROSWAP_ROUTER, SOROSWAP_USDC } from "../constants.js";
 import { AddressBook } from "../utils/address_book.js";
 import {
   airdropAccount,
@@ -37,9 +38,7 @@ export interface CreateVaultParams {
     paused: boolean;
   }>;
 }
-export const soroswapUSDC = new Address(
-  "CARDT45FED2I3FKESPMHDFV3ZMR6VH5ZHCFIOPH6TPSU35GPB6QBBCSU"
-);
+export const soroswapUSDC = new Address(SOROSWAP_USDC);
 
 /**
  * Mints a specified amount of tokens for a given user.
@@ -65,6 +64,7 @@ export async function mintToken(user: Keypair, amount: number, tokenAddress?: Ad
  * Generates the parameters required to create a DeFindex vault.
  *
  * @param {Keypair} emergencyManager - The keypair of the emergency manager.
+ * @param {Keypair} rebalanceManager - The keypair of the rebalance manager.
  * @param {Keypair} feeReceiver - The keypair of the fee receiver.
  * @param {Keypair} manager - The keypair of the manager.
  * @param {string} vaultName - The name of the vault.
@@ -73,7 +73,7 @@ export async function mintToken(user: Keypair, amount: number, tokenAddress?: Ad
  * @param {Address} router_address - The address of the Soroswap router.
  * @returns {xdr.ScVal[]} An array of ScVal objects representing the parameters.
  */
-function getCreateDeFindexParams(
+export function getCreateDeFindexParams(
   emergencyManager: Keypair,
   rebalanceManager: Keypair,
   feeReceiver: Keypair,
@@ -82,6 +82,7 @@ function getCreateDeFindexParams(
   vaultSymbol: string,
   assetAllocations: xdr.ScVal[],
   router_address: Address,
+  upgradable: boolean,
 ): xdr.ScVal[] {
   const roles = xdr.ScVal.scvMap([
     new xdr.ScMapEntry({
@@ -130,8 +131,9 @@ function getCreateDeFindexParams(
     nativeToScVal(100, { type: "u32" }), // Setting vault_fee as 100 bps for demonstration
     xdr.ScVal.scvVec(assetAllocations),
     nativeToScVal(randomBytes(32)), //salt
-    router_address.toScVal(), //TODO: add soroswap_rouer
+    router_address.toScVal(),
     nameSymbol,
+    nativeToScVal(upgradable, { type: "bool" })
   ];
 }
 
@@ -201,7 +203,6 @@ export async function deployVault(
   const assets: CreateVaultParams[] = createVaultParams;
   const assetAllocations = getAssetAllocations(assets);
 
-  const soroswap_router = new Address("CC6WRJYMZA574TOXNO2ZWU4HIXJ5OLKGB7JF556RKMZPSV2V62SLBTPK")
   const createDeFindexParams: xdr.ScVal[] = getCreateDeFindexParams(
     emergencyManager,
     rebalanceManager,
@@ -210,7 +211,8 @@ export async function deployVault(
     vaultName,
     vaultSymbol,
     assetAllocations,
-    soroswap_router
+    new Address(SOROSWAP_ROUTER),
+    true,
   );
   try {
     const result = await invokeContract(

@@ -7,9 +7,9 @@ import {
   scValToNative,
   xdr
 } from "@stellar/stellar-sdk";
-import { randomBytes } from "crypto";
+import { SOROSWAP_ROUTER } from "./constants.js";
 import { checkUserBalance, depositToStrategy, withdrawFromStrategy } from "./tests/strategy.js";
-import { depositToVault, withdrawFromVault } from "./tests/vault.js";
+import { depositToVault, getCreateDeFindexParams, rebalanceManager, withdrawFromVault } from "./tests/vault.js";
 import { AddressBook } from "./utils/address_book.js";
 import { airdropAccount, invokeContract } from "./utils/contract.js";
 import { config } from "./utils/env_config.js";
@@ -80,23 +80,18 @@ export async function test_factory(addressBook: AddressBook) {
       }),
     ]);
   });
- 
-  const nameSymbol = xdr.ScVal.scvVec([
-    nativeToScVal("Test Vault", { type: "string" }), // name
-    nativeToScVal("DFT-Test-Vault", { type: "string" }),
-  ]);
 
-
-  const createDeFindexParams: xdr.ScVal[] = [
-    new Address(emergencyManager.publicKey()).toScVal(), //     emergency_manager: Address, 
-    new Address(feeReceiver.publicKey()).toScVal(), //     fee_receiver: Address, 
-    nativeToScVal(100, { type: "u32" }),  // Setting vault_fee as 100 bps for demonstration
-    new Address(manager.publicKey()).toScVal(), //     manager: Address,
-    xdr.ScVal.scvVec(assetAllocations), //     assets: Vec<AssetStrategySet>,
-    nativeToScVal(randomBytes(32)), //     salt: BytesN<32>,
-    new Address(emergencyManager.publicKey()).toScVal(), //     soroswap_router: Address, 
-    nameSymbol, //     name_symbol: Vec<ScVal>,
-  ];
+  const createDeFindexParams: xdr.ScVal[] = getCreateDeFindexParams(
+    emergencyManager,
+    rebalanceManager,
+    feeReceiver,
+    manager,
+    "Test Vault",
+    "DFT-Test-Vault",
+    assetAllocations,
+    new Address(SOROSWAP_ROUTER),
+    true,
+  )
 
   const result = await invokeContract(
     'defindex_factory',
