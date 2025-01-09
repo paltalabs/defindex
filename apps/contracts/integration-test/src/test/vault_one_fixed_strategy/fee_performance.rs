@@ -2,12 +2,11 @@ use crate::{
     setup::create_vault_one_asset_fixed_strategy,
     test::{EnvTestUtils, IntegrationTest, ONE_YEAR_IN_SECONDS},
     vault::{
-        defindex_vault_contract::{AssetInvestmentAllocation, StrategyAllocation},
-        VaultContractError, MINIMUM_LIQUIDITY,
-    },
+        defindex_vault_contract::Instruction,
+        },
 };
 use soroban_sdk::{
-    testutils::{Ledger, MockAuth, MockAuthInvoke},
+    testutils::{MockAuth, MockAuthInvoke},
     vec as svec, IntoVal, Vec,
 };
 
@@ -72,45 +71,39 @@ fn fee_performance() {
         );
 
     // Create investment strategies for the deposited tokens
-    let investments = svec![
+    // let investments = svec![
+    //     &setup.env,
+    //     Some(AssetInvestmentAllocation {
+    //         asset: enviroment.token.address.clone(),
+    //         strategy_allocations: svec![
+    //             &setup.env,
+    //             Some(StrategyAllocation {
+    //                 amount: deposit_amount,
+    //                 strategy_address: enviroment.strategy_contract.address.clone(),
+    //             }),
+    //         ],
+    //     }),
+    // ];
+    let invest_instructions = svec![
         &setup.env,
-        Some(AssetInvestmentAllocation {
-            asset: enviroment.token.address.clone(),
-            strategy_allocations: svec![
-                &setup.env,
-                Some(StrategyAllocation {
-                    amount: deposit_amount,
-                    strategy_address: enviroment.strategy_contract.address.clone(),
-                }),
-            ],
-        }),
+        Instruction::Invest(
+            enviroment.strategy_contract.address.clone(),
+            deposit_amount,
+        ),
     ];
-
     enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
             address: &enviroment.manager.clone(),
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
-                fn_name: "invest",
-                args: (Vec::from_array(
-                    &setup.env,
-                    [Some(AssetInvestmentAllocation {
-                        asset: enviroment.token.address.clone(),
-                        strategy_allocations: svec![
-                            &setup.env,
-                            Some(StrategyAllocation {
-                                amount: deposit_amount,
-                                strategy_address: enviroment.strategy_contract.address.clone(),
-                            })
-                        ],
-                    })],
-                ),)
-                    .into_val(&setup.env),
+                fn_name: "rebalance",
+                args: (enviroment.manager.clone(), invest_instructions.clone()).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .invest(&investments);
+        .rebalance(&enviroment.manager, &invest_instructions);
+
     let vault_balance_in_strategy = enviroment
         .strategy_contract
         .balance(&enviroment.vault_contract.address);
