@@ -70,20 +70,6 @@ fn fee_performance() {
             &false,
         );
 
-    // Create investment strategies for the deposited tokens
-    // let investments = svec![
-    //     &setup.env,
-    //     Some(AssetInvestmentAllocation {
-    //         asset: enviroment.token.address.clone(),
-    //         strategy_allocations: svec![
-    //             &setup.env,
-    //             Some(StrategyAllocation {
-    //                 amount: deposit_amount,
-    //                 strategy_address: enviroment.strategy_contract.address.clone(),
-    //             }),
-    //         ],
-    //     }),
-    // ];
     let invest_instructions = svec![
         &setup.env,
         Instruction::Invest(
