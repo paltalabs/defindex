@@ -22,8 +22,8 @@ jobs:
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
-          profile: minimal
           toolchain: stable
+          override: true
 
       - name: install target
         run: rustup target add wasm32-unknown-unknown
@@ -32,8 +32,9 @@ jobs:
         run: cargo install --locked stellar-cli@22.1.0 --features opt
 
       - name: build contracts
-        run: cd apps/contracts && make build && make test || exit 1
-
-    #  - name: test contracts
-    #    run: cd apps/contracts && make test || exit 1 
-    #    continue-on-error: false
+        run: cd apps/contracts && cargo build --target wasm32-unknown-unknown --release || exit 1
+        continue-on-error: false
+    
+      - name: build contracts
+        run: cd apps/contracts && cargo test || exit 1
+        continue-on-error: false
