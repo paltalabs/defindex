@@ -8,7 +8,7 @@ const main = async () => {
         const { stdout: stdout1, stderr: stderr1 } = await execPromise('make build');
         if (stderr1) {
             console.error('🔴', stderr1);
-            process.exit(1);
+            return;
         }
         console.log('🟢', stdout1);
 
@@ -16,7 +16,7 @@ const main = async () => {
         const { stdout: stdout2, stderr: stderr2 } = await execPromise('make test');
         if (stderr2) {
             console.error('🔴', stderr2);
-            process.exit(1);
+            return;
         }
         console.log('🟢', stdout2);
     } catch (err) {
