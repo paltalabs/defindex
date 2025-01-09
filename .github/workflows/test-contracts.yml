@@ -27,13 +27,13 @@ jobs:
 
       - name: install target
         run: rustup target add wasm32-unknown-unknown
-
+        
       - name: setup soroban
         run: cargo install --locked stellar-cli@22.1.0 --features opt
 
       - name: build contracts
-        run: cd apps/contracts && make build
+        run: cd apps/contracts && node --trace-warnings src/test_contracts.js || exit 1
 
-      - name: test contracts
-        run: cd apps/contracts && make test || exit 1 
-        continue-on-error: false
+    #  - name: test contracts
+    #    run: cd apps/contracts && make test || exit 1 
+    #    continue-on-error: false
