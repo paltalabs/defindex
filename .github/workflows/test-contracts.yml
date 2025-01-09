@@ -57,8 +57,3 @@ jobs:
           make test || exit 1
         continue-on-error: false
 
-      - name: Capture build and test output
-        run: |
-          mkdir -p artifacts
-          cp apps/contracts/test.log artifacts/test.log
-        continue-on-error: false
