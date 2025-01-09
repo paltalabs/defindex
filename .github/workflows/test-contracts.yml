@@ -14,27 +14,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4.1.1
-      - uses: actions/cache@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          path:  |
-            apps/contracts/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
+          node-version: '18'
+          cache: 'npm'
 
-      - name: install target
-        run: rustup target add wasm32-unknown-unknown
-        
-      - name: setup soroban
-        run: cargo install --locked stellar-cli@22.1.0 --features opt
+      # Install and cache Rust toolchain
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      # Cache Rust dependencies
+      - uses: stellar/actions/rust-cache@main
+
+      
+      - name: Install Stellar CLI via Cargo
+        run: |
+          cargo install --locked stellar-cli@22.1.0 --features opt
+
+      # Start Soroban network (required for contract deployment during build)
+      - name: Start Soroban Network
+        run: |
+          stellar network start local
+          sleep 5
 
       - name: build contracts
-        run: cd apps/contracts && cargo build --target wasm32-unknown-unknown --release || exit 1
+        run: |
+          cd apps/contracts && 
+          cargo build --target wasm32-unknown-unknown --release || exit 1
         continue-on-error: false
     
       - name: build contracts
-        run: cd apps/contracts && cargo test || exit 1
+        run: |
+          cd apps/contracts && 
+          cargo test || exit 1
         continue-on-error: false
