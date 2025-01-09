@@ -666,9 +666,9 @@ impl AdminInterfaceTrait for DeFindexVault {
     fn get_queued_manager(e: Env) -> Result<Address, ContractError> {
         extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
-        let queued_manager = access_control.get_queued_manager();
-        let queued_adress: Address = queued_manager.get(0).unwrap().1;
-        Ok(queued_adress)
+        let queued_manager = access_control.get_queued_manager().values().first().unwrap();
+
+        Ok(queued_manager)
     }
 
     // clear the manager queue for the vault config.
@@ -702,13 +702,14 @@ impl AdminInterfaceTrait for DeFindexVault {
         extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         let current_timestamp = e.ledger().timestamp();
-        let manager_data = access_control.get_queued_manager().get(0).unwrap();
+        let manager_address = access_control.get_queued_manager().values().first().unwrap();
+        let queued_timestamp = access_control.get_queued_manager().keys().first().unwrap();
         let seven_days: u64 = ONE_DAY_IN_SECONDS * 7u64;
-        if (current_timestamp - manager_data.0) < (seven_days) {
+        if (current_timestamp - queued_timestamp) < (seven_days) {
             panic_with_error!(&e, ContractError::SetManagerBeforeTime);
         }
         access_control.set_manager();
-        events::emit_manager_changed_event(&e, manager_data.1);
+        events::emit_manager_changed_event(&e, manager_address);
         Ok(())
     }
 

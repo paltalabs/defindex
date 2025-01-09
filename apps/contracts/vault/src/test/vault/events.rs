@@ -374,10 +374,9 @@ fn queue_events(){
 
   let queue_event: ManagerQueuedEvent = FromVal::from_val(&test.env, &event.2);
 
-  let expected_new_manager_data = sorobanvec![
-    &test.env,
-    (test.env.ledger().timestamp(), users[0].clone())
-  ];
+  let mut expected_new_manager_data = Map::new(&test.env);
+  expected_new_manager_data.set(test.env.ledger().timestamp(), users[0].clone());
+
   assert_eq!(queue_event.new_manager_data, expected_new_manager_data);
 
   // Clear queue
@@ -391,7 +390,7 @@ fn queue_events(){
   test.env.jump_time(ONE_DAY_IN_SECONDS * 7);
   
   // Set manager
-  defindex_contract.set_manager(&test.manager);
+  defindex_contract.set_manager();
   let event = test.env.events().all().last().unwrap();
 
   let manager_changed_event: ManagerChangedEvent = FromVal::from_val(&test.env, &event.2);

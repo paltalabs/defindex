@@ -1,6 +1,6 @@
 use crate::error::ContractError;
 use crate::utils::bump_instance;
-use soroban_sdk::{contracttype, panic_with_error, Address, Env, Map, Vec};
+use soroban_sdk::{contracttype, panic_with_error, Address, Env, Map};
 
 #[contracttype]
 #[derive(Clone)]
@@ -27,7 +27,7 @@ pub trait AccessControlTrait {
     fn set_role(&self, key: &RolesDataKey, role: &Address);
     fn set_queued_manager(&self, manager_data: &Map<u64, Address>);
     fn clear_queue(&self);
-    fn queued_manager(&self) -> Vec<(u64, Address)>;
+    fn queued_manager(&self) -> Map<u64, Address>;
     fn check_role(&self, key: &RolesDataKey) -> Result<Address, ContractError>;
     fn require_role(&self, key: &RolesDataKey);
     fn require_any_role(&self, keys: &[RolesDataKey], caller: &Address);
@@ -54,7 +54,7 @@ impl AccessControlTrait for AccessControl {
         self.0.storage().instance().set(&RolesDataKey::QueuedManager,manager_data);
     }
 
-    fn queued_manager(&self) -> Vec<(u64, Address)> {
+    fn queued_manager(&self) -> Map<u64, Address> {
         if !self.has_role(&RolesDataKey::QueuedManager) {
             panic_with_error!(&self.0, ContractError::QueueEmpty);
         }
@@ -121,7 +121,7 @@ impl AccessControl {
         self.set_queued_manager(manager_data);
     }
 
-    pub fn get_queued_manager(&self) -> Vec<(u64, Address)> {
+    pub fn get_queued_manager(&self) -> Map<u64, Address> {
         self.queued_manager()
     }
 
@@ -132,7 +132,7 @@ impl AccessControl {
 
     pub fn set_manager(&self) {
         self.require_role( &RolesDataKey::Manager);
-        let manager = self.get_queued_manager().first().unwrap().1;
+        let manager = self.get_queued_manager().values().first().unwrap();
         self.set_role(&RolesDataKey::Manager, &manager);
     }
 
