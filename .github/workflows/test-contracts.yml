@@ -37,17 +37,17 @@ jobs:
       # Start Soroban network (required for contract deployment during build)
       - name: Start Soroban Network
         run: |
-          stellar network start local
+          stellar container start local
           sleep 5
 
       - name: build contracts
         run: |
           cd apps/contracts && 
-          cargo build --target wasm32-unknown-unknown --release || exit 1
+          make build || exit 1
         continue-on-error: false
     
-      - name: build contracts
+      - name: test contracts
         run: |
           cd apps/contracts && 
-          cargo test || exit 1
+          make test || exit 1
         continue-on-error: false
