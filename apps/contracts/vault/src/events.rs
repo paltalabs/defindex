@@ -1,6 +1,6 @@
 //! Definition of the Events used in the DeFindex Vault contract
 use common::models::AssetStrategySet;
-use soroban_sdk::{contracttype, symbol_short, Address, Env, Symbol, Val, Vec};
+use soroban_sdk::{contracttype, symbol_short, Address, Env, Symbol, Val, Vec, Map};
 
 use crate::{models::AssetInvestmentAllocation, report::Report};
 
@@ -143,11 +143,11 @@ pub(crate) fn emit_fee_receiver_changed_event(e: &Env, new_fee_receiver: Address
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ManagerQueuedEvent {
-    pub new_manager_data: Vec<(u64, Address)>,
+    pub new_manager_data: Map<u64, Address>,
 }
 
 /// Publishes a `ManagerChangedEvent` to the event stream.
-pub(crate) fn emit_queued_manager_event(e: &Env, new_manager_data: Vec<(u64, Address)>) {
+pub(crate) fn emit_queued_manager_event(e: &Env, new_manager_data: Map<u64, Address>) {
     let event = ManagerQueuedEvent { new_manager_data };
 
     e.events()

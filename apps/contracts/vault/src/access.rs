@@ -1,6 +1,6 @@
 use crate::error::ContractError;
 use crate::utils::bump_instance;
-use soroban_sdk::{contracttype, panic_with_error, Address, Env, Vec};
+use soroban_sdk::{contracttype, panic_with_error, Address, Env, Map, Vec};
 
 #[contracttype]
 #[derive(Clone)]
@@ -25,7 +25,7 @@ pub trait AccessControlTrait {
     fn has_role(&self, key: &RolesDataKey) -> bool;
     fn get_role(&self, key: &RolesDataKey) -> Option<Address>;
     fn set_role(&self, key: &RolesDataKey, role: &Address);
-    fn set_queued_manager(&self, manager_data: &Vec<(u64, Address)>);
+    fn set_queued_manager(&self, manager_data: &Map<u64, Address>);
     fn clear_queue(&self);
     fn queued_manager(&self) -> Vec<(u64, Address)>;
     fn check_role(&self, key: &RolesDataKey) -> Result<Address, ContractError>;
@@ -49,9 +49,9 @@ impl AccessControlTrait for AccessControl {
         self.0.storage().instance().set(key, role);
     }
 
-    fn set_queued_manager(&self, manager_data: &Vec<(u64, Address)>) {
+    fn set_queued_manager(&self, manager_data: &Map<u64, Address>) {
         bump_instance(&self.0);
-        self.0.storage().instance().set(&RolesDataKey::QueuedManager, manager_data);
+        self.0.storage().instance().set(&RolesDataKey::QueuedManager,manager_data);
     }
 
     fn queued_manager(&self) -> Vec<(u64, Address)> {
@@ -116,7 +116,7 @@ impl AccessControl {
         self.check_role(&RolesDataKey::VaultFeeReceiver)
     }
 
-    pub fn queue_manager(&self, manager_data: &Vec<(u64, Address)>) {
+    pub fn queue_manager(&self, manager_data: &Map<u64, Address>) {
         self.require_role(&RolesDataKey::Manager);
         self.set_queued_manager(manager_data);
     }
@@ -130,9 +130,10 @@ impl AccessControl {
         self.clear_queue()
     }
 
-    pub fn set_manager(&self, manager: &Address) {
-        self.require_role(&RolesDataKey::Manager);
-        self.set_role(&RolesDataKey::Manager, manager);
+    pub fn set_manager(&self) {
+        self.require_role( &RolesDataKey::Manager);
+        let manager = self.get_queued_manager().first().unwrap().1;
+        self.set_role(&RolesDataKey::Manager, &manager);
     }
 
     pub fn get_manager(&self) -> Result<Address, ContractError> {

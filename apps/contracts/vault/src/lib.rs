@@ -645,7 +645,8 @@ impl AdminInterfaceTrait for DeFindexVault {
         extend_instance_ttl(&e);
         
         let current_timestamp:u64 = e.ledger().timestamp();
-        let manager_data: Vec<(u64, Address)> = vec![&e, (current_timestamp, manager.clone())];
+        let mut manager_data: Map<u64, Address> = Map::new(&e);
+        manager_data.set(current_timestamp, manager.clone());
 
         let access_control = AccessControl::new(&e);
         access_control.queue_manager(&manager_data);
@@ -697,20 +698,17 @@ impl AdminInterfaceTrait for DeFindexVault {
     ///
     /// # Returns:
     /// * `()` - No return value.
-    fn set_manager(e: Env, manager: Address) -> Result<(), ContractError> {
+    fn set_manager(e: Env) -> Result<(), ContractError> {
         extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         let current_timestamp = e.ledger().timestamp();
         let manager_data = access_control.get_queued_manager().get(0).unwrap();
-        if manager_data.1 != manager.clone(){
-            panic_with_error!(&e, ContractError::ManagerNotInQueue);
-        }
         let seven_days: u64 = ONE_DAY_IN_SECONDS * 7u64;
         if (current_timestamp - manager_data.0) < (seven_days) {
             panic_with_error!(&e, ContractError::SetManagerBeforeTime);
         }
-        access_control.set_manager(&manager);
-        events::emit_manager_changed_event(&e, manager);
+        access_control.set_manager();
+        events::emit_manager_changed_event(&e, manager_data.1);
         Ok(())
     }
 
