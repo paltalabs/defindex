@@ -35,5 +35,5 @@ jobs:
         run: cd apps/contracts && make build
 
       - name: test contracts
-        run: bash run_workflow.sh remote || exit 1 
+        run: cd apps/contracts && make test || exit 1 
         continue-on-error: false
