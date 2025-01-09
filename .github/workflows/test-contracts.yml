@@ -44,12 +44,18 @@ jobs:
 
       - name: build contracts
         run: |
+          set -e
           cd apps/contracts && 
           make build || exit 1
         continue-on-error: false
     
       - name: test contracts
         run: |
+          set -e
           cd apps/contracts && 
           make test || exit 1
         continue-on-error: false
+
+      - name: Check test result
+        if: failure()
+        run: exit 1
