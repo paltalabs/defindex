@@ -9,7 +9,6 @@ elif [ "$1" == "remote" ]; then
   echo "Running GitHub Actions workflow remote..."
   cd apps/contracts
   make test || exit 1
-
 else
   echo "Invalid parameter. Use 'local' or 'remote'."
   exit 1
