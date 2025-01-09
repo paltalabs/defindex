@@ -31,7 +31,6 @@ jobs:
       # Cache Rust dependencies
       - uses: stellar/actions/rust-cache@main
 
-      
       - name: Install Stellar CLI via Cargo
         run: |
           cargo install --locked stellar-cli@22.1.0 --features opt
@@ -43,6 +42,7 @@ jobs:
           sleep 5
 
       - name: build contracts
+        shell: bash
         run: |
           set -e
           cd apps/contracts && 
@@ -50,12 +50,16 @@ jobs:
         continue-on-error: false
     
       - name: test contracts
+        shell: bash
         run: |
           set -e
           cd apps/contracts && 
           make test || exit 1
         continue-on-error: false
 
-      - name: Check test result
-        if: failure()
-        run: exit 1
+      - name: Capture build and test output
+        run: |
+          mkdir -p artifacts
+          cp apps/contracts/build.log artifacts/build.log
+          cp apps/contracts/test.log artifacts/test.log
+        continue-on-error: false
