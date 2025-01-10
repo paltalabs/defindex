@@ -18,11 +18,11 @@ import {
   fetchCurrentInvestedFunds,
   fetchParsedCurrentIdleFunds,
   Instruction,
-  investVault,
   manager,
   mapInstructionsToParams,
   mintToken,
-  withdrawFromVault,
+  rebalanceVault,
+  withdrawFromVault
 } from "./vault.js";
 
 const args = process.argv.slice(2);
@@ -195,23 +195,19 @@ async function testVaultOneStrategy() {
   console.log(purple, "Investing in vault");
   console.log(purple, "---------------------------------------");
 
-  const investmentArgs: AssetInvestmentAllocation[] = [
+  const investArgs: Instruction[] = [
     {
-      asset: xlmAddress,
-      strategy_investments: [
-        {
-          strategy: new Address(addressBook.getContractId("hodl_strategy")),
-          amount: BigInt(43_0_0),
-        },
-      ],
+      type: "Invest",
+      strategy: addressBook.getContractId("hodl_strategy"),
+      amount: BigInt(43_0_0),
     },
   ];
-  const { result: investResult } = await investVault(
+
+  const { result: rebalanceResult } = await rebalanceVault(
     vaultAddress,
-    investmentArgs,
+    investArgs,
     manager
   );
-
   console.log(yellow, "---------------------------------------");
   console.log(yellow, "Fetching balances");
   console.log(yellow, "---------------------------------------");
@@ -403,24 +399,21 @@ async function testVaultTwoStrategies() {
   console.log(purple, "Investing in vault");
   console.log(purple, "---------------------------------------");
 
-  const investmentArgs: AssetInvestmentAllocation[] = [
+  const investArgs: Instruction[] = [
     {
-      asset: xlmAddress,
-      strategy_investments: [
-        {
-          amount: BigInt(1500),
-          strategy: new Address(addressBook.getContractId("hodl_strategy")),
-        },
-        {
-          amount: BigInt(2000),
-          strategy: new Address(
-            addressBook.getContractId("fixed_apr_strategy")
-          ),
-        },
-      ],
+      type: "Invest",
+      strategy: addressBook.getContractId("hodl_strategy"),
+      amount: BigInt(1500),
+    },
+    {
+      type: "Invest",
+      strategy: addressBook.getContractId("fixed_apr_strategy"),
+      amount: BigInt(2000),
     },
   ];
-  await investVault(vaultAddress, investmentArgs, manager);
+  
+  await rebalanceVault(vaultAddress, investArgs, manager);
+  
   console.log(yellow, "---------------------------------------");
   console.log(yellow, "Fetching balances");
   console.log(yellow, "---------------------------------------");
@@ -666,7 +659,21 @@ async function testVaultTwoAssetsOneStrategy() {
       ],
     }
   ];
-  await investVault(vaultAddress, investmentArgs, manager);
+
+  const investArgs: Instruction[] = [
+    {
+      type: "Invest",
+      strategy: addressBook.getContractId("fixed_xtar_strategy"),
+      amount: BigInt(10_000_000),
+    },
+    {
+      type: "Invest",
+      strategy: addressBook.getContractId("fixed_usdc_strategy"),
+      amount: BigInt(10_000_000),
+    },
+  ];
+
+  await rebalanceVault(vaultAddress, investArgs, manager);
   console.log(yellow, "---------------------------------------");
   console.log(yellow, "Fetching balances");
   console.log(yellow, "---------------------------------------");

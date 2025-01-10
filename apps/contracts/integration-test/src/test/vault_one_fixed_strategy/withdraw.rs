@@ -1,11 +1,11 @@
 use crate::{
-    setup::{create_vault_one_asset_fixed_strategy, VAULT_FEE},
+    setup::create_vault_one_asset_fixed_strategy,
     test::{
-        vault_one_fixed_strategy::calculate_yield, IntegrationTest, DEFINDEX_FEE,
+        vault_one_fixed_strategy::calculate_yield, IntegrationTest,
         ONE_YEAR_IN_SECONDS,
     },
     vault::{
-        defindex_vault_contract::{AssetInvestmentAllocation, StrategyAllocation},
+        defindex_vault_contract::Instruction,
         MINIMUM_LIQUIDITY,
     },
 };
@@ -169,45 +169,27 @@ fn fixed_apr_invest_withdraw_success() {
             &false,
         );
 
-    let investments = svec![
+
+    let invest_instructions = svec![
         &setup.env,
-        Some(AssetInvestmentAllocation {
-            asset: enviroment.token.address.clone(),
-            strategy_allocations: svec![
-                &setup.env,
-                Some(StrategyAllocation {
-                    amount: deposit_amount,
-                    strategy_address: enviroment.strategy_contract.address.clone(),
-                }),
-            ],
-        }),
+        Instruction::Invest(
+            enviroment.strategy_contract.address.clone(),
+            deposit_amount,
+        ),
     ];
 
     enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
-            address: &enviroment.manager.clone(),
+            address: &enviroment.manager.clone(),   
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
-                fn_name: "invest",
-                args: (Vec::from_array(
-                    &setup.env,
-                    [Some(AssetInvestmentAllocation {
-                        asset: enviroment.token.address.clone(),
-                        strategy_allocations: svec![
-                            &setup.env,
-                            Some(StrategyAllocation {
-                                amount: deposit_amount,
-                                strategy_address: enviroment.strategy_contract.address.clone(),
-                            })
-                        ],
-                    })],
-                ),)
-                    .into_val(&setup.env),
+                fn_name: "rebalance",
+                args: (enviroment.manager.clone(), invest_instructions.clone()).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .invest(&investments);
+        .rebalance(&enviroment.manager, &invest_instructions);
 
     setup
         .env

@@ -611,6 +611,23 @@ export function mapInstructionsToParams(
   );
 }
 
+export async function rebalanceVault(deployedVault: string, instructions: Instruction[], manager: Keypair) {
+  const params = mapInstructionsToParams(instructions);
+
+  try {
+    const rebalanceResult = await invokeCustomContract(
+      deployedVault,
+      "rebalance",
+      [new Address(manager.publicKey()).toScVal(), params],
+      manager
+    );
+    return { result: rebalanceResult, status: true };
+  } catch (error) {
+    console.error("Rebalance failed:", error);
+    throw error;
+  }
+}
+
 // export async function rebalanceVault(deployedVault: string, instructions: Instruction[], manager: Keypair) {
 //     const mappedInstructions = xdr.ScVal.scvVec(
 //         instructions.map((instruction) =>

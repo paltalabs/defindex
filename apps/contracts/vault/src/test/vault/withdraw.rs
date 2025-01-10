@@ -737,21 +737,15 @@ fn from_strategy_one_asset_one_strategy_success() {
     let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount - 1000);
 
-    let investments = sorobanvec![
+    let rebalance_instructions = sorobanvec![
         &test.env,
-        Some(AssetInvestmentAllocation {
-            asset: test.token_0.address.clone(),
-            strategy_allocations: sorobanvec![
-                &test.env,
-                Some(StrategyAllocation {
-                    strategy_address: test.strategy_client_token_0.address.clone(),
-                    amount: amount,
-                }),
-            ],
-        }),
+        Instruction::Invest(
+            test.strategy_client_token_0.address.clone(),
+            amount
+        ),
     ];
 
-    defindex_contract.invest(&investments);
+    defindex_contract.rebalance(&test.rebalance_manager, &rebalance_instructions);
 
     let vault_balance = test.token_0.balance(&defindex_contract.address);
     assert_eq!(vault_balance, 0);
@@ -1003,31 +997,19 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     );
 
     // invest in strategies. We will invest 100% of the idle funds
-    let investments = sorobanvec![
+    let rebalance_instructions = sorobanvec![
         &test.env,
-        Some(AssetInvestmentAllocation {
-            asset: test.token_0.address.clone(),
-            strategy_allocations: sorobanvec![
-                &test.env,
-                Some(StrategyAllocation {
-                    strategy_address: test.strategy_client_token_0.address.clone(),
-                    amount: amount_to_deposit_0,
-                }),
-            ],
-        }),
-        Some(AssetInvestmentAllocation {
-            asset: test.token_1.address.clone(),
-            strategy_allocations: sorobanvec![
-                &test.env,
-                Some(StrategyAllocation {
-                    strategy_address: test.strategy_client_token_1.address.clone(),
-                    amount: amount_to_deposit_1,
-                }),
-            ],
-        }),
+        Instruction::Invest(
+            test.strategy_client_token_0.address.clone(),
+            amount_to_deposit_0
+        ),
+        Instruction::Invest(
+            test.strategy_client_token_1.address.clone(),
+            amount_to_deposit_1
+        ),
     ];
 
-    defindex_contract.invest(&investments);
+    defindex_contract.rebalance(&test.rebalance_manager, &rebalance_instructions);
 
     // check vault balances
     assert_eq!(test.token_0.balance(&defindex_contract.address), 0);
