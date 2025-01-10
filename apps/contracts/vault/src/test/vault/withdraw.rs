@@ -7,7 +7,6 @@ use crate::test::{
     }, DeFindexVaultTest
 };
 
-extern crate std;
 // check that withdraw with negative amount after initialized returns error
 #[test]
 fn negative_amount() {
