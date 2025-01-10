@@ -1,5 +1,6 @@
 import { Address, Asset, Keypair } from "@stellar/stellar-sdk";
 import { exit } from "process";
+import { SOROSWAP_USDC, SOROSWAP_XTAR } from "../constants.js";
 import { AddressBook } from "../utils/address_book.js";
 import { airdropAccount, invokeCustomContract } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
@@ -35,8 +36,8 @@ const xlmAddress = new Address(
   Asset.native().contractId(loadedConfig.passphrase)
 );
 
-const usdcAddress = new Address('CARDT45FED2I3FKESPMHDFV3ZMR6VH5ZHCFIOPH6TPSU35GPB6QBBCSU');
-const xtarAddress = new Address('CAJFOYPQKHRVIU4N3ZTJJ6P256L3KSCYNSQD4R4KCQNO5ZAEDQP2BNCG');
+const usdcAddress = new Address(SOROSWAP_USDC);
+const xtarAddress = new Address(SOROSWAP_XTAR);
 
 const testUser = Keypair.random();
 
