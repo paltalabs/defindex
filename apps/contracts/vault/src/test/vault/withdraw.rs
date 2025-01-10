@@ -1246,14 +1246,40 @@ fn from_strategies_two_asset_each_one_strategy_success() {
 #[test]
 fn from_strategy_success_no_mock_all_auths() {
     let test = DeFindexVaultTest::setup();
-    let strategy_params_token_0 = create_strategy_params_token_0(&test);
+
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
     let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
         AssetStrategySet {
             address: test.token_0.address.clone(),
-            strategies: strategy_params_token_0.clone()
+            strategies: sorobanvec![&test.env, 
+                Strategy{
+                    address: test.strategy_client_token_0.address.clone(),
+                    name: String::from_str(&test.env, "Strategy 1"),
+                    paused: false
+                },     
+                Strategy{
+                    address: test.fixed_strategy_client_token_0.address.clone(),
+                    name: String::from_str(&test.env, "Fixed Strategy 1"),
+                    paused: false
+                },     
+            ]     
+        },
+        AssetStrategySet {
+            address: test.token_1.address.clone(),
+            strategies: sorobanvec![&test.env, 
+                Strategy{
+                    address: test.strategy_client_token_1.address.clone(),
+                    name: String::from_str(&test.env, "Strategy 2"),
+                    paused: false
+                },     
+                Strategy{
+                    address: test.fixed_strategy_client_token_1.address.clone(),
+                    name: String::from_str(&test.env, "Fixed Strategy 2"),
+                    paused: false
+                },     
+            ]
         }
     ];
 
@@ -1288,16 +1314,19 @@ fn from_strategy_success_no_mock_all_auths() {
     assert_eq!(test.token_0.balance(&users[0]), amount);
 
     let assets = defindex_contract.get_assets();
-    assert_eq!(assets.len(), 1);
-    let asset = assets.get(0).unwrap();
-    assert_eq!(asset.strategies.len(), 1);
+    assert_eq!(assets.len(), 2);
+    let asset_0 = assets.get(0).unwrap();
+    let asset_1 = assets.get(1).unwrap();
+    assert_eq!(asset_0.strategies.len(), 2);
+    assert_eq!(asset_1.strategies.len(), 2);
 
 
-    let deposit_amount = 1_0_000_000i128;
+    let deposit_amount_0 = 1_0_000_000i128;
+    let deposit_amount_1 = 1_0_000_000i128;
 
 
-    let amounts_desired = sorobanvec![&test.env, deposit_amount];
-    let amounts_min = sorobanvec![&test.env, deposit_amount];
+    let amounts_desired = sorobanvec![&test.env, deposit_amount_0, deposit_amount_1];
+    let amounts_min = sorobanvec![&test.env, deposit_amount_0, deposit_amount_1];
     let from =  &users[0].clone();
     let invest = false;
 
@@ -1307,8 +1336,8 @@ fn from_strategy_success_no_mock_all_auths() {
             contract: &defindex_contract.address.clone(),
             fn_name: "deposit",
             args: (
-                Vec::from_array(&test.env, [deposit_amount]),
-                Vec::from_array(&test.env, [deposit_amount]),
+                Vec::from_array(&test.env, [deposit_amount_0, deposit_amount_1]),
+                Vec::from_array(&test.env, [deposit_amount_0, deposit_amount_1]),
                 from.clone(),
                 false
             ).into_val(&test.env),
@@ -1319,38 +1348,45 @@ fn from_strategy_success_no_mock_all_auths() {
                     &test.env,
                     from.clone().into_val(&test.env),
                     (defindex_contract.address).into_val(&test.env),
-                    deposit_amount.into_val(&test.env),
+                    sorobanvec![&test.env, deposit_amount_0, deposit_amount_1].into_val(&test.env),
                 ],
                 sub_invokes: &[],
             }],
         },
     }
     ]).deposit(&amounts_desired, &amounts_min, &from, &invest); 
+ 
+    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
+    let invested_funds_0 = current_invested_funds.get(test.token_0.address.clone()).unwrap();
+    let invested_funds_1 = current_invested_funds.get(test.token_1.address.clone()).unwrap();
+    let idle_funds_0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
+    let idle_funds_1 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
 
-    let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
-    let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
+    assert_eq!(idle_funds_0, deposit_amount_0);
+    assert_eq!(idle_funds_1, deposit_amount_1);
+    assert_eq!(invested_funds_0, 0);
+    assert_eq!(invested_funds_1, 0);
 
-    assert_eq!(idle_funds, deposit_amount);
-    assert_eq!(invested_funds, 0);
-
-    let withdraw_amount = deposit_amount/2;
+    let withdraw_amount_0 = deposit_amount_0/2;
+    let withdraw_amount_1 = deposit_amount_1/3;
     defindex_contract.mock_auths(&[MockAuth {
         address: &from.clone(),
         invoke: &MockAuthInvoke {
             contract: &defindex_contract.address.clone(),
             fn_name: "withdraw",
             args: (
-                withdraw_amount,
+                sorobanvec![&test.env, withdraw_amount_0, withdraw_amount_1],
                 from,
             ).into_val(&test.env),
             sub_invokes: &[],
         },
     }
-    ]).withdraw(&withdraw_amount, &from.clone());
+    ]).withdraw(&withdraw_amount_0, &from.clone());
 
     let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
     let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
 
-    assert_eq!(idle_funds, deposit_amount - withdraw_amount);
-    assert_eq!(invested_funds, 0);    
+    assert_eq!(idle_funds, deposit_amount_0 - withdraw_amount_0);
+    assert_eq!(invested_funds, 0);     
 }
+

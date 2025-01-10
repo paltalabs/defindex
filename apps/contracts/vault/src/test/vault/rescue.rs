@@ -344,6 +344,7 @@ fn distribute_fees_on_rescue() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let amount = 987654321i128;

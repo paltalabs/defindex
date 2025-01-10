@@ -23,6 +23,20 @@ pub fn create_hodl_strategy<'a>(e: &Env, asset: &Address) -> HodlStrategyClient<
     let args = (asset, init_args);
     HodlStrategyClient::new(e, &e.register(hodl_strategy::WASM, args))
 }
+pub mod fixed_strategy {
+    soroban_sdk::contractimport!(
+        file = "../target/wasm32-unknown-unknown/release/fixed_apr_strategy.optimized.wasm"
+    );
+    pub type FixedStrategyClient<'a> = Client<'a>;
+}
+use fixed_strategy::FixedStrategyClient;
+
+pub fn create_fixed_strategy<'a>(e: &Env, asset: &Address) -> FixedStrategyClient<'a> {
+    let apr_bps = 1000u32;
+    let init_args: Vec<Val> = sorobanvec![e, apr_bps.into_val(e)];
+    let args = (asset, init_args);
+    FixedStrategyClient::new(e, &e.register(fixed_strategy::WASM, args))
+}
 
 // DeFindex Vault Contract
 pub mod defindex_vault {
@@ -135,6 +149,8 @@ pub struct DeFindexVaultTest<'a> {
     rebalance_manager: Address,
     strategy_client_token_0: HodlStrategyClient<'a>,
     strategy_client_token_1: HodlStrategyClient<'a>,
+    fixed_strategy_client_token_0: FixedStrategyClient<'a>,
+    fixed_strategy_client_token_1: FixedStrategyClient<'a>,
     soroswap_router: SoroswapRouterClient<'a>,
     // soroswap_factory: SoroswapFactoryClient<'a>,
     // soroswap_pair: Address,
@@ -147,7 +163,7 @@ impl<'a> DeFindexVaultTest<'a> {
 
         // Mockup, should be the factory contract
         let defindex_factory = Address::generate(&env);
-
+        env.budget().reset_unlimited();
         let emergency_manager = Address::generate(&env);
         let vault_fee_receiver = Address::generate(&env);
         let defindex_protocol_receiver = Address::generate(&env);
@@ -164,10 +180,13 @@ impl<'a> DeFindexVaultTest<'a> {
         let token_1_admin_client = get_token_admin_client(&env, &token_1.address.clone());
 
         // token_1_admin_client.mint(to, amount);
+        env.budget().reset_unlimited();
+        let strategy_client_token_0 = create_hodl_strategy(&env, &token_0.address.clone());
+        let strategy_client_token_1 = create_hodl_strategy(&env, &token_1.address.clone());
 
-        let strategy_client_token_0 = create_hodl_strategy(&env, &token_0.address);
-        let strategy_client_token_1 = create_hodl_strategy(&env, &token_1.address);
-
+        let fixed_strategy_client_token_0 = create_fixed_strategy(&env, &token_0.address.clone());
+        let fixed_strategy_client_token_1 = create_fixed_strategy(&env, &token_1.address.clone());
+        env.budget().reset_unlimited();
         // Soroswap Setup
         let soroswap_admin = Address::generate(&env);
 
@@ -223,6 +242,8 @@ impl<'a> DeFindexVaultTest<'a> {
             rebalance_manager,
             strategy_client_token_0,
             strategy_client_token_1,
+            fixed_strategy_client_token_0,
+            fixed_strategy_client_token_1,
             soroswap_router,
             // soroswap_factory,
             // soroswap_pair,
