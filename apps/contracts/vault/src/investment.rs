@@ -7,7 +7,6 @@ use crate::{
     ContractError,
 };
 use common::models::AssetStrategySet;
-// use crate::events;
 
 /// Executes investment allocations for a set of assets based on the provided investment strategies.
 ///
@@ -92,7 +91,6 @@ pub fn check_and_execute_investments(
             }
         }
     }
-    // events::emit_execute_investment_event(e, assets.clone(), asset_investments.clone());
     Ok(())
 }
 
