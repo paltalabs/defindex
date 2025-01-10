@@ -8,8 +8,6 @@ use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::testutils::{Address as _, MockAuth, MockAuthInvoke};
 use soroban_sdk::{Address, Env, IntoVal};
 
-extern crate std;
-
 #[test]
 fn deposit_below_min_dust() {
     // Setting up the environment
@@ -202,7 +200,6 @@ fn harvest_from_random_address(){
     //Trying to harvest from random address
     let balance_before_harvest = strategy_client.balance(&user_2);
     let harvest_from_random_address = strategy_client.try_harvest(&strategy_client.address);
-    std::println!("{:?}", harvest_from_random_address);
     let balance_after_harvest = strategy_client.balance(&user_2);
 
     assert_eq!(balance_before_harvest, balance_after_harvest);
