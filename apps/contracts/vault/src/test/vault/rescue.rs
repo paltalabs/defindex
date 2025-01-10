@@ -2,7 +2,7 @@ use soroban_sdk::{vec as sorobanvec, Address, Map, String, Vec};
 
 use crate::test::{
     create_defindex_vault, create_strategy_params_token_0,
-    defindex_vault::{AssetInvestmentAllocation, AssetStrategySet, ContractError, RolesDataKey, StrategyAllocation},
+    defindex_vault::{ AssetStrategySet, ContractError, Instruction, RolesDataKey},
     DeFindexVaultTest,
 };
 
@@ -70,21 +70,11 @@ fn rescue_success() {
     let vault_balance_of_token = test.token_0.balance(&defindex_contract.address);
     assert_eq!(vault_balance_of_token, amount);
 
-    let investments = sorobanvec![
+    let invest_instructions = sorobanvec![
         &test.env,
-        Some(AssetInvestmentAllocation {
-            asset: test.token_0.address.clone(),
-            strategy_allocations: sorobanvec![
-                &test.env,
-                Some(StrategyAllocation {
-                    strategy_address: test.strategy_client_token_0.address.clone(),
-                    amount: amount,
-                }),
-            ],
-        }),
+        Instruction::Invest(test.strategy_client_token_0.address.clone(), amount),
     ];
-
-    defindex_contract.invest(&investments);
+    defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
 
     // Balance of the token_0 on the vault should be 0
     let vault_balance_of_token = test.token_0.balance(&defindex_contract.address);
@@ -165,21 +155,11 @@ fn rescue_errors() {
         &false,
     );
 
-    let investments = sorobanvec![
+    let invest_instructions = sorobanvec![
         &test.env,
-        Some(AssetInvestmentAllocation {
-            asset: test.token_0.address.clone(),
-            strategy_allocations: sorobanvec![
-                &test.env,
-                Some(StrategyAllocation {
-                    strategy_address: test.strategy_client_token_0.address.clone(),
-                    amount: amount,
-                }),
-            ],
-        }),
+        Instruction::Invest(test.strategy_client_token_0.address.clone(), amount),
     ];
-
-    defindex_contract.invest(&investments);
+    defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
 
     // rescue with wrong strategy address
     let result = defindex_contract.try_rescue(
@@ -262,21 +242,12 @@ fn pause_then_rescue() {
     let vault_balance_of_token = test.token_0.balance(&defindex_contract.address);
     assert_eq!(vault_balance_of_token, amount);
 
-    let investments = sorobanvec![
+    // invest
+    let invest_instructions = sorobanvec![
         &test.env,
-        Some(AssetInvestmentAllocation {
-            asset: test.token_0.address.clone(),
-            strategy_allocations: sorobanvec![
-                &test.env,
-                Some(StrategyAllocation {
-                    strategy_address: test.strategy_client_token_0.address.clone(),
-                    amount: amount,
-                }),
-            ],
-        }),
+        Instruction::Invest(test.strategy_client_token_0.address.clone(), amount),
     ];
-
-    defindex_contract.invest(&investments);
+    defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
 
     // Balance of the token_0 on the vault should be 0
     let vault_balance_of_token = test.token_0.balance(&defindex_contract.address);
@@ -344,6 +315,7 @@ fn distribute_fees_on_rescue() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let amount = 987654321i128;
@@ -372,21 +344,11 @@ fn distribute_fees_on_rescue() {
     let vault_balance_of_token = test.token_0.balance(&defindex_contract.address);
     assert_eq!(vault_balance_of_token, amount);
 
-    let investments = sorobanvec![
+    let invest_instructions = sorobanvec![
         &test.env,
-        Some(AssetInvestmentAllocation {
-            asset: test.token_0.address.clone(),
-            strategy_allocations: sorobanvec![
-                &test.env,
-                Some(StrategyAllocation {
-                    strategy_address: test.strategy_client_token_0.address.clone(),
-                    amount: amount,
-                }),
-            ],
-        }),
+        Instruction::Invest(test.strategy_client_token_0.address.clone(), amount),
     ];
-
-    defindex_contract.invest(&investments);
+    defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
 
     // Balance of the token_0 on the vault should be 0
     let vault_balance_of_token = test.token_0.balance(&defindex_contract.address);
