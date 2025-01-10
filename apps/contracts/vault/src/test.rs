@@ -1,7 +1,7 @@
 #![cfg(test)]
 extern crate std;
 use soroban_sdk::{
-    testutils::{Address as _, MockAuth, MockAuthInvoke}, token::{StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient}, vec as sorobanvec, Address, Env, IntoVal, Map, String, Val, Vec
+    testutils::{Address as _, Ledger, LedgerInfo, MockAuth, MockAuthInvoke}, token::{StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient}, vec as sorobanvec, Address, Env, IntoVal, Map, String, Val, Vec
 };
 use std::vec;
 
@@ -23,6 +23,21 @@ pub fn create_hodl_strategy<'a>(e: &Env, asset: &Address) -> HodlStrategyClient<
     let args = (asset, init_args);
     HodlStrategyClient::new(e, &e.register(hodl_strategy::WASM, args))
 }
+pub mod fixed_strategy {
+    soroban_sdk::contractimport!(
+        file = "../target/wasm32-unknown-unknown/release/fixed_apr_strategy.optimized.wasm"
+    );
+    pub type FixedStrategyClient<'a> = Client<'a>;
+}
+use fixed_strategy::FixedStrategyClient;
+
+pub fn create_fixed_strategy<'a>(e: &Env, asset: &Address) -> FixedStrategyClient<'a> {
+    let apr_bps = 1000u32;
+    let init_args: Vec<Val> = sorobanvec![e, apr_bps.into_val(e)];
+    let args = (asset, init_args);
+    FixedStrategyClient::new(e, &e.register(fixed_strategy::WASM, args))
+}
+
 
 // DeFindex Vault Contract
 pub mod defindex_vault {
@@ -32,6 +47,8 @@ pub mod defindex_vault {
     pub type DeFindexVaultClient<'a> = Client<'a>;
 }
 use defindex_vault::{AssetStrategySet, DeFindexVaultClient, Strategy};
+
+use crate::utils::DAY_IN_LEDGERS;
 
 pub fn create_defindex_vault<'a>(
     e: &Env,
@@ -98,6 +115,16 @@ pub(crate) fn create_strategy_params_token_1(test: &DeFindexVaultTest) -> Vec<St
         }
     ]
 }
+pub(crate) fn create_fixed_strategy_params_token_0(test: &DeFindexVaultTest) -> Vec<Strategy> {
+    sorobanvec![
+        &test.env,
+        Strategy {
+            name: String::from_str(&test.env, "Fixed strategy 1"),
+            address: test.fixed_strategy_client_token_0.address.clone(),
+            paused: false,
+        }
+    ]
+}
 
 pub fn mock_mint(
     env: &Env,
@@ -119,6 +146,59 @@ pub fn mock_mint(
         .mint(&to, &amount);
 }
 
+pub trait EnvTestUtils {
+    /// Jump the env by the given amount of ledgers. Assumes 5 seconds per ledger.
+    fn jump(&self, ledgers: u32);
+    /// Jump the env by the given amount of seconds. Incremends the sequence by 1.
+    fn jump_time(&self, seconds: u64);
+    /// Set the ledger to the default LedgerInfo
+    ///
+    /// Time -> 1441065600 (Sept 1st, 2015 12:00:00 AM UTC)
+    /// Sequence -> 100
+    fn set_default_info(&self);
+}
+
+impl EnvTestUtils for Env {
+    fn jump(&self, ledgers: u32) {
+        self.ledger().set(LedgerInfo {
+            timestamp: self.ledger().timestamp().saturating_add(ledgers as u64 * 5),
+            protocol_version: 22,
+            sequence_number: self.ledger().sequence().saturating_add(ledgers),
+            network_id: Default::default(),
+            base_reserve: 10,
+            min_temp_entry_ttl: 30 * DAY_IN_LEDGERS,
+            min_persistent_entry_ttl: 30 * DAY_IN_LEDGERS,
+            max_entry_ttl: 365 * DAY_IN_LEDGERS,
+        });
+    }
+    fn jump_time(&self, seconds: u64) {
+        self.ledger().set(LedgerInfo {
+            timestamp: self.ledger().timestamp().saturating_add(seconds),
+            protocol_version: 22,
+            sequence_number: self.ledger().sequence().saturating_add(1),
+            network_id: Default::default(),
+            base_reserve: 10,
+            min_temp_entry_ttl: 30 * DAY_IN_LEDGERS,
+            min_persistent_entry_ttl: 30 * DAY_IN_LEDGERS,
+            max_entry_ttl: 365 * DAY_IN_LEDGERS,
+        });
+    }
+    
+    fn set_default_info(&self) {
+        self.ledger().set(LedgerInfo {
+            timestamp: 1441065600, // Sept 1st, 2015 12:00:00 AM UTC
+            protocol_version: 22,
+            sequence_number: 100,
+            network_id: Default::default(),
+            base_reserve: 10,
+            min_temp_entry_ttl: 30 * DAY_IN_LEDGERS,
+            min_persistent_entry_ttl: 30 * DAY_IN_LEDGERS,
+            max_entry_ttl: 365 * DAY_IN_LEDGERS,
+        });
+    }
+}
+
+
 pub struct DeFindexVaultTest<'a> {
     env: Env,
     defindex_factory: Address,
@@ -135,6 +215,7 @@ pub struct DeFindexVaultTest<'a> {
     rebalance_manager: Address,
     strategy_client_token_0: HodlStrategyClient<'a>,
     strategy_client_token_1: HodlStrategyClient<'a>,
+    fixed_strategy_client_token_0: FixedStrategyClient<'a>,
     soroswap_router: SoroswapRouterClient<'a>,
     // soroswap_factory: SoroswapFactoryClient<'a>,
     // soroswap_pair: Address,
@@ -144,7 +225,7 @@ impl<'a> DeFindexVaultTest<'a> {
     fn setup() -> Self {
         let env = Env::default();
         // env.mock_all_auths();
-
+        env.set_default_info();
         // Mockup, should be the factory contract
         let defindex_factory = Address::generate(&env);
 
@@ -168,6 +249,7 @@ impl<'a> DeFindexVaultTest<'a> {
         let strategy_client_token_0 = create_hodl_strategy(&env, &token_0.address);
         let strategy_client_token_1 = create_hodl_strategy(&env, &token_1.address);
 
+        let fixed_strategy_client_token_0 = create_fixed_strategy(&env, &token_0.address);
         // Soroswap Setup
         let soroswap_admin = Address::generate(&env);
 
@@ -223,6 +305,7 @@ impl<'a> DeFindexVaultTest<'a> {
             rebalance_manager,
             strategy_client_token_0,
             strategy_client_token_1,
+            fixed_strategy_client_token_0,
             soroswap_router,
             // soroswap_factory,
             // soroswap_pair,
