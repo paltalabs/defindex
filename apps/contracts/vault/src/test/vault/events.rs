@@ -169,7 +169,7 @@ fn check_rebalance_events(){
 
   let events = test.env.events().all();
 
-  let rebalance_events: std::vec::Vec<(soroban_sdk::Address, soroban_sdk::Vec<soroban_sdk::Val>, soroban_sdk::Val)> = 
+  let rebalance_events: std::vec::Vec<(Address, Vec<Val>, Val)> = 
     events.iter().filter(
       | event| event.1 == 
         sorobanvec![&test.env, String::from_str(&test.env, "DeFindexVault").into_val(&test.env), 
@@ -206,7 +206,7 @@ fn check_rebalance_events(){
   defindex_contract.rebalance(&test.rebalance_manager, &instructions.clone());
 
   let events = test.env.events().all();
-  let rebalance_events: std::vec::Vec<(soroban_sdk::Address, soroban_sdk::Vec<soroban_sdk::Val>, soroban_sdk::Val)> = 
+  let rebalance_events: std::vec::Vec<(Address, Vec<Val>, Val)> = 
     events.iter().filter(
       | event| event.1 == 
         sorobanvec![&test.env, String::from_str(&test.env, "DeFindexVault").into_val(&test.env), 
@@ -254,7 +254,7 @@ fn check_rebalance_events(){
   defindex_contract.rebalance(&test.rebalance_manager, &instructions);
 
   let events = test.env.events().all();
-  let rebalance_events: std::vec::Vec<(soroban_sdk::Address, soroban_sdk::Vec<soroban_sdk::Val>, soroban_sdk::Val)> = 
+  let rebalance_events: std::vec::Vec<(Address, Vec<Val>, Val)> = 
     events.iter().filter(
       | event| event.1 == 
         sorobanvec![&test.env, String::from_str(&test.env, "DeFindexVault").into_val(&test.env), 
@@ -295,7 +295,7 @@ fn check_rebalance_events(){
   defindex_contract.rebalance(&test.rebalance_manager, &swap_exact_out_instructions);
 
   let events = test.env.events().all();
-  let rebalance_events: std::vec::Vec<(soroban_sdk::Address, soroban_sdk::Vec<soroban_sdk::Val>, soroban_sdk::Val)> = 
+  let rebalance_events: std::vec::Vec<(Address, Vec<Val>, Val)> = 
     events.iter().filter(
       | event| event.1 == 
         sorobanvec![&test.env, String::from_str(&test.env, "DeFindexVault").into_val(&test.env), 

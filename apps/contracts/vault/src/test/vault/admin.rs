@@ -8,7 +8,6 @@ use crate::{constants::ONE_DAY_IN_SECONDS, test::{
 }};
 
 extern crate alloc;
-extern crate std;
 use alloc::vec;
 
 #[test]
