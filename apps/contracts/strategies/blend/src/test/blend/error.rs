@@ -1,5 +1,5 @@
 #![cfg(test)]
-use crate::storage::DAY_IN_LEDGERS;
+use crate::constants::ONE_DAY_IN_SECONDS;
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
 use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils};
 use crate::BlendStrategyClient;
@@ -142,10 +142,9 @@ fn harvest_from_random_address(){
     let e = Env::default();
     e.budget().reset_unlimited();
     e.mock_all_auths();
-    e.set_default_info();
 
     // Setting up the users
-
+    e.set_default_info();
     let admin = Address::generate(&e);
     let user_2 = Address::generate(&e);
 
@@ -161,8 +160,8 @@ fn harvest_from_random_address(){
 
     // Setting up soroswap pool
     let pool_admin = Address::generate(&e);
-    let amount_a = 100000000_0_000_000;
-    let amount_b = 50000000_0_000_000;
+    let amount_a = 2_000;
+    let amount_b = 2_000;
     blnd_client.mint(&pool_admin, &amount_a);
     usdc_client.mint(&pool_admin, &amount_b);
     let soroswap_router = create_soroswap_pool(
@@ -188,25 +187,26 @@ fn harvest_from_random_address(){
     );
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
 
+
     let starting_balance = 100_0_000_000i128;
     usdc_client.mint(&user_2, &starting_balance);
 
     strategy_client.deposit(&starting_balance, &user_2);
-
-    e.jump(DAY_IN_LEDGERS * 22);
-    usdc_client.mint(&user_2, &starting_balance);
-
+    
+    e.jump_time(ONE_DAY_IN_SECONDS * 365);
+    
+    usdc_client.mint(&user_2, &1_0_000_000);
+    
     strategy_client.deposit(&1_0_000_000, &user_2);
 
-
     //Trying to harvest from random address
-
-    let harvest_from_random_address = strategy_client.try_harvest(&Address::generate(&e));
+    let balance_before_harvest = strategy_client.balance(&user_2);
+    let harvest_from_random_address = strategy_client.try_harvest(&strategy_client.address);
     std::println!("{:?}", harvest_from_random_address);
-    let funds = strategy_client.balance(&user_2);
-    std::println!("{:?}", funds);
-    /*   
-    assert_eq!(harvest_from_random_address, Err(Ok(StrategyError::ProtocolAddressNotFound))); */
+    let balance_after_harvest = strategy_client.balance(&user_2);
+
+    assert_eq!(balance_before_harvest, balance_after_harvest);
+    assert_eq!(harvest_from_random_address, Ok(Ok(())));
 }
 
 #[test]
