@@ -5,7 +5,13 @@ use crate::events::{InvestEvent, ManagerChangedEvent, SwapExactInEvent};
 
 use crate::{models, report};
 use crate::test::defindex_vault::{
-  AssetInvestmentAllocation, AssetStrategySet, Instruction, ManagerQueueClearEvent, ManagerQueuedEvent, Report, RolesDataKey, StrategyAllocation, UnwindEvent
+  AssetStrategySet, 
+  Instruction, 
+  ManagerQueueClearEvent, 
+  ManagerQueuedEvent, 
+  Report, 
+  RolesDataKey, 
+  UnwindEvent
 };
 use crate::test::{
   create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1, DeFindexVaultTest, EnvTestUtils

@@ -399,8 +399,8 @@ fn one_asset_success() {
     expected_map.set(test.token_0.address.clone(), 0i128);
 
     // check that current invested funds is now 0, funds still in idle funds
-    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
-    assert_eq!(current_invested_funds, expected_map);
+    let current_invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
+    assert_eq!(current_invested_funds, expected_map.get(test.token_0.address.clone()).unwrap());
 
     // Now user deposits for the second time
     let amount2 = 987654321i128;
@@ -450,8 +450,8 @@ fn one_asset_success() {
             strategy_allocations: strategy_investments_expected,
         },
     );
-    let total_managed_funds = defindex_contract.fetch_total_managed_funds();
-    assert_eq!(total_managed_funds, total_managed_funds_expected);
+    let total_managed_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap();
+    assert_eq!(total_managed_funds, total_managed_funds_expected.get(test.token_0.address.clone()).unwrap());
 
     // check current idle funds
     let current_idle_funds = defindex_contract.fetch_current_idle_funds();
@@ -462,8 +462,8 @@ fn one_asset_success() {
     expected_map.set(test.token_0.address.clone(), 0i128);
 
     // check that current invested funds is now 0, funds still in idle funds
-    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
-    assert_eq!(current_invested_funds, expected_map);
+    let current_invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
+    assert_eq!(current_invested_funds, expected_map.get(test.token_0.address.clone()).unwrap());
 }
 
 // test deposit one asset with minimum more than desired
@@ -677,8 +677,10 @@ fn several_assets_success() {
     expected_map.set(test.token_1.address.clone(), 0i128);
 
     // check that current invested funds is now 0, funds still in idle funds
-    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
-    assert_eq!(current_invested_funds, expected_map);
+    let current_invested_funds_0 = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
+    let current_invested_funds_1 = defindex_contract.fetch_total_managed_funds().get(test.token_1.address.clone()).unwrap().invested_amount;
+    assert_eq!(current_invested_funds_0, expected_map.get(test.token_0.address.clone()).unwrap());
+    assert_eq!(current_invested_funds_1, expected_map.get(test.token_1.address.clone()).unwrap());
 
     // new user wants to do a deposit with more assets 0 than the proportion, but with minium amount 0
     // multiply amount0 by 2
@@ -785,8 +787,10 @@ fn several_assets_success() {
     expected_map.set(test.token_1.address.clone(), 0i128);
 
     // check that current invested funds is now 0, funds still in idle funds
-    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
-    assert_eq!(current_invested_funds, expected_map);
+    let current_invested_funds_0 = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
+    let current_invested_funds_1 = defindex_contract.fetch_total_managed_funds().get(test.token_1.address.clone()).unwrap().invested_amount;
+    assert_eq!(current_invested_funds_0, expected_map.get(test.token_0.address.clone()).unwrap());
+    assert_eq!(current_invested_funds_1, expected_map.get(test.token_1.address.clone()).unwrap());
 
     // we will repeat one more time, now enforcing the first asset
     let amount0_new = amount0 * 2;
