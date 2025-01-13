@@ -1,6 +1,6 @@
 services:
   defindex-soroban:
-    image: esteblock/soroban-preview:22.0.1
+    image: esteblock/soroban-preview:22.0.1-scout-audit
     container_name: defindex-soroban
     volumes:
       - .:/workspace
