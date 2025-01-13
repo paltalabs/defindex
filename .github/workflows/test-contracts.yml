@@ -21,25 +21,22 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
 
-      # Install and cache Rust toolchain
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
+          toolchain: stable
           targets: wasm32-unknown-unknown
 
-      # Cache Rust dependencies
       - uses: stellar/actions/rust-cache@main
 
       - name: Install Stellar CLI via Cargo
         run: |
           cargo install --locked stellar-cli@22.1.0 --features opt
-
-      # Start Soroban network (required for contract deployment during build)
-      - name: Start Soroban Network
-        run: |
-          stellar container start local
-          sleep 5
+          sudo mv stellar /usr/local/bin/
+          stellar --version
 
       - name: build contracts
         shell: sh
@@ -54,6 +51,6 @@ jobs:
         run: |
           set -e
           cd apps/contracts && 
-          make test || exit 1
+          cargo test --release || exit 1
         continue-on-error: false
 
