@@ -285,11 +285,11 @@ fn no_instructions() {
     
     let amount: i128 = 987654321;
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
-    test.token_0_admin_client.mint(&users[0], &amount);
+    test.token_0_admin_client.mock_all_auths().mint(&users[0], &amount);
     let vault_balance = defindex_contract.balance(&users[0]);
     assert_eq!(vault_balance, 0i128);
 
-    defindex_contract.deposit(
+    defindex_contract.mock_all_auths().deposit(
         &sorobanvec![&test.env, amount],
         &sorobanvec![&test.env, amount],
         &users[0],
@@ -298,7 +298,23 @@ fn no_instructions() {
     let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount - 1000);
 
-    let rebalance = defindex_contract.try_rebalance(&test.rebalance_manager, &sorobanvec![&test.env]);
+    let empty_intructions = sorobanvec![&test.env];
+
+    let rebalance = defindex_contract
+    .mock_auths(&[MockAuth {
+        address: &test.rebalance_manager.clone(),
+        invoke: &MockAuthInvoke {
+            contract: &defindex_contract.address.clone(),
+            fn_name: "rebalance",
+            args: (
+                test.rebalance_manager.clone(),
+                empty_intructions.clone(),
+            )
+                .into_val(&test.env),
+            sub_invokes: &[],
+        },
+    }])
+    .try_rebalance(&test.rebalance_manager, &empty_intructions);
     assert_eq!(rebalance, Err(Ok(ContractError::NoInstructions)));
 }
 
