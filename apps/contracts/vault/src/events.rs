@@ -1,6 +1,5 @@
 //! Definition of the Events used in the DeFindex Vault contract
-use common::models::AssetStrategySet;
-use soroban_sdk::{contracttype, symbol_short, Address, Env, Symbol, Val, Vec};
+use soroban_sdk::{contracttype, symbol_short, Address, Env, Symbol, Val, Vec, Map};
 
 use crate::{models::AssetInvestmentAllocation, report::Report};
 
@@ -139,6 +138,35 @@ pub(crate) fn emit_fee_receiver_changed_event(e: &Env, new_fee_receiver: Address
         .publish(("DeFindexVault", symbol_short!("nreceiver")), event);
 }
 
+// MANAGER QUEUE CHANGED EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ManagerQueuedEvent {
+    pub new_manager_data: Map<u64, Address>,
+}
+
+/// Publishes a `ManagerChangedEvent` to the event stream.
+pub(crate) fn emit_queued_manager_event(e: &Env, new_manager_data: Map<u64, Address>) {
+    let event = ManagerQueuedEvent { new_manager_data };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("qmanager")), event);
+}
+// MANAGER QUEUE CLEAR EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ManagerQueueClearEvent {
+    pub timestamp: u64,
+}
+
+/// Publishes a `ManagerChangedEvent` to the event stream.
+pub(crate) fn emit_clear_manager_queue_event(e: &Env, timestamp: u64) {
+    let event = ManagerQueueClearEvent { timestamp };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("qmanager")), event);
+}
+
 // MANAGER CHANGED EVENT
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -202,32 +230,6 @@ pub(crate) fn emit_fees_distributed_event(e: &Env, distributed_fees: Vec<(Addres
     e.events()
         .publish(("DeFindexVault", symbol_short!("dfees")), event);
 }
-// EXECUTE INVESTMENT EVENT
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ExecuteInvestmentEvent {
-    pub assets: Vec<AssetStrategySet>,
-    pub rebalance_method: Symbol,
-    pub asset_investments: Vec<Option<AssetInvestmentAllocation>>,
-}
-
-/// Publishes an `ExecuteInvestmentEvent` to the event stream.
-pub(crate) fn emit_execute_investment_event(
-    e: &Env,
-    assets: Vec<AssetStrategySet>,
-    asset_investments: Vec<Option<AssetInvestmentAllocation>>,
-) {
-    let rebalance_method = symbol_short!("invest");
-    let event = ExecuteInvestmentEvent {
-        assets: assets,
-        rebalance_method,
-        asset_investments: asset_investments,
-    };
-
-    e.events()
-        .publish(("DeFindexVault", symbol_short!("invest")), event);
-}
-
 
 // REBALANCE WITHDRAW EVENT
 #[contracttype]
