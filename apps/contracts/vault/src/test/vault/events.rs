@@ -1,7 +1,7 @@
 use soroban_sdk::testutils::Events;
 use soroban_sdk::{symbol_short, vec as sorobanvec, Address, FromVal, IntoVal, Map, String, Val, Vec};
 use crate::constants::ONE_DAY_IN_SECONDS;
-use crate::events::{ExecuteInvestmentEvent, InvestEvent, ManagerChangedEvent, SwapExactInEvent};
+use crate::events::{InvestEvent, ManagerChangedEvent, SwapExactInEvent};
 
 use crate::{models, report};
 use crate::test::defindex_vault::{
@@ -74,87 +74,13 @@ fn check_rebalance_events(){
 
   // Invest
   let amount_to_invest = 5_000_000i128;
-  let asset_investments = sorobanvec![
+
+  let invest_instructions = sorobanvec![
     &test.env,
-    Some(AssetInvestmentAllocation {
-        asset: test.token_0.address.clone(),
-        strategy_allocations: sorobanvec![
-            &test.env,
-            Some(StrategyAllocation {
-                strategy_address: test.strategy_client_token_0.address.clone(),
-                amount: amount_to_invest,
-            }),
-        ],
-    }),
-    Some(AssetInvestmentAllocation {
-        asset: test.token_1.address.clone(),
-        strategy_allocations: sorobanvec![
-            &test.env,
-            Some(StrategyAllocation {
-                strategy_address: test.strategy_client_token_1.address.clone(),
-                amount: amount_to_invest,
-            }),
-        ],
-    }),
+    Instruction::Invest(test.strategy_client_token_0.address.clone(), amount_to_invest),
+    Instruction::Invest(test.strategy_client_token_1.address.clone(), amount_to_invest),
   ];
-
-  let invest_result = defindex_contract.invest(&asset_investments.clone());
-
-  assert_eq!(invest_result.clone(), asset_investments.clone());
-
-  let event = test.env.events().all().last().unwrap();
-
-  let invest_event: ExecuteInvestmentEvent = FromVal::from_val(&test.env, &event.2);
-
-  let expected_asset_investment: models::AssetInvestmentAllocation = models::AssetInvestmentAllocation {
-    asset: test.token_0.address.clone(),
-    strategy_allocations: sorobanvec![
-        &test.env,
-        Some(models::StrategyAllocation {
-            strategy_address: test.strategy_client_token_0.address.clone(),
-            amount: amount_to_invest,
-        }),
-    ],
-  };
-  let expected_asset_1_investment: models::AssetInvestmentAllocation = models::AssetInvestmentAllocation {
-    asset: test.token_1.address.clone(),
-    strategy_allocations: sorobanvec![
-        &test.env,
-        Some(models::StrategyAllocation {
-            strategy_address: test.strategy_client_token_1.address.clone(),
-            amount: amount_to_invest,
-        }),
-    ],
-  };
-
-  let expected_assets: Vec<common::models::AssetStrategySet> = sorobanvec![
-    &test.env,
-    common::models::AssetStrategySet {
-        address: test.token_0.address.clone(),
-        strategies: sorobanvec![
-            &test.env,
-            common::models::Strategy {
-                address: test.strategy_client_token_0.address.clone(),
-                name: String::from_str(&test.env, "Strategy 1"),
-                paused: false,
-            },
-        ],
-    },
-    common::models::AssetStrategySet {
-        address: test.token_1.address.clone(),
-        strategies: sorobanvec![
-            &test.env,
-            common::models::Strategy {
-                address: test.strategy_client_token_1.address.clone(),
-                name: String::from_str(&test.env, "Strategy 1"),
-                paused: false,
-            },
-        ],
-    },
-  ];
-  assert_eq!(invest_event.rebalance_method, symbol_short!("invest"));
-  assert_eq!(invest_event.asset_investments, sorobanvec![&test.env, Some(expected_asset_investment), Some(expected_asset_1_investment)]);
-  assert_eq!(invest_event.assets, expected_assets);
+  defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
 
   let instruction_amount_0 = 2_000i128;
   let instructions = sorobanvec![

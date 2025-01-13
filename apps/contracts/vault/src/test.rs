@@ -126,10 +126,8 @@ pub struct DeFindexVaultTest<'a> {
     defindex_factory: Address,
     token_0_admin_client: SorobanTokenAdminClient<'a>,
     token_0: SorobanTokenClient<'a>,
-    token_0_admin: Address,
     token_1_admin_client: SorobanTokenAdminClient<'a>,
     token_1: SorobanTokenClient<'a>,
-    token_1_admin: Address,
     emergency_manager: Address,
     vault_fee_receiver: Address,
     defindex_protocol_receiver: Address,
@@ -234,10 +232,8 @@ impl<'a> DeFindexVaultTest<'a> {
             defindex_factory,
             token_0_admin_client,
             token_0,
-            token_0_admin,
             token_1_admin_client,
             token_1,
-            token_1_admin,
             emergency_manager,
             vault_fee_receiver,
             defindex_protocol_receiver,
@@ -246,8 +242,6 @@ impl<'a> DeFindexVaultTest<'a> {
             strategy_client_token_0,
             strategy_client_token_1,
             soroswap_router,
-            // soroswap_factory,
-            // soroswap_pair,
         }
     }
 
