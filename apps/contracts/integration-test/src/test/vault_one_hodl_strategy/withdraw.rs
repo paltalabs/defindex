@@ -1,10 +1,7 @@
 use crate::{
-    setup::{create_vault_one_asset_hodl_strategy, VAULT_FEE},
-    test::{IntegrationTest, DEFINDEX_FEE, ONE_YEAR_IN_SECONDS},
-    vault::{
-        defindex_vault_contract::{AssetInvestmentAllocation, StrategyAllocation},
-        VaultContractError, MINIMUM_LIQUIDITY,
-    },
+    setup::create_vault_one_asset_hodl_strategy,
+    test::{IntegrationTest, ONE_YEAR_IN_SECONDS},
+    vault::{defindex_vault_contract::Instruction, VaultContractError, MINIMUM_LIQUIDITY},
 };
 use soroban_sdk::{
     testutils::{Ledger, MockAuth, MockAuthInvoke},
@@ -356,19 +353,13 @@ fn test_withdraw_after_invest() {
     let df_balance = enviroment.vault_contract.balance(&user);
     assert_eq!(df_balance, deposit_amount - MINIMUM_LIQUIDITY);
 
-    // Create investment strategies for the deposited tokens
-    let investments = svec![
+
+    let invest_instructions = svec![
         &setup.env,
-        Some(AssetInvestmentAllocation {
-            asset: enviroment.token.address.clone(),
-            strategy_allocations: svec![
-                &setup.env,
-                Some(StrategyAllocation {
-                    amount: deposit_amount,
-                    strategy_address: enviroment.strategy_contract.address.clone(),
-                }),
-            ],
-        }),
+        Instruction::Invest(
+            enviroment.strategy_contract.address.clone(),
+            deposit_amount,
+        ),
     ];
 
     enviroment
@@ -377,25 +368,12 @@ fn test_withdraw_after_invest() {
             address: &enviroment.manager.clone(),
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
-                fn_name: "invest",
-                args: (Vec::from_array(
-                    &setup.env,
-                    [Some(AssetInvestmentAllocation {
-                        asset: enviroment.token.address.clone(),
-                        strategy_allocations: svec![
-                            &setup.env,
-                            Some(StrategyAllocation {
-                                amount: deposit_amount,
-                                strategy_address: enviroment.strategy_contract.address.clone(),
-                            })
-                        ],
-                    })],
-                ),)
-                    .into_val(&setup.env),
+                fn_name: "rebalance",
+                args: (enviroment.manager.clone(), invest_instructions.clone()).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .invest(&investments);
+        .rebalance(&enviroment.manager, &invest_instructions);
 
     setup
         .env
@@ -719,19 +697,12 @@ fn test_withdraw_after_invest_multiple_users() {
     assert_eq!(df_balance_user1, deposit_amount - MINIMUM_LIQUIDITY);
     assert_eq!(df_balance_user2, deposit_amount);
 
-    // Create investment strategies for the deposited tokens
-    let investments = svec![
+    let invest_instructions = svec![
         &setup.env,
-        Some(AssetInvestmentAllocation {
-            asset: enviroment.token.address.clone(),
-            strategy_allocations: svec![
-                &setup.env,
-                Some(StrategyAllocation {
-                    amount: deposit_amount * 2,
-                    strategy_address: enviroment.strategy_contract.address.clone(),
-                }),
-            ],
-        }),
+        Instruction::Invest(
+            enviroment.strategy_contract.address.clone(),
+            deposit_amount * 2,
+        ),
     ];
 
     enviroment
@@ -740,25 +711,12 @@ fn test_withdraw_after_invest_multiple_users() {
             address: &enviroment.manager.clone(),
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
-                fn_name: "invest",
-                args: (Vec::from_array(
-                    &setup.env,
-                    [Some(AssetInvestmentAllocation {
-                        asset: enviroment.token.address.clone(),
-                        strategy_allocations: svec![
-                            &setup.env,
-                            Some(StrategyAllocation {
-                                amount: deposit_amount * 2,
-                                strategy_address: enviroment.strategy_contract.address.clone(),
-                            })
-                        ],
-                    })],
-                ),)
-                    .into_val(&setup.env),
+                fn_name: "rebalance",
+                args: (enviroment.manager.clone(), invest_instructions.clone()).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .invest(&investments);
+        .rebalance(&enviroment.manager, &invest_instructions);
 
     setup
         .env
