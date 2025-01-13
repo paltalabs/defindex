@@ -10,3 +10,5 @@ mod initialize;
 mod rebalance;
 mod withdraw;
 mod upgrade;
+
+mod failing_test;
