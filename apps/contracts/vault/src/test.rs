@@ -1,9 +1,10 @@
 #![cfg(test)]
 extern crate std;
 use soroban_sdk::{
-    testutils::{Address as _, MockAuth, MockAuthInvoke}, token::{StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient}, vec as sorobanvec, Address, Env, IntoVal, Map, String, Val, Vec
+    testutils::{Address as _, Ledger, LedgerInfo, MockAuth, MockAuthInvoke}, token::{StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient}, vec as sorobanvec, Address, Env, IntoVal, Map, String, Val, Vec
 };
 use std::vec;
+use crate::utils::DAY_IN_LEDGERS;
 
 use soroswap_setup::{
     create_soroswap_factory, create_soroswap_pool, create_soroswap_router, SoroswapRouterClient,
@@ -46,6 +47,7 @@ pub mod defindex_vault {
     pub type DeFindexVaultClient<'a> = Client<'a>;
 }
 use defindex_vault::{AssetStrategySet, DeFindexVaultClient, Strategy};
+
 
 pub fn create_defindex_vault<'a>(
     e: &Env,
@@ -152,6 +154,26 @@ pub struct DeFindexVaultTest<'a> {
     soroswap_router: SoroswapRouterClient<'a>,
     // soroswap_factory: SoroswapFactoryClient<'a>,
     // soroswap_pair: Address,
+}
+
+pub trait EnvTestUtils {
+    /// Jump the env by the given amount of seconds. Incremends the sequence by 1.
+    fn jump_time(&self, seconds: u64);
+}
+
+impl EnvTestUtils for Env {
+    fn jump_time(&self, seconds: u64) {
+        self.ledger().set(LedgerInfo {
+            timestamp: self.ledger().timestamp().saturating_add(seconds),
+            protocol_version: 22,
+            sequence_number: self.ledger().sequence().saturating_add(1),
+            network_id: Default::default(),
+            base_reserve: 10,
+            min_temp_entry_ttl: 30 * DAY_IN_LEDGERS,
+            min_persistent_entry_ttl: 30 * DAY_IN_LEDGERS,
+            max_entry_ttl: 365 * DAY_IN_LEDGERS,
+        });
+    }
 }
 
 impl<'a> DeFindexVaultTest<'a> {
