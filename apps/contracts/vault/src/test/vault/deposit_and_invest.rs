@@ -1281,11 +1281,18 @@ fn several_assets_several_strategies() {
     // First needs to have some funds invested so the deposit_and_invest works
     let invest_instructions = sorobanvec![
         &test.env,
-        Instruction::Invest(test.strategy_client_token_0.address.clone(), deposit_amount_0),
-        Instruction::Invest(test.strategy_client_token_1.address.clone(), deposit_amount_1),
+        Instruction::Invest(test.strategy_client_token_0.address.clone(), deposit_amount_0 / 4 * 3),
+        Instruction::Invest(asset_0_strategy_1.address.clone(), deposit_amount_0 / 4),
+        Instruction::Invest(test.strategy_client_token_1.address.clone(), deposit_amount_1 / 4 * 3),
+        Instruction::Invest(asset_1_strategy_1.address.clone(), deposit_amount_1 / 4),
     ];
 
     defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
+
+    assert_eq!(test.token_0.balance(&test.strategy_client_token_0.address), deposit_amount_0 / 4 * 3);
+    assert_eq!(test.token_0.balance(&asset_0_strategy_1.address), deposit_amount_0 / 4); 
+    assert_eq!(test.token_1.balance(&test.strategy_client_token_1.address), deposit_amount_1 / 4 * 3);
+    assert_eq!(test.token_1.balance(&asset_1_strategy_1.address), deposit_amount_1 / 4);
     
     let invested_funds_a0 = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
     let idle_funds_a0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
@@ -1306,6 +1313,11 @@ fn several_assets_several_strategies() {
         &users[0],
         &true,
     );
+
+    assert_eq!(test.token_0.balance(&test.strategy_client_token_0.address), amount0 / 4 * 3);
+    assert_eq!(test.token_0.balance(&asset_0_strategy_1.address), amount0 / 4); 
+    assert_eq!(test.token_1.balance(&test.strategy_client_token_1.address), amount1 / 4 * 3);
+    assert_eq!(test.token_1.balance(&asset_1_strategy_1.address), amount1 / 4);
 
     let invested_funds_a0 = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
     let idle_funds_a0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
@@ -1341,6 +1353,11 @@ fn several_assets_several_strategies() {
         &users[2],
         &true,
     );
+
+    assert_eq!(test.token_0.balance(&test.strategy_client_token_0.address), (amount0 * 3) / 4 * 3);
+    assert_eq!(test.token_0.balance(&asset_0_strategy_1.address), (amount0 * 3) / 4); 
+    assert_eq!(test.token_1.balance(&test.strategy_client_token_1.address), (amount1 * 3) / 4 * 3);
+    assert_eq!(test.token_1.balance(&asset_1_strategy_1.address), (amount1 * 3) / 4);
     
     let invested_funds_a0 = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
     let idle_funds_a0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
