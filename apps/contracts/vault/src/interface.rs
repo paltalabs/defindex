@@ -252,6 +252,38 @@ pub trait AdminInterfaceTrait {
     /// * `Result<Address, ContractError>` - The fee receiver address if successful, otherwise returns a ContractError.
     fn get_fee_receiver(e: Env) -> Result<Address, ContractError>;
 
+    /// Queues a new manager for the vault.
+    /// This function allows the current manager to queue a new manager for the vault.
+    ///
+    /// # Arguments:
+    /// * `e` - The environment.
+    /// * `address` - The new manager address.
+    /// 
+    /// # Returns:
+    /// * `()` - No return value.
+    fn queue_manager(e: Env, address: Address) -> Result<Address, ContractError>;
+
+    /// Retrieves the queued manager address for the vault.
+    /// 
+    /// # Arguments:
+    /// * `e` - The environment.
+    /// 
+    /// # Returns:
+    /// * `Result<Address, ContractError>` - The queued manager address if successful, otherwise returns a ContractError.
+    /// 
+    fn get_queued_manager(e: Env) -> Result<Address, ContractError>;
+
+    /// Clears the queued manager for the vault.
+    /// 
+    /// This function allows the current manager to clear the queued manager for the vault.
+    /// 
+    /// # Arguments:
+    /// * `e` - The environment.
+    /// 
+    /// # Returns:
+    /// * `()` - No return value.
+    fn clear_queue(e: Env) -> Result<(), ContractError>;
+
     /// Sets the manager for the vault.
     ///
     /// This function allows the current manager or emergency manager to set a new manager for the vault.
@@ -262,7 +294,7 @@ pub trait AdminInterfaceTrait {
     ///
     /// # Returns:
     /// * `()` - No return value.
-    fn set_manager(e: Env, new_manager: Address);
+    fn set_manager(e: Env) -> Result<(), ContractError>;
 
     /// Retrieves the current manager address for the vault.
     ///
@@ -328,39 +360,6 @@ pub trait AdminInterfaceTrait {
 }
 
 pub trait VaultManagementTrait {
-    /// Executes the investment of the vault's idle funds based on the specified asset allocations.
-    /// This function allows partial investments by providing an optional allocation for each asset,
-    /// and it ensures proper authorization and validation checks before proceeding with investments.
-    ///
-    /// # Arguments
-    /// * `e` - The current environment reference.
-    /// * `asset_investments` - A vector of optional `AssetInvestmentAllocation` structures, where each element
-    ///   represents an allocation for a specific asset. The vector must match the number of vault assets in length.
-    ///
-    /// # Returns
-    /// * `Result<(), ContractError>` - Returns `Ok(())` if the investments are successful or a `ContractError`
-    ///   if any issue occurs during validation or execution.
-    ///
-    /// # Function Flow
-    /// 1. **Extend Instance TTL**: Extends the contract instance's time-to-live to keep the instance active.
-    /// 2. **Check Initialization**: Verifies that the vault is properly initialized before proceeding.
-    /// 3. **Access Control**: Ensures the caller has the `Manager` role required to initiate investments.
-    /// 4. **Asset Count Validation**: Verifies that the length of the `asset_investments` vector matches
-    ///    the number of assets managed by the vault. If they don't match, a `WrongInvestmentLength` error is returned.
-    /// 5. **Investment Execution**: Calls the `check_and_execute_investments` function to perform the investment
-    ///    after validating the inputs and ensuring correct execution flows for each asset allocation.
-    ///
-    /// # Errors
-    /// * Returns `ContractError::WrongInvestmentLength` if the length of `asset_investments` does not match the vault assets.
-    /// * Returns `ContractError` if access control validation fails or if investment execution encounters an issue.
-    ///
-    /// # Security
-    /// - Only addresses with the `Manager` role can call this function, ensuring restricted access to managing investments.
-    fn invest(
-        e: Env,
-        asset_investments: Vec<Option<AssetInvestmentAllocation>>,
-    ) -> Result<Vec<Option<AssetInvestmentAllocation>>, ContractError>;
-
     /// Rebalances the vault by executing a series of instructions.
     ///
     /// # Arguments:

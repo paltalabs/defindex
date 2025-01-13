@@ -1,10 +1,7 @@
 use crate::{
     setup::create_vault_one_asset_hodl_strategy,
     test::{EnvTestUtils, IntegrationTest, ONE_YEAR_IN_SECONDS},
-    vault::{
-        defindex_vault_contract::{AssetInvestmentAllocation, StrategyAllocation},
-        VaultContractError, MINIMUM_LIQUIDITY,
-    },
+    vault::{defindex_vault_contract::Instruction, VaultContractError},
 };
 use soroban_sdk::{
     testutils::{MockAuth, MockAuthInvoke},
@@ -74,46 +71,67 @@ fn fee_performance() {
 
     // Split deposit amount in two
     let half_deposit = deposit_amount / 2;
-    let investments = svec![
-        &setup.env,
-        Some(AssetInvestmentAllocation {
-            asset: enviroment.token.address.clone(),
-            strategy_allocations: svec![
-                &setup.env,
-                Some(StrategyAllocation {
-                    amount: half_deposit,
-                    strategy_address: enviroment.strategy_contract.address.clone(),
-                }),
-            ],
-        }),
-    ];
 
-    // First investment
+    // let investments = svec![
+    //     &setup.env,
+    //     Some(AssetInvestmentAllocation {
+    //         asset: enviroment.token.address.clone(),
+    //         strategy_allocations: svec![
+    //             &setup.env,
+    //             Some(StrategyAllocation {
+    //                 amount: half_deposit,
+    //                 strategy_address: enviroment.strategy_contract.address.clone(),
+    //             }),
+    //         ],
+    //     }),
+    // ];
+
+    let invest_instructions = svec![
+        &setup.env,
+        Instruction::Invest(
+            enviroment.strategy_contract.address.clone(),
+            half_deposit,
+        ),
+    ];
+        // // First investment
+        // enviroment
+        // .vault_contract
+        // .mock_auths(&[MockAuth {
+        //     address: &enviroment.manager.clone(),
+        //     invoke: &MockAuthInvoke {
+        //         contract: &enviroment.vault_contract.address.clone(),
+        //         fn_name: "invest",
+        //         args: (Vec::from_array(
+        //             &setup.env,
+        //             [Some(AssetInvestmentAllocation {
+        //                 asset: enviroment.token.address.clone(),
+        //                 strategy_allocations: svec![
+        //                     &setup.env,
+        //                     Some(StrategyAllocation {
+        //                         amount: half_deposit,
+        //                         strategy_address: enviroment.strategy_contract.address.clone(),
+        //                     })
+        //                 ],
+        //             })],
+        //         ),)
+        //             .into_val(&setup.env),
+        //         sub_invokes: &[],
+        //     },
+        // }])
+        // .invest(&investments);
+
     enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
             address: &enviroment.manager.clone(),
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
-                fn_name: "invest",
-                args: (Vec::from_array(
-                    &setup.env,
-                    [Some(AssetInvestmentAllocation {
-                        asset: enviroment.token.address.clone(),
-                        strategy_allocations: svec![
-                            &setup.env,
-                            Some(StrategyAllocation {
-                                amount: half_deposit,
-                                strategy_address: enviroment.strategy_contract.address.clone(),
-                            })
-                        ],
-                    })],
-                ),)
-                    .into_val(&setup.env),
+                fn_name: "rebalance",
+                args: (enviroment.manager.clone(), invest_instructions.clone()).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .invest(&investments);
+        .rebalance(&enviroment.manager, &invest_instructions);
 
     let report_result_after_1_invest = enviroment.vault_contract.report();
     println!(
@@ -128,25 +146,13 @@ fn fee_performance() {
             address: &enviroment.manager.clone(),
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
-                fn_name: "invest",
-                args: (Vec::from_array(
-                    &setup.env,
-                    [Some(AssetInvestmentAllocation {
-                        asset: enviroment.token.address.clone(),
-                        strategy_allocations: svec![
-                            &setup.env,
-                            Some(StrategyAllocation {
-                                amount: half_deposit,
-                                strategy_address: enviroment.strategy_contract.address.clone(),
-                            })
-                        ],
-                    })],
-                ),)
-                    .into_val(&setup.env),
+                fn_name: "rebalance",
+                args: (enviroment.manager.clone(), invest_instructions.clone()).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .invest(&investments);
+        .rebalance(&enviroment.manager, &invest_instructions);
+
 
     let report_result_after_2_invests = enviroment.vault_contract.report();
     println!(
