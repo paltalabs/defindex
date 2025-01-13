@@ -823,3 +823,36 @@ fn swap_exact_out() {
     let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
 }
+
+#[test]
+fn rebalance_invest_negative_amount(){
+    todo!();
+}
+#[test]
+fn rebalance_invest_wrong_address(){
+    todo!();
+}
+#[test]
+fn rebalance_invest_paused_strategy(){
+    todo!();
+}
+#[test]
+fn rebalance_invest_more_than_idle_funds(){
+    todo!();
+}
+#[test]
+fn rebalance_invest_unauthorized_rebalance_unwind_paused_strategy(){
+    todo!();
+}
+#[test]
+fn rebalance_unwind_wrong_address(){
+    todo!();
+}
+#[test]
+fn rebalance_unwind_negative_amount(){
+    todo!();
+}
+#[test]
+fn rebalance_unwind_unauthorized(){
+    todo!();
+}
