@@ -1,5 +1,5 @@
 #![no_std]
-use constants::MIN_WITHDRAW_AMOUNT;
+use constants::{MIN_WITHDRAW_AMOUNT, ONE_DAY_IN_SECONDS};
 use report::Report;
 use soroban_sdk::{contract, contractimpl, panic_with_error, token::TokenClient, vec, Address, BytesN, Env, IntoVal, Map, String, Val, Vec
 };
@@ -631,6 +631,63 @@ impl AdminInterfaceTrait for DeFindexVault {
         access_control.get_fee_receiver()
     }
 
+    // Sets the manager queue for the vault config.
+    //
+    // This function allows the current manager to add to queue a new manager for the vault.
+    //
+    // # Arguments:
+    // * `e` - The environment.
+    // * `manager` - The new manager address.
+    //
+    // # Returns:
+    // * `Result<Address, ContractError>` - The manager address if successful, otherwise returns a ContractError.
+    fn queue_manager(e: Env, manager: Address) -> Result<Address, ContractError> {
+        extend_instance_ttl(&e);
+        
+        let current_timestamp:u64 = e.ledger().timestamp();
+        let mut manager_data: Map<u64, Address> = Map::new(&e);
+        manager_data.set(current_timestamp, manager.clone());
+
+        let access_control = AccessControl::new(&e);
+        access_control.queue_manager(&manager_data);
+        events::emit_queued_manager_event(&e, manager_data);
+        Ok(manager)
+    }
+
+    // Retrieves the manager queue for the vault config.
+    //
+    // This function allows the anyone to retrieve the manager queue for the vault.
+    //
+    // # Arguments:
+    // * `e` - The environment.
+    //
+    // # Returns:
+    // * `Result<Address, ContractError>` - The manager address if successful, otherwise returns a ContractError.
+    fn get_queued_manager(e: Env) -> Result<Address, ContractError> {
+        extend_instance_ttl(&e);
+        let access_control = AccessControl::new(&e);
+        let queued_manager = access_control.get_queued_manager().values().first().unwrap();
+
+        Ok(queued_manager)
+    }
+
+    // clear the manager queue for the vault config.
+    // This function allows the current manager clear the manager queue for the vault.
+    //
+    // # Arguments:
+    // * `e` - The environment.
+    //
+    // # Returns:
+    // * `()` - No return value.
+    fn clear_queue(e: Env) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
+        let access_control = AccessControl::new(&e);
+        access_control.clear_queued_manager();
+        let current_timestamp:u64 = e.ledger().timestamp();
+        events::emit_clear_manager_queue_event(&e, current_timestamp);
+        Ok(())
+    }
+
     /// Sets the manager for the vault.
     ///
     /// This function allows the current manager or emergency manager to set a new manager for the vault.
@@ -641,12 +698,19 @@ impl AdminInterfaceTrait for DeFindexVault {
     ///
     /// # Returns:
     /// * `()` - No return value.
-    fn set_manager(e: Env, manager: Address) {
+    fn set_manager(e: Env) -> Result<(), ContractError> {
         extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
-        access_control.set_manager(&manager);
-
-        events::emit_manager_changed_event(&e, manager);
+        let current_timestamp = e.ledger().timestamp();
+        let manager_address = access_control.get_queued_manager().values().first().unwrap();
+        let queued_timestamp = access_control.get_queued_manager().keys().first().unwrap();
+        let seven_days: u64 = ONE_DAY_IN_SECONDS * 7u64;
+        if (current_timestamp - queued_timestamp) < (seven_days) {
+            panic_with_error!(&e, ContractError::SetManagerBeforeTime);
+        }
+        access_control.set_manager();
+        events::emit_manager_changed_event(&e, manager_address);
+        Ok(())
     }
 
     /// Retrieves the current manager address for the vault.
