@@ -1,5 +1,5 @@
 #![no_std]
-use constants::MIN_WITHDRAW_AMOUNT;
+use constants::{MIN_WITHDRAW_AMOUNT, ONE_DAY_IN_SECONDS};
 use report::Report;
 use soroban_sdk::{contract, contractimpl, panic_with_error, token::TokenClient, vec, Address, BytesN, Env, IntoVal, Map, String, Val, Vec
 };
@@ -631,6 +631,63 @@ impl AdminInterfaceTrait for DeFindexVault {
         access_control.get_fee_receiver()
     }
 
+    // Sets the manager queue for the vault config.
+    //
+    // This function allows the current manager to add to queue a new manager for the vault.
+    //
+    // # Arguments:
+    // * `e` - The environment.
+    // * `manager` - The new manager address.
+    //
+    // # Returns:
+    // * `Result<Address, ContractError>` - The manager address if successful, otherwise returns a ContractError.
+    fn queue_manager(e: Env, manager: Address) -> Result<Address, ContractError> {
+        extend_instance_ttl(&e);
+        
+        let current_timestamp:u64 = e.ledger().timestamp();
+        let mut manager_data: Map<u64, Address> = Map::new(&e);
+        manager_data.set(current_timestamp, manager.clone());
+
+        let access_control = AccessControl::new(&e);
+        access_control.queue_manager(&manager_data);
+        events::emit_queued_manager_event(&e, manager_data);
+        Ok(manager)
+    }
+
+    // Retrieves the manager queue for the vault config.
+    //
+    // This function allows the anyone to retrieve the manager queue for the vault.
+    //
+    // # Arguments:
+    // * `e` - The environment.
+    //
+    // # Returns:
+    // * `Result<Address, ContractError>` - The manager address if successful, otherwise returns a ContractError.
+    fn get_queued_manager(e: Env) -> Result<Address, ContractError> {
+        extend_instance_ttl(&e);
+        let access_control = AccessControl::new(&e);
+        let queued_manager = access_control.get_queued_manager().values().first().unwrap();
+
+        Ok(queued_manager)
+    }
+
+    // clear the manager queue for the vault config.
+    // This function allows the current manager clear the manager queue for the vault.
+    //
+    // # Arguments:
+    // * `e` - The environment.
+    //
+    // # Returns:
+    // * `()` - No return value.
+    fn clear_queue(e: Env) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
+        let access_control = AccessControl::new(&e);
+        access_control.clear_queued_manager();
+        let current_timestamp:u64 = e.ledger().timestamp();
+        events::emit_clear_manager_queue_event(&e, current_timestamp);
+        Ok(())
+    }
+
     /// Sets the manager for the vault.
     ///
     /// This function allows the current manager or emergency manager to set a new manager for the vault.
@@ -641,12 +698,19 @@ impl AdminInterfaceTrait for DeFindexVault {
     ///
     /// # Returns:
     /// * `()` - No return value.
-    fn set_manager(e: Env, manager: Address) {
+    fn set_manager(e: Env) -> Result<(), ContractError> {
         extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
-        access_control.set_manager(&manager);
-
-        events::emit_manager_changed_event(&e, manager);
+        let current_timestamp = e.ledger().timestamp();
+        let manager_address = access_control.get_queued_manager().values().first().unwrap();
+        let queued_timestamp = access_control.get_queued_manager().keys().first().unwrap();
+        let seven_days: u64 = ONE_DAY_IN_SECONDS * 7u64;
+        if (current_timestamp - queued_timestamp) < (seven_days) {
+            panic_with_error!(&e, ContractError::SetManagerBeforeTime);
+        }
+        access_control.set_manager();
+        events::emit_manager_changed_event(&e, manager_address);
+        Ok(())
     }
 
     /// Retrieves the current manager address for the vault.
@@ -747,59 +811,7 @@ impl AdminInterfaceTrait for DeFindexVault {
 
 #[contractimpl]
 impl VaultManagementTrait for DeFindexVault {
-    /// Executes the investment of the vault's idle funds based on the specified asset allocations.
-    /// This function allows partial investments by providing an optional allocation for each asset,
-    /// and it ensures proper authorization and validation checks before proceeding with investments.
-    ///
-    /// # Arguments
-    /// * `e` - The current environment reference.
-    /// * `asset_investments` - A vector of optional `AssetInvestmentAllocation` structures, where each element
-    ///   represents an allocation for a specific asset. The vector must match the number of vault assets in length.
-    ///
-    /// # Returns
-    /// * `Result<(), ContractError>` - Returns `Ok(())` if the investments are successful or a `ContractError`
-    ///   if any issue occurs during validation or execution.
-    ///
-    /// # Function Flow
-    /// 1. **Extend Instance TTL**: Extends the contract instance's time-to-live to keep the instance active.
-    /// 2. **Check Initialization**: Verifies that the vault is properly initialized before proceeding.
-    /// 3. **Access Control**: Ensures the caller has the `Manager` role required to initiate investments.
-    /// 4. **Asset Count Validation**: Verifies that the length of the `asset_investments` vector matches
-    ///    the number of assets managed by the vault. If they don't match, a `WrongInvestmentLength` error is returned.
-    /// 5. **Investment Execution**: Calls the `check_and_execute_investments` function to perform the investment
-    ///    after validating the inputs and ensuring correct execution flows for each asset allocation.
-    ///
-    /// # Errors
-    /// * Returns `ContractError::WrongInvestmentLength` if the length of `asset_investments` does not match the vault assets.
-    /// * Returns `ContractError` if access control validation fails or if investment execution encounters an issue.
-    ///
-    /// # Security
-    /// - Only addresses with the `Manager` role can call this function, ensuring restricted access to managing investments.
-    fn invest(
-        e: Env,
-        asset_investments: Vec<Option<AssetInvestmentAllocation>>,
-    ) -> Result<Vec<Option<AssetInvestmentAllocation>>, ContractError> {
-        //-> Result<(Vec<i128>, i128, Option<Vec<Option<AssetInvestmentAllocation>>>), ContractError> 
-        extend_instance_ttl(&e);
-        check_initialized(&e)?;
-
-        // Access control: ensure caller has the required manager role
-        let access_control = AccessControl::new(&e);
-        access_control.require_role(&RolesDataKey::Manager);
-
-        let assets = get_assets(&e);
-
-        // Ensure the length of `asset_investments` matches the number of vault assets
-        if asset_investments.len() != assets.len() {
-            panic_with_error!(&e, ContractError::WrongInvestmentLength);
-        }
-
-        // Check and execute investments for each asset allocation
-        check_and_execute_investments(&e, &assets, &asset_investments)?;
-
-        Ok(asset_investments.clone())
-    }
-
+    
     fn rebalance(e: Env, caller: Address, instructions: Vec<Instruction>) -> Result<(), ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;

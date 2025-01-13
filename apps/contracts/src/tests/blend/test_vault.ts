@@ -3,7 +3,7 @@ import { SOROSWAP_ROUTER } from "../../constants.js";
 import { AddressBook } from "../../utils/address_book.js";
 import { airdropAccount, invokeContract } from "../../utils/contract.js";
 import { config } from "../../utils/env_config.js";
-import { AssetInvestmentAllocation, depositToVault, getCreateDeFindexParams, investVault, rebalanceManager } from "../vault.js";
+import { AssetInvestmentAllocation, depositToVault, getCreateDeFindexParams, Instruction, rebalanceManager, rebalanceVault } from "../vault.js";
 
 const network = process.argv[2];
 const loadedConfig = config(network);
@@ -175,8 +175,16 @@ export async function testBlendVault(user?: Keypair) {
         ]
       }
     ];
+
+    const investArgs: Instruction[] = [
+      {
+        type: "Invest",
+        strategy: blendStrategyAddress,
+        amount: BigInt(50_0_000_000),
+      },
+    ];
     
-    const investResult = await investVault(blendVaultAddress, investParams, manager)
+    const investResult = await rebalanceVault(blendVaultAddress, investArgs, manager)
     console.log('🚀 « investResult:', investResult);
     
     console.log(green, '---------------------- Invested in strategy ----------------------')
