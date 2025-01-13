@@ -1171,8 +1171,10 @@ fn several_assets_several_strategies() {
     test.env.mock_all_auths();
 
     let asset_0_strategy_1 = create_hodl_strategy(&test.env, &test.token_0.address.clone());
+    let asset_0_strategy_2 = create_hodl_strategy(&test.env, &test.token_0.address.clone());
 
     let asset_1_strategy_1 = create_hodl_strategy(&test.env, &test.token_1.address.clone());
+    let asset_1_strategy_2 = create_hodl_strategy(&test.env, &test.token_1.address.clone());
     
     let asset_0_strategy_params = sorobanvec![
         &test.env, 
@@ -1184,6 +1186,11 @@ fn several_assets_several_strategies() {
         Strategy {
             name: String::from_str(&test.env, "strategy1"),
             address: asset_0_strategy_1.address.clone(),
+            paused: false,
+        },
+        Strategy {
+            name: String::from_str(&test.env, "strategy2"),
+            address: asset_0_strategy_2.address.clone(),
             paused: false,
         },
     ];
@@ -1198,6 +1205,11 @@ fn several_assets_several_strategies() {
         Strategy {
             name: String::from_str(&test.env, "strategy1"),
             address: asset_1_strategy_1.address.clone(),
+            paused: false,
+        },
+        Strategy {
+            name: String::from_str(&test.env, "strategy2"),
+            address: asset_1_strategy_2.address.clone(),
             paused: false,
         },
     ];
@@ -1265,6 +1277,13 @@ fn several_assets_several_strategies() {
         &true, // Even if it is true
     );
     
+    assert_eq!(test.token_0.balance(&test.strategy_client_token_0.address), 0);
+    assert_eq!(test.token_0.balance(&asset_0_strategy_1.address), 0); 
+    assert_eq!(test.token_0.balance(&asset_0_strategy_2.address), 0); 
+    assert_eq!(test.token_1.balance(&test.strategy_client_token_1.address), 0);
+    assert_eq!(test.token_1.balance(&asset_1_strategy_1.address), 0);
+    assert_eq!(test.token_1.balance(&asset_1_strategy_2.address), 0);
+
     let invested_funds_a0 = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
     let idle_funds_a0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
 
@@ -1281,18 +1300,22 @@ fn several_assets_several_strategies() {
     // First needs to have some funds invested so the deposit_and_invest works
     let invest_instructions = sorobanvec![
         &test.env,
-        Instruction::Invest(test.strategy_client_token_0.address.clone(), deposit_amount_0 / 4 * 3),
+        Instruction::Invest(test.strategy_client_token_0.address.clone(), deposit_amount_0 / 4 * 2),
         Instruction::Invest(asset_0_strategy_1.address.clone(), deposit_amount_0 / 4),
-        Instruction::Invest(test.strategy_client_token_1.address.clone(), deposit_amount_1 / 4 * 3),
+        Instruction::Invest(asset_0_strategy_2.address.clone(), deposit_amount_0 / 4),
+        Instruction::Invest(test.strategy_client_token_1.address.clone(), deposit_amount_1 / 4 * 2),
         Instruction::Invest(asset_1_strategy_1.address.clone(), deposit_amount_1 / 4),
+        Instruction::Invest(asset_1_strategy_2.address.clone(), deposit_amount_1 / 4),
     ];
 
     defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
 
-    assert_eq!(test.token_0.balance(&test.strategy_client_token_0.address), deposit_amount_0 / 4 * 3);
+    assert_eq!(test.token_0.balance(&test.strategy_client_token_0.address), deposit_amount_0 / 4 * 2);
     assert_eq!(test.token_0.balance(&asset_0_strategy_1.address), deposit_amount_0 / 4); 
-    assert_eq!(test.token_1.balance(&test.strategy_client_token_1.address), deposit_amount_1 / 4 * 3);
+    assert_eq!(test.token_0.balance(&asset_0_strategy_2.address), deposit_amount_0 / 4); 
+    assert_eq!(test.token_1.balance(&test.strategy_client_token_1.address), deposit_amount_1 / 4 * 2);
     assert_eq!(test.token_1.balance(&asset_1_strategy_1.address), deposit_amount_1 / 4);
+    assert_eq!(test.token_1.balance(&asset_1_strategy_2.address), deposit_amount_1 / 4);
     
     let invested_funds_a0 = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
     let idle_funds_a0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
@@ -1314,10 +1337,12 @@ fn several_assets_several_strategies() {
         &true,
     );
 
-    assert_eq!(test.token_0.balance(&test.strategy_client_token_0.address), amount0 / 4 * 3);
+    assert_eq!(test.token_0.balance(&test.strategy_client_token_0.address), amount0 / 4 * 2);
     assert_eq!(test.token_0.balance(&asset_0_strategy_1.address), amount0 / 4); 
-    assert_eq!(test.token_1.balance(&test.strategy_client_token_1.address), amount1 / 4 * 3);
+    assert_eq!(test.token_0.balance(&asset_0_strategy_2.address), amount0 / 4); 
+    assert_eq!(test.token_1.balance(&test.strategy_client_token_1.address), amount1 / 4 * 2);
     assert_eq!(test.token_1.balance(&asset_1_strategy_1.address), amount1 / 4);
+    assert_eq!(test.token_1.balance(&asset_1_strategy_2.address), amount1 / 4);
 
     let invested_funds_a0 = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
     let idle_funds_a0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
@@ -1354,10 +1379,12 @@ fn several_assets_several_strategies() {
         &true,
     );
 
-    assert_eq!(test.token_0.balance(&test.strategy_client_token_0.address), (amount0 * 3) / 4 * 3);
+    assert_eq!(test.token_0.balance(&test.strategy_client_token_0.address), (amount0 * 3) / 4 * 2);
     assert_eq!(test.token_0.balance(&asset_0_strategy_1.address), (amount0 * 3) / 4); 
-    assert_eq!(test.token_1.balance(&test.strategy_client_token_1.address), (amount1 * 3) / 4 * 3);
+    assert_eq!(test.token_0.balance(&asset_0_strategy_2.address), (amount0 * 3) / 4); 
+    assert_eq!(test.token_1.balance(&test.strategy_client_token_1.address), (amount1 * 3) / 4 * 2);
     assert_eq!(test.token_1.balance(&asset_1_strategy_1.address), (amount1 * 3) / 4);
+    assert_eq!(test.token_1.balance(&asset_1_strategy_2.address), (amount1 * 3) / 4);
     
     let invested_funds_a0 = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
     let idle_funds_a0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
