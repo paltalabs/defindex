@@ -141,20 +141,3 @@ pub fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128> {
     map
 }
 
-/// Fetches the current invested funds for all assets managed by the contract.
-/// It returns a map where the key is the asset's address and the value is the invested balance.
-///
-/// # Arguments
-/// * `e` - The current environment instance.
-///
-/// # Returns
-/// * A map where each entry represents an asset's address and its corresponding invested balance.
-pub fn fetch_current_invested_funds(e: &Env, lock_fees: bool) -> Map<Address, i128> {
-    let assets = get_assets(e);
-    let mut map: Map<Address, i128> = Map::new(e);
-    for asset in assets {
-        let (invested_funds, _) = fetch_invested_funds_for_asset(e, &asset, lock_fees);
-        map.set(asset.address.clone(), invested_funds);
-    }
-    map
-}
