@@ -13,7 +13,7 @@ use crate::test::{
 #[test]
 fn multi_instructions() {
     let test = DeFindexVaultTest::setup();
-    test.env.mock_all_auths();
+
     let strategy_params_token_0 = create_strategy_params_token_0(&test);
     let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
@@ -112,7 +112,7 @@ fn multi_instructions() {
 #[test]
 fn one_instruction() {
     let test = DeFindexVaultTest::setup();
-    test.env.mock_all_auths();
+
     let strategy_params_token_0 = create_strategy_params_token_0(&test);
     let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
@@ -206,7 +206,6 @@ fn one_instruction() {
 #[test]
 fn empty_instructions() {
     let test = DeFindexVaultTest::setup();
-    test.env.mock_all_auths();
 
     let strategy_params_token_0 = create_strategy_params_token_0(&test);
     let assets: Vec<AssetStrategySet> = sorobanvec![
@@ -258,7 +257,6 @@ fn empty_instructions() {
 #[test]
 fn no_instructions() {
     let test = DeFindexVaultTest::setup();
-    test.env.mock_all_auths();
 
     let strategy_params_token_0 = create_strategy_params_token_0(&test);
     let assets: Vec<AssetStrategySet> = sorobanvec![
@@ -313,7 +311,6 @@ fn no_instructions() {
 #[test]
 fn insufficient_balance() {
     let test = DeFindexVaultTest::setup();
-    test.env.mock_all_auths();
 
     let strategy_params_token_0 = create_strategy_params_token_0(&test);
     let assets: Vec<AssetStrategySet> = sorobanvec![
@@ -414,7 +411,7 @@ fn insufficient_balance() {
 #[test]
 fn swap_exact_in() {
     let test = DeFindexVaultTest::setup();
-    test.env.mock_all_auths();
+
     let strategy_params_token_0 = create_strategy_params_token_0(&test);
     let strategy_params_token_1 = create_strategy_params_token_1(&test);
 
@@ -574,7 +571,7 @@ fn swap_exact_in() {
 #[test]
 fn swap_exact_out() {
     let test = DeFindexVaultTest::setup();
-    test.env.mock_all_auths();
+
     let strategy_params_token_0 = create_strategy_params_token_0(&test);
     let strategy_params_token_1 = create_strategy_params_token_1(&test);
 
