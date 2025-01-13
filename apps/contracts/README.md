@@ -37,7 +37,23 @@ yarn deploy-hodl <network>
 yarn deploy-fixed <network>
 ```
 ```bash 
+yarn deploy-fixed-usdc <network>
+```
+```bash 
+yarn deploy-fixed-xtar <network>
+```
+```bash 
 yarn deploy-blend <network>
+```
+
+If you want to deploy all the contracts you can do so by running:
+```
+yarn deploy-factory testnet && 
+yarn deploy-hodl testnet && 
+yarn deploy-fixed testnet && 
+yarn deploy-fixed-usdc testnet && 
+yarn deploy-fixed-xtar testnet && 
+yarn deploy-blend testnet
 ```
 
 once you have deployed all the contracts you can run all the tests by running:

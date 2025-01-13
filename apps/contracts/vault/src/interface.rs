@@ -1,8 +1,7 @@
-use soroban_sdk::{Address, Env, Map, String, Vec};
+use soroban_sdk::{Address, BytesN, Env, Map, String, Vec};
 
 use crate::{
-    models::{Instruction, AssetInvestmentAllocation, CurrentAssetInvestmentAllocation},
-    ContractError,
+    models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction}, report::Report, ContractError
 };
 use common::models::AssetStrategySet;
 
@@ -17,9 +16,11 @@ pub trait VaultTrait {
     /// - `manager`: Primary vault manager with permissions for vault control.
     /// - `emergency_manager`: Address with emergency access for emergency control over the vault.
     /// - `vault_fee_receiver`: Address designated to receive the vault fee receiver's portion of management fees.
-    /// - `vault_fee`: Vault-specific fee percentage in basis points (typically set at 0-2% APR).
-    /// - `defindex_protocol_receiver`: Address receiving DeFindex’s protocol-wide fee in basis points (0.5% APR).
+    /// - `vault_fee`: Vault-specific fee percentage in basis points.
+    /// - `defindex_protocol_receiver`: Address receiving DeFindex’s protocol-wide fee in basis points.
+    /// - `defindex_protocol_rate`: DeFindex’s protocol fee percentage in basis points.
     /// - `factory`: Factory contract address for deployment linkage.
+    /// - `soroswap_router`: Address of the Soroswap Router
     /// - `vault_name`: Name of the vault token to be displayed in metadata.
     /// - `vault_symbol`: Symbol representing the vault’s token.
     ///
@@ -32,23 +33,23 @@ pub trait VaultTrait {
     /// - `ContractError::StrategyDoesNotSupportAsset`: If a strategy within an asset does not support the asset’s contract.
     ///
     fn __constructor(
-        e: Env, 
+        e: Env,
         assets: Vec<AssetStrategySet>,
-        manager: Address,
-        emergency_manager: Address,
-        vault_fee_receiver: Address,
+        roles: Map<u32, Address>,
         vault_fee: u32,
         defindex_protocol_receiver: Address,
+        defindex_protocol_rate: u32,
         factory: Address,
-        vault_name: String,
-        vault_symbol: String,
+        soroswap_router: Address,
+        name_symbol: Map<String, String>,
+        upgradable: bool,
     );
 
     /// Handles user deposits into the DeFindex Vault.
     ///
     /// This function processes a deposit by transferring each specified asset amount from the user's address to
-    /// the vault, allocating assets according to the vault's defined strategy ratios, and minting dfTokens that 
-    /// represent the user's proportional share in the vault. The `amounts_desired` and `amounts_min` vectors should 
+    /// the vault, allocating assets according to the vault's defined strategy ratios, and minting dfTokens that
+    /// represent the user's proportional share in the vault. The `amounts_desired` and `amounts_min` vectors should
     /// align with the vault's asset order to ensure correct allocation.
     ///
     /// # Parameters
@@ -80,7 +81,7 @@ pub trait VaultTrait {
         amounts_min: Vec<i128>,
         from: Address,
         invest: bool,
-    ) -> Result<(Vec<i128>, i128), ContractError>;
+    ) -> Result<(Vec<i128>, i128, Option<Vec<Option<AssetInvestmentAllocation>>>), ContractError>;
 
     /// Withdraws assets from the DeFindex Vault by burning dfTokens.
     ///
@@ -110,7 +111,7 @@ pub trait VaultTrait {
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn emergency_withdraw(
+    fn rescue(
         e: Env,
         strategy_address: Address,
         caller: Address,
@@ -197,10 +198,9 @@ pub trait VaultTrait {
     /// * `Map<Address, i128>` - A map of asset addresses to their total idle amounts.
     fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128>;
 
-
     // Calculates the corresponding amounts of each asset per a given number of vault shares.
-    /// This function extends the contract's time-to-live and calculates how much of each asset corresponds 
-    /// per the provided number of vault shares (`vault_shares`). It provides proportional allocations for each asset 
+    /// This function extends the contract's time-to-live and calculates how much of each asset corresponds
+    /// per the provided number of vault shares (`vault_shares`). It provides proportional allocations for each asset
     /// in the vault relative to the specified shares.
     ///
     /// # Arguments
@@ -209,12 +209,24 @@ pub trait VaultTrait {
     ///
     /// # Returns
     /// * `Map<Address, i128>` - A map containing each asset address and its corresponding proportional amount.
-    fn get_asset_amounts_per_shares(e: Env, vault_shares: i128) -> Result<Map<Address, i128>, ContractError>;
-    
+    fn get_asset_amounts_per_shares(
+        e: Env,
+        vault_shares: i128,
+    ) -> Result<Map<Address, i128>, ContractError>;
+
     fn get_fees(e: Env) -> (u32, u32);
 
-    /// Collects the fees from the vault and transfers them to the fee receiver addresses. 
-    fn collect_fees(e: Env) -> Result<(), ContractError>;
+    /// Reports the gains or losses for all strategies in the vault based on their current balances.
+    ///
+    /// This function iterates through all the strategies managed by the vault and calculates the gains or losses
+    /// for each strategy based on their current balances. It updates the vault's records accordingly.
+    ///
+    /// # Arguments
+    /// * `e` - A reference to the environment.
+    ///
+    /// # Returns
+    /// * `Result<Vec<(Address, (i128, i128))>, ContractError>` - A vector of tuples containing the strategy address, current balance, and the gain or loss.
+    fn report(e: Env) -> Result<Vec<Report>, ContractError>;
 }
 
 pub trait AdminInterfaceTrait {
@@ -240,6 +252,38 @@ pub trait AdminInterfaceTrait {
     /// * `Result<Address, ContractError>` - The fee receiver address if successful, otherwise returns a ContractError.
     fn get_fee_receiver(e: Env) -> Result<Address, ContractError>;
 
+    /// Queues a new manager for the vault.
+    /// This function allows the current manager to queue a new manager for the vault.
+    ///
+    /// # Arguments:
+    /// * `e` - The environment.
+    /// * `address` - The new manager address.
+    /// 
+    /// # Returns:
+    /// * `()` - No return value.
+    fn queue_manager(e: Env, address: Address) -> Result<Address, ContractError>;
+
+    /// Retrieves the queued manager address for the vault.
+    /// 
+    /// # Arguments:
+    /// * `e` - The environment.
+    /// 
+    /// # Returns:
+    /// * `Result<Address, ContractError>` - The queued manager address if successful, otherwise returns a ContractError.
+    /// 
+    fn get_queued_manager(e: Env) -> Result<Address, ContractError>;
+
+    /// Clears the queued manager for the vault.
+    /// 
+    /// This function allows the current manager to clear the queued manager for the vault.
+    /// 
+    /// # Arguments:
+    /// * `e` - The environment.
+    /// 
+    /// # Returns:
+    /// * `()` - No return value.
+    fn clear_queue(e: Env) -> Result<(), ContractError>;
+
     /// Sets the manager for the vault.
     ///
     /// This function allows the current manager or emergency manager to set a new manager for the vault.
@@ -250,7 +294,7 @@ pub trait AdminInterfaceTrait {
     ///
     /// # Returns:
     /// * `()` - No return value.
-    fn set_manager(e: Env, new_manager: Address);
+    fn set_manager(e: Env) -> Result<(), ContractError>;
 
     /// Retrieves the current manager address for the vault.
     ///
@@ -281,41 +325,41 @@ pub trait AdminInterfaceTrait {
     /// # Returns:
     /// * `Result<Address, ContractError>` - The emergency manager address if successful, otherwise returns a ContractError.
     fn get_emergency_manager(e: Env) -> Result<Address, ContractError>;
+
+    /// Sets the rebalance manager for the vault.
+    ///
+    /// This function allows the current manager to set a new rebalance manager for the vault.
+    ///
+    /// # Arguments:
+    /// * `e` - The environment.
+    /// * `new_rebalance_manager` - The new rebalance manager address.
+    ///
+    /// # Returns:
+    /// * `()` - No return value.
+    fn set_rebalance_manager(e: Env, new_rebalance_manager: Address);
+
+    /// Retrieves the current rebalance manager address for the vault.
+    ///
+    /// # Arguments:
+    /// * `e` - The environment.
+    ///
+    /// # Returns:
+    /// * `Result<Address, ContractError>` - The rebalance manager address if successful, otherwise returns a ContractError.
+    fn get_rebalance_manager(e: Env) -> Result<Address, ContractError>;
+
+    /// Upgrades the contract with new WebAssembly (WASM) code.
+    ///
+    /// This function updates the contract with new WASM code provided by the `new_wasm_hash`.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The runtime environment.
+    /// * `new_wasm_hash` - The hash of the new WASM code to upgrade the contract to.
+    ///
+    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), ContractError>;
 }
 
 pub trait VaultManagementTrait {
-    /// Executes the investment of the vault's idle funds based on the specified asset allocations.
-    /// This function allows partial investments by providing an optional allocation for each asset,
-    /// and it ensures proper authorization and validation checks before proceeding with investments.
-    ///
-    /// # Arguments
-    /// * `e` - The current environment reference.
-    /// * `asset_investments` - A vector of optional `AssetInvestmentAllocation` structures, where each element 
-    ///   represents an allocation for a specific asset. The vector must match the number of vault assets in length.
-    ///
-    /// # Returns
-    /// * `Result<(), ContractError>` - Returns `Ok(())` if the investments are successful or a `ContractError`
-    ///   if any issue occurs during validation or execution.
-    ///
-    /// # Function Flow
-    /// 1. **Extend Instance TTL**: Extends the contract instance's time-to-live to keep the instance active.
-    /// 2. **Check Initialization**: Verifies that the vault is properly initialized before proceeding.
-    /// 3. **Access Control**: Ensures the caller has the `Manager` role required to initiate investments.
-    /// 4. **Asset Count Validation**: Verifies that the length of the `asset_investments` vector matches
-    ///    the number of assets managed by the vault. If they don't match, a `WrongInvestmentLength` error is returned.
-    /// 5. **Investment Execution**: Calls the `check_and_execute_investments` function to perform the investment
-    ///    after validating the inputs and ensuring correct execution flows for each asset allocation.
-    ///
-    /// # Errors
-    /// * Returns `ContractError::WrongInvestmentLength` if the length of `asset_investments` does not match the vault assets.
-    /// * Returns `ContractError` if access control validation fails or if investment execution encounters an issue.
-    ///
-    /// # Security
-    /// - Only addresses with the `Manager` role can call this function, ensuring restricted access to managing investments.
-    fn invest(e: Env, 
-        asset_investments: Vec<Option<AssetInvestmentAllocation>>
-    ) -> Result<(), ContractError>;
-
     /// Rebalances the vault by executing a series of instructions.
     ///
     /// # Arguments:
@@ -324,5 +368,41 @@ pub trait VaultManagementTrait {
     ///
     /// # Returns:
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
-    fn rebalance(e: Env, instructions: Vec<Instruction>) -> Result<(), ContractError>;
+    fn rebalance(e: Env, caller: Address, instructions: Vec<Instruction>) -> Result<(), ContractError>;
+
+    /// Locks fees for all assets and their strategies.
+    ///
+    /// Iterates through each asset and its strategies, locking fees based on `new_fee_bps` or the default vault fee.
+    ///
+    /// # Arguments
+    /// * `e` - The environment reference.
+    /// * `new_fee_bps` - Optional fee basis points to override the default.
+    ///
+    /// # Returns
+    /// * `Result<Vec<(Address, i128)>, ContractError>` - A vector of tuples with strategy addresses and locked fee amounts in their underlying_asset.
+    fn lock_fees(e: Env, new_fee_bps: Option<u32>) -> Result<Vec<Report>, ContractError>;
+
+    /// Releases locked fees for a specific strategy.
+    ///
+    /// # Arguments
+    /// * `e` - The environment reference.
+    /// * `strategy` - The address of the strategy for which to release fees.
+    /// * `amount` - The amount of fees to release.
+    ///
+    /// # Returns
+    /// * `Result<Report, ContractError>` - A report of the released fees or a `ContractError` if the operation fails.
+    fn release_fees(e: Env, strategy: Address, amount: i128) -> Result<Report, ContractError>;
+
+    /// Distributes the locked fees for all assets and their strategies.
+    ///
+    /// This function iterates through each asset and its strategies, calculating the fees to be distributed
+    /// to the vault fee receiver and the DeFindex protocol fee receiver based on their respective fee rates.
+    /// It ensures proper authorization and validation checks before proceeding with the distribution.
+    ///
+    /// # Arguments
+    /// * `e` - The environment reference.
+    ///
+    /// # Returns
+    /// * `Result<Vec<(Address, i128)>, ContractError>` - A vector of tuples with asset addresses and the total distributed fee amounts.
+    fn distribute_fees(e: Env) -> Result<Vec<(Address, i128)>, ContractError>;
 }

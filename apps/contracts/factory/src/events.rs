@@ -1,33 +1,27 @@
 //! Definition of the Events used in the contract
 use common::models::AssetStrategySet;
-use soroban_sdk::{contracttype, symbol_short, Address, Env, Vec};
+use soroban_sdk::{contracttype, symbol_short, Address, Env, Map, Vec};
 
 // CREATE DEFINDEX VAULT EVENT
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct CreateDeFindexEvent {
-    pub emergency_manager: Address, 
-    pub fee_receiver: Address, 
-    pub manager: Address,
+    pub roles: Map<u32, Address>,
     pub vault_fee: u32,
-    pub assets: Vec<AssetStrategySet>
+    pub assets: Vec<AssetStrategySet>,
 }
 
 /// Publishes an `CreateDeFindexEvent` to the event stream.
 pub(crate) fn emit_create_defindex_vault(
-    e: &Env, 
-    emergency_manager: Address, 
-    fee_receiver: Address, 
-    manager: Address,
+    e: &Env,
+    roles: Map<u32, Address>,
     vault_fee: u32,
     assets: Vec<AssetStrategySet>,
 ) {
-    let event = CreateDeFindexEvent { 
-      emergency_manager,
-      fee_receiver,
-      manager,
-      vault_fee,
-      assets,
+    let event = CreateDeFindexEvent {
+        roles,
+        vault_fee,
+        assets,
     };
 
     e.events()
@@ -56,7 +50,9 @@ pub struct NewDeFindexReceiverEvent {
 }
 
 pub(crate) fn emit_new_defindex_receiver(e: &Env, new_defindex_receiver: Address) {
-    let event = NewDeFindexReceiverEvent { new_defindex_receiver };
+    let event = NewDeFindexReceiverEvent {
+        new_defindex_receiver,
+    };
 
     e.events()
         .publish(("DeFindexFactory", symbol_short!("nreceiver")), event);

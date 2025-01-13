@@ -1,5 +1,7 @@
 //! Definition of the Events used in the DeFindex Vault contract
-use soroban_sdk::{contracttype, symbol_short, Address, Env, Vec};
+use soroban_sdk::{contracttype, symbol_short, Address, Env, Symbol, Val, Vec, Map};
+
+use crate::{models::AssetInvestmentAllocation, report::Report};
 
 // DEPOSIT EVENT
 #[contracttype]
@@ -63,7 +65,7 @@ pub struct EmergencyWithdrawEvent {
 }
 
 /// Publishes an `EmergencyWithdrawEvent` to the event stream.
-pub(crate) fn emit_emergency_withdraw_event(
+pub(crate) fn emit_rescue_event(
     e: &Env,
     caller: Address,
     strategy_address: Address,
@@ -76,7 +78,7 @@ pub(crate) fn emit_emergency_withdraw_event(
     };
 
     e.events()
-        .publish(("DeFindexVault", symbol_short!("ewithdraw")), event);
+        .publish(("DeFindexVault", symbol_short!("rescue")), event);
 }
 
 // STRATEGY PAUSED EVENT
@@ -136,6 +138,35 @@ pub(crate) fn emit_fee_receiver_changed_event(e: &Env, new_fee_receiver: Address
         .publish(("DeFindexVault", symbol_short!("nreceiver")), event);
 }
 
+// MANAGER QUEUE CHANGED EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ManagerQueuedEvent {
+    pub new_manager_data: Map<u64, Address>,
+}
+
+/// Publishes a `ManagerChangedEvent` to the event stream.
+pub(crate) fn emit_queued_manager_event(e: &Env, new_manager_data: Map<u64, Address>) {
+    let event = ManagerQueuedEvent { new_manager_data };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("qmanager")), event);
+}
+// MANAGER QUEUE CLEAR EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ManagerQueueClearEvent {
+    pub timestamp: u64,
+}
+
+/// Publishes a `ManagerChangedEvent` to the event stream.
+pub(crate) fn emit_clear_manager_queue_event(e: &Env, timestamp: u64) {
+    let event = ManagerQueueClearEvent { timestamp };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("qmanager")), event);
+}
+
 // MANAGER CHANGED EVENT
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -168,31 +199,153 @@ pub(crate) fn emit_emergency_manager_changed_event(e: &Env, new_emergency_manage
         .publish(("DeFindexVault", symbol_short!("nemanager")), event);
 }
 
-// FEES MINTED EVENT
+// REBALANCE MANAGER CHANGED EVENT
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct FeesMintedEvent {
-    pub defindex_protocol_receiver: Address,
-    pub defindex_shares: i128,
-    pub vault_receiver: Address,
-    pub vault_shares: i128,
+pub struct RebalanceManagerChangedEvent {
+    pub new_rebalance_manager: Address,
 }
 
-/// Publishes an `EmergencyManagerChangedEvent` to the event stream.
-pub(crate) fn emit_fees_minted_event(
-    e: &Env,
-    defindex_protocol_receiver: Address,
-    defindex_shares: i128,
-    vault_receiver: Address,
-    vault_shares: i128,
-) {
-    let event = FeesMintedEvent {
-        defindex_protocol_receiver,
-        defindex_shares,
-        vault_receiver,
-        vault_shares,
+/// Publishes a `RebalanceManagerChangedEvent` to the event stream.
+pub(crate) fn emit_rebalance_manager_changed_event(e: &Env, new_rebalance_manager: Address) {
+    let event = RebalanceManagerChangedEvent {
+        new_rebalance_manager,
     };
 
     e.events()
-        .publish(("DeFindexVault", symbol_short!("mfees")), event);
+        .publish(("DeFindexVault", symbol_short!("rbmanager")), event);
 }
+
+// FEES DISTRIBUTED EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct FeesDistributedEvent {
+    pub distributed_fees: Vec<(Address, i128)>,
+}
+
+/// Publishes an `EmergencyManagerChangedEvent` to the event stream.
+pub(crate) fn emit_fees_distributed_event(e: &Env, distributed_fees: Vec<(Address, i128)>) {
+    let event = FeesDistributedEvent { distributed_fees };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("dfees")), event);
+}
+
+// REBALANCE WITHDRAW EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct UnwindEvent {
+    pub call_params: Vec<(Address, i128, Address)>,
+    pub rebalance_method: Symbol,
+    pub report: Report,
+
+}
+
+pub(crate) fn emit_rebalance_unwind_event(
+    e: &Env,
+    call_params: Vec<(Address, i128, Address)>,
+    report: Report,
+) {
+    let rebalance_method = symbol_short!("unwind");
+    let event = UnwindEvent {
+        call_params,
+        rebalance_method,
+        report,
+    };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("rebalance")), event);
+}
+
+// REBALANCE INVEST EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct InvestEvent {
+    pub asset_investments: Vec<AssetInvestmentAllocation>,
+    pub rebalance_method: Symbol,
+    pub report: Report,
+}
+pub(crate) fn emit_rebalance_invest_event(
+    e: &Env, 
+    asset_investments: Vec<AssetInvestmentAllocation>,
+    report: Report,
+) {
+    let rebalance_method = symbol_short!("invest");
+    let event = InvestEvent {
+        asset_investments,
+        rebalance_method,
+        report,
+    };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("rebalance")),event);
+}
+
+// SWAP EXACT IN EVENT
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+
+pub struct SwapExactInEvent {
+    pub swap_args: Vec<Val>,
+    pub rebalance_method: Symbol,
+}
+pub(crate) fn emit_rebalance_swap_exact_in_event(
+    e: &Env, 
+    swap_args: Vec<Val>,
+) {
+    let rebalance_method = symbol_short!("SwapEIn");
+    let event: SwapExactInEvent = SwapExactInEvent {
+        swap_args,
+        rebalance_method,
+    };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("rebalance")), event);
+}
+
+// SWAP EXACT OUT EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct SwapExactOutEvent {
+    pub swap_args: Vec<Val>,
+    pub rebalance_method: Symbol,
+}
+pub(crate) fn emit_rebalance_swap_exact_out_event(
+    e: &Env, 
+    swap_args: Vec<Val>,
+) {
+    let rebalance_method = symbol_short!("SwapEOut");
+    let event = SwapExactOutEvent {
+        swap_args,
+        rebalance_method,
+    };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("rebalance")), event);
+}
+
+// ZAPPER EVENT
+//Waiting for zapper implementation
+/* #[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ZapperEvent {
+    pub zap_args: Vec<Val>,
+    pub rebalance_method: Symbol,
+    pub report: Report,
+}
+pub(crate) fn emit_rebalance_zapper_event(
+    e: &Env, 
+    zap_args: Vec<Val>,
+    report: Report,
+) {
+    let rebalance_method = symbol_short!("Zapper");
+    let event = ZapperEvent {
+        zap_args,
+        rebalance_method,
+        report,
+    };
+
+    e.events()
+        .publish(("DeFindexVault", symbol_short!("rebalance")), event);
+} */

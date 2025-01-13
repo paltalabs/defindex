@@ -2,7 +2,7 @@
 # DeFindex Vault Contract
 This contract serves as the core of the DeFindex platform, responsible for managing assets, executing strategies, and ensuring proper asset rebalancing. It operates with four primary roles: **Deployer**, **Fee Receiver**, **Manager**, **rebalancer** and **Emergency Manager**. Additionally, the contract functions as a token referred to as the *dfToken* that represents the shares of the vault.
 
-While anyone can invest in a DeFindex, only the Manager and Emergency Manager have the authority to move funds between strategies or even outside strategies and into the Vault itself (see idle assets and emergency withdrawal).
+While anyone can invest in a DeFindex, only the Manager and Emergency Manager have the authority to move funds between strategies or even outside strategies and into the Vault itself (see idle assets and rescue).
 
 The contract also holds funds not currently invested in any strategy, known as **IDLE funds**. These funds act as a safety buffer, allowing the Emergency Manager to withdraw assets from underperforming or unhealthy strategies and store them as IDLE funds. (also to enable fast small withdrawals)
 
@@ -80,8 +80,6 @@ When a user wishes to withdraw funds, they must burn a corresponding amount of d
 
 If there are sufficient **IDLE funds** available, the withdrawal is fulfilled directly from these IDLE funds. If additional assets are needed beyond what is available in the IDLE funds, a liquidation process is triggered to release the required assets.
 
-**To Discuss: (TODO) Do we need minimum idle funds?**
-
 To calculate the amount of each asset $a_i$ to be withdrawn, use the following formula:
 
 $$
@@ -114,11 +112,13 @@ Where:
 - $a_{i, \text{Strategy}}$: Amount of asset $i$ to get from the strategies
 
 ## Rebalancing
-Rebalancing is overseen by the **Manager**, who adjusts the allocation of funds between different strategies to maintain or change the ratio of underlying assets. For example, a DeFindex might start with a ratio of 2 USDC to 1 XLM, as initially set by the Deployer. However, this ratio can be modified by the Manager based on strategy performance or market conditions.
+Rebalancing is overseen by the **Manager** and/or **rebalancer**, who adjusts the allocation of funds between different strategies to maintain or change the ratio of underlying assets. For example, a DeFindex might start with a ratio of 2 USDC to 1 XLM, as initially set by the Deployer. However, this ratio can be modified by the Manager based on strategy performance or market conditions.
 
-Upon deployment, the Deployer establishes the initial strategies and asset ratios for the DeFindex. The Manager has the authority to adjust these ratios as needed to respond to evolving conditions or to optimize performance.
+After the deployment and first deposit, the Manager or Rebalancer has to invest in a strategy. After that step, the deposits to the vault can be invested inmediately according to the current ratios of allocations. The Manager and/or rebalancer has the authority to adjust these ratios as needed to respond to evolving conditions or to optimize performance. The idea of the rebalancer role is to automate this process, while limiting the actions that rebalancer can do.
 
-To ensure accurate representation of asset proportions, strategies are required to **report** the amount of each underlying asset they hold. This reporting ensures that when dfTokens are minted or redeemed, the DeFindex maintains the correct asset ratios in line with the current balance and strategy allocations.
+To ensure accurate representation of asset proportions, strategies are required to **answer** the amount of each underlying asset they hold. This communication ensures that when shares are minted or redeemed, the DeFindex maintains the correct asset ratios in line with the current balance and strategy allocations.
+
+When dealing with multi-asset vaults, the rebalancing process may require trading assets to invest in various strategies. This is achieved through Soroswap using direct path movements, which are preferred for security reasons. Multi-hop or multi-DEX swaps require off-chain calculations to determine the optimal paths, which are then sent to the contracts. This process increases the protocol's attack surface. In contrast, direct paths avoid introducing additional assets beyond those already used by the vault, minimizing risk.
 
 ### Functions
 - `assets()`: Returns the assets addresses and amount of each  of them in the DeFindex (and hence its current ratio).
@@ -129,7 +129,7 @@ To ensure accurate representation of asset proportions, strategies are required 
 - `rebalance`: Allows the Manager to rebalance the DeFindex. It executes `withdraw_from_strategies`, `internal_swap`, and `invest_in_strategies` functions.
 
 Then, a rebalance execution will withdraw assets from the strategies, swap them, and invest them back in the strategies.
-- `emergency_withdraw`: Allows the Emergency Manager to withdraw all assets from a specific Strategy. As arguments, it receives the the address of a Strategy. It also turns off the strategy.
+- `rescue`: Allows the Emergency Manager to withdraw all assets from a specific Strategy. As arguments, it receives the the address of a Strategy. It also turns off the strategy.
 
 ## Emergency Management
 The Emergency Manager has the authority to withdraw assets from the DeFindex in case of an emergency. This role is designed to protect users' assets in the event of a critical situation, such as a hack of a underlying protocol or a if a strategy gets unhealthy. The Emergency Manager can withdraw assets from the Strategy and store them as IDLE funds inside the Vault until the situation is resolved. 
@@ -197,12 +197,14 @@ Once gains are tracked, fees can be inspected and/or locked for future distribut
 
 The locking process is done by the manager calling the `lock_fees()` function.
 
+**pseudocode for locking fees**
 ```rust
 fn lock_fees(new_fee_bps: Option<i128>) {
     for strategy in strategies {
         if gains_or_losses > 0 {
-            let total_fee = gains_or_losses * new_fee_bps.unwrap_or(vault_fee_bps) / MAX_BPS;
-            lock_fee(strategy.asset, total_fee);
+            let fee = gains_or_losses * new_fee_bps.unwrap_or(vault_fee_bps) / MAX_BPS;
+            let previous_locked_fee = get_locked_fee(strategy.asset)
+            lock_fee(strategy.asset, fee + previous_locked_fee ); 
             reset_gains_or_losses(strategy);
         }
     }

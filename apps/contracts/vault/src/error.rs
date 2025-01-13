@@ -1,4 +1,5 @@
 use soroban_sdk::{self, contracterror};
+use soroswap_library::SoroswapLibraryError;
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -9,6 +10,8 @@ pub enum ContractError {
     InvalidRatio = 101,
     StrategyDoesNotSupportAsset = 102,
     NoAssetAllocation = 103,
+    RolesIncomplete = 104,
+    MetadataIncomplete = 105,
 
     // Validation Errors (11x)
     NegativeNotAllowed = 110,
@@ -25,7 +28,7 @@ pub enum ContractError {
     WrongStrategiesLength = 123,
     AmountOverTotalSupply = 124,
     NoInstructions = 125,
-
+    NotUpgradable = 126,
 
     // Arithmetic Errors (12x)
     ArithmeticError = 120,
@@ -34,6 +37,9 @@ pub enum ContractError {
     // Authorization/Role-based Errors (13x)
     Unauthorized = 130,
     RoleNotFound = 131,
+    ManagerNotInQueue = 132,
+    SetManagerBeforeTime = 133,
+    QueueEmpty = 134,
 
     // Strategy Errors (14x)
     StrategyNotFound = 140,
@@ -45,4 +51,16 @@ pub enum ContractError {
     // Asset Errors (15x)
     AssetNotFound = 150,
     NoAssetsProvided = 151,
+
+    // Add mappings for SoroswapLibraryError
+    LibrarySortIdenticalTokens = 190,
+}
+
+impl From<SoroswapLibraryError> for ContractError {
+    fn from(err: SoroswapLibraryError) -> Self {
+        match err {
+            SoroswapLibraryError::SortIdenticalTokens => ContractError::LibrarySortIdenticalTokens,
+            _ => panic!("Unhandled SoroswapLibraryError variant: {:?}", err),
+        }
+    }
 }

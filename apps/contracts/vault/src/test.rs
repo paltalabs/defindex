@@ -1,11 +1,14 @@
 #![cfg(test)]
 extern crate std;
-use soroban_sdk::token::{
-    StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient,
+use soroban_sdk::{
+    testutils::{Address as _, Ledger, LedgerInfo, MockAuth, MockAuthInvoke}, token::{StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient}, vec as sorobanvec, Address, Env, IntoVal, Map, String, Val, Vec
 };
-use soroban_sdk::Val;
-use soroban_sdk::{testutils::Address as _, vec as sorobanvec, Address, Env, String, Vec};
 use std::vec;
+use crate::utils::DAY_IN_LEDGERS;
+
+use soroswap_setup::{
+    create_soroswap_factory, create_soroswap_pool, create_soroswap_router, SoroswapRouterClient,
+};
 
 // DeFindex Hodl Strategy Contract
 pub mod hodl_strategy {
@@ -17,7 +20,7 @@ pub mod hodl_strategy {
 use hodl_strategy::HodlStrategyClient;
 
 pub fn create_hodl_strategy<'a>(e: &Env, asset: &Address) -> HodlStrategyClient<'a> {
-    let init_args: Vec<Val>= sorobanvec![e];
+    let init_args: Vec<Val> = sorobanvec![e];
     let args = (asset, init_args);
     HodlStrategyClient::new(e, &e.register(hodl_strategy::WASM, args))
 }
@@ -31,38 +34,34 @@ pub mod defindex_vault {
 }
 use defindex_vault::{AssetStrategySet, DeFindexVaultClient, Strategy};
 
+
 pub fn create_defindex_vault<'a>(
     e: &Env,
     assets: Vec<AssetStrategySet>,
-    manager: Address,
-    emergency_manager: Address,
-    vault_fee_receiver: Address,
+    roles: Map<u32, Address>,
     vault_fee: u32,
     defindex_protocol_receiver: Address,
+    defindex_protocol_rate: u32,
     factory: Address,
-    vault_name: String,
-    vault_symbol: String,
+    soroswap_router: Address,
+    name_symbol: Map<String, String>,
+    upgradable: bool,
 ) -> DeFindexVaultClient<'a> {
-    let args = (assets, manager, emergency_manager, vault_fee_receiver, vault_fee, defindex_protocol_receiver, factory, vault_name, vault_symbol);
+    let args = (
+        assets,
+        roles,
+        vault_fee,
+        defindex_protocol_receiver,
+        defindex_protocol_rate,
+        factory,
+        soroswap_router,
+        name_symbol,
+        upgradable
+    );
     let address = &e.register(defindex_vault::WASM, args);
     let client = DeFindexVaultClient::new(e, address);
     client
 }
-
-// DeFindex Factory Contract
-// pub mod defindex_factory {
-//     soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/defindex_factory.optimized.wasm");
-//     pub type DeFindexFactoryClient<'a> = Client<'a>;
-// }
-// use defindex_factory::DeFindexFactoryClient;
-
-// fn create_defindex_factory<'a>(
-//     e: & Env
-// ) -> DeFindexFactoryClient<'a> {
-//     let address = &e.register_contract_wasm(None, defindex_factory::WASM);
-//     let client = DeFindexFactoryClient::new(e, address);
-//     client
-// }
 
 // Create Test Token
 pub(crate) fn create_token_contract<'a>(e: &Env, admin: &Address) -> SorobanTokenClient<'a> {
@@ -80,43 +79,85 @@ pub(crate) fn get_token_admin_client<'a>(
     SorobanTokenAdminClient::new(e, address)
 }
 
-pub(crate) fn create_strategy_params_token0(test: &DeFindexVaultTest) -> Vec<Strategy> {
+pub(crate) fn create_strategy_params_token_0(test: &DeFindexVaultTest) -> Vec<Strategy> {
     sorobanvec![
-        &test.env, 
+        &test.env,
         Strategy {
             name: String::from_str(&test.env, "Strategy 1"),
-            address: test.strategy_client_token0.address.clone(),
+            address: test.strategy_client_token_0.address.clone(),
             paused: false,
         }
     ]
 }
 
-pub(crate) fn create_strategy_params_token1(test: &DeFindexVaultTest) -> Vec<Strategy> {
+pub(crate) fn create_strategy_params_token_1(test: &DeFindexVaultTest) -> Vec<Strategy> {
     sorobanvec![
         &test.env,
         Strategy {
             name: String::from_str(&test.env, "Strategy 1"),
-            address: test.strategy_client_token1.address.clone(),
+            address: test.strategy_client_token_1.address.clone(),
             paused: false,
         }
     ]
+}
+
+pub fn mock_mint(
+    env: &Env,
+    token_admin_client: &SorobanTokenAdminClient,
+    token_admin: &Address,
+    to: &Address,
+    amount: &i128,
+) {
+    token_admin_client
+        .mock_auths(&[MockAuth {
+            address: &token_admin,
+            invoke: &MockAuthInvoke {
+                contract: &token_admin_client.address.clone(),
+                fn_name: "mint",
+                args: sorobanvec![&env, to.into_val(env), amount.into_val(env)],
+                sub_invokes: &[],
+            },
+        }])
+        .mint(&to, &amount);
 }
 
 pub struct DeFindexVaultTest<'a> {
     env: Env,
     defindex_factory: Address,
-    token0_admin_client: SorobanTokenAdminClient<'a>,
-    token0: SorobanTokenClient<'a>,
-    token0_admin: Address,
-    token1_admin_client: SorobanTokenAdminClient<'a>,
-    token1: SorobanTokenClient<'a>,
-    token1_admin: Address,
+    token_0_admin_client: SorobanTokenAdminClient<'a>,
+    token_0: SorobanTokenClient<'a>,
+    token_1_admin_client: SorobanTokenAdminClient<'a>,
+    token_1: SorobanTokenClient<'a>,
     emergency_manager: Address,
     vault_fee_receiver: Address,
     defindex_protocol_receiver: Address,
     manager: Address,
-    strategy_client_token0: HodlStrategyClient<'a>,
-    strategy_client_token1: HodlStrategyClient<'a>,
+    rebalance_manager: Address,
+    strategy_client_token_0: HodlStrategyClient<'a>,
+    strategy_client_token_1: HodlStrategyClient<'a>,
+    soroswap_router: SoroswapRouterClient<'a>,
+    // soroswap_factory: SoroswapFactoryClient<'a>,
+    // soroswap_pair: Address,
+}
+
+pub trait EnvTestUtils {
+    /// Jump the env by the given amount of seconds. Incremends the sequence by 1.
+    fn jump_time(&self, seconds: u64);
+}
+
+impl EnvTestUtils for Env {
+    fn jump_time(&self, seconds: u64) {
+        self.ledger().set(LedgerInfo {
+            timestamp: self.ledger().timestamp().saturating_add(seconds),
+            protocol_version: 22,
+            sequence_number: self.ledger().sequence().saturating_add(1),
+            network_id: Default::default(),
+            base_reserve: 10,
+            min_temp_entry_ttl: 30 * DAY_IN_LEDGERS,
+            min_persistent_entry_ttl: 30 * DAY_IN_LEDGERS,
+            max_entry_ttl: 365 * DAY_IN_LEDGERS,
+        });
+    }
 }
 
 impl<'a> DeFindexVaultTest<'a> {
@@ -131,38 +172,76 @@ impl<'a> DeFindexVaultTest<'a> {
         let vault_fee_receiver = Address::generate(&env);
         let defindex_protocol_receiver = Address::generate(&env);
         let manager = Address::generate(&env);
+        let rebalance_manager = Address::generate(&env);
 
-        let token0_admin = Address::generate(&env);
-        let token0 = create_token_contract(&env, &token0_admin);
+        let token_0_admin = Address::generate(&env);
+        let token_0 = create_token_contract(&env, &token_0_admin);
 
-        let token1_admin = Address::generate(&env);
-        let token1 = create_token_contract(&env, &token1_admin);
+        let token_1_admin = Address::generate(&env);
+        let token_1 = create_token_contract(&env, &token_1_admin);
 
-        let token0_admin_client = get_token_admin_client(&env, &token0.address.clone());
-        let token1_admin_client = get_token_admin_client(&env, &token1.address.clone());
+        let token_0_admin_client = get_token_admin_client(&env, &token_0.address.clone());
+        let token_1_admin_client = get_token_admin_client(&env, &token_1.address.clone());
 
-        // token1_admin_client.mint(to, amount);
+        // token_1_admin_client.mint(to, amount);
 
-        let strategy_client_token0 = create_hodl_strategy(&env, &token0.address);
-        let strategy_client_token1 = create_hodl_strategy(&env, &token1.address);
+        let strategy_client_token_0 = create_hodl_strategy(&env, &token_0.address);
+        let strategy_client_token_1 = create_hodl_strategy(&env, &token_1.address);
+
+        // Soroswap Setup
+        let soroswap_admin = Address::generate(&env);
+
+        let amount_0: i128 = 1_000_000_000_000_000_000;
+        let amount_1: i128 = 4_000_000_000_000_000_000;
+
+        mock_mint(
+            &env,
+            &token_0_admin_client,
+            &token_0_admin,
+            &soroswap_admin,
+            &amount_0,
+        );
+        mock_mint(
+            &env,
+            &token_1_admin_client,
+            &token_1_admin,
+            &soroswap_admin,
+            &amount_1,
+        );
+
+        let soroswap_factory = create_soroswap_factory(&env, &soroswap_admin);
+        let soroswap_router = create_soroswap_router(&env, &soroswap_factory.address);
 
         env.budget().reset_unlimited();
-        
+
+        create_soroswap_pool(
+            &env,
+            &soroswap_router,
+            &soroswap_admin,
+            &token_0.address,
+            &token_1.address,
+            &amount_0,
+            &amount_1,
+        );
+        // let soroswap_pair = soroswap_factory.get_pair(&token_0.address, &token_1.address);
+
+        env.budget().reset_unlimited();
+
         DeFindexVaultTest {
             env,
             defindex_factory,
-            token0_admin_client,
-            token0,
-            token0_admin,
-            token1_admin_client,
-            token1,
-            token1_admin,
+            token_0_admin_client,
+            token_0,
+            token_1_admin_client,
+            token_1,
             emergency_manager,
             vault_fee_receiver,
             defindex_protocol_receiver,
             manager,
-            strategy_client_token0,
-            strategy_client_token1,
+            rebalance_manager,
+            strategy_client_token_0,
+            strategy_client_token_1,
+            soroswap_router,
         }
     }
 
@@ -175,4 +254,5 @@ impl<'a> DeFindexVaultTest<'a> {
     }
 }
 
+mod soroswap_setup;
 mod vault;

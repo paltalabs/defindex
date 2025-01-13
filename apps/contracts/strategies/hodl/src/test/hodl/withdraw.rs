@@ -13,7 +13,7 @@ fn withdraw() {
     let amount = 123456;
 
     //Try to withdraw before depositing
-    let result = strategy.try_withdraw(&amount, &test.user);
+    let result = strategy.try_withdraw(&amount, &test.user, &test.user);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
 
     // Deposit amount of token from the user to the strategy
@@ -30,10 +30,9 @@ fn withdraw() {
     let user_balance_on_strategy = strategy.balance(&test.user);
     assert_eq!(user_balance_on_strategy, amount);
 
-
     let amount_to_withdraw = 100_000;
     // Withdrawing token from the strategy to user
-    strategy.withdraw(&amount_to_withdraw, &test.user);
+    strategy.withdraw(&amount_to_withdraw, &test.user, &test.user);
 
     // Reading user balance in token
     let balance = test.token.balance(&test.user);
@@ -49,7 +48,6 @@ fn withdraw() {
 
     //withdraw more than the user has
     let amount_to_withdraw = user_balance + 1;
-    let result = strategy.try_withdraw(&amount_to_withdraw, &test.user);
+    let result = strategy.try_withdraw(&amount_to_withdraw, &test.user, &test.user);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
-    
 }

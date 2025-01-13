@@ -7,9 +7,9 @@ import {
   scValToNative,
   xdr
 } from "@stellar/stellar-sdk";
-import { randomBytes } from "crypto";
+import { SOROSWAP_ROUTER } from "./constants.js";
 import { checkUserBalance, depositToStrategy, withdrawFromStrategy } from "./tests/strategy.js";
-import { depositToVault, withdrawFromVault } from "./tests/vault.js";
+import { depositToVault, getCreateDeFindexParams, rebalanceManager, withdrawFromVault } from "./tests/vault.js";
 import { AddressBook } from "./utils/address_book.js";
 import { airdropAccount, invokeContract } from "./utils/contract.js";
 import { config } from "./utils/env_config.js";
@@ -81,16 +81,17 @@ export async function test_factory(addressBook: AddressBook) {
     ]);
   });
 
-  const createDeFindexParams: xdr.ScVal[] = [
-    new Address(emergencyManager.publicKey()).toScVal(),
-    new Address(feeReceiver.publicKey()).toScVal(),
-    nativeToScVal(100, { type: "u32" }),  // Setting vault_fee as 100 bps for demonstration
-    nativeToScVal("Test Vault", { type: "string" }),
-    nativeToScVal("DFT-Test-Vault", { type: "string" }),
-    new Address(manager.publicKey()).toScVal(),
-    xdr.ScVal.scvVec(assetAllocations),
-    nativeToScVal(randomBytes(32)),
-  ];
+  const createDeFindexParams: xdr.ScVal[] = getCreateDeFindexParams(
+    emergencyManager,
+    rebalanceManager,
+    feeReceiver,
+    manager,
+    "Test Vault",
+    "DFT-Test-Vault",
+    assetAllocations,
+    new Address(SOROSWAP_ROUTER),
+    true,
+  )
 
   const result = await invokeContract(
     'defindex_factory',

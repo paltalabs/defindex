@@ -47,10 +47,9 @@ fn deposit_and_withdrawal_flow() {
     let user_balance_on_strategy = strategy.balance(&test.user);
     assert_eq!(user_balance_on_strategy, amount);
 
-
     let amount_to_withdraw = 100_000;
     // Withdrawing token from the strategy to user
-    strategy.withdraw(&amount_to_withdraw, &test.user);
+    strategy.withdraw(&amount_to_withdraw, &test.user, &test.user);
 
     // Reading user balance in token
     let balance = test.token.balance(&test.user);
@@ -66,9 +65,8 @@ fn deposit_and_withdrawal_flow() {
 
     // now we will want to withdraw more of the remaining balance
     let amount_to_withdraw = 200_000;
-    let result = strategy.try_withdraw(&amount_to_withdraw, &test.user);
+    let result = strategy.try_withdraw(&amount_to_withdraw, &test.user, &test.user);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
-
 }
 
 #[test]
@@ -95,9 +93,8 @@ fn deposit_from_a_withdrawal_from_b() {
     let user_balance_on_strategy = strategy.balance(&test.user);
     assert_eq!(user_balance_on_strategy, amount);
 
-
     let amount_to_withdraw = 100_000;
     // Withdrawing token from the strategy to user
-    let result = strategy.try_withdraw(&amount_to_withdraw, &test.user1);
+    let result = strategy.try_withdraw(&amount_to_withdraw, &test.user1, &test.user1);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
 }
