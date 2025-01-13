@@ -35,7 +35,6 @@ jobs:
       - name: Install Stellar CLI via Cargo
         run: |
           cargo install --locked stellar-cli@22.1.0 --features opt
-          sudo mv stellar /usr/local/bin/
           stellar --version
 
       - name: build contracts
