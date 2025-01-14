@@ -10,25 +10,45 @@ permissions:
   packages: none
 
 jobs:
-  build:
+  build_and_test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
     steps:
       - uses: actions/checkout@v4.1.1
-      
-      - name: Install Rust
-        uses: actions-rs/toolchain@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          profile: minimal
+          node-version: '18'
+          cache: 'npm'
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
           toolchain: stable
+          targets: wasm32-unknown-unknown
 
-      - name: install target
-        run: rustup target add wasm32-unknown-unknown
+      - uses: stellar/actions/rust-cache@main
 
-      - name: setup soroban
-        run: cargo install --locked stellar-cli@22.1.0 --features opt
+      - name: Install Stellar CLI via Cargo
+        run: |
+          cargo install --locked stellar-cli@22.1.0 --features opt
+          stellar --version
 
       - name: build contracts
-        run: cd apps/contracts && make build
-
+        shell: sh
+        run: |
+          set -e
+          cd apps/contracts && 
+          make build || exit 1
+        continue-on-error: false
+    
       - name: test contracts
-        run: cd apps/contracts && make test
+        shell: sh
+        run: |
+          set -e
+          cd apps/contracts && 
+          cargo test --release || exit 1
+        continue-on-error: false
