@@ -1,6 +1,6 @@
 use soroban_sdk::{vec as sorobanvec, Address, Map, String, Vec};
 
-use crate::test::defindex_vault::{AssetInvestmentAllocation, AssetStrategySet, ContractError, RolesDataKey, StrategyAllocation};
+use crate::test::defindex_vault::{AssetStrategySet, ContractError, RolesDataKey, Instruction};
 use crate::test::{
     create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1,
     DeFindexVaultTest,
@@ -48,6 +48,7 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let amount0 = 123456789i128;
@@ -214,6 +215,7 @@ fn deposit_and_invest_several_assets_get_asset_amounts_per_shares() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let amount0 = 123456789i128;
@@ -245,32 +247,18 @@ fn deposit_and_invest_several_assets_get_asset_amounts_per_shares() {
 
     // Invest
     let amount_to_invest = 1_0_000_000i128;
-    let asset_investments = sorobanvec![
+    let rebalance_instructions = sorobanvec![
         &test.env,
-        Some(AssetInvestmentAllocation {
-        asset: test.token_0.address.clone(),
-        strategy_allocations: sorobanvec![
-            &test.env,
-            Some(StrategyAllocation {
-            strategy_address: test.strategy_client_token_0.address.clone(),
-            amount: amount_to_invest,
-            }),
-        ],
-        }),
-        Some(AssetInvestmentAllocation {
-        asset: test.token_1.address.clone(),
-        strategy_allocations: sorobanvec![
-            &test.env,
-            Some(StrategyAllocation {
-            strategy_address: test.strategy_client_token_1.address.clone(),
-            amount: amount_to_invest,
-            }),
-        ],
-        }),
+        Instruction::Invest(
+            test.strategy_client_token_0.address.clone(),
+            amount_to_invest
+        ),
+        Instruction::Invest(
+            test.strategy_client_token_1.address.clone(),
+            amount_to_invest
+        )
     ];
-    let _investment = defindex_contract.invest(
-        &asset_investments,
-    );    
+    defindex_contract.rebalance(&test.rebalance_manager, &rebalance_instructions);
     let token_0_invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
     let token_1_invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_1.address.clone()).unwrap();
     let token_0_idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();

@@ -1,14 +1,12 @@
 #![no_std]
-use constants::{MAX_BPS, MIN_WITHDRAW_AMOUNT};
-use events::{emit_rebalance_invest_event, emit_rebalance_swap_exact_in_event, emit_rebalance_swap_exact_out_event, emit_rebalance_unwind_event};
+use constants::{MIN_WITHDRAW_AMOUNT, ONE_DAY_IN_SECONDS};
 use report::Report;
-use soroban_sdk::{IntoVal,
-    contract, contractimpl, panic_with_error, token::TokenClient, vec, Address, Env, Map, String, Val, Vec
+use soroban_sdk::{contract, contractimpl, panic_with_error, token::TokenClient, vec, Address, BytesN, Env, IntoVal, Map, String, Val, Vec
 };
 use soroban_token_sdk::metadata::TokenMetadata;
 
 mod access;
-mod aggregator;
+mod router;
 mod constants;
 mod deposit;
 mod error;
@@ -25,7 +23,7 @@ mod token;
 mod utils;
 
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
-use aggregator::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
+use router::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
 use deposit::process_deposit;
 use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds};
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
@@ -33,9 +31,9 @@ use investment::{check_and_execute_investments, generate_investment_allocations}
 use models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction, StrategyAllocation};
 use storage::{
     extend_instance_ttl, get_assets, get_defindex_protocol_fee_rate,
-    get_defindex_protocol_fee_receiver, get_report, get_vault_fee, set_asset,
+    get_report, get_vault_fee, set_asset,
     set_defindex_protocol_fee_rate, set_defindex_protocol_fee_receiver, set_factory, set_report,
-    set_soroswap_router, set_total_assets, set_vault_fee,
+    set_soroswap_router, set_total_assets, set_vault_fee, set_is_upgradable
 };
 use strategies::{
     get_strategy_asset, get_strategy_client, get_strategy_struct, invest_in_strategy,
@@ -93,6 +91,7 @@ impl VaultTrait for DeFindexVault {
         factory: Address,
         soroswap_router: Address,
         name_symbol: Map<String, String>,
+        upgradable: bool,
     ) {
         let access_control = AccessControl::new(&e);
 
@@ -110,6 +109,7 @@ impl VaultTrait for DeFindexVault {
         set_defindex_protocol_fee_rate(&e, &defindex_protocol_rate);
 
         set_factory(&e, &factory);
+        set_is_upgradable(&e, &upgradable);
 
         set_soroswap_router(&e, &soroswap_router);
 
@@ -379,6 +379,13 @@ impl VaultTrait for DeFindexVault {
         // This ensures that the vault has this strategy in its list of assets
         let strategy = get_strategy_struct(&strategy_address, &asset)?;
 
+        let distribution_result = report::distribute_strategy_fees(&e, &strategy.address, &access_control)?;
+        if distribution_result > 0 {
+            let mut distributed_fees: Vec<(Address, i128)> = Vec::new(&e);
+            distributed_fees.push_back((asset.address.clone(), distribution_result));
+            events::emit_fees_distributed_event(&e, distributed_fees.clone());
+        }
+
         // Withdraw all assets from the strategy
         let strategy_client = get_strategy_client(&e, strategy.address.clone());
         let strategy_balance = strategy_client.balance(&e.current_contract_address());
@@ -624,6 +631,63 @@ impl AdminInterfaceTrait for DeFindexVault {
         access_control.get_fee_receiver()
     }
 
+    // Sets the manager queue for the vault config.
+    //
+    // This function allows the current manager to add to queue a new manager for the vault.
+    //
+    // # Arguments:
+    // * `e` - The environment.
+    // * `manager` - The new manager address.
+    //
+    // # Returns:
+    // * `Result<Address, ContractError>` - The manager address if successful, otherwise returns a ContractError.
+    fn queue_manager(e: Env, manager: Address) -> Result<Address, ContractError> {
+        extend_instance_ttl(&e);
+        
+        let current_timestamp:u64 = e.ledger().timestamp();
+        let mut manager_data: Map<u64, Address> = Map::new(&e);
+        manager_data.set(current_timestamp, manager.clone());
+
+        let access_control = AccessControl::new(&e);
+        access_control.queue_manager(&manager_data);
+        events::emit_queued_manager_event(&e, manager_data);
+        Ok(manager)
+    }
+
+    // Retrieves the manager queue for the vault config.
+    //
+    // This function allows the anyone to retrieve the manager queue for the vault.
+    //
+    // # Arguments:
+    // * `e` - The environment.
+    //
+    // # Returns:
+    // * `Result<Address, ContractError>` - The manager address if successful, otherwise returns a ContractError.
+    fn get_queued_manager(e: Env) -> Result<Address, ContractError> {
+        extend_instance_ttl(&e);
+        let access_control = AccessControl::new(&e);
+        let queued_manager = access_control.get_queued_manager().values().first().unwrap();
+
+        Ok(queued_manager)
+    }
+
+    // clear the manager queue for the vault config.
+    // This function allows the current manager clear the manager queue for the vault.
+    //
+    // # Arguments:
+    // * `e` - The environment.
+    //
+    // # Returns:
+    // * `()` - No return value.
+    fn clear_queue(e: Env) -> Result<(), ContractError> {
+        extend_instance_ttl(&e);
+        let access_control = AccessControl::new(&e);
+        access_control.clear_queued_manager();
+        let current_timestamp:u64 = e.ledger().timestamp();
+        events::emit_clear_manager_queue_event(&e, current_timestamp);
+        Ok(())
+    }
+
     /// Sets the manager for the vault.
     ///
     /// This function allows the current manager or emergency manager to set a new manager for the vault.
@@ -634,12 +698,19 @@ impl AdminInterfaceTrait for DeFindexVault {
     ///
     /// # Returns:
     /// * `()` - No return value.
-    fn set_manager(e: Env, manager: Address) {
+    fn set_manager(e: Env) -> Result<(), ContractError> {
         extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
-        access_control.set_manager(&manager);
-
-        events::emit_manager_changed_event(&e, manager);
+        let current_timestamp = e.ledger().timestamp();
+        let manager_address = access_control.get_queued_manager().values().first().unwrap();
+        let queued_timestamp = access_control.get_queued_manager().keys().first().unwrap();
+        let seven_days: u64 = ONE_DAY_IN_SECONDS * 7u64;
+        if (current_timestamp - queued_timestamp) < (seven_days) {
+            panic_with_error!(&e, ContractError::SetManagerBeforeTime);
+        }
+        access_control.set_manager();
+        events::emit_manager_changed_event(&e, manager_address);
+        Ok(())
     }
 
     /// Retrieves the current manager address for the vault.
@@ -715,63 +786,32 @@ impl AdminInterfaceTrait for DeFindexVault {
         let access_control = AccessControl::new(&e);
         access_control.get_rebalance_manager()
     }
+
+    /// Upgrades the contract with new WebAssembly (WASM) code.
+    ///
+    /// This function updates the contract with new WASM code provided by the `new_wasm_hash`.
+    ///
+    /// # Arguments
+    ///
+    /// * `e` - The runtime environment.
+    /// * `new_wasm_hash` - The hash of the new WASM code to upgrade the contract to.
+    ///
+    fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), ContractError> {
+        if !storage::is_upgradable(&e) {
+            return Err(ContractError::NotUpgradable);
+        }
+        
+        let access_control = AccessControl::new(&e);
+        access_control.require_role(&RolesDataKey::Manager);
+        
+        e.deployer().update_current_contract_wasm(new_wasm_hash);
+        Ok(())
+    }
 }
 
 #[contractimpl]
 impl VaultManagementTrait for DeFindexVault {
-    /// Executes the investment of the vault's idle funds based on the specified asset allocations.
-    /// This function allows partial investments by providing an optional allocation for each asset,
-    /// and it ensures proper authorization and validation checks before proceeding with investments.
-    ///
-    /// # Arguments
-    /// * `e` - The current environment reference.
-    /// * `asset_investments` - A vector of optional `AssetInvestmentAllocation` structures, where each element
-    ///   represents an allocation for a specific asset. The vector must match the number of vault assets in length.
-    ///
-    /// # Returns
-    /// * `Result<(), ContractError>` - Returns `Ok(())` if the investments are successful or a `ContractError`
-    ///   if any issue occurs during validation or execution.
-    ///
-    /// # Function Flow
-    /// 1. **Extend Instance TTL**: Extends the contract instance's time-to-live to keep the instance active.
-    /// 2. **Check Initialization**: Verifies that the vault is properly initialized before proceeding.
-    /// 3. **Access Control**: Ensures the caller has the `Manager` role required to initiate investments.
-    /// 4. **Asset Count Validation**: Verifies that the length of the `asset_investments` vector matches
-    ///    the number of assets managed by the vault. If they don't match, a `WrongInvestmentLength` error is returned.
-    /// 5. **Investment Execution**: Calls the `check_and_execute_investments` function to perform the investment
-    ///    after validating the inputs and ensuring correct execution flows for each asset allocation.
-    ///
-    /// # Errors
-    /// * Returns `ContractError::WrongInvestmentLength` if the length of `asset_investments` does not match the vault assets.
-    /// * Returns `ContractError` if access control validation fails or if investment execution encounters an issue.
-    ///
-    /// # Security
-    /// - Only addresses with the `Manager` role can call this function, ensuring restricted access to managing investments.
-    fn invest(
-        e: Env,
-        asset_investments: Vec<Option<AssetInvestmentAllocation>>,
-    ) -> Result<Vec<Option<AssetInvestmentAllocation>>, ContractError> {
-        //-> Result<(Vec<i128>, i128, Option<Vec<Option<AssetInvestmentAllocation>>>), ContractError> 
-        extend_instance_ttl(&e);
-        check_initialized(&e)?;
-
-        // Access control: ensure caller has the required manager role
-        let access_control = AccessControl::new(&e);
-        access_control.require_role(&RolesDataKey::Manager);
-
-        let assets = get_assets(&e);
-
-        // Ensure the length of `asset_investments` matches the number of vault assets
-        if asset_investments.len() != assets.len() {
-            panic_with_error!(&e, ContractError::WrongInvestmentLength);
-        }
-
-        // Check and execute investments for each asset allocation
-        check_and_execute_investments(&e, &assets, &asset_investments)?;
-
-        Ok(asset_investments.clone())
-    }
-
+    
     fn rebalance(e: Env, caller: Address, instructions: Vec<Instruction>) -> Result<(), ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
@@ -796,7 +836,7 @@ impl VaultManagementTrait for DeFindexVault {
                         &e.current_contract_address(),
                     )?;
                     let call_params = vec![&e, (strategy_address, amount, e.current_contract_address())];
-                    emit_rebalance_unwind_event(&e, call_params, report);
+                    events::emit_rebalance_unwind_event(&e, call_params, report);
                 }
                 Instruction::Invest(strategy_address, amount) => {
                     let asset_address = get_strategy_asset(&e, &strategy_address)?;
@@ -808,7 +848,7 @@ impl VaultManagementTrait for DeFindexVault {
                             amount: amount.clone(),
                         })],
                     };
-                    emit_rebalance_invest_event(&e, vec![&e, call_params], report);
+                    events::emit_rebalance_invest_event(&e, vec![&e, call_params], report);
                 }
                 Instruction::SwapExactIn(
                     token_in,
@@ -833,7 +873,7 @@ impl VaultManagementTrait for DeFindexVault {
                         e.current_contract_address().to_val(),
                         deadline.into_val(&e),
                     ];
-                    emit_rebalance_swap_exact_in_event(&e, swap_args);
+                    events::emit_rebalance_swap_exact_in_event(&e, swap_args);
                 }
                 Instruction::SwapExactOut(
                     token_in,
@@ -858,7 +898,7 @@ impl VaultManagementTrait for DeFindexVault {
                         e.current_contract_address().to_val(),
                         deadline.into_val(&e),
                     ];
-                    emit_rebalance_swap_exact_out_event(&e, swap_args);
+                    events::emit_rebalance_swap_exact_out_event(&e, swap_args);
                 } // Zapper instruction is omitted for now
                   // Instruction::Zapper(instructions) => {
                   //     // TODO: Implement Zapper instructions
@@ -957,10 +997,6 @@ impl VaultManagementTrait for DeFindexVault {
         // Get all assets and their strategies
         let assets = get_assets(&e);
 
-        let vault_fee_receiver = access_control.get_fee_receiver()?;
-        let defindex_protocol_receiver = get_defindex_protocol_fee_receiver(&e);
-        let defindex_fee = get_defindex_protocol_fee_rate(&e);
-
         let mut distributed_fees: Vec<(Address, i128)> = Vec::new(&e);
 
         // Loop through each asset and its strategies to lock the fees
@@ -968,33 +1004,7 @@ impl VaultManagementTrait for DeFindexVault {
             let mut total_fees_distributed: i128 = 0;
 
             for strategy in asset.strategies.iter() {
-                let mut report = get_report(&e, &strategy.address);
-
-                if report.locked_fee > 0 {
-                    // Calculate shares for each receiver based on their fee proportion
-                    let numerator = report.locked_fee.checked_mul(defindex_fee as i128).unwrap();
-                    let defindex_fee_amount = numerator.checked_div(MAX_BPS).unwrap();
-
-                    let vault_fee_amount = report.locked_fee - defindex_fee_amount;
-
-                    report.prev_balance = report.prev_balance - report.locked_fee;
-
-                    unwind_from_strategy(
-                        &e,
-                        &strategy.address,
-                        &defindex_fee_amount,
-                        &defindex_protocol_receiver,
-                    )?;
-                    unwind_from_strategy(
-                        &e,
-                        &strategy.address,
-                        &vault_fee_amount,
-                        &vault_fee_receiver,
-                    )?;
-                    total_fees_distributed += report.locked_fee;
-                    report.locked_fee = 0;
-                    set_report(&e, &strategy.address, &report);
-                }
+                total_fees_distributed += report::distribute_strategy_fees(&e, &strategy.address, &access_control)?;
             }
 
             if total_fees_distributed > 0 {

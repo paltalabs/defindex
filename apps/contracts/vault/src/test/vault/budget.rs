@@ -2,7 +2,7 @@ extern crate std;
 use crate::test::{
     create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1,
     defindex_vault::{
-        AssetInvestmentAllocation, AssetStrategySet, Instruction, RolesDataKey, StrategyAllocation
+        AssetStrategySet, Instruction, RolesDataKey
     },
     DeFindexVaultTest,
 };
@@ -50,6 +50,7 @@ fn budget() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let mem = test.env.budget().memory_bytes_cost();
@@ -121,42 +122,24 @@ fn budget() {
     );
 
     test.env.budget().reset_unlimited();
-
-    // invest
-    let asset_investments = sorobanvec![
-        &test.env,
-        Some(AssetInvestmentAllocation {
-            asset: test.token_0.address.clone(),
-            strategy_allocations: sorobanvec![
-                &test.env,
-                Some(StrategyAllocation {
-                    strategy_address: test.strategy_client_token_0.address.clone(),
-                    amount: 100,
-                }),
-            ]
-        }),
-        Some(AssetInvestmentAllocation {
-            asset: test.token_1.address.clone(),
-            strategy_allocations: sorobanvec![
-                &test.env,
-                Some(StrategyAllocation {
-                    strategy_address: test.strategy_client_token_1.address.clone(),
-                    amount: 200,
-                }),
-            ]
-        })
-    ];
-
-    let _ = defindex_contract.invest(&asset_investments);
-    let mem = test.env.budget().memory_bytes_cost();
-    let cpu = test.env.budget().cpu_instruction_cost();
-    std::println!(
-        "invest()                                                  | cpu: {},      mem: {}",
-        cpu,
-        mem
-    );
-
-    test.env.budget().reset_unlimited();
+    
+        // rebalance invest
+    
+        let invest_instructions = sorobanvec![
+            &test.env,
+            Instruction::Invest(test.strategy_client_token_0.address.clone(), 100),
+        ];
+    
+        let _ = defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
+        let mem = test.env.budget().memory_bytes_cost();
+        let cpu = test.env.budget().cpu_instruction_cost();
+        std::println!(
+            "rebalance_invest()                                        | cpu: {},      mem: {}",
+            cpu,
+            mem
+        );
+    
+        test.env.budget().reset_unlimited();
 
     // rebalance withdraw
     let withdraw_instructions = sorobanvec![
@@ -168,24 +151,6 @@ fn budget() {
     let cpu = test.env.budget().cpu_instruction_cost();
     std::println!(
         "rebalance_withdraw()                                      | cpu: {},      mem: {}",
-        cpu,
-        mem
-    );
-
-    test.env.budget().reset_unlimited();
-
-    // rebalance invest
-
-    let invest_instructions = sorobanvec![
-        &test.env,
-        Instruction::Invest(test.strategy_client_token_0.address.clone(), 100),
-    ];
-
-    let _ = defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
-    let mem = test.env.budget().memory_bytes_cost();
-    let cpu = test.env.budget().cpu_instruction_cost();
-    std::println!(
-        "rebalance_invest()                                        | cpu: {},      mem: {}",
         cpu,
         mem
     );

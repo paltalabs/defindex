@@ -1,9 +1,10 @@
 #![cfg(test)]
 extern crate std;
 use soroban_sdk::{
-    testutils::{Address as _, MockAuth, MockAuthInvoke}, token::{StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient}, vec as sorobanvec, Address, Env, IntoVal, Map, String, Val, Vec
+    testutils::{Address as _, Ledger, LedgerInfo, MockAuth, MockAuthInvoke}, token::{StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient}, vec as sorobanvec, Address, Env, IntoVal, Map, String, Val, Vec
 };
 use std::vec;
+use crate::utils::DAY_IN_LEDGERS;
 
 use soroswap_setup::{
     create_soroswap_factory, create_soroswap_pool, create_soroswap_router, SoroswapRouterClient,
@@ -33,6 +34,7 @@ pub mod defindex_vault {
 }
 use defindex_vault::{AssetStrategySet, DeFindexVaultClient, Strategy};
 
+
 pub fn create_defindex_vault<'a>(
     e: &Env,
     assets: Vec<AssetStrategySet>,
@@ -43,6 +45,7 @@ pub fn create_defindex_vault<'a>(
     factory: Address,
     soroswap_router: Address,
     name_symbol: Map<String, String>,
+    upgradable: bool,
 ) -> DeFindexVaultClient<'a> {
     let args = (
         assets,
@@ -53,6 +56,7 @@ pub fn create_defindex_vault<'a>(
         factory,
         soroswap_router,
         name_symbol,
+        upgradable
     );
     let address = &e.register(defindex_vault::WASM, args);
     let client = DeFindexVaultClient::new(e, address);
@@ -122,10 +126,8 @@ pub struct DeFindexVaultTest<'a> {
     defindex_factory: Address,
     token_0_admin_client: SorobanTokenAdminClient<'a>,
     token_0: SorobanTokenClient<'a>,
-    token_0_admin: Address,
     token_1_admin_client: SorobanTokenAdminClient<'a>,
     token_1: SorobanTokenClient<'a>,
-    token_1_admin: Address,
     emergency_manager: Address,
     vault_fee_receiver: Address,
     defindex_protocol_receiver: Address,
@@ -136,6 +138,26 @@ pub struct DeFindexVaultTest<'a> {
     soroswap_router: SoroswapRouterClient<'a>,
     // soroswap_factory: SoroswapFactoryClient<'a>,
     // soroswap_pair: Address,
+}
+
+pub trait EnvTestUtils {
+    /// Jump the env by the given amount of seconds. Incremends the sequence by 1.
+    fn jump_time(&self, seconds: u64);
+}
+
+impl EnvTestUtils for Env {
+    fn jump_time(&self, seconds: u64) {
+        self.ledger().set(LedgerInfo {
+            timestamp: self.ledger().timestamp().saturating_add(seconds),
+            protocol_version: 22,
+            sequence_number: self.ledger().sequence().saturating_add(1),
+            network_id: Default::default(),
+            base_reserve: 10,
+            min_temp_entry_ttl: 30 * DAY_IN_LEDGERS,
+            min_persistent_entry_ttl: 30 * DAY_IN_LEDGERS,
+            max_entry_ttl: 365 * DAY_IN_LEDGERS,
+        });
+    }
 }
 
 impl<'a> DeFindexVaultTest<'a> {
@@ -210,10 +232,8 @@ impl<'a> DeFindexVaultTest<'a> {
             defindex_factory,
             token_0_admin_client,
             token_0,
-            token_0_admin,
             token_1_admin_client,
             token_1,
-            token_1_admin,
             emergency_manager,
             vault_fee_receiver,
             defindex_protocol_receiver,
@@ -222,8 +242,6 @@ impl<'a> DeFindexVaultTest<'a> {
             strategy_client_token_0,
             strategy_client_token_1,
             soroswap_router,
-            // soroswap_factory,
-            // soroswap_pair,
         }
     }
 

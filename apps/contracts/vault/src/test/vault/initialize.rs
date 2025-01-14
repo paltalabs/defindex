@@ -56,6 +56,7 @@ fn get_roles() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let manager_role = defindex_contract.get_manager();
@@ -168,6 +169,7 @@ fn deploy_unsupported_strategy() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 }
 
@@ -200,6 +202,7 @@ fn initialize_with_empty_asset_allocation() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 }
 
@@ -259,6 +262,7 @@ fn with_one_asset_and_several_strategies() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let manager_role = defindex_contract.get_manager();
@@ -353,6 +357,7 @@ fn with_one_asset_no_strategies(){
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let vault_assets = defindex_contract.get_assets();

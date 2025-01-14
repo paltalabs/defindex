@@ -1,7 +1,7 @@
 use soroban_sdk::{vec as sorobanvec, vec, Address, Map, String, Vec};
 
 use crate::test::defindex_vault::{
-    AssetInvestmentAllocation, AssetStrategySet, CurrentAssetInvestmentAllocation, RolesDataKey, Strategy, StrategyAllocation
+    AssetInvestmentAllocation, AssetStrategySet, CurrentAssetInvestmentAllocation, RolesDataKey, Strategy, StrategyAllocation,Instruction
 };
 use crate::test::{
     create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1,
@@ -43,6 +43,7 @@ fn one_asset_no_previous_investment() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount = 123456789i128;
@@ -209,6 +210,7 @@ fn one_asset_previous_investment_success() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
 
@@ -262,21 +264,15 @@ fn one_asset_previous_investment_success() {
     let amount_to_invest = 100000000i128;
 
     // GENERATE INVESTMENT
-    let asset_investments = vec![
+    let invest_instructions = sorobanvec![
         &test.env,
-        Some(AssetInvestmentAllocation {
-            asset: test.token_0.address.clone(),
-            strategy_allocations: vec![
-                &test.env,
-                Some(StrategyAllocation {
-                    strategy_address: test.strategy_client_token_0.address.clone(),
-                    amount: amount_to_invest,
-                }),
-            ],
-        }),
+        Instruction::Invest(
+            test.strategy_client_token_0.address.clone(),
+            amount_to_invest
+        ),
     ];
 
-    defindex_contract.invest(&asset_investments);
+    defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
 
     // Now we should have:
     let mut total_managed_funds_expected = Map::new(&test.env);
@@ -419,6 +415,7 @@ fn several_assets_no_previous_investment() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount0 = 123456789i128;
@@ -658,6 +655,7 @@ fn several_assets_wih_previous_investment_success() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
 
@@ -682,31 +680,13 @@ fn several_assets_wih_previous_investment_success() {
     let amount_to_invest_0 = 100000000i128;
     let amount_to_invest_1 = 200000000i128;
 
-    let asset_investments = sorobanvec![
+    let invest_instructions = sorobanvec![
         &test.env,
-        Some(AssetInvestmentAllocation {
-            asset: test.token_0.address.clone(),
-            strategy_allocations: vec![
-                &test.env,
-                Some(StrategyAllocation {
-                    strategy_address: test.strategy_client_token_0.address.clone(),
-                    amount: amount_to_invest_0,
-                }),
-            ],
-        }),
-        Some(AssetInvestmentAllocation {
-            asset: test.token_1.address.clone(),
-            strategy_allocations: vec![
-                &test.env,
-                Some(StrategyAllocation {
-                    strategy_address: test.strategy_client_token_1.address.clone(),
-                    amount: amount_to_invest_1,
-                }),
-            ],
-        })
+        Instruction::Invest(test.strategy_client_token_0.address.clone(), amount_to_invest_0),
+        Instruction::Invest(test.strategy_client_token_1.address.clone(), amount_to_invest_1),
     ];
 
-    defindex_contract.invest(&asset_investments);
+    defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
 
     // total managed funds
     let mut total_managed_funds_expected = Map::new(&test.env);
@@ -970,6 +950,7 @@ fn one_asset_several_strategies() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let assets = defindex_contract.get_assets();
@@ -1001,33 +982,15 @@ fn one_asset_several_strategies() {
   
     // Invest
     let amount_to_invest = 1_0_000_000i128;
-    let asset_investments = vec![
+    let invest_instructions = sorobanvec![
         &test.env,
-        Some(AssetInvestmentAllocation {
-        asset: test.token_0.address.clone(),
-        strategy_allocations: vec![
-            &test.env,
-            Some(StrategyAllocation {
-            strategy_address: test.strategy_client_token_0.address.clone(),
-            amount: amount_to_invest,
-            }),
-            Some(StrategyAllocation {
-            strategy_address: strategy_client_1.address.clone(),
-            amount: amount_to_invest,
-            }),
-            Some(StrategyAllocation {
-            strategy_address: strategy_client_2.address.clone(),
-            amount: amount_to_invest,
-            }),
-            Some(StrategyAllocation {
-            strategy_address: strategy_client_3.address.clone(),
-            amount: amount_to_invest,
-            }),
-        ],
-    })];
-    let _investment = defindex_contract.invest(
-        &asset_investments,
-    );    
+        Instruction::Invest(test.strategy_client_token_0.address.clone(), amount_to_invest),
+        Instruction::Invest(test.strategy_client_token_0.address.clone(), amount_to_invest),
+        Instruction::Invest(test.strategy_client_token_0.address.clone(), amount_to_invest),
+        Instruction::Invest(test.strategy_client_token_0.address.clone(), amount_to_invest),
+    ];
+
+    defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
     let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
     let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
     assert_eq!(invested_funds, (amount_to_invest * 4));
@@ -1089,6 +1052,7 @@ fn deposit_simple_then_deposit_and_invest() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
 
     let assets = defindex_contract.get_assets();
@@ -1151,21 +1115,15 @@ fn deposit_simple_then_deposit_and_invest() {
 
     let amount_to_invest = 4_0_000_000i128;
     let mut total_invested = amount_to_invest;
-    let asset_investments = vec![
+
+    let invest_instructions = sorobanvec![
         &test.env,
-        Some(AssetInvestmentAllocation {
-        asset: test.token_0.address.clone(),
-        strategy_allocations: vec![
-            &test.env,
-            Some(StrategyAllocation {
-            strategy_address: test.strategy_client_token_0.address.clone(),
-            amount: amount_to_invest,
-            })
-        ],
-    })];
-    let _ = defindex_contract.invest(
-        &asset_investments,
-    );
+        Instruction::Invest(
+            test.strategy_client_token_0.address.clone(),
+            amount_to_invest
+        ),
+    ];
+    defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
 
     let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
     let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();

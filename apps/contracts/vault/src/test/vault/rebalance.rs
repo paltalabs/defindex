@@ -4,7 +4,7 @@ use crate::test::defindex_vault::{ContractError, RolesDataKey};
 use crate::test::{
     create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1,
     defindex_vault::{
-        AssetInvestmentAllocation, AssetStrategySet, CurrentAssetInvestmentAllocation, Instruction,
+        AssetStrategySet, CurrentAssetInvestmentAllocation, Instruction,
         StrategyAllocation,
     },
     DeFindexVaultTest,
@@ -43,6 +43,7 @@ fn multi_instructions() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount = 987654321i128;
@@ -66,21 +67,15 @@ fn multi_instructions() {
     let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount - 1000);
 
-    let investments = sorobanvec![
+    let invest_instructions = sorobanvec![
         &test.env,
-        Some(AssetInvestmentAllocation {
-            asset: test.token_0.address.clone(),
-            strategy_allocations: sorobanvec![
-                &test.env,
-                Some(StrategyAllocation {
-                    strategy_address: test.strategy_client_token_0.address.clone(),
-                    amount: amount,
-                }),
-            ],
-        }),
+        Instruction::Invest(
+            test.strategy_client_token_0.address.clone(),
+            amount
+        ),
     ];
 
-    defindex_contract.invest(&investments);
+    defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
 
     let vault_balance = test.token_0.balance(&defindex_contract.address);
     assert_eq!(vault_balance, 0);
@@ -141,6 +136,7 @@ fn one_instruction() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount = 987654321i128;
@@ -164,21 +160,15 @@ fn one_instruction() {
     let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, amount - 1000);
 
-    let investments = sorobanvec![
+    let invest_instructions = sorobanvec![
         &test.env,
-        Some(AssetInvestmentAllocation {
-            asset: test.token_0.address.clone(),
-            strategy_allocations: sorobanvec![
-                &test.env,
-                Some(StrategyAllocation {
-                    strategy_address: test.strategy_client_token_0.address.clone(),
-                    amount: amount,
-                }),
-            ],
-        }),
+        Instruction::Invest(
+            test.strategy_client_token_0.address.clone(),
+            amount
+        ),
     ];
 
-    defindex_contract.invest(&investments);
+    defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
 
     let vault_balance = test.token_0.balance(&defindex_contract.address);
     assert_eq!(vault_balance, 0);
@@ -234,6 +224,7 @@ fn empty_instructions() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount: i128 = 987654321;
@@ -285,6 +276,7 @@ fn no_instructions() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount: i128 = 987654321;
@@ -339,6 +331,7 @@ fn insufficient_balance() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount: i128 = 987654321;
@@ -446,6 +439,7 @@ fn swap_exact_in() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount0 = 123456789i128;
@@ -605,6 +599,7 @@ fn swap_exact_out() {
         test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
+        true
     );
     
     let amount0 = 123456789i128;

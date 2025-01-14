@@ -1,4 +1,5 @@
 import { Address, Asset, nativeToScVal, Networks, xdr } from "@stellar/stellar-sdk";
+import { BLEND_POOL_TESTNET, BLEND_TOKEN_TESTNET, SOROSWAP_ROUTER } from "../constants.js";
 import { AddressBook } from "../utils/address_book.js";
 import {
   airdropAccount,
@@ -44,10 +45,10 @@ export async function deployBlendStrategy(addressBook: AddressBook) {
   const xlmScVal = xlmAddress.toScVal();
 
   const initArgs = xdr.ScVal.scvVec([
-    new Address("CD2OM6AQMIXPS6ODWAYDEKLLFX5376ZHUFCMSSQJ5ACPVKMTK5NOQC5D").toScVal(), //Blend pool on testnet!
+    new Address(BLEND_POOL_TESTNET).toScVal(), //Blend pool on testnet!
     nativeToScVal(0, { type: "u32" }), // ReserveId 0 is XLM
-    new Address("CB22KRA3YZVCNCQI64JQ5WE7UY2VAV7WFLK6A2JN3HEX56T2EDAFO7QF").toScVal(), // BLND Token
-    new Address("CC6WRJYMZA574TOXNO2ZWU4HIXJ5OLKGB7JF556RKMZPSV2V62SLBTPK").toScVal(), // Soroswap router
+    new Address(BLEND_TOKEN_TESTNET).toScVal(), // BLND Token
+    new Address(SOROSWAP_ROUTER).toScVal(), // Soroswap router
   ]);
 
   const args: xdr.ScVal[] = [
