@@ -49,8 +49,6 @@ pub mod defindex_vault {
 }
 use defindex_vault::{AssetStrategySet, DeFindexVaultClient, Strategy};
 
-use crate::utils::DAY_IN_LEDGERS;
-
 pub fn create_defindex_vault<'a>(
     e: &Env,
     assets: Vec<AssetStrategySet>,
@@ -149,7 +147,7 @@ pub fn mock_mint(
 
 pub trait EnvTestUtils {
     /// Jump the env by the given amount of ledgers. Assumes 5 seconds per ledger.
-    fn jump(&self, ledgers: u32);
+    fn _jump(&self, ledgers: u32);
     /// Jump the env by the given amount of seconds. Incremends the sequence by 1.
     fn jump_time(&self, seconds: u64);
     /// Set the ledger to the default LedgerInfo
@@ -160,7 +158,7 @@ pub trait EnvTestUtils {
 }
 
 impl EnvTestUtils for Env {
-    fn jump(&self, ledgers: u32) {
+    fn _jump(&self, ledgers: u32) {
         self.ledger().set(LedgerInfo {
             timestamp: self.ledger().timestamp().saturating_add(ledgers as u64 * 5),
             protocol_version: 22,
@@ -218,26 +216,6 @@ pub struct DeFindexVaultTest<'a> {
     soroswap_router: SoroswapRouterClient<'a>,
     // soroswap_factory: SoroswapFactoryClient<'a>,
     // soroswap_pair: Address,
-}
-
-pub trait EnvTestUtils {
-    /// Jump the env by the given amount of seconds. Incremends the sequence by 1.
-    fn jump_time(&self, seconds: u64);
-}
-
-impl EnvTestUtils for Env {
-    fn jump_time(&self, seconds: u64) {
-        self.ledger().set(LedgerInfo {
-            timestamp: self.ledger().timestamp().saturating_add(seconds),
-            protocol_version: 22,
-            sequence_number: self.ledger().sequence().saturating_add(1),
-            network_id: Default::default(),
-            base_reserve: 10,
-            min_temp_entry_ttl: 30 * DAY_IN_LEDGERS,
-            min_persistent_entry_ttl: 30 * DAY_IN_LEDGERS,
-            max_entry_ttl: 365 * DAY_IN_LEDGERS,
-        });
-    }
 }
 
 impl<'a> DeFindexVaultTest<'a> {
