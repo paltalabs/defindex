@@ -6,3 +6,5 @@ pub const SCALAR_9: i128 = 1_000_000_000;
 pub const MIN_DUST: i128 = 0_0010000;
 
 pub const REWARD_THRESHOLD: i128 = 40_0000000;
+
+pub const ONE_DAY_IN_SECONDS: u64 = 86_400;

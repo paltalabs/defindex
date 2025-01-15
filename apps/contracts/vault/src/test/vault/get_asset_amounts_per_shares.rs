@@ -259,8 +259,8 @@ fn deposit_and_invest_several_assets_get_asset_amounts_per_shares() {
         )
     ];
     defindex_contract.rebalance(&test.rebalance_manager, &rebalance_instructions);
-    let token_0_invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
-    let token_1_invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_1.address.clone()).unwrap();
+    let token_0_invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
+    let token_1_invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_1.address.clone()).unwrap().invested_amount;
     let token_0_idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
     let token_1_idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_1.address.clone()).unwrap();
 
