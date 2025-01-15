@@ -161,7 +161,7 @@ impl VaultTrait for DeFindexVault {
     ///     - `false`: Leave the deposited funds as idle assets in the vault.
     ///
     /// # Returns
-    /// * `Result<(Vec<i128>, i128), ContractError>` - Returns the actual deposited `amounts` and `shares_to_mint` if successful,
+    /// * `Result<(Vec<i128>, i128, Option<Vec<Option<AssetInvestmentAllocation>>>), ContractError>` - Returns the actual deposited `amounts` and `shares_to_mint` if successful,
     ///   otherwise a `ContractError`.
     ///
     /// # Function Flow
@@ -826,6 +826,13 @@ impl VaultManagementTrait for DeFindexVault {
                 }
                 Instruction::Invest(strategy_address, amount) => {
                     let asset_address = get_strategy_asset(&e, &strategy_address)?;
+                    
+                    // Check if strategy is paused before investing
+                    let strategy = get_strategy_struct(&strategy_address, &asset_address)?;
+                    if strategy.paused {
+                        panic_with_error!(&e, ContractError::StrategyPaused);
+                    }
+                    
                     let report = invest_in_strategy(&e, &asset_address.address, &strategy_address, &amount)?;
                     let call_params = AssetInvestmentAllocation {
                         asset: asset_address.address.clone(),

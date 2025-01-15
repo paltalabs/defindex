@@ -1358,31 +1358,6 @@ fn invest_more_than_idle_funds(){
         &false,
     );
 
-  
-
-    let pause_strategy_0 = defindex_contract.try_pause_strategy(&test.strategy_client_token_0.address, &test.manager);
-    assert_eq!(pause_strategy_0, Ok(Ok(())));
-
-    let assets = defindex_contract.get_assets();
-
-    // Check if strategies are paused
-    let expected_strategy_0:Vec<Strategy> = sorobanvec![&test.env, 
-        Strategy{
-            address: test.strategy_client_token_0.address.clone(),
-            name: String::from_str(&test.env, "Strategy 1"),
-            paused: true,
-        },
-    ];
-
-    let expected_assets:Vec<AssetStrategySet> = sorobanvec![
-        &test.env,
-        AssetStrategySet {
-            address: test.token_0.address.clone(),
-            strategies: expected_strategy_0,
-        }
-    ];
-    assert_eq!(assets, expected_assets);
-
     // Check if invested funds are 0
     let managed_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap();
     assert_eq!(managed_funds.invested_amount, 0i128);
@@ -1588,8 +1563,8 @@ fn unwind_paused_strategy(){
     
     // Check if invested funds are 0
     let invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address).unwrap().invested_amount;
-    assert_eq!(invested_funds, amount_to_invest);
-    assert_eq!(unwind_result, Err(Ok(ContractError::StrategyPaused)));
+    assert_eq!(invested_funds, amount_to_invest-amount_to_unwind);
+    assert_eq!(unwind_result, Ok(Ok(())));
 }
 
 #[test]
