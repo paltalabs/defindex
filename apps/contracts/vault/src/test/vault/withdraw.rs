@@ -1303,7 +1303,7 @@ fn from_strategy_success_no_mock_all_auths() {
     }
     ]).deposit(&amounts_desired, &amounts_min, &from, &invest); 
 
-    let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
+    let invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
     let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
 
     assert_eq!(idle_funds, deposit_amount);
@@ -1324,7 +1324,7 @@ fn from_strategy_success_no_mock_all_auths() {
     }
     ]).withdraw(&withdraw_amount, &from.clone());
 
-    let invested_funds = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
+    let invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
     let idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
 
     assert_eq!(idle_funds, deposit_amount - withdraw_amount);

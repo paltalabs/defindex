@@ -174,18 +174,6 @@ pub trait VaultTrait {
     /// * `Map<Address, i128>` - A map of asset addresses to their total managed amounts.
     fn fetch_total_managed_funds(e: &Env) -> Map<Address, CurrentAssetInvestmentAllocation>;
 
-    /// Returns the current invested funds, representing the total assets allocated to strategies.
-    ///
-    /// This function provides a map where the key is the asset address and the value is the total amount
-    /// of that asset currently invested in various strategies.
-    ///
-    /// # Arguments:
-    /// * `e` - The environment.
-    ///
-    /// # Returns:
-    /// * `Map<Address, i128>` - A map of asset addresses to their total invested amounts.
-    fn fetch_current_invested_funds(e: &Env) -> Map<Address, i128>;
-
     /// Returns the current idle funds, representing the total assets held directly by the vault (not invested).
     ///
     /// This function provides a map where the key is the asset address and the value is the total amount
