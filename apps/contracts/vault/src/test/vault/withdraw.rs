@@ -850,25 +850,17 @@ fn from_strategies_one_asset_two_strategies_success() {
     let amount_to_invest_0 = 640_0_000_000i128;
     let amount_to_invest_1 = 160_0_000_000i128;
 
-
-    let investments = sorobanvec![
-        &test.env,
-        Some(AssetInvestmentAllocation {
-            asset: test.token_0.address.clone(),
-            strategy_allocations: sorobanvec![
-                &test.env,
-                Some(StrategyAllocation {
-                strategy_address: test.strategy_client_token_0.address.clone(),
-                amount: amount_to_invest_0,
-                }),
-                Some(StrategyAllocation {
-                strategy_address: strategy_client_1.address.clone(),
-                amount: amount_to_invest_1,
-                }),
-            ],
-        })
+    let instructions: Vec<Instruction> = sorobanvec![&test.env,
+        Instruction::Invest(
+            test.strategy_client_token_0.address.clone(),
+            amount_to_invest_0
+        ),
+        Instruction::Invest(
+            strategy_client_1.address.clone(),
+            amount_to_invest_1
+        ),
     ];
-    defindex_contract.invest(&investments);
+    defindex_contract.rebalance(&test.rebalance_manager, &instructions);
 
     let strategy_1_balance_before_withdraw = test.token_0.balance(&test.strategy_client_token_0.address);
     let strategy_2_balance_before_withdraw = test.token_0.balance(&strategy_client_1.address);
@@ -1373,9 +1365,13 @@ fn from_strategy_success_no_mock_all_auths() {
     }
     ]).deposit(&amounts_desired, &amounts_min, &from, &invest); 
  
-    let current_invested_funds = defindex_contract.fetch_total_managed_funds();
-    let invested_funds_0 = current_invested_funds.get(test.token_0.address.clone()).unwrap().invested_amount;
-    let invested_funds_1 = current_invested_funds.get(test.token_1.address.clone()).unwrap();
+    let total_managed_funds = defindex_contract.fetch_total_managed_funds();
+    let invested_funds_0 = total_managed_funds.get(test.token_0.address.clone()).unwrap().invested_amount;
+    let invested_funds_1 = if total_managed_funds.get(test.token_1.address.clone()).is_some() {
+        total_managed_funds.get(test.token_1.address.clone()).unwrap().invested_amount
+    } else {
+        0
+    };
     let idle_funds_0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
     let idle_funds_1 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
 
@@ -1417,7 +1413,7 @@ fn from_strategy_success_no_mock_all_auths() {
     ]).withdraw(&withdraw_amount_0, &from.clone());
 
     let invested_funds_0 = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
-    let invested_funds_1 = defindex_contract.fetch_current_invested_funds().get(test.token_1.address.clone()).unwrap();
+    let invested_funds_1 = defindex_contract.fetch_total_managed_funds().get(test.token_1.address.clone()).unwrap().invested_amount;
     let idle_funds_0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
     let idle_funds_1 = defindex_contract.fetch_current_idle_funds().get(test.token_1.address.clone()).unwrap();
 
