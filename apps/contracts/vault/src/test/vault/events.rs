@@ -1,5 +1,15 @@
 use soroban_sdk::testutils::Events;
-use soroban_sdk::{symbol_short, vec as sorobanvec, Address, FromVal, IntoVal, Map, String, Val, Vec};
+use soroban_sdk::{
+  symbol_short, 
+  vec as sorobanvec, 
+  Address, 
+  FromVal, 
+  IntoVal, 
+  Map, 
+  String, 
+  Val, 
+  Vec
+};
 use crate::constants::ONE_DAY_IN_SECONDS;
 use crate::events::{InvestEvent, ManagerChangedEvent, SwapExactInEvent};
 
@@ -14,7 +24,11 @@ use crate::test::defindex_vault::{
   UnwindEvent
 };
 use crate::test::{
-  create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1, DeFindexVaultTest, EnvTestUtils
+  create_defindex_vault, 
+  create_strategy_params_token_0, 
+  create_strategy_params_token_1, 
+  DeFindexVaultTest, 
+  EnvTestUtils
 };
 
 extern crate std;

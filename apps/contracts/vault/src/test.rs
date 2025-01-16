@@ -128,6 +128,8 @@ pub struct DeFindexVaultTest<'a> {
     token_0: SorobanTokenClient<'a>,
     token_1_admin_client: SorobanTokenAdminClient<'a>,
     token_1: SorobanTokenClient<'a>,
+    token_2_admin_client: SorobanTokenAdminClient<'a>,
+    token_2: SorobanTokenClient<'a>,
     emergency_manager: Address,
     vault_fee_receiver: Address,
     defindex_protocol_receiver: Address,
@@ -135,6 +137,7 @@ pub struct DeFindexVaultTest<'a> {
     rebalance_manager: Address,
     strategy_client_token_0: HodlStrategyClient<'a>,
     strategy_client_token_1: HodlStrategyClient<'a>,
+    strategy_client_token_2: HodlStrategyClient<'a>,
     soroswap_router: SoroswapRouterClient<'a>,
     // soroswap_factory: SoroswapFactoryClient<'a>,
     // soroswap_pair: Address,
@@ -180,20 +183,26 @@ impl<'a> DeFindexVaultTest<'a> {
         let token_1_admin = Address::generate(&env);
         let token_1 = create_token_contract(&env, &token_1_admin);
 
+        let token_2_admin = Address::generate(&env);
+        let token_2 = create_token_contract(&env, &token_2_admin);
+
         let token_0_admin_client = get_token_admin_client(&env, &token_0.address.clone());
         let token_1_admin_client = get_token_admin_client(&env, &token_1.address.clone());
+        let token_2_admin_client = get_token_admin_client(&env, &token_2.address.clone());
 
         // token_1_admin_client.mint(to, amount);
 
         let strategy_client_token_0 = create_hodl_strategy(&env, &token_0.address);
         let strategy_client_token_1 = create_hodl_strategy(&env, &token_1.address);
+        let strategy_client_token_2 = create_hodl_strategy(&env, &token_2.address);
 
         // Soroswap Setup
         let soroswap_admin = Address::generate(&env);
 
-        let amount_0: i128 = 1_000_000_000_000_000_000;
-        let amount_1: i128 = 4_000_000_000_000_000_000;
-
+        let amount_0: i128 = 3_000_000_000_000_000_000;
+        let amount_1: i128 = 12_000_000_000_000_000_000;
+        let amount_2: i128 = 9_000_000_000_000_000_000;
+        
         mock_mint(
             &env,
             &token_0_admin_client,
@@ -208,7 +217,6 @@ impl<'a> DeFindexVaultTest<'a> {
             &soroswap_admin,
             &amount_1,
         );
-
         let soroswap_factory = create_soroswap_factory(&env, &soroswap_admin);
         let soroswap_router = create_soroswap_router(&env, &soroswap_factory.address);
 
@@ -223,6 +231,60 @@ impl<'a> DeFindexVaultTest<'a> {
             &amount_0,
             &amount_1,
         );
+
+        env.budget().reset_unlimited();
+
+        mock_mint(
+            &env,
+            &token_1_admin_client,
+            &token_1_admin,
+            &soroswap_admin,
+            &amount_1,
+        );
+        mock_mint(
+            &env,
+            &token_2_admin_client,
+            &token_2_admin,
+            &soroswap_admin,
+            &amount_2,
+        );
+
+        create_soroswap_pool(
+            &env,
+            &soroswap_router,
+            &soroswap_admin,
+            &token_1.address,
+            &token_2.address,
+            &amount_1,
+            &amount_2,
+        ); 
+
+        env.budget().reset_unlimited();
+
+        mock_mint(
+            &env,
+            &token_0_admin_client,
+            &token_0_admin,
+            &soroswap_admin,
+            &amount_0,
+        );
+        mock_mint(
+            &env,
+            &token_2_admin_client,
+            &token_2_admin,
+            &soroswap_admin,
+            &amount_2,
+        );
+
+        create_soroswap_pool(
+            &env,
+            &soroswap_router,
+            &soroswap_admin,
+            &token_0.address,
+            &token_2.address,
+            &amount_0,
+            &amount_2,
+        );
         // let soroswap_pair = soroswap_factory.get_pair(&token_0.address, &token_1.address);
 
         env.budget().reset_unlimited();
@@ -234,6 +296,8 @@ impl<'a> DeFindexVaultTest<'a> {
             token_0,
             token_1_admin_client,
             token_1,
+            token_2_admin_client,
+            token_2,
             emergency_manager,
             vault_fee_receiver,
             defindex_protocol_receiver,
@@ -241,6 +305,7 @@ impl<'a> DeFindexVaultTest<'a> {
             rebalance_manager,
             strategy_client_token_0,
             strategy_client_token_1,
+            strategy_client_token_2,
             soroswap_router,
         }
     }
