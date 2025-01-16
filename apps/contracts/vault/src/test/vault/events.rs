@@ -164,14 +164,9 @@ fn check_rebalance_events(){
   let expected_asset_investment = sorobanvec![
     &test.env,
     models::AssetInvestmentAllocation {
-        asset: test.token_0.address.clone(),
-        strategy_allocations: sorobanvec![
-            &test.env,
-            Some(models::StrategyAllocation {
-                strategy_address: test.strategy_client_token_0.address.clone(),
-                amount: instruction_amount_1,
-            }),
-        ],
+      asset_address: test.token_0.address.clone(), 
+      strategy_address: test.strategy_client_token_0.address.clone(),
+      amount: instruction_amount_1,
     },
   ];
 

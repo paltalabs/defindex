@@ -1,5 +1,5 @@
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{vec as sorobanvec, vec, Address, Map, String, Vec};
+use soroban_sdk::{vec as sorobanvec, Address, Map, String, Vec};
 
 use crate::test::defindex_vault::{
     AssetInvestmentAllocation, AssetStrategySet, CurrentAssetInvestmentAllocation, RolesDataKey, Strategy, StrategyAllocation,Instruction
@@ -764,24 +764,14 @@ fn several_assets_wih_previous_investment_success() {
             Some(sorobanvec![
                 &test.env,
                 Some(AssetInvestmentAllocation{
-                    asset: test.token_0.address.clone(),
-                    strategy_allocations: vec![
-                        &test.env,
-                        Some(StrategyAllocation {
-                            strategy_address: test.strategy_client_token_0.address.clone(),
-                            amount: (amount0_new-100),
-                        }),
-                    ],
+                    asset_address: test.token_0.address.clone(),
+                    strategy_address: test.strategy_client_token_0.address.clone(),
+                    amount: (amount0_new-100),
                 }),
                 Some(AssetInvestmentAllocation{
-                    asset: test.token_1.address.clone(),
-                    strategy_allocations: vec![
-                        &test.env,
-                        Some(StrategyAllocation {
-                            strategy_address: test.strategy_client_token_1.address.clone(),
-                            amount: amount1_new,
-                        }),
-                    ],
+                    asset_address: test.token_1.address.clone(),
+                    strategy_address: test.strategy_client_token_1.address.clone(),                            
+                    amount: amount1_new,
                 }),
             ])
         )
