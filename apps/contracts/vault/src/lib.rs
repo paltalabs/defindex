@@ -27,8 +27,8 @@ use router::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exa
 use deposit::process_deposit;
 use funds::{fetch_current_idle_funds, fetch_total_managed_funds};
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
-use investment::{check_and_execute_investments, generate_investment_allocations};
-use models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction, StrategyAllocation};
+use investment::generate_investment_allocations;
+use models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction};
 use storage::{
     extend_instance_ttl, get_assets, get_defindex_protocol_fee_rate,
     get_report, get_vault_fee, set_asset,
@@ -209,8 +209,26 @@ impl VaultTrait for DeFindexVault {
         events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone());
 
         let asset_investments = if invest {
-            let allocations = generate_investment_allocations(&e, &assets, &total_managed_funds, &amounts)?;
-            check_and_execute_investments(&e, &assets, &allocations)?;
+            let allocations = generate_investment_allocations(&e, &total_managed_funds, &amounts)?;
+
+            for (_i, allocation) in allocations.iter().enumerate() {
+                if let Some(allocation) = allocation {
+                    // Validate amount is non-negative
+                    check_nonnegative_amount(allocation.amount)?;
+                    let asset = assets.iter().find(|a| a.address == allocation.asset_address).unwrap_or_else(|| panic_with_error!(&e, ContractError::AssetNotFound));
+                    let strategy = get_strategy_struct(&allocation.strategy_address, &asset)?;
+                    if strategy.paused {
+                        panic_with_error!(&e, ContractError::StrategyPaused);
+                    }
+                    // Execute the investment if checks pass
+                    invest_in_strategy(
+                        &e,
+                        &allocation.asset_address,
+                        &allocation.strategy_address,
+                        &allocation.amount,
+                    )?;
+                }
+            }
             Some(allocations)
         } else {
             None
@@ -835,11 +853,9 @@ impl VaultManagementTrait for DeFindexVault {
                     
                     let report = invest_in_strategy(&e, &asset_address.address, &strategy_address, &amount)?;
                     let call_params = AssetInvestmentAllocation {
-                        asset: asset_address.address.clone(),
-                        strategy_allocations: vec![&e, Some(StrategyAllocation {
-                            strategy_address: strategy_address.clone(),
-                            amount: amount.clone(),
-                        })],
+                        asset_address: asset_address.address.clone(),
+                        strategy_address: strategy_address.clone(),
+                        amount: amount.clone(),
                     };
                     events::emit_rebalance_invest_event(&e, vec![&e, call_params], report);
                 }
