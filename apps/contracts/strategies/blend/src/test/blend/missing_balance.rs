@@ -396,13 +396,19 @@ fn missing_balance() {
     println!("Blend Pool Position for strategy: {:?}", blend_pool_position);
     println!("Is the same amount as the strategy knows, so we are good here");
 
-    println!("--- Withdrawing ALL user 3 funds ---");
-    strategy_client.withdraw(&200_000_000_000i128, &user_3, &user_3); // if i withdraw more than i have it will just withdraw the maximum possible, which is the real USER 3 Balance of 1224351200 so in some part of the code when the conversion from b_tokens to shares to underlying asset is done it is not working properly
-    println!("Blend Pool USDC Balance {}", usdc_client.balance(&pool));
-    println!("---- Strategy Balances for users ----");
-    let user_3_balance_after_withdraw = strategy_client.balance(&user_3);
-    println!("USER 3 strategy balance {}", user_3_balance_after_withdraw);
-    println!("-----------------------------------------------");
+    // println!("--- Withdrawing ALL user 3 funds ---");
+    // strategy_client.withdraw(&200_000_000_000i128, &user_3, &user_3); // if i withdraw more than i have it will just withdraw the maximum possible, which is the real USER 3 Balance of 1224351200 so in some part of the code when the conversion from b_tokens to shares to underlying asset is done it is not working properly
+    // println!("Blend Pool USDC Balance {}", usdc_client.balance(&pool));
+    // println!("---- Strategy Balances for users ----");
+    // let user_3_balance_after_withdraw = strategy_client.balance(&user_3);
+    // println!("USER 3 strategy balance {}", user_3_balance_after_withdraw);
+    // println!("-----------------------------------------------");
+
+    println!("Deposits");
+    strategy_client.deposit(&100_000_000_0i128, &user_2);
+    let user_3_balance = strategy_client.balance(&user_3);
+    println!("USER 3 strategy balance {}", user_3_balance);
+
 
 
 }

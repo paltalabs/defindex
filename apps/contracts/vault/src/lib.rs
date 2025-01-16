@@ -945,8 +945,8 @@ impl VaultManagementTrait for DeFindexVault {
                 if report.gains_or_losses > 0 {
                     report.lock_fee(current_vault_fee);
                     set_report(&e, &strategy.address, &report);
-                    reports.push_back(report);
                 }
+                reports.push_back(report);
             }
         }
 
