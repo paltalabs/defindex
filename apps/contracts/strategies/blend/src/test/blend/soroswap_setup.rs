@@ -47,6 +47,7 @@ pub fn create_soroswap_pool<'a>(
     amount_a: &i128,
     amount_b: &i128,
 ) -> SoroswapRouterClient<'a> {
+    e.mock_all_auths();
     let soroswap_admin = Address::generate(&e);
     let factory = create_soroswap_factory(&e, &soroswap_admin);
     let router = create_soroswap_router(&e, &factory.address);

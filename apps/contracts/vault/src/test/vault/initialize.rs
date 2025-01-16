@@ -68,7 +68,8 @@ fn get_roles() {
     let asset_1 = vault_assets.get(1).unwrap();
     
     let total_managed_funds = defindex_contract.fetch_total_managed_funds();
-    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
+    let current_invested_funds_0 = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
+    let current_invested_funds_1 = defindex_contract.fetch_total_managed_funds().get(test.token_1.address.clone()).unwrap().invested_amount;
     let current_idle_funds = defindex_contract.fetch_current_idle_funds();
 
     let mut expected_total_managed_funds: Map<Address, CurrentAssetInvestmentAllocation> = Map::new(&test.env);
@@ -122,7 +123,8 @@ fn get_roles() {
     assert_eq!(vault_assets.len(), 2);
 
     assert_eq!(total_managed_funds, expected_total_managed_funds);
-    assert_eq!(current_invested_funds, expected_current_invested_funds);
+    assert_eq!(current_invested_funds_0, expected_current_invested_funds.get(test.token_0.address.clone()).unwrap());
+    assert_eq!(current_invested_funds_1, expected_current_invested_funds.get(test.token_1.address.clone()).unwrap());
     assert_eq!(current_idle_funds, expected_current_idle_funds);
 
     assert_eq!(manager_role, test.manager);
@@ -274,7 +276,7 @@ fn with_one_asset_and_several_strategies() {
     let vault_strategies = asset.strategies;
     
     let total_managed_funds = defindex_contract.fetch_total_managed_funds();
-    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
+    let current_invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
     let current_idle_funds = defindex_contract.fetch_current_idle_funds();
 
     let mut expected_total_managed_funds: Map<Address, CurrentAssetInvestmentAllocation> = Map::new(&test.env);
@@ -319,7 +321,7 @@ fn with_one_asset_and_several_strategies() {
     assert_eq!(vault_strategies.len(), strategy_params.len());
 
     assert_eq!(total_managed_funds, expected_total_managed_funds);
-    assert_eq!(current_invested_funds, expected_current_invested_funds);
+    assert_eq!(current_invested_funds, expected_current_invested_funds.get(test.token_0.address.clone()).unwrap());
     assert_eq!(current_idle_funds, expected_current_idle_funds);
  
 }
@@ -365,7 +367,7 @@ fn with_one_asset_no_strategies(){
     let vault_strategies = asset.strategies;
 
     let total_managed_funds = defindex_contract.fetch_total_managed_funds();
-    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
+    let current_invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
     let current_idle_funds = defindex_contract.fetch_current_idle_funds();
 
     let mut expected_total_managed_funds: Map<Address, CurrentAssetInvestmentAllocation> = Map::new(&test.env);
@@ -389,7 +391,7 @@ fn with_one_asset_no_strategies(){
     assert_eq!(vault_strategies.len(), strategy_params.len());
 
     assert_eq!(total_managed_funds, expected_total_managed_funds);
-    assert_eq!(current_invested_funds, expected_current_invested_funds);
+    assert_eq!(current_invested_funds, expected_current_invested_funds.get(test.token_0.address.clone()).unwrap());
     assert_eq!(current_idle_funds, expected_current_idle_funds);
     
     //Deposit
@@ -404,7 +406,7 @@ fn with_one_asset_no_strategies(){
     );
 
     let current_idle_funds = defindex_contract.fetch_current_idle_funds();
-    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
+    let current_invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
 
     let mut expected_current_idle_funds: Map<Address, i128> = Map::new(&test.env);
     expected_current_idle_funds.set(test.token_0.address.clone(), amount0);
@@ -413,7 +415,7 @@ fn with_one_asset_no_strategies(){
     expected_current_invested_funds.set(test.token_0.address.clone(), 0i128);
 
     assert_eq!(current_idle_funds, expected_current_idle_funds);
-    assert_eq!(current_invested_funds, expected_current_invested_funds);
+    assert_eq!(current_invested_funds, expected_current_invested_funds.get(test.token_0.address.clone()).unwrap());
 
     let vault_shares = defindex_contract.balance(&users[0]);
     let withdraw_amount = defindex_contract.try_get_asset_amounts_per_shares(&vault_shares).unwrap().unwrap().get(test.token_0.address.clone()).unwrap();

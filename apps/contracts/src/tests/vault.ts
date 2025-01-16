@@ -776,7 +776,13 @@ export async function rebalanceVault(deployedVault: string, instructions: Instru
 //         }),
 //     ];
 // }
-
+interface TotalManagedFunds {
+  asset: string,
+  idle_amount: bigint,
+  invested_amount: bigint,
+  strategy_allocations: any[],
+  total_amount: bigint
+}
 export async function fetchCurrentInvestedFunds(
   deployedVault: string,
   user: Keypair
@@ -784,15 +790,18 @@ export async function fetchCurrentInvestedFunds(
   try {
     const res = await invokeCustomContract(
       deployedVault,
-      "fetch_current_invested_funds",
+      "fetch_total_managed_funds",
       [],
       user
     );
     const funds = scValToNative(res.returnValue);
-    const mappedFunds = Object.entries(funds).map(([key, value]) => ({
-      address: key,
-      amount: value,
-    }));
+    const mappedFunds = Object.entries(funds).map(([key, value]) => {
+      const fund = value as TotalManagedFunds;
+      return {
+        asset: key,
+        amount: fund.invested_amount,
+      };
+    });
     return mappedFunds;
   } catch (error) {
     console.error("Error:", error);

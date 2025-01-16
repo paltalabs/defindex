@@ -1373,8 +1373,8 @@ fn from_strategy_success_no_mock_all_auths() {
     }
     ]).deposit(&amounts_desired, &amounts_min, &from, &invest); 
  
-    let current_invested_funds = defindex_contract.fetch_current_invested_funds();
-    let invested_funds_0 = current_invested_funds.get(test.token_0.address.clone()).unwrap();
+    let current_invested_funds = defindex_contract.fetch_total_managed_funds();
+    let invested_funds_0 = current_invested_funds.get(test.token_0.address.clone()).unwrap().invested_amount;
     let invested_funds_1 = current_invested_funds.get(test.token_1.address.clone()).unwrap();
     let idle_funds_0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
     let idle_funds_1 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
@@ -1416,7 +1416,7 @@ fn from_strategy_success_no_mock_all_auths() {
     }
     ]).withdraw(&withdraw_amount_0, &from.clone());
 
-    let invested_funds_0 = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
+    let invested_funds_0 = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
     let invested_funds_1 = defindex_contract.fetch_current_invested_funds().get(test.token_1.address.clone()).unwrap();
     let idle_funds_0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
     let idle_funds_1 = defindex_contract.fetch_current_idle_funds().get(test.token_1.address.clone()).unwrap();
