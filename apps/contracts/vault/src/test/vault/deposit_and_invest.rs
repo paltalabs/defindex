@@ -7,6 +7,9 @@ use crate::test::defindex_vault::{
 use crate::test::{
     create_defindex_vault, create_hodl_strategy, create_strategy_params_token_0, create_strategy_params_token_1, create_token_contract, get_token_admin_client, DeFindexVaultTest, EnvTestUtils
 };
+
+extern crate std;
+use std::println;
 // with no previous investment, there should not be any investment
 #[test]
 fn one_asset_no_previous_investment() {
@@ -659,8 +662,8 @@ fn several_assets_wih_previous_investment_success() {
     );
     
 
-    let amount0 = 123456789i128;
-    let amount1 = 987654321i128;
+    let amount0 = 12_3_456_789i128;
+    let amount1 = 98_7_654_321i128;
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
 
@@ -677,8 +680,8 @@ fn several_assets_wih_previous_investment_success() {
     );
 
     // GENERATE INVESTMENT
-    let amount_to_invest_0 = 100000000i128;
-    let amount_to_invest_1 = 200000000i128;
+    let amount_to_invest_0 = 10_0_000_000i128;
+    let amount_to_invest_1 = 20_0_000_000i128;
 
     let invest_instructions = sorobanvec![
         &test.env,
@@ -709,7 +712,7 @@ fn several_assets_wih_previous_investment_success() {
         CurrentAssetInvestmentAllocation {
             asset: test.token_0.address.clone(),
             total_amount: amount0,
-            idle_amount: amount0 - amount_to_invest_0,
+            idle_amount: amount0 - amount_to_invest_0, // 123456789 - 100000000 = 23456789
             invested_amount: amount_to_invest_0,
             strategy_allocations: strategy_investments_expected_token_0,
         },
@@ -719,7 +722,7 @@ fn several_assets_wih_previous_investment_success() {
         CurrentAssetInvestmentAllocation {
             asset: test.token_1.address.clone(),
             total_amount: amount1,
-            idle_amount: amount1 - amount_to_invest_1,
+            idle_amount: amount1 - amount_to_invest_1, // 987654321 - 200000000 = 787654321
             invested_amount: amount_to_invest_1,
             strategy_allocations: strategy_investments_expected_token_1,
         },
@@ -732,9 +735,13 @@ fn several_assets_wih_previous_investment_success() {
 
     // new user wants to do a deposit with more assets 0 than the proportion, but with minium amount 0
     // multiply amount0 by 2
-    let amount0_new = amount0 * 2 + 100;
-    let amount1_new = amount1 * 2;
+    let amount0_new = amount0 * 2 + 100; // 24_6_913_578 + 100 = 24_6_913_678
+    let amount1_new = amount1 * 2; // 197_5_308_642 
 
+    println!("test.token_0.address: {:?}", test.token_0.address);
+    println!("test.token_1.address: {:?}", test.token_1.address);
+    println!("test.strategy_client_token_0.address: {:?}", test.strategy_client_token_0.address);
+    println!("test.strategy_client_token_1.address: {:?}", test.strategy_client_token_1.address);
     // mint this to user 1
     test.token_0_admin_client.mint(&users[1], &amount0_new);
     test.token_1_admin_client.mint(&users[1], &amount1_new);
@@ -753,6 +760,7 @@ fn several_assets_wih_previous_investment_success() {
         &true,
     );
 
+    println!("deposit_result: {:?}", deposit_result);
     // check deposit result. Ok((amounts, shares_to_mint))
     // Vec<i128>, i128
 
