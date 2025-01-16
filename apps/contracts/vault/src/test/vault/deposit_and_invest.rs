@@ -1318,19 +1318,19 @@ fn several_assets_several_strategies() {
     assert_eq!(token_3.balance(&asset_2_strategy_1.address), 0);
     assert_eq!(token_3.balance(&asset_2_strategy_2.address), 0);
 
-    let invested_funds_a0 = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
+    let invested_funds_a0 = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
     let idle_funds_a0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
 
     assert_eq!(invested_funds_a0, 0i128);
     assert_eq!(idle_funds_a0, deposit_amount_0);
 
-    let invested_funds_a1 = defindex_contract.fetch_current_invested_funds().get(test.token_1.address.clone()).unwrap();
+    let invested_funds_a1 = defindex_contract.fetch_total_managed_funds().get(test.token_1.address.clone()).unwrap().invested_amount;
     let idle_funds_a1 = defindex_contract.fetch_current_idle_funds().get(test.token_1.address.clone()).unwrap();
 
     assert_eq!(invested_funds_a1, 0i128);
     assert_eq!(idle_funds_a1, deposit_amount_1);
 
-    let invested_funds_a2 = defindex_contract.fetch_current_invested_funds().get(token_3.address.clone()).unwrap();
+    let invested_funds_a2 = defindex_contract.fetch_total_managed_funds().get(token_3.address.clone()).unwrap().invested_amount;
     let idle_funds_a2 = defindex_contract.fetch_current_idle_funds().get(token_3.address.clone()).unwrap();
 
     assert_eq!(invested_funds_a2, 0i128);
@@ -1361,19 +1361,19 @@ fn several_assets_several_strategies() {
     assert_eq!(token_3.balance(&asset_2_strategy_1.address), deposit_amount_2 / 2);
     assert_eq!(token_3.balance(&asset_2_strategy_2.address), deposit_amount_2 / 2);
     
-    let invested_funds_a0 = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
+    let invested_funds_a0 = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
     let idle_funds_a0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
 
     assert_eq!(invested_funds_a0, deposit_amount_0);
     assert_eq!(idle_funds_a0, 0i128);
 
-    let invested_funds_a1 = defindex_contract.fetch_current_invested_funds().get(test.token_1.address.clone()).unwrap();
+    let invested_funds_a1 = defindex_contract.fetch_total_managed_funds().get(test.token_1.address.clone()).unwrap().invested_amount;
     let idle_funds_a1 = defindex_contract.fetch_current_idle_funds().get(test.token_1.address.clone()).unwrap();
 
     assert_eq!(invested_funds_a1, deposit_amount_1);
     assert_eq!(idle_funds_a1, 0i128);
 
-    let invested_funds_a2 = defindex_contract.fetch_current_invested_funds().get(token_3.address.clone()).unwrap();
+    let invested_funds_a2 = defindex_contract.fetch_total_managed_funds().get(token_3.address.clone()).unwrap().invested_amount;
     let idle_funds_a2 = defindex_contract.fetch_current_idle_funds().get(token_3.address.clone()).unwrap();
 
     assert_eq!(invested_funds_a2, deposit_amount_2);
@@ -1396,19 +1396,19 @@ fn several_assets_several_strategies() {
     assert_eq!(token_3.balance(&asset_2_strategy_1.address), amount2 / 2);
     assert_eq!(token_3.balance(&asset_2_strategy_2.address), amount2 / 2);
 
-    let invested_funds_a0 = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
+    let invested_funds_a0 = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
     let idle_funds_a0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
 
     assert_eq!(invested_funds_a0, amount0);
     assert_eq!(idle_funds_a0, 0i128);
 
-    let invested_funds_a1 = defindex_contract.fetch_current_invested_funds().get(test.token_1.address.clone()).unwrap();
+    let invested_funds_a1 = defindex_contract.fetch_total_managed_funds().get(test.token_1.address.clone()).unwrap().invested_amount;
     let idle_funds_a1 = defindex_contract.fetch_current_idle_funds().get(test.token_1.address.clone()).unwrap();
 
     assert_eq!(invested_funds_a1, amount1);
     assert_eq!(idle_funds_a1, 0i128);
 
-    let invested_funds_a2 = defindex_contract.fetch_current_invested_funds().get(token_3.address.clone()).unwrap();
+    let invested_funds_a2 = defindex_contract.fetch_total_managed_funds().get(token_3.address.clone()).unwrap().invested_amount;
     let idle_funds_a2 = defindex_contract.fetch_current_idle_funds().get(token_3.address.clone()).unwrap();
 
     assert_eq!(invested_funds_a2, amount2);
@@ -1448,19 +1448,19 @@ fn several_assets_several_strategies() {
     assert_eq!(token_3.balance(&asset_2_strategy_1.address), (amount2 * 3) / 2);
     assert_eq!(token_3.balance(&asset_2_strategy_2.address), (amount2 * 3) / 2);
     
-    let invested_funds_a0 = defindex_contract.fetch_current_invested_funds().get(test.token_0.address.clone()).unwrap();
+    let invested_funds_a0 = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
     let idle_funds_a0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
 
     assert_eq!(invested_funds_a0, amount0 * 3);
     assert_eq!(idle_funds_a0, 0i128);
 
-    let invested_funds_a1 = defindex_contract.fetch_current_invested_funds().get(test.token_1.address.clone()).unwrap();
+    let invested_funds_a1 = defindex_contract.fetch_total_managed_funds().get(test.token_1.address.clone()).unwrap().invested_amount;
     let idle_funds_a1 = defindex_contract.fetch_current_idle_funds().get(test.token_1.address.clone()).unwrap();
 
     assert_eq!(invested_funds_a1, amount1 * 3);
     assert_eq!(idle_funds_a1, 0i128);
 
-    let invested_funds_a2 = defindex_contract.fetch_current_invested_funds().get(token_3.address.clone()).unwrap();
+    let invested_funds_a2 = defindex_contract.fetch_total_managed_funds().get(token_3.address.clone()).unwrap().invested_amount;
     let idle_funds_a2 = defindex_contract.fetch_current_idle_funds().get(token_3.address.clone()).unwrap();
 
     assert_eq!(invested_funds_a2, amount2 * 3);
