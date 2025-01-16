@@ -1,5 +1,5 @@
-use crate::{setup::create_vault_one_blend_strategy, test::{EnvTestUtils, IntegrationTest, DAY_IN_LEDGERS}, vault::defindex_vault_contract::{AssetInvestmentAllocation, StrategyAllocation}};
-use soroban_sdk::{testutils::{AuthorizedFunction, AuthorizedInvocation}, vec as svec, Symbol, IntoVal, Vec};
+use crate::{setup::create_vault_one_blend_strategy, test::{EnvTestUtils, IntegrationTest, DAY_IN_LEDGERS}, vault::defindex_vault_contract::{AssetInvestmentAllocation, Instruction, StrategyAllocation}};
+use soroban_sdk::{testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke}, vec as svec, IntoVal, Symbol, Vec};
 use crate::setup::blend_setup::Request;
 
 #[test]
@@ -100,22 +100,27 @@ fn success() {
     let report = vault_contract.report();
     println!("{:?}", report);
 
-    let investments = svec![
+    println!("--- Investing ---");
+
+    let invest_instructions = svec![
         &setup.env,
-        Some(AssetInvestmentAllocation {
-            asset: usdc.address.clone(),
-            strategy_allocations: svec![
-                &setup.env,
-                Some(StrategyAllocation {
-                    amount: starting_balance * 2,
-                    strategy_address: enviroment.strategy_contract.address.clone(),
-                }),
-            ],
-        }),
+        Instruction::Invest(
+            enviroment.strategy_contract.address.clone(),
+            starting_balance * 2,
+        ),
     ];
 
-    println!("--- Investing ---");
-    vault_contract.invest(&investments);
+    vault_contract
+    .mock_auths(&[MockAuth {
+        address: &enviroment.manager.clone(),   
+        invoke: &MockAuthInvoke {
+            contract: &vault_contract.address.clone(),
+            fn_name: "rebalance",
+            args: (enviroment.manager.clone(), invest_instructions.clone()).into_val(&setup.env),
+            sub_invokes: &[],
+        },
+    }])
+    .rebalance(&enviroment.manager, &invest_instructions);
 
     println!("--report after investing 0 0 2 --");
     let report = vault_contract.report();

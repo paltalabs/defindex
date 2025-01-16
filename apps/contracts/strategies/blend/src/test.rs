@@ -1,5 +1,5 @@
 #![cfg(test)]
-extern crate std;
+pub extern crate std;
 
 use crate::{
     blend_pool::{self, BlendPoolClient, Request, ReserveConfig, ReserveEmissionMetadata},
