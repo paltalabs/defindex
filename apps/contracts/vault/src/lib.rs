@@ -25,7 +25,7 @@ mod utils;
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use router::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
 use deposit::process_deposit;
-use funds::{fetch_current_idle_funds, fetch_current_invested_funds, fetch_total_managed_funds};
+use funds::{fetch_current_idle_funds, fetch_total_managed_funds};
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::{check_and_execute_investments, generate_investment_allocations};
 use models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction, StrategyAllocation};
@@ -161,7 +161,7 @@ impl VaultTrait for DeFindexVault {
     ///     - `false`: Leave the deposited funds as idle assets in the vault.
     ///
     /// # Returns
-    /// * `Result<(Vec<i128>, i128), ContractError>` - Returns the actual deposited `amounts` and `shares_to_mint` if successful,
+    /// * `Result<(Vec<i128>, i128, Option<Vec<Option<AssetInvestmentAllocation>>>), ContractError>` - Returns the actual deposited `amounts` and `shares_to_mint` if successful,
     ///   otherwise a `ContractError`.
     ///
     /// # Function Flow
@@ -497,20 +497,6 @@ impl VaultTrait for DeFindexVault {
         fetch_total_managed_funds(e, false)
     }
 
-    /// Returns the current invested funds, representing the total assets allocated to strategies.
-    ///
-    /// This function provides a map where the key is the asset address and the value is the total amount
-    /// of that asset currently invested in various strategies.
-    ///
-    /// # Arguments:
-    /// * `e` - The environment.
-    ///
-    /// # Returns:
-    /// * `Map<Address, i128>` - A map of asset addresses to their total invested amounts.
-    fn fetch_current_invested_funds(e: &Env) -> Map<Address, i128> {
-        extend_instance_ttl(&e);
-        fetch_current_invested_funds(e, false)
-    }
 
     /// Returns the current idle funds, representing the total assets held directly by the vault (not invested).
     ///
@@ -840,6 +826,13 @@ impl VaultManagementTrait for DeFindexVault {
                 }
                 Instruction::Invest(strategy_address, amount) => {
                     let asset_address = get_strategy_asset(&e, &strategy_address)?;
+                    
+                    // Check if strategy is paused before investing
+                    let strategy = get_strategy_struct(&strategy_address, &asset_address)?;
+                    if strategy.paused {
+                        panic_with_error!(&e, ContractError::StrategyPaused);
+                    }
+                    
                     let report = invest_in_strategy(&e, &asset_address.address, &strategy_address, &amount)?;
                     let call_params = AssetInvestmentAllocation {
                         asset: asset_address.address.clone(),
