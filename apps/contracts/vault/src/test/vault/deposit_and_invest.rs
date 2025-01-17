@@ -8,7 +8,6 @@ use crate::test::{
     create_defindex_vault, create_hodl_strategy, create_strategy_params_token_0, create_strategy_params_token_1, create_token_contract, get_token_admin_client, DeFindexVaultTest, EnvTestUtils
 };
 
-extern crate std;
 // with no previous investment, there should not be any investment
 #[test]
 fn one_asset_no_previous_investment() {
@@ -1805,9 +1804,17 @@ fn several_assets_one_strategy_paused_and_rescue() {
     // Pause the strategy
     defindex_contract.pause_strategy(&strategy_1.address.clone(), &test.manager.clone());
 
-    // Check the strategy is paused
-    let strategy = defindex_contract.get_assets().get(1).unwrap().strategies.get(1).unwrap();
-    assert_eq!(strategy.paused, true);
+    // Check only the strategy_1 is paused
+    let strategy_a0 = defindex_contract.get_assets().get(0).unwrap().strategies.get(0).unwrap();
+    assert_eq!(strategy_a0.paused, false);
+
+    let strategy0_a1 = defindex_contract.get_assets().get(1).unwrap().strategies.get(0).unwrap();
+    let strategy1_a1 = defindex_contract.get_assets().get(1).unwrap().strategies.get(1).unwrap();
+    let strategy2_a1 = defindex_contract.get_assets().get(1).unwrap().strategies.get(2).unwrap();
+
+    assert_eq!(strategy0_a1.paused, false);
+    assert_eq!(strategy1_a1.paused, true);
+    assert_eq!(strategy2_a1.paused, false);
 
     let amount_0 =  2_0_000_000i128;
     let amount_1 =  6_0_000_000i128;
@@ -1830,11 +1837,12 @@ fn several_assets_one_strategy_paused_and_rescue() {
     let invested_full_funds_a1 = defindex_contract.fetch_total_managed_funds().get(test.token_1.address.clone()).unwrap().invested_amount;
     let idle_funds_a1 = defindex_contract.fetch_current_idle_funds().get(test.token_1.address.clone()).unwrap();
 
+
     assert_eq!(invested_funds_a0, mint_amount + amount_0);
     assert_eq!(idle_funds_a0, 0);
 
-    //assert_eq!(invested_full_funds_a1, mint_amount*3);
-    //assert_eq!(idle_funds_a1, amount_1);
+    assert_eq!(invested_full_funds_a1, mint_amount*3 + 4_0_000_000i128);
+    assert_eq!(idle_funds_a1, 2_0_000_000i128);
 
     defindex_contract.rescue(&strategy_1.address, &test.emergency_manager);
 
@@ -1842,8 +1850,8 @@ fn several_assets_one_strategy_paused_and_rescue() {
     let invested_funds_a1 = defindex_contract.fetch_total_managed_funds().get(test.token_1.address.clone()).unwrap().invested_amount;
     let idle_funds_a1 = defindex_contract.fetch_current_idle_funds().get(test.token_1.address.clone()).unwrap();
 
-    //assert_eq!(invested_funds_a1, mint_amount*2);
-    //assert_eq!(idle_funds_a1, (mint_amount + amount_1));
+    assert_eq!(invested_funds_a1, mint_amount*2 + 4_0_000_000i128);
+    assert_eq!(idle_funds_a1, (mint_amount + 2_0_000_000i128));
 
 
     //Deposit again (the strategy_1 funds should be in idle funds)
@@ -1861,7 +1869,6 @@ fn several_assets_one_strategy_paused_and_rescue() {
     );
 
     // Check that the funds are in the right place
-
     let invested_funds_a0 = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
     let idle_funds_a0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
 
@@ -1871,8 +1878,8 @@ fn several_assets_one_strategy_paused_and_rescue() {
     let expected_invested_funds_a0 = 10_0_000_000i128 + 2_0_000_000i128 + 2_0_000_000i128;
     let expected_idle_funds_a0 = 0;
 
-    let expected_invested_funds_a1 = 20_0_000_000i128 + 4_0_000_000i128; 
-    let expected_idle_funds_a1 = 10_0_000_000i128 + 2_0_000_000i128 + 2_0_000_000i128;
+    let expected_invested_funds_a1 = 30_0_000_000i128; 
+    let expected_idle_funds_a1 = 10_0_000_000i128 + 2_0_000_000i128;
 
     assert_eq!(invested_funds_a0, expected_invested_funds_a0);
     assert_eq!(idle_funds_a0, expected_idle_funds_a0);
@@ -1881,4 +1888,3 @@ fn several_assets_one_strategy_paused_and_rescue() {
     assert_eq!(idle_funds_a1, expected_idle_funds_a1);
 
 }
-
