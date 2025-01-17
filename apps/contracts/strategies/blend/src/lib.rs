@@ -12,7 +12,7 @@ mod reserves;
 mod soroswap;
 mod storage;
 
-use storage::{extend_instance_ttl, has_config, Config};
+use storage::{extend_instance_ttl, Config};
 
 pub use defindex_strategy_core::{event, DeFindexStrategyTrait, StrategyError};
 

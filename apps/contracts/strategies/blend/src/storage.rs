@@ -41,10 +41,6 @@ pub fn get_config(e: &Env) -> Config {
     e.storage().instance().get(&DataKey::Config).unwrap()
 }
 
-pub fn has_config(e: &Env) -> bool {
-    e.storage().instance().has(&DataKey::Config)
-}
-
 // Vault Position
 /// Set the number of shares shares a user owns. Shares are stored with 7 decimal places of precision.
 pub fn set_vault_shares(e: &Env, address: &Address, shares: i128) {
