@@ -60,6 +60,11 @@ impl DeFindexStrategyTrait for BlendStrategy {
             .ok_or(StrategyError::InvalidArgument)
             .unwrap()
             .into_val(&e);
+        let claim_ids: Vec<u32> = init_args
+            .get(4)
+            .ok_or(StrategyError::InvalidArgument)
+            .unwrap()
+            .into_val(&e);
 
         let config = Config {
             asset: asset.clone(),
@@ -67,6 +72,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
             reserve_id,
             blend_token,
             router: soroswap_router,
+            claim_ids,
         };
 
         storage::set_config(&e, config);
