@@ -380,6 +380,55 @@ fn missing_balance() {
     println!("USER 2 USDC Balance {}", usdc_client.balance(&user_2));
     println!("USER 3 USDC Balance {}", usdc_client.balance(&user_3));
     println!("USER 4 USDC Balance {}", usdc_client.balance(&user_4));
+    // user_4 deposit directly into pool
+    println!("--- Depositing Directly into Blend ---");
+    let user_4_starting_balance = 200_0000000;
+    usdc_client.mint(&user_4, &user_4_starting_balance);
+    pool_client.submit(
+        &user_4,
+        &user_4,
+        &user_4,
+        &vec![
+            &e,
+            Request {
+                request_type: 0,
+                address: usdc.address().clone(),
+                amount: user_4_starting_balance,
+            },
+        ],
+    );
+    // withdraw all funds from pool for user_4
+    println!("USER 4 Withdraws from Blend Pool: 200_1_917_808");
+    pool_client.submit(
+        &user_4,
+        &user_4,
+        &user_4,
+        &vec![
+            &e,
+            Request {
+                request_type: 1,
+                address: usdc.address().clone(),
+                amount: user_4_starting_balance*10,
+            },
+        ],
+    );
+        // admin borrow back to 50% util rate
+        println!("--- ADMIN Borrowing from Blend ---");
+        let borrow_amount = (user_4_starting_balance + starting_balance * 2) / 2;
+        pool_client.submit(
+            &admin,
+            &admin,
+            &admin,
+            &vec![
+                &e,
+                Request {
+                    request_type: 4,
+                    address: usdc.address().clone(),
+                    amount: borrow_amount,
+                },
+            ],
+        );
+
     println!("-----------------------------------------------");
     println!("---- Strategy Balances for users ----");
     let user_3_balance_after_sim = strategy_client.balance(&user_3);
