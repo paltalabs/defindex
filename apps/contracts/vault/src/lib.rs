@@ -27,7 +27,7 @@ use router::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exa
 use deposit::process_deposit;
 use funds::{fetch_current_idle_funds, fetch_total_managed_funds};
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
-use investment::{check_and_execute_investments, generate_investment_allocations};
+use investment::generate_investment_allocations;
 use models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction, StrategyAllocation};
 use storage::{
     extend_instance_ttl, get_assets, get_defindex_protocol_fee_rate,
@@ -210,7 +210,22 @@ impl VaultTrait for DeFindexVault {
 
         let asset_investments = if invest {
             let allocations = generate_investment_allocations(&e, &assets, &total_managed_funds, &amounts)?;
-            check_and_execute_investments(&e, &assets, &allocations)?;
+            //iterate between allocations to execute investments
+            for allocation in allocations.iter() {
+                //Validate if alloctation is not empty
+                if let Some(allocation) = allocation.clone() {
+                    let strategies = allocation.strategy_allocations;
+                    for strategy in strategies {
+                        if let Some(strategy) = strategy {
+                            let strategy_address = strategy.strategy_address;
+                            let amount = strategy.amount;
+                            let asset_address = get_strategy_asset(&e, &strategy_address)?;
+                            invest_in_strategy(&e, &asset_address.address, &strategy_address, &amount)?;
+                        }
+
+                    }
+                }
+            }
             Some(allocations)
         } else {
             None
