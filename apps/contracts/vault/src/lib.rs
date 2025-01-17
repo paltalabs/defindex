@@ -219,8 +219,7 @@ impl VaultTrait for DeFindexVault {
                         if let Some(strategy) = strategy {
                             let strategy_address = strategy.strategy_address;
                             let amount = strategy.amount;
-                            let asset_address = get_strategy_asset(&e, &strategy_address)?;
-                            invest_in_strategy(&e, &asset_address.address, &strategy_address, &amount)?;
+                            invest_in_strategy(&e, &allocation.asset, &strategy_address, &amount)?;
                         }
 
                     }
