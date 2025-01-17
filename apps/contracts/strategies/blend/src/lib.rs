@@ -24,14 +24,6 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
     }
 }
 
-fn check_initialized(e: &Env) -> Result<(), StrategyError> {
-    if has_config(e) {
-        Ok(())
-    } else {
-        Err(StrategyError::NotInitialized)
-    }
-}
-
 const STARETEGY_NAME: &str = "BlendStrategy";
 
 #[contract]
@@ -79,14 +71,12 @@ impl DeFindexStrategyTrait for BlendStrategy {
     }
 
     fn asset(e: Env) -> Result<Address, StrategyError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
 
         Ok(storage::get_config(&e).asset)
     }
 
     fn deposit(e: Env, amount: i128, from: Address) -> Result<i128, StrategyError> {
-        check_initialized(&e)?;
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
         from.require_auth();
@@ -118,7 +108,6 @@ impl DeFindexStrategyTrait for BlendStrategy {
     }
 
     fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
 
         let config = storage::get_config(&e);
@@ -136,7 +125,6 @@ impl DeFindexStrategyTrait for BlendStrategy {
     }
 
     fn withdraw(e: Env, amount: i128, from: Address, to: Address) -> Result<i128, StrategyError> {
-        check_initialized(&e)?;
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
         from.require_auth();
@@ -168,7 +156,6 @@ impl DeFindexStrategyTrait for BlendStrategy {
     }
 
     fn balance(e: Env, from: Address) -> Result<i128, StrategyError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
 
         // Get the vault's shares
