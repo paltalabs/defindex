@@ -60,7 +60,7 @@ pub fn deposit(
     from: &Address,
     underlying_amount: i128,
     b_tokens_amount: i128,
-) -> i128 {
+) -> (i128, StrategyReserves) {
     if underlying_amount <= 0 {
         panic_with_error!(e, StrategyError::UnderlyingAmountBelowMin); 
     }
@@ -79,9 +79,9 @@ pub fn deposit(
 
     vault_shares += share_amount;
 
-    storage::set_strategy_reserves(&e, reserves);
+    storage::set_strategy_reserves(&e, reserves.clone());
     storage::set_vault_shares(&e, &from, vault_shares);
-    vault_shares
+    (vault_shares, reserves)
 }
 
 /// Withdraw from the reserve vault. This function expects the withdraw to have already been made
@@ -92,7 +92,7 @@ pub fn withdraw(
     from: &Address,
     underlying_amount: i128,
     b_tokens_amount: i128,
-) -> i128 {
+) -> (i128, StrategyReserves) {
     if underlying_amount <= 0 {
         panic_with_error!(e, StrategyError::InvalidArgument);
     }
@@ -117,10 +117,10 @@ pub fn withdraw(
     }
 
     vault_shares -= share_amount;
-    storage::set_strategy_reserves(&e, reserves);
+    storage::set_strategy_reserves(&e, reserves.clone());
     storage::set_vault_shares(&e, &from, vault_shares);
 
-    vault_shares
+    (vault_shares, reserves)
 }
 
 pub fn harvest(

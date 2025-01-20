@@ -5,6 +5,7 @@ use reserves::StrategyReserves;
 use soroban_sdk::{
     contract, contractimpl, token::TokenClient, Address, Env, IntoVal, String, Val, Vec,
 };
+use soroban_fixed_point_math::{i128, FixedPoint};
 
 mod blend_pool;
 mod constants;
@@ -103,7 +104,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
         let b_tokens_minted = blend_pool::supply(&e, &from, &amount, &config);
 
         // Keeping track of the total deposited amount and the total bTokens owned by the strategy depositors
-        let vault_shares = reserves::deposit(&e, reserves.clone(), &from, amount, b_tokens_minted);
+        let (vault_shares, reserves) = reserves::deposit(&e, reserves.clone(), &from, amount, b_tokens_minted);
 
         let underlying_balance = shares_to_underlying(vault_shares, reserves);
 
@@ -147,7 +148,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         let (tokens_withdrawn, b_tokens_burnt) = blend_pool::withdraw(&e, &to, &amount, &config);
 
-        let vault_shares = reserves::withdraw(
+        let (vault_shares, reserves) = reserves::withdraw(
             &e,
             reserves.clone(),
             &from,
@@ -186,9 +187,11 @@ fn shares_to_underlying(shares: i128, reserves: StrategyReserves) -> i128 {
         return 0i128;
     }
     // Calculate the bTokens corresponding to the vault's shares
-    let vault_b_tokens = (shares * total_b_tokens) / total_shares;
+    let vault_b_tokens = reserves.shares_to_b_tokens_down(shares);
 
     // Use the b_rate to convert bTokens to underlying assets
-    (vault_b_tokens * reserves.b_rate) / SCALAR_9
+    vault_b_tokens
+        .fixed_div_floor(SCALAR_9, reserves.b_rate)
+        .unwrap()
 }
 mod test;
