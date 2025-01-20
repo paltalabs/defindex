@@ -242,6 +242,7 @@ fn asset_n_strategies_fixed() {
     check_limits(&setup.env, "Withdraw");
 }
 
+// 2 Strategies is the limit for 1 asset and 2 Blend strategies 
 #[test]
 fn asset_n_strategies_blend() {
     let setup = IntegrationTest::setup();
@@ -282,7 +283,7 @@ fn asset_n_strategies_blend() {
     let pool_client = BlendPoolClient::new(&setup.env, &pool);
 
     let mut strategies = svec![&setup.env];
-    let num_strategies = 3; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
+    let num_strategies = 2; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
 
     for i in 0..num_strategies {
         let strategy_name = format!("Blend_{}", i);
@@ -293,6 +294,7 @@ fn asset_n_strategies_blend() {
             &0u32,
             &blnd.address,
             &soroswap_router.address,
+            svec![&setup.env, 0u32, 1u32, 2u32, 3u32]
         );
         let strategy_contract = BlendStrategyClient::new(&setup.env, &strategy);
 
@@ -379,15 +381,9 @@ fn asset_n_strategies_blend() {
 
     let invest_instructions = invest_instructions;
 
-    let report = vault_contract.report();
-    println!("report = {:?}", report);
-
     setup.env.budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
     check_limits(&setup.env, "Invest");
-
-    let report = vault_contract.report();
-    println!("report = {:?}", report);
 
     // user_2 deposit directly into pool
     let user_2_starting_balance = 200_0000000;
@@ -430,54 +426,53 @@ fn asset_n_strategies_blend() {
      */
     setup.env.jump(DAY_IN_LEDGERS * 7);
 
-    // pool_client.submit(
-    //     &users[2],
-    //     &users[2],
-    //     &users[2],
-    //     &svec![
-    //         &setup.env,
-    //         Request {
-    //             request_type: 1,
-    //             address: usdc.address.clone(),
-    //             amount: user_2_starting_balance * 2,
-    //         },
-    //     ],
-    // );
-    // let user_2_final_balance = usdc.balance(&users[2]);
-    // let user_2_profit = user_2_final_balance - user_2_starting_balance;
+    pool_client.submit(
+        &users[2],
+        &users[2],
+        &users[2],
+        &svec![
+            &setup.env,
+            Request {
+                request_type: 1,
+                address: usdc.address.clone(),
+                amount: user_2_starting_balance * 2,
+            },
+        ],
+    );
+    let user_2_final_balance = usdc.balance(&users[2]);
+    let user_2_profit = user_2_final_balance - user_2_starting_balance;
 
-    // let expected_user_2_profit = user_2_profit / 2;
-    // let withdraw_amount = starting_balance + expected_user_2_profit;
+    let expected_user_2_profit = user_2_profit / 2;
 
-    // std::println!("-- Harvesting --");
-    // // harvest on all strategies
-    // for i in 0..num_strategies {
-    //     setup.env.budget().reset_unlimited();
-    //     let temp_strategy_address = strategies.get(i).unwrap().address.clone();
-    //     let temp_client = FixedStrategyClient::new(&setup.env, &temp_strategy_address);
+    std::println!("-- Harvesting --");
+    // harvest on all strategies
+    for i in 0..num_strategies {
+        setup.env.budget().reset_unlimited();
+        let temp_strategy_address = strategies.get(i).unwrap().address.clone();
+        let temp_client = FixedStrategyClient::new(&setup.env, &temp_strategy_address);
         
-    //     temp_client.harvest(&manager);
-    //     check_limits(&setup.env, "Harvest");
-    // }
+        temp_client.harvest(&manager);
+        check_limits(&setup.env, "Harvest");
+    }
 
-    // let report = vault_contract.report();
-    // println!("report = {:?}", report);
+    let report = vault_contract.report();
+    println!("report = {:?}", report);
 
-    // let lock_fees = vault_contract.lock_fees(&None);
-    // println!("locked_fees = {:?}", lock_fees);
+    let lock_fees = vault_contract.lock_fees(&None);
+    println!("locked_fees = {:?}", lock_fees);
 
-    // println!("-- Distributing Fees --");
-    // setup.env.budget().reset_unlimited();    
-    // vault_contract.distribute_fees();
-    // check_limits(&setup.env, "Distribute Fees");
+    println!("-- Distributing Fees --");
+    setup.env.budget().reset_unlimited();    
+    vault_contract.distribute_fees();
+    check_limits(&setup.env, "Distribute Fees");
 
-    // setup.env.budget().reset_unlimited();
-    // let balance = vault_contract.balance(&users[0]);
-    // vault_contract.withdraw(&balance, &users[0]);
-    // check_limits(&setup.env, "Withdraw");
+    setup.env.budget().reset_unlimited();
+    let balance = vault_contract.balance(&users[0]);
+    vault_contract.withdraw(&balance, &users[0]);
+    check_limits(&setup.env, "Withdraw");
 
-    // setup.env.budget().reset_unlimited();
-    // let balance = vault_contract.balance(&users[1]);
-    // vault_contract.withdraw(&balance, &users[1]);
-    // check_limits(&setup.env, "Withdraw");
+    setup.env.budget().reset_unlimited();
+    let balance = vault_contract.balance(&users[1]);
+    vault_contract.withdraw(&balance, &users[1]);
+    check_limits(&setup.env, "Withdraw");
 }
