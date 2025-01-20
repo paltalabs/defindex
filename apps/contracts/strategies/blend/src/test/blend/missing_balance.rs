@@ -36,8 +36,8 @@ fn missing_balance() {
 
     // Setting up soroswap pool
     let pool_admin = Address::generate(&e);
-    let amount_a = 100000000_0_000_000;
-    let amount_b = 50000000_0_000_000;
+    let amount_a = 100_000_000_0_000_000;
+    let amount_b = 50_000_000_0_000_000;
     blnd_client.mint(&pool_admin, &amount_a);
     usdc_client.mint(&pool_admin, &amount_b);
     let soroswap_router = create_soroswap_pool(
@@ -86,6 +86,7 @@ fn missing_balance() {
     println!("---- Amounts before anything ----");
     println!("Blend pool is at 100k USDC");
     println!("Blend Pool USDC Balance {}", usdc_client.balance(&pool));
+    println!("Blend pool xlm balance {}", xlm_client.balance(&pool));
     println!("Strategy is empty");
     println!("ADMIN USDC Balance {}", usdc_client.balance(&admin));
     println!("USER 2 USDC Balance {}", usdc_client.balance(&user_2));
@@ -207,6 +208,7 @@ fn missing_balance() {
             },
         ],
     );
+    println!("admin borrows {}", borrow_amount);
 
     println!("-----------------------------------------------");
     println!("Blend Pool USDC Balance -200 {}", usdc_client.balance(&pool));
@@ -224,7 +226,19 @@ fn missing_balance() {
     e.jump(DAY_IN_LEDGERS * 7);
 
     println!("--- 7 Days have passed ---");
+    println!("---- Strategy Balances for users ----");
+    
+    println!("USER 2 strategy balance {}", strategy_client.balance(&user_2));
+    println!("USER 3 strategy balance {}", strategy_client.balance(&user_3));
+    println!("-----------------------------------------------");
+    
+    let blend_pool_position = pool_client.get_positions(&strategy_client.address);
+    println!("Blend Pool Position for strategy (collateral): {:?}", blend_pool_position.collateral.get(0));
+    println!("Blend Pool Position for strategy (supply): {:?}", blend_pool_position.supply.get(0));
+    println!("Blend Pool Position for strategy (liabilities): {:?}", blend_pool_position.liabilities.get(0));
+    println!("-----------------------------------------------");
 
+    println!("Blend Pool reserves {:?}", strategy_client.get_blend_reserves());
     /*
      * Withdraw from pool
      * -> withdraw all funds from pool for user_4
@@ -252,6 +266,7 @@ fn missing_balance() {
     let user_4_final_balance = usdc_client.balance(&user_4);
     let user_4_profit = user_4_final_balance - user_4_starting_balance; //1_917_808
     println!("USER 4 Profit: {}", user_4_profit);
+    println!("Blend Pool reserves {:?}", strategy_client.get_blend_reserves());
 
     // withdraw from blend strategy for user_2 and user_3
     // they are expected to receive half of the profit of user_4
@@ -363,16 +378,22 @@ fn missing_balance() {
     println!("USER 3 USDC Balance {}", usdc_client.balance(&user_3));
     println!("USER 4 USDC Balance {}", usdc_client.balance(&user_4));
     println!("-----------------------------------------------");
+    println!("-----------------------------------------------");
+    println!("-----------------------------------------------");
+    println!("-----------------------------------------------");
+    println!("-----------------------------------------------");
     println!("---- Strategy Balances for users ----");
     let user_3_balance_prev_sim = strategy_client.balance(&user_3);
-    println!("USER 3 strategy balance {}", user_3_balance_prev_sim);
+    println!("USER 3 strategy balance previous simulation {}", user_3_balance_prev_sim);
+    println!("Blend Pool reserves previous simulation {:?}", strategy_client.get_blend_reserves());
+    println!("USER 3 vault shares {:?}", strategy_client.get_vault_shares(&user_3));
     println!("-----------------------------------------------");
     
 
     println!("--- Simulating Distributing fees ---");
-    println!("It sends 2275859 USDC from the USER 3 aka the vault to the fee receiver");
+    println!("It sends 20000 USDC from the USER 3 aka the vault to the fee receiver");
     let fee_receiver = Address::generate(&e);
-    strategy_client.withdraw(&2275859i128, &user_3, &fee_receiver);
+    strategy_client.withdraw(&20000i128, &user_3, &fee_receiver);
     println!("-----------------------------------------------");
     println!("Blend Pool USDC Balance {}", usdc_client.balance(&pool));
     println!("Strategy USDC Balance {}", usdc_client.balance(&strategy));
@@ -380,70 +401,37 @@ fn missing_balance() {
     println!("USER 2 USDC Balance {}", usdc_client.balance(&user_2));
     println!("USER 3 USDC Balance {}", usdc_client.balance(&user_3));
     println!("USER 4 USDC Balance {}", usdc_client.balance(&user_4));
-    // user_4 deposit directly into pool
-    println!("--- Depositing Directly into Blend ---");
-    let user_4_starting_balance = 200_0000000;
-    usdc_client.mint(&user_4, &user_4_starting_balance);
-    pool_client.submit(
-        &user_4,
-        &user_4,
-        &user_4,
-        &vec![
-            &e,
-            Request {
-                request_type: 0,
-                address: usdc.address().clone(),
-                amount: user_4_starting_balance,
-            },
-        ],
-    );
-    // withdraw all funds from pool for user_4
-    println!("USER 4 Withdraws from Blend Pool: 200_1_917_808");
-    pool_client.submit(
-        &user_4,
-        &user_4,
-        &user_4,
-        &vec![
-            &e,
-            Request {
-                request_type: 1,
-                address: usdc.address().clone(),
-                amount: user_4_starting_balance*10,
-            },
-        ],
-    );
-        // admin borrow back to 50% util rate
-        println!("--- ADMIN Borrowing from Blend ---");
-        let borrow_amount = (user_4_starting_balance + starting_balance * 2) / 2;
-        pool_client.submit(
-            &admin,
-            &admin,
-            &admin,
-            &vec![
-                &e,
-                Request {
-                    request_type: 4,
-                    address: usdc.address().clone(),
-                    amount: borrow_amount,
-                },
-            ],
-        );
+    println!("Fee Receiver USDC Balance {}", usdc_client.balance(&fee_receiver));    // user_4 deposit directly into pool
+    println!("Blend Pool reserves after distributing fees {:?}", strategy_client.get_blend_reserves());
+    println!("USER 3 vault shares {:?}", strategy_client.get_vault_shares(&user_3));
+    println!("USER 2 vault shares {:?}", strategy_client.get_vault_shares(&user_2));
+    println!("USER 4 vault shares {:?}", strategy_client.get_vault_shares(&user_4));
+    println!("ADMIN vault shares {:?}", strategy_client.get_vault_shares(&admin));
 
     println!("-----------------------------------------------");
     println!("---- Strategy Balances for users ----");
     let user_3_balance_after_sim = strategy_client.balance(&user_3);
-    println!("USER 3 strategy balance {}", user_3_balance_after_sim);
+    println!("USER 3 strategy balance after sim {}", user_3_balance_after_sim);
+    strategy_client.withdraw(&9999999989i128, &user_3, &user_3);
+    println!("Blend Pool reserves after withdrawing all the b_tokens {:?}", strategy_client.get_blend_reserves());
+    println!("USER 3 vault shares {:?}", strategy_client.get_vault_shares(&user_3));
+    println!("USER 2 vault shares {:?}", strategy_client.get_vault_shares(&user_2));
+    println!("USER 4 vault shares {:?}", strategy_client.get_vault_shares(&user_4));
+    println!("ADMIN vault shares {:?}", strategy_client.get_vault_shares(&admin));
+    println!("-----------------------------------------------");
+    println!("USER 3 USDC Balance {}", usdc_client.balance(&user_3));
+
+    
     println!("-----------------------------------------------");
 
-    println!("If we subtract the 2275859 USDC from the USER 3 balance we get");
-    println!("{}", user_3_balance_prev_sim - 2275859i128);
+    println!("If we subtract the 20000 USDC from the USER 3 balance we get");
+    println!("{}", user_3_balance_prev_sim - 20000i128);
     println!("Which should be the same as the USER 3 balance after the distributing fees simulation");
     println!("But is not, the balance after is: {}", user_3_balance_after_sim);
-    println!("And there is a difference of: {}", (user_3_balance_prev_sim - 2275859i128) - user_3_balance_after_sim);
-
-    let blend_pool_position = pool_client.get_positions(&strategy_client.address);
-    println!("Blend Pool Position for strategy: {:?}", blend_pool_position);
+    println!("And there is a difference of: {}", (user_3_balance_prev_sim - 20000i128) - user_3_balance_after_sim);
     println!("Is the same amount as the strategy knows, so we are good here");
+
+
 
     // println!("--- Withdrawing ALL user 3 funds ---");
     // strategy_client.withdraw(&200_000_000_000i128, &user_3, &user_3); // if i withdraw more than i have it will just withdraw the maximum possible, which is the real USER 3 Balance of 1224351200 so in some part of the code when the conversion from b_tokens to shares to underlying asset is done it is not working properly
