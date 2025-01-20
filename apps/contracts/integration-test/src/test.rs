@@ -27,6 +27,12 @@ pub trait EnvTestUtils {
     fn jump(&self, ledgers: u32);
     /// Jump the env by the given amount of seconds. Incremends the sequence by 1.
     fn jump_time(&self, seconds: u64);
+
+    /// Set the ledger to the default LedgerInfo
+    ///
+    /// Time -> 1441065600 (Sept 1st, 2015 12:00:00 AM UTC)
+    /// Sequence -> 100
+    fn set_default_info(&self);
 }
 
 impl EnvTestUtils for Env {
@@ -55,11 +61,25 @@ impl EnvTestUtils for Env {
             max_entry_ttl: 365 * DAY_IN_LEDGERS,
         });
     }
+
+    fn set_default_info(&self) {
+        self.ledger().set(LedgerInfo {
+            timestamp: 1441065600, // Sept 1st, 2015 12:00:00 AM UTC
+            protocol_version: 22,
+            sequence_number: 100,
+            network_id: Default::default(),
+            base_reserve: 10,
+            min_temp_entry_ttl: 30 * DAY_IN_LEDGERS,
+            min_persistent_entry_ttl: 30 * DAY_IN_LEDGERS,
+            max_entry_ttl: 365 * DAY_IN_LEDGERS,
+        });
+    }
 }
 
 impl<'a> IntegrationTest<'a> {
     pub fn setup() -> Self {
         let env = Env::default();
+        env.set_default_info();
 
         let admin = Address::generate(&env);
         let defindex_receiver = Address::generate(&env);
@@ -100,4 +120,5 @@ impl<'a> IntegrationTest<'a> {
 // #[cfg(test)]
 mod vault_one_fixed_strategy;
 mod vault_one_hodl_strategy;
+mod vault_blend_strategy;
 mod limits;

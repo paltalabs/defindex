@@ -1,56 +1,28 @@
-#![cfg(test)]
-pub extern crate std;
-
-pub const ONE_DAY_IN_SECONDS: u64 = 86_400;
-
-use crate::{
-    blend_pool::{self, BlendPoolClient, Request, ReserveConfig, ReserveEmissionMetadata},
-    storage::DAY_IN_LEDGERS,
-    BlendStrategy,
-};
-use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::{
-    testutils::{BytesN as _, Ledger as _, LedgerInfo},
+    testutils::BytesN as _,
     token::StellarAssetClient,
-    vec, Address, BytesN, Env, IntoVal, String, Symbol, Val, Vec,
+    vec, Address, BytesN, Env, String, Symbol, Vec,
 };
+
+mod blend_pool {
+    soroban_sdk::contractimport!(file = "../strategies/external_wasms/blend/blend_pool.wasm");
+}
+pub use blend_pool::{Client as BlendPoolClient, Request, ReserveConfig, ReserveEmissionMetadata};
 
 mod blend_factory_pool {
-    soroban_sdk::contractimport!(file = "../external_wasms/blend/pool_factory.wasm");
+    soroban_sdk::contractimport!(file = "../strategies/external_wasms/blend/pool_factory.wasm");
 }
 
 mod blend_emitter {
-    soroban_sdk::contractimport!(file = "../external_wasms/blend/emitter.wasm");
+    soroban_sdk::contractimport!(file = "../strategies/external_wasms/blend/emitter.wasm");
 }
 
 mod blend_backstop {
-    soroban_sdk::contractimport!(file = "../external_wasms/blend/backstop.wasm");
+    soroban_sdk::contractimport!(file = "../strategies/external_wasms/blend/backstop.wasm");
 }
 
 mod blend_comet {
-    soroban_sdk::contractimport!(file = "../external_wasms/blend/comet.wasm");
-}
-
-pub(crate) fn register_blend_strategy(
-    e: &Env,
-    asset: &Address,
-    blend_pool: &Address,
-    reserve_id: &u32,
-    blend_token: &Address,
-    soroswap_router: &Address,
-    claim_ids: Vec<u32>,
-) -> Address {
-    let init_args: Vec<Val> = vec![
-        e,
-        blend_pool.into_val(e),
-        reserve_id.into_val(e),
-        blend_token.into_val(e),
-        soroswap_router.into_val(e),
-        claim_ids.into_val(e),
-    ];
-
-    let args = (asset, init_args);
-    e.register(BlendStrategy, args)
+    soroban_sdk::contractimport!(file = "../strategies/external_wasms/blend/comet.wasm");
 }
 
 pub struct BlendFixture<'a> {
@@ -64,8 +36,8 @@ pub(crate) fn create_blend_pool(
     e: &Env,
     blend_fixture: &BlendFixture,
     admin: &Address,
-    usdc: &MockTokenClient,
-    xlm: &MockTokenClient,
+    usdc: &StellarAssetClient,
+    xlm: &StellarAssetClient,
 ) -> Address {
     // Mint usdc to admin
     usdc.mint(admin, &200_000_0000000);
@@ -179,112 +151,10 @@ pub(crate) fn create_blend_pool(
     return pool;
 }
 
-/// Create a Blend Strategy
-pub(crate) fn create_blend_strategy(
-    e: &Env,
-    underlying_asset: &Address,
-    blend_pool: &Address,
-    reserve_id: &u32,
-    blend_token: &Address,
-    soroswap_router: &Address,
-) -> Address {
-    let address = register_blend_strategy(
-        e,
-        underlying_asset,
-        blend_pool,
-        reserve_id,
-        blend_token,
-        soroswap_router,
-        vec![e, 0u32, 1u32, 2u32, 3u32]
-    );
-
-    address
-}
-
-pub trait EnvTestUtils {
-    /// Jump the env by the given amount of ledgers. Assumes 5 seconds per ledger.
-    fn jump(&self, ledgers: u32);
-
-    /// Jump the env by the given amount of seconds. Incremends the sequence by 1.
-    fn jump_time(&self, seconds: u64);
-
-    /// Set the ledger to the default LedgerInfo
-    ///
-    /// Time -> 1441065600 (Sept 1st, 2015 12:00:00 AM UTC)
-    /// Sequence -> 100
-    fn set_default_info(&self);
-}
-
-impl EnvTestUtils for Env {
-    fn jump(&self, ledgers: u32) {
-        self.ledger().set(LedgerInfo {
-            timestamp: self.ledger().timestamp().saturating_add(ledgers as u64 * 5),
-            protocol_version: 22,
-            sequence_number: self.ledger().sequence().saturating_add(ledgers),
-            network_id: Default::default(),
-            base_reserve: 10,
-            min_temp_entry_ttl: 30 * DAY_IN_LEDGERS,
-            min_persistent_entry_ttl: 30 * DAY_IN_LEDGERS,
-            max_entry_ttl: 365 * DAY_IN_LEDGERS,
-        });
-    }
-
-    fn jump_time(&self, seconds: u64) {
-        self.ledger().set(LedgerInfo {
-            timestamp: self.ledger().timestamp().saturating_add(seconds),
-            protocol_version: 22,
-            sequence_number: self.ledger().sequence().saturating_add(1),
-            network_id: Default::default(),
-            base_reserve: 10,
-            min_temp_entry_ttl: 30 * DAY_IN_LEDGERS,
-            min_persistent_entry_ttl: 30 * DAY_IN_LEDGERS,
-            max_entry_ttl: 365 * DAY_IN_LEDGERS,
-        });
-    }
-
-    fn set_default_info(&self) {
-        self.ledger().set(LedgerInfo {
-            timestamp: 1441065600, // Sept 1st, 2015 12:00:00 AM UTC
-            protocol_version: 22,
-            sequence_number: 100,
-            network_id: Default::default(),
-            base_reserve: 10,
-            min_temp_entry_ttl: 30 * DAY_IN_LEDGERS,
-            min_persistent_entry_ttl: 30 * DAY_IN_LEDGERS,
-            max_entry_ttl: 365 * DAY_IN_LEDGERS,
-        });
-    }
-}
-
-// pub fn assert_approx_eq_abs(a: i128, b: i128, delta: i128) {
-//     assert!(
-//         a > b - delta && a < b + delta,
-//         "assertion failed: `(left != right)` \
-//          (left: `{:?}`, right: `{:?}`, epsilon: `{:?}`)",
-//         a,
-//         b,
-//         delta
-//     );
-// }
-
-/// Asset that `b` is within `percentage` of `a` where `percentage`
-/// is a percentage in decimal form as a fixed-point number with 7 decimal
-/// places
-// pub fn assert_approx_eq_rel(a: i128, b: i128, percentage: i128) {
-//     let rel_delta = b.fixed_mul_floor(percentage, SCALAR_7).unwrap();
-
-//     assert!(
-//         a > b - rel_delta && a < b + rel_delta,
-//         "assertion failed: `(left != right)` \
-//          (left: `{:?}`, right: `{:?}`, epsilon: `{:?}`)",
-//         a,
-//         b,
-//         rel_delta
-//     );
-// }
-
 /// Oracle
 use sep_40_oracle::testutils::{Asset, MockPriceOracleClient, MockPriceOracleWASM};
+
+use crate::test::{EnvTestUtils, DAY_IN_LEDGERS};
 
 pub fn create_mock_oracle<'a>(e: &Env) -> (Address, MockPriceOracleClient<'a>) {
     let contract_id = e.register(MockPriceOracleWASM, ());
@@ -378,5 +248,3 @@ impl<'a> BlendFixture<'a> {
         }
     }
 }
-
-mod blend;

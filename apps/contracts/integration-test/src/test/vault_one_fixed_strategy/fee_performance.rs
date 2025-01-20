@@ -130,6 +130,8 @@ fn fee_performance() {
         }])
         .lock_fees(&Some(lock_fees_bps));
 
+    println!("lock_fees_result: {:?}", lock_fees_result);
+
     let locked_fee = lock_fees_result.get(0).unwrap().locked_fee;
 
     let total_funds_after_lock = enviroment
@@ -188,6 +190,8 @@ fn fee_performance() {
         }])
         .lock_fees(&Some(lock_fees_bps));
 
+    println!("_lock_fees_result 2: {:?}", _lock_fees_result);
+
     let total_funds_after_lock = enviroment
         .vault_contract
         .fetch_total_managed_funds()
@@ -208,6 +212,9 @@ fn fee_performance() {
             },
         }])
         .distribute_fees();
+
+    let lock_fees_result_after = enviroment.vault_contract.mock_all_auths().lock_fees(&None);
+    println!("lock_fees_result_after: {:?}", lock_fees_result_after);
 
     let total_funds_after_distribute = enviroment
         .vault_contract

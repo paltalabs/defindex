@@ -129,7 +129,7 @@ pub fn claim(e: &Env, from: &Address, config: &Config) -> i128 {
     let pool_client = BlendPoolClient::new(e, &config.pool);
 
     // TODO: Hardcoded reserve_token_ids for now
-    pool_client.claim(from, &vec![&e, 0u32, 1u32, 2u32, 3u32], from)
+    pool_client.claim(from, &config.claim_ids, from)
 }
 
 pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError> {
