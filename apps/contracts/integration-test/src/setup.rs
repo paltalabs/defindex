@@ -310,6 +310,7 @@ pub fn create_vault_one_blend_strategy<'a>() -> VaultOneBlendStrategy<'a> {
         &0u32,
         &blnd.address,
         &soroswap_router.address,
+        sorobanvec![&setup.env, 0u32, 1u32, 2u32, 3u32],
     );
     let strategy_contract = BlendStrategyClient::new(&setup.env, &strategy);
 
