@@ -13,7 +13,7 @@ mod reserves;
 mod soroswap;
 mod storage;
 
-use storage::{extend_instance_ttl, has_config, Config};
+use storage::{extend_instance_ttl, Config};
 
 pub use defindex_strategy_core::{event, DeFindexStrategyTrait, StrategyError};
 
@@ -22,14 +22,6 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
         Err(StrategyError::NegativeNotAllowed)
     } else {
         Ok(())
-    }
-}
-
-fn check_initialized(e: &Env) -> Result<(), StrategyError> {
-    if has_config(e) {
-        Ok(())
-    } else {
-        Err(StrategyError::NotInitialized)
     }
 }
 
@@ -61,6 +53,11 @@ impl DeFindexStrategyTrait for BlendStrategy {
             .ok_or(StrategyError::InvalidArgument)
             .unwrap()
             .into_val(&e);
+        let claim_ids: Vec<u32> = init_args
+            .get(4)
+            .ok_or(StrategyError::InvalidArgument)
+            .unwrap()
+            .into_val(&e);
 
         let config = Config {
             asset: asset.clone(),
@@ -68,20 +65,19 @@ impl DeFindexStrategyTrait for BlendStrategy {
             reserve_id,
             blend_token,
             router: soroswap_router,
+            claim_ids,
         };
 
         storage::set_config(&e, config);
     }
 
     fn asset(e: Env) -> Result<Address, StrategyError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
 
         Ok(storage::get_config(&e).asset)
     }
 
     fn deposit(e: Env, amount: i128, from: Address) -> Result<i128, StrategyError> {
-        check_initialized(&e)?;
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
         from.require_auth();
@@ -113,7 +109,6 @@ impl DeFindexStrategyTrait for BlendStrategy {
     }
 
     fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
 
         let config = storage::get_config(&e);
@@ -131,7 +126,6 @@ impl DeFindexStrategyTrait for BlendStrategy {
     }
 
     fn withdraw(e: Env, amount: i128, from: Address, to: Address) -> Result<i128, StrategyError> {
-        check_initialized(&e)?;
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
         from.require_auth();
@@ -163,7 +157,6 @@ impl DeFindexStrategyTrait for BlendStrategy {
     }
 
     fn balance(e: Env, from: Address) -> Result<i128, StrategyError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
 
         // Get the vault's shares

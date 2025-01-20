@@ -1,6 +1,8 @@
 #![cfg(test)]
 pub extern crate std;
 
+pub const ONE_DAY_IN_SECONDS: u64 = 86_400;
+
 use crate::{
     blend_pool::{self, BlendPoolClient, Request, ReserveConfig, ReserveEmissionMetadata},
     storage::DAY_IN_LEDGERS,
@@ -36,6 +38,7 @@ pub(crate) fn register_blend_strategy(
     reserve_id: &u32,
     blend_token: &Address,
     soroswap_router: &Address,
+    claim_ids: Vec<u32>,
 ) -> Address {
     let init_args: Vec<Val> = vec![
         e,
@@ -43,6 +46,7 @@ pub(crate) fn register_blend_strategy(
         reserve_id.into_val(e),
         blend_token.into_val(e),
         soroswap_router.into_val(e),
+        claim_ids.into_val(e),
     ];
 
     let args = (asset, init_args);
@@ -191,6 +195,7 @@ pub(crate) fn create_blend_strategy(
         reserve_id,
         blend_token,
         soroswap_router,
+        vec![e, 0u32, 1u32, 2u32, 3u32]
     );
 
     address

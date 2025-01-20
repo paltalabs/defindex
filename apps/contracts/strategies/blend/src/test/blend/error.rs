@@ -1,7 +1,6 @@
 #![cfg(test)]
-use crate::constants::ONE_DAY_IN_SECONDS;
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
-use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils};
+use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils, ONE_DAY_IN_SECONDS};
 use crate::BlendStrategyClient;
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
