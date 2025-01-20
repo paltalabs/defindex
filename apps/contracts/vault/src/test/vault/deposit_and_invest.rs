@@ -1744,21 +1744,21 @@ fn several_assets_one_strategy_paused_and_rescue() {
     assert_eq!(assets.get(0).unwrap().strategies.len(), 1);
     assert_eq!(assets.get(1).unwrap().strategies.len(), 3);
 
-    let mint_amount = 10_0_000_000i128;
+    let ten_lumens = 10_0_000_000i128;
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
-    test.token_0_admin_client.mint(&users[0], &mint_amount);
-    test.token_1_admin_client.mint(&users[0], &(mint_amount*3));
+    test.token_0_admin_client.mint(&users[0], &ten_lumens);
+    test.token_1_admin_client.mint(&users[0], &(ten_lumens*3));
 
     let user_0_token_0_balance = test.token_0.balance(&users[0]);
     let user_0_token_1_balance = test.token_1.balance(&users[0]);
 
-    assert_eq!(user_0_token_0_balance, mint_amount);
-    assert_eq!(user_0_token_1_balance, mint_amount*3);
+    assert_eq!(user_0_token_0_balance, ten_lumens);
+    assert_eq!(user_0_token_1_balance, ten_lumens*3);
 
     defindex_contract.deposit(
-        &sorobanvec![&test.env, mint_amount, mint_amount*3],
-        &sorobanvec![&test.env, mint_amount, mint_amount*3],
+        &sorobanvec![&test.env, ten_lumens, ten_lumens*3],
+        &sorobanvec![&test.env, ten_lumens, ten_lumens*3],
         &users[0].clone(),
         &true
     );
@@ -1771,19 +1771,19 @@ fn several_assets_one_strategy_paused_and_rescue() {
     let idle_funds_a1 = defindex_contract.fetch_current_idle_funds().get(test.token_1.address.clone()).unwrap();
 
     assert_eq!(invested_funds_a0, 0);
-    assert_eq!(idle_funds_a0, mint_amount);
+    assert_eq!(idle_funds_a0, ten_lumens);
 
     assert_eq!(invested_full_funds_a1, 0);
-    assert_eq!(idle_funds_a1, mint_amount*3);
+    assert_eq!(idle_funds_a1, ten_lumens*3);
 
     // Rebalance to invest the funds
 
     let invest_instructions = sorobanvec![
         &test.env,
-        Instruction::Invest(test.strategy_client_token_0.address.clone(), mint_amount),
-        Instruction::Invest(test.strategy_client_token_1.address.clone(), mint_amount),
-        Instruction::Invest(strategy_1.address.clone(), mint_amount),
-        Instruction::Invest(test.fixed_strategy_client_token_1.address.clone(), mint_amount),
+        Instruction::Invest(test.strategy_client_token_0.address.clone(), ten_lumens),
+        Instruction::Invest(test.strategy_client_token_1.address.clone(), ten_lumens),
+        Instruction::Invest(strategy_1.address.clone(), ten_lumens),
+        Instruction::Invest(test.fixed_strategy_client_token_1.address.clone(), ten_lumens),
     ];
 
     defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
@@ -1795,10 +1795,10 @@ fn several_assets_one_strategy_paused_and_rescue() {
     let invested_full_funds_a1 = defindex_contract.fetch_total_managed_funds().get(test.token_1.address.clone()).unwrap().invested_amount;
     let idle_funds_a1 = defindex_contract.fetch_current_idle_funds().get(test.token_1.address.clone()).unwrap();
 
-    assert_eq!(invested_funds_a0, mint_amount);
+    assert_eq!(invested_funds_a0, ten_lumens);
     assert_eq!(idle_funds_a0, 0);
 
-    assert_eq!(invested_full_funds_a1, mint_amount*3);
+    assert_eq!(invested_full_funds_a1, ten_lumens*3);
     assert_eq!(idle_funds_a1, 0);
 
     // Pause the strategy
@@ -1808,23 +1808,25 @@ fn several_assets_one_strategy_paused_and_rescue() {
     let strategy_a0 = defindex_contract.get_assets().get(0).unwrap().strategies.get(0).unwrap();
     assert_eq!(strategy_a0.paused, false);
 
-    let strategy0_a1 = defindex_contract.get_assets().get(1).unwrap().strategies.get(0).unwrap();
-    let strategy1_a1 = defindex_contract.get_assets().get(1).unwrap().strategies.get(1).unwrap();
-    let strategy2_a1 = defindex_contract.get_assets().get(1).unwrap().strategies.get(2).unwrap();
+    let a1_strategy0 = defindex_contract.get_assets().get(1).unwrap().strategies.get(0).unwrap();
+    let a1_strategy1 = defindex_contract.get_assets().get(1).unwrap().strategies.get(1).unwrap();
+    let a1_strategy2 = defindex_contract.get_assets().get(1).unwrap().strategies.get(2).unwrap();
 
-    assert_eq!(strategy0_a1.paused, false);
-    assert_eq!(strategy1_a1.paused, true);
-    assert_eq!(strategy2_a1.paused, false);
+    assert_eq!(a1_strategy0.paused, false);
+    assert_eq!(a1_strategy1.paused, true);
+    assert_eq!(a1_strategy2.paused, false);
 
-    let amount_0 =  2_0_000_000i128;
-    let amount_1 =  6_0_000_000i128;
 
-    test.token_0_admin_client.mint(&users[0], &amount_0);
-    test.token_1_admin_client.mint(&users[0], &amount_1);
+    // Once paused, we will deposit again respecting the 1:3 ratio
+    let a0_amount =  2_0_000_000i128;
+    let a1_amount =  6_0_000_000i128;
+
+    test.token_0_admin_client.mint(&users[0], &a0_amount);
+    test.token_1_admin_client.mint(&users[0], &a1_amount);
 
     defindex_contract.mock_all_auths().deposit(
-        &sorobanvec![&test.env, amount_0, amount_1], 
-        &sorobanvec![&test.env, amount_0, amount_1], 
+        &sorobanvec![&test.env, a0_amount, a1_amount], 
+        &sorobanvec![&test.env, a0_amount, a1_amount], 
         &users[0].clone(), 
         &true
     );
@@ -1838,11 +1840,11 @@ fn several_assets_one_strategy_paused_and_rescue() {
     let idle_funds_a1 = defindex_contract.fetch_current_idle_funds().get(test.token_1.address.clone()).unwrap();
 
 
-    assert_eq!(invested_funds_a0, mint_amount + amount_0);
+    assert_eq!(invested_funds_a0, ten_lumens + a0_amount);
     assert_eq!(idle_funds_a0, 0);
 
-    assert_eq!(invested_full_funds_a1, mint_amount*3 + 4_0_000_000i128);
-    assert_eq!(idle_funds_a1, 2_0_000_000i128);
+    assert_eq!(invested_full_funds_a1, ten_lumens*3 + 4_0_000_000i128); //Representing the first deposit + the 2/3 part of the 6 lumens deposited in the paused strategy.
+    assert_eq!(idle_funds_a1, 2_0_000_000i128); //Representing the part of the 6 lumens deposited in the paused strategy.
 
     defindex_contract.rescue(&strategy_1.address, &test.emergency_manager);
 
@@ -1850,20 +1852,16 @@ fn several_assets_one_strategy_paused_and_rescue() {
     let invested_funds_a1 = defindex_contract.fetch_total_managed_funds().get(test.token_1.address.clone()).unwrap().invested_amount;
     let idle_funds_a1 = defindex_contract.fetch_current_idle_funds().get(test.token_1.address.clone()).unwrap();
 
-    assert_eq!(invested_funds_a1, mint_amount*2 + 4_0_000_000i128);
-    assert_eq!(idle_funds_a1, (mint_amount + 2_0_000_000i128));
+    assert_eq!(invested_funds_a1, (ten_lumens*2 + (a1_amount/3)*2)); //(a1_amount/3)*2 is the amount of the not paused strategies (2/3) of the desposit
+    assert_eq!(idle_funds_a1, (ten_lumens + (a1_amount/3))); //a1_amount/3 is the amount of the paused strategy
 
+    //Deposit again (the strategy_1 funds should be in idle funds) respecting the 1:3 ratio
+    test.token_0_admin_client.mint(&users[0], &2_0_000_000i128);
+    test.token_1_admin_client.mint(&users[0], &6_0_000_000i128);
 
-    //Deposit again (the strategy_1 funds should be in idle funds)
-    let amount_0 =  2_0_000_000i128;
-    let amount_1 =  6_0_000_000i128;
-
-    test.token_0_admin_client.mint(&users[0], &amount_0);
-    test.token_1_admin_client.mint(&users[0], &amount_1);
-
-    defindex_contract.mock_all_auths().deposit(
-        &sorobanvec![&test.env, amount_0, amount_1], 
-        &sorobanvec![&test.env, amount_0, amount_1], 
+    let deposit_result = defindex_contract.mock_all_auths().deposit(
+        &sorobanvec![&test.env, a0_amount, a1_amount], 
+        &sorobanvec![&test.env, 0i128, 0i128], 
         &users[0].clone(), 
         &true
     );
@@ -1875,16 +1873,10 @@ fn several_assets_one_strategy_paused_and_rescue() {
     let invested_full_funds_a1 = defindex_contract.fetch_total_managed_funds().get(test.token_1.address.clone()).unwrap().invested_amount;
     let idle_funds_a1 = defindex_contract.fetch_current_idle_funds().get(test.token_1.address.clone()).unwrap();
 
-    let expected_invested_funds_a0 = 10_0_000_000i128 + 2_0_000_000i128 + 2_0_000_000i128;
-    let expected_idle_funds_a0 = 0;
+    assert_eq!(invested_funds_a0, 14_0_000_000i128); // 10_000_000i128 + 2_000_000i128 + 2_000_000i128
+    assert_eq!(idle_funds_a0, 0i128); // All invested
 
-    let expected_invested_funds_a1 = 30_0_000_000i128; 
-    let expected_idle_funds_a1 = 10_0_000_000i128 + 2_0_000_000i128;
-
-    assert_eq!(invested_funds_a0, expected_invested_funds_a0);
-    assert_eq!(idle_funds_a0, expected_idle_funds_a0);
-
-    assert_eq!(invested_full_funds_a1, expected_invested_funds_a1);
-    assert_eq!(idle_funds_a1, expected_idle_funds_a1);
+    assert_eq!(invested_full_funds_a1, 30_0_000_000i128); // 20_000_000i128 + 4_000_000i128 + 6_000_000i128 (the last deposit splits into the active strategies)
+    assert_eq!(idle_funds_a1, 12_0_000_000i128); // 10_000_000i128 + 2_000_000i128 + 0i128 (the last deposit goes full to the active strategies)
 
 }
