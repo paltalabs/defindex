@@ -85,7 +85,7 @@ pub fn generate_investment_allocations(
                 remaining_amount -= invest_amount;
 
                 // Add the strategy allocation
-                strategy_allocations.push_back(if invest_amount > 0 {
+                strategy_allocations.push_back(if invest_amount > 0 && strategy.paused == false {
                     Some(StrategyAllocation {
                         strategy_address: strategy.address.clone(),
                         amount: invest_amount,
