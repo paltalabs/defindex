@@ -122,12 +122,17 @@ async function testVaultOneStrategy() {
   console.log(purple, "---------------------------------------");
   console.log(purple, "Deploying vault with one strategy");
   console.log(purple, "---------------------------------------");
-  const vaultAddress = await deployVault(
+  const { 
+    address: vaultAddress, 
+    instructions:deployInstructions, 
+    readBytes:deployReadBytes, 
+    writeBytes:deployWriteBytes} = await deployVault(
     addressBook,
     oneStrategyParams,
     "TestVault",
     "TSTV"
   );
+  console.log(vaultAddress)
 
   console.log(yellow, "---------------------------------------");
   console.log(yellow, "Fetching balances");
@@ -149,7 +154,11 @@ async function testVaultOneStrategy() {
 
   // deposit to vault
 
-  await depositToVault(vaultAddress, [987654321], testUser);
+  const {
+    instructions: depositInstructions,
+    readBytes:depositReadBytes,
+    writeBytes:depositWriteBytes,
+  } = await depositToVault(vaultAddress, [987654321], testUser);
 
   console.log(yellow, "---------------------------------------");
   console.log(yellow, "Fetching balances");
@@ -170,7 +179,11 @@ async function testVaultOneStrategy() {
   );
 
   // withdraw from vault
-  await withdrawFromVault(vaultAddress, 65_0_000, testUser);
+  const {
+    instructions: withdrawInstructions,
+    readBytes:withdrawReadBytes,
+    writeBytes:withdrawWriteBytes,
+  } = await withdrawFromVault(vaultAddress, 65_0_000, testUser);
 
   console.log(yellow, "---------------------------------------");
   console.log(yellow, "Fetching balances");
@@ -203,7 +216,12 @@ async function testVaultOneStrategy() {
     },
   ];
 
-  const { result: rebalanceResult } = await rebalanceVault(
+  const { 
+    result: investResult,
+    instructions: investInstructions,
+    readBytes:investReadBytes,
+    writeBytes:investWriteBytes
+  } = await rebalanceVault(
     vaultAddress,
     investArgs,
     manager
@@ -246,12 +264,16 @@ async function testVaultOneStrategy() {
 
   const mappedParams = mapInstructionsToParams(rebalanceArgs);
 
-
-  await invokeCustomContract(
-                vaultAddress,
-                "rebalance",
-                [new Address(manager.publicKey()).toScVal(), mappedParams],
-                manager);
+  const { 
+    result: rebalanceResult,
+    instructions: rebalanceInstructions,
+    readBytes:rebalanceReadBytes,
+    writeBytes:rebalanceWriteBytes
+  } = await rebalanceVault(
+    vaultAddress,
+    investArgs,
+    manager
+  );
 
   console.log(yellow, "---------------------------------------");
   console.log(yellow, "Fetching balances");
@@ -294,7 +316,36 @@ async function testVaultOneStrategy() {
     },
   };
   console.table(tableData);
-  return tableData;
+
+  const budgetData = {
+    deploy: {
+      instructions: deployInstructions,
+      readBytes: deployReadBytes,
+      writeBytes: deployWriteBytes,
+    },
+    deposit: {
+      instructions: depositInstructions,
+      readBytes: depositReadBytes,
+      writeBytes: depositWriteBytes,
+    },
+    withdraw: {
+      instructions: withdrawInstructions,
+      readBytes: withdrawReadBytes,
+      writeBytes: withdrawWriteBytes,
+    },
+    invest: {
+      instructions: investInstructions,
+      readBytes: investReadBytes,
+      writeBytes: investWriteBytes,
+    },
+    rebalance: {
+      instructions: rebalanceInstructions,
+      readBytes: rebalanceReadBytes,
+      writeBytes: rebalanceWriteBytes,
+    },
+  }
+  console.table(budgetData);
+  return {tableData, budgetData};
 }
 
 async function testVaultTwoStrategies() {
@@ -306,7 +357,12 @@ async function testVaultTwoStrategies() {
   console.log(purple, "---------------------------------------");
   console.log(purple, "Deploying vault with two strategies");
   console.log(purple, "---------------------------------------");
-  const vaultAddress = await deployVault(
+  const {
+    address:vaultAddress,
+    instructions:deployInstructions,
+    readBytes:deployReadBytes,
+    writeBytes:deployWriteBytes
+  } = await deployVault(
     addressBook,
     twoStrategyParams,
     "TestVault",
@@ -342,7 +398,11 @@ async function testVaultTwoStrategies() {
   console.log(purple, "Depositing to vault");
   console.log(purple, "---------------------------------------");
 
-  await depositToVault(vaultAddress, [987654321], testUser);
+  const {
+    instructions:depositInstructions,
+    readBytes:depositReadBytes,
+    writeBytes:depositWriteBytes
+  } = await depositToVault(vaultAddress, [987654321], testUser);
 
   console.log(yellow, "---------------------------------------");
   console.log(yellow, "Fetching balances");
@@ -373,7 +433,11 @@ async function testVaultTwoStrategies() {
   console.log(purple, "Withdrawing from vault");
   console.log(purple, "---------------------------------------");
 
-  await withdrawFromVault(vaultAddress, 65_0_000, testUser);
+  const {
+    instructions:withdrawInstructions,
+    readBytes:withdrawReadBytes,
+    writeBytes:withdrawWriteBytes
+  } = await withdrawFromVault(vaultAddress, 65_0_000, testUser);
 
   const idleFundsAfterWithdraw = await fetchParsedCurrentIdleFunds(
     vaultAddress,
@@ -412,7 +476,11 @@ async function testVaultTwoStrategies() {
     },
   ];
   
-  await rebalanceVault(vaultAddress, investArgs, manager);
+  const {
+    instructions:investInstructions,
+    readBytes:investReadBytes,
+    writeBytes:investWriteBytes
+  } = await rebalanceVault(vaultAddress, investArgs, manager);
   
   console.log(yellow, "---------------------------------------");
   console.log(yellow, "Fetching balances");
@@ -465,14 +533,12 @@ async function testVaultTwoStrategies() {
       },
   ];
 
-  const mappedParams = mapInstructionsToParams(rebalanceArgs);
 
-  await invokeCustomContract(
-      vaultAddress,
-      "rebalance",
-      [new Address(manager.publicKey()).toScVal(), mappedParams],
-      manager
-  );
+  const {
+    instructions:rebalanceInstructions,
+    readBytes:rebalanceReadBytes,
+    writeBytes:rebalanceWriteBytes
+  } = await rebalanceVault(vaultAddress, rebalanceArgs, manager);
 
 
   console.log(yellow, "---------------------------------------");
@@ -530,8 +596,38 @@ async function testVaultTwoStrategies() {
       "Balance after rebalance": idleFundsAfterRebalance[0].amount,
     },
   };
+
+  const budgetData = {  
+    deploy: {
+      instructions: deployInstructions,
+      readBytes: deployReadBytes,
+      writeBytes: deployWriteBytes,
+    },
+    deposit: {
+      instructions: depositInstructions,
+      readBytes: depositReadBytes,
+      writeBytes: depositWriteBytes,
+    },
+    withdraw: {
+      instructions: withdrawInstructions,
+      readBytes: withdrawReadBytes,
+      writeBytes: withdrawWriteBytes,
+    },
+    invest: {
+      instructions: investInstructions,
+      readBytes: investReadBytes,
+      writeBytes: investWriteBytes,
+    },
+    rebalance: {
+      instructions: rebalanceInstructions,
+      readBytes: rebalanceReadBytes,
+      writeBytes: rebalanceWriteBytes,
+    },
+  }
+
   console.table(tableData);
-  return tableData;
+  console.table(budgetData);
+  return {tableData, budgetData};
 }
 
 async function testVaultTwoAssetsOneStrategy() {
@@ -543,7 +639,12 @@ async function testVaultTwoAssetsOneStrategy() {
   console.log(purple, "---------------------------------------");
   console.log(purple, "Deploying vault with two strategies");
   console.log(purple, "---------------------------------------");
-  const vaultAddress = await deployVault(
+  const {
+    address:vaultAddress,
+    instructions:deployInstructions,
+    readBytes:deployReadBytes,
+    writeBytes:deployWriteBytes
+  } = await deployVault(
     addressBook,
     twoAssetOneStrategyParams,
     "TestVault",
@@ -579,7 +680,11 @@ async function testVaultTwoAssetsOneStrategy() {
   console.log(purple, "Depositing to vault");
   console.log(purple, "---------------------------------------");
 
-  await depositToVault(vaultAddress, [98_7_654_321, 98_7_654_321], testUser);
+  const {
+    instructions:depositInstructions,
+    readBytes:depositReadBytes,
+    writeBytes:depositWriteBytes
+  } = await depositToVault(vaultAddress, [98_7_654_321, 98_7_654_321], testUser);
 
   console.log(yellow, "---------------------------------------");
   console.log(yellow, "Fetching balances");
@@ -610,7 +715,11 @@ async function testVaultTwoAssetsOneStrategy() {
   console.log(purple, "Withdrawing from vault");
   console.log(purple, "---------------------------------------");
 
-  await withdrawFromVault(vaultAddress, 7_0_000_000, testUser);
+  const {
+    instructions:withdrawInstructions,
+    readBytes:withdrawReadBytes,
+    writeBytes:withdrawWriteBytes
+  } = await withdrawFromVault(vaultAddress, 7_0_000_000, testUser);
 
   const idleFundsAfterWithdraw = await fetchParsedCurrentIdleFunds(
     vaultAddress,
@@ -636,30 +745,6 @@ async function testVaultTwoAssetsOneStrategy() {
   console.log(purple, "Investing in vault");
   console.log(purple, "---------------------------------------");
 
-
-  const investmentArgs: AssetInvestmentAllocation[] = [
-    {
-      asset: xtarAddress,
-      strategy_investments: [
-        {
-          amount: BigInt(10_0_000_000),
-          strategy: new Address(addressBook.getContractId("fixed_xtar_strategy")),
-        },
-      ],
-    },
-    {
-      asset: usdcAddress,
-      strategy_investments: [
-        {
-          amount: BigInt(10_0_000_000),
-          strategy: new Address(
-            addressBook.getContractId("fixed_usdc_strategy")
-          ),
-        },
-      ],
-    }
-  ];
-
   const investArgs: Instruction[] = [
     {
       type: "Invest",
@@ -673,7 +758,12 @@ async function testVaultTwoAssetsOneStrategy() {
     },
   ];
 
-  await rebalanceVault(vaultAddress, investArgs, manager);
+  const {
+    instructions:investInstructions,
+    readBytes:investReadBytes,
+    writeBytes:investWriteBytes
+  } = await rebalanceVault(vaultAddress, investArgs, manager);
+
   console.log(yellow, "---------------------------------------");
   console.log(yellow, "Fetching balances");
   console.log(yellow, "---------------------------------------");
@@ -721,16 +811,12 @@ async function testVaultTwoAssetsOneStrategy() {
     }
   ];
 
-
-  const mappedParams = mapInstructionsToParams(rebalanceArgs);
-
-  await invokeCustomContract(
-      vaultAddress,
-      "rebalance",
-      [new Address(manager.publicKey()).toScVal(), mappedParams],
-      manager
-  );
-
+  const {
+      instructions:rebalanceInstructions,
+      readBytes:rebalanceReadBytes,
+      writeBytes:rebalanceWriteBytes
+  } = await rebalanceVault(vaultAddress, rebalanceArgs, manager);
+    
 
   console.log(yellow, "---------------------------------------");
   console.log(yellow, "Fetching balances");
@@ -787,8 +873,36 @@ async function testVaultTwoAssetsOneStrategy() {
       "Balance after rebalance": idleFundsAfterRebalance[0].amount,
     },
   };
+  const budgetData = {
+    deploy: {
+      instructions: deployInstructions,
+      readBytes: deployReadBytes,
+      writeBytes: deployWriteBytes,
+    },
+    deposit: {
+      instructions: depositInstructions,
+      readBytes: depositReadBytes,
+      writeBytes: depositWriteBytes,
+    },
+    withdraw: {
+      instructions: withdrawInstructions,
+      readBytes: withdrawReadBytes,
+      writeBytes: withdrawWriteBytes,
+    },
+    invest: {
+      instructions: investInstructions,
+      readBytes: investReadBytes,
+      writeBytes: investWriteBytes,
+    },
+    rebalance: {
+      instructions: rebalanceInstructions,
+      readBytes: rebalanceReadBytes,
+      writeBytes: rebalanceWriteBytes,
+    },
+  }
   console.table(tableData);
-  return tableData;
+  console.table(budgetData);
+  return {tableData, budgetData};
 }
 
 switch (tests) {
@@ -828,27 +942,32 @@ switch (tests) {
       console.log("")
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------")
       console.log(green, "One strategy results")
-      console.table(oneStrategy);
+      console.table(oneStrategy.tableData);
+      console.table(oneStrategy.budgetData);
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log("");
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log(green, "Two strategies results");
-      console.table(twoStrategies);
+      console.table(twoStrategies.tableData);
+      console.table(twoStrategies.budgetData);
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log("");
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log(green, "Two asssets one strategy results");
-      console.table(twoStrategies);
+      console.table(twoAssetsOneStrategy.tableData);
+      console.table(twoAssetsOneStrategy.budgetData);
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log("");
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log(green, "Blend strategy test status");
-      console.table(blendStrategy);
+      console.table(blendStrategy.status);
+      console.table(blendStrategy.budget);
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log("");
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log(green, "Blend vault test status");
-      console.table(blendVault);
+      console.table(blendVault!.status);
+      console.table(blendVault!.budget);
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       exit(0);
     } catch (error) {
@@ -890,7 +1009,8 @@ switch (tests) {
     try {
       const blendStrategy = await testBlendStrategy();
       console.log(green, "Blend strategy test status");
-      console.table(blendStrategy);
+      console.table(blendStrategy.status);
+      console.table(blendStrategy.budget);
       console.log(green, "---------------------------------------");
       exit(0);
     } catch (error) {
@@ -900,9 +1020,10 @@ switch (tests) {
   case "-bv":
     console.log(yellow, "Testing blend vault");
     try {
-      const blendVault = await testBlendStrategy();
+      const blendVault = await testBlendVault();
       console.log(green, "Blend vault test status");
-      console.table(blendVault);
+      console.table(blendVault!.status);
+      console.table(blendVault!.budget);
       console.log(green, "---------------------------------------");
       exit(0);
     } catch (error) {
