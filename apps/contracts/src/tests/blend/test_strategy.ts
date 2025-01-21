@@ -79,7 +79,7 @@ export async function testBlendStrategy(user?: Keypair) {
     console.log(purple, '---------------------------------------------------------------------------')
     console.log(purple, '----------------------- Waiting for 1 minute -----------------------')
     console.log(purple, '---------------------------------------------------------------------------')
-    await new Promise(resolve => setTimeout(resolve, 60000));
+    await new Promise(resolve => setTimeout(resolve, 100));
   
     // Withdrawing XLM from Blend Strategy
     try {
@@ -101,7 +101,7 @@ export async function testBlendStrategy(user?: Keypair) {
       console.log('🚀 « balance:', balance);
 
       const withdrawParams: xdr.ScVal[] = [
-        nativeToScVal(1000_0_000_000, { type: "i128" }),
+        nativeToScVal(balance, { type: "i128" }),
         new Address(newUser.publicKey()).toScVal(),
         new Address(newUser.publicKey()).toScVal(),
       ]
