@@ -1,4 +1,4 @@
-use soroban_sdk::{contracttype, Address, Env};
+use soroban_sdk::{contracttype, Address, Env, Vec};
 
 use crate::reserves::StrategyReserves;
 
@@ -9,6 +9,7 @@ pub struct Config {
     pub reserve_id: u32,
     pub blend_token: Address,
     pub router: Address,
+    pub claim_ids: Vec<u32>,
 }
 
 #[derive(Clone)]
@@ -38,10 +39,6 @@ pub fn set_config(e: &Env, config: Config) {
 
 pub fn get_config(e: &Env) -> Config {
     e.storage().instance().get(&DataKey::Config).unwrap()
-}
-
-pub fn has_config(e: &Env) -> bool {
-    e.storage().instance().has(&DataKey::Config)
 }
 
 // Vault Position

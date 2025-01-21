@@ -5,6 +5,7 @@ use reserves::StrategyReserves;
 use soroban_sdk::{
     contract, contractimpl, token::TokenClient, Address, Env, IntoVal, String, Val, Vec,
 };
+use soroban_fixed_point_math::{i128, FixedPoint};
 
 mod blend_pool;
 mod constants;
@@ -12,7 +13,7 @@ mod reserves;
 mod soroswap;
 mod storage;
 
-use storage::{extend_instance_ttl, has_config, Config};
+use storage::{extend_instance_ttl, Config};
 
 pub use defindex_strategy_core::{event, DeFindexStrategyTrait, StrategyError};
 
@@ -21,14 +22,6 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
         Err(StrategyError::NegativeNotAllowed)
     } else {
         Ok(())
-    }
-}
-
-fn check_initialized(e: &Env) -> Result<(), StrategyError> {
-    if has_config(e) {
-        Ok(())
-    } else {
-        Err(StrategyError::NotInitialized)
     }
 }
 
@@ -78,6 +71,11 @@ impl DeFindexStrategyTrait for BlendStrategy {
             .ok_or(StrategyError::InvalidArgument)
             .unwrap()
             .into_val(&e);
+        let claim_ids: Vec<u32> = init_args
+            .get(4)
+            .ok_or(StrategyError::InvalidArgument)
+            .unwrap()
+            .into_val(&e);
 
         let config = Config {
             asset: asset.clone(),
@@ -85,20 +83,19 @@ impl DeFindexStrategyTrait for BlendStrategy {
             reserve_id,
             blend_token,
             router: soroswap_router,
+            claim_ids,
         };
 
         storage::set_config(&e, config);
     }
 
     fn asset(e: Env) -> Result<Address, StrategyError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
 
         Ok(storage::get_config(&e).asset)
     }
 
     fn deposit(e: Env, amount: i128, from: Address) -> Result<i128, StrategyError> {
-        check_initialized(&e)?;
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
         from.require_auth();
@@ -130,7 +127,6 @@ impl DeFindexStrategyTrait for BlendStrategy {
     }
 
     fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
 
         let config = storage::get_config(&e);
@@ -148,7 +144,6 @@ impl DeFindexStrategyTrait for BlendStrategy {
     }
 
     fn withdraw(e: Env, amount: i128, from: Address, to: Address) -> Result<i128, StrategyError> {
-        check_initialized(&e)?;
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
         from.require_auth();
@@ -156,7 +151,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
         // protect against rouding of reserve_vault::update_rate, as small amounts
         // can cause incorrect b_rate calculations due to the pool rounding
         if amount < MIN_DUST {
-            return Err(StrategyError::InvalidArgument); //TODO: create a new error type for this
+            return Err(StrategyError::AmountBelowMinDust); //TODO: create a new error type for this
         }
 
         let reserves = storage::get_strategy_reserves(&e);
@@ -180,7 +175,6 @@ impl DeFindexStrategyTrait for BlendStrategy {
     }
 
     fn balance(e: Env, from: Address) -> Result<i128, StrategyError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
 
         // Get the vault's shares
@@ -204,9 +198,11 @@ fn shares_to_underlying(shares: i128, reserves: StrategyReserves) -> i128 {
         return 0i128;
     }
     // Calculate the bTokens corresponding to the vault's shares
-    let vault_b_tokens = (shares * total_b_tokens) / total_shares;
+    let vault_b_tokens = reserves.shares_to_b_tokens_down(shares);
 
     // Use the b_rate to convert bTokens to underlying assets
-    (vault_b_tokens * reserves.b_rate) / SCALAR_9
+    vault_b_tokens
+        .fixed_div_floor(SCALAR_9, reserves.b_rate)
+        .unwrap()
 }
 mod test;

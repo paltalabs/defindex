@@ -1,5 +1,5 @@
 use crate::{setup::create_vault_one_blend_strategy, test::{EnvTestUtils, IntegrationTest, DAY_IN_LEDGERS}, vault::defindex_vault_contract::{AssetInvestmentAllocation, Instruction, StrategyAllocation}};
-use soroban_sdk::{testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke}, vec as svec, IntoVal, Symbol, Vec};
+use soroban_sdk::{testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke, Address as _}, vec as svec, IntoVal, Symbol, Vec, Address};
 use crate::setup::blend_setup::Request;
 
 #[test]
@@ -236,13 +236,26 @@ fn success() {
     println!("Pool USDC Balance: {}", usdc.balance(&enviroment.blend_pool_client.address));
     println!("Vault Balance on Strategy: {}", enviroment.strategy_contract.balance(&vault_contract.address));
 
-    
-
     let report = vault_contract.report();
     println!("report = {:?}", report);
 
-    let lock_fees = vault_contract.lock_fees(&None);
-    println!("locked_fees = {:?}", lock_fees);
+    let new_user_random = Address::generate(&setup.env);
+    usdc_client.mint(&new_user_random, &100_000_000_0);
+
+    vault_contract.deposit(
+        &svec!(&setup.env, 100_000_000_0),
+        &svec!(&setup.env, 100_000_000_0),
+        &new_user_random, 
+        &true
+    );
+
+    let report = vault_contract.report();
+    println!("Pool USDC Balance: {}", usdc.balance(&enviroment.blend_pool_client.address));
+    println!("Vault Balance on Strategy: {}", enviroment.strategy_contract.balance(&vault_contract.address));
+    println!("report NEW = {:?}", report);
+
+    // let lock_fees = vault_contract.lock_fees(&None);
+    // println!("locked_fees = {:?}", lock_fees);
 
     // -> verify over withdraw fails
     // let result =
