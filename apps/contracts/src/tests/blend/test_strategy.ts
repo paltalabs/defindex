@@ -119,7 +119,7 @@ export async function testBlendStrategy(user?: Keypair) {
         writeBytes
       } = getTransactionBudget(withdrawResult);
       const withdrawResultValue = scValToNative(withdrawResult.returnValue);
-      console.log('🟡🟡🟡🟡🟡🟡🟡🟡🟡🟡🟡🟡', instructions, readBytes, writeBytes)
+
       withdrawInstructions = instructions;
       withdrawReadBytes = readBytes;
       withdrawWriteBytes = writeBytes;
