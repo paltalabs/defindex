@@ -31,24 +31,6 @@ const STARETEGY_NAME: &str = "BlendStrategy";
 pub struct BlendStrategy;
 
 #[contractimpl]
-impl BlendStrategy {
-    /// Get the current strategy reserves information
-    pub fn get_blend_reserves(e: Env) -> StrategyReserves {
-        check_initialized(&e).unwrap();
-        extend_instance_ttl(&e);
-        
-        storage::get_strategy_reserves(&e)
-    }
-    /// Get the number of strategy shares a user owns. Shares are stored with 7 decimal places of precision.
-    pub fn get_vault_shares(e: Env, address: Address) -> i128 {
-        check_initialized(&e).unwrap();
-        extend_instance_ttl(&e);
-        
-        storage::get_vault_shares(&e, &address)
-    }
-}
-
-#[contractimpl]
 impl DeFindexStrategyTrait for BlendStrategy {
     fn __constructor(e: Env, asset: Address, init_args: Vec<Val>) {
         let blend_pool_address: Address = init_args
