@@ -269,10 +269,9 @@ fn test_distribute_fees_auth(){
       sub_invokes: &[],
     },
   }]).try_distribute_fees(&test.rebalance_manager);
-  println!("distribute_fees_result: {:?}", distribute_fees_result);
   assert_eq!(distribute_fees_result.is_err(), true);
   assert_eq!(distribute_fees_result, Err(Ok(ContractError::Unauthorized)));
-
+  
   // try distribute fees from emergency manager
   let distribute_fees_result = vault.mock_auths(&[MockAuth {
     address: &test.emergency_manager.clone(),
@@ -285,6 +284,20 @@ fn test_distribute_fees_auth(){
   }]).try_distribute_fees(&test.emergency_manager);
   assert_eq!(distribute_fees_result.is_err(), true);
   assert_eq!(distribute_fees_result, Err(Ok(ContractError::Unauthorized)));
+  
+  // try distribute fees from unauthorized user but with telling caller is manager
+  let distribute_fees_result = vault.mock_auths(&[MockAuth {
+    address: &unauthorized_user.clone(),
+    invoke: &MockAuthInvoke {
+      contract: &vault.address.clone(),
+      fn_name: "distribute_fees",
+      args: (&test.manager,).into_val(&test.env),
+      sub_invokes: &[],
+    },
+  }]).try_distribute_fees(&test.manager);
+  println!("distribute_fees_result: {:?}", distribute_fees_result);
+  assert_eq!(distribute_fees_result.is_err(), true);
+  // assert_eq!(distribute_fees_result, Err(Ok(ContractError::Unauthorized)));
 
   // try distribute fees from manager
   let distribute_fees_result = vault.mock_auths(&[MockAuth {
