@@ -168,10 +168,73 @@ pub trait FactoryTrait {
     /// # Returns
     /// * `Result<u32, FactoryError>` - Returns the fee rate in basis points or an error if not found.
     fn defindex_fee(e: Env) -> Result<u32, FactoryError>;
+
+    /// Updates the vault WASM hash used for deploying new vaults.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `new_vault_wasm_hash` - The new hash of the vault's WASM file.
+    ///
+    /// # Returns
+    /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, or an error if not authorized.
+    fn set_vault_wasm_hash(e: Env, new_vault_wasm_hash: BytesN<32>) -> Result<(), FactoryError>;
 }
 
 #[contract]
 struct DeFindexFactory;
+
+// Private helper function for vault creation
+fn create_vault_internal(
+    e: &Env,
+    roles: Map<u32, Address>,
+    vault_fee: u32,
+    assets: Vec<AssetStrategySet>,
+    salt: BytesN<32>,
+    soroswap_router: Address,
+    name_symbol: Map<String, String>,
+    upgradable: bool,
+) -> Result<Address, FactoryError> {
+    let current_contract = e.current_contract_address();
+    let vault_wasm_hash = get_vault_wasm_hash(e)?;
+    let defindex_receiver = get_defindex_receiver(e);
+    let defindex_fee = get_fee_rate(e);
+
+    let mut init_args: Vec<Val> = vec![e];
+    init_args.push_back(assets.to_val());
+    init_args.push_back(roles.to_val());
+    init_args.push_back(vault_fee.into_val(e));
+    init_args.push_back(defindex_receiver.to_val());
+    init_args.push_back(defindex_fee.into_val(e));
+    init_args.push_back(current_contract.to_val());
+    init_args.push_back(soroswap_router.to_val());
+    init_args.push_back(name_symbol.to_val());
+    init_args.push_back(upgradable.into_val(e));
+
+    let defindex_address = create_contract(e, vault_wasm_hash, init_args, salt);
+    add_new_defindex(e, defindex_address.clone());
+    Ok(defindex_address)
+}
+
+// Private helper function for deposits
+fn perform_initial_deposit(
+    e: &Env,
+    vault_address: &Address,
+    caller: &Address,
+    amounts: &Vec<i128>,
+) {
+    let mut amounts_min = Vec::new(e);
+    for _ in 0..amounts.len() {
+        amounts_min.push_back(0i128);
+    }
+
+    let mut deposit_args: Vec<Val> = vec![e];
+    deposit_args.push_back(amounts.to_val());
+    deposit_args.push_back(amounts_min.to_val());
+    deposit_args.push_back(caller.to_val());
+    deposit_args.push_back(false.into_val(e));
+
+    e.invoke_contract::<Val>(vault_address, &Symbol::new(e, "deposit"), deposit_args);
+}
 
 #[contractimpl]
 impl FactoryTrait for DeFindexFactory {
@@ -246,28 +309,18 @@ impl FactoryTrait for DeFindexFactory {
         upgradable: bool,
     ) -> Result<Address, FactoryError> {
         extend_instance_ttl(&e);
+        
+        let defindex_address = create_vault_internal(
+            &e,
+            roles.clone(),
+            vault_fee,
+            assets.clone(),
+            salt,
+            soroswap_router,
+            name_symbol,
+            upgradable,
+        )?;
 
-        let current_contract = e.current_contract_address();
-
-        let vault_wasm_hash = get_vault_wasm_hash(&e)?;
-
-        let defindex_receiver = get_defindex_receiver(&e);
-        let defindex_fee = get_fee_rate(&e);
-
-        let mut init_args: Vec<Val> = vec![&e];
-        init_args.push_back(assets.to_val());
-        init_args.push_back(roles.to_val());
-        init_args.push_back(vault_fee.into_val(&e));
-        init_args.push_back(defindex_receiver.to_val());
-        init_args.push_back(defindex_fee.into_val(&e));
-        init_args.push_back(current_contract.to_val());
-        init_args.push_back(soroswap_router.to_val());
-        init_args.push_back(name_symbol.to_val());
-        init_args.push_back(upgradable.into_val(&e));
-
-        let defindex_address = create_contract(&e, vault_wasm_hash, init_args, salt);
-
-        add_new_defindex(&e, defindex_address.clone());
         events::emit_create_defindex_vault(
             &e,
             roles,
@@ -312,40 +365,19 @@ impl FactoryTrait for DeFindexFactory {
             return Err(FactoryError::AssetLengthMismatch);
         }
 
-        let current_contract = e.current_contract_address();
+        let defindex_address = create_vault_internal(
+            &e,
+            roles.clone(),
+            vault_fee,
+            assets.clone(),
+            salt,
+            soroswap_router,
+            name_symbol,
+            upgradable,
+        )?;
 
-        let vault_wasm_hash = get_vault_wasm_hash(&e)?;
+        perform_initial_deposit(&e, &defindex_address, &caller, &amounts);
 
-        let defindex_receiver = get_defindex_receiver(&e);
-        let defindex_fee = get_fee_rate(&e);
-
-        let mut init_args: Vec<Val> = vec![&e];
-        init_args.push_back(assets.to_val());
-        init_args.push_back(roles.to_val());
-        init_args.push_back(vault_fee.into_val(&e));
-        init_args.push_back(defindex_receiver.to_val());
-        init_args.push_back(defindex_fee.into_val(&e));
-        init_args.push_back(current_contract.to_val());
-        init_args.push_back(soroswap_router.to_val());
-        init_args.push_back(name_symbol.to_val());
-        init_args.push_back(upgradable.into_val(&e));
-
-        let defindex_address = create_contract(&e, vault_wasm_hash, init_args, salt);
-
-        let mut amounts_min = Vec::new(&e);
-        for _ in 0..amounts.len() {
-            amounts_min.push_back(0i128);
-        }
-
-        let mut deposit_args: Vec<Val> = vec![&e];
-        deposit_args.push_back(amounts.to_val());
-        deposit_args.push_back(amounts_min.to_val());
-        deposit_args.push_back(caller.to_val());
-        deposit_args.push_back(false.into_val(&e));
-
-        e.invoke_contract::<Val>(&defindex_address, &Symbol::new(&e, "deposit"), deposit_args);
-
-        add_new_defindex(&e, defindex_address.clone());
         events::emit_create_defindex_vault(
             &e,
             roles,
@@ -411,6 +443,17 @@ impl FactoryTrait for DeFindexFactory {
 
         put_defindex_fee(&e, &defindex_fee);
         events::emit_new_defindex_fee(&e, defindex_fee);
+        Ok(())
+    }
+
+    fn set_vault_wasm_hash(e: Env, new_vault_wasm_hash: BytesN<32>) -> Result<(), FactoryError> {
+        check_initialized(&e)?;
+        extend_instance_ttl(&e);
+        let admin = get_admin(&e);
+        admin.require_auth();
+
+        put_vault_wasm_hash(&e, new_vault_wasm_hash.clone());
+        events::emit_new_vault_wasm_hash(&e, new_vault_wasm_hash);
         Ok(())
     }
 

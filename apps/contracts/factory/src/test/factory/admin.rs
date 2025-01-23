@@ -1,6 +1,6 @@
 use soroban_sdk::{
     testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
-    Address, IntoVal, Symbol,
+    Address, BytesN, IntoVal, Symbol,
 };
 extern crate alloc;
 use alloc::vec;
@@ -105,4 +105,55 @@ fn set_fee_receiver_by_unauthorized() {
             },
         }])
         .set_defindex_receiver(&users[0]);
+}
+
+#[test]
+fn set_vault_wasm_hash_by_admin() {
+    let test = DeFindexFactoryTest::setup();
+    let new_wasm_hash = BytesN::from_array(&test.env, &[1; 32]);
+
+    test.factory_contract
+        .mock_auths(&[MockAuth {
+            address: &test.admin,
+            invoke: &MockAuthInvoke {
+                contract: &test.factory_contract.address.clone(),
+                fn_name: "set_vault_wasm_hash",
+                args: (&new_wasm_hash,).into_val(&test.env),
+                sub_invokes: &[],
+            },
+        }])
+        .set_vault_wasm_hash(&new_wasm_hash);
+
+    let expected_auth = AuthorizedInvocation {
+        function: AuthorizedFunction::Contract((
+            test.factory_contract.address.clone(),
+            Symbol::new(&test.env, "set_vault_wasm_hash"),
+            (new_wasm_hash.clone(),).into_val(&test.env),
+        )),
+        sub_invocations: vec![],
+    };
+    assert_eq!(test.env.auths(), vec![(test.admin, expected_auth)]);
+
+    // let stored_hash = test.factory_contract.vault_wasm_hash();
+    // assert_eq!(stored_hash, new_wasm_hash);
+}
+
+#[test]
+#[should_panic(expected = "HostError: Error(Auth, InvalidAction)")] // Unauthorized
+fn set_vault_wasm_hash_by_unauthorized() {
+    let test = DeFindexFactoryTest::setup();
+    let new_wasm_hash = BytesN::from_array(&test.env, &[1; 32]);
+    let users = DeFindexFactoryTest::generate_random_users(&test.env, 1);
+
+    test.factory_contract
+        .mock_auths(&[MockAuth {
+            address: &users[0],
+            invoke: &MockAuthInvoke {
+                contract: &test.factory_contract.address.clone(),
+                fn_name: "set_vault_wasm_hash",
+                args: (&new_wasm_hash,).into_val(&test.env),
+                sub_invokes: &[],
+            },
+        }])
+        .set_vault_wasm_hash(&new_wasm_hash);
 }
