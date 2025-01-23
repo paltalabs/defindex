@@ -383,7 +383,7 @@ fn asset_n_strategies_fixed_panic() {
     name_symbol.set(String::from_str(&setup.env, "symbol"), vault_symbol);
 
     let mut strategies = svec![&setup.env];
-    let num_strategies = 11; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
+    let num_strategies = 12; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
 
     for i in 0..num_strategies {
         let strategy_name = format!("Strategy_{}", i);
@@ -488,7 +488,7 @@ fn asset_n_strategies_blend() {
 
     let (blnd, blnd_client) = create_token(&setup.env, &admin);
     let (usdc, usdc_client) = create_token(&setup.env, &admin);
-    let (xlm, xlm_client) = create_token(&setup.env, &admin);
+    let (_, xlm_client) = create_token(&setup.env, &admin);
 
     // Setting up soroswap pool
     let pool_admin = Address::generate(&setup.env);
@@ -667,10 +667,6 @@ fn asset_n_strategies_blend() {
             },
         ],
     );
-    let user_2_final_balance = usdc.balance(&users[2]);
-    let user_2_profit = user_2_final_balance - user_2_starting_balance;
-
-    let expected_user_2_profit = user_2_profit / 2;
 
     std::println!("-- Harvesting --");
     // harvest on all strategies
@@ -721,7 +717,7 @@ fn asset_n_strategies_blend_panic() {
 
     let (blnd, blnd_client) = create_token(&setup.env, &admin);
     let (usdc, usdc_client) = create_token(&setup.env, &admin);
-    let (xlm, xlm_client) = create_token(&setup.env, &admin);
+    let (_, xlm_client) = create_token(&setup.env, &admin);
 
     // Setting up soroswap pool
     let pool_admin = Address::generate(&setup.env);
@@ -900,10 +896,6 @@ fn asset_n_strategies_blend_panic() {
             },
         ],
     );
-    let user_2_final_balance = usdc.balance(&users[2]);
-    let user_2_profit = user_2_final_balance - user_2_starting_balance;
-
-    let expected_user_2_profit = user_2_profit / 2;
 
     std::println!("-- Harvesting --");
     // harvest on all strategies

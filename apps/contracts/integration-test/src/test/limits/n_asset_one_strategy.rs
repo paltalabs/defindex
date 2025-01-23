@@ -380,7 +380,6 @@ fn n_assets_one_strategy_blend() {
     let blend_fixture = BlendFixture::deploy(&setup.env, &admin, &blnd.address, &usdc.address);
 
     let pool = create_blend_pool(&setup.env, &blend_fixture, &admin, &usdc_client, &xlm_client);
-    let pool_client = BlendPoolClient::new(&setup.env, &pool);
 
     let emergency_manager = Address::generate(&setup.env);
     let rebalance_manager = Address::generate(&setup.env);
