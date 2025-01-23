@@ -80,3 +80,9 @@ to publish them, run this to copy all files into /rust_docs
 ```bash
 cp -rf /workspace/apps/contracts/target/doc/* /workspace/apps/rust_docs/
 ```
+
+## Scout Audit
+```bash
+cd apps/contracts/factory/
+cargo scout-audit
+```

@@ -201,9 +201,3 @@ cd apps/docs/10-whitepaper
 mdbook build
 
 ```
-
-## Scout Audit
-```bash
-cd apps/contracts/factory/
-cargo scout-audit
-```
