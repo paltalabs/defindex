@@ -1,7 +1,8 @@
-import { Address, Keypair } from "@stellar/stellar-sdk";
+import { Keypair } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
 import { checkUserBalance } from "../strategy.js";
 import {
+  admin,
   CreateVaultParams,
   deployVault,
   depositToVault,
@@ -18,10 +19,11 @@ import {
   setRebalanceManager,
   setVaultManager,
   unpauseStrategy,
+  upgradeVaultWasm,
   withdrawFromVault
 } from "../vault.js";
 import { green, purple, red, yellow } from "../common.js";
-import { airdropAccount } from "../../utils/contract.js";
+import { airdropAccount, installContract } from "../../utils/contract.js";
 
 async function fetchBalances(addressBook: AddressBook, vault_address: string, user: Keypair) {
   console.log(yellow, "---------------------------------------");
@@ -44,6 +46,36 @@ async function fetchBalances(addressBook: AddressBook, vault_address: string, us
 
   return {idle_funds, invested_funds, hodl_balance};
 }
+async function deployOneStrategyVault(addressBook: AddressBook, params: CreateVaultParams[], user: Keypair) {
+  console.log(purple, "---------------------------------------");
+  console.log(purple, "Deploying vault with one strategy");
+  console.log(purple, "---------------------------------------");
+  try {
+    const { 
+      address: vault_address, 
+      instructions:deploy_instructions, 
+      readBytes:deploy_read_bytes, 
+      writeBytes:deploy_write_bytes
+    } = await deployVault(
+      addressBook,
+      params,
+      "TestVault",
+      "TSTV"
+    );
+    console.log(vault_address);
+    return {address: vault_address, deploy_instructions, deploy_read_bytes, deploy_write_bytes};
+  } catch (error:any) {
+    console.error(red, error);
+    return {
+      address: null, 
+      deploy_instructions:0, 
+      deploy_read_bytes: 0, 
+      deploy_write_bytes: 0,
+      error
+    };
+  }
+}
+
 /* 
 // Success flow:
   - [x] deposit
@@ -78,8 +110,6 @@ async function fetchBalances(addressBook: AddressBook, vault_address: string, us
   - [x] unpause strategy
   - [x] pause strategy
 */
-
-
 export async function successFlow(addressBook: AddressBook, params: CreateVaultParams[], user: Keypair) {
   console.log(yellow, "---------------------------------------");
   console.log(yellow, "Testing one strategy vault tests");
@@ -92,35 +122,9 @@ export async function successFlow(addressBook: AddressBook, params: CreateVaultP
     deploy_read_bytes,
     deploy_write_bytes 
 
-  } = await (async () => {
-    try {
-      console.log(purple, "---------------------------------------");
-      console.log(purple, "Deploying vault with one strategy");
-      console.log(purple, "---------------------------------------");
-      const { 
-        address: vault_address, 
-        instructions:deploy_instructions, 
-        readBytes:deploy_read_bytes, 
-        writeBytes:deploy_write_bytes} = await deployVault(
-        addressBook,
-        params,
-        "TestVault",
-        "TSTV"
-      );
-      console.log(vault_address);
-      return {address: vault_address, deploy_instructions, deploy_read_bytes, deploy_write_bytes};
-    } catch (error) {
-      console.error(red, error);
-      return {
-        address: null, 
-        deploy_instructions:0, 
-        deploy_read_bytes: 0, 
-        deploy_write_bytes: 0,
-        error
-      };
-    }
-  })();
+  } = await deployOneStrategyVault(addressBook, params, user);
   if (!vault_address) throw new Error("Vault was not deployed");
+
   const { 
     idle_funds:idle_funds_before_deposit, 
     invested_funds:invested_funds_before_deposit, 
@@ -163,7 +167,6 @@ export async function successFlow(addressBook: AddressBook, params: CreateVaultP
   } = await fetchBalances(addressBook, vault_address, user);
 
   //Invest
-  //To-Do: Return error handling status
   const invest_amount = 5_0_000_000;
   const { 
     instructions: invest_instructions, 
@@ -317,7 +320,6 @@ export async function successFlow(addressBook: AddressBook, params: CreateVaultP
   )();
 
   // Unwind
-  //  To-do: Return error handling status
   const {
     instructions: unwind_instructions,
     readBytes:unwind_read_bytes,
@@ -569,7 +571,6 @@ export async function successFlow(addressBook: AddressBook, params: CreateVaultP
       }
     }
   )();
-
 
   // withdraw from vault
   const { 
@@ -999,8 +1000,6 @@ export async function successFlow(addressBook: AddressBook, params: CreateVaultP
       hodlStrategy: hodl_balance_after_rescue,
     }
   };
-  console.table(tableData);
-
   const budgetData = {
     deploy: {
       instructions: deploy_instructions,
@@ -1053,7 +1052,6 @@ export async function successFlow(addressBook: AddressBook, params: CreateVaultP
       writeBytes: pause_strategy_write_bytes,
     },
   }
-  console.table(budgetData);
   return {tableData, budgetData};
 }
 
@@ -1074,40 +1072,12 @@ export async function successFlow(addressBook: AddressBook, params: CreateVaultP
 
   - [x] try setEmergencyManager from unauthorized
   - [x] setEmergencyManager
-
 */
 async function testAccessControl(addressBook: AddressBook, params: CreateVaultParams[], user: Keypair) {
   //Deploy vault
   const { 
     address:vault_address, 
-  } = await (async () => {
-    try {
-      console.log(purple, "---------------------------------------");
-      console.log(purple, "Deploying vault with one strategy");
-      console.log(purple, "---------------------------------------");
-      const { 
-        address: vault_address, 
-        instructions:deploy_instructions, 
-        readBytes:deploy_read_bytes, 
-        writeBytes:deploy_write_bytes} = await deployVault(
-        addressBook,
-        params,
-        "TestVault",
-        "TSTV"
-      );
-      console.log(vault_address);
-      return {address: vault_address, deploy_instructions, deploy_read_bytes, deploy_write_bytes};
-    } catch (error) {
-      console.error(red, error);
-      return {
-        address: null, 
-        deploy_instructions:0, 
-        deploy_read_bytes: 0, 
-        deploy_write_bytes: 0,
-        error
-      };
-    }
-  })();
+  } = await deployOneStrategyVault(addressBook, params, user);
   if (!vault_address) throw new Error("Vault was not deployed");
 
   //Try set manager without previous queued manager
@@ -1324,278 +1294,119 @@ async function testAccessControl(addressBook: AddressBook, params: CreateVaultPa
       return {result: false, instructions: 0, readBytes: 0, writeBytes: 0};
     }
   } )();
-
-  return {
-    tableData: {}, 
-    budgetData: {
-      queue: {
-        instructions: queue_instructions,
-        readBytes: queue_read_bytes,
-        writeBytes: queue_write_bytes,
-      },
-      set_rebalance_manager: {
-        instructions: set_rebalance_manager_instructions,
-        readBytes: set_rebalance_manager_read_bytes,
-        writeBytes: set_rebalance_manager_write_bytes,
-      },
-      set_fee_receiver: {
-        instructions: set_fee_receiver_instructions,
-        readBytes: set_fee_receiver_read_bytes,
-        writeBytes: set_fee_receiver_write_bytes,
-      },
-      set_emergency_manager: {
-        instructions: set_emergency_manager_instructions,
-        readBytes: set_emergency_manager_read_bytes,
-        writeBytes: set_emergency_manager_write_bytes,
-      }
+  const budgetData = {
+    queue: {
+      instructions: queue_instructions,
+      readBytes: queue_read_bytes,
+      writeBytes: queue_write_bytes,
+    },
+    set_rebalance_manager: {
+      instructions: set_rebalance_manager_instructions,
+      readBytes: set_rebalance_manager_read_bytes,
+      writeBytes: set_rebalance_manager_write_bytes,
+    },
+    set_fee_receiver: {
+      instructions: set_fee_receiver_instructions,
+      readBytes: set_fee_receiver_read_bytes,
+      writeBytes: set_fee_receiver_write_bytes,
+    },
+    set_emergency_manager: {
+      instructions: set_emergency_manager_instructions,
+      readBytes: set_emergency_manager_read_bytes,
+      writeBytes: set_emergency_manager_write_bytes,
     }
+  }
+  return {
+    budgetData
   };
 };
 
 
 /* 
 // Upgrade tests:
-  - [ ] try upgrade from unauthorized
-  - [ ] upgrade
+  - [x] try upgrade from unauthorized
+  - [x] upgrade
 */
+export async function testUpgradeContract(addressBook: AddressBook, params: CreateVaultParams[], user: Keypair) {
+  try {
+    console.log(yellow, "----------------");
+    console.log(yellow, "| updating Wasm |");
+    console.log(yellow, "----------------");
+    await installContract("defindex_vault", addressBook, admin);
+    console.log(green, "----------------");
+    console.log(green, "| Wasm updated |");
+    console.log(green, "----------------");
+  } catch (error: any) {
+    throw Error(error);
+  }
+  
+  // Deploy vault
+  const { 
+    address:vault_address, 
+  } = await deployOneStrategyVault(addressBook, params, user);
+
+  if (!vault_address) throw new Error("Vault was not deployed");
+  //Try upgrade from unauthorized
+  try {
+    console.log(purple, "---------------------------------------");
+    console.log(purple, "Try upgrade from unauthorized");
+    console.log(purple, "---------------------------------------");
+    const random_user = Keypair.random();
+    const wasm_hash = Buffer.from(addressBook.getWasmHash("defindex_vault"), "hex");
+    await airdropAccount(random_user);
+    const {result} = await upgradeVaultWasm(vault_address, random_user, wasm_hash);
+    if( result !== false){
+      throw Error("Upgrade from unauthorized validation failed");
+    } else if (result === false) {
+      console.log(green, "------------------------------------------------");
+      console.log(green, "| Upgrade from unauthorized failed as expected |");
+      console.log(green, "------------------------------------------------");
+    }
+  } catch (error: any) {
+    throw Error(error);
+  }
+
+  // upgrade success
+  const {
+    instructions: upgrade_instructions,
+    readBytes: upgrade_read_bytes,
+    writeBytes: upgrade_write_bytes
+  } = await (async () => {
+    try {
+      console.log(purple, "---------------------------------------");
+      console.log(purple, "Upgrade");
+      console.log(purple, "---------------------------------------");
+      const wasm_hash = Buffer.from(addressBook.getWasmHash("defindex_vault"), "hex");
+      const {instructions, readBytes, writeBytes} = await upgradeVaultWasm(vault_address, manager, wasm_hash);
+      console.log(green, "------------------------");
+      console.log(green, "| Upgrade sucessfully  |");
+      console.log(green, "------------------------");
+      return {instructions, readBytes, writeBytes};
+    } catch (error: any) {
+      console.error(red, error);
+      return {instructions: 0, readBytes: 0, writeBytes: 0};
+    } 
+  } )();
+  const budgetData = {
+    upgrade: {
+      instructions: upgrade_instructions,
+      readBytes: upgrade_read_bytes,
+      writeBytes: upgrade_write_bytes,
+    }
+  }
+  return { budgetData };
+
+}
+
 export async function testVaultOneStrategy(addressBook: AddressBook, params: CreateVaultParams[], user: Keypair) {
   const {tableData: userFlowTable, budgetData: userFlowBudgetData} = await successFlow(addressBook, params, user);
-  const {tableData: accessControlTable, budgetData: accessControlBudgetData} = await testAccessControl(addressBook, params, user);
+  const {budgetData: accessControlBudgetData} = await testAccessControl(addressBook, params, user);
+  const {budgetData: upgradeBudgetData} = await testUpgradeContract(addressBook, params, user);
 
-  const tableData:any  = {...userFlowTable, ...accessControlTable};
-  const budgetData:any = { ...userFlowBudgetData, ...accessControlBudgetData,};
-  return {tableData, budgetData};
-
-  /* console.log(yellow, "---------------------------------------");
-  console.log(yellow, "Running one strategy vault tests");
-  console.log(yellow, "---------------------------------------");
-
-  // deploy vault
-  console.log(purple, "---------------------------------------");
-  console.log(purple, "Deploying vault with one strategy");
-  console.log(purple, "---------------------------------------");
-  const { 
-    address: vault_address, 
-    instructions:deploy_instructions, 
-    readBytes:deploy_read_bytes, 
-    writeBytes:deploy_write_bytes} = await deployVault(
-    addressBook,
-    params,
-    "TestVault",
-    "TSTV"
-  );
-  console.log(vault_address)
-
-  console.log(yellow, "---------------------------------------");
-  console.log(yellow, "Fetching balances");
-  console.log(yellow, "---------------------------------------");
-
-  const idle_funds_before_deposit = await fetchParsedCurrentIdleFunds(
-    vault_address,
-    user
-  );
-  const invested_funds_before_deposit = await fetchCurrentInvestedFunds(
-    vault_address,
-    user
-  );
-  const hodl_balance_before_deposit = await checkUserBalance(
-    addressBook.getContractId("hodl_strategy"),
-    vault_address,
-    user
-  );
-
-  // deposit to vault
-
-  const {
-    instructions: deposit_instructions,
-    readBytes:deposit_read_bytes,
-    writeBytes:deposit_write_bytes,
-  } = await depositToVault(vault_address, [987654321], user);
-
-  console.log(yellow, "---------------------------------------");
-  console.log(yellow, "Fetching balances");
-  console.log(yellow, "---------------------------------------");
-
-  const idle_funds_after_deposit = await fetchParsedCurrentIdleFunds(
-    vault_address,
-    user
-  );
-  const invested_funds_after_deposit = await fetchCurrentInvestedFunds(
-    vault_address,
-    user
-  );
-  const hodl_balance_after_deposit = await checkUserBalance(
-    addressBook.getContractId("hodl_strategy"),
-    vault_address,
-    user
-  );
-
-  // withdraw from vault
-  const {
-    instructions: withdraw_instructions,
-    readBytes:withdraw_read_bytes,
-    writeBytes:withdraw_write_bytes,
-  } = await withdrawFromVault(vault_address, 65_0_000, user);
-
-  console.log(yellow, "---------------------------------------");
-  console.log(yellow, "Fetching balances");
-  console.log(yellow, "---------------------------------------");
-
-  const idle_funds_after_withdraw = await fetchParsedCurrentIdleFunds(
-    vault_address,
-    user
-  );
-  const invested_funds_after_withdraw = await fetchCurrentInvestedFunds(
-    vault_address,
-    user
-  );
-  const hodl_balance_after_withdraw = await checkUserBalance(
-    addressBook.getContractId("hodl_strategy"),
-    vault_address,
-    user
-  );
-
-  // invest in vault
-  console.log(purple, "---------------------------------------");
-  console.log(purple, "Investing in vault");
-  console.log(purple, "---------------------------------------");
-
-  const investArgs: Instruction[] = [
-    {
-      type: "Invest",
-      strategy: addressBook.getContractId("hodl_strategy"),
-      amount: BigInt(43_0_0),
-    },
-  ];
-
-  const { 
-    result: investResult,
-    instructions: invest_instructions,
-    readBytes:invest_read_bytes,
-    writeBytes:invest_write_bytes
-  } = await rebalanceVault(
-    vault_address,
-    investArgs,
-    manager
-  );
-  console.log(yellow, "---------------------------------------");
-  console.log(yellow, "Fetching balances");
-  console.log(yellow, "---------------------------------------");
-  const idle_funds_after_invest = await fetchParsedCurrentIdleFunds(
-    vault_address,
-    user
-  );
-  const invested_funds_after_invest = await fetchCurrentInvestedFunds(
-    vault_address,
-    user
-  );
-  const hodl_balance_after_invest = await checkUserBalance(
-    addressBook.getContractId("hodl_strategy"),
-    vault_address,
-    user
-  );
-
-  // rebalance vault
-
-  console.log(purple, "---------------------------------------");
-  console.log(purple, "Rebalancing vault"); 
-  console.log(purple, "---------------------------------------");
-
-  const rebalanceArgs: Instruction[] = [
-    {
-      type: "Invest",
-      strategy: addressBook.getContractId("hodl_strategy"),
-      amount: BigInt(7_0_000),
-    },
-    {
-      type: "Unwind",
-      strategy: addressBook.getContractId("hodl_strategy"),
-      amount: BigInt(6_0_00),
-    },
-  ];
-
-  const mappedParams = mapInstructionsToParams(rebalanceArgs);
-
-  const { 
-    result: rebalanceResult,
-    instructions: rebalance_instructions,
-    readBytes:rebalance_read_bytes,
-    writeBytes:rebalance_write_bytes
-  } = await rebalanceVault(
-    vault_address,
-    investArgs,
-    manager
-  );
-
-  console.log(yellow, "---------------------------------------");
-  console.log(yellow, "Fetching balances");
-  console.log(yellow, "---------------------------------------");
-  const idle_funds_after_rebalance = await fetchParsedCurrentIdleFunds(
-    vault_address,
-    user
-  );
-  const invested_funds_after_rebalance = await fetchCurrentInvestedFunds(
-    vault_address,
-    user
-  );
-  const hodl_balance_after_rebalance = await checkUserBalance(
-    addressBook.getContractId("hodl_strategy"),
-    vault_address,
-    user
-  );
-
-  const tableData = {
-    hodlStrategy: {
-      "Balance before deposit": hodl_balance_before_deposit,
-      "Balance after deposit": hodl_balance_after_deposit,
-      "Balance after withdraw": hodl_balance_after_withdraw,
-      "Balance after invest": hodl_balance_after_invest,
-      "Balance after rebalance": hodl_balance_after_rebalance,
-    },
-    "Invested funds": {
-      "Balance before deposit": invested_funds_before_deposit[0].amount,
-      "Balance after deposit": invested_funds_after_deposit[0].amount,
-      "Balance after withdraw": invested_funds_after_withdraw[0].amount,
-      "Balance after invest": invested_funds_after_invest[0].amount,
-      "Balance after rebalance": invested_funds_after_rebalance[0].amount,
-    },
-    "Idle funds": {
-      "Balance before deposit": idle_funds_before_deposit[0].amount,
-      "Balance after deposit": idle_funds_after_deposit[0].amount,
-      "Balance after withdraw": idle_funds_after_withdraw[0].amount,
-      "Balance after invest": idle_funds_after_invest[0].amount,
-      "Balance after rebalance": idle_funds_after_rebalance[0].amount,
-    },
-  };
+  const tableData:any  = {...userFlowTable,};
+  const budgetData:any = { ...userFlowBudgetData, ...accessControlBudgetData,  ...upgradeBudgetData};
+  
   console.table(tableData);
-
-  const budgetData = {
-    deploy: {
-      instructions: deploy_instructions,
-      readBytes: deploy_read_bytes,
-      writeBytes: deploy_write_bytes,
-    },
-    deposit: {
-      instructions: deposit_instructions,
-      readBytes: deposit_read_bytes,
-      writeBytes: deposit_write_bytes,
-    },
-    withdraw: {
-      instructions: withdraw_instructions,
-      readBytes: withdraw_read_bytes,
-      writeBytes: withdraw_write_bytes,
-    },
-    invest: {
-      instructions: invest_instructions,
-      readBytes: invest_read_bytes,
-      writeBytes: invest_write_bytes,
-    },
-    rebalance: {
-      instructions: rebalance_instructions,
-      readBytes: rebalance_read_bytes,
-      writeBytes: rebalance_write_bytes,
-    },
-  }
   console.table(budgetData);
-  return {tableData, budgetData}; */
+  return {tableData, budgetData};
 }

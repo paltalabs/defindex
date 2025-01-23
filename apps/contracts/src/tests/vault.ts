@@ -1005,3 +1005,21 @@ export async function setEmergencyManager(deployedVault:Address, manager:Keypair
     throw error;
   }
 }
+
+export async function upgradeVaultWasm(deployedVault:Address, manager:Keypair, new_wasm_hash:Uint8Array){
+  try {
+    const result = await invokeCustomContract(
+      deployedVault.toString(),
+      "upgrade",
+      [nativeToScVal(new_wasm_hash)],
+      manager
+    );
+    const parsed_result = scValToNative(result.returnValue);
+    const { instructions, readBytes, writeBytes } = getTransactionBudget(result);
+    console.log("Upgrade successful:", scValToNative(result.returnValue));
+    return { result: parsed_result, instructions, readBytes, writeBytes };
+  } catch (error) {
+    console.error("Upgrade failed:", error);
+    throw error;
+  }
+}
