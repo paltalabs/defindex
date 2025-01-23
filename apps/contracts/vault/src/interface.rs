@@ -392,5 +392,5 @@ pub trait VaultManagementTrait {
     ///
     /// # Returns
     /// * `Result<Vec<(Address, i128)>, ContractError>` - A vector of tuples with asset addresses and the total distributed fee amounts.
-    fn distribute_fees(e: Env) -> Result<Vec<(Address, i128)>, ContractError>;
+    fn distribute_fees(e: Env, caller: Address) -> Result<Vec<(Address, i128)>, ContractError>;
 }

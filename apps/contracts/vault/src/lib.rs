@@ -994,12 +994,15 @@ impl VaultManagementTrait for DeFindexVault {
     ///
     /// # Returns
     /// * `Result<Vec<(Address, i128)>, ContractError>` - A vector of tuples with asset addresses and the total distributed fee amounts.
-    fn distribute_fees(e: Env) -> Result<Vec<(Address, i128)>, ContractError> {
+    fn distribute_fees(e: Env, caller: Address) -> Result<Vec<(Address, i128)>, ContractError> {
         extend_instance_ttl(&e);
-        check_initialized(&e)?;
+        // check_initialized(&e)?;
 
         let access_control = AccessControl::new(&e);
-        access_control.require_role(&RolesDataKey::Manager);
+        access_control.require_any_role(
+            &[RolesDataKey::Manager, RolesDataKey::VaultFeeReceiver],
+            &caller,
+        );
 
         // Get all assets and their strategies
         let assets = get_assets(&e);
