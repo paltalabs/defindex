@@ -178,6 +178,15 @@ pub trait FactoryTrait {
     /// # Returns
     /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, or an error if not authorized.
     fn set_vault_wasm_hash(e: Env, new_vault_wasm_hash: BytesN<32>) -> Result<(), FactoryError>;
+
+    /// Retrieves the current vault WASM hash.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    ///
+    /// # Returns
+    /// * `Result<BytesN<32>, FactoryError>` - Returns the current vault WASM hash or an error if not found.
+    fn vault_wasm_hash(e: Env) -> Result<BytesN<32>, FactoryError>;
 }
 
 #[contract]
@@ -455,6 +464,12 @@ impl FactoryTrait for DeFindexFactory {
         put_vault_wasm_hash(&e, new_vault_wasm_hash.clone());
         events::emit_new_vault_wasm_hash(&e, new_vault_wasm_hash);
         Ok(())
+    }
+
+    fn vault_wasm_hash(e: Env) -> Result<BytesN<32>, FactoryError> {
+        check_initialized(&e)?;
+        extend_instance_ttl(&e);
+        get_vault_wasm_hash(&e)
     }
 
     // --- Read Methods ---

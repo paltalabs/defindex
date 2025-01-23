@@ -1,11 +1,15 @@
 use soroban_sdk::{
-    testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
-    Address, BytesN, IntoVal, Symbol,
+    testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke, Events},
+    Address, BytesN, IntoVal, Symbol, FromVal, Vec, Val, String, symbol_short,
+    vec as sorobanvec,
 };
 extern crate alloc;
+extern crate std;
+
 use alloc::vec;
 
 use crate::test::DeFindexFactoryTest;
+use crate::events::NewVaultWasmHashEvent;
 
 #[test]
 fn set_new_admin_by_admin() {
@@ -134,8 +138,27 @@ fn set_vault_wasm_hash_by_admin() {
     };
     assert_eq!(test.env.auths(), vec![(test.admin, expected_auth)]);
 
-    // let stored_hash = test.factory_contract.vault_wasm_hash();
-    // assert_eq!(stored_hash, new_wasm_hash);
+    // Verify the event was emitted
+    let events = test.env.events().all();
+    let wasm_hash_events: std::vec::Vec<(Address, Vec<Val>, Val)> = events
+        .iter()
+        .filter(|event| {
+            event.1 == sorobanvec![
+                &test.env,
+                String::from_str(&test.env, "DeFindexFactory").into_val(&test.env),
+                symbol_short!("n_wasm").into_val(&test.env)
+            ]
+        })
+        .collect();
+
+    assert_eq!(wasm_hash_events.len(), 1);
+    let event = wasm_hash_events.last().unwrap();
+    let new_wasm_hash_event: NewVaultWasmHashEvent = FromVal::from_val(&test.env, &event.2);
+    assert_eq!(new_wasm_hash_event.new_vault_wasm_hash, new_wasm_hash);
+
+    // Verify the storage was updated
+    let stored_hash = test.factory_contract.vault_wasm_hash();
+    assert_eq!(stored_hash, new_wasm_hash);
 }
 
 #[test]
