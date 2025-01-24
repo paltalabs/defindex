@@ -100,8 +100,6 @@ pub fn withdraw(
         panic_with_error!(e, StrategyError::InvalidArgument);
     }
 
-    reserves.update_rate(underlying_amount, b_tokens_amount);
-
     let mut vault_shares = storage::get_vault_shares(&e, &from);
     let share_amount = reserves.b_tokens_to_shares_up(b_tokens_amount);
 

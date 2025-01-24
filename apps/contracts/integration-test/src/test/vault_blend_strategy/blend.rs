@@ -231,7 +231,7 @@ fn success() {
     println!("Vault Balance on Strategy: {}", enviroment.strategy_contract.balance(&vault_contract.address));
 
     println!("-- Distributing Fees --");
-    vault_contract.distribute_fees();
+    vault_contract.distribute_fees(&enviroment.manager);
 
     println!("Pool USDC Balance: {}", usdc.balance(&enviroment.blend_pool_client.address));
     println!("Vault Balance on Strategy: {}", enviroment.strategy_contract.balance(&vault_contract.address));
