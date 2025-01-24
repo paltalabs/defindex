@@ -228,11 +228,11 @@ fn fee_performance() {
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
                 fn_name: "distribute_fees",
-                args: ().into_val(&setup.env),
+                args: (&enviroment.manager,).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .distribute_fees();
+        .distribute_fees(&enviroment.manager);
 
     let _report_result = enviroment.vault_contract.report();
 

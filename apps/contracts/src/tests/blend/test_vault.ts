@@ -4,6 +4,7 @@ import { AddressBook } from "../../utils/address_book.js";
 import { airdropAccount, invokeContract } from "../../utils/contract.js";
 import { config } from "../../utils/env_config.js";
 import { AssetInvestmentAllocation, depositToVault, getCreateDeFindexParams, Instruction, rebalanceManager, rebalanceVault } from "../vault.js";
+import { getTransactionBudget } from "../../utils/tx.js";
 
 const network = process.argv[2];
 const loadedConfig = config(network);
@@ -115,6 +116,18 @@ export async function testBlendVault(user?: Keypair) {
   let depositStatus: boolean;
   let investStatus: boolean;
 
+  let createInstructions: number = 0;
+  let createReadBytes: number = 0;
+  let createWriteBytes: number = 0;
+
+  let depositInstructions: number = 0;
+  let depositReadBytes: number = 0;
+  let depositWriteBytes: number = 0;
+
+  let investInstructions: number = 0;
+  let investReadBytes: number = 0;
+  let investWriteBytes: number = 0;
+  
   // Create vault
   try {
     console.log(purple, '--------------------------------------------------------------')
@@ -128,6 +141,15 @@ export async function testBlendVault(user?: Keypair) {
       manager,
       false
     );
+    const {
+      instructions,
+      readBytes,
+      writeBytes
+    } = getTransactionBudget(createResult);
+    console.log("🟢",instructions, readBytes, writeBytes)
+    createInstructions = instructions;
+    createReadBytes = readBytes;
+    createWriteBytes = writeBytes;
 
     blendVaultAddress = scValToNative(createResult.returnValue);
     console.log(green, '----------------------- Vault created -------------------------')
@@ -146,7 +168,16 @@ export async function testBlendVault(user?: Keypair) {
     console.log(purple, '---------------------------------------------------------------------------')
     const { user, balanceBefore: depositBalanceBefore, result: depositResult, balanceAfter: depositBalanceAfter } 
       = await depositToVault(blendVaultAddress, [initialAmount], newUser, false);
-    
+    const {
+      instructions,
+      readBytes,
+      writeBytes
+    } = getTransactionBudget(depositResult);
+
+    depositInstructions = instructions;
+    depositReadBytes = readBytes;
+    depositWriteBytes = writeBytes;
+
     console.log(green, '------------ XLM deposited to the vault ------------')
     console.log(green, 'Deposit balance before: ', depositBalanceBefore)
     console.log(green, 'depositResult', depositResult)
@@ -184,8 +215,17 @@ export async function testBlendVault(user?: Keypair) {
       },
     ];
     
-    const investResult = await rebalanceVault(blendVaultAddress, investArgs, manager)
+    const {
+      result:investResult,
+      instructions,
+      readBytes,
+      writeBytes
+    } = await rebalanceVault(blendVaultAddress, investArgs, manager);
     console.log('🚀 « investResult:', investResult);
+
+    investInstructions = instructions;
+    investReadBytes = readBytes;
+    investWriteBytes = writeBytes;
     
     console.log(green, '---------------------- Invested in strategy ----------------------')
     console.log(green, 'Invested: ', investResult, ' in the strategy')
@@ -200,6 +240,23 @@ export async function testBlendVault(user?: Keypair) {
       createStatus: createStatus ? '✅ Success' : '❌ Failed',
       depositStatus: depositStatus ? '✅ Success' : '❌ Failed', 
       investStatus: investStatus ? '✅ Success' : '❌ Failed' 
+    },
+    budget: {
+      create: {
+        instructions: createInstructions,
+        readBytes: createReadBytes,
+        writeBytes: createWriteBytes
+      },
+      deposit: {
+        instructions: depositInstructions,
+        readBytes: depositReadBytes,
+        writeBytes: depositWriteBytes
+      },
+      invest: {
+        instructions: investInstructions,
+        readBytes: investReadBytes,
+        writeBytes: investWriteBytes
+      }
     }
   }
   // try { 

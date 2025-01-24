@@ -15,6 +15,7 @@ import {
   invokeCustomContract,
 } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
+import { getTransactionBudget } from "../utils/tx.js";
 
 const network = process.argv[2];
 const loadedConfig = config(network);
@@ -199,7 +200,7 @@ export async function deployVault(
   createVaultParams: CreateVaultParams[],
   vaultName: string,
   vaultSymbol: string
-): Promise<string> {
+): Promise<any> {
   const assets: CreateVaultParams[] = createVaultParams;
   const assetAllocations = getAssetAllocations(assets);
 
@@ -226,7 +227,9 @@ export async function deployVault(
       "🚀 « DeFindex Vault created with address:",
       scValToNative(result.returnValue)
     );
-    return scValToNative(result.returnValue);
+    const address = scValToNative(result.returnValue);
+    const budget = getTransactionBudget(result);
+    return { address: address, ...budget };
   } catch (error) {
     console.error("Error deploying vault:", error);
     throw error;
@@ -318,8 +321,8 @@ export async function depositToVault(
     console.error("❌ Balance check after deposit failed:", error);
     throw error;
   }
-
-  return { user: newUser, balanceBefore, result, balanceAfter, status: true };
+  const budget = getTransactionBudget(result);
+  return { user: newUser, balanceBefore, result, balanceAfter, status: true, ...budget };
 }
 
 /**
@@ -436,8 +439,8 @@ export async function withdrawFromVault(
     console.error("❌ Balance check after withdraw failed:", error);
     throw error;
   }
-
-  return { balanceBefore, result, balanceAfter };
+  const budget = getTransactionBudget(result);
+  return { balanceBefore, result, balanceAfter, ...budget };
 }
 
 /**
@@ -621,7 +624,8 @@ export async function rebalanceVault(deployedVault: string, instructions: Instru
       [new Address(manager.publicKey()).toScVal(), params],
       manager
     );
-    return { result: rebalanceResult, status: true };
+    const budget = getTransactionBudget(rebalanceResult);
+    return { result: rebalanceResult, status: true, ...budget };
   } catch (error) {
     console.error("Rebalance failed:", error);
     throw error;
