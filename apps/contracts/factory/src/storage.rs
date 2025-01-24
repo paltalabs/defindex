@@ -86,8 +86,8 @@ pub fn put_admin(e: &Env, admin: &Address) {
     e.storage().instance().set(&DataKey::Admin, admin);
 }
 
-pub fn get_admin(e: &Env) -> Address {
-    e.storage().instance().get(&DataKey::Admin).unwrap()
+pub fn get_admin(e: &Env) -> Result<Address, FactoryError> {
+    e.storage().instance().get(&DataKey::Admin).ok_or(FactoryError::NotInitialized)?
 }
 
 // Fee Receiver
@@ -97,11 +97,11 @@ pub fn put_defindex_receiver(e: &Env, address: &Address) {
         .set(&DataKey::DeFindexReceiver, address);
 }
 
-pub fn get_defindex_receiver(e: &Env) -> Address {
+pub fn get_defindex_receiver(e: &Env) -> Result<Address, FactoryError> {
     e.storage()
         .instance()
         .get(&DataKey::DeFindexReceiver)
-        .unwrap()
+        .ok_or(FactoryError::NotInitialized)?
 }
 
 // Fee Rate BPS (MAX BPS = 10000)
@@ -109,6 +109,6 @@ pub fn put_defindex_fee(e: &Env, value: &u32) {
     e.storage().instance().set(&DataKey::FeeRate, value);
 }
 
-pub fn get_fee_rate(e: &Env) -> u32 {
-    e.storage().instance().get(&DataKey::FeeRate).unwrap()
+pub fn get_fee_rate(e: &Env) -> Result<u32, FactoryError> {
+    e.storage().instance().get(&DataKey::FeeRate).ok_or(FactoryError::NotInitialized)?
 }

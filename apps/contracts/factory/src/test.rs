@@ -115,7 +115,7 @@ pub struct DeFindexFactoryTest<'a> {
 impl<'a> DeFindexFactoryTest<'a> {
     fn setup() -> Self {
         let env = Env::default();
-        env.budget().reset_unlimited();
+        env.cost_estimate().budget().reset_unlimited();
         // env.mock_all_auths();
 
         let admin = Address::generate(&env);

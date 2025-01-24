@@ -1,6 +1,6 @@
 //! Definition of the Events used in the contract
 use common::models::AssetStrategySet;
-use soroban_sdk::{contracttype, symbol_short, Address, Env, Map, Vec};
+use soroban_sdk::{contracttype, symbol_short, Address, Env, Map, Vec, BytesN};
 
 // CREATE DEFINDEX VAULT EVENT
 #[contracttype]
@@ -70,4 +70,20 @@ pub(crate) fn emit_new_defindex_fee(e: &Env, new_defindex_fee: u32) {
 
     e.events()
         .publish(("DeFindexFactory", symbol_short!("n_fee")), event);
+}
+
+// NEW VAULT WASM HASH EVENT
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct NewVaultWasmHashEvent {
+    pub new_vault_wasm_hash: BytesN<32>,
+}
+
+pub(crate) fn emit_new_vault_wasm_hash(e: &Env, new_vault_wasm_hash: BytesN<32>) {
+    let event = NewVaultWasmHashEvent {
+        new_vault_wasm_hash,
+    };
+
+    e.events()
+        .publish(("DeFindexFactory", symbol_short!("n_wasm")), event);
 }
