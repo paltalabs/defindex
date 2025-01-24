@@ -1,5 +1,5 @@
 use crate::error::FactoryError;
-use soroban_sdk::{contracttype, Address, BytesN, Env, Map, TryFromVal, Val};
+use soroban_sdk::{contracttype, Address, BytesN, Env, TryFromVal, Val};
 
 #[derive(Clone)]
 #[contracttype]
@@ -7,7 +7,8 @@ pub enum DataKey {
     Admin,
     DeFindexWasmHash,
     DeFindexReceiver,
-    DeFindexesMap,
+    TotalVaults,
+    VaultAddressNIndexed(u32),
     FeeRate,
 }
 
@@ -55,27 +56,32 @@ pub fn put_vault_wasm_hash(e: &Env, vault_wasm_hash: BytesN<32>) {
         .extend_ttl(&key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT)
 }
 
-// Storing deployed defindexes
-pub fn get_deployed_defindexes(e: &Env) -> Result<Map<u32, Address>, FactoryError> {
-    let key = DataKey::DeFindexesMap;
-    get_persistent_extend_or_error(&e, &key, FactoryError::EmptyMap)
+// Storing deployed vaults
+pub fn get_total_vaults(e: &Env) -> u32 {
+    e.storage().instance().get(&DataKey::TotalVaults).unwrap_or(0)
 }
 
-fn put_deployed_defindexes(e: &Env, deployed_defindexes: Map<u32, Address>) {
-    let key = DataKey::DeFindexesMap;
-    e.storage().persistent().set(&key, &deployed_defindexes);
+pub fn put_total_vaults(e: &Env, n: u32) {
+    e.storage().instance().set(&DataKey::TotalVaults, &n);
+}
+
+pub fn get_vault_by_index(e: &Env, n: u32) -> Result<Address, FactoryError> {
+    let key = DataKey::VaultAddressNIndexed(n);
+    get_persistent_extend_or_error(&e, &key, FactoryError::IndexDoesNotExist)
+}
+
+pub fn add_new_vault(e: &Env, vault_address: Address) {
+    let total_vaults = get_total_vaults(e);
+    
+    let key = DataKey::VaultAddressNIndexed(total_vaults);
+    e.storage().persistent().set(&key, &vault_address);
     e.storage()
         .persistent()
-        .extend_ttl(&key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT)
+        .extend_ttl(&key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT);
+
+    put_total_vaults(e, total_vaults.checked_add(1).unwrap());
 }
 
-pub fn add_new_defindex(e: &Env, defindex_address: Address) {
-    let mut deployed_defindexes: Map<u32, Address> =
-        get_deployed_defindexes(&e).unwrap_or(Map::new(&e));
-    let new_id = deployed_defindexes.len() as u32;
-    deployed_defindexes.set(new_id, defindex_address);
-    put_deployed_defindexes(&e, deployed_defindexes);
-}
 
 // Admin
 pub fn has_admin(e: &Env) -> bool {
