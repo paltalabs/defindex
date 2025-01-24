@@ -1002,51 +1002,61 @@ export async function successFlow(addressBook: AddressBook, params: CreateVaultP
   };
   const budgetData = {
     deploy: {
+      status: !!deploy_instructions && !!deploy_read_bytes && !!deploy_write_bytes ? "success" : "failed",
       instructions: deploy_instructions,
       readBytes: deploy_read_bytes,
       writeBytes: deploy_write_bytes,
     },
     deposit: {
+      status: !!deposit_instructions && !!deposit_read_bytes && !!deposit_write_bytes ? "success" : "failed",
       instructions: deposit_instructions,
       readBytes: deposit_read_bytes,
       writeBytes: deposit_write_bytes,
     },
     invest: {
+      status: !!invest_instructions && !!invest_read_bytes && !!invest_write_bytes ? "success" : "failed",
       instructions: invest_instructions,
       readBytes: invest_read_bytes,
       writeBytes: invest_write_bytes,
     },
     deposit_and_invest: {
+      status: !!deposit_and_invest_instructions && !!deposit_and_invest_read_bytes && !!deposit_and_invest_write_bytes ? "success" : "failed",
       instructions: deposit_and_invest_instructions,
       readBytes: deposit_and_invest_read_bytes,
       writeBytes: deposit_and_invest_write_bytes,
     },
     unwind: {
+      status: !!unwind_instructions && !!unwind_read_bytes && !!unwind_write_bytes ? "success" : "failed",
       instructions: unwind_instructions,
       readBytes: unwind_read_bytes,
       writeBytes: unwind_write_bytes,
     },
     rebalance: {
+      status: !!rebalance_instructions && !!rebalance_read_bytes && !!rebalance_write_bytes ? "success" : "failed",
       instructions: rebalance_instructions,
       readBytes: rebalance_read_bytes,
       writeBytes: rebalance_write_bytes,
     },
     withdraw: {
+      status: !!withdraw_instructions && !!withdraw_read_bytes && !!withdraw_write_bytes ? "success" : "failed",
       instructions: withdraw_instructions,
       readBytes: withdraw_read_bytes,
       writeBytes: withdraw_write_bytes,
     },
     rescue: {
+      status: !!rescue_instructions && !!rescue_read_bytes && !!rescue_write_bytes ? "success" : "failed",
       instructions: rescue_instructions,
       readBytes: rescue_read_bytes,
       writeBytes: rescue_write_bytes,
     },
     unpause_strategy: {
+      status: !!unpause_strategy_instructions && !!unpause_strategy_read_bytes && !!unpause_strategy_write_bytes ? "success" : "failed",
       instructions: unpause_strategy_instructions,
       readBytes: unpause_strategy_read_bytes,
       writeBytes: unpause_strategy_write_bytes,
     },
     pause_strategy: {
+      status: !!pause_strategy_instructions && !!pause_strategy_read_bytes && !!pause_strategy_write_bytes ? "success" : "failed",
       instructions: pause_strategy_instructions,
       readBytes: pause_strategy_read_bytes,
       writeBytes: pause_strategy_write_bytes,
@@ -1294,33 +1304,53 @@ async function testAccessControl(addressBook: AddressBook, params: CreateVaultPa
       return {result: false, instructions: 0, readBytes: 0, writeBytes: 0};
     }
   } )();
+
+  const tests_status = {
+    queue: {
+      status: !!queue_instructions && !!queue_read_bytes && !!queue_write_bytes,
+    },
+    set_rebalance_manager: {
+      status: !!set_rebalance_manager_instructions && !!set_rebalance_manager_read_bytes && !!set_rebalance_manager_write_bytes,
+    },
+    set_fee_receiver: {
+      status: !!set_fee_receiver_instructions && !!set_fee_receiver_read_bytes && !!set_fee_receiver_write_bytes,
+    },
+    set_emergency_manager: {
+      status: !!set_emergency_manager_instructions && !!set_emergency_manager_read_bytes && !!set_emergency_manager_write_bytes,
+    }
+  }
+
   const budgetData = {
     queue: {
+      status: tests_status.queue.status ? `success`: `failed`,
       instructions: queue_instructions,
       readBytes: queue_read_bytes,
       writeBytes: queue_write_bytes,
     },
     set_rebalance_manager: {
+      status: tests_status.set_rebalance_manager.status ? `success`: `failed`,
       instructions: set_rebalance_manager_instructions,
       readBytes: set_rebalance_manager_read_bytes,
       writeBytes: set_rebalance_manager_write_bytes,
     },
     set_fee_receiver: {
+      status: tests_status.set_fee_receiver.status ? `success`: `failed`,
       instructions: set_fee_receiver_instructions,
       readBytes: set_fee_receiver_read_bytes,
       writeBytes: set_fee_receiver_write_bytes,
     },
     set_emergency_manager: {
+      status: tests_status.set_emergency_manager.status ? `success`: `failed`,
       instructions: set_emergency_manager_instructions,
       readBytes: set_emergency_manager_read_bytes,
       writeBytes: set_emergency_manager_write_bytes,
     }
   }
+
   return {
     budgetData
   };
 };
-
 
 /* 
 // Upgrade tests:
@@ -1389,6 +1419,7 @@ export async function testUpgradeContract(addressBook: AddressBook, params: Crea
   } )();
   const budgetData = {
     upgrade: {
+      status: !!upgrade_instructions && !!upgrade_read_bytes && !!upgrade_write_bytes ? `success`: `failed`,
       instructions: upgrade_instructions,
       readBytes: upgrade_read_bytes,
       writeBytes: upgrade_write_bytes,
@@ -1405,7 +1436,7 @@ export async function testVaultOneStrategy(addressBook: AddressBook, params: Cre
 
   const tableData:any  = {...userFlowTable,};
   const budgetData:any = { ...userFlowBudgetData, ...accessControlBudgetData,  ...upgradeBudgetData};
-  
+
   console.table(tableData);
   console.table(budgetData);
   return {tableData, budgetData};
