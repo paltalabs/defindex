@@ -54,17 +54,14 @@ fn create_success() {
         &true
     );
 
-    let deployed_vaults = test.factory_contract.deployed_vaults();
-    assert_eq!(deployed_vaults.len(), 3);
+    let total_vaults = test.factory_contract.total_vaults();
+    assert_eq!(total_vaults, 3);
 
     // Verify vaults are stored in order of creation
-    let first_vault = deployed_vaults.get(0);
-    let second_vault = deployed_vaults.get(1);
-    let third_vault = deployed_vaults.get(2);
+    let first_vault = test.factory_contract.get_vault_by_index(&0u32);
+    let second_vault = test.factory_contract.get_vault_by_index(&1u32);
+    let third_vault = test.factory_contract.get_vault_by_index(&2u32);
 
-    assert!(first_vault.is_some());
-    assert!(second_vault.is_some());
-    assert!(third_vault.is_some());
     assert_ne!(first_vault, second_vault);
     assert_ne!(second_vault, third_vault);
     assert_ne!(first_vault, third_vault);
@@ -128,18 +125,18 @@ fn create_and_deposit_success() {
         &amounts,
     );
 
-    let deployed_vaults = test.factory_contract.deployed_vaults();
-    assert_eq!(deployed_vaults.len(), 2);
+    let total_vaults = test.factory_contract.total_vaults();
+    assert_eq!(total_vaults, 2);
 
     // Verify first vault balances
-    let first_vault = deployed_vaults.get(0).unwrap();
+    let first_vault = test.factory_contract.get_vault_by_index(&0u32);
     let token_0_first_vault_balance = test.token0.balance(&first_vault);
     let token_1_first_vault_balance = test.token1.balance(&first_vault);
     assert_eq!(token_0_first_vault_balance, amount_0);
     assert_eq!(token_1_first_vault_balance, amount_1);
 
     // Verify second vault balances
-    let second_vault = deployed_vaults.get(1).unwrap();
+    let second_vault = test.factory_contract.get_vault_by_index(&1u32);
     let token_0_second_vault_balance = test.token0.balance(&second_vault);
     let token_1_second_vault_balance = test.token1.balance(&second_vault);
     assert_eq!(token_0_second_vault_balance, amount_0);

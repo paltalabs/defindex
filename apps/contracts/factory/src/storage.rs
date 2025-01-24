@@ -1,5 +1,5 @@
 use crate::error::FactoryError;
-use soroban_sdk::{contracttype, Address, BytesN, Env, TryFromVal, Val, Vec};
+use soroban_sdk::{contracttype, Address, BytesN, Env, TryFromVal, Val};
 
 #[derive(Clone)]
 #[contracttype]
@@ -82,20 +82,6 @@ pub fn add_new_vault(e: &Env, vault_address: Address) {
     put_total_vaults(e, total_vaults.checked_add(1).unwrap());
 }
 
-pub fn get_deployed_vaults(e: &Env) -> Result<Vec<Address>, FactoryError> {
-    let total_vaults = get_total_vaults(e);
-    if total_vaults == 0 {
-        return Err(FactoryError::EmptyMap);
-    }
-
-    let mut vaults: Vec<Address> = Vec::new(e);
-    for i in 0..total_vaults {
-        let vault_address = get_vault_by_index(e, i)?;
-        vaults.push_back(vault_address);
-    }
-
-    Ok(vaults)
-}
 
 // Admin
 pub fn has_admin(e: &Env) -> bool {

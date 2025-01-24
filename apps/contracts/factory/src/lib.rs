@@ -12,7 +12,7 @@ use soroban_sdk::{
 };
 use storage::{
     add_new_vault, extend_instance_ttl, get_admin, get_defindex_receiver,
-    get_deployed_vaults, get_fee_rate, get_vault_wasm_hash, has_admin, put_admin,
+    get_total_vaults, get_vault_by_index, get_fee_rate, get_vault_wasm_hash, has_admin, put_admin,
     put_defindex_fee, put_defindex_receiver, put_vault_wasm_hash,
 };
 pub use vault::create_contract;
@@ -151,14 +151,24 @@ pub trait FactoryTrait {
     /// * `Result<Address, FactoryError>` - Returns the DeFindex receiver's address or an error if not found.
     fn defindex_receiver(e: Env) -> Result<Address, FactoryError>;
 
-    /// Retrieves a vector of all deployed DeFindex vaults.
+    /// Retrieves the total number of deployed DeFindex vaults.
     ///
     /// # Arguments
     /// * `e` - The environment in which the contract is running.
     ///
     /// # Returns
-    /// * `Result<Vec<Address>, FactoryError>` - Returns a vector of vault addresses or an error if retrieval fails.
-    fn deployed_vaults(e: Env) -> Result<Vec<Address>, FactoryError>;
+    /// * `Result<u32, FactoryError>` - Returns the total number of deployed vaults or an error if retrieval fails.
+    fn total_vaults(e: Env) -> Result<u32, FactoryError>;
+
+    /// Retrieves a specific vault address by its index.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `index` - The index of the vault to retrieve (0-based).
+    ///
+    /// # Returns
+    /// * `Result<Address, FactoryError>` - Returns the vault address at the specified index or an error if not found.
+    fn get_vault_by_index(e: Env, index: u32) -> Result<Address, FactoryError>;
 
     /// Retrieves the current fee rate.
     ///
@@ -464,17 +474,33 @@ impl FactoryTrait for DeFindexFactory {
         Ok(get_defindex_receiver(&e))
     }
 
-    /// Retrieves a vector of all deployed DeFindex vaults.
+    /// Retrieves the total number of deployed DeFindex vaults.
     ///
     /// # Arguments
     /// * `e` - The environment in which the contract is running.
     ///
     /// # Returns
-    /// * `Result<Vec<Address>, FactoryError>` - Returns a vector of vault addresses or an error if retrieval fails.
-    fn deployed_vaults(e: Env) -> Result<Vec<Address>, FactoryError> {
+    /// * `Result<u32, FactoryError>` - Returns the total number of deployed vaults or an error if retrieval fails.
+    fn total_vaults(e: Env) -> Result<u32, FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-        get_deployed_vaults(&e)
+        let vaults = get_total_vaults(&e);
+        Ok(vaults)
+    }
+
+    /// Retrieves a specific vault address by its index.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `index` - The index of the vault to retrieve (0-based).
+    ///
+    /// # Returns
+    /// * `Result<Address, FactoryError>` - Returns the vault address at the specified index or an error if not found.
+    fn get_vault_by_index(e: Env, index: u32) -> Result<Address, FactoryError> {
+        check_initialized(&e)?;
+        extend_instance_ttl(&e);
+
+        get_vault_by_index(&e, index)
     }
 
     /// Retrieves the current fee rate.
