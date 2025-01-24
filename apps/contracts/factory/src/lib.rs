@@ -462,11 +462,6 @@ impl FactoryTrait for DeFindexFactory {
         Ok(())
     }
 
-    fn vault_wasm_hash(e: Env) -> Result<BytesN<32>, FactoryError> {
-        check_initialized(&e)?;
-        extend_instance_ttl(&e);
-        get_vault_wasm_hash(&e)
-    }
 
     // --- Read Methods ---
 
@@ -520,6 +515,25 @@ impl FactoryTrait for DeFindexFactory {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
         Ok(get_fee_rate(&e))
+    }
+
+    /// Retrieves the WASM hash of the vault contract.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    ///
+    /// # Returns
+    /// * `Result<BytesN<32>, FactoryError>` - Returns the 32-byte WASM hash of the vault contract 
+    ///   or an error if the contract is not properly initialized.
+    ///
+    /// # Behavior
+    /// 1. Ensures the contract is initialized by calling `check_initialized(&e)`.
+    /// 2. Extends the instance's time-to-live (TTL) by invoking `extend_instance_ttl(&e)`.
+    /// 3. Retrieves and returns the vault WASM hash by calling `get_vault_wasm_hash(&e)`.
+    fn vault_wasm_hash(e: Env) -> Result<BytesN<32>, FactoryError> {
+        check_initialized(&e)?;
+        extend_instance_ttl(&e);
+        get_vault_wasm_hash(&e)
     }
 }
 
