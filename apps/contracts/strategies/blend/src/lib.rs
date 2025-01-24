@@ -28,7 +28,7 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
 const STARETEGY_NAME: &str = "BlendStrategy";
 
 #[contract]
-struct BlendStrategy;
+pub struct BlendStrategy;
 
 #[contractimpl]
 impl DeFindexStrategyTrait for BlendStrategy {
