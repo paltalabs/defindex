@@ -14,7 +14,7 @@ use soroban_sdk::{vec, Address, Env, IntoVal, Symbol};
 #[test]
 fn success() {
     let e = Env::default();
-    e.budget().reset_unlimited();
+    e.cost_estimate().budget().reset_unlimited();
     e.mock_all_auths();
     e.set_default_info();
 

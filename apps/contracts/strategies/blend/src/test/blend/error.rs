@@ -11,7 +11,7 @@ use soroban_sdk::{Address, Env, IntoVal};
 fn deposit_below_min_dust() {
     // Setting up the environment
     let e = Env::default();
-    e.budget().reset_unlimited();
+    e.cost_estimate().budget().reset_unlimited();
     e.mock_all_auths();
     e.set_default_info();
 
@@ -71,7 +71,7 @@ fn deposit_below_min_dust() {
 fn deposit_zero_and_negative_amount(){
     // Setting up the environment
     let e = Env::default();
-    e.budget().reset_unlimited();
+    e.cost_estimate().budget().reset_unlimited();
     e.mock_all_auths();
     e.set_default_info();
 
@@ -137,7 +137,7 @@ fn deposit_zero_and_negative_amount(){
 fn harvest_from_random_address(){
     // Setting up the environment
     let e = Env::default();
-    e.budget().reset_unlimited();
+    e.cost_estimate().budget().reset_unlimited();
     e.mock_all_auths();
 
     // Setting up the users
@@ -209,7 +209,7 @@ fn harvest_from_random_address(){
 fn withdraw_insufficient_balance(){
     // Setting up the environment
     let e = Env::default();
-    e.budget().reset_unlimited();
+    e.cost_estimate().budget().reset_unlimited();
     e.mock_all_auths();
     e.set_default_info();
 
