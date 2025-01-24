@@ -221,6 +221,14 @@ fn create_vault_internal(
 
     let defindex_address = create_contract(e, vault_wasm_hash, init_args, salt);
     add_new_defindex(e, defindex_address.clone());
+
+    events::emit_create_defindex_vault(
+        &e,
+        roles,
+        vault_fee,
+        assets,
+    );
+
     Ok(defindex_address)
 }
 
@@ -319,7 +327,7 @@ impl FactoryTrait for DeFindexFactory {
     ) -> Result<Address, FactoryError> {
         extend_instance_ttl(&e);
         
-        let defindex_address = create_vault_internal(
+        let vault_address = create_vault_internal(
             &e,
             roles.clone(),
             vault_fee,
@@ -330,13 +338,7 @@ impl FactoryTrait for DeFindexFactory {
             upgradable,
         )?;
 
-        events::emit_create_defindex_vault(
-            &e,
-            roles,
-            vault_fee,
-            assets,
-        );
-        Ok(defindex_address)
+        Ok(vault_address)
     }
 
     /// Creates a new DeFindex Vault with specified parameters and makes the first deposit to set ratios.
@@ -374,7 +376,7 @@ impl FactoryTrait for DeFindexFactory {
             return Err(FactoryError::AssetLengthMismatch);
         }
 
-        let defindex_address = create_vault_internal(
+        let vault_addreess = create_vault_internal(
             &e,
             roles.clone(),
             vault_fee,
@@ -385,15 +387,9 @@ impl FactoryTrait for DeFindexFactory {
             upgradable,
         )?;
 
-        perform_initial_deposit(&e, &defindex_address, &caller, &amounts);
+        perform_initial_deposit(&e, &vault_addreess, &caller, &amounts);
 
-        events::emit_create_defindex_vault(
-            &e,
-            roles,
-            vault_fee,
-            assets,
-        );
-        Ok(defindex_address)
+        Ok(vault_addreess)
     }
 
     // --- Admin Functions ---
