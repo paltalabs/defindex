@@ -991,6 +991,7 @@ impl VaultManagementTrait for DeFindexVault {
     ///
     /// # Arguments
     /// * `e` - The environment reference.
+    /// * `caller` - The address initiating the fee distribution.
     ///
     /// # Returns
     /// * `Result<Vec<(Address, i128)>, ContractError>` - A vector of tuples with asset addresses and the total distributed fee amounts.
