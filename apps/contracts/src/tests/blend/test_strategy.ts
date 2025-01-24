@@ -1,6 +1,7 @@
 import { Address, Keypair, nativeToScVal, scValToNative, xdr } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
 import { airdropAccount, invokeContract } from "../../utils/contract.js";
+import { getTransactionBudget } from "../../utils/tx.js";
 
 const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
@@ -17,6 +18,19 @@ export async function testBlendStrategy(user?: Keypair) {
   let depositStatus: boolean;
   let withdrawStatus: boolean;
   let harvestStatus: boolean;
+
+  let depositInstructions: number = 0;
+  let depositReadBytes: number = 0;
+  let depositWriteBytes: number = 0;
+
+  let withdrawInstructions: number = 0;
+  let withdrawReadBytes: number = 0;
+  let withdrawWriteBytes: number = 0;
+
+  let harvestInstructions: number = 0;
+  let harvestReadBytes: number = 0;
+  let harvestWriteBytes: number = 0;
+
   if (network !== "mainnet") {
     console.log(purple, '-------------------------------------------------------------------')
     console.log(purple, '----------------------- Funding new account -----------------------')
@@ -42,6 +56,14 @@ export async function testBlendStrategy(user?: Keypair) {
         false
       );
       console.log('🚀 « depositResult:', depositResult);
+      const {
+        instructions,
+        readBytes,
+        writeBytes
+      } = getTransactionBudget(depositResult);
+      depositInstructions = instructions;
+      depositReadBytes = readBytes;
+      depositWriteBytes = writeBytes;
       const depositResultValue = scValToNative(depositResult.returnValue);
       
       console.log(green, '------------ XLM deposited to the Strategy ------------')
@@ -79,7 +101,7 @@ export async function testBlendStrategy(user?: Keypair) {
       console.log('🚀 « balance:', balance);
 
       const withdrawParams: xdr.ScVal[] = [
-        nativeToScVal(1000_0_000_000, { type: "i128" }),
+        nativeToScVal(balance, { type: "i128" }),
         new Address(newUser.publicKey()).toScVal(),
         new Address(newUser.publicKey()).toScVal(),
       ]
@@ -91,8 +113,17 @@ export async function testBlendStrategy(user?: Keypair) {
         newUser,
         false
       );
+      const {
+        instructions,
+        readBytes,
+        writeBytes
+      } = getTransactionBudget(withdrawResult);
       const withdrawResultValue = scValToNative(withdrawResult.returnValue);
-      
+
+      withdrawInstructions = instructions;
+      withdrawReadBytes = readBytes;
+      withdrawWriteBytes = writeBytes;
+
       console.log(green, '------------ XLM withdrawed from the Strategy ------------')
       console.log(green, 'withdrawResult', withdrawResultValue)
       console.log(green, '----------------------------------------------------')
@@ -119,7 +150,16 @@ export async function testBlendStrategy(user?: Keypair) {
         newUser,
         false
       );
+      const {
+        instructions,
+        readBytes,
+        writeBytes
+      } = getTransactionBudget(harvestResult);
       const harvestResultValue = scValToNative(harvestResult.returnValue);
+
+      harvestInstructions = instructions;
+      harvestReadBytes = readBytes;
+      harvestWriteBytes = writeBytes;
       
       console.log(green, '------------ BLND Harvested from the vault ------------')
       console.log(green, 'harvestResult', harvestResultValue)
@@ -135,6 +175,23 @@ export async function testBlendStrategy(user?: Keypair) {
         depositStatus: depositStatus ?  '✅ Success' : '❌ Failed', 
         withdrawStatus: withdrawStatus ?  '✅ Success' : '❌ Failed',
         harvestStatus: harvestStatus ?  '✅ Success' : '❌ Failed',
+      },
+      budget: {
+        deposit: {
+          instructions: depositInstructions,
+          readBytes: depositReadBytes,
+          writeBytes: depositWriteBytes
+        },
+        withdraw: {
+          instructions: withdrawInstructions,
+          readBytes: withdrawReadBytes,
+          writeBytes: withdrawWriteBytes
+        },
+        harvest: {
+          instructions: harvestInstructions,
+          readBytes: harvestReadBytes,
+          writeBytes: harvestWriteBytes
+        }
       }
     }
 }

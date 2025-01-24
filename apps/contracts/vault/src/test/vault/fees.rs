@@ -1,11 +1,14 @@
-use soroban_sdk::{ vec as sorobanvec, Address, Map, String, Vec};
+extern crate std;
+use std::println;
+
+use soroban_sdk::{ vec as sorobanvec, Address, Map, String, Vec, IntoVal,
+testutils::{MockAuth, MockAuthInvoke, Address as _}};
 
 use crate::{
   constants::ONE_DAY_IN_SECONDS, 
   test::{create_defindex_vault, create_fixed_strategy_params_token_0, 
-    defindex_vault::{ AssetStrategySet, Instruction, RolesDataKey,}, 
+    defindex_vault::{ ContractError, AssetStrategySet, Instruction, RolesDataKey,}, 
   DeFindexVaultTest, EnvTestUtils}};
-
 
 #[test]
 fn rebalance_invest(){
@@ -203,4 +206,120 @@ fn rebalance_unwind(){
   let expected_reward = instruction_amount_0 / 10;
 
   assert_eq!(report, expected_reward);
+}
+
+#[test]
+fn test_distribute_fees_auth(){
+  let test = DeFindexVaultTest::setup();
+  
+  let strategy_params_token_0 = create_fixed_strategy_params_token_0(&test);
+  let assets: Vec<AssetStrategySet> = sorobanvec![
+      &test.env,
+      AssetStrategySet {
+          address: test.token_0.address.clone(),
+          strategies: strategy_params_token_0.clone()
+      }
+  ];
+
+  let mut roles: Map<u32, Address> = Map::new(&test.env);
+  roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+  roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+  roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+  roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+  let mut name_symbol: Map<String, String> = Map::new(&test.env);
+  name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+  name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+  let vault = create_defindex_vault(
+      &test.env,
+      assets,
+      roles,
+      2000u32,
+      test.defindex_protocol_receiver.clone(),
+      2500u32,
+      test.defindex_factory.clone(),
+      test.soroswap_router.address.clone(),
+      name_symbol,
+      true
+  );
+
+  // try distribute fees from unauthorized address
+  let unauthorized_user = Address::generate(&test.env);
+  let distribute_fees_result = vault.mock_auths(&[MockAuth {
+    address: &unauthorized_user.clone(),
+    invoke: &MockAuthInvoke {
+      contract: &vault.address.clone(),
+      fn_name: "distribute_fees",
+      args: (&unauthorized_user,).into_val(&test.env),
+      sub_invokes: &[],
+    },
+    }]).try_distribute_fees(&unauthorized_user);
+
+  assert_eq!(distribute_fees_result.is_err(), true);
+  assert_eq!(distribute_fees_result, Err(Ok(ContractError::Unauthorized)));
+
+  // try distribute fees from rebalance manager
+  let distribute_fees_result = vault.mock_auths(&[MockAuth {
+    address: &test.rebalance_manager.clone(),
+    invoke: &MockAuthInvoke {
+      contract: &vault.address.clone(),
+      fn_name: "distribute_fees",
+      args: (&test.rebalance_manager,).into_val(&test.env),
+      sub_invokes: &[],
+    },
+  }]).try_distribute_fees(&test.rebalance_manager);
+  assert_eq!(distribute_fees_result.is_err(), true);
+  assert_eq!(distribute_fees_result, Err(Ok(ContractError::Unauthorized)));
+  
+  // try distribute fees from emergency manager
+  let distribute_fees_result = vault.mock_auths(&[MockAuth {
+    address: &test.emergency_manager.clone(),
+    invoke: &MockAuthInvoke {
+      contract: &vault.address.clone(),
+      fn_name: "distribute_fees",
+      args: (&test.emergency_manager,).into_val(&test.env),
+      sub_invokes: &[],
+    },
+  }]).try_distribute_fees(&test.emergency_manager);
+  assert_eq!(distribute_fees_result.is_err(), true);
+  assert_eq!(distribute_fees_result, Err(Ok(ContractError::Unauthorized)));
+  
+  // try distribute fees from unauthorized user but with telling caller is manager
+  let distribute_fees_result = vault.mock_auths(&[MockAuth {
+    address: &unauthorized_user.clone(),
+    invoke: &MockAuthInvoke {
+      contract: &vault.address.clone(),
+      fn_name: "distribute_fees",
+      args: (&test.manager,).into_val(&test.env),
+      sub_invokes: &[],
+    },
+  }]).try_distribute_fees(&test.manager);
+  println!("distribute_fees_result: {:?}", distribute_fees_result);
+  assert_eq!(distribute_fees_result.is_err(), true);
+  // assert_eq!(distribute_fees_result, Err(Ok(ContractError::Unauthorized)));
+
+  // try distribute fees from manager
+  let distribute_fees_result = vault.mock_auths(&[MockAuth {
+    address: &test.manager.clone(),
+    invoke: &MockAuthInvoke {
+      contract: &vault.address.clone(),
+      fn_name: "distribute_fees",
+      args: (&test.manager,).into_val(&test.env),
+      sub_invokes: &[],
+    },
+  }]).distribute_fees(&test.manager);
+  assert_eq!(distribute_fees_result, Vec::new(&test.env));
+
+  // try distribute fees from vault fee receiver
+  let distribute_fees_result = vault.mock_auths(&[MockAuth {
+    address: &test.vault_fee_receiver.clone(),
+    invoke: &MockAuthInvoke {
+      contract: &vault.address.clone(),
+      fn_name: "distribute_fees",
+      args: (&test.vault_fee_receiver,).into_val(&test.env),
+      sub_invokes: &[],
+    },
+  }]).distribute_fees(&test.vault_fee_receiver);
+  assert_eq!(distribute_fees_result, Vec::new(&test.env));
 }

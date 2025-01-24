@@ -207,11 +207,11 @@ fn fee_performance() {
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
                 fn_name: "distribute_fees",
-                args: ().into_val(&setup.env),
+                args: (enviroment.manager.clone(),).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .distribute_fees();
+        .distribute_fees(&enviroment.manager);
 
     let lock_fees_result_after = enviroment.vault_contract.mock_all_auths().lock_fees(&None);
     println!("lock_fees_result_after: {:?}", lock_fees_result_after);
