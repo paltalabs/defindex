@@ -22,7 +22,7 @@ import {
   rebalanceVault,
   withdrawFromVault
 } from "./vault.js";
-import { testVaultOneStrategy } from "./vault/one_strategy.js";
+import { testVaultOneAssetOneStrategy } from "./vault/one_strategy.js";
 
 const args = process.argv.slice(2);
 const network = args[0];
@@ -697,7 +697,7 @@ switch (tests) {
     console.log(yellow, "Running all tests");
     try {
       await prepareEnvironment();
-      const oneStrategy = await testVaultOneStrategy(addressBook, oneStrategyParams, testUser);
+      const oneStrategy = await testVaultOneAssetOneStrategy(addressBook, oneStrategyParams, testUser);
       const twoStrategies = await testVaultTwoStrategies();
       const twoAssetsOneStrategy = await testVaultTwoAssetsOneStrategy();
       const blendStrategy = await testBlendStrategy();
@@ -744,7 +744,7 @@ switch (tests) {
     console.log(yellow, "Testing one strategy vault");
     try {
       await prepareEnvironment();
-      await testVaultOneStrategy(addressBook, oneStrategyParams, testUser);
+      await testVaultOneAssetOneStrategy(addressBook, oneStrategyParams, testUser);
       exit(0);
     } catch (error) {
       console.log(red, "Tests failed:", error);

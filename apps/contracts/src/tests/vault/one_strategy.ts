@@ -77,7 +77,7 @@ async function deployOneStrategyVault(addressBook: AddressBook, params: CreateVa
 }
 
 /* 
-// Success flow:
+// One asset one strategy success flow:
   - [x] deposit
   - [x] check balance
 
@@ -110,7 +110,7 @@ async function deployOneStrategyVault(addressBook: AddressBook, params: CreateVa
   - [x] unpause strategy
   - [x] pause strategy
 */
-export async function successFlow(addressBook: AddressBook, params: CreateVaultParams[], user: Keypair) {
+export async function oneAssetOneStrategySuccess(addressBook: AddressBook, params: CreateVaultParams[], user: Keypair) {
   console.log(yellow, "---------------------------------------");
   console.log(yellow, "Testing one strategy vault tests");
   console.log(yellow, "---------------------------------------");
@@ -1429,8 +1429,8 @@ export async function testUpgradeContract(addressBook: AddressBook, params: Crea
 
 }
 
-export async function testVaultOneStrategy(addressBook: AddressBook, params: CreateVaultParams[], user: Keypair) {
-  const {tableData: userFlowTable, budgetData: userFlowBudgetData} = await successFlow(addressBook, params, user);
+export async function testVaultOneAssetOneStrategy(addressBook: AddressBook, params: CreateVaultParams[], user: Keypair) {
+  const {tableData: userFlowTable, budgetData: userFlowBudgetData} = await oneAssetOneStrategySuccess(addressBook, params, user);
   const {budgetData: accessControlBudgetData} = await testAccessControl(addressBook, params, user);
   const {budgetData: upgradeBudgetData} = await testUpgradeContract(addressBook, params, user);
 
