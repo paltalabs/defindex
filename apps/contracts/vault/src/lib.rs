@@ -106,6 +106,10 @@ impl VaultTrait for DeFindexVault {
         set_vault_fee(&e, &vault_fee);
 
         set_defindex_protocol_fee_receiver(&e, &defindex_protocol_receiver);
+        
+        if defindex_protocol_rate > 9000 {
+            panic_with_error!(&e, ContractError::MaximumFeeExceeded);
+        }
         set_defindex_protocol_fee_rate(&e, &defindex_protocol_rate);
 
         set_factory(&e, &factory);

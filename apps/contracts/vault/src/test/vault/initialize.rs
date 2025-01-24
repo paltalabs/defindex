@@ -428,3 +428,90 @@ fn with_one_asset_no_strategies(){
     let current_idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
     assert_eq!(current_idle_funds, 1000i128);
 }
+
+// Test that if we try to initialize with a fee greater than 9000 basis points it fails
+#[test]
+#[should_panic(expected = "Error(Contract, #106)")]
+fn initialize_with_excessive_vault_fee() {
+    let test = DeFindexVaultTest::setup();
+    let strategy_params_token_0 = create_strategy_params_token_0(&test);
+    let strategy_params_token_1 = create_strategy_params_token_1(&test);
+
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: strategy_params_token_0.clone()
+        },
+        AssetStrategySet {
+            address: test.token_1.address.clone(),
+            strategies: strategy_params_token_1.clone()
+        }
+    ];
+
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+    create_defindex_vault(
+        &test.env,
+        assets,
+        roles,
+        9500u32, // Fee greater than 9000 basis points (90%)
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
+        name_symbol,
+        true
+    );
+}
+
+#[test]
+#[should_panic(expected = "Error(Contract, #106)")]
+fn initialize_with_excessive_protocol_fee() {
+    let test = DeFindexVaultTest::setup();
+    let strategy_params_token_0 = create_strategy_params_token_0(&test);
+    let strategy_params_token_1 = create_strategy_params_token_1(&test);
+
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: strategy_params_token_0.clone()
+        },
+        AssetStrategySet {
+            address: test.token_1.address.clone(),
+            strategies: strategy_params_token_1.clone()
+        }
+    ];
+
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+    create_defindex_vault(
+        &test.env,
+        assets,
+        roles,
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        9500u32, // Protocol fee greater than 9000 basis points (90%)
+        test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
+        name_symbol,
+        true
+    );
+}

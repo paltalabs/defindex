@@ -12,6 +12,7 @@ pub enum ContractError {
     NoAssetAllocation = 103,
     RolesIncomplete = 104,
     MetadataIncomplete = 105,
+    MaximumFeeExceeded = 106,
 
     // Validation Errors (11x)
     NegativeNotAllowed = 110,
