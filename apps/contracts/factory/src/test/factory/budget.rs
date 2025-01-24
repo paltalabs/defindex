@@ -8,7 +8,7 @@ fn budget() {
     let test = DeFindexFactoryTest::setup();
     test.env.mock_all_auths();
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     // initialize factory contract
     let factory_contract = create_defindex_factory(
@@ -19,12 +19,12 @@ fn budget() {
         &test.defindex_wasm_hash,
     );
 
-    let mem = test.env.budget().memory_bytes_cost();
-    let cpu = test.env.budget().cpu_instruction_cost();
+    let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+    let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
 
     std::println!("create_defindex_factory()                                              | cpu: {},      mem: {}", cpu, mem);
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     // create defindex vault
 
@@ -52,11 +52,11 @@ fn budget() {
         &true
     );
 
-    let mem = test.env.budget().memory_bytes_cost();
-    let cpu = test.env.budget().cpu_instruction_cost();
+    let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+    let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
     std::println!("create_defindex_vault()                                                | cpu: {},      mem: {}", cpu, mem);
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     // create defindex vault deposit
     let asset_params = create_asset_params(&test);
     let salt = BytesN::from_array(&test.env, &[0; 32]);
@@ -82,7 +82,7 @@ fn budget() {
         &amounts,
     );
 
-    let mem = test.env.budget().memory_bytes_cost();
-    let cpu = test.env.budget().cpu_instruction_cost();
+    let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+    let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
     std::println!("create_defindex_vault_deposit()                                        | cpu: {},      mem: {}", cpu, mem);
 }
