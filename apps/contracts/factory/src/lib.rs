@@ -270,51 +270,22 @@ impl FactoryTrait for DeFindexFactory {
         extend_instance_ttl(&e);
     }
 
-    /// Initializes the factory contract with the given parameters.
+
+    /// Creates a new DeFindex Vault with the specified parameters.
     ///
     /// # Arguments
     /// * `e` - The environment in which the contract is running.
-    /// * `admin` - The address of the contract administrator, who can manage settings.
-    /// * `defindex_receiver` - The default address designated to receive a portion of fees.
-    /// * `defindex_fee` - The initial annual fee rate (in basis points).
-    /// * `vault_wasm_hash` - The hash of the DeFindex Vault's WASM file for deploying new vaults.
+    /// * `roles` - A `Map` containing role identifiers (`u32`) and their corresponding `Address` assignments.
+    ///              Example roles include the manager and fee receiver.
+    /// * `vault_fee` - The fee rate in basis points (1 basis point = 0.01%) allocated to the fee receiver.
+    /// * `assets` - A vector of `AssetStrategySet` structs defining the strategies and assets managed by the vault.
+    /// * `salt` - A unique `BytesN<32>` value used to ensure that each deployed vault has a unique address.
+    /// * `soroswap_router` - The `Address` of the Soroswap router, which facilitates swaps within the vault.
+    /// * `name_symbol` - A `Map` containing the vault's name and symbol metadata (e.g., "name" -> "MyVault", "symbol" -> "MVLT").
+    /// * `upgradable` - A boolean flag indicating whether the deployed vault contract should support upgrades.
     ///
     /// # Returns
-    /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, otherwise an error.
-    // fn initialize(
-    //     e: Env,
-    //     admin: Address,
-    //     defindex_receiver: Address,
-    //     defindex_fee: u32,
-    //     vault_wasm_hash: BytesN<32>
-    // ) -> Result<(), FactoryError> {
-    //     if has_admin(&e) {
-    //         return Err(FactoryError::AlreadyInitialized);
-    //     }
-
-    //     put_admin(&e, &admin);
-    //     put_defindex_receiver(&e, &defindex_receiver);
-    //     put_vault_wasm_hash(&e, vault_wasm_hash);
-    //     put_defindex_fee(&e, &defindex_fee);
-
-    //     events::emit_initialized(&e, admin, defindex_receiver, defindex_fee);
-    //     extend_instance_ttl(&e);
-    //     Ok(())
-    // }
-
-    /// Creates a new DeFindex Vault with specified parameters.
-    ///
-    /// # Arguments
-    /// * `e` - The environment in which the contract is running.
-    /// * `emergency_manager` - The address assigned emergency control over the vault.
-    /// * `fee_receiver` - The address designated to receive fees from the vault.
-    /// * `vault_fee` - The percentage share of fees allocated to the vault's fee receiver.
-    /// * `manager` - The address assigned as the vault manager.
-    /// * `assets` - A vector of `AssetStrategySet` structs that define the assets managed by the vault.
-    /// * `salt` - A salt used for ensuring unique addresses for each deployed vault.
-    ///
-    /// # Returns
-    /// * `Result<Address, FactoryError>` - Returns the address of the new vault, or an error if unsuccessful.
+    /// * `Result<Address, FactoryError>` - Returns the address of the newly created vault if successful, or an error if creation fails.
     fn create_defindex_vault(
         e: Env,
         roles: Map<u32, Address>,
@@ -341,22 +312,24 @@ impl FactoryTrait for DeFindexFactory {
         Ok(vault_address)
     }
 
-    /// Creates a new DeFindex Vault with specified parameters and makes the first deposit to set ratios.
+    /// Creates a new DeFindex Vault with specified parameters and performs an initial deposit to set asset ratios.
     ///
     /// # Arguments
     /// * `e` - The environment in which the contract is running.
-    /// * `emergency_manager` - The address assigned emergency control over the vault.
-    /// * `fee_receiver` - The address designated to receive fees from the vault.
-    /// * `vault_fee` - The percentage share of fees allocated to the vault's fee receiver.
-    /// * `vault_name` - The name of the vault.
-    /// * `vault_symbol` - The symbol of the vault.
-    /// * `manager` - The address assigned as the vault manager.
-    /// * `assets` - A vector of `AssetStrategySet` structs that define the assets managed by the vault.
-    /// * `amounts` - A vector of `AssetAmounts` structs that define the initial deposit amounts.
-    /// * `salt` - A salt used for ensuring unique addresses for each deployed vault.
+    /// * `caller` - The address of the caller, who must authenticate and provide the initial deposit.
+    /// * `roles` - A `Map` containing role identifiers (`u32`) and their corresponding `Address` assignments.
+    ///             Example roles include the manager and fee receiver.
+    /// * `vault_fee` - The fee rate in basis points (1 basis point = 0.01%) allocated to the fee receiver.
+    /// * `assets` - A vector of `AssetStrategySet` structs defining the strategies and assets managed by the vault.
+    /// * `salt` - A unique `BytesN<32>` value used to ensure that each deployed vault has a unique address.
+    /// * `soroswap_router` - The `Address` of the Soroswap router, which facilitates swaps within the vault.
+    /// * `name_symbol` - A `Map` containing the vault's name and symbol metadata (e.g., "name" -> "MyVault", "symbol" -> "MVLT").
+    /// * `upgradable` - A boolean flag indicating whether the deployed vault contract should support upgrades.
+    /// * `amounts` - A vector of `i128` values representing the initial deposit amounts for each asset in the vault.
     ///
     /// # Returns
-    /// * `Result<Address, FactoryError>` - Returns the address of the new vault, or an error if unsuccessful.
+    /// * `Result<Address, FactoryError>` - Returns the address of the newly created vault if successful, or an error if creation fails.
+    
     fn create_defindex_vault_deposit(
         e: Env,
         caller: Address,
