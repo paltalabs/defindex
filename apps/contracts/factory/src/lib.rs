@@ -205,8 +205,8 @@ fn create_vault_internal(
 ) -> Result<Address, FactoryError> {
     let current_contract = e.current_contract_address();
     let vault_wasm_hash = get_vault_wasm_hash(e)?;
-    let defindex_receiver = get_defindex_receiver(e);
-    let defindex_fee = get_fee_rate(e);
+    let defindex_receiver = get_defindex_receiver(e)?;
+    let defindex_fee = get_fee_rate(e)?;
 
     let mut init_args: Vec<Val> = vec![e];
     init_args.push_back(assets.to_val());
@@ -378,7 +378,7 @@ impl FactoryTrait for DeFindexFactory {
     fn set_new_admin(e: Env, new_admin: Address) -> Result<(), FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-        let admin = get_admin(&e);
+        let admin = get_admin(&e)?;
         admin.require_auth();
 
         put_admin(&e, &new_admin);
@@ -397,7 +397,7 @@ impl FactoryTrait for DeFindexFactory {
     fn set_defindex_receiver(e: Env, new_fee_receiver: Address) -> Result<(), FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-        let admin = get_admin(&e);
+        let admin = get_admin(&e)?;
         admin.require_auth();
 
         put_defindex_receiver(&e, &new_fee_receiver);
@@ -416,7 +416,7 @@ impl FactoryTrait for DeFindexFactory {
     fn set_defindex_fee(e: Env, defindex_fee: u32) -> Result<(), FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-        let admin = get_admin(&e);
+        let admin = get_admin(&e)?;
         admin.require_auth();
 
         put_defindex_fee(&e, &defindex_fee);
@@ -427,7 +427,7 @@ impl FactoryTrait for DeFindexFactory {
     fn set_vault_wasm_hash(e: Env, new_vault_wasm_hash: BytesN<32>) -> Result<(), FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-        let admin = get_admin(&e);
+        let admin = get_admin(&e)?;
         admin.require_auth();
 
         put_vault_wasm_hash(&e, new_vault_wasm_hash.clone());
@@ -448,7 +448,7 @@ impl FactoryTrait for DeFindexFactory {
     fn admin(e: Env) -> Result<Address, FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-        Ok(get_admin(&e))
+        Ok(get_admin(&e)?)
     }
 
     /// Retrieves the current DeFindex receiver's address.
@@ -461,7 +461,7 @@ impl FactoryTrait for DeFindexFactory {
     fn defindex_receiver(e: Env) -> Result<Address, FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-        Ok(get_defindex_receiver(&e))
+        Ok(get_defindex_receiver(&e)?)
     }
 
     /// Retrieves a map of all deployed DeFindex vaults.
@@ -487,7 +487,7 @@ impl FactoryTrait for DeFindexFactory {
     fn defindex_fee(e: Env) -> Result<u32, FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-        Ok(get_fee_rate(&e))
+        Ok(get_fee_rate(&e)?)
     }
 
     /// Retrieves the WASM hash of the vault contract.
