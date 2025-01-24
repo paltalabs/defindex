@@ -5,7 +5,7 @@ use soroban_sdk::{
 };
 
 mod soroswap_setup;
-use soroswap_setup::{
+pub use soroswap_setup::{
     create_soroswap_pool, create_soroswap_factory, create_soroswap_router
 };
 use crate::{blend_strategy::{create_blend_strategy_contract, BlendStrategyClient}, factory::{AssetStrategySet, Strategy}, test::EnvTestUtils};

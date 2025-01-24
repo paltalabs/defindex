@@ -121,3 +121,4 @@ impl<'a> IntegrationTest<'a> {
 mod vault_one_fixed_strategy;
 mod vault_one_hodl_strategy;
 mod vault_blend_strategy;
+mod limits;
