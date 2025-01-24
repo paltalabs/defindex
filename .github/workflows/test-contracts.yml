@@ -50,5 +50,5 @@ jobs:
         run: |
           set -e
           cd apps/contracts && 
-          cargo test --release || exit 1
+          cargo test --release -- --nocapture|| exit 1
         continue-on-error: false
