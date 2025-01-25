@@ -71,7 +71,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
     idle_funds:idle_funds_before_deposit, 
     invested_funds:invested_funds_before_deposit, 
     hodl_balance:hodl_balance_before_deposit 
-  } = await fetchBalances(addressBook, vault_address, user);
+  } = await fetchBalances(addressBook, vault_address, params, user);
 
   // Deposit to vault
   const deposit_amount = 10_0_000_000;
@@ -81,9 +81,9 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
     writeBytes:deposit_write_bytes 
   } = await (
     async () => {
-      console.log(purple, "---------------------------------------");
+      console.log(purple, "-----------------------------------------");
       console.log(purple, `Deposit ${deposit_amount} in one strategy`);
-      console.log(purple, "---------------------------------------");
+      console.log(purple, "-----------------------------------------");
       try {
         const {
           instructions,
@@ -106,7 +106,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
     idle_funds:idle_funds_after_deposit,
     invested_funds:invested_funds_after_deposit,
     hodl_balance:hodl_balance_after_deposit
-  } = await fetchBalances(addressBook, vault_address, user);
+  } = await fetchBalances(addressBook, vault_address, params, user);
 
   //Invest
   const invest_amount = 5_0_000_000;
@@ -167,7 +167,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           idle_funds:idle_funds_after_invest, 
           invested_funds:invested_funds_after_invest, 
           hodl_balance:hodl_balance_after_invest 
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
         return { 
           instructions, 
           readBytes, 
@@ -218,7 +218,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           idle_funds:idle_funds_after_deposit_and_invest, 
           invested_funds:invested_funds_after_deposit_and_invest, 
           hodl_balance:hodl_balance_after_deposit_and_invest
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
 
         const expected_idle_funds = (BigInt(deposit_and_invest_amount) - invested_funds_after_invest[0].amount);
         const expected_invested_funds = BigInt(deposit_and_invest_amount) + invested_funds_after_invest[0].amount;
@@ -355,7 +355,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           idle_funds:idle_funds_after_unwind, 
           invested_funds:invested_funds_after_unwind, 
           hodl_balance:hodl_balance_after_unwind
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
 
         let expected_idle_funds = BigInt(idle_funds_after_deposit_and_invest[0].amount) + BigInt(unwind_amount);
         let expected_invested_funds = BigInt(invested_funds_after_deposit_and_invest[0].amount) - BigInt(unwind_amount);
@@ -470,7 +470,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           idle_funds, 
           invested_funds, 
           hodl_balance
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
 
         const expected_idle_funds = idle_funds_after_unwind[0].amount - BigInt(invest_amount) + BigInt(unwind_amount);
         const expected_invested_funds = invested_funds_after_unwind[0].amount + BigInt(invest_amount) - BigInt(unwind_amount);
@@ -577,7 +577,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           idle_funds, 
           invested_funds, 
           hodl_balance 
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
 
         const expected_idle_funds = idle_funds_after_rebalance[0].amount - BigInt(withdraw_amount);
         const expected_invested_funds = invested_funds_after_rebalance[0].amount;
@@ -664,7 +664,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
         }
         // Rescue
         const { instructions, readBytes, writeBytes } = await rescueFromStrategy(vault_address, addressBook.getContractId("hodl_strategy"), manager);
-        const { idle_funds, invested_funds, hodl_balance } = await fetchBalances(addressBook, vault_address, user);
+        const { idle_funds, invested_funds, hodl_balance } = await fetchBalances(addressBook, vault_address, params, user);
 
         const expected_idle_funds = idle_funds_after_withdraw[0].amount + invested_funds_after_withdraw[0].amount;
         const expected_invested_funds = BigInt(0);
@@ -760,7 +760,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           idle_funds,
           invested_funds,
           hodl_balance
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
         const expected_idle_funds = idle_funds_after_rescue[0].amount + BigInt(10_0_000_000);
         const expected_invested_funds = invested_funds_after_rescue[0].amount;
         const expected_hodl_balance = parseInt(hodl_balance_after_rescue.toString());
@@ -875,7 +875,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           idle_funds, 
           invested_funds, 
           hodl_balance
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
         
         return {
           instructions,
@@ -906,40 +906,40 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
       "Invested funds": invested_funds_before_deposit[0].amount,
       hodlStrategy: hodl_balance_before_deposit,
     },
-    "Balance after deposit": {
+    "After deposit": {
       "Idle funds": idle_funds_after_deposit[0].amount,
       "Invested funds": invested_funds_after_deposit[0].amount,
-      hodlStrategy: hodl_balance_after_deposit,
+      "Hodl strategy": hodl_balance_after_deposit,
     },
-    "Balance after invest": {
+    "After invest": {
       "Idle funds": idle_funds_after_invest[0].amount,
       "Invested funds": invested_funds_after_invest[0].amount,
-      hodlStrategy: hodl_balance_after_invest,
+      "Hodl strategy": hodl_balance_after_invest,
     },
-    "Balance after deposit and invest": {
+    "After deposit and invest": {
       "Idle funds": idle_funds_after_deposit_and_invest[0].amount,
       "Invested funds": invested_funds_after_deposit_and_invest[0].amount,
-      hodlStrategy: hodl_balance_after_deposit_and_invest,
+      "Hodl strategy": hodl_balance_after_deposit_and_invest,
     },
-    "Balance after unwind": {
+    "After unwind": {
       "Idle funds": idle_funds_after_unwind[0].amount,
       "Invested funds": invested_funds_after_unwind[0].amount,
-      hodlStrategy: hodl_balance_after_unwind,
+      "Hodl strategy": hodl_balance_after_unwind,
     },
-    "Balance after rebalance": {
+    "After rebalance": {
       "Idle funds": idle_funds_after_rebalance[0].amount,
       "Invested funds": invested_funds_after_rebalance[0].amount,
-      hodlStrategy: hodl_balance_after_rebalance,
+      "Hodl strategy": hodl_balance_after_rebalance,
     },
-    "Balance after withdraw": {
+    "After withdraw": {
       "Idle funds": idle_funds_after_withdraw[0].amount,
       "Invested funds": invested_funds_after_withdraw[0].amount,
-      hodlStrategy: hodl_balance_after_withdraw,
+      "Hodl strategy": hodl_balance_after_withdraw,
     },
-    "Balance after rescue": {
+    "After rescue": {
       "Idle funds": idle_funds_after_rescue[0].amount,
       "Invested funds": invested_funds_after_rescue[0].amount,
-      hodlStrategy: hodl_balance_after_rescue,
+      "Hodl strategy": hodl_balance_after_rescue,
     }
   };
   const budgetData = {
@@ -1039,7 +1039,7 @@ export async function twoAssetsOneStrategySuccess(addressBook: AddressBook, para
   const { 
     idle_funds:idle_funds_before_deposit, 
     invested_funds:invested_funds_before_deposit, 
-  } = await fetchBalances(addressBook, vault_address, user);
+  } = await fetchBalances(addressBook, vault_address, params, user);
 
   // Deposit to vault
   const deposit_amount_0 = 10_0_000_000;
@@ -1050,9 +1050,9 @@ export async function twoAssetsOneStrategySuccess(addressBook: AddressBook, para
     writeBytes:deposit_write_bytes 
   } = await (
     async () => {
-      console.log(purple, "----------------------------------------------------------------");
-      console.log(purple, `Deposit ${deposit_amount_0}, ${deposit_amount_1} in one strategy`);
-      console.log(purple, "----------------------------------------------------------------");
+      console.log(purple, "------------------------------------------------------------------");
+      console.log(purple, `Deposit ${deposit_amount_0}, ${deposit_amount_1} in two strategies`);
+      console.log(purple, "------------------------------------------------------------------");
       try {
         const {
           instructions,
@@ -1074,7 +1074,7 @@ export async function twoAssetsOneStrategySuccess(addressBook: AddressBook, para
   const {
     idle_funds:idle_funds_after_deposit,
     invested_funds:invested_funds_after_deposit,
-} = await fetchBalances(addressBook, vault_address, user);
+} = await fetchBalances(addressBook, vault_address, params, user);
 
 
   //Invest
@@ -1094,8 +1094,10 @@ export async function twoAssetsOneStrategySuccess(addressBook: AddressBook, para
         console.log(purple, "---------------------------------------");
         console.log(purple, "Try Invest idle_funds*2");
         console.log(purple, "---------------------------------------");
-        const invest_amount_0 = parseInt(idle_funds_after_deposit[0].amount.toString()) + 2;
-        const invest_amount_1 = parseInt(idle_funds_after_deposit[1].amount.toString()) + 1;
+        const invest_amount_0 = Number(idle_funds_after_deposit[0].amount) * 2;
+        const invest_amount_1 = Number(idle_funds_after_deposit[1].amount) * 2;
+        console.log(yellow, "Invest amount 0:", invest_amount_0);
+        console.log(yellow, "Invest amount 1:", invest_amount_1);
         const investArgs: Instruction[] = [
           {
             type: "Invest",
@@ -1149,7 +1151,7 @@ export async function twoAssetsOneStrategySuccess(addressBook: AddressBook, para
         const { 
           idle_funds:idle_funds_after_invest, 
           invested_funds:invested_funds_after_invest, 
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
 
         const current_strategies_balances = await fetchStrategiesBalances(addressBook, ['fixed_xtar_strategy', 'fixed_usdc_strategy'], vault_address, user);
 
@@ -1241,7 +1243,7 @@ export async function twoAssetsOneStrategySuccess(addressBook: AddressBook, para
         const {
           idle_funds:idle_funds_after_deposit_and_invest, 
           invested_funds:invested_funds_after_deposit_and_invest, 
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
 
         const current_strategies_balances = await fetchStrategiesBalances(addressBook, ['fixed_xtar_strategy', 'fixed_usdc_strategy'], vault_address, user);
 
@@ -1425,7 +1427,7 @@ export async function twoAssetsOneStrategySuccess(addressBook: AddressBook, para
         const { 
           idle_funds:idle_funds_after_unwind, 
           invested_funds:invested_funds_after_unwind, 
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
 
         const current_strategies_balances = await fetchStrategiesBalances(addressBook, ['fixed_xtar_strategy', 'fixed_usdc_strategy'], vault_address, user);
 
@@ -1572,7 +1574,7 @@ export async function twoAssetsOneStrategySuccess(addressBook: AddressBook, para
         const {
           idle_funds, 
           invested_funds, 
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
 
         const current_strategies_balances = await fetchStrategiesBalances(addressBook, ['fixed_xtar_strategy', 'fixed_usdc_strategy'], vault_address, user);
 
@@ -1710,7 +1712,7 @@ export async function twoAssetsOneStrategySuccess(addressBook: AddressBook, para
         const {
           idle_funds, 
           invested_funds, 
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
 
         const current_strategies_balances = await fetchStrategiesBalances(addressBook, ['fixed_xtar_strategy', 'fixed_usdc_strategy'], vault_address, user);
 
@@ -1826,7 +1828,7 @@ export async function twoAssetsOneStrategySuccess(addressBook: AddressBook, para
         const { 
           idle_funds, 
           invested_funds, 
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
         
         const current_strategies_balances = await fetchStrategiesBalances(addressBook, ['fixed_xtar_strategy', 'fixed_usdc_strategy'], vault_address, user);
 
@@ -1927,7 +1929,7 @@ export async function twoAssetsOneStrategySuccess(addressBook: AddressBook, para
         // Rescue
         const { instructions: xtar_rescue_instructions, readBytes: xtar_rescue_readBytes, writeBytes: xtar_rescue_writeBytes} = await rescueFromStrategy(vault_address, addressBook.getContractId("fixed_xtar_strategy"), manager);
         const { instructions: usdc_rescue_instructions, readBytes: usdc_rescue_readBytes, writeBytes: usdc_rescue_writeBytes } = await rescueFromStrategy(vault_address, addressBook.getContractId("fixed_usdc_strategy"), manager);
-        const { idle_funds, invested_funds } = await fetchBalances(addressBook, vault_address, user);
+        const { idle_funds, invested_funds } = await fetchBalances(addressBook, vault_address, params, user);
         const current_strategies_balances = await fetchStrategiesBalances(addressBook, ['fixed_xtar_strategy', 'fixed_usdc_strategy'], vault_address, user);
         const expected_idle_funds = idle_funds_after_withdraw[0].amount + invested_funds_after_withdraw[0].amount;
         const expected_invested_funds = BigInt(0);
@@ -1972,71 +1974,71 @@ export async function twoAssetsOneStrategySuccess(addressBook: AddressBook, para
   //Show data
   const tableData = {
     "Initial balance": {
-      "Idle funds asset 0": idle_funds_before_deposit[0].amount,
-      "Idle funds asset 1": idle_funds_before_deposit[1].amount,
-      "Invested funds asset 0": invested_funds_before_deposit[0].amount,
+      "Idle funds a_0": idle_funds_before_deposit[0].amount,
+      "Idle funds a_1": idle_funds_before_deposit[1].amount,
+      "Invested funds a_0": invested_funds_before_deposit[0].amount,
     },
-    "Balance after deposit": {
-      "Idle funds asset 0": idle_funds_after_deposit[0].amount,
-      "Idle funds asset 1": idle_funds_after_deposit[1].amount,
-      "Invested funds asset 0": invested_funds_after_deposit[0].amount,
-      "Invested funds asset 1": invested_funds_after_deposit[1].amount,
+    "After deposit": {
+      "Idle funds a_0": idle_funds_after_deposit[0].amount,
+      "Idle funds a_1": idle_funds_after_deposit[1].amount,
+      "Invested funds a_0": invested_funds_after_deposit[0].amount,
+      "Invested funds a_1": invested_funds_after_deposit[1].amount,
     },
-    "Balance after invest": {
-      "Idle funds asset 0": idle_funds_after_invest[0].amount,
-      "Idle funds asset 1": idle_funds_after_invest[1].amount,
-      "Invested funds asset 0": invested_funds_after_invest[0].amount,
-      "Invested funds asset 1": invested_funds_after_invest[1].amount,
-      fixed_xtar_strategy_balance: fixed_xtar_strategy_balance_after_invest,
-      fixed_usdc_strategy_balance: fixed_usdc_strategy_balance_after_invest,
+    "After invest": {
+      "Idle funds a_0": idle_funds_after_invest[0].amount,
+      "Idle funds a_1": idle_funds_after_invest[1].amount,
+      "Invested funds a_0": invested_funds_after_invest[0].amount,
+      "Invested funds a_1": invested_funds_after_invest[1].amount,
+      "xtar strategy": fixed_xtar_strategy_balance_after_invest,
+      "usdc strategy": fixed_usdc_strategy_balance_after_invest,
     },
-    "Balance after deposit and invest": {
-      "Idle funds asset 0": idle_funds_after_deposit_and_invest[0].amount,
-      "Idle funds asset 1": idle_funds_after_deposit_and_invest[1].amount,
-      "Invested funds asset 0": invested_funds_after_deposit_and_invest[0].amount,
-      "Invested funds asset 1": invested_funds_after_deposit_and_invest[1].amount,
-      fixed_xtar_strategy_balance: fixed_xtar_strategy_balance_after_deposit_and_invest,
-      fixed_usdc_strategy_balance: fixed_usdc_strategy_balance_after_deposit_and_invest,
+    "After deposit and invest": {
+      "Idle funds a_0": idle_funds_after_deposit_and_invest[0].amount,
+      "Idle funds a_1": idle_funds_after_deposit_and_invest[1].amount,
+      "Invested funds a_0": invested_funds_after_deposit_and_invest[0].amount,
+      "Invested funds a_1": invested_funds_after_deposit_and_invest[1].amount,
+      "xtar strategy": fixed_xtar_strategy_balance_after_deposit_and_invest,
+      "usdc strategy": fixed_usdc_strategy_balance_after_deposit_and_invest,
     },
-    "Balance after unwind": {
-      "Idle funds asset 0": idle_funds_after_unwind[0].amount,
-      "Idle funds asset 1": idle_funds_after_unwind[1].amount,
-      "Invested funds asset 0": invested_funds_after_unwind[0].amount,
-      "Invested funds asset 1": invested_funds_after_unwind[1].amount,
-      fixed_xtar_strategy_balance: fixed_xtar_strategy_balance_after_unwind,
-      fixed_usdc_strategy_balance: fixed_usdc_strategy_balance_after_unwind,
+    "After unwind": {
+      "Idle funds a_0": idle_funds_after_unwind[0].amount,
+      "Idle funds a_1": idle_funds_after_unwind[1].amount,
+      "Invested funds a_0": invested_funds_after_unwind[0].amount,
+      "Invested funds a_1": invested_funds_after_unwind[1].amount,
+      "xtar strategy": fixed_xtar_strategy_balance_after_unwind,
+      "usdc strategy": fixed_usdc_strategy_balance_after_unwind,
     },
-    "Balance after rebalance swap exact in": {
-      "Idle funds asset 0": idle_funds_after_rebalance_swap_e_in[0].amount,
-      "Idle funds asset 1": idle_funds_after_rebalance_swap_e_in[1].amount,
-      "Invested funds asset 0": invested_funds_after_rebalance_swap_e_in[0].amount,
-      "Invested funds asset 1": invested_funds_after_rebalance_swap_e_in[1].amount,
-      fixed_xtar_strategy_balance: fixed_xtar_strategy_balance_after_rebalance_swap_e_in,
-      fixed_usdc_strategy_balance: fixed_usdc_strategy_balance_after_rebalance_swap_e_in,
+    "After rebalance swap exact in": {
+      "Idle funds a_0": idle_funds_after_rebalance_swap_e_in[0].amount,
+      "Idle funds a_1": idle_funds_after_rebalance_swap_e_in[1].amount,
+      "Invested funds a_0": invested_funds_after_rebalance_swap_e_in[0].amount,
+      "Invested funds a_1": invested_funds_after_rebalance_swap_e_in[1].amount,
+      "xtar strategy": fixed_xtar_strategy_balance_after_rebalance_swap_e_in,
+      "usdc strategy": fixed_usdc_strategy_balance_after_rebalance_swap_e_in,
     },
-    "Balance after rebalance swap exact out": {
-      "Idle funds asset 0": idle_funds_after_rebalance_swap_e_out[0].amount,
-      "Idle funds asset 1": idle_funds_after_rebalance_swap_e_out[1].amount,
-      "Invested funds asset 0": invested_funds_after_rebalance_swap_e_out[0].amount,
-      "Invested funds asset 1": invested_funds_after_rebalance_swap_e_out[1].amount,
-      fixed_xtar_strategy_balance: fixed_xtar_strategy_balance_after_rebalance_swap_e_out,
-      fixed_usdc_strategy_balance: fixed_usdc_strategy_balance_after_rebalance_swap_e_out,
+    "After rebalance swap exact out": {
+      "Idle funds a_0": idle_funds_after_rebalance_swap_e_out[0].amount,
+      "Idle funds a_1": idle_funds_after_rebalance_swap_e_out[1].amount,
+      "Invested funds a_0": invested_funds_after_rebalance_swap_e_out[0].amount,
+      "Invested funds a_1": invested_funds_after_rebalance_swap_e_out[1].amount,
+      "xtar strategy": fixed_xtar_strategy_balance_after_rebalance_swap_e_out,
+      "usdc strategy": fixed_usdc_strategy_balance_after_rebalance_swap_e_out,
     },
-    "Balance after withdraw": {
-      "Idle funds asset 0": idle_funds_after_withdraw[0].amount,
-      "Idle funds asset 1": idle_funds_after_withdraw[1].amount,
-      "Invested funds asset 0": invested_funds_after_withdraw[0].amount,
-      "Invested funds asset 1": invested_funds_after_withdraw[1].amount,
-      fixed_xtar_strategy_balance: fixed_xtar_strategy_balance_after_withdraw,
-      fixed_usdc_strategy_balance: fixed_usdc_strategy_balance_after_withdraw,
+    "After withdraw": {
+      "Idle funds a_0": idle_funds_after_withdraw[0].amount,
+      "Idle funds a_1": idle_funds_after_withdraw[1].amount,
+      "Invested funds a_0": invested_funds_after_withdraw[0].amount,
+      "Invested funds a_1": invested_funds_after_withdraw[1].amount,
+      "xtar strategy": fixed_xtar_strategy_balance_after_withdraw,
+      "usdc strategy": fixed_usdc_strategy_balance_after_withdraw,
     },
-    "Balance after rescue": {
-      "Idle funds asset 0": idle_funds_after_rescue[0].amount,
-      "Idle funds asset 1": idle_funds_after_rescue[1].amount,
-      "Invested funds asset 0": invested_funds_after_rescue[0].amount,
-      "Invested funds asset 1": invested_funds_after_rescue[1].amount,
-      fixed_xtar_strategy_balance: fixed_xtar_strategy_balance_after_rescue,
-      fixed_usdc_strategy_balance: fixed_usdc_strategy_balance_after_rescue,
+    "After rescue": {
+      "Idle funds a_0": idle_funds_after_rescue[0].amount,
+      "Idle funds a_1": idle_funds_after_rescue[1].amount,
+      "Invested funds a_0": invested_funds_after_rescue[0].amount,
+      "Invested funds a_1": invested_funds_after_rescue[1].amount,
+      "xtar strategy": fixed_xtar_strategy_balance_after_rescue,
+      "usdc strategy": fixed_usdc_strategy_balance_after_rescue,
     }
   };
   const budgetData = {

@@ -2,22 +2,27 @@ import { Keypair } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
 import { green, purple, red, yellow } from "../common.js";
 import { checkUserBalance } from "../strategy.js";
-import { CreateVaultParams, deployVault, fetchCurrentInvestedFunds, fetchParsedCurrentIdleFunds } from "../vault.js";
+import { CreateVaultParams, deployVault, fetchCurrentIdleFunds, fetchCurrentInvestedFunds, fetchParsedCurrentIdleFunds } from "../vault.js";
 
+export function extractAddresses(params: CreateVaultParams[]): string[] {
+  return params.map(param => param.address.toString());
+}
 
-export async function fetchBalances(addressBook: AddressBook, vault_address: string, user: Keypair) {
+export async function fetchBalances(addressBook: AddressBook, vault_address: string, token_address:CreateVaultParams[], user: Keypair) {
   console.log(yellow, "---------------------------------------");
   console.log(yellow, "Fetching balances");
   console.log(yellow, "---------------------------------------");
 
-  const idle_funds = await fetchParsedCurrentIdleFunds(
-    vault_address,
+  const idle_funds = await fetchCurrentIdleFunds(
+    vault_address, 
     user
   );
+  console.log(green, "🟢Idle funds: ", idle_funds);
   const invested_funds = await fetchCurrentInvestedFunds(
     vault_address,
     user
   );
+  console.log(green, "🟢Invested funds: ", invested_funds);
   const hodl_balance = await checkUserBalance(
     addressBook.getContractId("hodl_strategy"),
     vault_address,

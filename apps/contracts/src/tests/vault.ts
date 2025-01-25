@@ -549,6 +549,11 @@ export async function fetchParsedCurrentIdleFunds(
   }
 }
 
+export interface AssetInvestmentAllocation {
+  asset: Address;
+  strategy_investments: { amount: bigint; strategy: Address }[];
+}
+
 export async function investVault(
   deployedVault: string,
   investParams: AssetInvestmentAllocation[],
@@ -602,6 +607,7 @@ export async function investVault(
     throw error;
   }
 }
+
 export async function rebalanceVault(deployedVault: string, instructions: Instruction[], manager: Keypair) {
   const params = mapInstructionsToParams(instructions);
 
@@ -860,6 +866,13 @@ export async function unpauseStrategy(deployedVault:string ,strategyAddress: str
 //         }),
 //     ];
 // }
+interface TotalManagedFunds {
+  asset: string,
+  idle_amount: bigint,
+  invested_amount: bigint,
+  strategy_allocations: any[],
+  total_amount: bigint
+}
 export async function fetchCurrentInvestedFunds(
   deployedVault: string,
   user: Keypair
@@ -877,6 +890,31 @@ export async function fetchCurrentInvestedFunds(
       return {
         asset: key,
         amount: fund.invested_amount,
+      };
+    });
+    return mappedFunds;
+  } catch (error) {
+    console.error("Error:", error);
+    throw error;
+  }
+}
+export async function fetchCurrentIdleFunds(
+  deployedVault: string,
+  user: Keypair
+) {
+  try {
+    const res = await invokeCustomContract(
+      deployedVault,
+      "fetch_total_managed_funds",
+      [],
+      user
+    );
+    const funds = scValToNative(res.returnValue);
+    const mappedFunds = Object.entries(funds).map(([key, value]) => {
+      const fund = value as TotalManagedFunds;
+      return {
+        asset: key,
+        amount: fund.idle_amount,
       };
     });
     return mappedFunds;

@@ -1,6 +1,5 @@
 import { Address, Asset, Keypair } from "@stellar/stellar-sdk";
 import { exit } from "process";
-
 import { AddressBook } from "../utils/address_book.js";
 import { airdropAccount } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
@@ -18,12 +17,14 @@ import {
   fetchParsedCurrentIdleFunds,
   Instruction,
   manager,
+  mapInstructionsToParams,
   mintToken,
   rebalanceVault,
   withdrawFromVault
 } from "./vault.js";
+import { green, purple, red, usdcAddress, xtarAddress, yellow } from "./common.js";
 import { testVaultOneAssetOneStrategy, twoAssetsOneStrategySuccess } from "./vault/one_strategy.js";
-import { usdcAddress, xtarAddress } from "./common.js";
+import { extractAddresses } from "./vault/utils.js";
 
 const args = process.argv.slice(2);
 const network = args[0];
@@ -38,10 +39,6 @@ const xlmAddress = new Address(
 
 const testUser = Keypair.random();
 
-const yellow = "\x1b[33m%s\x1b[0m";
-const green = "\x1b[32m%s\x1b[0m";
-const purple = "\x1b[35m%s\x1b[0m";
-const red = "\x1b[31m%s\x1b[0m";
 
 const oneStrategyParams: CreateVaultParams[] = [
   {
@@ -95,9 +92,7 @@ const twoAssetOneStrategyParams: CreateVaultParams[] = [
   },
 ];
 
-function extractAddresses(params: CreateVaultParams[]): string[] {
-  return params.map(param => param.address.toString());
-}
+
 
 async function prepareEnvironment() {
   if (network !== "mainnet") {
