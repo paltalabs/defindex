@@ -4,6 +4,7 @@ import { green, purple, red, yellow } from "../common.js";
 import { checkUserBalance } from "../strategy.js";
 import { CreateVaultParams, deployVault, fetchCurrentInvestedFunds, fetchParsedCurrentIdleFunds } from "../vault.js";
 
+
 export async function fetchBalances(addressBook: AddressBook, vault_address: string, user: Keypair) {
   console.log(yellow, "---------------------------------------");
   console.log(yellow, "Fetching balances");
@@ -24,6 +25,25 @@ export async function fetchBalances(addressBook: AddressBook, vault_address: str
   );
 
   return {idle_funds, invested_funds, hodl_balance};
+}
+
+export async function fetchStrategiesBalances(addressBook: AddressBook, strategies_keys: string[], vault_address: string, user: Keypair) {
+  console.log(yellow, "---------------------------------------");
+  console.log(yellow, "Fetching strategies balances");
+  console.log(yellow, "---------------------------------------");
+
+  const strategies_balances = await Promise.all(
+    strategies_keys.map(async (strategy_key) => {
+      const strategy_balance = await checkUserBalance(
+        addressBook.getContractId(strategy_key),
+        vault_address,
+        user
+      );
+      return {strategy_key, strategy_balance};
+    })
+  );
+
+  return strategies_balances;
 }
 
 export async function deployDefindexVault(addressBook: AddressBook, params: CreateVaultParams[]) {
