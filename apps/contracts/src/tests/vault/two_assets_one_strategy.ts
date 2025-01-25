@@ -27,9 +27,9 @@ import { getCurrentTimePlusOneHour } from "../../utils/tx.js";
   - [x] rebalance with a unwind, swap exact out, invest
   - [x] withdraw more than idle
 */
-export async function twoAssetsOneStrategySuccess(addressBook: AddressBook, params: CreateVaultParams[], xlmAddress:Address, user: Keypair) {
+export async function testVaultTwoAssetsOneStrategy(addressBook: AddressBook, params: CreateVaultParams[], xlmAddress:Address, user: Keypair) {
   console.log(yellow, "-------------------------------------------");
-  console.log(yellow, "Testing two assets one strategy vault tests");
+  console.log(yellow, "Testing two assets one strategy vault");
   console.log(yellow, "-------------------------------------------");
 
   //Deploy vault

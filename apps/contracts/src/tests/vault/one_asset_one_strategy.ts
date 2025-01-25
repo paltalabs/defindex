@@ -53,7 +53,7 @@ import { testUpgradeContract } from "./upgrade_contract.js";
 */
 export async function oneAssetOneStrategySuccess(addressBook: AddressBook, params: CreateVaultParams[], user: Keypair) {
   console.log(yellow, "---------------------------------------");
-  console.log(yellow, "Testing one strategy vault tests");
+  console.log(yellow, "Testing one strategy vault");
   console.log(yellow, "---------------------------------------");
 
   //Deploy vault
