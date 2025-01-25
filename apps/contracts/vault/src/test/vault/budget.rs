@@ -12,7 +12,7 @@ use soroban_sdk::{vec as sorobanvec, Address, Map, String, Vec};
 fn budget() {
     let test = DeFindexVaultTest::setup();
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     test.env.mock_all_auths();
     let strategy_params_token_0 = create_strategy_params_token_0(&test);
@@ -53,15 +53,15 @@ fn budget() {
         true
     );
     
-    let mem = test.env.budget().memory_bytes_cost();
-    let cpu = test.env.budget().cpu_instruction_cost();
+    let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+    let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
     std::println!(
         "create_defindex_vault()                                   | cpu: {},      mem: {}",
         cpu,
         mem
     );
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     // deposit
     let amount0 = 5_0_000_000i128;
@@ -79,15 +79,15 @@ fn budget() {
         &false,
     );
 
-    let mem = test.env.budget().memory_bytes_cost();
-    let cpu = test.env.budget().cpu_instruction_cost();
+    let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+    let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
     std::println!(
         "deposit()                                                 | cpu: {},      mem: {}",
         cpu,
         mem
     );
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     // deposit
     let amount0 = 5_0_000_000i128;
     let amount1 = 4_0_000_000i128;
@@ -104,24 +104,24 @@ fn budget() {
         &true,
     );
 
-    let mem = test.env.budget().memory_bytes_cost();
-    let cpu = test.env.budget().cpu_instruction_cost();
+    let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+    let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
     std::println!("deposit_and_invest()                                                 | cpu: {},      mem: {}", cpu, mem);
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     // withdraw
     let _ = defindex_contract.withdraw(&5_0_000i128, &users[0]);
 
-    let mem = test.env.budget().memory_bytes_cost();
-    let cpu = test.env.budget().cpu_instruction_cost();
+    let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+    let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
     std::println!(
         "withdraw()                                                | cpu: {},      mem: {}",
         cpu,
         mem
     );
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
     
         // rebalance invest
     
@@ -131,15 +131,15 @@ fn budget() {
         ];
     
         let _ = defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
-        let mem = test.env.budget().memory_bytes_cost();
-        let cpu = test.env.budget().cpu_instruction_cost();
+        let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+        let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
         std::println!(
             "rebalance_invest()                                        | cpu: {},      mem: {}",
             cpu,
             mem
         );
     
-        test.env.budget().reset_unlimited();
+        test.env.cost_estimate().budget().reset_unlimited();
 
     // rebalance withdraw
     let withdraw_instructions = sorobanvec![
@@ -147,15 +147,15 @@ fn budget() {
         Instruction::Unwind(test.strategy_client_token_0.address.clone(), 100),
     ];
     let _ = defindex_contract.rebalance(&test.rebalance_manager, &withdraw_instructions);
-    let mem = test.env.budget().memory_bytes_cost();
-    let cpu = test.env.budget().cpu_instruction_cost();
+    let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+    let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
     std::println!(
         "rebalance_withdraw()                                      | cpu: {},      mem: {}",
         cpu,
         mem
     );
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     //Rebalance with several instructions one strategy
 
@@ -168,15 +168,15 @@ fn budget() {
     ];
 
     let _ = defindex_contract.rebalance(&test.rebalance_manager, &several_instructions_one_strategy);
-    let mem = test.env.budget().memory_bytes_cost();
-    let cpu = test.env.budget().cpu_instruction_cost();
+    let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+    let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
     std::println!(
         "rebalance_invest_several_instructions_one_strategy()      | cpu: {},      mem: {}",
         cpu,
         mem
     );
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 
     // Rebalance several instructions two strategies
 
@@ -189,13 +189,13 @@ fn budget() {
     ];
 
     let _ = defindex_contract.rebalance(&test.rebalance_manager, &several_instructions_two_strategy);
-    let mem = test.env.budget().memory_bytes_cost();
-    let cpu = test.env.budget().cpu_instruction_cost();
+    let mem = test.env.cost_estimate().budget().memory_bytes_cost();
+    let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
     std::println!(
         "rebalance_invest_several_instructions_two_strategy()      | cpu: {},      mem: {}",
         cpu,
         mem
     );
 
-    test.env.budget().reset_unlimited();
+    test.env.cost_estimate().budget().reset_unlimited();
 }

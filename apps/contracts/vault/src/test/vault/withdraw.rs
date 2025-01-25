@@ -864,7 +864,7 @@ fn from_strategies_one_asset_two_strategies_success() {
 
     let strategy_1_balance_before_withdraw = test.token_0.balance(&test.strategy_client_token_0.address);
     let strategy_2_balance_before_withdraw = test.token_0.balance(&strategy_client_1.address);
-    let idle_funds_before_withdraw = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
+    let idle_funds_before_withdraw = test.token_0.balance(&defindex_contract.address);
 
     defindex_contract.withdraw(&(amount_0-1000), &users[0]);
 
@@ -1372,8 +1372,8 @@ fn from_strategy_success_no_mock_all_auths() {
     } else {
         0
     };
-    let idle_funds_0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
-    let idle_funds_1 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
+    let idle_funds_0 = test.token_0.balance(&defindex_contract.address);
+    let idle_funds_1 = test.token_1.balance(&defindex_contract.address);
 
     assert_eq!(idle_funds_0, deposit_amount_0);
     assert_eq!(idle_funds_1, deposit_amount_1);
@@ -1414,8 +1414,8 @@ fn from_strategy_success_no_mock_all_auths() {
 
     let invested_funds_0 = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
     let invested_funds_1 = defindex_contract.fetch_total_managed_funds().get(test.token_1.address.clone()).unwrap().invested_amount;
-    let idle_funds_0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
-    let idle_funds_1 = defindex_contract.fetch_current_idle_funds().get(test.token_1.address.clone()).unwrap();
+    let idle_funds_0 = test.token_0.balance(&defindex_contract.address);
+    let idle_funds_1 = test.token_1.balance(&defindex_contract.address);
 
     assert_eq!(idle_funds_0, (deposit_amount_0 - withdraw_amount_0/2));
     assert_eq!(idle_funds_1, (deposit_amount_1 - withdraw_amount_0/2));

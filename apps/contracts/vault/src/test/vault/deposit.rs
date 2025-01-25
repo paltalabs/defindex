@@ -388,11 +388,8 @@ fn one_asset_success() {
     assert_eq!(total_managed_funds, total_managed_funds_expected);
 
     // check current idle funds,
-    let mut expected_idle_funds_map = Map::new(&test.env);
-    expected_idle_funds_map.set(test.token_0.address.clone(), amount);
-
-    let current_idle_funds = defindex_contract.fetch_current_idle_funds();
-    assert_eq!(current_idle_funds, expected_idle_funds_map);
+    let current_idle_funds = test.token_0.balance(&defindex_contract.address);
+    assert_eq!(current_idle_funds, amount);
 
     //map shuould be map
     let mut expected_map = Map::new(&test.env);
@@ -415,10 +412,6 @@ fn one_asset_success() {
         &users[0],
         &false,
     );
-
-    //map shuould be map
-    let mut expected_map = Map::new(&test.env);
-    expected_map.set(test.token_0.address.clone(), amount + amount2);
 
     // check balances after deposit
     let df_balance = defindex_contract.balance(&users[0]);
@@ -454,8 +447,8 @@ fn one_asset_success() {
     assert_eq!(total_managed_funds, total_managed_funds_expected.get(test.token_0.address.clone()).unwrap());
 
     // check current idle funds
-    let current_idle_funds = defindex_contract.fetch_current_idle_funds();
-    assert_eq!(current_idle_funds, expected_map);
+    let current_idle_funds = test.token_0.balance(&defindex_contract.address);
+    assert_eq!(current_idle_funds, amount + amount2);
 
     //map shuould be map
     let mut expected_map = Map::new(&test.env);
@@ -662,14 +655,11 @@ fn several_assets_success() {
     let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
 
-    //map shuould be map
-    let mut expected_map = Map::new(&test.env);
-    expected_map.set(test.token_0.address.clone(), amount0);
-    expected_map.set(test.token_1.address.clone(), amount1);
-
-    // check current idle funds
-    let current_idle_funds = defindex_contract.fetch_current_idle_funds();
-    assert_eq!(current_idle_funds, expected_map);
+    //Checking idle balance
+    let current_idle_funds_token_0 = test.token_0.balance(&defindex_contract.address);
+    assert_eq!(current_idle_funds_token_0, amount0);
+    let current_idle_funds_token_1 = test.token_1.balance(&defindex_contract.address);
+    assert_eq!(current_idle_funds_token_1, amount1);
 
     //map shuould be map
     let mut expected_map = Map::new(&test.env);
@@ -773,13 +763,11 @@ fn several_assets_success() {
     let total_managed_funds = defindex_contract.fetch_total_managed_funds();
     assert_eq!(total_managed_funds, total_managed_funds_expected);
 
-    //map shuould be map
-    let mut expected_map = Map::new(&test.env);
-    expected_map.set(test.token_0.address.clone(), 3 * amount0);
-    expected_map.set(test.token_1.address.clone(), 3 * amount1);
-    // check current idle funds
-    let current_idle_funds = defindex_contract.fetch_current_idle_funds();
-    assert_eq!(current_idle_funds, expected_map);
+    //Checking idle balance
+    let current_idle_funds_token_0 = test.token_0.balance(&defindex_contract.address);
+    assert_eq!(current_idle_funds_token_0, 3 * amount0);
+    let current_idle_funds_token_1 = test.token_1.balance(&defindex_contract.address);
+    assert_eq!(current_idle_funds_token_1, 3 * amount1);
 
     //map shuould be map
     let mut expected_map = Map::new(&test.env);

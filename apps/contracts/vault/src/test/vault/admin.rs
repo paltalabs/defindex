@@ -586,6 +586,6 @@ fn lock_fees_with_new_fee() {
     assert_eq!(test.env.auths(), vec![(test.manager, expected_auth)]);
 
     // Verify the new fee was set
-    let (vault_fee, defindex_fee) = defindex_contract.get_fees();
+    let (vault_fee, _defindex_fee) = defindex_contract.get_fees();
     assert_eq!(vault_fee, 2000u32);
 }

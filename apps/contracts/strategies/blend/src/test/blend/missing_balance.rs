@@ -1,16 +1,16 @@
 #![cfg(test)]
 use crate::blend_pool::{BlendPoolClient, Request};
-use crate::constants::MIN_DUST;
+// use crate::constants::MIN_DUST;
 use crate::storage::DAY_IN_LEDGERS;
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
 use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils};
 use crate::BlendStrategyClient;
-use defindex_strategy_core::StrategyError;
+// use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
-use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
-use soroban_sdk::{vec, Address, Env, IntoVal, Symbol};
+use soroban_sdk::testutils::{Address as _};
+use soroban_sdk::{vec, Address, Env};
 
-use crate::test::std;
+// use crate::test::std;
 use crate::test::std::println;
 
 // There is a discrepancy of in the funds the strategy actually holds and the funds it tells you it holds when asking for the balance
@@ -18,7 +18,7 @@ use crate::test::std::println;
 #[test]
 fn missing_balance() {
     let e = Env::default();
-    e.budget().reset_unlimited();
+    e.cost_estimate().budget().reset_unlimited();
     e.mock_all_auths();
     e.set_default_info();
 

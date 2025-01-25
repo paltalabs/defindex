@@ -25,7 +25,7 @@ mod utils;
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use router::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
 use deposit::process_deposit;
-use funds::{fetch_current_idle_funds, fetch_total_managed_funds};
+use funds::fetch_total_managed_funds;
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::generate_investment_allocations;
 use models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction, StrategyAllocation};
@@ -513,22 +513,6 @@ impl VaultTrait for DeFindexVault {
     fn fetch_total_managed_funds(e: &Env) -> Map<Address, CurrentAssetInvestmentAllocation> {
         extend_instance_ttl(&e);
         fetch_total_managed_funds(e, false)
-    }
-
-
-    /// Returns the current idle funds, representing the total assets held directly by the vault (not invested).
-    ///
-    /// This function provides a map where the key is the asset address and the value is the total amount
-    /// of that asset held as idle funds within the vault.
-    ///
-    /// # Arguments:
-    /// * `e` - The environment.
-    ///
-    /// # Returns:
-    /// * `Map<Address, i128>` - A map of asset addresses to their total idle amounts.
-    fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128> {
-        extend_instance_ttl(&e);
-        fetch_current_idle_funds(e)
     }
 
     // Calculates the corresponding amounts of each asset per a given number of vault shares.

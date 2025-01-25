@@ -8,4 +8,5 @@ pub enum FactoryError {
     AlreadyInitialized = 402,
     EmptyMap = 403,
     AssetLengthMismatch = 404,
+    IndexDoesNotExist = 405,
 }
