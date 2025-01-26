@@ -25,7 +25,8 @@ import {
 import { green, purple, red, usdcAddress, xtarAddress, yellow } from "./common.js";
 import { testVaultOneAssetOneStrategy } from "./vault/one_asset_one_strategy.js";
 import { extractAddresses } from "./vault/utils.js";
-import { twoAssetsOneStrategySuccess } from "./vault/two_assets_one_strategy.js";
+import { testVaultTwoAssetsOneStrategy } from "./vault/two_assets_one_strategy.js";
+import { testVaultOneAssetTwoStrategies } from "./vault/one_aset_two_strategies.js";
 
 const args = process.argv.slice(2);
 const network = args[0];
@@ -58,8 +59,8 @@ const twoStrategyParams: CreateVaultParams[] = [
     address: xlmAddress,
     strategies: [
       {
-        name: "Hodl Strategy",
-        address: addressBook.getContractId("hodl_strategy"),
+        name: "Blend Strategy",
+        address: addressBook.getContractId("blend_strategy"),
         paused: false,
       },
       {
@@ -109,293 +110,6 @@ async function prepareEnvironment() {
 }
 
 
-async function testVaultTwoStrategies() {
-  console.log(yellow, "---------------------------------------");
-  console.log(yellow, "Running two strategies vault tests");
-  console.log(yellow, "---------------------------------------");
-  // deploy vault
-
-  console.log(purple, "---------------------------------------");
-  console.log(purple, "Deploying vault with two strategies");
-  console.log(purple, "---------------------------------------");
-  const {
-    address:vaultAddress,
-    instructions:deployInstructions,
-    readBytes:deployReadBytes,
-    writeBytes:deployWriteBytes
-  } = await deployVault(
-    addressBook,
-    twoStrategyParams,
-    "TestVault",
-    "TSTV"
-  );
-
-  console.log(yellow, "---------------------------------------");
-  console.log(yellow, "Fetching balances");
-  console.log(yellow, "---------------------------------------");
-
-  const idleFundsBeforeDeposit = await fetchParsedCurrentIdleFunds(
-    vaultAddress,
-    extractAddresses(twoStrategyParams),
-    testUser
-  );
-  const investedFundsBeforeDeposit = await fetchCurrentInvestedFunds(
-    vaultAddress,
-    testUser
-  );
-  const hodlBalanceBeforeDeposit = await checkUserBalance(
-    addressBook.getContractId("hodl_strategy"),
-    vaultAddress,
-    testUser
-  );
-  const fixedBalanceBeforeDeposit = await checkUserBalance(
-    addressBook.getContractId("fixed_apr_strategy"),
-    vaultAddress,
-    testUser
-  );
-
-  // deposit to vault
-
-  console.log(purple, "---------------------------------------");
-  console.log(purple, "Depositing to vault");
-  console.log(purple, "---------------------------------------");
-
-  const {
-    instructions:depositInstructions,
-    readBytes:depositReadBytes,
-    writeBytes:depositWriteBytes
-  } = await depositToVault(vaultAddress, [987654321], testUser);
-
-  console.log(yellow, "---------------------------------------");
-  console.log(yellow, "Fetching balances");
-  console.log(yellow, "---------------------------------------");
-
-  const idleFundsAfterDeposit = await fetchParsedCurrentIdleFunds(
-    vaultAddress,
-    extractAddresses(twoStrategyParams),
-    testUser
-  );
-  const investedFundsAfterDeposit = await fetchCurrentInvestedFunds(
-    vaultAddress,
-    testUser
-  );
-  const hodlBalanceAfterDeposit = await checkUserBalance(
-    addressBook.getContractId("hodl_strategy"),
-    vaultAddress,
-    testUser
-  );
-  const fixedBalanceAfterDeposit = await checkUserBalance(
-    addressBook.getContractId("fixed_apr_strategy"),
-    vaultAddress,
-    testUser
-  );
-
-  // withdraw from vault
-
-  console.log(purple, "---------------------------------------");
-  console.log(purple, "Withdrawing from vault");
-  console.log(purple, "---------------------------------------");
-
-  const {
-    instructions:withdrawInstructions,
-    readBytes:withdrawReadBytes,
-    writeBytes:withdrawWriteBytes
-  } = await withdrawFromVault(vaultAddress, 65_0_000, testUser);
-
-  const idleFundsAfterWithdraw = await fetchParsedCurrentIdleFunds(
-    vaultAddress,
-    extractAddresses(twoStrategyParams),
-    testUser
-  );
-  const investedFundsAfterWithdraw = await fetchCurrentInvestedFunds(
-    vaultAddress,
-    testUser
-  );
-  const hodlBalanceAfterWithdraw = await checkUserBalance(
-    addressBook.getContractId("hodl_strategy"),
-    vaultAddress,
-    testUser
-  );
-  const fixedBalanceAfterWithdraw = await checkUserBalance(
-    addressBook.getContractId("fixed_apr_strategy"),
-    vaultAddress,
-    testUser
-  );
-
-  // invest in vault
-  console.log(purple, "---------------------------------------");
-  console.log(purple, "Investing in vault");
-  console.log(purple, "---------------------------------------");
-
-  const investArgs: Instruction[] = [
-    {
-      type: "Invest",
-      strategy: addressBook.getContractId("hodl_strategy"),
-      amount: BigInt(1500),
-    },
-    {
-      type: "Invest",
-      strategy: addressBook.getContractId("fixed_apr_strategy"),
-      amount: BigInt(2000),
-    },
-  ];
-  
-  const {
-    instructions:investInstructions,
-    readBytes:investReadBytes,
-    writeBytes:investWriteBytes
-  } = await rebalanceVault(vaultAddress, investArgs, manager);
-  
-  console.log(yellow, "---------------------------------------");
-  console.log(yellow, "Fetching balances");
-  console.log(yellow, "---------------------------------------");
-
-  const idleFundsAfterInvest = await fetchParsedCurrentIdleFunds(
-    vaultAddress,
-    extractAddresses(twoStrategyParams),
-    testUser
-  );
-  const investedFundsAfterInvest = await fetchCurrentInvestedFunds(
-    vaultAddress,
-    testUser
-  );
-  const hodlBalanceAfterInvest = await checkUserBalance(
-    addressBook.getContractId("hodl_strategy"),
-    vaultAddress,
-    testUser
-  );
-  const fixedBalanceAfterInvest = await checkUserBalance(
-    addressBook.getContractId("fixed_apr_strategy"),
-    vaultAddress,
-    testUser
-  );
-
-  // rebalance vault
-  console.log(purple, "---------------------------------------");
-  console.log(purple, "Rebalancing vault");
-  console.log(purple, "---------------------------------------");
-
-  const rebalanceArgs: Instruction[] = [
-      {
-          type: "Invest",
-          strategy: addressBook.getContractId("hodl_strategy"),
-          amount: BigInt(7_000_000),
-      },
-      {
-          type: "Unwind",
-          strategy: addressBook.getContractId("hodl_strategy"),
-          amount: BigInt(6_000_00),
-      },
-      {
-          type: "Invest",
-          strategy: addressBook.getContractId("fixed_apr_strategy"),
-          amount: BigInt(8_000_000),
-      },
-      {
-          type: "Unwind",
-          strategy: addressBook.getContractId("fixed_apr_strategy"),
-          amount: BigInt(3_000_00),
-      },
-  ];
-
-
-  const {
-    instructions:rebalanceInstructions,
-    readBytes:rebalanceReadBytes,
-    writeBytes:rebalanceWriteBytes
-  } = await rebalanceVault(vaultAddress, rebalanceArgs, manager);
-
-
-  console.log(yellow, "---------------------------------------");
-  console.log(yellow, "Fetching balances");
-  console.log(yellow, "---------------------------------------");
-  const idleFundsAfterRebalance = await fetchParsedCurrentIdleFunds(
-    vaultAddress,
-    extractAddresses(twoStrategyParams),
-    testUser
-  );
-  const investedFundsAfterRebalance = await fetchCurrentInvestedFunds(
-    vaultAddress,
-    testUser
-  );
-  const hodlBalanceAfterRebalance = await checkUserBalance(
-    addressBook.getContractId("hodl_strategy"),
-    vaultAddress,
-    testUser
-  );
-  const fixedBalanceAfterRebalance = await checkUserBalance(
-    addressBook.getContractId("fixed_apr_strategy"),
-    vaultAddress,
-    testUser
-  );
-
-  console.log(green, "---------------------------------------");
-  console.log(green, "Tests completed successfully");
-  console.log(green, "---------------------------------------");
-  const tableData = {
-    hodlStrategy: {
-      "Balance before deposit": hodlBalanceBeforeDeposit,
-      "Balance after deposit": hodlBalanceAfterDeposit,
-      "Balance after withdraw": hodlBalanceAfterWithdraw,
-      "Balance after invest": hodlBalanceAfterInvest,
-      "Balance after rebalance": hodlBalanceAfterRebalance,
-    },
-    fixedStrategy: {
-      "Balance before deposit": fixedBalanceBeforeDeposit,
-      "Balance after deposit": fixedBalanceAfterDeposit,
-      "Balance after withdraw": fixedBalanceAfterWithdraw,
-      "Balance after invest": fixedBalanceAfterInvest,
-      "Balance after rebalance": fixedBalanceAfterRebalance,
-    },
-    "Invested funds": {
-      "Balance before deposit": investedFundsBeforeDeposit[0].amount,
-      "Balance after deposit": investedFundsAfterDeposit[0].amount,
-      "Balance after withdraw": investedFundsAfterWithdraw[0].amount,
-      "Balance after invest": investedFundsAfterInvest[0].amount,
-      "Balance after rebalance": investedFundsAfterRebalance[0].amount,
-    },
-    "Idle funds": {
-      "Balance before deposit": idleFundsBeforeDeposit[0].amount,
-      "Balance after deposit": idleFundsAfterDeposit[0].amount,
-      "Balance after withdraw": idleFundsAfterWithdraw[0].amount,
-      "Balance after invest": idleFundsAfterInvest[0].amount,
-      "Balance after rebalance": idleFundsAfterRebalance[0].amount,
-    },
-  };
-
-  const budgetData = {  
-    deploy: {
-      instructions: deployInstructions,
-      readBytes: deployReadBytes,
-      writeBytes: deployWriteBytes,
-    },
-    deposit: {
-      instructions: depositInstructions,
-      readBytes: depositReadBytes,
-      writeBytes: depositWriteBytes,
-    },
-    withdraw: {
-      instructions: withdrawInstructions,
-      readBytes: withdrawReadBytes,
-      writeBytes: withdrawWriteBytes,
-    },
-    invest: {
-      instructions: investInstructions,
-      readBytes: investReadBytes,
-      writeBytes: investWriteBytes,
-    },
-    rebalance: {
-      instructions: rebalanceInstructions,
-      readBytes: rebalanceReadBytes,
-      writeBytes: rebalanceWriteBytes,
-    },
-  }
-
-  console.table(tableData);
-  console.table(budgetData);
-  return {tableData, budgetData};
-}
-
 switch (tests) {
   case "-h":
     console.log("");
@@ -423,8 +137,8 @@ switch (tests) {
     try {
       await prepareEnvironment();
       const oneStrategy = await testVaultOneAssetOneStrategy(addressBook, oneStrategyParams, testUser);
-      const twoStrategies = await testVaultTwoStrategies();
-      const twoAssetsOneStrategy = await twoAssetsOneStrategySuccess(addressBook, twoAssetOneStrategyParams, xlmAddress, testUser);
+      const twoStrategies = await testVaultOneAssetTwoStrategies(addressBook, twoStrategyParams, testUser, xlmAddress);
+      const twoAssetsOneStrategy = await testVaultTwoAssetsOneStrategy(addressBook, twoAssetOneStrategyParams, testUser, xlmAddress);
       const blendStrategy = await testBlendStrategy();
       const blendVault = await testBlendVault();
       console.log(yellow, "----------------------------------------------------------------------------------------------------------------------------------------------")
@@ -479,7 +193,7 @@ switch (tests) {
     console.log(yellow, "Testing two strategies vault");
     try {
       await prepareEnvironment();
-      await testVaultTwoStrategies();
+      await testVaultOneAssetTwoStrategies(addressBook, twoStrategyParams, testUser, xlmAddress);
       exit(0);
     } catch (error) {
       console.log(red, "Tests failed:", error);
@@ -489,7 +203,7 @@ switch (tests) {
     console.log(yellow, "Testing two assets one strategy vault");
     try {
       await prepareEnvironment();
-      await twoAssetsOneStrategySuccess(addressBook, twoAssetOneStrategyParams, xlmAddress, testUser);
+      await testVaultTwoAssetsOneStrategy(addressBook, twoAssetOneStrategyParams, testUser, xlmAddress);
       exit(0);
     } catch (error) {
       console.log(red, "Tests failed:", error);
