@@ -67,11 +67,11 @@ pub fn fetch_invested_funds_for_asset(
     asset_strategy_set: &AssetStrategySet,
     lock_fees: bool,
 ) -> (i128, Vec<StrategyAllocation>) {
-    let mut invested_funds = 0;
+    let mut invested_funds: i128 = 0;
     let mut strategy_allocations: Vec<StrategyAllocation> = Vec::new(e);
     for strategy in asset_strategy_set.strategies.iter() {
         let strategy_balance = fetch_strategy_invested_funds(e, &strategy.address, lock_fees);
-        invested_funds += strategy_balance;
+        invested_funds = invested_funds.checked_add(strategy_balance).unwrap();
         strategy_allocations.push_back(StrategyAllocation {
             strategy_address: strategy.address.clone(),
             amount: strategy_balance,
@@ -99,7 +99,7 @@ pub fn fetch_total_managed_funds(
         let idle_amount = fetch_idle_funds_for_asset(e, &asset.address);
         let (invested_amount, strategy_allocations) =
             fetch_invested_funds_for_asset(e, &asset, lock_fees);
-        let total_amount = idle_amount + invested_amount;
+        let total_amount = idle_amount.checked_add(invested_amount).unwrap();
         map.set(
             asset.address.clone(),
             CurrentAssetInvestmentAllocation {

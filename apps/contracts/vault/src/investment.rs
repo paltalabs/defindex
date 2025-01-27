@@ -66,7 +66,7 @@ pub fn generate_investment_allocations(
 
             for (j, strategy) in asset.strategies.iter().enumerate() {
                 // Determine the investment amount for the strategy
-                let invest_amount = if j == asset.strategies.len() as usize - 1 {
+                let invest_amount = if j == (asset.strategies.len() as usize).checked_sub(1).unwrap()  {
                     remaining_amount
                 } else {
                     let strategy_invested_funds = current_asset_allocation

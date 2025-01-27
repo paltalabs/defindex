@@ -53,8 +53,8 @@ export async function invokeTransaction(
   if (rpc.Api.isSimulationError(simulation_resp)) {
     // No resource estimation available from a simulation error. Allow the response formatter
     // to fetch the error.
-    console.log("simulation_resp", simulation_resp);
-    throw Error(`Simulation error`);
+    console.log("simulation_resp", simulation_resp.error);
+    throw Error(simulation_resp.error);
   } else if (sim) {
     // Only simulate the TX. Assemble the TX to borrow the resource estimation algorithm in
     return simulation_resp;
