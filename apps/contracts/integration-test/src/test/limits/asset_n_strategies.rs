@@ -338,7 +338,7 @@ fn asset_n_strategies_fixed() {
     }
 
     setup.env.budget().reset_unlimited();
-    vault_contract.distribute_fees();
+    vault_contract.distribute_fees(&manager);
     check_limits(&setup.env, "Distribute Fees");
 
     // Simulate a user withdrawal touching all strategies
@@ -462,7 +462,7 @@ fn asset_n_strategies_fixed_panic() {
     }
 
     setup.env.budget().reset_unlimited();
-    vault_contract.distribute_fees();
+    vault_contract.distribute_fees(&manager);
     check_limits(&setup.env, "Distribute Fees");
 
     // Simulate a user withdrawal touching all strategies
@@ -687,7 +687,7 @@ fn asset_n_strategies_blend() {
 
     println!("-- Distributing Fees --");
     setup.env.budget().reset_unlimited();    
-    vault_contract.distribute_fees();
+    vault_contract.distribute_fees(&manager);
     check_limits(&setup.env, "Distribute Fees");
 
     setup.env.budget().reset_unlimited();
@@ -916,7 +916,7 @@ fn asset_n_strategies_blend_panic() {
 
     println!("-- Distributing Fees --");
     setup.env.budget().reset_unlimited();    
-    vault_contract.distribute_fees();
+    vault_contract.distribute_fees(&manager);
     check_limits(&setup.env, "Distribute Fees");
 
     setup.env.budget().reset_unlimited();

@@ -427,7 +427,7 @@ fn asset_one_strategy_fixed_rebalance() {
 
     vault_contract.report();
     vault_contract.lock_fees(&None);
-    vault_contract.distribute_fees();
+    vault_contract.distribute_fees(&manager);
 
     let balance_on_strategy = strategy_contract.balance(&vault_contract.address);
     let num_unwinds = 25;
@@ -645,7 +645,7 @@ fn asset_one_strategy_fixed_rebalance_panic_unwind() {
 
     vault_contract.report();
     vault_contract.lock_fees(&None);
-    vault_contract.distribute_fees();
+    vault_contract.distribute_fees(&manager);
 
     let balance_on_strategy = strategy_contract.balance(&vault_contract.address);
     let num_unwinds = 26;
