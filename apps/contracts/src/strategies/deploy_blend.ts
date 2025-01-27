@@ -44,10 +44,11 @@ export async function deployBlendStrategy(addressBook: AddressBook) {
   const xlmAddress = new Address(xlmContractId);
   const xlmScVal = xlmAddress.toScVal();
 
+  // CLAIM IDs
+  // For XLM we have 
+  // * `reserve_token_ids` - The ids of the reserves to claiming emissions for
   const claim_ids = xdr.ScVal.scvVec([
-    nativeToScVal(0, { type: "u32" }),
     nativeToScVal(1, { type: "u32" }),
-    nativeToScVal(2, { type: "u32" }),
   ]);
 
   let blendFixedXlmUsdcPool: string = othersAddressBook.getContractId("blend_fixed_xlm_usdc_pool");
