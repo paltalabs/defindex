@@ -27,6 +27,7 @@ import { testVaultOneAssetOneStrategy } from "./vault/one_asset_one_strategy.js"
 import { extractAddresses } from "./vault/utils.js";
 import { testVaultTwoAssetsOneStrategy } from "./vault/two_assets_one_strategy.js";
 import { testVaultOneAssetTwoStrategies } from "./vault/one_aset_two_strategies.js";
+import { testVaultTwoAssetsTwoStrategies } from "./vault/two_assets_two_strategies.js";
 
 const args = process.argv.slice(2);
 const network = args[0];
@@ -93,6 +94,38 @@ const twoAssetOneStrategyParams: CreateVaultParams[] = [
     ],
   },
 ];
+const twoAssetTwoStrategyParams: CreateVaultParams[] = [
+  {
+    address: xlmAddress,
+    strategies: [
+      {
+        name: "A0 S1",
+        address: addressBook.getContractId("blend_strategy"),
+        paused: false,
+      },
+      {
+        name: "A0 S2",
+        address: addressBook.getContractId("fixed_apr_strategy"),
+        paused: false,
+      },
+    ],
+  },
+  {
+    address: usdcAddress,
+    strategies: [
+      {
+        name: "A1 S1",
+        address: addressBook.getContractId("hodl_usdc_strategy"),
+        paused: false,
+      },
+      {
+        name: "A1 S2",
+        address: addressBook.getContractId("fixed_usdc_strategy"),
+        paused: false,
+      },
+    ],
+  },
+];
 
 
 
@@ -125,9 +158,10 @@ switch (tests) {
       yellow,
       `   Tests:       
        -a  all tests,
-       -os one strategy tests,
-       -ts two strategy tests, 
+       -oaos one strategy tests,
+       -oats two strategy tests, 
        -taos two assets one strategy test,
+       -tats two assets two strategies test,
        -bs blend strategy tests,
        -bv blend vault tests`       
     );
@@ -136,8 +170,8 @@ switch (tests) {
     console.log(yellow, "Running all tests");
     try {
       await prepareEnvironment();
-      const oneStrategy = await testVaultOneAssetOneStrategy(addressBook, oneStrategyParams, testUser);
-      const twoStrategies = await testVaultOneAssetTwoStrategies(addressBook, twoStrategyParams, testUser, xlmAddress);
+      const oneAssetOneStrategy = await testVaultOneAssetOneStrategy(addressBook, oneStrategyParams, testUser);
+      const oneAssetTwoStrategies = await testVaultOneAssetTwoStrategies(addressBook, twoStrategyParams, testUser, xlmAddress);
       const twoAssetsOneStrategy = await testVaultTwoAssetsOneStrategy(addressBook, twoAssetOneStrategyParams, testUser, xlmAddress);
       const blendStrategy = await testBlendStrategy();
       const blendVault = await testBlendVault();
@@ -147,14 +181,14 @@ switch (tests) {
       console.log("")
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------")
       console.log(green, "One strategy results")
-      console.table(oneStrategy.tableData);
-      console.table(oneStrategy.budgetData);
+      console.table(oneAssetOneStrategy.tableData);
+      console.table(oneAssetOneStrategy.budgetData);
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log("");
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log(green, "Two strategies results");
-      console.table(twoStrategies.tableData);
-      console.table(twoStrategies.budgetData);
+      console.table(oneAssetTwoStrategies.tableData);
+      console.table(oneAssetTwoStrategies.budgetData);
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log("");
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
@@ -179,7 +213,7 @@ switch (tests) {
       console.log(red, "Tests failed:", error);
       exit(1);
     }
-  case "-os":
+  case "-oaos":
     console.log(yellow, "Testing one strategy vault");
     try {
       await prepareEnvironment();
@@ -189,7 +223,7 @@ switch (tests) {
       console.log(red, "Tests failed:", error);
       exit(1);
     }
-  case "-ts":
+  case "-oats":
     console.log(yellow, "Testing two strategies vault");
     try {
       await prepareEnvironment();
@@ -204,6 +238,16 @@ switch (tests) {
     try {
       await prepareEnvironment();
       await testVaultTwoAssetsOneStrategy(addressBook, twoAssetOneStrategyParams, testUser, xlmAddress);
+      exit(0);
+    } catch (error) {
+      console.log(red, "Tests failed:", error);
+      exit(1);
+    }
+  case "-tats":
+    console.log(yellow, "Testing two assets one strategy vault");
+    try {
+      await prepareEnvironment();
+      await testVaultTwoAssetsTwoStrategies(addressBook, twoAssetTwoStrategyParams, testUser, xlmAddress);
       exit(0);
     } catch (error) {
       console.log(red, "Tests failed:", error);

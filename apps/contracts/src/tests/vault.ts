@@ -17,6 +17,7 @@ import {
 } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
 import { getTransactionBudget } from "../utils/tx.js";
+import { green } from "./common.js";
 
 const network = process.argv[2];
 const loadedConfig = config(network);
@@ -618,6 +619,7 @@ export async function rebalanceVault(deployedVault: string, instructions: Instru
       [new Address(manager.publicKey()).toScVal(), params],
       manager
     );
+    console.log(green, 'Rebalance result:', scValToNative(rebalanceResult.returnValue));
     const budget = getTransactionBudget(rebalanceResult);
     return { result: rebalanceResult, status: true, ...budget };
   } catch (error) {
