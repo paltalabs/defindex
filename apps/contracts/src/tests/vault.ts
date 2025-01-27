@@ -11,6 +11,7 @@ import { SOROSWAP_ROUTER, SOROSWAP_USDC } from "../constants.js";
 import { AddressBook } from "../utils/address_book.js";
 import {
   airdropAccount,
+  getTokenBalance,
   invokeContract,
   invokeCustomContract,
 } from "../utils/contract.js";
@@ -525,47 +526,32 @@ export async function withdrawFromVault(
   return { balanceBefore, result, balanceAfter, ...budget };
 }
 
-/**
- * Retrieves the current idle funds of the vault.
- *
- * @param {string} deployedVault - The address of the deployed vault contract.
- * @returns {Promise<Map<Address, bigint>>} A promise that resolves with a map of asset addresses to idle amounts.
- */
-export async function fetchCurrentIdleFunds(
-  deployedVault: string,
-  user: Keypair
-): Promise<Map<Address, bigint>> {
-  try {
-    const result = await invokeCustomContract(
-      deployedVault,
-      "fetch_current_idle_funds",
-      [],
-      user,
-      false
-    );
-    const parsedResult = scValToNative(result.returnValue);
-    return parsedResult; // Convert result to native format if needed
-  } catch (error) {
-    console.error("❌ Failed to fetch current idle funds:", error);
-    throw error;
-  }
-}
-
 export async function fetchParsedCurrentIdleFunds(
   deployedVault: string,
+  tokens: string[],
   user: Keypair
 ): Promise<{ address: string; amount: bigint }[]> {
   try {
-    const res = await fetchCurrentIdleFunds(deployedVault, user);
-    const mappedFunds = Object.entries(res).map(([key, value]) => ({
-      address: key,
-      amount: value,
-    }));
-    return mappedFunds;
+    const idle_funds = await Promise.all(
+      tokens.map(async (token_id) => {
+        const balance = await getTokenBalance(token_id, deployedVault, user);
+        return {
+          address: token_id,
+          amount: balance
+        };
+      })
+    );
+
+    return idle_funds;
   } catch (error) {
     console.error("Error:", error);
     throw error;
   }
+}
+
+export interface AssetInvestmentAllocation {
+  asset: Address;
+  strategy_investments: { amount: bigint; strategy: Address }[];
 }
 
 export async function investVault(

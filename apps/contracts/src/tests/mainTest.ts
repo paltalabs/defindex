@@ -99,6 +99,10 @@ const twoAssetOneStrategyParams: CreateVaultParams[] = [
   },
 ];
 
+function extractAddresses(params: CreateVaultParams[]): string[] {
+  return params.map(param => param.address.toString());
+}
+
 async function prepareEnvironment() {
   if (network !== "mainnet") {
     await airdropAccount(testUser);
@@ -141,6 +145,7 @@ async function testVaultTwoStrategies() {
 
   const idleFundsBeforeDeposit = await fetchParsedCurrentIdleFunds(
     vaultAddress,
+    extractAddresses(twoStrategyParams),
     testUser
   );
   const investedFundsBeforeDeposit = await fetchCurrentInvestedFunds(
@@ -176,6 +181,7 @@ async function testVaultTwoStrategies() {
 
   const idleFundsAfterDeposit = await fetchParsedCurrentIdleFunds(
     vaultAddress,
+    extractAddresses(twoStrategyParams),
     testUser
   );
   const investedFundsAfterDeposit = await fetchCurrentInvestedFunds(
@@ -207,6 +213,7 @@ async function testVaultTwoStrategies() {
 
   const idleFundsAfterWithdraw = await fetchParsedCurrentIdleFunds(
     vaultAddress,
+    extractAddresses(twoStrategyParams),
     testUser
   );
   const investedFundsAfterWithdraw = await fetchCurrentInvestedFunds(
@@ -254,6 +261,7 @@ async function testVaultTwoStrategies() {
 
   const idleFundsAfterInvest = await fetchParsedCurrentIdleFunds(
     vaultAddress,
+    extractAddresses(twoStrategyParams),
     testUser
   );
   const investedFundsAfterInvest = await fetchCurrentInvestedFunds(
@@ -312,6 +320,7 @@ async function testVaultTwoStrategies() {
   console.log(yellow, "---------------------------------------");
   const idleFundsAfterRebalance = await fetchParsedCurrentIdleFunds(
     vaultAddress,
+    extractAddresses(twoStrategyParams),
     testUser
   );
   const investedFundsAfterRebalance = await fetchCurrentInvestedFunds(
@@ -423,6 +432,7 @@ async function testVaultTwoAssetsOneStrategy() {
 
   const idleFundsBeforeDeposit = await fetchParsedCurrentIdleFunds(
     vaultAddress,
+    extractAddresses(twoAssetOneStrategyParams),
     testUser
   );
   const investedFundsBeforeDeposit = await fetchCurrentInvestedFunds(
@@ -458,6 +468,7 @@ async function testVaultTwoAssetsOneStrategy() {
 
   const idleFundsAfterDeposit = await fetchParsedCurrentIdleFunds(
     vaultAddress,
+    extractAddresses(twoAssetOneStrategyParams),
     testUser
   );
   const investedFundsAfterDeposit = await fetchCurrentInvestedFunds(
@@ -489,6 +500,7 @@ async function testVaultTwoAssetsOneStrategy() {
 
   const idleFundsAfterWithdraw = await fetchParsedCurrentIdleFunds(
     vaultAddress,
+    extractAddresses(twoAssetOneStrategyParams),
     testUser
   );
   const investedFundsAfterWithdraw = await fetchCurrentInvestedFunds(
@@ -536,6 +548,7 @@ async function testVaultTwoAssetsOneStrategy() {
 
   const idleFundsAfterInvest = await fetchParsedCurrentIdleFunds(
     vaultAddress,
+    extractAddresses(twoAssetOneStrategyParams),
     testUser
   );
   const investedFundsAfterInvest = await fetchCurrentInvestedFunds(
@@ -589,6 +602,7 @@ async function testVaultTwoAssetsOneStrategy() {
   console.log(yellow, "---------------------------------------");
   const idleFundsAfterRebalance = await fetchParsedCurrentIdleFunds(
     vaultAddress,
+    extractAddresses(twoAssetOneStrategyParams),
     testUser
   );
   const investedFundsAfterRebalance = await fetchCurrentInvestedFunds(

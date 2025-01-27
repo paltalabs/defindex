@@ -113,31 +113,3 @@ pub fn fetch_total_managed_funds(
     }
     map
 }
-
-/*
-    User experience functions. The following functions are not being used inernally in
-    the contrac, but are intender to be used by the client for a better user experience.
-    They create maps for better redeability
-
-*/
-
-/// Fetches the current idle funds for all assets managed by the contract.
-/// It returns a map where the key is the asset's address and the value is the idle balance.
-///
-/// # Arguments
-/// * `e` - The current environment instance.
-///
-/// # Returns
-/// * A map where each entry represents an asset's address and its corresponding idle balance.
-pub fn fetch_current_idle_funds(e: &Env) -> Map<Address, i128> {
-    let assets = get_assets(e);
-    let mut map: Map<Address, i128> = Map::new(e);
-    for asset in assets {
-        map.set(
-            asset.address.clone(),
-            fetch_idle_funds_for_asset(e, &asset.address),
-        );
-    }
-    map
-}
-
