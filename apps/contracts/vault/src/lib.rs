@@ -301,8 +301,7 @@ impl VaultTrait for DeFindexVault {
             {
                 let asset_allocation = total_managed_funds
                     .get(asset_address.clone())
-                    .unwrap_or_else(|| panic_with_error!(&e, ContractError::WrongAmountsLength));
-
+                    .ok_or_else(|| ContractError::WrongAmountsLength)?;
                 let idle_funds = asset_allocation.idle_amount;
 
                 if idle_funds >= requested_withdrawal_amount {
@@ -1019,7 +1018,10 @@ impl VaultManagementTrait for DeFindexVault {
             let mut total_fees_distributed: i128 = 0;
 
             for strategy in asset.strategies.iter() {
-                total_fees_distributed += report::distribute_strategy_fees(&e, &strategy.address, &access_control)?;
+                total_fees_distributed =
+                total_fees_distributed.checked_add(
+                    report::distribute_strategy_fees(&e, &strategy.address, &access_control)?)
+                    .unwrap();
             }
 
             if total_fees_distributed > 0 {

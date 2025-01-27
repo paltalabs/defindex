@@ -52,7 +52,7 @@ pub fn process_deposit(
             panic_with_error!(&e, ContractError::InsufficientAmount);
         }
         if amount > 0 {
-            let asset = assets.get(i as u32).unwrap();
+            let asset = assets.get(i as u32).ok_or(ContractError::ArithmeticError)?; 
             let asset_client = TokenClient::new(&e, &asset.address);
             asset_client.transfer(&from, &e.current_contract_address(), &amount);
         }
