@@ -97,7 +97,7 @@ impl<'a> IntegrationTest<'a> {
             &vault_wasm_hash,
         );
 
-        env.budget().reset_unlimited();
+        env.cost_estimate().budget().reset_unlimited();
 
         IntegrationTest {
             env,

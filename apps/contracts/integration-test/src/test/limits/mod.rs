@@ -8,8 +8,8 @@ pub const CPU_LIMIT: u64 = 100000000;
 pub const MEM_LIMIT: u64 = 41943040;
 
 pub fn check_limits(e: &Env, message: &str) {
-    let cpu_used = e.budget().cpu_instruction_cost();
-    let mem_used = e.budget().memory_bytes_cost();
+    let cpu_used = e.cost_estimate().budget().cpu_instruction_cost();
+    let mem_used = e.cost_estimate().budget().memory_bytes_cost();
     println!("{} CPU Instructions: {:?}", message, cpu_used);
     println!("{} MEMORY: {:?}", message, mem_used);
     println!("===========================================");

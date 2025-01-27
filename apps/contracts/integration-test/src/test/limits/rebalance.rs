@@ -8,7 +8,7 @@ use super::check_limits;
 fn asset_one_strategy_hodl_rebalance() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
 
     let token_admin = Address::generate(&setup.env);
     let (token, token_admin_client) = create_token(&setup.env, &token_admin);
@@ -95,7 +95,7 @@ fn asset_one_strategy_hodl_rebalance() {
     }
 
     // Rebalance
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
     check_limits(&setup.env, "Invest");
 
@@ -112,7 +112,7 @@ fn asset_one_strategy_hodl_rebalance() {
     }
 
     // Rebalance
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &unwind_instructions);
     check_limits(&setup.env, "Unwind");
 }
@@ -122,7 +122,7 @@ fn asset_one_strategy_hodl_rebalance() {
 fn asset_one_strategy_hodl_rebalance_panic_invest() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
 
     let token_admin = Address::generate(&setup.env);
     let (token, token_admin_client) = create_token(&setup.env, &token_admin);
@@ -209,7 +209,7 @@ fn asset_one_strategy_hodl_rebalance_panic_invest() {
     }
 
     // Rebalance
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
     check_limits(&setup.env, "Invest");
 }
@@ -219,7 +219,7 @@ fn asset_one_strategy_hodl_rebalance_panic_invest() {
 fn asset_one_strategy_hodl_rebalance_panic_unwind() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
 
     let token_admin = Address::generate(&setup.env);
     let (token, token_admin_client) = create_token(&setup.env, &token_admin);
@@ -321,7 +321,7 @@ fn asset_one_strategy_hodl_rebalance_panic_unwind() {
     }
 
     // Rebalance
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &unwind_instructions);
     check_limits(&setup.env, "Unwind");
 }
@@ -330,7 +330,7 @@ fn asset_one_strategy_hodl_rebalance_panic_unwind() {
 fn asset_one_strategy_fixed_rebalance() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
 
     let token_admin = Address::generate(&setup.env);
     let (token, token_admin_client) = create_token(&setup.env, &token_admin);
@@ -416,7 +416,7 @@ fn asset_one_strategy_fixed_rebalance() {
     }
 
     // Rebalance
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
     check_limits(&setup.env, "Invest");
 
@@ -442,7 +442,7 @@ fn asset_one_strategy_fixed_rebalance() {
     }
 
     // Rebalance
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &unwind_instructions);
     check_limits(&setup.env, "Unwind");
 }
@@ -452,7 +452,7 @@ fn asset_one_strategy_fixed_rebalance() {
 fn asset_one_strategy_fixed_rebalance_panic_invest() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
 
     let token_admin = Address::generate(&setup.env);
     let (token, token_admin_client) = create_token(&setup.env, &token_admin);
@@ -538,7 +538,7 @@ fn asset_one_strategy_fixed_rebalance_panic_invest() {
     }
 
     // Rebalance
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
     check_limits(&setup.env, "Invest");
 }
@@ -548,7 +548,7 @@ fn asset_one_strategy_fixed_rebalance_panic_invest() {
 fn asset_one_strategy_fixed_rebalance_panic_unwind() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
 
     let token_admin = Address::generate(&setup.env);
     let (token, token_admin_client) = create_token(&setup.env, &token_admin);
@@ -634,7 +634,7 @@ fn asset_one_strategy_fixed_rebalance_panic_unwind() {
     }
 
     // Rebalance
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
     check_limits(&setup.env, "Invest");
 
@@ -660,7 +660,7 @@ fn asset_one_strategy_fixed_rebalance_panic_unwind() {
     }
 
     // Rebalance
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &unwind_instructions);
     check_limits(&setup.env, "Unwind");
 }
@@ -792,7 +792,7 @@ fn asset_one_strategy_blend_rebalance() {
         ));
     }
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
     check_limits(&setup.env, "Invest");
 
@@ -807,7 +807,7 @@ fn asset_one_strategy_blend_rebalance() {
         ));
     }
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &unwinds_instructions);
     check_limits(&setup.env, "Unwind");
 }
@@ -940,7 +940,7 @@ fn asset_one_strategy_blend_rebalance_panic_invest() {
         ));
     }
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
     check_limits(&setup.env, "Invest");
 }
@@ -1086,7 +1086,7 @@ fn asset_one_strategy_blend_rebalance_panic_unwind() {
         ));
     }
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &unwinds_instructions);
     check_limits(&setup.env, "Unwind");
 }
@@ -1095,7 +1095,7 @@ fn asset_one_strategy_blend_rebalance_panic_unwind() {
 fn two_assets_swap_limits_rebalance() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
 
     let token_admin = Address::generate(&setup.env);
     let (xlm, xlm_client) = create_token(&setup.env, &token_admin);
@@ -1208,7 +1208,7 @@ fn two_assets_swap_limits_rebalance() {
         ));
     }
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &exact_in_instructions);
     check_limits(&setup.env, "SwapExactIn");
 
@@ -1225,7 +1225,7 @@ fn two_assets_swap_limits_rebalance() {
         ));
     }
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &exact_out_instructions);
     check_limits(&setup.env, "SwapExactOut");
 }
@@ -1235,7 +1235,7 @@ fn two_assets_swap_limits_rebalance() {
 fn two_assets_swap_limits_rebalance_panic_exact_in() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
 
     let token_admin = Address::generate(&setup.env);
     let (xlm, xlm_client) = create_token(&setup.env, &token_admin);
@@ -1348,7 +1348,7 @@ fn two_assets_swap_limits_rebalance_panic_exact_in() {
         ));
     }
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &exact_in_instructions);
     check_limits(&setup.env, "SwapExactIn");
 }
@@ -1358,7 +1358,7 @@ fn two_assets_swap_limits_rebalance_panic_exact_in() {
 fn two_assets_swap_limits_rebalance_panic_exact_out() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
 
     let token_admin = Address::generate(&setup.env);
     let (xlm, xlm_client) = create_token(&setup.env, &token_admin);
@@ -1486,7 +1486,7 @@ fn two_assets_swap_limits_rebalance_panic_exact_out() {
         ));
     }
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &exact_out_instructions);
     check_limits(&setup.env, "SwapExactOut");
 }

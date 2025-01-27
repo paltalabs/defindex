@@ -9,7 +9,7 @@ use crate::{blend_strategy::{create_blend_strategy_contract, BlendStrategyClient
 fn asset_n_strategies_hodl() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
 
     let token_admin = Address::generate(&setup.env);
     let (token, token_admin_client) = create_token(&setup.env, &token_admin);
@@ -61,7 +61,7 @@ fn asset_n_strategies_hodl() {
 
     let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
@@ -82,7 +82,7 @@ fn asset_n_strategies_hodl() {
     token_admin_client.mint(user, &user_starting_balance);
 
     let deposit_amount = 100000_0_000_000i128;
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.deposit(
         &svec![&setup.env, deposit_amount],
         &svec![&setup.env, deposit_amount],
@@ -101,14 +101,14 @@ fn asset_n_strategies_hodl() {
     }
 
     // Rebalance
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
     check_limits(&setup.env, "Invest");
 
     setup.env.jump(DAY_IN_LEDGERS * 7);
 
     // Simulate a user withdrawal touching all strategies
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&user);
     vault_contract.withdraw(&balance, &user);
     check_limits(&setup.env, "Withdraw");
@@ -119,7 +119,7 @@ fn asset_n_strategies_hodl() {
 fn asset_n_strategies_hodl_panic() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
 
     let token_admin = Address::generate(&setup.env);
     let (token, token_admin_client) = create_token(&setup.env, &token_admin);
@@ -171,7 +171,7 @@ fn asset_n_strategies_hodl_panic() {
 
     let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
@@ -192,7 +192,7 @@ fn asset_n_strategies_hodl_panic() {
     token_admin_client.mint(user, &user_starting_balance);
 
     let deposit_amount = 100000_0_000_000i128;
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.deposit(
         &svec![&setup.env, deposit_amount],
         &svec![&setup.env, deposit_amount],
@@ -211,14 +211,14 @@ fn asset_n_strategies_hodl_panic() {
     }
 
     // Rebalance
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
     check_limits(&setup.env, "Invest");
 
     setup.env.jump(DAY_IN_LEDGERS * 7);
 
     // Simulate a user withdrawal touching all strategies
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&user);
     vault_contract.withdraw(&balance, &user);
     check_limits(&setup.env, "Withdraw");
@@ -229,7 +229,7 @@ fn asset_n_strategies_hodl_panic() {
 fn asset_n_strategies_fixed() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
 
     let token_admin = Address::generate(&setup.env);
     let (token, token_admin_client) = create_token(&setup.env, &token_admin);
@@ -281,7 +281,7 @@ fn asset_n_strategies_fixed() {
 
     let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
@@ -302,7 +302,7 @@ fn asset_n_strategies_fixed() {
     token_admin_client.mint(user, &user_starting_balance);
 
     let deposit_amount = 100000_0_000_000i128;
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.deposit(
         &svec![&setup.env, deposit_amount],
         &svec![&setup.env, deposit_amount],
@@ -321,7 +321,7 @@ fn asset_n_strategies_fixed() {
     }
 
     // Rebalance
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
     check_limits(&setup.env, "Invest");
 
@@ -329,7 +329,7 @@ fn asset_n_strategies_fixed() {
 
     // harvest on all strategies
     for i in 0..num_strategies {
-        setup.env.budget().reset_unlimited();
+        setup.env.cost_estimate().budget().reset_unlimited();
         let temp_strategy_address = strategies.get(i).unwrap().address.clone();
         let temp_client = FixedStrategyClient::new(&setup.env, &temp_strategy_address);
         
@@ -337,12 +337,12 @@ fn asset_n_strategies_fixed() {
         check_limits(&setup.env, "Harvest");
     }
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.distribute_fees(&manager);
     check_limits(&setup.env, "Distribute Fees");
 
     // Simulate a user withdrawal touching all strategies
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&user);
     vault_contract.withdraw(&balance, &user);
     check_limits(&setup.env, "Withdraw");
@@ -353,7 +353,7 @@ fn asset_n_strategies_fixed() {
 fn asset_n_strategies_fixed_panic() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
 
     let token_admin = Address::generate(&setup.env);
     let (token, token_admin_client) = create_token(&setup.env, &token_admin);
@@ -405,7 +405,7 @@ fn asset_n_strategies_fixed_panic() {
 
     let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
@@ -426,7 +426,7 @@ fn asset_n_strategies_fixed_panic() {
     token_admin_client.mint(user, &user_starting_balance);
 
     let deposit_amount = 100000_0_000_000i128;
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.deposit(
         &svec![&setup.env, deposit_amount],
         &svec![&setup.env, deposit_amount],
@@ -445,7 +445,7 @@ fn asset_n_strategies_fixed_panic() {
     }
 
     // Rebalance
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
     check_limits(&setup.env, "Invest");
 
@@ -453,7 +453,7 @@ fn asset_n_strategies_fixed_panic() {
 
     // harvest on all strategies
     for i in 0..num_strategies {
-        setup.env.budget().reset_unlimited();
+        setup.env.cost_estimate().budget().reset_unlimited();
         let temp_strategy_address = strategies.get(i).unwrap().address.clone();
         let temp_client = FixedStrategyClient::new(&setup.env, &temp_strategy_address);
         
@@ -461,12 +461,12 @@ fn asset_n_strategies_fixed_panic() {
         check_limits(&setup.env, "Harvest");
     }
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.distribute_fees(&manager);
     check_limits(&setup.env, "Distribute Fees");
 
     // Simulate a user withdrawal touching all strategies
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&user);
     vault_contract.withdraw(&balance, &user);
     check_limits(&setup.env, "Withdraw");
@@ -563,7 +563,7 @@ fn asset_n_strategies_blend() {
     name_symbol.set(String::from_str(&setup.env, "name"), vault_name);
     name_symbol.set(String::from_str(&setup.env, "symbol"), vault_symbol);
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
@@ -583,7 +583,7 @@ fn asset_n_strategies_blend() {
     usdc_client.mint(&users[0], &starting_balance);
     usdc_client.mint(&users[1], &starting_balance);
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.deposit(
         &svec!(&setup.env, starting_balance.clone()),
         &svec!(&setup.env, starting_balance.clone()),
@@ -592,7 +592,7 @@ fn asset_n_strategies_blend() {
     );
     check_limits(&setup.env, "Deposit");
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.deposit(
         &svec!(&setup.env, starting_balance.clone()),
         &svec!(&setup.env, starting_balance.clone()),
@@ -609,7 +609,7 @@ fn asset_n_strategies_blend() {
         ));
     }
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
     check_limits(&setup.env, "Invest");
 
@@ -671,7 +671,7 @@ fn asset_n_strategies_blend() {
     std::println!("-- Harvesting --");
     // harvest on all strategies
     for i in 0..num_strategies {
-        setup.env.budget().reset_unlimited();
+        setup.env.cost_estimate().budget().reset_unlimited();
         let temp_strategy_address = strategies.get(i).unwrap().address.clone();
         let temp_client = FixedStrategyClient::new(&setup.env, &temp_strategy_address);
         
@@ -686,16 +686,16 @@ fn asset_n_strategies_blend() {
     println!("locked_fees = {:?}", lock_fees);
 
     println!("-- Distributing Fees --");
-    setup.env.budget().reset_unlimited();    
+    setup.env.cost_estimate().budget().reset_unlimited();    
     vault_contract.distribute_fees(&manager);
     check_limits(&setup.env, "Distribute Fees");
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&users[0]);
     vault_contract.withdraw(&balance, &users[0]);
     check_limits(&setup.env, "Withdraw");
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&users[1]);
     vault_contract.withdraw(&balance, &users[1]);
     check_limits(&setup.env, "Withdraw");
@@ -792,7 +792,7 @@ fn asset_n_strategies_blend_panic() {
     name_symbol.set(String::from_str(&setup.env, "name"), vault_name);
     name_symbol.set(String::from_str(&setup.env, "symbol"), vault_symbol);
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
@@ -812,7 +812,7 @@ fn asset_n_strategies_blend_panic() {
     usdc_client.mint(&users[0], &starting_balance);
     usdc_client.mint(&users[1], &starting_balance);
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.deposit(
         &svec!(&setup.env, starting_balance.clone()),
         &svec!(&setup.env, starting_balance.clone()),
@@ -821,7 +821,7 @@ fn asset_n_strategies_blend_panic() {
     );
     check_limits(&setup.env, "Deposit");
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.deposit(
         &svec!(&setup.env, starting_balance.clone()),
         &svec!(&setup.env, starting_balance.clone()),
@@ -838,7 +838,7 @@ fn asset_n_strategies_blend_panic() {
         ));
     }
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
     check_limits(&setup.env, "Invest");
 
@@ -900,7 +900,7 @@ fn asset_n_strategies_blend_panic() {
     std::println!("-- Harvesting --");
     // harvest on all strategies
     for i in 0..num_strategies {
-        setup.env.budget().reset_unlimited();
+        setup.env.cost_estimate().budget().reset_unlimited();
         let temp_strategy_address = strategies.get(i).unwrap().address.clone();
         let temp_client = FixedStrategyClient::new(&setup.env, &temp_strategy_address);
         
@@ -915,16 +915,16 @@ fn asset_n_strategies_blend_panic() {
     println!("locked_fees = {:?}", lock_fees);
 
     println!("-- Distributing Fees --");
-    setup.env.budget().reset_unlimited();    
+    setup.env.cost_estimate().budget().reset_unlimited();    
     vault_contract.distribute_fees(&manager);
     check_limits(&setup.env, "Distribute Fees");
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&users[0]);
     vault_contract.withdraw(&balance, &users[0]);
     check_limits(&setup.env, "Withdraw");
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&users[1]);
     vault_contract.withdraw(&balance, &users[1]);
     check_limits(&setup.env, "Withdraw");

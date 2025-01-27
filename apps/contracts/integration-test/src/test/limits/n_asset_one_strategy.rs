@@ -5,7 +5,7 @@ use crate::{blend_strategy::{create_blend_strategy_contract, BlendStrategyClient
 fn n_assets_one_strategy_hodl() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
 
     let mut tokens = Vec::new();
     let mut token_clients = Vec::new();
@@ -66,7 +66,7 @@ fn n_assets_one_strategy_hodl() {
 
     let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
@@ -98,7 +98,7 @@ fn n_assets_one_strategy_hodl() {
         amounts_min.push_back(desired_amount);
     }
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.deposit(&amounts_desired, &amounts_min, user, &false);
     check_limits(&setup.env, "Deposit");
 
@@ -115,7 +115,7 @@ fn n_assets_one_strategy_hodl() {
     }
 
     // Rebalance first batch
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
     check_limits(&setup.env, "Invest Batch 1");
 
@@ -129,7 +129,7 @@ fn n_assets_one_strategy_hodl() {
     }
 
     // Rebalance second batch
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
     check_limits(&setup.env, "Invest Batch 2");
 
@@ -155,7 +155,7 @@ fn n_assets_one_strategy_hodl() {
         amounts_min.push_back(desired_amount);
     }
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.deposit(&amounts_desired, &amounts_min, user, &true);
     check_limits(&setup.env, "Deposit and Invest");
 
@@ -170,7 +170,7 @@ fn n_assets_one_strategy_hodl() {
     setup.env.jump(DAY_IN_LEDGERS * 7);
 
     // Simulate a user withdrawal touching all strategies
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&user);
     vault_contract.withdraw(&balance, &user);
     check_limits(&setup.env, "Withdraw");
@@ -188,7 +188,7 @@ fn n_assets_one_strategy_hodl() {
 fn n_assets_one_strategy_fixed() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
 
     let mut tokens = Vec::new();
     let mut token_clients = Vec::new();
@@ -250,7 +250,7 @@ fn n_assets_one_strategy_fixed() {
 
     let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
@@ -282,7 +282,7 @@ fn n_assets_one_strategy_fixed() {
         amounts_min.push_back(desired_amount);
     }
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.deposit(&amounts_desired, &amounts_min, user, &false);
     check_limits(&setup.env, "Deposit");
 
@@ -297,7 +297,7 @@ fn n_assets_one_strategy_fixed() {
     }
 
     // Rebalance first batch
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
     check_limits(&setup.env, "Invest");
 
@@ -323,7 +323,7 @@ fn n_assets_one_strategy_fixed() {
         amounts_min.push_back(desired_amount);
     }
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.deposit(&amounts_desired, &amounts_min, user, &true);
     check_limits(&setup.env, "Deposit and Invest");
 
@@ -338,7 +338,7 @@ fn n_assets_one_strategy_fixed() {
     setup.env.jump(DAY_IN_LEDGERS * 7);
 
     // Simulate a user withdrawal touching all strategies
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&user);
     vault_contract.withdraw(&balance, &user);
     check_limits(&setup.env, "Withdraw");
@@ -348,7 +348,7 @@ fn n_assets_one_strategy_fixed() {
 fn n_assets_one_strategy_blend() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
 
     // Soroswap Setup
     let soroswap_admin = Address::generate(&setup.env);
@@ -445,7 +445,7 @@ fn n_assets_one_strategy_blend() {
     
     let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
@@ -477,7 +477,7 @@ fn n_assets_one_strategy_blend() {
         amounts_min.push_back(desired_amount);
     }
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.deposit(&amounts_desired, &amounts_min, user, &false);
     check_limits(&setup.env, "Deposit");
 
@@ -495,7 +495,7 @@ fn n_assets_one_strategy_blend() {
     }
 
     // Rebalance first batch
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
     check_limits(&setup.env, "Invest");
 
@@ -509,7 +509,7 @@ fn n_assets_one_strategy_blend() {
     // }
 
     // // Rebalance second batch
-    // setup.env.budget().reset_unlimited();
+    // setup.env.cost_estimate().budget().reset_unlimited();
     // vault_contract.rebalance(&manager, &invest_instructions);
     // check_limits(&setup.env, "Invest Batch 2");
 
@@ -526,14 +526,14 @@ fn n_assets_one_strategy_blend() {
         amounts_min.push_back(desired_amount);
     }
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.deposit(&amounts_desired, &amounts_min, user, &true);
     check_limits(&setup.env, "Deposit and Invest");
 
     setup.env.jump(DAY_IN_LEDGERS * 7);
 
     // Simulate a user withdrawal touching all strategies
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&user);
     vault_contract.withdraw(&(balance/2), &user);
     check_limits(&setup.env, "Withdraw");
