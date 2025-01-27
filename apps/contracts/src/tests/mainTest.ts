@@ -5,28 +5,18 @@ import { airdropAccount } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
 import { testBlendStrategy } from "./blend/test_strategy.js";
 import { testBlendVault } from "./blend/test_vault.js";
-import { checkUserBalance } from "./strategy.js";
+import { green, red, usdcAddress, xtarAddress, yellow } from "./common.js";
 import {
   admin,
   CreateVaultParams,
-  deployVault,
-  depositToVault,
   emergencyManager,
   feeReceiver,
-  fetchCurrentInvestedFunds,
-  fetchParsedCurrentIdleFunds,
-  Instruction,
   manager,
-  mapInstructionsToParams,
-  mintToken,
-  rebalanceVault,
-  withdrawFromVault
+  mintToken
 } from "./vault.js";
-import { green, purple, red, usdcAddress, xtarAddress, yellow } from "./common.js";
-import { testVaultOneAssetOneStrategy } from "./vault/one_asset_one_strategy.js";
-import { extractAddresses } from "./vault/utils.js";
-import { testVaultTwoAssetsOneStrategy } from "./vault/two_assets_one_strategy.js";
 import { testVaultOneAssetTwoStrategies } from "./vault/one_aset_two_strategies.js";
+import { testVaultOneAssetOneStrategy } from "./vault/one_asset_one_strategy.js";
+import { testVaultTwoAssetsOneStrategy } from "./vault/two_assets_one_strategy.js";
 import { testVaultTwoAssetsTwoStrategies } from "./vault/two_assets_two_strategies.js";
 
 const args = process.argv.slice(2);

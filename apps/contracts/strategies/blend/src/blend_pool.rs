@@ -165,7 +165,7 @@ pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError>
         .into_val(e);
 
     // Supplying underlying asset into blend pool
-    let b_tokens_minted = supply(&e, &e.current_contract_address(), &amount_out, &config);
+    let b_tokens_minted = supply(&e, &e.current_contract_address(), &amount_out, &config); 
 
     let reserves = storage::get_strategy_reserves(&e);
     reserves::harvest(&e, reserves, amount_out, b_tokens_minted);
