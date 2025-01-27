@@ -884,7 +884,8 @@ export async function fetchCurrentInvestedFunds(
       deployedVault,
       "fetch_total_managed_funds",
       [],
-      user
+      user,
+      true
     );
     const funds = scValToNative(res.returnValue);
     const mappedFunds = Object.entries(funds).map(([key, value]) => {
@@ -909,7 +910,8 @@ export async function fetchCurrentIdleFunds(
       deployedVault,
       "fetch_total_managed_funds",
       [],
-      user
+      user,
+      true,
     );
     const funds = scValToNative(res.returnValue);
     const mappedFunds = Object.entries(funds).map(([key, value]) => {
