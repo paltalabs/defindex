@@ -11,8 +11,8 @@ use soroban_sdk::{
     contract, contractimpl, vec, Address, BytesN, Env, IntoVal, Map, String, Symbol, Val, Vec,
 };
 use storage::{
-    add_new_defindex, extend_instance_ttl, get_admin, get_defindex_receiver,
-    get_deployed_defindexes, get_fee_rate, get_vault_wasm_hash, has_admin, put_admin,
+    add_new_vault, extend_instance_ttl, get_admin, get_defindex_receiver,
+    get_total_vaults, get_vault_by_index, get_fee_rate, get_vault_wasm_hash, has_admin, put_admin,
     put_defindex_fee, put_defindex_receiver, put_vault_wasm_hash,
 };
 pub use vault::create_contract;
@@ -151,14 +151,24 @@ pub trait FactoryTrait {
     /// * `Result<Address, FactoryError>` - Returns the DeFindex receiver's address or an error if not found.
     fn defindex_receiver(e: Env) -> Result<Address, FactoryError>;
 
-    /// Retrieves a map of all deployed DeFindex vaults.
+    /// Retrieves the total number of deployed DeFindex vaults.
     ///
     /// # Arguments
     /// * `e` - The environment in which the contract is running.
     ///
     /// # Returns
-    /// * `Result<Map<u32, Address>, FactoryError>` - Returns a map with vault identifiers and addresses or an error if retrieval fails.
-    fn deployed_defindexes(e: Env) -> Result<Map<u32, Address>, FactoryError>;
+    /// * `Result<u32, FactoryError>` - Returns the total number of deployed vaults or an error if retrieval fails.
+    fn total_vaults(e: Env) -> Result<u32, FactoryError>;
+
+    /// Retrieves a specific vault address by its index.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `index` - The index of the vault to retrieve (0-based).
+    ///
+    /// # Returns
+    /// * `Result<Address, FactoryError>` - Returns the vault address at the specified index or an error if not found.
+    fn get_vault_by_index(e: Env, index: u32) -> Result<Address, FactoryError>;
 
     /// Retrieves the current fee rate.
     ///
@@ -205,8 +215,8 @@ fn create_vault_internal(
 ) -> Result<Address, FactoryError> {
     let current_contract = e.current_contract_address();
     let vault_wasm_hash = get_vault_wasm_hash(e)?;
-    let defindex_receiver = get_defindex_receiver(e);
-    let defindex_fee = get_fee_rate(e);
+    let defindex_receiver = get_defindex_receiver(e)?;
+    let defindex_fee = get_fee_rate(e)?;
 
     let mut init_args: Vec<Val> = vec![e];
     init_args.push_back(assets.to_val());
@@ -220,7 +230,7 @@ fn create_vault_internal(
     init_args.push_back(upgradable.into_val(e));
 
     let defindex_address = create_contract(e, vault_wasm_hash, init_args, salt);
-    add_new_defindex(e, defindex_address.clone());
+    add_new_vault(e, defindex_address.clone());
 
     events::emit_create_defindex_vault(
         &e,
@@ -378,7 +388,7 @@ impl FactoryTrait for DeFindexFactory {
     fn set_new_admin(e: Env, new_admin: Address) -> Result<(), FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-        let admin = get_admin(&e);
+        let admin = get_admin(&e)?;
         admin.require_auth();
 
         put_admin(&e, &new_admin);
@@ -397,7 +407,7 @@ impl FactoryTrait for DeFindexFactory {
     fn set_defindex_receiver(e: Env, new_fee_receiver: Address) -> Result<(), FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-        let admin = get_admin(&e);
+        let admin = get_admin(&e)?;
         admin.require_auth();
 
         put_defindex_receiver(&e, &new_fee_receiver);
@@ -416,7 +426,7 @@ impl FactoryTrait for DeFindexFactory {
     fn set_defindex_fee(e: Env, defindex_fee: u32) -> Result<(), FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-        let admin = get_admin(&e);
+        let admin = get_admin(&e)?;
         admin.require_auth();
 
         put_defindex_fee(&e, &defindex_fee);
@@ -427,7 +437,7 @@ impl FactoryTrait for DeFindexFactory {
     fn set_vault_wasm_hash(e: Env, new_vault_wasm_hash: BytesN<32>) -> Result<(), FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-        let admin = get_admin(&e);
+        let admin = get_admin(&e)?;
         admin.require_auth();
 
         put_vault_wasm_hash(&e, new_vault_wasm_hash.clone());
@@ -448,7 +458,7 @@ impl FactoryTrait for DeFindexFactory {
     fn admin(e: Env) -> Result<Address, FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-        Ok(get_admin(&e))
+        Ok(get_admin(&e)?)
     }
 
     /// Retrieves the current DeFindex receiver's address.
@@ -461,20 +471,36 @@ impl FactoryTrait for DeFindexFactory {
     fn defindex_receiver(e: Env) -> Result<Address, FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-        Ok(get_defindex_receiver(&e))
+        Ok(get_defindex_receiver(&e)?)
     }
 
-    /// Retrieves a map of all deployed DeFindex vaults.
+    /// Retrieves the total number of deployed DeFindex vaults.
     ///
     /// # Arguments
     /// * `e` - The environment in which the contract is running.
     ///
     /// # Returns
-    /// * `Result<Map<u32, Address>, FactoryError>` - Returns a map with vault identifiers and addresses or an error if retrieval fails.
-    fn deployed_defindexes(e: Env) -> Result<Map<u32, Address>, FactoryError> {
+    /// * `Result<u32, FactoryError>` - Returns the total number of deployed vaults or an error if retrieval fails.
+    fn total_vaults(e: Env) -> Result<u32, FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-        get_deployed_defindexes(&e)
+        let vaults = get_total_vaults(&e);
+        Ok(vaults)
+    }
+
+    /// Retrieves a specific vault address by its index.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `index` - The index of the vault to retrieve (0-based).
+    ///
+    /// # Returns
+    /// * `Result<Address, FactoryError>` - Returns the vault address at the specified index or an error if not found.
+    fn get_vault_by_index(e: Env, index: u32) -> Result<Address, FactoryError> {
+        check_initialized(&e)?;
+        extend_instance_ttl(&e);
+
+        get_vault_by_index(&e, index)
     }
 
     /// Retrieves the current fee rate.
@@ -487,7 +513,7 @@ impl FactoryTrait for DeFindexFactory {
     fn defindex_fee(e: Env) -> Result<u32, FactoryError> {
         check_initialized(&e)?;
         extend_instance_ttl(&e);
-        Ok(get_fee_rate(&e))
+        Ok(get_fee_rate(&e)?)
     }
 
     /// Retrieves the WASM hash of the vault contract.

@@ -1859,7 +1859,7 @@ fn several_assets_one_strategy_paused_and_rescue() {
     test.token_0_admin_client.mint(&users[0], &2_0_000_000i128);
     test.token_1_admin_client.mint(&users[0], &6_0_000_000i128);
 
-    let deposit_result = defindex_contract.mock_all_auths().deposit(
+    defindex_contract.mock_all_auths().deposit(
         &sorobanvec![&test.env, a0_amount, a1_amount], 
         &sorobanvec![&test.env, 0i128, 0i128], 
         &users[0].clone(), 

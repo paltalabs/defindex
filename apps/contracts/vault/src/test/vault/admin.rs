@@ -505,3 +505,87 @@ fn queue_manager(){
     let queued_manager = defindex_contract.try_get_queued_manager();
     assert_eq!(queued_manager, Err(Ok(ContractError::QueueEmpty))) 
 }
+
+#[test]
+fn lock_fees_with_new_fee() {
+    let test = DeFindexVaultTest::setup();
+    let strategy_params_token_0 = create_strategy_params_token_0(&test);
+    let strategy_params_token_1 = create_strategy_params_token_1(&test);
+
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: strategy_params_token_0.clone()
+        },
+        AssetStrategySet {
+            address: test.token_1.address.clone(),
+            strategies: strategy_params_token_1.clone()
+        }
+    ];
+
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        roles,
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
+        name_symbol,
+        true
+    );
+
+    // Try to set an excessive fee (should fail)
+    let result = defindex_contract
+        .mock_auths(&[MockAuth {
+            address: &test.manager,
+            invoke: &MockAuthInvoke {
+                contract: &defindex_contract.address.clone(),
+                fn_name: "lock_fees",
+                args: (&Some(9500u32),).into_val(&test.env),
+                sub_invokes: &[],
+            },
+        }])
+        .try_lock_fees(&Some(9500u32));
+    
+    assert_eq!(result, Err(Ok(ContractError::MaximumFeeExceeded)));
+
+    // Set a valid fee (should succeed)
+    defindex_contract
+        .mock_auths(&[MockAuth {
+            address: &test.manager,
+            invoke: &MockAuthInvoke {
+                contract: &defindex_contract.address.clone(),
+                fn_name: "lock_fees",
+                args: (&Some(2000u32),).into_val(&test.env),
+                sub_invokes: &[],
+            },
+        }])
+        .lock_fees(&Some(2000u32));
+
+    let expected_auth = AuthorizedInvocation {
+        function: AuthorizedFunction::Contract((
+            defindex_contract.address.clone(),
+            Symbol::new(&test.env, "lock_fees"),
+            (&Some(2000u32),).into_val(&test.env),
+        )),
+        sub_invocations: vec![],
+    };
+    assert_eq!(test.env.auths(), vec![(test.manager, expected_auth)]);
+
+    // Verify the new fee was set
+    let (vault_fee, _defindex_fee) = defindex_contract.get_fees();
+    assert_eq!(vault_fee, 2000u32);
+}

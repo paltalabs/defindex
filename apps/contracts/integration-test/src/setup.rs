@@ -390,7 +390,7 @@ mod tests {
     fn test_create_vault_one_asset_hodl_strategy() {
         let enviroment = create_vault_one_asset_hodl_strategy();
         let setup = enviroment.setup;
-        assert_eq!(setup.factory_contract.deployed_defindexes().len(), 1);
+        assert_eq!(setup.factory_contract.total_vaults(), 1);
 
         let strategy_token = enviroment.strategy_contract.asset();
         assert_eq!(strategy_token, enviroment.token.address);
@@ -433,7 +433,7 @@ mod tests {
     fn test_create_vault_one_asset_fixed_strategy() {
         let enviroment = create_vault_one_asset_fixed_strategy();
         let setup = enviroment.setup;
-        assert_eq!(setup.factory_contract.deployed_defindexes().len(), 1);
+        assert_eq!(setup.factory_contract.total_vaults(), 1);
 
         let strategy_token = enviroment.strategy_contract.asset();
         assert_eq!(strategy_token, enviroment.token.address);
@@ -481,7 +481,7 @@ mod tests {
     fn test_create_vault_blend_strategy() {
         let enviroment = create_vault_one_blend_strategy();
         let setup = enviroment.setup;
-        assert_eq!(setup.factory_contract.deployed_defindexes().len(), 1);
+        assert_eq!(setup.factory_contract.total_vaults(), 1);
 
         let strategy_token = enviroment.strategy_contract.asset();
         assert_eq!(strategy_token, enviroment.usdc.address);

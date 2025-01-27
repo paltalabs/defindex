@@ -1,9 +1,9 @@
-use soroban_sdk::{contracttype, Address, Env, Vec};
+use soroban_sdk::{contracttype, Address, Env, Vec, panic_with_error};
 
 use common::models::AssetStrategySet;
 
 use crate::report::Report;
-
+use crate::error::ContractError;
 const DAY_IN_LEDGERS: u32 = 17280;
 const INSTANCE_BUMP_AMOUNT: u32 = 30 * DAY_IN_LEDGERS;
 const INSTANCE_LIFETIME_THRESHOLD: u32 = INSTANCE_BUMP_AMOUNT - DAY_IN_LEDGERS;
@@ -111,6 +111,9 @@ pub fn get_soroswap_router(e: &Env) -> Address {
 
 // Vault Share
 pub fn set_vault_fee(e: &Env, vault_fee: &u32) {
+    if vault_fee > &9000u32 {
+        panic_with_error!(&e, ContractError::MaximumFeeExceeded);
+    }
     e.storage().instance().set(&DataKey::VaultFee, vault_fee);
 }
 

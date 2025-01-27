@@ -228,7 +228,7 @@ impl<'a> DeFindexVaultTest<'a> {
         env.set_default_info();
         // Mockup, should be the factory contract
         let defindex_factory = Address::generate(&env);
-        env.budget().reset_unlimited();
+        env.cost_estimate().budget().reset_unlimited();
         let emergency_manager = Address::generate(&env);
         let vault_fee_receiver = Address::generate(&env);
         let defindex_protocol_receiver = Address::generate(&env);
@@ -249,14 +249,14 @@ impl<'a> DeFindexVaultTest<'a> {
         let token_2_admin_client = get_token_admin_client(&env, &token_2.address.clone());
 
         // token_1_admin_client.mint(to, amount);
-        env.budget().reset_unlimited();
+        env.cost_estimate().budget().reset_unlimited();
         let strategy_client_token_0 = create_hodl_strategy(&env, &token_0.address.clone());
         let strategy_client_token_1 = create_hodl_strategy(&env, &token_1.address.clone());
         let strategy_client_token_2 = create_hodl_strategy(&env, &token_2.address);
 
         let fixed_strategy_client_token_0 = create_fixed_strategy(&env, &token_0.address.clone());
         let fixed_strategy_client_token_1 = create_fixed_strategy(&env, &token_1.address.clone());
-        env.budget().reset_unlimited();
+        env.cost_estimate().budget().reset_unlimited();
         // Soroswap Setup
         let soroswap_admin = Address::generate(&env);
 
@@ -281,7 +281,7 @@ impl<'a> DeFindexVaultTest<'a> {
         let soroswap_factory = create_soroswap_factory(&env, &soroswap_admin);
         let soroswap_router = create_soroswap_router(&env, &soroswap_factory.address);
 
-        env.budget().reset_unlimited();
+        env.cost_estimate().budget().reset_unlimited();
 
         create_soroswap_pool(
             &env,
@@ -293,7 +293,7 @@ impl<'a> DeFindexVaultTest<'a> {
             &amount_1,
         );
 
-        env.budget().reset_unlimited();
+        env.cost_estimate().budget().reset_unlimited();
 
         mock_mint(
             &env,
@@ -320,7 +320,7 @@ impl<'a> DeFindexVaultTest<'a> {
             &amount_2,
         ); 
 
-        env.budget().reset_unlimited();
+        env.cost_estimate().budget().reset_unlimited();
 
         mock_mint(
             &env,
@@ -348,7 +348,7 @@ impl<'a> DeFindexVaultTest<'a> {
         );
         // let soroswap_pair = soroswap_factory.get_pair(&token_0.address, &token_1.address);
 
-        env.budget().reset_unlimited();
+        env.cost_estimate().budget().reset_unlimited();
 
         DeFindexVaultTest {
             env,
