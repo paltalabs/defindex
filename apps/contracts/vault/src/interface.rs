@@ -228,49 +228,17 @@ pub trait AdminInterfaceTrait {
     /// * `Result<Address, ContractError>` - The fee receiver address if successful, otherwise returns a ContractError.
     fn get_fee_receiver(e: Env) -> Result<Address, ContractError>;
 
-    /// Queues a new manager for the vault.
-    /// This function allows the current manager to queue a new manager for the vault.
-    ///
-    /// # Arguments:
-    /// * `e` - The environment.
-    /// * `address` - The new manager address.
-    /// 
-    /// # Returns:
-    /// * `()` - No return value.
-    fn queue_manager(e: Env, address: Address) -> Result<Address, ContractError>;
-
-    /// Retrieves the queued manager address for the vault.
-    /// 
-    /// # Arguments:
-    /// * `e` - The environment.
-    /// 
-    /// # Returns:
-    /// * `Result<Address, ContractError>` - The queued manager address if successful, otherwise returns a ContractError.
-    /// 
-    fn get_queued_manager(e: Env) -> Result<Address, ContractError>;
-
-    /// Clears the queued manager for the vault.
-    /// 
-    /// This function allows the current manager to clear the queued manager for the vault.
-    /// 
-    /// # Arguments:
-    /// * `e` - The environment.
-    /// 
-    /// # Returns:
-    /// * `()` - No return value.
-    fn clear_queue(e: Env) -> Result<(), ContractError>;
-
     /// Sets the manager for the vault.
     ///
-    /// This function allows the current manager or emergency manager to set a new manager for the vault.
+    /// This function allows the current manager to set a new manager for the vault.
     ///
     /// # Arguments:
     /// * `e` - The environment.
-    /// * `manager` - The new manager address.
+    /// * `new_manager` - The new manager address.
     ///
     /// # Returns:
     /// * `()` - No return value.
-    fn set_manager(e: Env) -> Result<(), ContractError>;
+    fn set_manager(e: Env, new_manager: Address) -> Result<(), ContractError>;
 
     /// Retrieves the current manager address for the vault.
     ///
