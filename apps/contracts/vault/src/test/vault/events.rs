@@ -10,15 +10,12 @@ use soroban_sdk::{
   Val, 
   Vec
 };
-use crate::constants::ONE_DAY_IN_SECONDS;
 use crate::events::{InvestEvent, ManagerChangedEvent, SwapExactInEvent};
 
 use crate::{models, report};
 use crate::test::defindex_vault::{
   AssetStrategySet, 
   Instruction, 
-  ManagerQueueClearEvent, 
-  ManagerQueuedEvent, 
   Report, 
   RolesDataKey, 
   UnwindEvent
@@ -28,7 +25,6 @@ use crate::test::{
   create_strategy_params_token_0, 
   create_strategy_params_token_1, 
   DeFindexVaultTest, 
-  EnvTestUtils
 };
 
 extern crate std;
@@ -114,6 +110,8 @@ fn check_rebalance_events(){
   defindex_contract.rebalance(&test.rebalance_manager, &instructions.clone());
 
   let events = test.env.events().all();
+  std::println!("events: {:?}", events);
+
 
   let rebalance_events: std::vec::Vec<(Address, Vec<Val>, Val)> = 
     events.iter().filter(
@@ -270,76 +268,55 @@ fn check_rebalance_events(){
 }
 
 #[test]
-fn queue_events(){
-  let test = DeFindexVaultTest::setup();
-  let strategy_params_token_0 = create_strategy_params_token_0(&test);
-  let strategy_params_token_1 = create_strategy_params_token_1(&test);
-  let assets: Vec<AssetStrategySet> = sorobanvec![
-      &test.env,
-      AssetStrategySet {
-          address: test.token_0.address.clone(),
-          strategies: strategy_params_token_0.clone()
-      },
-      AssetStrategySet {
-          address: test.token_1.address.clone(),
-          strategies: strategy_params_token_1.clone()
-      }
-  ];
-  test.env.mock_all_auths();
-  let mut roles: Map<u32, Address> = Map::new(&test.env);
-  roles.set(RolesDataKey::Manager as u32, test.manager.clone());
-  roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
-  roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
-  roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+fn set_new_manager_by_manager() {
+    let test = DeFindexVaultTest::setup();
+    let strategy_params_token_0 = create_strategy_params_token_0(&test);
+    let strategy_params_token_1 = create_strategy_params_token_1(&test);
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: strategy_params_token_0.clone()
+        },
+        AssetStrategySet {
+            address: test.token_1.address.clone(),
+            strategies: strategy_params_token_1.clone()
+        }
+    ];
 
-  let mut name_symbol: Map<String, String> = Map::new(&test.env);
-  name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
-  name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
 
-  let defindex_contract = create_defindex_vault(
-      &test.env,
-      assets,
-      roles,
-      2000u32,
-      test.defindex_protocol_receiver.clone(),
-      2500u32,
-      test.defindex_factory.clone(),
-      test.soroswap_router.address.clone(),
-      name_symbol,
-      true
-  );
-  //Check initial manager
-  let manager_role = defindex_contract.get_manager();
-  assert_eq!(manager_role, test.manager);
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
 
-  let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
-  
-  // Queue manager
-  defindex_contract.queue_manager(&users[0]);
-  let event = test.env.events().all().last().unwrap();
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        roles,
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
+        name_symbol,
+        true
+    );
+    let manager_role = defindex_contract.get_manager();
+    assert_eq!(manager_role, test.manager);
 
-  let queue_event: ManagerQueuedEvent = FromVal::from_val(&test.env, &event.2);
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
+    test.env.mock_all_auths();
 
-  let mut expected_new_manager_data = Map::new(&test.env);
-  expected_new_manager_data.set(test.env.ledger().timestamp(), users[0].clone());
+    defindex_contract.set_manager(&users[0]);
 
-  assert_eq!(queue_event.new_manager_data, expected_new_manager_data);
-
-  // Clear queue
-  defindex_contract.clear_queue();
-  let event = test.env.events().all().last().unwrap();
-
-  let clear_queue_event: ManagerQueueClearEvent = FromVal::from_val(&test.env, &event.2);
-  assert_eq!(clear_queue_event.timestamp, test.env.ledger().timestamp());
-  
-  defindex_contract.queue_manager(&users[0]);
-  test.env.jump_time(ONE_DAY_IN_SECONDS * 7);
-  
-  // Set manager
-  defindex_contract.set_manager();
-  let event = test.env.events().all().last().unwrap();
-
-  let manager_changed_event: ManagerChangedEvent = FromVal::from_val(&test.env, &event.2);
-  assert_eq!(manager_changed_event.new_manager, users[0]);
-
+    // Verify the event was emitted correctly
+    let events = test.env.events().all().last().unwrap();
+    // Get the last manager change event
+    let manager_changed_event: ManagerChangedEvent = FromVal::from_val(&test.env, &events.2);
+     assert_eq!(manager_changed_event.new_manager, users[0]);
 }
