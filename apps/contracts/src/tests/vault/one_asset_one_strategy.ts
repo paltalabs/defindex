@@ -53,7 +53,7 @@ import { testUpgradeContract } from "./upgrade_contract.js";
 */
 export async function oneAssetOneStrategySuccess(addressBook: AddressBook, params: CreateVaultParams[], user: Keypair) {
   console.log(yellow, "---------------------------------------");
-  console.log(yellow, "Testing one strategy vault tests");
+  console.log(yellow, "Testing one strategy vault");
   console.log(yellow, "---------------------------------------");
 
   //Deploy vault
@@ -70,7 +70,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
     idle_funds:idle_funds_before_deposit, 
     invested_funds:invested_funds_before_deposit, 
     hodl_balance:hodl_balance_before_deposit 
-  } = await fetchBalances(addressBook, vault_address, user);
+  } = await fetchBalances(addressBook, vault_address, params, user);
 
   // Deposit to vault
   const deposit_amount = 10_0_000_000;
@@ -80,9 +80,9 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
     writeBytes:deposit_write_bytes 
   } = await (
     async () => {
-      console.log(purple, "---------------------------------------");
+      console.log(purple, "-----------------------------------------");
       console.log(purple, `Deposit ${deposit_amount} in one strategy`);
-      console.log(purple, "---------------------------------------");
+      console.log(purple, "-----------------------------------------");
       try {
         const {
           instructions,
@@ -105,7 +105,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
     idle_funds:idle_funds_after_deposit,
     invested_funds:invested_funds_after_deposit,
     hodl_balance:hodl_balance_after_deposit
-  } = await fetchBalances(addressBook, vault_address, user);
+  } = await fetchBalances(addressBook, vault_address, params, user);
 
   //Invest
   const invest_amount = 5_0_000_000;
@@ -166,7 +166,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           idle_funds:idle_funds_after_invest, 
           invested_funds:invested_funds_after_invest, 
           hodl_balance:hodl_balance_after_invest 
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
         return { 
           instructions, 
           readBytes, 
@@ -217,7 +217,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           idle_funds:idle_funds_after_deposit_and_invest, 
           invested_funds:invested_funds_after_deposit_and_invest, 
           hodl_balance:hodl_balance_after_deposit_and_invest
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
 
         const expected_idle_funds = (BigInt(deposit_and_invest_amount) - invested_funds_after_invest[0].amount);
         const expected_invested_funds = BigInt(deposit_and_invest_amount) + invested_funds_after_invest[0].amount;
@@ -354,7 +354,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           idle_funds:idle_funds_after_unwind, 
           invested_funds:invested_funds_after_unwind, 
           hodl_balance:hodl_balance_after_unwind
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
 
         let expected_idle_funds = BigInt(idle_funds_after_deposit_and_invest[0].amount) + BigInt(unwind_amount);
         let expected_invested_funds = BigInt(invested_funds_after_deposit_and_invest[0].amount) - BigInt(unwind_amount);
@@ -469,7 +469,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           idle_funds, 
           invested_funds, 
           hodl_balance
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
 
         const expected_idle_funds = idle_funds_after_unwind[0].amount - BigInt(invest_amount) + BigInt(unwind_amount);
         const expected_invested_funds = invested_funds_after_unwind[0].amount + BigInt(invest_amount) - BigInt(unwind_amount);
@@ -576,7 +576,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           idle_funds, 
           invested_funds, 
           hodl_balance 
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
 
         const expected_idle_funds = idle_funds_after_rebalance[0].amount - BigInt(withdraw_amount);
         const expected_invested_funds = invested_funds_after_rebalance[0].amount;
@@ -663,7 +663,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
         }
         // Rescue
         const { instructions, readBytes, writeBytes } = await rescueFromStrategy(vault_address, addressBook.getContractId("hodl_strategy"), manager);
-        const { idle_funds, invested_funds, hodl_balance } = await fetchBalances(addressBook, vault_address, user);
+        const { idle_funds, invested_funds, hodl_balance } = await fetchBalances(addressBook, vault_address, params, user);
 
         const expected_idle_funds = idle_funds_after_withdraw[0].amount + invested_funds_after_withdraw[0].amount;
         const expected_invested_funds = BigInt(0);
@@ -759,7 +759,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           idle_funds,
           invested_funds,
           hodl_balance
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
         const expected_idle_funds = idle_funds_after_rescue[0].amount + BigInt(10_0_000_000);
         const expected_invested_funds = invested_funds_after_rescue[0].amount;
         const expected_hodl_balance = parseInt(hodl_balance_after_rescue.toString());
@@ -874,7 +874,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           idle_funds, 
           invested_funds, 
           hodl_balance
-        } = await fetchBalances(addressBook, vault_address, user);
+        } = await fetchBalances(addressBook, vault_address, params, user);
         
         return {
           instructions,
@@ -905,40 +905,40 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
       "Invested funds": invested_funds_before_deposit[0].amount,
       hodlStrategy: hodl_balance_before_deposit,
     },
-    "Balance after deposit": {
+    "After deposit": {
       "Idle funds": idle_funds_after_deposit[0].amount,
       "Invested funds": invested_funds_after_deposit[0].amount,
-      hodlStrategy: hodl_balance_after_deposit,
+      "Hodl strategy": hodl_balance_after_deposit,
     },
-    "Balance after invest": {
+    "After invest": {
       "Idle funds": idle_funds_after_invest[0].amount,
       "Invested funds": invested_funds_after_invest[0].amount,
-      hodlStrategy: hodl_balance_after_invest,
+      "Hodl strategy": hodl_balance_after_invest,
     },
-    "Balance after deposit and invest": {
+    "After deposit and invest": {
       "Idle funds": idle_funds_after_deposit_and_invest[0].amount,
       "Invested funds": invested_funds_after_deposit_and_invest[0].amount,
-      hodlStrategy: hodl_balance_after_deposit_and_invest,
+      "Hodl strategy": hodl_balance_after_deposit_and_invest,
     },
-    "Balance after unwind": {
+    "After unwind": {
       "Idle funds": idle_funds_after_unwind[0].amount,
       "Invested funds": invested_funds_after_unwind[0].amount,
-      hodlStrategy: hodl_balance_after_unwind,
+      "Hodl strategy": hodl_balance_after_unwind,
     },
-    "Balance after rebalance": {
+    "After rebalance": {
       "Idle funds": idle_funds_after_rebalance[0].amount,
       "Invested funds": invested_funds_after_rebalance[0].amount,
-      hodlStrategy: hodl_balance_after_rebalance,
+      "Hodl strategy": hodl_balance_after_rebalance,
     },
-    "Balance after withdraw": {
+    "After withdraw": {
       "Idle funds": idle_funds_after_withdraw[0].amount,
       "Invested funds": invested_funds_after_withdraw[0].amount,
-      hodlStrategy: hodl_balance_after_withdraw,
+      "Hodl strategy": hodl_balance_after_withdraw,
     },
-    "Balance after rescue": {
+    "After rescue": {
       "Idle funds": idle_funds_after_rescue[0].amount,
       "Invested funds": invested_funds_after_rescue[0].amount,
-      hodlStrategy: hodl_balance_after_rescue,
+      "Hodl strategy": hodl_balance_after_rescue,
     }
   };
   const budgetData = {
@@ -1005,6 +1005,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
   }
   return {tableData, budgetData};
 }
+
 
 
 export async function testVaultOneAssetOneStrategy(addressBook: AddressBook, params: CreateVaultParams[], user: Keypair) {
