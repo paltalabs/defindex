@@ -40,7 +40,6 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
   const { 
     idle_funds:idle_funds_before_deposit, 
     invested_funds:invested_funds_before_deposit, 
-    hodl_balance:hodl_balance_before_deposit 
   } = await fetchBalances(addressBook, vault_address, params, user);
 
   // Deposit to vault
@@ -190,7 +189,6 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
     writeBytes:deposit_and_invest_write_bytes,
     idle_funds_after_deposit_and_invest,
     invested_funds_after_deposit_and_invest,
-    hodl_balance_after_deposit_and_invest
   } = await (
     async () => {
       console.log(purple, "---------------------------------------");
@@ -204,6 +202,9 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
           readBytes,
           writeBytes,
         } = await depositToVault(vault_address, [deposit_and_invest_amount], user, true);
+        console.log(green, "Instructions", instructions);
+        console.log(green, "Read Bytes", readBytes);
+        console.log(green, "Write Bytes", writeBytes);
         const {
           idle_funds:idle_funds_after_deposit_and_invest, 
           invested_funds:invested_funds_after_deposit_and_invest, 
@@ -481,7 +482,7 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
     invested_funds: invested_funds_after_withdraw,
   } = await (
     async () => {
-      let withdraw_amount = 2_0_000_000;
+      let withdraw_amount = idle_funds_after_unwind_and_invest[0].amount + BigInt(2_0_000_000);
       console.log(purple, "--------------------------------------------------------------");
       console.log(purple,`Withdraw ${withdraw_amount} from one asset two strategies vault`);
       console.log(purple, "--------------------------------------------------------------");
@@ -523,25 +524,24 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
             //To-do: return status
           }
         }
-        //Withdraw
+        //Withdraw more than idle funds
         const {
           instructions,
           readBytes,
           writeBytes,
-        } = await withdrawFromVault(vault_address, withdraw_amount, user);
+        } = await withdrawFromVault(vault_address, Number(withdraw_amount), user);
 
         const { 
           idle_funds, 
           invested_funds, 
         } = await fetchBalances(addressBook, vault_address, params, user);
 
-        const tolerance = BigInt(1_000);
-        const expected_idle_funds = idle_funds_after_unwind_and_invest[0].amount - BigInt(withdraw_amount);
-        const expected_invested_funds = invested_funds_after_unwind_and_invest[0].amount;
+
+        const expected_idle_funds = BigInt(0);
+        const expected_invested_funds = invested_funds_after_unwind_and_invest[0].amount - BigInt(2_0_000_001);
 
         if (
-          idle_funds[0].amount < expected_idle_funds - tolerance || 
-          idle_funds[0].amount > expected_idle_funds + tolerance
+          idle_funds[0].amount !== expected_idle_funds 
         ) {
           console.error(red, `idle funds: ${idle_funds[0].amount} !== approximately ${expected_idle_funds}`);
           throw Error("Idle funds after withdraw failed");
@@ -650,3 +650,14 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
   console.table(budgetData);
   return {tableData, budgetData};
 }
+/* 
+Passing:
+  Instructions 30807765
+  Read Bytes 157072
+  Write Bytes 6640
+
+Error:
+  Instructions 30679749
+  Read Bytes 157160
+  Write Bytes 6580
+*/

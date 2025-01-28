@@ -887,7 +887,7 @@ export async function fetchCurrentInvestedFunds(
       user,
       true
     );
-    const funds = scValToNative(res.returnValue);
+    const funds = scValToNative(res.result.retval);
     const mappedFunds = Object.entries(funds).map(([key, value]) => {
       const fund = value as TotalManagedFunds;
       return {
@@ -913,7 +913,7 @@ export async function fetchCurrentIdleFunds(
       user,
       true,
     );
-    const funds = scValToNative(res.returnValue);
+    const funds = scValToNative(res.result.retval);
     const mappedFunds = Object.entries(funds).map(([key, value]) => {
       const fund = value as TotalManagedFunds;
       return {
