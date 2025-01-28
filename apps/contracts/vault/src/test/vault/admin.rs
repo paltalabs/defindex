@@ -304,20 +304,7 @@ fn set_new_manager_by_manager() {
     assert_eq!(manager_role, test.manager);
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
-    test.env.mock_all_auths();
-    let deposit_amount = 10_0_000_000i128;
-    // Mint before deposit
-    test.token_0_admin_client.mint(&users[0], &deposit_amount);
-    test.token_1_admin_client.mint(&users[0], &deposit_amount);
-
-
-// Deposit
-defindex_contract.deposit(
-    &sorobanvec![&test.env, deposit_amount, deposit_amount],
-    &sorobanvec![&test.env, deposit_amount, deposit_amount],
-    &users[0],
-    &true,
-);
+    
     // Manager is setting the new manager
     defindex_contract
         .mock_auths(&[MockAuth {
