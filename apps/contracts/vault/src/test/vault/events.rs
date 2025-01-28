@@ -10,7 +10,6 @@ use soroban_sdk::{
   Val, 
   Vec
 };
-use crate::constants::ONE_DAY_IN_SECONDS;
 use crate::events::{InvestEvent, ManagerChangedEvent, SwapExactInEvent};
 
 use crate::{models, report};
@@ -26,7 +25,6 @@ use crate::test::{
   create_strategy_params_token_0, 
   create_strategy_params_token_1, 
   DeFindexVaultTest, 
-  EnvTestUtils
 };
 
 extern crate std;
@@ -313,32 +311,12 @@ fn set_new_manager_by_manager() {
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
     test.env.mock_all_auths();
-    let deposit_amount = 10_0_000_000i128;
-    // Mint before deposit
-    test.token_0_admin_client.mint(&users[0], &deposit_amount);
-    test.token_1_admin_client.mint(&users[0], &deposit_amount);
 
-
-// Deposit
-defindex_contract.deposit(
-    &sorobanvec![&test.env, deposit_amount, deposit_amount],
-    &sorobanvec![&test.env, deposit_amount, deposit_amount],
-    &users[0],
-    &true,
-);
-    // Manager is setting the new manager
-    defindex_contract
-        .set_manager(&users[0]);
-
-    let new_manager_role = defindex_contract.get_manager();
-    assert_eq!(new_manager_role, users[0]);
+    defindex_contract.set_manager(&users[0]);
 
     // Verify the event was emitted correctly
-    let events = test.env.events().all();
-    std::println!("events: {:?}", events);
+    let events = test.env.events().all().last().unwrap();
     // Get the last manager change event
-    // let manager_changed_event: ManagerChangedEvent = FromVal::from_val(&test.env, &events.2);
-
-    // Verify the event data
-    // assert_eq!(manager_changed_event.new_manager, users[0]);
+    let manager_changed_event: ManagerChangedEvent = FromVal::from_val(&test.env, &events.2);
+     assert_eq!(manager_changed_event.new_manager, users[0]);
 }

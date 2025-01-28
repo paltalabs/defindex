@@ -1,12 +1,11 @@
 use soroban_sdk::{
-    symbol_short, FromVal,
-    testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke, Events},
-    vec as sorobanvec, Address, IntoVal, Map, String, Symbol, Vec, Val
+    testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke},
+    vec as sorobanvec, Address, IntoVal, Map, String, Symbol, Vec
 };
 
 use crate::test::{
     create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1,
-    defindex_vault::{AssetStrategySet, ContractError, RolesDataKey, ManagerChangedEvent}, DeFindexVaultTest, EnvTestUtils,
+    defindex_vault::{AssetStrategySet, ContractError, RolesDataKey}, DeFindexVaultTest,
 };
 
 extern crate std;
@@ -334,15 +333,6 @@ defindex_contract.deposit(
 
     let new_manager_role = defindex_contract.get_manager();
     assert_eq!(new_manager_role, users[0]);
-
-    // Verify the event was emitted correctly
-    let events = test.env.events().all();
-    std::println!("events: {:?}", events);
-    // Get the last manager change event
-    // let manager_changed_event: ManagerChangedEvent = FromVal::from_val(&test.env, &events.2);
-
-    // Verify the event data
-    // assert_eq!(manager_changed_event.new_manager, users[0]);
 }
 
 #[test]
