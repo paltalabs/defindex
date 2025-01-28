@@ -78,11 +78,11 @@ export async function testBlendStrategy(user?: Keypair) {
       console.log('error', e)
     }
   
-    // Wait for 1 minute
-    console.log(purple, '---------------------------------------------------------------------------')
-    console.log(purple, '----------------------- Waiting for 1 minute -----------------------')
-    console.log(purple, '---------------------------------------------------------------------------')
-    await new Promise(resolve => setTimeout(resolve, 60000));
+    // // Wait for 1 minute
+    // console.log(purple, '---------------------------------------------------------------------------')
+    // console.log(purple, '----------------------- Waiting for 5 minute -----------------------')
+    // console.log(purple, '---------------------------------------------------------------------------')
+    // await new Promise(resolve => setTimeout(resolve, 300000));
   
     // Withdrawing XLM from Blend Strategy
     try {
