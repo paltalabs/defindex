@@ -172,7 +172,7 @@ pub trait VaultTrait {
     ///
     /// # Returns:
     /// * `Map<Address, i128>` - A map of asset addresses to their total managed amounts.
-    fn fetch_total_managed_funds(e: &Env) -> Map<Address, CurrentAssetInvestmentAllocation>;
+    fn fetch_total_managed_funds(e: &Env) -> Vec<CurrentAssetInvestmentAllocation>;
 
     // Calculates the corresponding amounts of each asset per a given number of vault shares.
     /// This function extends the contract's time-to-live and calculates how much of each asset corresponds
@@ -188,7 +188,7 @@ pub trait VaultTrait {
     fn get_asset_amounts_per_shares(
         e: Env,
         vault_shares: i128,
-    ) -> Result<Map<Address, i128>, ContractError>;
+    ) -> Result<Vec<i128>, ContractError>;
 
     fn get_fees(e: Env) -> (u32, u32);
 

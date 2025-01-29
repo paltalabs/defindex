@@ -170,6 +170,7 @@ fn check_rebalance_events(){
             Some(models::StrategyAllocation {
                 strategy_address: test.strategy_client_token_0.address.clone(),
                 amount: instruction_amount_1,
+                paused: true,
             }),
         ],
     },
