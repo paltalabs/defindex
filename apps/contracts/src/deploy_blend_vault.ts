@@ -116,6 +116,7 @@ export async function deployVault(
     );
     const address = scValToNative(result.returnValue);
     const budget = getTransactionBudget(result);
+    addressBook.setContractId('blend_strategy_vault', address);
     return { address: address, ...budget };
   } catch (error) {
     console.error("Error deploying vault:", error);
@@ -155,3 +156,4 @@ async function deployBlendVault() {
 };
 
 await deployBlendVault();
+addressBook.writeToFile();
