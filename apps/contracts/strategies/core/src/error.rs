@@ -19,6 +19,7 @@ pub enum StrategyError {
     ProtocolAddressNotFound = 420,
     DeadlineExpired = 421,
     ExternalError = 422,
+    SoroswapPairError = 423,
 
     //Blend Errors
     AmountBelowMinDust = 451,

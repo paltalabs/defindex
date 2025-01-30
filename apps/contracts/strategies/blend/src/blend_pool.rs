@@ -1,7 +1,6 @@
 use defindex_strategy_core::StrategyError;
 use soroban_sdk::{
     auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation},
-    panic_with_error,
     token::TokenClient,
     vec, Address, Env, IntoVal, Symbol, Vec,
 };
@@ -85,27 +84,25 @@ pub fn supply(e: &Env, from: &Address, amount: &i128, config: &Config) -> Result
 
     // Calculate the amount of bTokens received
     let b_tokens_amount = new_positions.supply
-        .get_unchecked(config.reserve_id)
-        .checked_sub(pre_supply)
-        .ok_or_else(|| StrategyError::UnderflowOverflow)?;
-
-
-        .supply
         .try_get(config.reserve_id) 
         .unwrap_or(Some(0))
-        .unwrap_or(0);
+        .unwrap_or(0)
+        .checked_sub(pre_supply)
+        .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     Ok(b_tokens_amount)
 }
 
 pub fn withdraw(e: &Env, to: &Address, amount: &i128, config: &Config) -> Result<(i128, i128), StrategyError> {
     let pool_client = BlendPoolClient::new(e, &config.pool);
-
+    
     let pre_supply = pool_client
         .get_positions(&e.current_contract_address())
         .supply
-        .get(config.reserve_id)
-        .unwrap_or_else(|| panic_with_error!(e, StrategyError::InsufficientBalance));
+        .try_get(config.reserve_id)
+        .map_err(|_| StrategyError::InsufficientBalance)? // Convert Result to Error
+        .ok_or_else(|| StrategyError::InsufficientBalance)?; // Convert Option to Error if None
+
 
     // Get balance pre-withdraw, as the pool can modify the withdrawal amount
     let pre_withdrawal_balance = TokenClient::new(&e, &config.asset).balance(&to);
@@ -127,6 +124,12 @@ pub fn withdraw(e: &Env, to: &Address, amount: &i128, config: &Config) -> Result
         &requests,
     );
 
+    let new_supply = new_positions
+                        .supply
+                        .try_get(config.reserve_id)
+                        .unwrap_or(Some(0))
+                        .unwrap_or(0);
+
     // Calculate the amount of tokens withdrawn and bTokens burnt
     let post_withdrawal_balance = TokenClient::new(&e, &config.asset).balance(&to);
     let real_amount = post_withdrawal_balance
@@ -134,7 +137,7 @@ pub fn withdraw(e: &Env, to: &Address, amount: &i128, config: &Config) -> Result
 
     // position entry is deleted if the position is cleared
     let b_tokens_amount = pre_supply
-        .checked_sub(new_positions.supply.get(config.reserve_id).unwrap_or(0))
+        .checked_sub(new_supply)
         .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     Ok((real_amount, b_tokens_amount))
@@ -157,10 +160,11 @@ pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError>
         return Ok(false);
     }
 
-    // Swap BLND to the underlying asset
-    let mut swap_path: Vec<Address> = vec![&e];
-    swap_path.push_back(config.blend_token.clone());
-    swap_path.push_back(config.asset.clone());
+    let swap_path = vec!(
+        e, 
+        config.blend_token.clone(), 
+        config.asset.clone()
+    );
 
     let deadline = e.ledger().timestamp()
         .checked_add(600).ok_or(StrategyError::UnderflowOverflow)?;

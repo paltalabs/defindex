@@ -4,6 +4,8 @@ use soroban_sdk::{contracttype, panic_with_error, Address, Env};
 
 use crate::{constants::SCALAR_9, storage};
 
+// taken from https://github.com/script3/fee-vault/blob/433ae359b24f15dee66fc624fa09479890e249f5/src/reserve_vault.rs#L24
+
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -22,9 +24,11 @@ impl StrategyReserves {
         if self.total_shares == 0 || self.total_b_tokens == 0 {
             return Ok(amount);
         }
-        amount
-            .fixed_mul_floor(self.total_shares, self.total_b_tokens)
-            .ok_or_else(|| StrategyError::ArithmeticError)
+        else {
+            return amount
+                .fixed_mul_floor(self.total_shares, self.total_b_tokens)
+                .ok_or_else(|| StrategyError::ArithmeticError);
+        }
     }
 
     /// Converts a b_token amount to shares rounding up
