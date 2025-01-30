@@ -17,6 +17,7 @@ import {
 } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
 import { getTransactionBudget } from "../utils/tx.js";
+import { green } from "./common.js";
 
 const network = process.argv[2];
 const loadedConfig = config(network);
@@ -607,6 +608,7 @@ export async function investVault(
     throw error;
   }
 }
+
 export async function rebalanceVault(deployedVault: string, instructions: Instruction[], manager: Keypair) {
   const params = mapInstructionsToParams(instructions);
 
@@ -617,6 +619,7 @@ export async function rebalanceVault(deployedVault: string, instructions: Instru
       [new Address(manager.publicKey()).toScVal(), params],
       manager
     );
+    console.log(green, 'Rebalance result:', scValToNative(rebalanceResult.returnValue));
     const budget = getTransactionBudget(rebalanceResult);
     return { result: rebalanceResult, status: true, ...budget };
   } catch (error) {
@@ -865,6 +868,13 @@ export async function unpauseStrategy(deployedVault:string ,strategyAddress: str
 //         }),
 //     ];
 // }
+interface TotalManagedFunds {
+  asset: string,
+  idle_amount: bigint,
+  invested_amount: bigint,
+  strategy_allocations: any[],
+  total_amount: bigint
+}
 export async function fetchCurrentInvestedFunds(
   deployedVault: string,
   user: Keypair
@@ -874,14 +884,41 @@ export async function fetchCurrentInvestedFunds(
       deployedVault,
       "fetch_total_managed_funds",
       [],
-      user
+      user,
+      true
     );
-    const funds = scValToNative(res.returnValue);
+    const funds = scValToNative(res.result.retval);
     const mappedFunds = Object.entries(funds).map(([key, value]) => {
       const fund = value as TotalManagedFunds;
       return {
         asset: key,
         amount: fund.invested_amount,
+      };
+    });
+    return mappedFunds;
+  } catch (error) {
+    console.error("Error:", error);
+    throw error;
+  }
+}
+export async function fetchCurrentIdleFunds(
+  deployedVault: string,
+  user: Keypair
+) {
+  try {
+    const res = await invokeCustomContract(
+      deployedVault,
+      "fetch_total_managed_funds",
+      [],
+      user,
+      true,
+    );
+    const funds = scValToNative(res.result.retval);
+    const mappedFunds = Object.entries(funds).map(([key, value]) => {
+      const fund = value as TotalManagedFunds;
+      return {
+        asset: key,
+        amount: fund.idle_amount,
       };
     });
     return mappedFunds;
