@@ -12,6 +12,8 @@ pub enum StrategyError {
     InvalidArgument = 411,
     InsufficientBalance = 412,
     UnderflowOverflow= 413,
+    ArithmeticError = 414,
+    DivisionByZero = 415,
 
     // Protocol Errors
     ProtocolAddressNotFound = 420,

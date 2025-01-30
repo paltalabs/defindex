@@ -102,7 +102,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
         // Keeping track of the total deposited amount and the total bTokens owned by the strategy depositors
         let (vault_shares, reserves) = reserves::deposit(&e, reserves.clone(), &from, amount, b_tokens_minted)?;
 
-        let underlying_balance = shares_to_underlying(vault_shares, reserves);
+        let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
 
         event::emit_deposit(&e, String::from_str(&e, STARETEGY_NAME), amount, from);
         Ok(underlying_balance)
@@ -149,7 +149,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
             tokens_withdrawn,
             b_tokens_burnt,
         )?;
-        let underlying_balance = shares_to_underlying(vault_shares, reserves);
+        let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
 
         event::emit_withdraw(&e, String::from_str(&e, STARETEGY_NAME), amount, from);
 
@@ -165,26 +165,26 @@ impl DeFindexStrategyTrait for BlendStrategy {
         // Get the strategy's total shares and bTokens
         let reserves = storage::get_strategy_reserves(&e);
 
-        let underlying_balance = shares_to_underlying(vault_shares, reserves);
+        let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
 
         Ok(underlying_balance)
     }
 }
 
-fn shares_to_underlying(shares: i128, reserves: StrategyReserves) -> i128 {
+fn shares_to_underlying(shares: i128, reserves: StrategyReserves) -> Result<i128, StrategyError> {
     let total_shares = reserves.total_shares;
     let total_b_tokens = reserves.total_b_tokens;
 
     if total_shares == 0 || total_b_tokens == 0 {
         // No shares or bTokens in the strategy
-        return 0i128;
+        return Ok(0i128);
     }
     // Calculate the bTokens corresponding to the vault's shares
-    let vault_b_tokens = reserves.shares_to_b_tokens_down(shares);
+    let vault_b_tokens = reserves.shares_to_b_tokens_down(shares)?;
 
     // Use the b_rate to convert bTokens to underlying assets
     vault_b_tokens
         .fixed_div_floor(SCALAR_9, reserves.b_rate)
-        .unwrap()
+        .ok_or_else(|| StrategyError::DivisionByZero)
 }
 mod test;

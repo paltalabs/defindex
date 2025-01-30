@@ -4,6 +4,7 @@ use soroban_sdk::{contracttype, panic_with_error, Address, Env};
 
 use crate::{constants::SCALAR_9, storage};
 
+
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct StrategyReserves {
@@ -17,38 +18,40 @@ pub struct StrategyReserves {
 
 impl StrategyReserves {
     /// Converts a b_token amount to shares rounding down
-    pub fn b_tokens_to_shares_down(&self, amount: i128) -> i128 {
+    pub fn b_tokens_to_shares_down(&self, amount: i128) -> Result<i128, StrategyError> {
         if self.total_shares == 0 || self.total_b_tokens == 0 {
-            return amount;
+            return Ok(amount);
         }
         amount
             .fixed_mul_floor(self.total_shares, self.total_b_tokens)
-            .unwrap()
+            .ok_or_else(|| StrategyError::ArithmeticError)
     }
 
     /// Converts a b_token amount to shares rounding up
-    pub fn b_tokens_to_shares_up(&self, amount: i128) -> i128 {
+    pub fn b_tokens_to_shares_up(&self, amount: i128) -> Result<i128, StrategyError> {
         if self.total_shares == 0 || self.total_b_tokens == 0 {
-            return amount;
+            return Ok(amount);
         }
         amount
             .fixed_mul_ceil(self.total_shares, self.total_b_tokens)
-            .unwrap()
+            .ok_or_else(|| StrategyError::ArithmeticError)
     }
 
     /// Coverts a share amount to a b_token amount rounding down
-    pub fn shares_to_b_tokens_down(&self, amount: i128) -> i128 {
+    pub fn shares_to_b_tokens_down(&self, amount: i128) -> Result<i128, StrategyError> {
         amount
             .fixed_div_floor(self.total_shares, self.total_b_tokens)
-            .unwrap()
+            .ok_or_else(|| StrategyError::DivisionByZero)
     }
 
-    pub fn update_rate(&mut self, amount: i128, b_tokens: i128) {
+    pub fn update_rate(&mut self, amount: i128, b_tokens: i128) -> Result<(), StrategyError> {
         // Calculate the new bRate - 9 decimal places of precision
         // Update the reserve's bRate
-        let new_rate = amount.fixed_div_floor(b_tokens, SCALAR_9).unwrap();
+        let new_rate = amount.fixed_div_floor(b_tokens, SCALAR_9).ok_or_else(|| StrategyError::ArithmeticError)?;
 
         self.b_rate = new_rate;
+
+        Ok(())
     }
 }
 
@@ -69,10 +72,10 @@ pub fn deposit(
         panic_with_error!(e, StrategyError::BTokensAmountBelowMin); 
     }
 
-    reserves.update_rate(underlying_amount, b_tokens_amount);
+    let _ = reserves.update_rate(underlying_amount, b_tokens_amount);
 
     let mut vault_shares = storage::get_vault_shares(&e, &from);
-    let share_amount: i128 = reserves.b_tokens_to_shares_down(b_tokens_amount);
+    let share_amount: i128 = reserves.b_tokens_to_shares_down(b_tokens_amount)?;
 
     reserves.total_shares = reserves.total_shares
                             .checked_add(share_amount).ok_or_else(|| StrategyError::UnderflowOverflow)?;
@@ -103,7 +106,7 @@ pub fn withdraw(
     }
 
     let mut vault_shares = storage::get_vault_shares(&e, &from);
-    let share_amount = reserves.b_tokens_to_shares_up(b_tokens_amount);
+    let share_amount = reserves.b_tokens_to_shares_up(b_tokens_amount)?;
 
     if reserves.total_shares < share_amount || reserves.total_b_tokens < b_tokens_amount {
         return Err(StrategyError::InsufficientBalance);
@@ -138,7 +141,7 @@ pub fn harvest(
         panic_with_error!(e, StrategyError::InvalidArgument); //TODO: create a new error type for this
     }
 
-    reserves.update_rate(underlying_amount, b_tokens_amount);
+    let _ = reserves.update_rate(underlying_amount, b_tokens_amount)?;
 
     reserves.total_b_tokens =  reserves.total_b_tokens
                                 .checked_add(b_tokens_amount).ok_or_else(|| StrategyError::UnderflowOverflow)?;
