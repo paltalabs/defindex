@@ -46,7 +46,8 @@ pub fn supply(e: &Env, from: &Address, amount: &i128, config: &Config) -> Result
     let pre_supply = pool_client
         .get_positions(&e.current_contract_address())
         .supply
-        .get(config.reserve_id)
+        .try_get(config.reserve_id) 
+        .unwrap_or(Some(0))
         .unwrap_or(0);
 
     let requests: Vec<Request> = vec![
@@ -87,6 +88,13 @@ pub fn supply(e: &Env, from: &Address, amount: &i128, config: &Config) -> Result
         .get_unchecked(config.reserve_id)
         .checked_sub(pre_supply)
         .ok_or_else(|| StrategyError::UnderflowOverflow)?;
+
+
+        .supply
+        .try_get(config.reserve_id) 
+        .unwrap_or(Some(0))
+        .unwrap_or(0);
+
     Ok(b_tokens_amount)
 }
 

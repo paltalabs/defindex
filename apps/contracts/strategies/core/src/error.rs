@@ -25,5 +25,6 @@ pub enum StrategyError {
     UnderlyingAmountBelowMin = 452,
     BTokensAmountBelowMin = 453,
     InternalSwapError = 454,
+    SupplyNotFound = 455,
 
 }
