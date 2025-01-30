@@ -11,6 +11,7 @@ export async function fetchBalances(addressBook: AddressBook, vault_address: str
 
   const idle_funds = await fetchParsedCurrentIdleFunds(
     vault_address,
+    [],
     user
   );
   const invested_funds = await fetchCurrentInvestedFunds(

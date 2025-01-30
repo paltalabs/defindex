@@ -14,6 +14,7 @@
     "deploy-all-testnet": "tsc && node dist/deploy_factory.js testnet && node dist/strategies/deploy_hodl.js testnet && node dist/strategies/deploy_fixed.js testnet && node dist/strategies/deploy_fixed_usdc.js testnet && node dist/strategies/deploy_fixed_xtar.js testnet && node dist/strategies/deploy_blend.js testnet ",
     "publish-addresses": "tsc && node dist/publish_addresses.js",
     "test": "tsc && node dist/tests/mainTest.js",
+    "dev-blend": "tsc && node dist/tests/blend/dev.js",
     "test-blend-strategy": "tsc && node dist/tests/blend/test_strategy.js",
     "test-blend-vault": "tsc && node dist/tests/blend/test_vault.js",
     "test-deployed-blend-vault": "tsc && node dist/tests/blend/test_deployed_vault.js",
