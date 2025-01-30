@@ -74,7 +74,9 @@ it will show the next message where you can see all the available tests and the 
 1. Make sure you have `MAINNET_RPC_URL`,   `ADMIN_SECRET_KEY` and `TEST_USER` in .env
 2. Set up the contract addresses from other projects (i.e. Blend) on `public/mainnet.contracts.json`
 3. `yarn deploy-blend mainnet`
-4. Test the Blen strategy with `yarn exec tsc && node dist/tests/blend/test_strategy.js mainnet`
+4. Test the Blend strategy with `yarn exec tsc && node dist/tests/blend/test_strategy.js mainnet`
+5. Deploy Vault using the blend strategy `yarn deploy-blend-vault mainnet`
+6. Test the Vault-Blend with ``
 
 ### Generate Docs
 ```bash 
