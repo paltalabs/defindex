@@ -930,35 +930,14 @@ export async function fetchCurrentIdleFunds(
 
 export async function setVaultManager(
   deployedVault: string,
+  newManager: Keypair,
   manager: Keypair
 ) {
   try {
     const result = await invokeCustomContract(
       deployedVault,
       "set_manager",
-      [],
-      manager
-    );
-    const parsed_result = scValToNative(result.returnValue);
-    const { instructions, readBytes, writeBytes } = getTransactionBudget(result);
-    console.log("Set manager successful:", scValToNative(result.returnValue));
-    return { result: parsed_result, instructions, readBytes, writeBytes };
-  } catch (error) {
-    console.error("Set manager failed:", error);
-    throw error;
-  }
-}
-
-export async function queueVaultManager(
-  deployedVault: string,
-  manager: Keypair,
-  new_manager: Keypair
-) {
-  try {
-    const result = await invokeCustomContract(
-      deployedVault,
-      "queue_manager",
-      [new Address(new_manager.publicKey()).toScVal()],
+      [new Address(newManager.publicKey()).toScVal()],
       manager
     );
     const parsed_result = scValToNative(result.returnValue);
