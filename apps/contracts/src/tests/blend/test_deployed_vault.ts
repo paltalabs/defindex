@@ -1,11 +1,9 @@
-import { Address, Asset, Keypair, nativeToScVal, Networks, scValToNative, xdr } from "@stellar/stellar-sdk";
-import { SOROSWAP_ROUTER } from "../../constants.js";
+import { Asset, Keypair, scValToNative, Networks } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
-import { airdropAccount, invokeContract, invokeCustomContract } from "../../utils/contract.js";
+import { airdropAccount, invokeCustomContract } from "../../utils/contract.js";
 import { config } from "../../utils/env_config.js";
-import { AssetInvestmentAllocation, depositToVault, getCreateDeFindexParams, Instruction, rebalanceManager, rebalanceVault } from "../vault.js";
+import { depositToVault, Instruction, rebalanceVault } from "../vault.js";
 import { getTransactionBudget } from "../../utils/tx.js";
-import { yellow } from "../common.js";
 
 const network = process.argv[2];
 const loadedConfig = config(network);
@@ -102,18 +100,24 @@ export async function testBlendVault() {
   let blendVaultAddress: string = addressBook.getContractId("blend_vault");
   
   let deposit_status: boolean;
-  let deposit_balances: any;
   let deposit_instructions: number = 0;
   let deposit_read_bytes: number = 0;
   let deposit_write_bytes: number = 0;
   
   let invest_status: boolean;
-  let invest_balances: any;
   let invest_instructions: number = 0;
   let invest_read_bytes: number = 0;
   let invest_write_bytes: number = 0;
   
-
+  let deposit_and_invest_status: boolean;
+  let deposit_and_invest_instructions: number = 0;
+  let deposit_and_invest_read_bytes: number = 0;
+  let deposit_and_invest_write_bytes: number = 0;
+  
+  let rebalance_status: boolean;
+  let rebalance_instructions: number = 0;
+  let rebalance_read_bytes: number = 0;
+  let rebalance_write_bytes: number = 0;
 
   // Deposit assets to the vault
   try {    
@@ -158,7 +162,6 @@ export async function testBlendVault() {
         amount: BigInt(5_000_000),
       },
     ];
-    
     const {
       result:investResult,
       instructions,
@@ -180,13 +183,85 @@ export async function testBlendVault() {
   }
   const invest_total_managed_funds: mappedFunds[] = await fetchCurrentFunds(blendVaultAddress, userAccount);
 
-  const status_result={
-    status:{
-      "deposit status": deposit_status ? '✅ Success' : '❌ Failed', 
-      "invest status": invest_status ? '✅ Success' : '❌ Failed' 
-    },
+
+  // Deposit and invest
+  try {
+    console.log(purple, '-------------------------------------------------------------------------------------')
+    console.log(purple, '----------------------- Deposit and invest XLM into the vault -----------------------')
+    console.log(purple, '-------------------------------------------------------------------------------------')
+    const { balanceBefore: deposit_and_invest_balance_before, result: deposit_and_invest_result, balanceAfter: deposit_and_invest_balance_after } 
+      = await depositToVault(blendVaultAddress, [1_0_000_000], userAccount, true);
+    const {
+      instructions,
+      readBytes,
+      writeBytes
+    } = getTransactionBudget(deposit_and_invest_result);
+
+    deposit_and_invest_instructions = instructions;
+    deposit_and_invest_read_bytes = readBytes;
+    deposit_and_invest_write_bytes = writeBytes;
+
+    console.log(green, '------------ XLM deposited to the vault ------------')
+    console.log(green, 'Deposit balance before: ', deposit_and_invest_balance_before)
+    console.log(green, 'deposit_and_invest', deposit_and_invest_result)
+    console.log(green, 'Deposit balance after: ', deposit_and_invest_balance_after)
+    console.log(green, '----------------------------------------------------')
+
+    deposit_and_invest_status = true;
+    
+  } catch (error) {
+    console.log('❌ Error while deposit and invest:', error);
+    deposit_and_invest_status = false;
   }
-  const balances_result ={
+
+  const deposit_and_invest_total_managed_funds: mappedFunds[] = await fetchCurrentFunds(blendVaultAddress, userAccount);
+
+  //rebalance the vault
+  try {
+    console.log(purple, '---------------------------------------------------------------------------')
+    console.log(purple, '----------------------- Rebalancing the vault -----------------------------')
+    console.log(purple, '---------------------------------------------------------------------------')
+    const rebalanceArgs: Instruction[] = [
+      {
+        type: "Unwind",
+        strategy: blendStrategyAddress,
+        amount: BigInt(5_000_000)
+      },
+      {
+        type: "Invest",
+        strategy: blendStrategyAddress,
+        amount: BigInt(1_0_000_000)
+      },
+    ];
+    const {
+      result: rebalanceResult,
+      instructions,
+      readBytes,
+      writeBytes
+    } = await rebalanceVault(blendVaultAddress, rebalanceArgs, manager);
+    console.log('🚀 « rebalanceResult:', rebalanceResult);
+
+    rebalance_instructions = instructions;
+    rebalance_read_bytes = readBytes;
+    rebalance_write_bytes = writeBytes;
+    console.log(green, '---------------------- Rebalanced the vault ----------------------')
+    console.log(green, 'Rebalanced: ', rebalanceResult, ' in the strategy')
+    console.log(green, '------------------------------------------------------------------')
+    rebalance_status = true;
+  } catch (error) {
+    console.log('❌ Error rebalancing the vault:', error);
+    rebalance_status = false;
+  }
+
+  const rebalance_total_managed_funds: mappedFunds[] = await fetchCurrentFunds(blendVaultAddress, userAccount);
+
+  const status_result = {
+    "deposit": deposit_status ? '✅ Success' : '❌ Failed',
+    "invest": invest_status ? '✅ Success' : '❌ Failed',
+    "deposit and invest": deposit_and_invest_status ? '✅ Success' : '❌ Failed'
+  };
+
+  const balances_result = {
     deposit: {
       idle_amount: deposit_total_managed_funds[0].idle_amount,
       invested_amount: deposit_total_managed_funds[0].invested_amount,
@@ -196,10 +271,20 @@ export async function testBlendVault() {
       idle_amount: invest_total_managed_funds[0].idle_amount,
       invested_amount: invest_total_managed_funds[0].invested_amount,
       total_amount: invest_total_managed_funds[0].total_amount
+    },
+    deposit_and_invest: {
+      idle_amount: deposit_and_invest_total_managed_funds[0].idle_amount,
+      invested_amount: deposit_and_invest_total_managed_funds[0].invested_amount,
+      total_amount: deposit_and_invest_total_managed_funds[0].total_amount
+    },
+    rebalance: {
+      idle_amount: rebalance_total_managed_funds[0].idle_amount,
+      invested_amount: rebalance_total_managed_funds[0].invested_amount,
+      total_amount: rebalance_total_managed_funds[0].total_amount
     }
-  }
+  };
 
-  const budget_result={
+  const budget_result = {
     deposit: {
       instructions: deposit_instructions,
       readBytes: deposit_read_bytes,
@@ -209,8 +294,18 @@ export async function testBlendVault() {
       instructions: invest_instructions,
       readBytes: invest_read_bytes,
       writeBytes: invest_write_bytes
+    },
+    deposit_and_invest: {
+      instructions: deposit_and_invest_instructions,
+      readBytes: deposit_and_invest_read_bytes,
+      writeBytes: deposit_and_invest_write_bytes
+    },
+    rebalance: {
+      instructions: rebalance_instructions,
+      readBytes: rebalance_read_bytes,
+      writeBytes: rebalance_write_bytes
     }
-  }
+  };
   console.table(status_result);
   console.table(balances_result);
   console.table(budget_result);
