@@ -1,6 +1,7 @@
 use soroban_sdk::{contracttype, Address, Env, Vec};
-
 use crate::reserves::StrategyReserves;
+use defindex_strategy_core::StrategyError;
+
 
 #[contracttype]
 pub struct Config {
@@ -37,8 +38,8 @@ pub fn set_config(e: &Env, config: Config) {
     e.storage().instance().set(&DataKey::Config, &config);
 }
 
-pub fn get_config(e: &Env) -> Config {
-    e.storage().instance().get(&DataKey::Config).unwrap()
+pub fn get_config(e: &Env) -> Result<Config, StrategyError> {
+    e.storage().instance().get(&DataKey::Config).ok_or(StrategyError::NotInitialized)?
 }
 
 // Vault Position

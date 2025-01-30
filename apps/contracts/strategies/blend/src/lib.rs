@@ -35,28 +35,23 @@ impl DeFindexStrategyTrait for BlendStrategy {
     fn __constructor(e: Env, asset: Address, init_args: Vec<Val>) {
         let blend_pool_address: Address = init_args
             .get(0)
-            .ok_or(StrategyError::InvalidArgument)
-            .unwrap()
+            .expect("Invalid argument: blend_pool_address")
             .into_val(&e);
         let reserve_id: u32 = init_args
             .get(1)
-            .ok_or(StrategyError::InvalidArgument)
-            .unwrap()
+            .expect("Invalid argument: reserve_id")
             .into_val(&e);
         let blend_token: Address = init_args
             .get(2)
-            .ok_or(StrategyError::InvalidArgument)
-            .unwrap()
+            .expect("Invalid argument: blend_token")
             .into_val(&e);
         let soroswap_router: Address = init_args
             .get(3)
-            .ok_or(StrategyError::InvalidArgument)
-            .unwrap()
+            .expect("Invalid argument: soroswap_router")
             .into_val(&e);
         let claim_ids: Vec<u32> = init_args
             .get(4)
-            .ok_or(StrategyError::InvalidArgument)
-            .unwrap()
+            .expect("Invalid argument: claim_ids")
             .into_val(&e);
 
         let config = Config {
@@ -73,8 +68,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
     fn asset(e: Env) -> Result<Address, StrategyError> {
         extend_instance_ttl(&e);
-
-        Ok(storage::get_config(&e).asset)
+        Ok(storage::get_config(&e)?.asset)
     }
 
     fn deposit(e: Env, amount: i128, from: Address) -> Result<i128, StrategyError> {
@@ -88,7 +82,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
             return Err(StrategyError::AmountBelowMinDust);
         }
 
-        let config = storage::get_config(&e);
+        let config = storage::get_config(&e)?;
         blend_pool::claim(&e, &e.current_contract_address(), &config);
         perform_reinvest(&e, &config)?;
 
@@ -111,7 +105,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
     fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
         extend_instance_ttl(&e);
 
-        let config = storage::get_config(&e);
+        let config = storage::get_config(&e)?;
         let harvested_blend = blend_pool::claim(&e, &e.current_contract_address(), &config);
 
         perform_reinvest(&e, &config)?;
@@ -138,7 +132,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         let reserves = storage::get_strategy_reserves(&e);
 
-        let config = storage::get_config(&e);
+        let config = storage::get_config(&e)?;
 
         let (tokens_withdrawn, b_tokens_burnt) = blend_pool::withdraw(&e, &to, &amount, &config)?;
 
