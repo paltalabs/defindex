@@ -189,7 +189,7 @@ export async function testAccessControl(addressBook: AddressBook, params: Create
     } = await (async () => {
       try {
         console.log(purple, "---------------------------------------");
-        console.log(purple, "setRebalanceManager");
+        console.log(purple, "setManager");
         console.log(purple, "---------------------------------------");
         const {result, instructions, readBytes, writeBytes}  = await setVaultManager(vault_address, new_manager, manager);
         if( result === null){
@@ -205,6 +205,7 @@ export async function testAccessControl(addressBook: AddressBook, params: Create
         return {result: false, instructions: 0, readBytes: 0, writeBytes: 0};
       } 
     } )();
+  
 
   const tests_status = {
     set_manager: {
