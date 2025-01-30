@@ -1046,3 +1046,27 @@ export async function upgradeVaultWasm(deployedVault:Address, manager:Keypair, n
     throw error;
   }
 }
+
+export async function fetchTotalManagedFunds(deployedVault:Address, user:Keypair){
+  const res = await invokeCustomContract(
+    deployedVault.toString(),
+    "fetch_total_managed_funds",
+    [],
+    user,
+    true
+  );
+  const funds = scValToNative(res.result.retval);
+  return funds;
+}
+
+export async function fetchTotalSupply(deployedVault:Address, user:Keypair){
+  const res = await invokeCustomContract(
+    deployedVault.toString(),
+    "total_supply",
+    [],
+    user,
+    true
+  );
+  const supply = scValToNative(res.result.retval);
+  return supply;
+}

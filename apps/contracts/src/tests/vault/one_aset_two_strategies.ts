@@ -1,16 +1,18 @@
 import { Address, Keypair } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
+import { airdropAccount } from "../../utils/contract.js";
+import { green, purple, red, yellow } from "../common.js";
 import {
   CreateVaultParams,
   depositToVault,
+  fetchTotalManagedFunds,
+  fetchTotalSupply,
   Instruction,
   manager,
   rebalanceVault,
   withdrawFromVault
 } from "../vault.js";
-import { green, purple, red, yellow } from "../common.js";
-import { airdropAccount } from "../../utils/contract.js";
-import { deployDefindexVault, fetchBalances } from "./utils.js";
+import { deployDefindexVault, fetchBalances, underlyingToDfTokens } from "./utils.js";
 /* 
 ### One asset one strategy tests:
 - [x] deposit
@@ -536,9 +538,11 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
           invested_funds, 
         } = await fetchBalances(addressBook, vault_address, params, user);
 
+        const total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
+        const total_supply = await fetchTotalSupply(vault_address, user);
 
-        const expected_idle_funds = BigInt(0);
-        const expected_invested_funds = invested_funds_after_unwind_and_invest[0].amount - BigInt(2_0_000_001);
+        const expected_idle_funds = underlyingToDfTokens(idle_funds[0].amount, total_supply, total_managed_funds);
+        const expected_invested_funds = underlyingToDfTokens(invested_funds[0].amount, total_supply, total_managed_funds);
 
         if (
           idle_funds[0].amount !== expected_idle_funds 

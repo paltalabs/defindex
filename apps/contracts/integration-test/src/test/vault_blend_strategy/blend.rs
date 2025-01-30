@@ -316,3 +316,46 @@ fn success() {
     // assert_eq!(user_3_strategy_balance, 1226627059);
 
 }
+
+#[test]
+fn missing_balance() {
+    let enviroment = create_vault_one_blend_strategy();
+    let setup = enviroment.setup;
+
+    let vault_contract = enviroment.vault_contract;
+
+    let users = IntegrationTest::generate_random_users(&setup.env, 3);
+
+    setup.env.mock_all_auths();
+
+    // mint usdc to user
+    let usdc_client = enviroment.usdc_client;
+    let usdc = enviroment.usdc;
+    let starting_balance = 100_0000000;
+    usdc_client.mint(&users[0], &starting_balance);
+    usdc_client.mint(&users[1], &starting_balance);
+    usdc_client.mint(&users[2], &starting_balance);
+
+    // deposit into vault
+    vault_contract.deposit(
+        &svec!(&setup.env, starting_balance.clone()),
+        &svec!(&setup.env, starting_balance.clone()),
+        &users[0], 
+        &false
+    );
+
+    // Rebalance invest into Blend strategy
+    let invest_instructions = svec![
+        &setup.env,
+        Instruction::Invest(
+            enviroment.strategy_contract.address.clone(),
+            starting_balance,
+        ),
+    ];
+
+    vault_contract.rebalance(&enviroment.manager, &invest_instructions);
+    println!("Vault USDC Balance: {}", usdc.balance(&vault_contract.address));
+    println!("Vault Balance on Strategy: {}", enviroment.strategy_contract.balance(&vault_contract.address));
+    println!("user balance on vault: {}", vault_contract.balance(&users[0]));
+    println!("total managed funds: {:#?}", vault_contract.fetch_total_managed_funds());
+}
