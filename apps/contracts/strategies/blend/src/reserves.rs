@@ -60,7 +60,7 @@ pub fn deposit(
     from: &Address,
     underlying_amount: i128,
     b_tokens_amount: i128,
-) -> (i128, StrategyReserves) {
+) -> Result<(i128, StrategyReserves), StrategyError> {
     if underlying_amount <= 0 {
         panic_with_error!(e, StrategyError::UnderlyingAmountBelowMin); 
     }
@@ -74,14 +74,16 @@ pub fn deposit(
     let mut vault_shares = storage::get_vault_shares(&e, &from);
     let share_amount: i128 = reserves.b_tokens_to_shares_down(b_tokens_amount);
 
-    reserves.total_shares += share_amount;
-    reserves.total_b_tokens += b_tokens_amount;
+    reserves.total_shares = reserves.total_shares
+                            .checked_add(share_amount).ok_or_else(|| StrategyError::UnderflowOverflow)?;
+    reserves.total_b_tokens = reserves.total_b_tokens
+                            .checked_add(b_tokens_amount).ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
-    vault_shares += share_amount;
+    vault_shares = vault_shares.checked_add(share_amount).ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     storage::set_strategy_reserves(&e, reserves.clone());
     storage::set_vault_shares(&e, &from, vault_shares);
-    (vault_shares, reserves)
+    Ok((vault_shares, reserves))
 }
 
 /// Withdraw from the reserve vault. This function expects the withdraw to have already been made
@@ -92,33 +94,34 @@ pub fn withdraw(
     from: &Address,
     underlying_amount: i128,
     b_tokens_amount: i128,
-) -> (i128, StrategyReserves) {
+) -> Result<(i128, StrategyReserves), StrategyError> {
     if underlying_amount <= 0 {
-        panic_with_error!(e, StrategyError::InvalidArgument);
+        return Err(StrategyError::InvalidArgument);
     }
     if b_tokens_amount <= 0 {
-        panic_with_error!(e, StrategyError::InvalidArgument);
+        return Err(StrategyError::InvalidArgument);        
     }
 
     let mut vault_shares = storage::get_vault_shares(&e, &from);
     let share_amount = reserves.b_tokens_to_shares_up(b_tokens_amount);
 
     if reserves.total_shares < share_amount || reserves.total_b_tokens < b_tokens_amount {
-        panic_with_error!(e, StrategyError::InvalidArgument);
+        return Err(StrategyError::InsufficientBalance);
     }
 
-    reserves.total_shares -= share_amount;
-    reserves.total_b_tokens -= b_tokens_amount;
+    reserves.total_shares = reserves.total_shares.checked_sub(share_amount).ok_or_else(|| StrategyError::UnderflowOverflow)?;
+    reserves.total_b_tokens = reserves.total_b_tokens.checked_sub(b_tokens_amount).ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     if share_amount > vault_shares {
-        panic_with_error!(e, StrategyError::InsufficientBalance);
+        return Err(StrategyError::InsufficientBalance);
     }
 
-    vault_shares -= share_amount;
+    vault_shares = vault_shares.checked_sub(share_amount).ok_or_else(|| StrategyError::UnderflowOverflow)?;
+
     storage::set_strategy_reserves(&e, reserves.clone());
     storage::set_vault_shares(&e, &from, vault_shares);
 
-    (vault_shares, reserves)
+    Ok((vault_shares, reserves))
 }
 
 pub fn harvest(
@@ -126,7 +129,7 @@ pub fn harvest(
     mut reserves: StrategyReserves,
     underlying_amount: i128,
     b_tokens_amount: i128,
-) {
+) -> Result<(), StrategyError> {
     if underlying_amount <= 0 {
         panic_with_error!(e, StrategyError::InvalidArgument); //TODO: create a new error type for this
     }
@@ -137,7 +140,10 @@ pub fn harvest(
 
     reserves.update_rate(underlying_amount, b_tokens_amount);
 
-    reserves.total_b_tokens += b_tokens_amount;
+    reserves.total_b_tokens =  reserves.total_b_tokens
+                                .checked_add(b_tokens_amount).ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     storage::set_strategy_reserves(&e, reserves);
+    
+    Ok(())
 }

@@ -97,10 +97,10 @@ impl DeFindexStrategyTrait for BlendStrategy {
         // transfer tokens from the vault to the strategy contract
         TokenClient::new(&e, &config.asset).transfer(&from, &e.current_contract_address(), &amount);
 
-        let b_tokens_minted = blend_pool::supply(&e, &from, &amount, &config);
+        let b_tokens_minted = blend_pool::supply(&e, &from, &amount, &config)?;
 
         // Keeping track of the total deposited amount and the total bTokens owned by the strategy depositors
-        let (vault_shares, reserves) = reserves::deposit(&e, reserves.clone(), &from, amount, b_tokens_minted);
+        let (vault_shares, reserves) = reserves::deposit(&e, reserves.clone(), &from, amount, b_tokens_minted)?;
 
         let underlying_balance = shares_to_underlying(vault_shares, reserves);
 
@@ -140,7 +140,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         let config = storage::get_config(&e);
 
-        let (tokens_withdrawn, b_tokens_burnt) = blend_pool::withdraw(&e, &to, &amount, &config);
+        let (tokens_withdrawn, b_tokens_burnt) = blend_pool::withdraw(&e, &to, &amount, &config)?;
 
         let (vault_shares, reserves) = reserves::withdraw(
             &e,
@@ -148,7 +148,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
             &from,
             tokens_withdrawn,
             b_tokens_burnt,
-        );
+        )?;
         let underlying_balance = shares_to_underlying(vault_shares, reserves);
 
         event::emit_withdraw(&e, String::from_str(&e, STARETEGY_NAME), amount, from);

@@ -39,7 +39,7 @@ impl RequestType {
     }
 }
 
-pub fn supply(e: &Env, from: &Address, amount: &i128, config: &Config) -> i128 {
+pub fn supply(e: &Env, from: &Address, amount: &i128, config: &Config) -> Result<i128, StrategyError> {
     let pool_client = BlendPoolClient::new(e, &config.pool);
 
     // Get deposit amount pre-supply
@@ -83,11 +83,14 @@ pub fn supply(e: &Env, from: &Address, amount: &i128, config: &Config) -> i128 {
     );
 
     // Calculate the amount of bTokens received
-    let b_tokens_amount = new_positions.supply.get_unchecked(config.reserve_id) - pre_supply;
-    b_tokens_amount
+    let b_tokens_amount = new_positions.supply
+        .get_unchecked(config.reserve_id)
+        .checked_sub(pre_supply)
+        .ok_or_else(|| StrategyError::UnderflowOverflow)?;
+    Ok(b_tokens_amount)
 }
 
-pub fn withdraw(e: &Env, to: &Address, amount: &i128, config: &Config) -> (i128, i128) {
+pub fn withdraw(e: &Env, to: &Address, amount: &i128, config: &Config) -> Result<(i128, i128), StrategyError> {
     let pool_client = BlendPoolClient::new(e, &config.pool);
 
     let pre_supply = pool_client
@@ -118,11 +121,15 @@ pub fn withdraw(e: &Env, to: &Address, amount: &i128, config: &Config) -> (i128,
 
     // Calculate the amount of tokens withdrawn and bTokens burnt
     let post_withdrawal_balance = TokenClient::new(&e, &config.asset).balance(&to);
-    let real_amount = post_withdrawal_balance - pre_withdrawal_balance;
+    let real_amount = post_withdrawal_balance
+        .checked_sub(pre_withdrawal_balance).ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     // position entry is deleted if the position is cleared
-    let b_tokens_amount = pre_supply - new_positions.supply.get(config.reserve_id).unwrap_or(0);
-    (real_amount, b_tokens_amount)
+    let b_tokens_amount = pre_supply
+        .checked_sub(new_positions.supply.get(config.reserve_id).unwrap_or(0))
+        .ok_or_else(|| StrategyError::UnderflowOverflow)?;
+
+    Ok((real_amount, b_tokens_amount))
 }
 
 pub fn claim(e: &Env, from: &Address, config: &Config) -> i128 {
@@ -147,7 +154,8 @@ pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError>
     swap_path.push_back(config.blend_token.clone());
     swap_path.push_back(config.asset.clone());
 
-    let deadline = e.ledger().timestamp() + 600;
+    let deadline = e.ledger().timestamp()
+        .checked_add(600).ok_or(StrategyError::UnderflowOverflow)?;
 
     // Swapping BLND tokens to Underlying Asset
     let swapped_amounts = internal_swap_exact_tokens_for_tokens(
@@ -165,10 +173,10 @@ pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError>
         .into_val(e);
 
     // Supplying underlying asset into blend pool
-    let b_tokens_minted = supply(&e, &e.current_contract_address(), &amount_out, &config); 
+    let b_tokens_minted = supply(&e, &e.current_contract_address(), &amount_out, &config)?; 
 
     let reserves = storage::get_strategy_reserves(&e);
-    reserves::harvest(&e, reserves, amount_out, b_tokens_minted);
+    reserves::harvest(&e, reserves, amount_out, b_tokens_minted)?;
 
     Ok(true)
 }
