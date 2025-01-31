@@ -3,7 +3,6 @@ import { AddressBook } from "../../utils/address_book.js";
 import { invokeCustomContract } from "../../utils/contract.js";
 import { green, purple, red, yellow } from "../common.js";
 import {
-  CreateVaultParams,
   depositToVault,
   fetchTotalManagedFunds,
   fetchTotalSupply,
@@ -13,6 +12,7 @@ import {
   withdrawFromVault
 } from "../vault.js";
 import { deployDefindexVault, fetchBalances, underlyingToDfTokens } from "./utils.js";
+import { CreateVaultParams } from "../types.js";
 /* 
 ### One asset one strategy tests:
 - [ ] fix amounts to not crash when fails
@@ -63,6 +63,13 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
           readBytes,
           writeBytes,
         } = await depositToVault(vault_address, [deposit_amount], user);
+
+        const expected_idle_funds = BigInt(deposit_amount);
+        const expected_invested_funds = BigInt(0);
+
+        const total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
+        console.log(total_managed_funds);
+        console.log(total_managed_funds[0].strategy_allocations)
         return { instructions, readBytes, writeBytes };
 
       } catch (e) {
@@ -485,7 +492,7 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
         
         const total_supply = await fetchTotalSupply(vault_address, user);
         const total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
-        const withdrawAmountDfTokens = underlyingToDfTokens(withdraw_amount, total_supply, total_managed_funds[xlmAddress.toString()].total_amount);
+        const withdrawAmountDfTokens = underlyingToDfTokens(withdraw_amount, total_supply, total_managed_funds[0].total_amount);
         
         const {
           instructions,

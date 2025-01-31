@@ -2,7 +2,8 @@ import { Keypair } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
 import { green, purple, red, yellow } from "../common.js";
 import { checkUserBalance } from "../strategy.js";
-import { CreateVaultParams, deployVault, fetchCurrentIdleFunds, fetchCurrentInvestedFunds } from "../vault.js";
+import { deployVault, fetchCurrentIdleFunds, fetchCurrentInvestedFunds } from "../vault.js";
+import { CreateVaultParams } from "../types.js";
 
 export function extractAddresses(params: CreateVaultParams[]): string[] {
   return params.map(param => param.address.toString());

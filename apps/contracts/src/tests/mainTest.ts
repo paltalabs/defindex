@@ -5,10 +5,9 @@ import { airdropAccount } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
 import { testBlendStrategy } from "./blend/test_strategy.js";
 import { testBlendVault } from "./blend/test_vault.js";
-import { green, red, usdcAddress, xtarAddress, yellow } from "./common.js";
+import { green, red, yellow } from "./common.js";
 import {
   admin,
-  CreateVaultParams,
   emergencyManager,
   feeReceiver,
   manager,
@@ -18,6 +17,8 @@ import { testVaultOneAssetTwoStrategies } from "./vault/one_aset_two_strategies.
 import { testVaultOneAssetOneStrategy } from "./vault/one_asset_one_strategy.js";
 import { testVaultTwoAssetsOneStrategy } from "./vault/two_assets_one_strategy.js";
 import { testVaultTwoAssetsTwoStrategies } from "./vault/two_assets_two_strategies.js";
+import { CreateVaultParams } from "./types.js";
+import { USDC_ADDRESS } from "../constants.js";
 
 const args = process.argv.slice(2);
 const network = args[0];
@@ -76,7 +77,7 @@ const twoAssetOneStrategyParams: CreateVaultParams[] = [
     ],
   },
   {
-    address: usdcAddress,
+    address: USDC_ADDRESS,
     strategies: [
       {
         name: "Blend usdc Strategy",
@@ -104,7 +105,7 @@ const twoAssetTwoStrategiesParams: CreateVaultParams[] = [
     ],
   },
   {
-    address: usdcAddress,
+    address: USDC_ADDRESS,
     strategies: [
       {
         name: "blend usdc Strategy 0",
@@ -131,7 +132,6 @@ async function prepareEnvironment() {
     await airdropAccount(manager);
     await airdropAccount(testUser);
     await mintToken(testUser, 987654321)
-    await mintToken(testUser, 987654321, xtarAddress)
   }
 }
 
