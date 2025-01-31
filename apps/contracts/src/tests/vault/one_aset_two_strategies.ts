@@ -13,14 +13,16 @@ import { airdropAccount } from "../../utils/contract.js";
 import { deployDefindexVault, fetchBalances } from "./utils.js";
 /* 
 ### One asset one strategy tests:
-- [x] deposit
-- [x] try rebalance with invest and more than idle
-- [x] invest
-- [x] deposit and invest
-- [x] try rebalance with unwind and more than invested
-- [x] rebalance with unwind
-- [x] rebalance with `[unwind, invest]`
-- [x] withdraw more than idle
+- [ ] fix amounts to not crash when fails
+- [ ] add assertions to check if the amounts are correct
+- [ ] deposit
+- [ ] try rebalance with invest and more than idle
+- [ ] invest
+- [ ] deposit and invest
+- [ ] try rebalance with unwind and more than invested
+- [ ] rebalance with unwind
+- [ ] rebalance with `[unwind, invest]`
+- [ ] withdraw more than idle
 */
 export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, params: CreateVaultParams[], user: Keypair, xlmAddress: Address) {
   console.log(yellow, "--------------------------------------");
@@ -60,6 +62,7 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
           writeBytes,
         } = await depositToVault(vault_address, [deposit_amount], user);
         return { instructions, readBytes, writeBytes };
+
       } catch (e) {
         console.error(red, e);
         return {
@@ -94,12 +97,12 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
         const investArgs: Instruction[] = [
           {
             type: "Invest",
-            strategy: addressBook.getContractId("fixed_apr_strategy"),
+            strategy: params[0].strategies[0].address,
             amount: BigInt(invest_amount),
           },
           {
             type: "Invest",
-            strategy: addressBook.getContractId("blend_strategy"),
+            strategy: params[0].strategies[1].address,
             amount: BigInt(investAmount),
           },
         ];
@@ -125,12 +128,12 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
       const investArgs: Instruction[] = [
         {
           type: "Invest",
-          strategy: addressBook.getContractId("fixed_apr_strategy"),
+          strategy: params[0].strategies[0].address,
           amount: BigInt(invest_amount),
         },
         {
           type: "Invest",
-          strategy: addressBook.getContractId("blend_strategy"),
+          strategy: params[0].strategies[1].address,
           amount: BigInt(invest_amount),
         },
       ];
@@ -208,7 +211,6 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
         const {
           idle_funds:idle_funds_after_deposit_and_invest, 
           invested_funds:invested_funds_after_deposit_and_invest, 
-          hodl_balance:hodl_balance_after_deposit_and_invest
         } = await fetchBalances(addressBook, vault_address, params, user);
 
         const expected_idle_funds = BigInt(0);
@@ -230,7 +232,6 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
           writeBytes,
           idle_funds_after_deposit_and_invest,
           invested_funds_after_deposit_and_invest,
-          hodl_balance_after_deposit_and_invest
         };
       } catch (e) {
         console.error(red, e);
@@ -240,7 +241,6 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
           writeBytes: 0,
           idle_funds_after_deposit_and_invest: [{ amount: BigInt(0) }],
           invested_funds_after_deposit_and_invest: [{ amount: BigInt(0) }],
-          hodl_balance_after_deposit_and_invest: 0,
           error: e,
         };
       }
@@ -267,12 +267,12 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
           const unwind_args: Instruction[] = [
             {
               type: "Unwind",
-              strategy: addressBook.getContractId("blend_strategy"),
+              strategy: params[0].strategies[0].address,
               amount: BigInt(unwind_amount),
             },
             {
               type: "Unwind",
-              strategy: addressBook.getContractId("fixed_apr_strategy"),
+              strategy: params[0].strategies[1].address,
               amount: BigInt(unwind_amount),
             },
           ];
@@ -301,12 +301,12 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
           const unwind_args: Instruction[] = [
             {
               type: "Unwind",
-              strategy: addressBook.getContractId("blend_strategy"),
+              strategy: params[0].strategies[0].address,
               amount: BigInt(unwind_amount),
             },
             {
               type: "Unwind",
-              strategy: addressBook.getContractId("fixed_apr_strategy"),
+              strategy: params[0].strategies[1].address,
               amount: BigInt(unwind_amount),
             },
           ];
@@ -333,7 +333,7 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
         const unwind_args: Instruction[] = [
           {
             type: "Unwind",
-            strategy: addressBook.getContractId("blend_strategy"),
+            strategy: params[0].strategies[1].address,
             amount: BigInt(unwind_amount),
           },
         ];
@@ -384,7 +384,6 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
           writeBytes: 0,
           idle_funds_after_unwind: [{ amount: BigInt(0) }],
           invested_funds_after_unwind: [{ amount: BigInt(0) }],
-          hodl_balance_after_unwind: 0,
           error: error
         }
       };
@@ -408,12 +407,12 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
         const unwind_args: Instruction[] = [
           {
             type: "Unwind",
-            strategy: addressBook.getContractId("fixed_apr_strategy"),
+            strategy: params[0].strategies[0].address,
             amount: BigInt(unwind_amount),
           },
           {
             type: "Invest",
-            strategy: addressBook.getContractId("blend_strategy"),
+            strategy: params[0].strategies[1].address,
             amount: BigInt(unwind_amount),
           },
         ];
