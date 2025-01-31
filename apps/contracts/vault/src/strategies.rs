@@ -137,7 +137,7 @@ pub fn unwind_from_strategy(
    
     match strategy_client.try_withdraw(amount, &e.current_contract_address(), to) {
         Ok(Ok(result)) => {
-            report.report(result);
+            report.report(result)?;
             set_report(e, strategy_address, &report);
             Ok(report)
         }
@@ -177,7 +177,7 @@ pub fn invest_in_strategy(
 
     // Reports
     // Store Strategy invested funds for reports
-    report.report(strategy_funds);
+    report.report(strategy_funds)?;
     set_report(e, strategy_address, &report);
 
 

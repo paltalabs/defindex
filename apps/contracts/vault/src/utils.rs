@@ -1,4 +1,4 @@
-use soroban_sdk::{panic_with_error, Address, Env, Map, Vec};
+use soroban_sdk::{panic_with_error, Env, Vec};
 
 use crate::{
     access::{AccessControl, AccessControlTrait, RolesDataKey},
@@ -6,7 +6,6 @@ use crate::{
     token::VaultToken,
     ContractError,
 };
-use common::models::AssetStrategySet;
 
 pub const DAY_IN_LEDGERS: u32 = 17280;
 

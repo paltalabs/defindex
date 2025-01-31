@@ -1,9 +1,7 @@
-use common::models::AssetStrategySet;
-use soroban_sdk::{panic_with_error, token::TokenClient, Address, Env, Map, Vec};
+use soroban_sdk::{panic_with_error, token::TokenClient, Address, Env, Vec};
 
 use crate::{
     models::CurrentAssetInvestmentAllocation,
-    storage::get_assets,
     token::{internal_mint, VaultToken},
     utils::{calculate_deposit_amounts_and_shares_to_mint, check_nonnegative_amount},
     ContractError, MINIMUM_LIQUIDITY,

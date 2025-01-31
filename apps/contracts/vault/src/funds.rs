@@ -1,5 +1,5 @@
 use soroban_sdk::token::TokenClient;
-use soroban_sdk::{Address, Env, Map, Vec};
+use soroban_sdk::{Address, Env, Vec};
 
 use crate::models::{CurrentAssetInvestmentAllocation, StrategyAllocation};
 use crate::storage::{get_assets, get_report, get_vault_fee, set_report};
@@ -34,19 +34,19 @@ pub fn fetch_idle_funds_for_asset(e: &Env, asset: &Address) -> i128 {
 ///
 /// # Returns
 /// The total invested funds in the strategy as an `i128`, excluding locked fees.
-pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address, lock_fees: bool) -> i128 {
+pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address, lock_fees: bool) -> Result<i128, ContractError> {
     let strategy_client = get_strategy_client(e, strategy_address.clone());
     let strategy_invested_funds = strategy_client.balance(&e.current_contract_address());
 
     let mut report = get_report(e, strategy_address);
 
     if lock_fees {
-        report.lock_fee(get_vault_fee(e));
+        report.lock_fee(get_vault_fee(e))?;
         set_report(e, strategy_address, &report);
     }
-    strategy_invested_funds
+    Ok(strategy_invested_funds
         .checked_sub(report.locked_fee)
-        .unwrap_or(0)
+        .unwrap_or(0))
 }
 
 /// Calculates the total funds invested in strategies for a given asset and
@@ -67,11 +67,11 @@ pub fn fetch_invested_funds_for_asset(
     e: &Env,
     asset_strategy_set: &AssetStrategySet,
     lock_fees: bool,
-) -> (i128, Vec<StrategyAllocation>) {
+) -> Result<(i128, Vec<StrategyAllocation>), ContractError> {
     let mut invested_funds: i128 = 0;
     let mut strategy_allocations: Vec<StrategyAllocation> = Vec::new(e);
     for strategy in asset_strategy_set.strategies.iter() {
-        let strategy_balance = fetch_strategy_invested_funds(e, &strategy.address, lock_fees);
+        let strategy_balance = fetch_strategy_invested_funds(e, &strategy.address, lock_fees)?;
         invested_funds = invested_funds.checked_add(strategy_balance).unwrap();
         strategy_allocations.push_back(StrategyAllocation {
             strategy_address: strategy.address.clone(),
@@ -79,7 +79,7 @@ pub fn fetch_invested_funds_for_asset(
             paused: strategy.paused
         });
     }
-    (invested_funds, strategy_allocations)
+    Ok((invested_funds, strategy_allocations))
 }
 
 /// Fetches the total managed funds for all assets. This includes both idle and invested funds.
@@ -100,7 +100,7 @@ pub fn fetch_total_managed_funds(
     for asset in &assets {
         let idle_amount = fetch_idle_funds_for_asset(e, &asset.address);
         let (invested_amount, strategy_allocations) =
-            fetch_invested_funds_for_asset(e, &asset, lock_fees);
+            fetch_invested_funds_for_asset(e, &asset, lock_fees)?;
         let total_amount = idle_amount.checked_add(invested_amount).unwrap();
         allocations.push_back(CurrentAssetInvestmentAllocation {
             asset: asset.address.clone(),

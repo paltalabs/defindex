@@ -568,7 +568,7 @@ impl VaultTrait for DeFindexVault {
                     strategy_client.balance(&e.current_contract_address());
 
                 let mut report = get_report(&e, &strategy.address);
-                report.report(strategy_invested_funds);
+                report.report(strategy_invested_funds)?;
                 set_report(&e, &strategy.address, &report);
 
                 reports.push_back(report);
@@ -870,7 +870,7 @@ impl VaultManagementTrait for DeFindexVault {
             for strategy in asset.strategies.iter() {
                 let mut report = get_report(&e, &strategy.address);
                 if report.gains_or_losses > 0 {
-                    report.lock_fee(current_vault_fee);
+                    report.lock_fee(current_vault_fee)?;
                     set_report(&e, &strategy.address, &report);
                 }
                 reports.push_back(report);
@@ -898,7 +898,7 @@ impl VaultManagementTrait for DeFindexVault {
 
         let mut report = get_report(&e, &strategy);
 
-        report.release_fee(&e, amount);
+        report.release_fee(&e, amount)?;
         set_report(&e, &strategy, &report);
         Ok(report)
     }
