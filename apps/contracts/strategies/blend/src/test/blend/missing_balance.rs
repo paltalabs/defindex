@@ -7,7 +7,7 @@ use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTes
 use crate::BlendStrategyClient;
 // use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
-use soroban_sdk::testutils::{Address as _};
+use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{vec, Address, Env};
 
 // use crate::test::std;
@@ -86,19 +86,25 @@ fn missing_balance() {
     println!("USER 2 Deposits: {}", starting_balance);
     let deposit_result_0 = strategy_client.deposit(&starting_balance, &user_2);
     assert_eq!(deposit_result_0, starting_balance);
-    assert_eq!(usdc_client.balance(&pool), starting_balance + pool_usdc_balace_start);
+    assert_eq!(
+        usdc_client.balance(&pool),
+        starting_balance + pool_usdc_balace_start
+    );
 
     println!("--- Second Deposit ---");
     println!("USER 3 Deposits: {}", starting_balance);
     let deposit_result_1 = strategy_client.deposit(&starting_balance, &user_3);
     assert_eq!(deposit_result_1, starting_balance);
-    
+
     // verify deposit (pool b_rate still 1 as no time has passed)
     assert_eq!(usdc_client.balance(&user_2), 0);
     assert_eq!(usdc_client.balance(&user_3), 0);
     assert_eq!(strategy_client.balance(&user_2), starting_balance);
     assert_eq!(strategy_client.balance(&user_3), starting_balance);
-    assert_eq!(usdc_client.balance(&pool), starting_balance*2 + pool_usdc_balace_start);
+    assert_eq!(
+        usdc_client.balance(&pool),
+        starting_balance * 2 + pool_usdc_balace_start
+    );
 
     let vault_positions = pool_client.get_positions(&strategy);
     assert_eq!(vault_positions.supply.get(0).unwrap(), starting_balance * 2);
@@ -121,7 +127,10 @@ fn missing_balance() {
         ],
     );
 
-    assert_eq!(usdc_client.balance(&pool), starting_balance*2 + pool_usdc_balace_start + user_4_starting_balance);
+    assert_eq!(
+        usdc_client.balance(&pool),
+        starting_balance * 2 + pool_usdc_balace_start + user_4_starting_balance
+    );
 
     // admin borrow back to 50% util rate
     println!("--- ADMIN Borrowing from Blend ---");
@@ -142,7 +151,10 @@ fn missing_balance() {
 
     println!("admin borrows {}", borrow_amount);
 
-    assert_eq!(usdc_client.balance(&pool), starting_balance*2 + pool_usdc_balace_start + user_4_starting_balance - borrow_amount);
+    assert_eq!(
+        usdc_client.balance(&pool),
+        starting_balance * 2 + pool_usdc_balace_start + user_4_starting_balance - borrow_amount
+    );
 
     /*
      * Allow 1 week to pass
@@ -211,22 +223,31 @@ fn missing_balance() {
     let user_3_strategy_balance = strategy_client.balance(&user_3);
     assert_eq!(user_3_strategy_balance, 1226627059);
 
-
-    println!("-----------------------------------------------");    
+    println!("-----------------------------------------------");
     println!("--- Simulating Distributing fees ---");
-    println!("-----------------------------------------------");    
+    println!("-----------------------------------------------");
     let fee_amount = 20000i128;
-    println!("It sends {} USDC from the USER 3 aka the vault to the fee receiver", fee_amount);
+    println!(
+        "It sends {} USDC from the USER 3 aka the vault to the fee receiver",
+        fee_amount
+    );
     let user_3_balance_prev_sim = strategy_client.balance(&user_3);
-    println!("USER 3 strategy balance previous simulation {}", user_3_balance_prev_sim);
+    println!(
+        "USER 3 strategy balance previous simulation {}",
+        user_3_balance_prev_sim
+    );
     let fee_receiver = Address::generate(&e);
     strategy_client.withdraw(&fee_amount, &user_3, &fee_receiver);
 
     let user_3_balance_after_sim = strategy_client.balance(&user_3);
-    assert_eq!((user_3_balance_prev_sim - fee_amount), user_3_balance_after_sim);
-    
-    println!("USER 3 strategy balance after sim {}", user_3_balance_after_sim);
-    strategy_client.withdraw(&(user_3_balance_after_sim*2), &user_3, &user_3);
+    assert_eq!(
+        (user_3_balance_prev_sim - fee_amount),
+        user_3_balance_after_sim
+    );
 
+    println!(
+        "USER 3 strategy balance after sim {}",
+        user_3_balance_after_sim
+    );
+    strategy_client.withdraw(&(user_3_balance_after_sim * 2), &user_3, &user_3);
 }
-

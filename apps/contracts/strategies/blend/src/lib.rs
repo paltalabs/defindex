@@ -1,10 +1,10 @@
 #![no_std]
 use constants::{MIN_DUST, SCALAR_9};
 use reserves::StrategyReserves;
+use soroban_fixed_point_math::{i128, FixedPoint};
 use soroban_sdk::{
     contract, contractimpl, token::TokenClient, Address, Env, IntoVal, String, Val, Vec,
 };
-use soroban_fixed_point_math::{i128, FixedPoint};
 
 mod blend_pool;
 mod constants;
@@ -31,15 +31,14 @@ pub struct BlendStrategy;
 
 #[contractimpl]
 impl DeFindexStrategyTrait for BlendStrategy {
-
     /// Constructor function to initialize the contract's configuration with the necessary parameters.
     ///
     /// # Arguments
-    /// 
+    ///
     /// * `e: Env` - The execution environment (provided automatically when the contract is invoked).
     /// * `asset: Address` - The address of the asset being managed by the contract.
     /// * `init_args: Vec<Val>` - A vector of initialization arguments required for configuring the contract.
-    /// 
+    ///
     /// # Process
     ///
     /// This constructor function takes in the following arguments:
@@ -60,7 +59,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
     /// - `d_token_id = reserve_index * 2`
     /// - `b_token_id = reserve_index * 2 + 1`
     ///
-    /// This ensures each reserve has distinct token IDs for its d_token and b_token. 
+    /// This ensures each reserve has distinct token IDs for its d_token and b_token.
     /// You can retrieve the **reserve_index** from a **reserve_token_id** by using the formula:
     /// `reserve_index = floor(reserve_token_id / 2)`
     ///
@@ -72,8 +71,8 @@ impl DeFindexStrategyTrait for BlendStrategy {
     /// # Example
     ///
     /// ```rust
-    /// let e: Env = ...; 
-    /// let asset: Address = ...; 
+    /// let e: Env = ...;
+    /// let asset: Address = ...;
     /// let init_args: Vec<Val> = ...;
     /// __constructor(e, asset, init_args);
     /// ```
@@ -126,6 +125,22 @@ impl DeFindexStrategyTrait for BlendStrategy {
         Ok(storage::get_config(&e)?.asset)
     }
 
+    /// Deposits a specified amount of the underlying asset into the strategy.
+    ///
+    /// This function transfers the specified amount of the underlying asset from the `from` address
+    /// to the strategy contract, supplies it to the Blend pool, and mints shares representing the
+    /// deposited amount. It also handles reinvestment of any rewards if the balance exceeds the
+    /// reward threshold.
+    ///
+    /// # Arguments
+    ///
+    /// * `e: Env` - The execution environment.
+    /// * `amount: i128` - The amount of the underlying asset to deposit.
+    /// * `from: Address` - The address from which the asset is being transferred.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<i128, StrategyError>` - The underlying balance after the deposit or an error.
     fn deposit(e: Env, amount: i128, from: Address) -> Result<i128, StrategyError> {
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
@@ -139,7 +154,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         let config = storage::get_config(&e)?;
         blend_pool::claim(&e, &e.current_contract_address(), &config);
-        
+
         // will reinvest only if blnd_balance > REWARD_THRESHOLD
         blend_pool::perform_reinvest(&e, &config)?;
 
@@ -151,7 +166,8 @@ impl DeFindexStrategyTrait for BlendStrategy {
         let b_tokens_minted = blend_pool::supply(&e, &from, &amount, &config)?;
 
         // Keeping track of the total deposited amount and the total bTokens owned by the strategy depositors
-        let (vault_shares, reserves) = reserves::deposit(&e, reserves.clone(), &from, amount, b_tokens_minted)?;
+        let (vault_shares, reserves) =
+            reserves::deposit(&e, reserves.clone(), &from, amount, b_tokens_minted)?;
 
         let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
 
@@ -159,6 +175,19 @@ impl DeFindexStrategyTrait for BlendStrategy {
         Ok(underlying_balance)
     }
 
+    /// Harvests the rewards from the Blend pool and reinvests them into the strategy.
+    ///
+    /// This function claims the rewards from the Blend pool, reinvests them if the balance exceeds
+    /// the reward threshold, and emits a harvest event.
+    ///
+    /// # Arguments
+    ///
+    /// * `e: Env` - The execution environment.
+    /// * `from: Address` - The address initiating the harvest.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<(), StrategyError>` - An empty result or an error.
     fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
         extend_instance_ttl(&e);
 
@@ -176,8 +205,21 @@ impl DeFindexStrategyTrait for BlendStrategy {
         Ok(())
     }
 
-    //retiurns the remaining balance of the vault after the withdrawal
-    // amount of underlying asset to withraw
+    /// Withdraws a specified amount of the underlying asset from the strategy.
+    ///
+    /// This function transfers the specified amount of the underlying asset from the strategy contract
+    /// to the `to` address, burns the corresponding bTokens, and updates the reserves.
+    ///
+    /// # Arguments
+    ///
+    /// * `e: Env` - The execution environment.
+    /// * `amount: i128` - The amount of the underlying asset to withdraw.
+    /// * `from: Address` - The address from which the asset is being withdrawn.
+    /// * `to: Address` - The address to which the asset is being transferred.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<i128, StrategyError>` - The remaining balance of the vault after the withdrawal or an error.
     fn withdraw(e: Env, amount: i128, from: Address, to: Address) -> Result<i128, StrategyError> {
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
@@ -209,7 +251,20 @@ impl DeFindexStrategyTrait for BlendStrategy {
         Ok(underlying_balance)
     }
 
-    // returns the balance of the underlying asset of the from 
+    /// Returns the balance of the underlying asset for a given address.
+    ///
+    /// This function calculates the balance of the underlying asset for the specified 'from' address
+    /// by converting the 'from' shares to the underlying asset amount.
+    ///
+    /// # Arguments
+    ///
+    /// * `e: Env` - The execution environment.
+    /// * `from: Address` - The address for which the balance is being queried.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<i128, StrategyError>` - The balance of the underlying asset or an error.
+    ///
     fn balance(e: Env, from: Address) -> Result<i128, StrategyError> {
         extend_instance_ttl(&e);
 
@@ -225,6 +280,21 @@ impl DeFindexStrategyTrait for BlendStrategy {
     }
 }
 
+/// Converts a given amount of shares to the corresponding amount of underlying assets.
+///
+/// This function first converts the shares to bTokens using the `shares_to_b_tokens_down` method
+/// from the `reserves`. It then uses the `b_rate` to convert the bTokens to the underlying assets.
+///
+/// # Arguments
+///
+/// * `shares` - The amount of shares to be converted.
+/// * `reserves` - The strategy reserves containing the total shares, total bTokens, and b_rate.
+///
+/// # Returns
+///
+/// * `Result<i128, StrategyError>` - The amount of underlying assets corresponding to the given shares,
+///   or an error if the conversion fails.
+///
 fn shares_to_underlying(shares: i128, reserves: StrategyReserves) -> Result<i128, StrategyError> {
     let total_shares = reserves.total_shares;
     let total_b_tokens = reserves.total_b_tokens;

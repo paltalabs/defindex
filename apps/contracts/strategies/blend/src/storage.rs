@@ -1,7 +1,6 @@
-use soroban_sdk::{contracttype, Address, Env, Vec};
 use crate::reserves::StrategyReserves;
 use defindex_strategy_core::StrategyError;
-
+use soroban_sdk::{contracttype, Address, Env, Vec};
 
 #[contracttype]
 pub struct Config {
@@ -22,10 +21,12 @@ pub enum DataKey {
 }
 
 pub const DAY_IN_LEDGERS: u32 = 17280;
+
 pub const INSTANCE_BUMP_AMOUNT: u32 = 30 * DAY_IN_LEDGERS;
 pub const INSTANCE_LIFETIME_THRESHOLD: u32 = INSTANCE_BUMP_AMOUNT - DAY_IN_LEDGERS;
-const LEDGER_BUMP: u32 = 120 * DAY_IN_LEDGERS;
-const LEDGER_THRESHOLD: u32 = LEDGER_BUMP - 20 * DAY_IN_LEDGERS;
+
+const PERSISTENT_BUMP: u32 = 120 * DAY_IN_LEDGERS;
+const PERSISTANT_THRESHOLD: u32 = PERSISTENT_BUMP - 20 * DAY_IN_LEDGERS;
 
 pub fn extend_instance_ttl(e: &Env) {
     e.storage()
@@ -39,17 +40,21 @@ pub fn set_config(e: &Env, config: Config) {
 }
 
 pub fn get_config(e: &Env) -> Result<Config, StrategyError> {
-    e.storage().instance().get(&DataKey::Config).ok_or(StrategyError::NotInitialized)?
+    e.storage()
+        .instance()
+        .get(&DataKey::Config)
+        .ok_or(StrategyError::NotInitialized)?
 }
 
-// Vault Position
-/// Set the number of shares shares a user owns. Shares are stored with 7 decimal places of precision.
+/// This function sets the vault shares associated with a specific user address.
+/// Shares are stored with 7 decimal places of precision to ensure accurate tracking.  
+/// The function also extends the time-to-live (TTL) for persistent storage.
 pub fn set_vault_shares(e: &Env, address: &Address, shares: i128) {
     let key = DataKey::VaultPos(address.clone());
     e.storage().persistent().set::<DataKey, i128>(&key, &shares);
     e.storage()
         .persistent()
-        .extend_ttl(&key, LEDGER_THRESHOLD, LEDGER_BUMP);
+        .extend_ttl(&key, PERSISTANT_THRESHOLD, PERSISTENT_BUMP);
 }
 
 /// Get the number of strategy shares a user owns. Shares are stored with 7 decimal places of precision.
@@ -62,8 +67,8 @@ pub fn get_vault_shares(e: &Env, address: &Address) -> i128 {
         Some(shares) => {
             e.storage().persistent().extend_ttl(
                 &DataKey::VaultPos(address.clone()),
-                LEDGER_THRESHOLD,
-                LEDGER_BUMP,
+                PERSISTANT_THRESHOLD,
+                PERSISTENT_BUMP,
             );
             shares
         }
