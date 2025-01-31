@@ -17,14 +17,14 @@ import { deployDefindexVault, fetchBalances, underlyingToDfTokens } from "./util
 ### One asset one strategy tests:
 - [ ] fix amounts to not crash when fails
 - [ ] add assertions to check if the amounts are correct
-- [ ] deposit
-- [ ] try rebalance with invest and more than idle
-- [ ] invest
-- [ ] deposit and invest
-- [ ] try rebalance with unwind and more than invested
-- [ ] rebalance with unwind
-- [ ] rebalance with `[unwind, invest]`
-- [ ] withdraw more than idle
+  - [ ] deposit
+  - [ ] try rebalance with invest and more than idle
+  - [ ] invest
+  - [ ] deposit and invest
+  - [ ] try rebalance with unwind and more than invested
+  - [ ] rebalance with unwind
+  - [ ] rebalance with `[unwind, invest]`
+  - [ ] withdraw more than idle
 */
 export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, params: CreateVaultParams[], user: Keypair, xlmAddress: Address) {
   console.log(yellow, "--------------------------------------");
