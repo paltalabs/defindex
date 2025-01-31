@@ -1,13 +1,13 @@
 import { Address, Asset, nativeToScVal, Networks, xdr } from "@stellar/stellar-sdk";
-import { AddressBook } from "../utils/address_book.js";
+import { exit } from "process";
+import { red, yellow } from "../tests/common.js";
 import {
   airdropAccount,
   deployContract,
   installContract
 } from "../utils/contract.js";
+import { AddressBook } from "../utils/address_book.js";
 import { config } from "../utils/env_config.js";
-import { exit } from "process";
-import { red, yellow } from "../tests/common.js";
 
 export async function multiDeployBlendStrategies(quantity: number, asset_key: string) {
   if (network == "standalone") {
@@ -51,7 +51,7 @@ export async function multiDeployBlendStrategies(quantity: number, asset_key: st
   const init_args = (
     ()=> {
       switch (asset_key) {
-        case "soroswap_usdc":
+        case "usdc":
           return {
             address: othersAddressBook.getContractId("soroswap_usdc"),
             claim_id: xdr.ScVal.scvVec([
@@ -66,13 +66,13 @@ export async function multiDeployBlendStrategies(quantity: number, asset_key: st
             ])
           };
         default:
-          console.error("Invalid asset key:", asset_key, "It should be either soroswap_usdc or xlm");
+          console.error("Invalid asset key:", asset_key, "It should be either usdc or xlm");
           exit(1);
       }
     }
   )();
 
-  const asset_symbol = asset_key === "soroswap_usdc" ? "USDC" : "XLM";
+  const asset_symbol = asset_key;
 
   console.log(yellow, "----------------------------------------------------------------------");
   console.log(yellow, `Deploying ${quantity}, Blend Strategies with ${asset_key} in ${network}`);
@@ -120,11 +120,11 @@ if(!asset_key || typeof asset_key !== "string") {
   exit(1);
 }
 
-const allowed_assets = ['soroswap_usdc', 'xlm']
+const allowed_assets = ['usdc', 'xlm']
 
 if(!allowed_assets.includes(asset_key)) {
   console.log(red, "Please provide a valid asset key to deploy the strategies");
-  console.log(yellow, "Allowed assets are: soroswap_usdc, xlm");
+  console.log(yellow, "Allowed assets are: usdc, xlm");
   exit(1);
 }
 
