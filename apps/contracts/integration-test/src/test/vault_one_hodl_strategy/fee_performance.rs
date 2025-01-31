@@ -190,7 +190,7 @@ fn fee_performance() {
     let total_funds_after_lock = enviroment
         .vault_contract
         .fetch_total_managed_funds()
-        .get(enviroment.token.address.clone())
+        .get(0)
         .unwrap()
         .total_amount;
     assert_eq!(total_funds_after_lock, deposit_amount);
@@ -239,7 +239,7 @@ fn fee_performance() {
     let total_funds_after_distribute = enviroment
         .vault_contract
         .fetch_total_managed_funds()
-        .get(enviroment.token.address.clone())
+        .get(0)
         .unwrap()
         .total_amount;
     assert_eq!(total_funds_after_distribute, deposit_amount);
