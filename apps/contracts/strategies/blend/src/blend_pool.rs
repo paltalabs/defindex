@@ -42,7 +42,7 @@ pub fn supply(e: &Env, from: &Address, amount: &i128, config: &Config) -> Result
     let pool_client = BlendPoolClient::new(e, &config.pool);
 
     // Get deposit amount pre-supply
-    let pre_supply = pool_client
+    let pre_supply_amount = pool_client
         .get_positions(&e.current_contract_address())
         .supply
         .try_get(config.reserve_id) 
@@ -82,21 +82,33 @@ pub fn supply(e: &Env, from: &Address, amount: &i128, config: &Config) -> Result
         &requests,
     );
 
-    // Calculate the amount of bTokens received
-    let b_tokens_amount = new_positions.supply
-        .try_get(config.reserve_id) 
+    let new_supply_amount = new_positions
+        .supply
+        .try_get(config.reserve_id)
         .unwrap_or(Some(0))
-        .unwrap_or(0)
-        .checked_sub(pre_supply)
+        .unwrap_or(0);
+
+    // Calculate the amount of bTokens received
+    let b_tokens_amount = new_supply_amount
+        .checked_sub(pre_supply_amount)
         .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     Ok(b_tokens_amount)
 }
 
+/// Executes a user withdrawal of the underlying asset
+// from the blend pool on behalf of the strategy
+///
+/// ### Arguments
+/// * `to` - The destination of the withdrawal of the underlying asset
+/// * `amount` - The amount of the underlying asset to withdraw
+///
+/// ### Returns
+/// * `(i128, i128)` - (The amount of underyling tokens withdrawn, the amount of bTokens burnt)
 pub fn withdraw(e: &Env, to: &Address, amount: &i128, config: &Config) -> Result<(i128, i128), StrategyError> {
     let pool_client = BlendPoolClient::new(e, &config.pool);
     
-    let pre_supply = pool_client
+    let pre_supply_amount = pool_client
         .get_positions(&e.current_contract_address())
         .supply
         .try_get(config.reserve_id)
@@ -124,7 +136,7 @@ pub fn withdraw(e: &Env, to: &Address, amount: &i128, config: &Config) -> Result
         &requests,
     );
 
-    let new_supply = new_positions
+    let new_supply_amount = new_positions
                         .supply
                         .try_get(config.reserve_id)
                         .unwrap_or(Some(0))
@@ -136,8 +148,8 @@ pub fn withdraw(e: &Env, to: &Address, amount: &i128, config: &Config) -> Result
         .checked_sub(pre_withdrawal_balance).ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     // position entry is deleted if the position is cleared
-    let b_tokens_amount = pre_supply
-        .checked_sub(new_supply)
+    let b_tokens_amount = pre_supply_amount
+        .checked_sub(new_supply_amount)
         .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     Ok((real_amount, b_tokens_amount))
@@ -145,8 +157,6 @@ pub fn withdraw(e: &Env, to: &Address, amount: &i128, config: &Config) -> Result
 
 pub fn claim(e: &Env, from: &Address, config: &Config) -> i128 {
     let pool_client = BlendPoolClient::new(e, &config.pool);
-
-    // TODO: Hardcoded reserve_token_ids for now
     pool_client.claim(from, &config.claim_ids, from)
 }
 
@@ -187,7 +197,7 @@ pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError>
     // Supplying underlying asset into blend pool
     let b_tokens_minted = supply(&e, &e.current_contract_address(), &amount_out, &config)?; 
 
-    let reserves = storage::get_strategy_reserves(&e);
+    let reserves = storage::get_strategy_reserves(&e); 
     reserves::harvest(&e, reserves, amount_out, b_tokens_minted)?;
 
     Ok(true)

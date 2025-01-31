@@ -48,10 +48,10 @@ impl StrategyReserves {
             .ok_or_else(|| StrategyError::DivisionByZero)
     }
 
-    pub fn update_rate(&mut self, amount: i128, b_tokens: i128) -> Result<(), StrategyError> {
+    pub fn update_rate(&mut self, underlying_amount: i128, b_tokens_amount: i128) -> Result<(), StrategyError> {
         // Calculate the new bRate - 9 decimal places of precision
         // Update the reserve's bRate
-        let new_rate = amount.fixed_div_floor(b_tokens, SCALAR_9).ok_or_else(|| StrategyError::ArithmeticError)?;
+        let new_rate = underlying_amount.fixed_div_floor(b_tokens_amount, SCALAR_9).ok_or_else(|| StrategyError::ArithmeticError)?;
 
         self.b_rate = new_rate;
 
@@ -78,19 +78,19 @@ pub fn deposit(
 
     let _ = reserves.update_rate(underlying_amount, b_tokens_amount);
 
-    let mut vault_shares = storage::get_vault_shares(&e, &from);
-    let share_amount: i128 = reserves.b_tokens_to_shares_down(b_tokens_amount)?;
+    let old_vault_shares = storage::get_vault_shares(&e, &from);
+    let new_minted_shares: i128 = reserves.b_tokens_to_shares_down(b_tokens_amount)?;
 
     reserves.total_shares = reserves.total_shares
-                            .checked_add(share_amount).ok_or_else(|| StrategyError::UnderflowOverflow)?;
+                            .checked_add(new_minted_shares).ok_or_else(|| StrategyError::UnderflowOverflow)?;
     reserves.total_b_tokens = reserves.total_b_tokens
                             .checked_add(b_tokens_amount).ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
-    vault_shares = vault_shares.checked_add(share_amount).ok_or_else(|| StrategyError::UnderflowOverflow)?;
+    let new_vault_shares = old_vault_shares.checked_add(new_minted_shares).ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     storage::set_strategy_reserves(&e, reserves.clone());
-    storage::set_vault_shares(&e, &from, vault_shares);
-    Ok((vault_shares, reserves))
+    storage::set_vault_shares(&e, &from, new_vault_shares);
+    Ok((new_vault_shares, reserves))
 }
 
 /// Withdraw from the reserve vault. This function expects the withdraw to have already been made
@@ -131,7 +131,7 @@ pub fn withdraw(
     Ok((vault_shares, reserves))
 }
 
-pub fn harvest(
+pub fn harvest( 
     e: &Env,
     mut reserves: StrategyReserves,
     underlying_amount: i128,
