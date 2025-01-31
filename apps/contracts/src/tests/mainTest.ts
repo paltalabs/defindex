@@ -33,64 +33,44 @@ const xlmAddress = new Address(
 const testUser = Keypair.random();
 
 
-const oneStrategyParams: CreateVaultParams[] = [
+const oneAssetOneStrategyParams: CreateVaultParams[] = [
   {
     address: xlmAddress,
     strategies: [
       {
-        name: "Hodl Strategy",
-        address: addressBook.getContractId("hodl_strategy"),
+        name: "Blend Strategy",
+        address: addressBook.getContractId("blend_strategy"),
         paused: false,
       },
     ],
   },
 ];
-const twoStrategyParams: CreateVaultParams[] = [
+
+const oneAssetTwoStrategyParams: CreateVaultParams[] = [
   {
     address: xlmAddress,
     strategies: [
       {
         name: "Blend Strategy 0",
-        address: addressBook.getContractId("XLM_blend_strategy_0"),
+        address: addressBook.getContractId("xlm_blend_strategy_0"),
+        paused: false,
+      },
+      {
+        name: "Blend Strategy 0",
+        address: addressBook.getContractId("xlm_blend_strategy_1"),
         paused: false,
       },
     ],
   },
 ];
+
 const twoAssetOneStrategyParams: CreateVaultParams[] = [
-  {
-    address: xtarAddress,
-    strategies: [
-      {
-        name: "Strategy 1",
-        address: addressBook.getContractId("fixed_xtar_strategy"),
-        paused: false,
-      },
-    ],
-  },
-  {
-    address: usdcAddress,
-    strategies: [
-      {
-        name: "Stretegy 2",
-        address: addressBook.getContractId("fixed_usdc_strategy"),
-        paused: false,
-      },
-    ],
-  },
-];
-const twoAssetTwoStrategyParams: CreateVaultParams[] = [
   {
     address: xlmAddress,
     strategies: [
       {
-        name: "A0 S1",
-        address: addressBook.getContractId("blend_strategy"),
-        paused: false,
-      },
-      {
-        name: "A0 S2",
-        address: addressBook.getContractId("fixed_apr_strategy"),
+        name: "Blend xlm Strategy",
+        address: addressBook.getContractId("xlm_blend_strategy_0"),
         paused: false,
       },
     ],
@@ -99,13 +79,41 @@ const twoAssetTwoStrategyParams: CreateVaultParams[] = [
     address: usdcAddress,
     strategies: [
       {
-        name: "A1 S1",
-        address: addressBook.getContractId("hodl_usdc_strategy"),
+        name: "Blend usdc Strategy",
+        address: addressBook.getContractId("usdc_blend_strategy_0"),
+        paused: false,
+      },
+    ],
+  },
+];
+
+const twoAssetTwoStrategiesParams: CreateVaultParams[] = [
+  {
+    address: xlmAddress,
+    strategies: [
+      {
+        name: "blend xlm Strategy 0",
+        address: addressBook.getContractId("xlm_blend_strategy_0"),
         paused: false,
       },
       {
-        name: "A1 S2",
-        address: addressBook.getContractId("fixed_usdc_strategy"),
+        name: "blend xlm Strategy 1",
+        address: addressBook.getContractId("xlm_blend_strategy_1"),
+        paused: false,
+      },
+    ],
+  },
+  {
+    address: usdcAddress,
+    strategies: [
+      {
+        name: "blend usdc Strategy 0",
+        address: addressBook.getContractId("usdc_blend_strategy_0"),
+        paused: false,
+      },
+      {
+        name: "blend usdc Strategy 1",
+        address: addressBook.getContractId("usdc_blend_strategy_1"),
         paused: false,
       },
     ],
@@ -155,9 +163,10 @@ switch (tests) {
     console.log(yellow, "Running all tests");
     try {
       await prepareEnvironment();
-      const oneAssetOneStrategy = await testVaultOneAssetOneStrategy(addressBook, oneStrategyParams, testUser);
-      const oneAssetTwoStrategies = await testVaultOneAssetTwoStrategies(addressBook, twoStrategyParams, testUser, xlmAddress);
+      const oneAssetOneStrategy = await testVaultOneAssetOneStrategy(addressBook, oneAssetOneStrategyParams, testUser);
+      const oneAssetTwoStrategies = await testVaultOneAssetTwoStrategies(addressBook, oneAssetTwoStrategyParams, testUser, xlmAddress);
       const twoAssetsOneStrategy = await testVaultTwoAssetsOneStrategy(addressBook, twoAssetOneStrategyParams, testUser, xlmAddress);
+      const twoAssetsTwoStrategies = await testVaultTwoAssetsTwoStrategies(addressBook, twoAssetTwoStrategiesParams, testUser, xlmAddress);
       const blendStrategy = await testBlendStrategy();
       const blendVault = await testBlendVault();
       console.log(yellow, "----------------------------------------------------------------------------------------------------------------------------------------------")
@@ -183,6 +192,12 @@ switch (tests) {
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log("");
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
+      console.log(green, "Two asssets two strategies results");
+      console.table(twoAssetsTwoStrategies.tableData);
+      console.table(twoAssetsTwoStrategies.budgetData);
+      console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
+      console.log("");
+      console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log(green, "Blend strategy test status");
       console.table(blendStrategy.status);
       console.table(blendStrategy.budget);
@@ -202,7 +217,7 @@ switch (tests) {
     console.log(yellow, "Testing one strategy vault");
     try {
       await prepareEnvironment();
-      await testVaultOneAssetOneStrategy(addressBook, oneStrategyParams, testUser);
+      await testVaultOneAssetOneStrategy(addressBook, oneAssetOneStrategyParams, testUser);
       exit(0);
     } catch (error) {
       console.log(red, "Tests failed:", error);
@@ -212,7 +227,7 @@ switch (tests) {
     console.log(yellow, "Testing two strategies vault");
     try {
       await prepareEnvironment();
-      await testVaultOneAssetTwoStrategies(addressBook, twoStrategyParams, testUser, xlmAddress);
+      await testVaultOneAssetTwoStrategies(addressBook, oneAssetTwoStrategyParams, testUser, xlmAddress);
       exit(0);
     } catch (error) {
       console.log(red, "Tests failed:", error);
@@ -232,7 +247,7 @@ switch (tests) {
     console.log(yellow, "Testing two assets one strategy vault");
     try {
       await prepareEnvironment();
-      await testVaultTwoAssetsTwoStrategies(addressBook, twoAssetTwoStrategyParams, testUser, xlmAddress);
+      await testVaultTwoAssetsTwoStrategies(addressBook, twoAssetTwoStrategiesParams, testUser, xlmAddress);
       exit(0);
     } catch (error) {
       console.log(red, "Tests failed:", error);
