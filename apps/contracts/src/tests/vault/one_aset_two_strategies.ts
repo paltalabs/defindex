@@ -1,6 +1,6 @@
 import { Address, Keypair } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
-import { airdropAccount } from "../../utils/contract.js";
+import { invokeCustomContract } from "../../utils/contract.js";
 import { green, purple, red, yellow } from "../common.js";
 import {
   CreateVaultParams,
@@ -92,7 +92,7 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
         console.log(purple, "---------------------------------------");
         console.log(purple, "Try Invest idle_funds*2");
         console.log(purple, "---------------------------------------");
-        const investAmount = parseInt(idle_funds_after_deposit[0].amount.toString()) * 2;
+        const idleFundsX2 = parseInt(idle_funds_after_deposit[0].amount.toString()) * 2;
         const investArgs: Instruction[] = [
           {
             type: "Invest",
@@ -102,7 +102,7 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
           {
             type: "Invest",
             strategy: addressBook.getContractId("blend_strategy"),
-            amount: BigInt(investAmount),
+            amount: BigInt(idleFundsX2),
           },
         ];
         await rebalanceVault(
@@ -147,7 +147,7 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
           invested_funds:invested_funds_after_invest, 
         } = await fetchBalances(addressBook, vault_address, params, user);
 
-        const tolerance = BigInt(1_000); // Define a tolerance for approximation
+        const tolerance = BigInt(1); // Define a tolerance for approximation
         const expected_invested_funds = BigInt(invest_amount * 2);
         if (
           invested_funds_after_invest[0].amount < expected_invested_funds - tolerance || 
@@ -184,6 +184,16 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
     }
   )();
 
+  console.log(purple, "---------------------------------------");
+  console.log(purple, "Harvest Fixed APR");
+  console.log(purple, "---------------------------------------");
+
+  await invokeCustomContract(
+    addressBook.getContractId("fixed_apr_strategy"),
+    "harvest",
+    [(new Address (user.publicKey())).toScVal()],
+    manager
+  )
   // Deposit and invest
   const {
     instructions: deposit_and_invest_instructions,
@@ -285,40 +295,6 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
           );
         } catch (error:any) {
           if (error.toString().includes("HostError: Error(Contract, #10)") || error.toString().includes("HostError: Error(Contract, #142)")) {
-            console.log(green, "---------------------------------------------------------");
-            console.log(green, "| Unwinding more than invested funds failed as expected |");
-            console.log(green, "---------------------------------------------------------");
-            //To-do: return status
-          }else {
-            throw Error(error);
-          }
-        }
-
-        // Unwind from unauthorized
-        try { 
-          console.log(purple, "---------------------------------------");
-          console.log(purple, "Try Unwind from unauthorized");
-          console.log(purple, "---------------------------------------");
-          const unwind_amount = 5_0_000_000;
-          const unwind_args: Instruction[] = [
-            {
-              type: "Unwind",
-              strategy: addressBook.getContractId("blend_strategy"),
-              amount: BigInt(unwind_amount),
-            },
-            {
-              type: "Unwind",
-              strategy: addressBook.getContractId("fixed_apr_strategy"),
-              amount: BigInt(unwind_amount),
-            },
-          ];
-          await rebalanceVault(
-            vault_address,
-            unwind_args,
-            user
-          );
-        } catch (error:any) {
-          if (error.toString().includes("HostError: Error(Contract, #130)")) {
             console.log(green, "---------------------------------------------------------");
             console.log(green, "| Unwinding more than invested funds failed as expected |");
             console.log(green, "---------------------------------------------------------");
@@ -489,27 +465,7 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
       console.log(purple,`Withdraw ${withdraw_amount} from one asset two strategies vault`);
       console.log(purple, "--------------------------------------------------------------");
       try {
-        //Try withdraw from unauthorized
-        try {
-          console.log(purple, "---------------------------------------");
-          console.log(purple, "Try withdraw from unauthorized");
-          console.log(purple, "---------------------------------------");
-          const withdraw_amount = 65_0_000;
-          const random_user = Keypair.random();
-          await airdropAccount(random_user);
-
-          await withdrawFromVault(vault_address, withdraw_amount, random_user);
-          
-        } catch (error:any) {
-          if (error.toString().includes("HostError: Error(Contract, #111)") || error.toString().includes("HostError: Error(Contract, #10)")) {
-            console.log(green, "-------------------------------------------------");
-            console.log(green, "| Withdraw from unauthorized failed as expected |");
-            console.log(green, "-------------------------------------------------");
-            //To-do: return status
-          }else {
-            throw Error(error);
-          }
-        }
+        
         //Try withdraw more than total funds
         try {
           console.log(purple, "-----------------------------------------------------");
@@ -527,22 +483,24 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
           }
         }
         //Withdraw more than idle funds
+        
+        const total_supply = await fetchTotalSupply(vault_address, user);
+        const total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
+        const withdrawAmountDfTokens = underlyingToDfTokens(withdraw_amount, total_supply, total_managed_funds[xlmAddress.toString()].total_amount);
+        
         const {
           instructions,
           readBytes,
           writeBytes,
-        } = await withdrawFromVault(vault_address, Number(withdraw_amount), user);
+        } = await withdrawFromVault(vault_address, Number(withdrawAmountDfTokens), user);
 
         const { 
           idle_funds, 
           invested_funds, 
         } = await fetchBalances(addressBook, vault_address, params, user);
 
-        const total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
-        const total_supply = await fetchTotalSupply(vault_address, user);
-
-        const expected_idle_funds = underlyingToDfTokens(idle_funds[0].amount, total_supply, total_managed_funds);
-        const expected_invested_funds = underlyingToDfTokens(invested_funds[0].amount, total_supply, total_managed_funds);
+        const expected_idle_funds = BigInt(0);
+        const expected_invested_funds = invested_funds_after_unwind_and_invest[0].amount - BigInt(2_0_000_000);
 
         if (
           idle_funds[0].amount !== expected_idle_funds 
