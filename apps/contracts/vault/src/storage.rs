@@ -70,11 +70,11 @@ pub fn set_defindex_protocol_fee_receiver(e: &Env, address: &Address) {
         .set(&DataKey::DeFindexProtocolFeeReceiver, address);
 }
 
-pub fn get_defindex_protocol_fee_receiver(e: &Env) -> Address {
+pub fn get_defindex_protocol_fee_receiver(e: &Env) -> Result<Address, ContractError> {
     e.storage()
         .instance()
         .get(&DataKey::DeFindexProtocolFeeReceiver)
-        .unwrap()
+        .ok_or(ContractError::NotInitialized)
 }
 
 // DeFindex Fee BPS

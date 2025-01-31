@@ -51,7 +51,7 @@ pub fn distribute_strategy_fees(e: &Env, strategy_address: &Address, access_cont
     let report = get_report(&e, &strategy_address);
     
     let defindex_fee = get_defindex_protocol_fee_rate(&e);
-    let defindex_protocol_receiver = get_defindex_protocol_fee_receiver(&e);
+    let defindex_protocol_receiver = get_defindex_protocol_fee_receiver(&e)?;
     let vault_fee_receiver = access_control.get_fee_receiver()?;
 
     let mut fees_distributed: i128 = 0;
