@@ -8,9 +8,9 @@ use crate::{
     storage::{get_assets, get_soroswap_router}, ContractError
 };
 
-fn is_supported_asset(e: &Env, token: &Address) -> bool {
-    let assets = get_assets(e);
-    assets.iter().any(|asset| &asset.address == token)
+fn is_supported_asset(e: &Env, token: &Address) -> Result<bool, ContractError> {
+    let assets = get_assets(e)?;
+    Ok(assets.iter().any(|asset| &asset.address == token))
 }
 
 pub fn internal_swap_exact_tokens_for_tokens(
@@ -22,7 +22,7 @@ pub fn internal_swap_exact_tokens_for_tokens(
     deadline: &u64,
 ) -> Result<(), ContractError> {
     // Check if both tokens are supported by the vault
-    if !is_supported_asset(e, token_in) || !is_supported_asset(e, token_out) {
+    if !is_supported_asset(e, token_in)? || !is_supported_asset(e, token_out)? {
         return Err(ContractError::UnsupportedAsset);
     }
     let swap_args: Vec<Val> = vec![
@@ -77,7 +77,7 @@ pub fn internal_swap_tokens_for_exact_tokens(
     deadline: &u64,
 ) -> Result<(), ContractError> {
     // Check if both tokens are supported by the vault
-    if !is_supported_asset(e, token_in) || !is_supported_asset(e, token_out) {
+    if !is_supported_asset(e, token_in)? || !is_supported_asset(e, token_out)? {
         return Err(ContractError::UnsupportedAsset);
     }
     let soroswap_router = get_soroswap_router(e);

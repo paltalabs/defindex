@@ -4,6 +4,7 @@ use soroban_sdk::{Address, Env, Map, Vec};
 use crate::models::{CurrentAssetInvestmentAllocation, StrategyAllocation};
 use crate::storage::{get_assets, get_report, get_vault_fee, set_report};
 use crate::strategies::get_strategy_client;
+use crate::ContractError;
 use common::models::AssetStrategySet;
 
 /// Retrieves the idle funds for a given asset.
@@ -93,8 +94,8 @@ pub fn fetch_invested_funds_for_asset(
 pub fn fetch_total_managed_funds(
     e: &Env,
     lock_fees: bool,
-) -> Vec<CurrentAssetInvestmentAllocation> {
-    let assets = get_assets(e);
+) -> Result<Vec<CurrentAssetInvestmentAllocation>, ContractError> {
+    let assets = get_assets(e)?;
     let mut allocations: Vec<CurrentAssetInvestmentAllocation> = Vec::new(e);
     for asset in &assets {
         let idle_amount = fetch_idle_funds_for_asset(e, &asset.address);
@@ -109,5 +110,5 @@ pub fn fetch_total_managed_funds(
             strategy_allocations,
         });
     }
-    allocations
+    Ok(allocations)
 }

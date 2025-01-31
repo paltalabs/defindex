@@ -20,7 +20,7 @@ pub fn get_strategy_asset(
     e: &Env,
     strategy_address: &Address,
 ) -> Result<AssetStrategySet, ContractError> {
-    let assets = get_assets(e);
+    let assets = get_assets(e)?;
 
     for asset in assets.iter() {
         if asset
@@ -70,7 +70,7 @@ pub fn pause_strategy(e: &Env, strategy_address: Address) -> Result<(), Contract
 
     // Iterate through all assets to find the one that contains the strategy
     for i in 0..total_assets {
-        let mut asset = get_asset(e, i);
+        let mut asset = get_asset(e, i)?;
 
         // Check if this asset contains the strategy
         for (j, strategy) in asset.strategies.iter().enumerate() {
@@ -101,7 +101,7 @@ pub fn unpause_strategy(e: &Env, strategy_address: Address) -> Result<(), Contra
 
     // Iterate through all assets to find the one that contains the strategy
     for i in 0..total_assets {
-        let mut asset = get_asset(e, i);
+        let mut asset = get_asset(e, i)?;
 
         // Check if this asset contains the strategy
         for (j, strategy) in asset.strategies.iter().enumerate() {
