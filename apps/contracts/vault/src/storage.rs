@@ -46,7 +46,7 @@ pub fn get_asset(e: &Env, index: u32) -> Result<AssetStrategySet, ContractError>
 }
 
 pub fn get_assets(e: &Env) -> Result<Vec<AssetStrategySet>, ContractError> {
-    let total_assets = get_total_assets(e);
+    let total_assets = get_total_assets(e)?;
     let mut assets = Vec::new(e);
     for i in 0..total_assets {
         assets.push_back(get_asset(e, i)?);
@@ -59,8 +59,8 @@ pub fn set_total_assets(e: &Env, n: u32) {
     e.storage().instance().set(&DataKey::TotalAssets, &n);
 }
 
-pub fn get_total_assets(e: &Env) -> u32 {
-    e.storage().instance().get(&DataKey::TotalAssets).unwrap()
+pub fn get_total_assets(e: &Env) -> Result<u32, ContractError> {
+    e.storage().instance().get(&DataKey::TotalAssets).ok_or(ContractError::NotInitialized)
 }
 
 // DeFindex Fee Receiver

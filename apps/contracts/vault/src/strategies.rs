@@ -66,7 +66,7 @@ pub fn get_strategy_struct(
 /// Pauses a strategy by setting its `paused` field to `true`.
 /// Finds the asset that contains the strategy and updates the storage.
 pub fn pause_strategy(e: &Env, strategy_address: Address) -> Result<(), ContractError> {
-    let total_assets = get_total_assets(e);
+    let total_assets = get_total_assets(e)?;
 
     // Iterate through all assets to find the one that contains the strategy
     for i in 0..total_assets {
@@ -97,7 +97,7 @@ pub fn pause_strategy(e: &Env, strategy_address: Address) -> Result<(), Contract
 /// Unpauses a strategy by setting its `paused` field to `false`.
 /// Finds the asset that contains the strategy and updates the storage.
 pub fn unpause_strategy(e: &Env, strategy_address: Address) -> Result<(), ContractError> {
-    let total_assets = get_total_assets(e);
+    let total_assets = get_total_assets(e)?;
 
     // Iterate through all assets to find the one that contains the strategy
     for i in 0..total_assets {
