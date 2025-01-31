@@ -6,6 +6,7 @@ use soroban_sdk::{contracttype, Address, Vec};
 pub struct StrategyAllocation {
     pub strategy_address: Address,
     pub amount: i128,
+    pub paused: bool,
 }
 
 // Current Asset Investment Allocation
