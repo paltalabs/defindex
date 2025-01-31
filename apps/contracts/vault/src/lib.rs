@@ -543,7 +543,8 @@ impl VaultTrait for DeFindexVault {
     /// * `vault_shares` - The number of vault shares for which the corresponding asset amounts are calculated.
     ///
     /// # Returns
-    /// * `Map<Address, i128>` - A map containing each asset address and its corresponding proportional amount.
+    /// * `Result<Vec<i128>, ContractError>` - A vector of asset amounts corresponding to the vault shares, where each index
+    ///   matches the asset index in the vault's asset list. Returns ContractError if calculation fails.
     fn get_asset_amounts_per_shares(
         e: Env,
         vault_shares: i128,
@@ -774,6 +775,9 @@ impl AdminInterfaceTrait for DeFindexVault {
     /// * `e` - The runtime environment.
     /// * `new_wasm_hash` - The hash of the new WASM code to upgrade the contract to.
     ///
+    /// # Returns
+    /// * `Result<(), ContractError>` - Returns Ok(()) on success, ContractError if upgrade fails
+    ///
     fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), ContractError> {
         if !storage::is_upgradable(&e) {
             return Err(ContractError::NotUpgradable);
@@ -789,7 +793,15 @@ impl AdminInterfaceTrait for DeFindexVault {
 
 #[contractimpl]
 impl VaultManagementTrait for DeFindexVault {
-    
+
+    /// Rebalances the vault by executing a series of instructions.
+    ///
+    /// # Arguments:
+    /// * `e` - The environment.
+    /// * `instructions` - A vector of `Instruction` structs representing actions (withdraw, invest, swap, zapper) to be taken.
+    ///
+    /// # Returns:
+    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn rebalance(e: Env, caller: Address, instructions: Vec<Instruction>) -> Result<(), ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
