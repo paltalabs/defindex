@@ -1,4 +1,4 @@
-use soroban_sdk::{panic_with_error, Address, Env, Map, Vec};
+use soroban_sdk::{panic_with_error, Env, Vec};
 
 use crate::{
     access::{AccessControl, AccessControlTrait, RolesDataKey},
@@ -6,15 +6,13 @@ use crate::{
     token::VaultToken,
     ContractError,
 };
-use common::models::AssetStrategySet;
 
 pub const DAY_IN_LEDGERS: u32 = 17280;
 
 pub fn bump_instance(e: &Env) {
     let max_ttl = e.storage().max_ttl();
-    e.storage()
-        .instance()
-        .extend_ttl(max_ttl - DAY_IN_LEDGERS, max_ttl);
+    let new_ttl = max_ttl.checked_sub(DAY_IN_LEDGERS).unwrap_or_else(|| panic_with_error!(e, ContractError::Underflow));
+    e.storage().instance().extend_ttl(new_ttl, max_ttl);
 }
 
 pub fn check_initialized(e: &Env) -> Result<(), ContractError> {
@@ -244,7 +242,7 @@ pub fn calculate_deposit_amounts_and_shares_to_mint(
                 should_skip = true;
 
                 // If all assets have been analyzed and no valid solution is found, return an error
-                if i == total_managed_funds.len() - 1 {
+                if i == total_managed_funds.len().checked_sub(1).ok_or(ContractError::Underflow)? {
                     return Err(ContractError::NoOptimalAmounts);
                 }
                 break;

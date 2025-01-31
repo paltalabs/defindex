@@ -198,7 +198,7 @@ impl VaultTrait for DeFindexVault {
         check_initialized(&e)?;
         from.require_auth();
 
-        let total_managed_funds = fetch_total_managed_funds(&e, false);
+        let total_managed_funds = fetch_total_managed_funds(&e, false)?;
 
         let (amounts, shares_to_mint) = process_deposit(
             &e,
@@ -276,7 +276,7 @@ impl VaultTrait for DeFindexVault {
 
         check_min_amount(withdraw_shares, MIN_WITHDRAW_AMOUNT)?;
         // Calculate the withdrawal amounts for each asset based on the share amounts
-        let total_managed_funds = fetch_total_managed_funds(&e, true);
+        let total_managed_funds = fetch_total_managed_funds(&e, true)?;
 
         let asset_withdrawal_amounts =
             calculate_asset_amounts_per_vault_shares(&e, withdraw_shares, &total_managed_funds)?;
@@ -315,7 +315,7 @@ impl VaultTrait for DeFindexVault {
                         asset.strategy_allocations.iter().enumerate()
                     {
                         let strategy_amount_to_unwind: i128 =
-                            if i == (asset.strategy_allocations.len() as usize) - 1 {
+                            if i == asset.strategy_allocations.len().checked_sub(1).unwrap_or(0) as usize {
                                 requested_withdrawal_amount
                                     .checked_sub(cumulative_amount_for_asset)
                                     .unwrap()
@@ -333,7 +333,7 @@ impl VaultTrait for DeFindexVault {
                                 &strategy_amount_to_unwind,
                                 &e.current_contract_address(),
                             )?;
-                            cumulative_amount_for_asset += strategy_amount_to_unwind;
+                            cumulative_amount_for_asset = cumulative_amount_for_asset.checked_add(strategy_amount_to_unwind).ok_or(ContractError::Overflow)?;
                         }
                     }
 
@@ -487,7 +487,7 @@ impl VaultTrait for DeFindexVault {
     ///
     /// # Returns:
     /// * `Vec<AssetStrategySet>` - A vector of `AssetStrategySet` structs representing the assets managed by the vault.
-    fn get_assets(e: Env) -> Vec<AssetStrategySet> {
+    fn get_assets(e: Env) -> Result<Vec<AssetStrategySet>, ContractError> {
         extend_instance_ttl(&e);
         get_assets(&e)
     }
@@ -502,11 +502,11 @@ impl VaultTrait for DeFindexVault {
     ///
     /// # Returns:
     /// * `Map<Address, i128>` - A map of asset addresses to their total managed amounts.
-    fn fetch_total_managed_funds(e: &Env) -> Vec<CurrentAssetInvestmentAllocation> {
+    fn fetch_total_managed_funds(e: &Env) -> Result<Vec<CurrentAssetInvestmentAllocation>, ContractError> {
         extend_instance_ttl(&e);
-        let total_managed_funds = fetch_total_managed_funds(e, false);
+        let total_managed_funds = fetch_total_managed_funds(e, false)?;
 
-        total_managed_funds
+        Ok(total_managed_funds)
     }
 
     // Calculates the corresponding amounts of each asset per a given number of vault shares.
@@ -526,7 +526,7 @@ impl VaultTrait for DeFindexVault {
     ) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
 
-        let total_managed_funds = fetch_total_managed_funds(&e, true);
+        let total_managed_funds = fetch_total_managed_funds(&e, true)?;
         Ok(calculate_asset_amounts_per_vault_shares(
             &e,
             vault_shares,
@@ -557,7 +557,7 @@ impl VaultTrait for DeFindexVault {
         extend_instance_ttl(&e);
 
         // Get all assets and their strategies
-        let assets = get_assets(&e);
+        let assets = get_assets(&e)?;
         let mut reports: Vec<Report> = Vec::new(&e);
 
         // Loop through each asset and its strategies to report the balances
@@ -568,7 +568,7 @@ impl VaultTrait for DeFindexVault {
                     strategy_client.balance(&e.current_contract_address());
 
                 let mut report = get_report(&e, &strategy.address);
-                report.report(strategy_invested_funds);
+                report.report(strategy_invested_funds)?;
                 set_report(&e, &strategy.address, &report);
 
                 reports.push_back(report);
@@ -862,7 +862,7 @@ impl VaultManagementTrait for DeFindexVault {
         let current_vault_fee = get_vault_fee(&e);
 
         // Get all assets and their strategies
-        let assets = get_assets(&e);
+        let assets = get_assets(&e)?;
         let mut reports: Vec<Report> = Vec::new(&e);
 
         // Loop through each asset and its strategies to lock the fees
@@ -870,7 +870,7 @@ impl VaultManagementTrait for DeFindexVault {
             for strategy in asset.strategies.iter() {
                 let mut report = get_report(&e, &strategy.address);
                 if report.gains_or_losses > 0 {
-                    report.lock_fee(current_vault_fee);
+                    report.lock_fee(current_vault_fee)?;
                     set_report(&e, &strategy.address, &report);
                 }
                 reports.push_back(report);
@@ -898,7 +898,7 @@ impl VaultManagementTrait for DeFindexVault {
 
         let mut report = get_report(&e, &strategy);
 
-        report.release_fee(&e, amount);
+        report.release_fee(&e, amount)?;
         set_report(&e, &strategy, &report);
         Ok(report)
     }
@@ -926,7 +926,7 @@ impl VaultManagementTrait for DeFindexVault {
         );
 
         // Get all assets and their strategies
-        let assets = get_assets(&e);
+        let assets = get_assets(&e)?;
 
         let mut distributed_fees: Vec<(Address, i128)> = Vec::new(&e);
 
