@@ -1,10 +1,10 @@
 #![no_std]
 use constants::{MIN_DUST, SCALAR_9};
 use reserves::StrategyReserves;
+use soroban_fixed_point_math::{i128, FixedPoint};
 use soroban_sdk::{
     contract, contractimpl, token::TokenClient, Address, Env, IntoVal, String, Val, Vec,
 };
-use soroban_fixed_point_math::{i128, FixedPoint};
 
 mod blend_pool;
 mod constants;
@@ -31,15 +31,14 @@ pub struct BlendStrategy;
 
 #[contractimpl]
 impl DeFindexStrategyTrait for BlendStrategy {
-
     /// Constructor function to initialize the contract's configuration with the necessary parameters.
     ///
     /// # Arguments
-    /// 
+    ///
     /// * `e: Env` - The execution environment (provided automatically when the contract is invoked).
     /// * `asset: Address` - The address of the asset being managed by the contract.
     /// * `init_args: Vec<Val>` - A vector of initialization arguments required for configuring the contract.
-    /// 
+    ///
     /// # Process
     ///
     /// This constructor function takes in the following arguments:
@@ -60,7 +59,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
     /// - `d_token_id = reserve_index * 2`
     /// - `b_token_id = reserve_index * 2 + 1`
     ///
-    /// This ensures each reserve has distinct token IDs for its d_token and b_token. 
+    /// This ensures each reserve has distinct token IDs for its d_token and b_token.
     /// You can retrieve the **reserve_index** from a **reserve_token_id** by using the formula:
     /// `reserve_index = floor(reserve_token_id / 2)`
     ///
@@ -72,8 +71,8 @@ impl DeFindexStrategyTrait for BlendStrategy {
     /// # Example
     ///
     /// ```rust
-    /// let e: Env = ...; 
-    /// let asset: Address = ...; 
+    /// let e: Env = ...;
+    /// let asset: Address = ...;
     /// let init_args: Vec<Val> = ...;
     /// __constructor(e, asset, init_args);
     /// ```
@@ -155,7 +154,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         let config = storage::get_config(&e)?;
         blend_pool::claim(&e, &e.current_contract_address(), &config);
-        
+
         // will reinvest only if blnd_balance > REWARD_THRESHOLD
         blend_pool::perform_reinvest(&e, &config)?;
 
@@ -167,7 +166,8 @@ impl DeFindexStrategyTrait for BlendStrategy {
         let b_tokens_minted = blend_pool::supply(&e, &from, &amount, &config)?;
 
         // Keeping track of the total deposited amount and the total bTokens owned by the strategy depositors
-        let (vault_shares, reserves) = reserves::deposit(&e, reserves.clone(), &from, amount, b_tokens_minted)?;
+        let (vault_shares, reserves) =
+            reserves::deposit(&e, reserves.clone(), &from, amount, b_tokens_minted)?;
 
         let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
 

@@ -1,6 +1,6 @@
-use soroban_sdk::{contracttype, Address, Env, Vec};
 use crate::reserves::StrategyReserves;
 use defindex_strategy_core::StrategyError;
+use soroban_sdk::{contracttype, Address, Env, Vec};
 
 #[contracttype]
 pub struct Config {
@@ -40,7 +40,10 @@ pub fn set_config(e: &Env, config: Config) {
 }
 
 pub fn get_config(e: &Env) -> Result<Config, StrategyError> {
-    e.storage().instance().get(&DataKey::Config).ok_or(StrategyError::NotInitialized)?
+    e.storage()
+        .instance()
+        .get(&DataKey::Config)
+        .ok_or(StrategyError::NotInitialized)?
 }
 
 /// This function sets the vault shares associated with a specific user address.

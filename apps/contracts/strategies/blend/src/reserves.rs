@@ -23,8 +23,7 @@ impl StrategyReserves {
     pub fn b_tokens_to_shares_down(&self, amount: i128) -> Result<i128, StrategyError> {
         if self.total_shares == 0 || self.total_b_tokens == 0 {
             return Ok(amount);
-        }
-        else {
+        } else {
             return amount
                 .fixed_mul_floor(self.total_shares, self.total_b_tokens)
                 .ok_or_else(|| StrategyError::ArithmeticError);
@@ -48,10 +47,16 @@ impl StrategyReserves {
             .ok_or_else(|| StrategyError::DivisionByZero)
     }
 
-    pub fn update_rate(&mut self, underlying_amount: i128, b_tokens_amount: i128) -> Result<(), StrategyError> {
+    pub fn update_rate(
+        &mut self,
+        underlying_amount: i128,
+        b_tokens_amount: i128,
+    ) -> Result<(), StrategyError> {
         // Calculate the new bRate - 9 decimal places of precision
         // Update the reserve's bRate
-        let new_rate = underlying_amount.fixed_div_floor(b_tokens_amount, SCALAR_9).ok_or_else(|| StrategyError::ArithmeticError)?;
+        let new_rate = underlying_amount
+            .fixed_div_floor(b_tokens_amount, SCALAR_9)
+            .ok_or_else(|| StrategyError::ArithmeticError)?;
 
         self.b_rate = new_rate;
 
@@ -61,9 +66,9 @@ impl StrategyReserves {
 
 /// Accounts for a deposit into the Blend pool.
 ///
-/// This function updates the strategy reserves and user/vault shares after a deposit 
-/// has been made. It calculates the new user/vault shares, updates the total 
-/// shares owned by the strategy, and adjusts the reserves based on the deposited 
+/// This function updates the strategy reserves and user/vault shares after a deposit
+/// has been made. It calculates the new user/vault shares, updates the total
+/// shares owned by the strategy, and adjusts the reserves based on the deposited
 /// underlying asset and bTokens.
 ///
 /// # Process
@@ -82,7 +87,7 @@ impl StrategyReserves {
 /// * `b_tokens_amount` - The amount of bTokens received from the deposit.
 ///
 /// # Returns
-/// * `Result<(i128, StrategyReserves), StrategyError>` - A tuple containing the updated 
+/// * `Result<(i128, StrategyReserves), StrategyError>` - A tuple containing the updated
 ///   vault shares of the depositor and the updated strategy reserves.
 pub fn deposit(
     e: &Env,
@@ -92,11 +97,11 @@ pub fn deposit(
     b_tokens_amount: i128,
 ) -> Result<(i128, StrategyReserves), StrategyError> {
     if underlying_amount <= 0 {
-        panic_with_error!(e, StrategyError::UnderlyingAmountBelowMin); 
+        panic_with_error!(e, StrategyError::UnderlyingAmountBelowMin);
     }
 
     if b_tokens_amount <= 0 {
-        panic_with_error!(e, StrategyError::BTokensAmountBelowMin); 
+        panic_with_error!(e, StrategyError::BTokensAmountBelowMin);
     }
 
     let _ = reserves.update_rate(underlying_amount, b_tokens_amount);
@@ -104,12 +109,18 @@ pub fn deposit(
     let old_vault_shares = storage::get_vault_shares(&e, &from);
     let new_minted_shares: i128 = reserves.b_tokens_to_shares_down(b_tokens_amount)?;
 
-    reserves.total_shares = reserves.total_shares
-                            .checked_add(new_minted_shares).ok_or_else(|| StrategyError::UnderflowOverflow)?;
-    reserves.total_b_tokens = reserves.total_b_tokens
-                            .checked_add(b_tokens_amount).ok_or_else(|| StrategyError::UnderflowOverflow)?;
+    reserves.total_shares = reserves
+        .total_shares
+        .checked_add(new_minted_shares)
+        .ok_or_else(|| StrategyError::UnderflowOverflow)?;
+    reserves.total_b_tokens = reserves
+        .total_b_tokens
+        .checked_add(b_tokens_amount)
+        .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
-    let new_vault_shares = old_vault_shares.checked_add(new_minted_shares).ok_or_else(|| StrategyError::UnderflowOverflow)?;
+    let new_vault_shares = old_vault_shares
+        .checked_add(new_minted_shares)
+        .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     storage::set_strategy_reserves(&e, reserves.clone());
     storage::set_vault_shares(&e, &from, new_vault_shares);
@@ -118,9 +129,9 @@ pub fn deposit(
 
 /// Accounts for a deposit into the Blend pool.
 ///
-/// This function updates the strategy reserves and vault shares after a deposit 
-/// has been made. It calculates the new user/vault shares, updates the total 
-/// shares owned by the strategy, and adjusts the reserves based on the deposited 
+/// This function updates the strategy reserves and vault shares after a deposit
+/// has been made. It calculates the new user/vault shares, updates the total
+/// shares owned by the strategy, and adjusts the reserves based on the deposited
 /// underlying asset and bTokens.
 ///
 /// # Process
@@ -139,7 +150,7 @@ pub fn deposit(
 /// * `b_tokens_amount` - The amount of bTokens received from the deposit.
 ///
 /// # Returns
-/// * `Result<(i128, StrategyReserves), StrategyError>` - A tuple containing the updated 
+/// * `Result<(i128, StrategyReserves), StrategyError>` - A tuple containing the updated
 ///   shares of the depositor and the updated strategy reserves.
 pub fn withdraw(
     e: &Env,
@@ -152,7 +163,7 @@ pub fn withdraw(
         return Err(StrategyError::UnderlyingAmountBelowMin);
     }
     if b_tokens_amount <= 0 {
-        return Err(StrategyError::BTokensAmountBelowMin);        
+        return Err(StrategyError::BTokensAmountBelowMin);
     }
 
     let mut vault_shares = storage::get_vault_shares(&e, &from);
@@ -162,14 +173,22 @@ pub fn withdraw(
         return Err(StrategyError::InsufficientBalance);
     }
 
-    reserves.total_shares = reserves.total_shares.checked_sub(share_amount).ok_or_else(|| StrategyError::UnderflowOverflow)?;
-    reserves.total_b_tokens = reserves.total_b_tokens.checked_sub(b_tokens_amount).ok_or_else(|| StrategyError::UnderflowOverflow)?;
+    reserves.total_shares = reserves
+        .total_shares
+        .checked_sub(share_amount)
+        .ok_or_else(|| StrategyError::UnderflowOverflow)?;
+    reserves.total_b_tokens = reserves
+        .total_b_tokens
+        .checked_sub(b_tokens_amount)
+        .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     if share_amount > vault_shares {
         return Err(StrategyError::InsufficientBalance);
     }
 
-    vault_shares = vault_shares.checked_sub(share_amount).ok_or_else(|| StrategyError::UnderflowOverflow)?;
+    vault_shares = vault_shares
+        .checked_sub(share_amount)
+        .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     storage::set_strategy_reserves(&e, reserves.clone());
     storage::set_vault_shares(&e, &from, vault_shares);
@@ -179,8 +198,8 @@ pub fn withdraw(
 
 /// Updates strategy reserves after reinvesting rewards.
 ///
-/// This function accounts for newly earned rewards by updating the total bTokens 
-/// held by the strategy. It assumes the rewards have already been reinvested 
+/// This function accounts for newly earned rewards by updating the total bTokens
+/// held by the strategy. It assumes the rewards have already been reinvested
 /// into the Blend pool and only updates the reserves accordingly.
 ///
 /// # Process
@@ -201,14 +220,14 @@ pub fn withdraw(
 /// # Errors
 /// * `StrategyError::InvalidArgument` - If `underlying_amount` or `b_tokens_amount` are not positive.
 /// * `StrategyError::UnderflowOverflow` - If an arithmetic operation fails due to an overflow/underflow.
-pub fn harvest( 
+pub fn harvest(
     e: &Env,
     mut reserves: StrategyReserves,
     underlying_amount: i128,
     b_tokens_amount: i128,
 ) -> Result<(), StrategyError> {
     if underlying_amount <= 0 {
-        panic_with_error!(e, StrategyError::UnderlyingAmountBelowMin); 
+        panic_with_error!(e, StrategyError::UnderlyingAmountBelowMin);
     }
 
     if b_tokens_amount <= 0 {
@@ -217,10 +236,12 @@ pub fn harvest(
 
     let _ = reserves.update_rate(underlying_amount, b_tokens_amount)?;
 
-    reserves.total_b_tokens =  reserves.total_b_tokens
-                                .checked_add(b_tokens_amount).ok_or_else(|| StrategyError::UnderflowOverflow)?;
+    reserves.total_b_tokens = reserves
+        .total_b_tokens
+        .checked_add(b_tokens_amount)
+        .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     storage::set_strategy_reserves(&e, reserves);
-    
+
     Ok(())
 }

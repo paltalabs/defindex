@@ -34,14 +34,14 @@ pub fn internal_swap_exact_tokens_for_tokens(
     deadline: &u64,
     config: &Config,
 ) -> Result<Vec<i128>, StrategyError> {
-    let swap_args = vec!(
+    let swap_args = vec![
         e,
         amount_in.into_val(e),
         amount_out_min.into_val(e),
         path.into_val(e),
         to.to_val(),
-        deadline.into_val(e)
-    );
+        deadline.into_val(e),
+    ];
 
     // Maybe instead of using the router directly, we should use the pair for swaps
     let pair_address: Address = e.invoke_contract(
