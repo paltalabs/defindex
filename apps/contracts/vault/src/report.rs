@@ -64,7 +64,7 @@ pub fn distribute_strategy_fees(e: &Env, strategy_address: &Address, access_cont
         let numerator = report.locked_fee.checked_mul(defindex_fee as i128).unwrap();
         let defindex_fee_amount = numerator.checked_div(MAX_BPS).unwrap();
 
-        let vault_fee_amount = report.locked_fee - defindex_fee_amount;
+        let vault_fee_amount = report.locked_fee.checked_sub(defindex_fee_amount).ok_or(ContractError::Underflow)?;
 
         unwind_from_strategy(
             &e,

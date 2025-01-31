@@ -242,7 +242,7 @@ pub fn calculate_deposit_amounts_and_shares_to_mint(
                 should_skip = true;
 
                 // If all assets have been analyzed and no valid solution is found, return an error
-                if i == total_managed_funds.len() - 1 {
+                if i == total_managed_funds.len().checked_sub(1).ok_or(ContractError::Underflow)? {
                     return Err(ContractError::NoOptimalAmounts);
                 }
                 break;

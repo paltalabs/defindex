@@ -315,7 +315,7 @@ impl VaultTrait for DeFindexVault {
                         asset.strategy_allocations.iter().enumerate()
                     {
                         let strategy_amount_to_unwind: i128 =
-                            if i == (asset.strategy_allocations.len() as usize) - 1 {
+                            if i == asset.strategy_allocations.len().checked_sub(1).unwrap_or(0) as usize {
                                 requested_withdrawal_amount
                                     .checked_sub(cumulative_amount_for_asset)
                                     .unwrap()
@@ -333,7 +333,7 @@ impl VaultTrait for DeFindexVault {
                                 &strategy_amount_to_unwind,
                                 &e.current_contract_address(),
                             )?;
-                            cumulative_amount_for_asset += strategy_amount_to_unwind;
+                            cumulative_amount_for_asset = cumulative_amount_for_asset.checked_add(strategy_amount_to_unwind).ok_or(ContractError::Overflow)?;
                         }
                     }
 
