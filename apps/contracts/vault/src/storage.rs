@@ -37,20 +37,24 @@ pub fn set_asset(e: &Env, index: u32, asset: &AssetStrategySet) {
         .instance()
         .set(&DataKey::AssetStrategySet(index), asset);
 }
-pub fn get_asset(e: &Env, index: u32) -> AssetStrategySet {
+
+pub fn get_asset(e: &Env, index: u32) -> Result<AssetStrategySet, ContractError> {
     e.storage()
         .instance()
         .get(&DataKey::AssetStrategySet(index))
-        .unwrap()
+        .ok_or(ContractError::NotInitialized)
 }
-pub fn get_assets(e: &Env) -> Vec<AssetStrategySet> {
+
+pub fn get_assets(e: &Env) -> Result<Vec<AssetStrategySet>, ContractError> {
     let total_assets = get_total_assets(e);
     let mut assets = Vec::new(e);
     for i in 0..total_assets {
-        assets.push_back(get_asset(e, i));
+        assets.push_back(get_asset(e, i)?);
     }
-    assets
+
+    Ok(assets)
 }
+
 pub fn set_total_assets(e: &Env, n: u32) {
     e.storage().instance().set(&DataKey::TotalAssets, &n);
 }
