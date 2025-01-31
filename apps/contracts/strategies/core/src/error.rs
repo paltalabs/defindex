@@ -11,16 +11,21 @@ pub enum StrategyError {
     NegativeNotAllowed = 410,
     InvalidArgument = 411,
     InsufficientBalance = 412,
+    UnderflowOverflow= 413,
+    ArithmeticError = 414,
+    DivisionByZero = 415,
 
     // Protocol Errors
     ProtocolAddressNotFound = 420,
     DeadlineExpired = 421,
     ExternalError = 422,
+    SoroswapPairError = 423,
 
     //Blend Errors
     AmountBelowMinDust = 451,
     UnderlyingAmountBelowMin = 452,
     BTokensAmountBelowMin = 453,
     InternalSwapError = 454,
+    SupplyNotFound = 455,
 
 }
