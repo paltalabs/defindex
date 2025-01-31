@@ -2,7 +2,7 @@ import { Asset, Keypair, scValToNative, Networks } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
 import { airdropAccount, invokeCustomContract } from "../../utils/contract.js";
 import { config } from "../../utils/env_config.js";
-import { depositToVault, Instruction, rebalanceVault } from "../vault.js";
+import { depositToVault, Instruction, rebalanceVault, withdrawFromVault } from "../vault.js";
 import { getTransactionBudget } from "../../utils/tx.js";
 
 const network = process.argv[2];
@@ -118,6 +118,11 @@ export async function testBlendVault() {
   let rebalance_instructions: number = 0;
   let rebalance_read_bytes: number = 0;
   let rebalance_write_bytes: number = 0;
+
+  let withdraw_status: boolean;
+  let withdraw_instructions: number = 0;
+  let withdraw_read_bytes: number = 0;
+  let withdraw_write_bytes: number = 0;
 
   // Deposit assets to the vault
   try {    
@@ -254,11 +259,37 @@ export async function testBlendVault() {
   }
 
   const rebalance_total_managed_funds: mappedFunds[] = await fetchCurrentFunds(blendVaultAddress, userAccount);
+  //rebalance the vault
+  try {
+    console.log(purple, '---------------------------------------------------------------------------')
+    console.log(purple, '----------------------- Rebalancing the vault -----------------------------')
+    console.log(purple, '---------------------------------------------------------------------------')
+
+    const {
+      result: rebalanceResult,
+      instructions,
+      readBytes,
+      writeBytes
+    } = await withdrawFromVault(blendVaultAddress, 1_0_000_000, userAccount);
+    console.log('🚀 « rebalanceResult:', rebalanceResult);
+
+    withdraw_instructions = instructions;
+    withdraw_read_bytes = readBytes;
+    withdraw_write_bytes = writeBytes;
+    withdraw_status = true;
+  } catch (error) {
+    console.log('❌ Error rebalancing the vault:', error);
+    withdraw_status = false;
+  }
+
+  const withdraw_total_managed_funds: mappedFunds[] = await fetchCurrentFunds(blendVaultAddress, userAccount);
 
   const status_result = {
     "deposit": deposit_status ? '✅ Success' : '❌ Failed',
     "invest": invest_status ? '✅ Success' : '❌ Failed',
-    "deposit and invest": deposit_and_invest_status ? '✅ Success' : '❌ Failed'
+    "deposit and invest": deposit_and_invest_status ? '✅ Success' : '❌ Failed',
+    "rebalance": rebalance_status ? '✅ Success' : '❌ Failed',
+    "withdraw": withdraw_status ? '✅ Success' : '❌ Failed'
   };
 
   const balances_result = {
@@ -281,6 +312,11 @@ export async function testBlendVault() {
       idle_amount: rebalance_total_managed_funds[0].idle_amount,
       invested_amount: rebalance_total_managed_funds[0].invested_amount,
       total_amount: rebalance_total_managed_funds[0].total_amount
+    },
+    withdraw: {
+      idle_amount: withdraw_total_managed_funds[0].idle_amount,
+      invested_amount: withdraw_total_managed_funds[0].invested_amount,
+      total_amount: withdraw_total_managed_funds[0].total_amount
     }
   };
 
