@@ -8,29 +8,58 @@ use common::models::AssetStrategySet;
 pub trait VaultTrait {
     /// Initializes the DeFindex Vault contract with the required parameters.
     ///
-    /// This function sets the roles for manager, emergency manager, vault fee receiver, and manager.
-    /// It also stores the list of assets to be managed by the vault, including strategies for each asset.
-    ///
     /// # Arguments
-    /// - `assets`: List of asset allocations for the vault, including strategies associated with each asset.
-    /// - `manager`: Primary vault manager with permissions for vault control.
-    /// - `emergency_manager`: Address with emergency access for emergency control over the vault.
-    /// - `vault_fee_receiver`: Address designated to receive the vault fee receiver's portion of management fees.
-    /// - `vault_fee`: Vault-specific fee percentage in basis points.
-    /// - `defindex_protocol_receiver`: Address receiving DeFindex’s protocol-wide fee in basis points.
-    /// - `defindex_protocol_rate`: DeFindex’s protocol fee percentage in basis points.
-    /// - `factory`: Factory contract address for deployment linkage.
-    /// - `soroswap_router`: Address of the Soroswap Router
-    /// - `vault_name`: Name of the vault token to be displayed in metadata.
-    /// - `vault_symbol`: Symbol representing the vault’s token.
+    /// * `e` - The environment reference.
+    /// * `assets` - List of asset allocations for the vault, including strategies for each asset.
+    /// * `roles` - Map of role IDs to addresses containing:
+    ///   - Emergency Manager: For emergency control
+    ///   - Vault Fee Receiver: For receiving vault fees
+    ///   - Manager: For primary vault control
+    ///   - Rebalance Manager: For rebalancing operations
+    /// * `vault_fee` - Vault-specific fee in basis points (0-2000 for 0-20%)
+    /// * `defindex_protocol_receiver` - Address receiving protocol fees
+    /// * `defindex_protocol_rate` - Protocol fee rate in basis points (0-9000 for 0-90%)
+    /// * `factory` - Factory contract address
+    /// * `soroswap_router` - Soroswap router address
+    /// * `name_symbol` - Map containing:
+    ///   - "name": Vault token name
+    ///   - "symbol": Vault token symbol
+    /// * `upgradable` - Boolean flag for contract upgradeability
     ///
-    /// # Returns
-    /// - `Result<(), ContractError>`: Returns `Ok(())` if initialization succeeds, or a `ContractError` if
-    ///   any setup fails (e.g., strategy mismatch with asset).
+    /// # Function Flow
+    /// 1. **Role Assignment**:
+    ///    - Sets Emergency Manager
+    ///    - Sets Vault Fee Receiver
+    ///    - Sets Manager
+    ///    - Sets Rebalance Manager
+    ///
+    /// 2. **Fee Configuration**:
+    ///    - Sets vault fee rate
+    ///    - Sets protocol fee receiver
+    ///    - Validates and sets protocol fee rate
+    ///
+    /// 3. **Contract Setup**:
+    ///    - Sets factory address
+    ///    - Sets upgradeability status
+    ///    - Sets Soroswap router
+    ///
+    /// 4. **Asset Validation & Setup**:
+    ///    - Validates asset list is not empty
+    ///    - Stores total asset count
+    ///    - For each asset:
+    ///      - Validates strategy compatibility
+    ///      - Stores asset configuration
+    ///
+    /// 5. **Token Initialization**:
+    ///    - Sets token decimals (7)
+    ///    - Sets token name and symbol
     ///
     /// # Errors
-    /// - `ContractError::AlreadyInitialized`: If the vault has already been initialized.
-    /// - `ContractError::StrategyDoesNotSupportAsset`: If a strategy within an asset does not support the asset’s contract.
+    /// * `ContractError::RolesIncomplete` - If required roles are missing
+    /// * `ContractError::MetadataIncomplete` - If name or symbol is missing
+    /// * `ContractError::MaximumFeeExceeded` - If protocol fee > 9000 basis points
+    /// * `ContractError::NoAssetAllocation` - If assets vector is empty
+    /// * `ContractError::StrategyDoesNotSupportAsset` - If strategy validation fails
     ///
     fn __constructor(
         e: Env,
@@ -45,36 +74,57 @@ pub trait VaultTrait {
         upgradable: bool,
     );
 
-    /// Handles user deposits into the DeFindex Vault.
+    /// Handles user deposits into the DeFindex Vault and optionally allocates investments automatically.
     ///
     /// This function processes a deposit by transferring each specified asset amount from the user's address to
-    /// the vault, allocating assets according to the vault's defined strategy ratios, and minting dfTokens that
-    /// represent the user's proportional share in the vault. The `amounts_desired` and `amounts_min` vectors should
-    /// align with the vault's asset order to ensure correct allocation.
+    /// the vault and mints vault shares that represent the user's proportional share in the vault. Additionally, 
+    /// if the `invest` parameter is set to `true`, the function will immediately generate and execute investment 
+    /// allocations based on the vault's strategy configuration.
     ///
     /// # Parameters
     /// * `e` - The current environment reference (`Env`), for access to the contract state and utilities.
     /// * `amounts_desired` - A vector specifying the user's intended deposit amounts for each asset.
     /// * `amounts_min` - A vector of minimum deposit amounts required for the transaction to proceed.
     /// * `from` - The address of the user making the deposit.
+    /// * `invest` - A boolean flag indicating whether to immediately invest the deposited funds into the vault's strategies:
+    ///     - `true`: Generate and execute investments after the deposit.
+    ///     - `false`: Leave the deposited funds as idle assets in the vault.
     ///
     /// # Returns
-    /// * `Result<(Vec<i128>, i128), ContractError>` - Returns the actual deposited `amounts` and `shares_to_mint` if successful,
-    ///   otherwise a `ContractError`.
+    /// * `Result<(Vec<i128>, i128, Option<Vec<Option<AssetInvestmentAllocation>>>), ContractError>` - Returns:
+    ///   - A vector of actual deposited amounts
+    ///   - The number of shares minted
+    ///   - Optional investment allocations if `invest` is true
     ///
     /// # Function Flow
-    /// 1. **Fee Collection**: Collects accrued fees before processing the deposit.
-    /// 2. **Validation**: Checks that the lengths of `amounts_desired` and `amounts_min` match the vault's assets.
-    /// 3. **Share Calculation**: Calculates `shares_to_mint` based on the vault's total managed funds and the deposit amount.
-    /// 4. **Asset Transfer**: Transfers each specified amount from the user’s address to the vault as idle funds.
-    /// 5. **dfToken Minting**: Mints new dfTokens for the user to represent their ownership in the vault.
+    /// 1. **Validation**:
+    ///    - Checks contract initialization
+    ///    - Verifies authorization of the depositor
+    ///    - Validates input parameters
+    /// 2. **Current State Assessment**:
+    ///    - Fetches total managed funds to calculate share ratios
+    /// 3. **Deposit Processing**:
+    ///    - Calculates shares to mint based on deposit amounts and current vault state
+    ///    - Transfers assets from user to vault
+    ///    - Mints vault shares to represent ownership
+    /// 4. **Investment Processing** (if `invest` is true):
+    ///    - Generates investment allocations based on current strategy ratios
+    ///    - Executes investments by deploying idle funds to strategies
+    /// 5. **Event Emission**:
+    ///    - Emits deposit event with amounts and minted shares
     ///
     /// # Notes
-    /// - For the first deposit, if the vault has only one asset, shares are calculated directly based on the deposit amount.
-    /// - For multiple assets, the function delegates to `calculate_deposit_amounts_and_shares_to_mint`
-    ///   for precise share computation.
-    /// - An event is emitted to log the deposit, including the actual deposited amounts and minted shares.
+    /// - The function maintains proportional share minting across multiple assets
+    /// - Investment allocations follow existing strategy ratios when `invest` is true
+    /// - Deposited funds remain idle if `invest` is false
     ///
+    /// # Errors
+    /// - Returns a `ContractError` if:
+    ///   - Contract is not initialized
+    ///   - Input validation fails
+    ///   - Asset transfers fail
+    ///   - Share calculations encounter arithmetic errors
+    ///   - Investment execution fails (when `invest` is true)
     fn deposit(
         e: Env,
         amounts_desired: Vec<i128>,
@@ -83,22 +133,29 @@ pub trait VaultTrait {
         invest: bool,
     ) -> Result<(Vec<i128>, i128, Option<Vec<Option<AssetInvestmentAllocation>>>), ContractError>;
 
-    /// Withdraws assets from the DeFindex Vault by burning dfTokens.
+    /// Handles user withdrawals from the DeFindex Vault by burning shares and returning assets.
     ///
-    /// This function calculates the amount of assets to withdraw based on the number of dfTokens being burned,
-    /// then transfers the appropriate assets back to the user, pulling from both idle funds and strategies
-    /// as needed.
+    /// This function processes a withdrawal request by burning the specified amount of vault shares
+    /// and returning a proportional amount of the vault's assets to the user. It can unwind positions
+    /// from strategies if necessary to fulfill the withdrawal.
     ///
-    /// # Arguments:
-    /// * `e` - The environment.
-    /// * `df_amount` - The amount of dfTokens to burn for the withdrawal.
-    /// * `from` - The address of the user requesting the withdrawal.
+    /// ## Parameters:
+    /// - `e`: The contract environment (`Env`).
+    /// - `withdraw_shares`: The number of vault shares to withdraw.
+    /// - `from`: The address initiating the withdrawal.
     ///
-    /// # Returns:
-    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
+    /// ## Returns
+    /// * `Result<Vec<i128>, ContractError>` - On success, returns a vector of withdrawn amounts 
+    ///   where each index corresponds to the asset index in the vault's asset list.
+    ///   Returns ContractError if the withdrawal fails.
+    ///
+    /// ## Errors:
+    /// - `ContractError::AmountOverTotalSupply`: If the specified shares exceed the total supply.
+    /// - `ContractError::ArithmeticError`: If any arithmetic operation fails during calculations.
+    /// - `ContractError::WrongAmountsLength`: If there is a mismatch in asset allocation data.
     fn withdraw(e: Env, df_amount: i128, from: Address) -> Result<Vec<i128>, ContractError>;
 
-    /// Executes an emergency withdrawal from a specific strategy.
+    /// Executes rescue (formerly emergency withdrawal) from a specific strategy.
     ///
     /// This function allows the emergency manager or manager to withdraw all assets from a particular strategy
     /// and store them as idle funds within the vault. It also pauses the strategy to prevent further use until
@@ -109,8 +166,8 @@ pub trait VaultTrait {
     /// * `strategy_address` - The address of the strategy to withdraw from.
     /// * `caller` - The address initiating the emergency withdrawal (must be the manager or emergency manager).
     ///
-    /// # Returns:
-    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
+    /// # Returns
+    /// * `Result<(), ContractError>` - Success (()) or ContractError if the rescue operation fails
     fn rescue(
         e: Env,
         strategy_address: Address,
@@ -127,8 +184,8 @@ pub trait VaultTrait {
     /// * `strategy_address` - The address of the strategy to pause.
     /// * `caller` - The address initiating the pause (must be the manager or emergency manager).
     ///
-    /// # Returns:
-    /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
+    /// # Returns
+    /// * `Result<(), ContractError>` - Success (()) or ContractError if the pause operation fails
     fn pause_strategy(
         e: Env,
         strategy_address: Address,
@@ -164,14 +221,14 @@ pub trait VaultTrait {
 
     /// Returns the total managed funds of the vault, including both invested and idle funds.
     ///
-    /// This function provides a map where the key is the asset address and the value is the total amount
-    /// of that asset being managed by the vault.
+    /// This function provides a vector of `CurrentAssetInvestmentAllocation` structs containing information
+    /// about each asset's current allocation, including both invested amounts in strategies and idle amounts.
     ///
     /// # Arguments:
     /// * `e` - The environment.
     ///
     /// # Returns:
-    /// * `Map<Address, i128>` - A map of asset addresses to their total managed amounts.
+    /// * `Result<Vec<CurrentAssetInvestmentAllocation>, ContractError>` - A vector of asset allocations or error
     fn fetch_total_managed_funds(e: &Env) -> Result<Vec<CurrentAssetInvestmentAllocation>, ContractError>;
 
     // Calculates the corresponding amounts of each asset per a given number of vault shares.
@@ -184,24 +241,63 @@ pub trait VaultTrait {
     /// * `vault_shares` - The number of vault shares for which the corresponding asset amounts are calculated.
     ///
     /// # Returns
-    /// * `Map<Address, i128>` - A map containing each asset address and its corresponding proportional amount.
+    /// * `Result<Vec<i128>, ContractError>` - A vector of asset amounts corresponding to the vault shares, where each index
+    ///   matches the asset index in the vault's asset list. Returns ContractError if calculation fails.
     fn get_asset_amounts_per_shares(
         e: Env,
         vault_shares: i128,
     ) -> Result<Vec<i128>, ContractError>;
 
-    fn get_fees(e: Env) -> (u32, u32);
-
-    /// Reports the gains or losses for all strategies in the vault based on their current balances.
+    /// Retrieves the current fee rates for the vault and the DeFindex protocol.
     ///
-    /// This function iterates through all the strategies managed by the vault and calculates the gains or losses
-    /// for each strategy based on their current balances. It updates the vault's records accordingly.
+    /// This function returns the fee rates for both the vault and the DeFindex protocol.
     ///
     /// # Arguments
-    /// * `e` - A reference to the environment.
+    /// * `e` - The environment.
     ///
     /// # Returns
-    /// * `Result<Vec<(Address, (i128, i128))>, ContractError>` - A vector of tuples containing the strategy address, current balance, and the gain or loss.
+    /// * `(u32, u32)` - A tuple containing:
+    ///     - The vault fee rate as a percentage in basis points.
+    ///     - The DeFindex protocol fee rate as a percentage in basis points.
+    ///
+
+    fn get_fees(e: Env) -> (u32, u32);
+
+    /// Generates reports for all strategies in the vault, tracking their performance and fee accrual.
+    ///
+    /// This function iterates through all assets and their associated strategies to generate
+    /// performance reports. It updates each strategy's report with current balances and
+    /// calculates gains or losses since the last report.
+    ///
+    /// # Arguments
+    /// * `e` - The environment reference.
+    ///
+    /// # Function Flow
+    /// 1. **Instance Extension**:
+    ///    - Extends contract TTL
+    ///
+    /// 2. **Asset & Strategy Retrieval**:
+    ///    - Gets all assets and their strategies
+    ///    - Initializes reports vector
+    ///
+    /// 3. **Report Generation**:
+    ///    - For each asset:
+    ///      - For each strategy:
+    ///        - Gets current strategy balance
+    ///        - Updates report with new balance
+    ///        - Stores updated report
+    ///
+    /// # Returns
+    /// * `Result<Vec<Report>, ContractError>` - On success, returns a vector of reports 
+    ///   where each report contains performance metrics for a strategy. Returns 
+    ///   ContractError if report generation fails.
+    ///
+    /// # Note
+    /// Reports track:
+    /// - Current strategy balance
+    /// - Gains or losses since last report
+    /// - Locked fees
+    /// - Fee distribution status
     fn report(e: Env) -> Result<Vec<Report>, ContractError>;
 }
 
@@ -236,8 +332,8 @@ pub trait AdminInterfaceTrait {
     /// * `e` - The environment.
     /// * `new_manager` - The new manager address.
     ///
-    /// # Returns:
-    /// * `()` - No return value.
+    /// # Returns
+    /// * `Result<(), ContractError>` - Success (()) or ContractError if the manager change fails
     fn set_manager(e: Env, new_manager: Address) -> Result<(), ContractError>;
 
     /// Retrieves the current manager address for the vault.
@@ -299,6 +395,9 @@ pub trait AdminInterfaceTrait {
     ///
     /// * `e` - The runtime environment.
     /// * `new_wasm_hash` - The hash of the new WASM code to upgrade the contract to.
+    ///
+    /// # Returns
+    /// * `Result<(), ContractError>` - Returns Ok(()) on success, ContractError if upgrade fails
     ///
     fn upgrade(e: Env, new_wasm_hash: BytesN<32>) -> Result<(), ContractError>;
 }
