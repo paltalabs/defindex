@@ -75,41 +75,39 @@ pub fn fetch_invested_funds_for_asset(
         strategy_allocations.push_back(StrategyAllocation {
             strategy_address: strategy.address.clone(),
             amount: strategy_balance,
+            paused: strategy.paused
         });
     }
     (invested_funds, strategy_allocations)
 }
 
 /// Fetches the total managed funds for all assets. This includes both idle and invested funds.
-/// It returns a map where the key is the asset's address and the value is the total managed balance
-/// (idle + invested). With this map we can calculate the current managed funds ratio.
+/// It returns a vector where each entry represents an asset's total managed balance
+/// (idle + invested) in the same order as the assets come.
 ///
 /// # Arguments
 /// * `e` - The current environment instance.
 ///
 /// # Returns
-/// * A map where each entry represents an asset's address and its total managed balance.
+/// * A vector where each entry represents an asset's total managed balance.
 pub fn fetch_total_managed_funds(
     e: &Env,
     lock_fees: bool,
-) -> Map<Address, CurrentAssetInvestmentAllocation> {
+) -> Vec<CurrentAssetInvestmentAllocation> {
     let assets = get_assets(e);
-    let mut map: Map<Address, CurrentAssetInvestmentAllocation> = Map::new(e);
-    for asset in assets {
+    let mut allocations: Vec<CurrentAssetInvestmentAllocation> = Vec::new(e);
+    for asset in &assets {
         let idle_amount = fetch_idle_funds_for_asset(e, &asset.address);
         let (invested_amount, strategy_allocations) =
             fetch_invested_funds_for_asset(e, &asset, lock_fees);
         let total_amount = idle_amount.checked_add(invested_amount).unwrap();
-        map.set(
-            asset.address.clone(),
-            CurrentAssetInvestmentAllocation {
-                asset: asset.address.clone(),
-                total_amount,
-                idle_amount,
-                invested_amount,
-                strategy_allocations,
-            },
-        );
+        allocations.push_back(CurrentAssetInvestmentAllocation {
+            asset: asset.address.clone(),
+            total_amount,
+            idle_amount,
+            invested_amount,
+            strategy_allocations,
+        });
     }
-    map
+    allocations
 }

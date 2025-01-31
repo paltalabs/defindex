@@ -200,11 +200,8 @@ impl VaultTrait for DeFindexVault {
 
         let total_managed_funds = fetch_total_managed_funds(&e, false);
 
-        let assets = get_assets(&e);
-
         let (amounts, shares_to_mint) = process_deposit(
             &e,
-            &assets,
             &total_managed_funds,
             &amounts_desired,
             &amounts_min,
@@ -213,7 +210,7 @@ impl VaultTrait for DeFindexVault {
         events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone());
 
         let asset_investments = if invest {
-            let allocations = generate_investment_allocations(&e, &assets, &total_managed_funds, &amounts)?;
+            let allocations = generate_investment_allocations(&e, &total_managed_funds, &amounts)?;
             //iterate between allocations to execute investments
             for allocation in allocations.iter() {
                 //Validate if alloctation is not empty
@@ -287,22 +284,18 @@ impl VaultTrait for DeFindexVault {
         // Burn the shares after calculating the withdrawal amounts
         // This will panic with error if the user does not have enough balance
         internal_burn(e.clone(), from.clone(), withdraw_shares);
-
-        let assets = get_assets(&e); // Use assets for iteration order
-                                     // Loop through each asset to handle the withdrawal
+        
         let mut withdrawn_amounts: Vec<i128> = Vec::new(&e);
-
-        for asset in assets.iter() {
+        
+        // Loop through each asset to handle the withdrawal
+        for (i, asset) in total_managed_funds.iter().enumerate() {
             // Use assets instead of asset_withdrawal_amounts
-            let asset_address = &asset.address;
+            let asset_address = &asset.asset;
 
             if let Some(requested_withdrawal_amount) =
-                asset_withdrawal_amounts.get(asset_address.clone())
+                asset_withdrawal_amounts.get(i as u32)
             {
-                let asset_allocation = total_managed_funds
-                    .get(asset_address.clone())
-                    .ok_or_else(|| ContractError::WrongAmountsLength)?;
-                let idle_funds = asset_allocation.idle_amount;
+                let idle_funds = asset.idle_amount;
 
                 if idle_funds >= requested_withdrawal_amount {
                     TokenClient::new(&e, asset_address).transfer(
@@ -316,13 +309,13 @@ impl VaultTrait for DeFindexVault {
                     let remaining_amount_to_unwind =
                         requested_withdrawal_amount.checked_sub(idle_funds).unwrap();
 
-                    let total_invested_amount = asset_allocation.invested_amount;
+                    let total_invested_amount = asset.invested_amount;
 
                     for (i, strategy_allocation) in
-                        asset_allocation.strategy_allocations.iter().enumerate()
+                        asset.strategy_allocations.iter().enumerate()
                     {
                         let strategy_amount_to_unwind: i128 =
-                            if i == (asset_allocation.strategy_allocations.len() as usize) - 1 {
+                            if i == (asset.strategy_allocations.len() as usize) - 1 {
                                 requested_withdrawal_amount
                                     .checked_sub(cumulative_amount_for_asset)
                                     .unwrap()
@@ -509,9 +502,11 @@ impl VaultTrait for DeFindexVault {
     ///
     /// # Returns:
     /// * `Map<Address, i128>` - A map of asset addresses to their total managed amounts.
-    fn fetch_total_managed_funds(e: &Env) -> Map<Address, CurrentAssetInvestmentAllocation> {
+    fn fetch_total_managed_funds(e: &Env) -> Vec<CurrentAssetInvestmentAllocation> {
         extend_instance_ttl(&e);
-        fetch_total_managed_funds(e, false)
+        let total_managed_funds = fetch_total_managed_funds(e, false);
+
+        total_managed_funds
     }
 
     // Calculates the corresponding amounts of each asset per a given number of vault shares.
@@ -528,7 +523,7 @@ impl VaultTrait for DeFindexVault {
     fn get_asset_amounts_per_shares(
         e: Env,
         vault_shares: i128,
-    ) -> Result<Map<Address, i128>, ContractError> {
+    ) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
 
         let total_managed_funds = fetch_total_managed_funds(&e, true);
@@ -777,6 +772,7 @@ impl VaultManagementTrait for DeFindexVault {
                         strategy_allocations: vec![&e, Some(StrategyAllocation {
                             strategy_address: strategy_address.clone(),
                             amount: amount.clone(),
+                            paused: strategy.paused
                         })],
                     };
                     events::emit_rebalance_invest_event(&e, vec![&e, call_params], report);
