@@ -160,7 +160,7 @@ pub trait VaultTrait {
     ///
     /// # Returns:
     /// * `Vec<AssetStrategySet>` - A vector of `AssetStrategySet` structs representing the assets managed by the vault.
-    fn get_assets(e: Env) -> Vec<AssetStrategySet>;
+    fn get_assets(e: Env) -> Result<Vec<AssetStrategySet>, ContractError>;
 
     /// Returns the total managed funds of the vault, including both invested and idle funds.
     ///
@@ -172,7 +172,7 @@ pub trait VaultTrait {
     ///
     /// # Returns:
     /// * `Map<Address, i128>` - A map of asset addresses to their total managed amounts.
-    fn fetch_total_managed_funds(e: &Env) -> Vec<CurrentAssetInvestmentAllocation>;
+    fn fetch_total_managed_funds(e: &Env) -> Result<Vec<CurrentAssetInvestmentAllocation>, ContractError>;
 
     // Calculates the corresponding amounts of each asset per a given number of vault shares.
     /// This function extends the contract's time-to-live and calculates how much of each asset corresponds
