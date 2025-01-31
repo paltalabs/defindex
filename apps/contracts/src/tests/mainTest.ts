@@ -50,13 +50,8 @@ const twoStrategyParams: CreateVaultParams[] = [
     address: xlmAddress,
     strategies: [
       {
-        name: "Blend Strategy",
-        address: addressBook.getContractId("blend_strategy"),
-        paused: false,
-      },
-      {
-        name: "Fixed Strategy",
-        address: addressBook.getContractId("fixed_apr_strategy"),
+        name: "Blend Strategy 0",
+        address: addressBook.getContractId("XLM_blend_strategy_0"),
         paused: false,
       },
     ],

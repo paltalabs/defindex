@@ -9,9 +9,9 @@ import {
   rescueFromStrategy,
   withdrawFromVault
 } from "../vault.js";
-import { green, purple, red, usdcAddress, xtarAddress, yellow } from "../common.js";
+import { green, purple, red, usdcAddress, yellow } from "../common.js";
 import { airdropAccount } from "../../utils/contract.js";
-import { deployDefindexVault, fetchBalances, fetchStrategiesBalances } from "./utils.js";
+import { deployDefindexVault, fetchBalances } from "./utils.js";
 import { getCurrentTimePlusOneHour } from "../../utils/tx.js";
 /* 
 ### Two assets two strategies tests:
