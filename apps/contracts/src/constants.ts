@@ -1,7 +1,8 @@
 import { Address } from "@stellar/stellar-sdk";
 import { AddressBook } from "./utils/address_book.js";
 
-const otherAddressbook = AddressBook.loadFromFile('../../../public');
+const network = process.argv[2];
+const otherAddressbook = AddressBook.loadFromFile(network, '../../public');
 
 export const USDC_ADDRESS = new Address(otherAddressbook.getContractId("soroswap_usdc"));
 export const XTAR_ADDRESS = new Address(otherAddressbook.getContractId("soroswap_xtar"));
