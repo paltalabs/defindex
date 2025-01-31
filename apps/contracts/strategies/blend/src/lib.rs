@@ -35,28 +35,23 @@ impl DeFindexStrategyTrait for BlendStrategy {
     fn __constructor(e: Env, asset: Address, init_args: Vec<Val>) {
         let blend_pool_address: Address = init_args
             .get(0)
-            .ok_or(StrategyError::InvalidArgument)
-            .unwrap()
+            .expect("Invalid argument: blend_pool_address")
             .into_val(&e);
         let reserve_id: u32 = init_args
             .get(1)
-            .ok_or(StrategyError::InvalidArgument)
-            .unwrap()
+            .expect("Invalid argument: reserve_id")
             .into_val(&e);
         let blend_token: Address = init_args
             .get(2)
-            .ok_or(StrategyError::InvalidArgument)
-            .unwrap()
+            .expect("Invalid argument: blend_token")
             .into_val(&e);
         let soroswap_router: Address = init_args
             .get(3)
-            .ok_or(StrategyError::InvalidArgument)
-            .unwrap()
+            .expect("Invalid argument: soroswap_router")
             .into_val(&e);
         let claim_ids: Vec<u32> = init_args
             .get(4)
-            .ok_or(StrategyError::InvalidArgument)
-            .unwrap()
+            .expect("Invalid argument: claim_ids")
             .into_val(&e);
 
         let config = Config {
@@ -73,8 +68,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
     fn asset(e: Env) -> Result<Address, StrategyError> {
         extend_instance_ttl(&e);
-
-        Ok(storage::get_config(&e).asset)
+        Ok(storage::get_config(&e)?.asset)
     }
 
     fn deposit(e: Env, amount: i128, from: Address) -> Result<i128, StrategyError> {
@@ -88,7 +82,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
             return Err(StrategyError::AmountBelowMinDust);
         }
 
-        let config = storage::get_config(&e);
+        let config = storage::get_config(&e)?;
         blend_pool::claim(&e, &e.current_contract_address(), &config);
         perform_reinvest(&e, &config)?;
 
@@ -97,12 +91,12 @@ impl DeFindexStrategyTrait for BlendStrategy {
         // transfer tokens from the vault to the strategy contract
         TokenClient::new(&e, &config.asset).transfer(&from, &e.current_contract_address(), &amount);
 
-        let b_tokens_minted = blend_pool::supply(&e, &from, &amount, &config);
+        let b_tokens_minted = blend_pool::supply(&e, &from, &amount, &config)?;
 
         // Keeping track of the total deposited amount and the total bTokens owned by the strategy depositors
-        let (vault_shares, reserves) = reserves::deposit(&e, reserves.clone(), &from, amount, b_tokens_minted);
+        let (vault_shares, reserves) = reserves::deposit(&e, reserves.clone(), &from, amount, b_tokens_minted)?;
 
-        let underlying_balance = shares_to_underlying(vault_shares, reserves);
+        let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
 
         event::emit_deposit(&e, String::from_str(&e, STARETEGY_NAME), amount, from);
         Ok(underlying_balance)
@@ -111,7 +105,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
     fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
         extend_instance_ttl(&e);
 
-        let config = storage::get_config(&e);
+        let config = storage::get_config(&e)?;
         let harvested_blend = blend_pool::claim(&e, &e.current_contract_address(), &config);
 
         perform_reinvest(&e, &config)?;
@@ -138,9 +132,9 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         let reserves = storage::get_strategy_reserves(&e);
 
-        let config = storage::get_config(&e);
+        let config = storage::get_config(&e)?;
 
-        let (tokens_withdrawn, b_tokens_burnt) = blend_pool::withdraw(&e, &to, &amount, &config);
+        let (tokens_withdrawn, b_tokens_burnt) = blend_pool::withdraw(&e, &to, &amount, &config)?;
 
         let (vault_shares, reserves) = reserves::withdraw(
             &e,
@@ -148,8 +142,8 @@ impl DeFindexStrategyTrait for BlendStrategy {
             &from,
             tokens_withdrawn,
             b_tokens_burnt,
-        );
-        let underlying_balance = shares_to_underlying(vault_shares, reserves);
+        )?;
+        let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
 
         event::emit_withdraw(&e, String::from_str(&e, STARETEGY_NAME), amount, from);
 
@@ -165,26 +159,26 @@ impl DeFindexStrategyTrait for BlendStrategy {
         // Get the strategy's total shares and bTokens
         let reserves = storage::get_strategy_reserves(&e);
 
-        let underlying_balance = shares_to_underlying(vault_shares, reserves);
+        let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
 
         Ok(underlying_balance)
     }
 }
 
-fn shares_to_underlying(shares: i128, reserves: StrategyReserves) -> i128 {
+fn shares_to_underlying(shares: i128, reserves: StrategyReserves) -> Result<i128, StrategyError> {
     let total_shares = reserves.total_shares;
     let total_b_tokens = reserves.total_b_tokens;
 
     if total_shares == 0 || total_b_tokens == 0 {
         // No shares or bTokens in the strategy
-        return 0i128;
+        return Ok(0i128);
     }
     // Calculate the bTokens corresponding to the vault's shares
-    let vault_b_tokens = reserves.shares_to_b_tokens_down(shares);
+    let vault_b_tokens = reserves.shares_to_b_tokens_down(shares)?;
 
     // Use the b_rate to convert bTokens to underlying assets
     vault_b_tokens
         .fixed_div_floor(SCALAR_9, reserves.b_rate)
-        .unwrap()
+        .ok_or_else(|| StrategyError::DivisionByZero)
 }
 mod test;
