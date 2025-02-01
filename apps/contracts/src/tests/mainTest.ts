@@ -57,7 +57,7 @@ const oneAssetTwoStrategyParams: CreateVaultParams[] = [
         paused: false,
       },
       {
-        name: "Blend Strategy 0",
+        name: "Blend Strategy 1",
         address: addressBook.getContractId("xlm_blend_strategy_1"),
         paused: false,
       },
