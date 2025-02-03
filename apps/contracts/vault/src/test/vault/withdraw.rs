@@ -1,5 +1,5 @@
 use soroban_sdk::{testutils::{MockAuth, MockAuthInvoke}, vec as sorobanvec, Address, IntoVal, Map, String, Vec};
-
+extern crate std;
 // use super::hodl_strategy::StrategyError;
 use crate::test::{
     create_defindex_vault, create_fixed_strategy, create_strategy_params_token_0, create_strategy_params_token_1, defindex_vault::{
@@ -866,7 +866,12 @@ fn from_strategies_one_asset_two_strategies_success() {
     let strategy_2_balance_before_withdraw = test.token_0.balance(&strategy_client_1.address);
     let idle_funds_before_withdraw = test.token_0.balance(&defindex_contract.address);
 
+    let total_managed_funds_before_withdraw = defindex_contract.fetch_total_managed_funds();
+    std::println!("total_managed_funds_before_withdraw: {:?}", total_managed_funds_before_withdraw);
     defindex_contract.withdraw(&(amount_0-1000), &users[0]);
+
+    let total_managed_funds_after_withdraw = defindex_contract.fetch_total_managed_funds();
+    std::println!("total_managed_funds_after_withdraw: {:?}", total_managed_funds_after_withdraw);
 
     let unwind_amount = (amount_0 - 1000)-idle_funds_before_withdraw;
     let strategy_1_expected_unwind = (unwind_amount as f64 * 0.8) as i128;
