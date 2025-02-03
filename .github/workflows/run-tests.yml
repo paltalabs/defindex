@@ -2,6 +2,8 @@ name: Run dapp tests
 
 on:
   pull_request:
+    paths:
+      - 'apps/dapp/**'
   workflow_dispatch:
 permissions:
   contents: write

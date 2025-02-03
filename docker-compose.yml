@@ -40,6 +40,19 @@ services:
     tty: true
     working_dir: /workspace/packages/defindex-dart-sdk
 
+  dotnet:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    container_name: dotnet-defindex
+    profiles:
+      - on-demand
+    networks:
+      - defindex-network
+    volumes:
+      - .:/workspace
+    tty: true
+    stdin_open: true
+    working_dir: /workspace/packages/dotnet-sdk
+
 networks:
   defindex-network:
     driver: bridge

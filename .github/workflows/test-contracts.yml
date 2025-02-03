@@ -2,6 +2,8 @@ name: Test contracts
 
 on:
   pull_request:
+    paths:
+      - 'apps/contracts/**'
   workflow_dispatch:
 permissions:
   contents: write
