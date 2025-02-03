@@ -31,7 +31,7 @@ jobs:
           dotnet-version: ${{ matrix.dotnet }}
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore packages/dotnet-sdk
 
       - name: Run tests with coverage
-        run: dotnet test --no-restore
+        run: dotnet test packages/dotnet-sdk --no-restore
