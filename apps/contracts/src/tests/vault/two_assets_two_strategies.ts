@@ -1,18 +1,18 @@
 import { Address, Keypair } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
 import {
-  CreateVaultParams,
   depositToVault,
   Instruction,
   manager,
   rebalanceVault,
-  rescueFromStrategy,
   withdrawFromVault
 } from "../vault.js";
-import { green, purple, red, usdcAddress, xtarAddress, yellow } from "../common.js";
+import { green, purple, red, yellow } from "../common.js";
 import { airdropAccount } from "../../utils/contract.js";
-import { deployDefindexVault, fetchBalances, fetchStrategiesBalances } from "./utils.js";
+import { deployDefindexVault, fetchBalances } from "./utils.js";
 import { getCurrentTimePlusOneHour } from "../../utils/tx.js";
+import { CreateVaultParams } from "../types.js";
+import { USDC_ADDRESS } from "../../constants.js";
 /* 
 ### Two assets two strategies tests:
 - [x] deposit
@@ -343,7 +343,7 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
               type: "SwapExactIn",
               amount_in: BigInt(2_500_000),
               amount_out_min: BigInt(0),
-              token_in: usdcAddress.toString(),
+              token_in: USDC_ADDRESS.toString(),
               token_out: xlmAddress.toString(),
               deadline: BigInt(getCurrentTimePlusOneHour()),
             },       
@@ -378,7 +378,7 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
             type: "SwapExactIn",
             amount_in: BigInt(2_500_000),
             amount_out_min: BigInt(0),
-            token_in: usdcAddress.toString(),
+            token_in: USDC_ADDRESS.toString(),
             token_out: xlmAddress.toString(),
             deadline: BigInt(getCurrentTimePlusOneHour()),
           },       

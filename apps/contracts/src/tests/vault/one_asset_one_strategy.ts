@@ -1,7 +1,6 @@
 import { Keypair } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
 import {
-  CreateVaultParams,
   depositToVault,
   Instruction,
   manager,
@@ -16,6 +15,7 @@ import { airdropAccount } from "../../utils/contract.js";
 import { deployDefindexVault, fetchBalances } from "./utils.js";
 import { testAccessControl } from "./access_control.js";
 import { testUpgradeContract } from "./upgrade_contract.js";
+import { CreateVaultParams } from "../types.js";
 
 /* 
 // One asset one strategy success flow:
