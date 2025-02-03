@@ -1,9 +1,10 @@
 use soroban_sdk::token::TokenClient;
-use soroban_sdk::{Address, Env, Map, Vec};
+use soroban_sdk::{Address, Env, Vec};
 
 use crate::models::{CurrentAssetInvestmentAllocation, StrategyAllocation};
 use crate::storage::{get_assets, get_report, get_vault_fee, set_report};
 use crate::strategies::get_strategy_client;
+use crate::ContractError;
 use common::models::AssetStrategySet;
 
 /// Retrieves the idle funds for a given asset.
@@ -33,19 +34,19 @@ pub fn fetch_idle_funds_for_asset(e: &Env, asset: &Address) -> i128 {
 ///
 /// # Returns
 /// The total invested funds in the strategy as an `i128`, excluding locked fees.
-pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address, lock_fees: bool) -> i128 {
+pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address, lock_fees: bool) -> Result<i128, ContractError> {
     let strategy_client = get_strategy_client(e, strategy_address.clone());
     let strategy_invested_funds = strategy_client.balance(&e.current_contract_address());
 
     let mut report = get_report(e, strategy_address);
 
     if lock_fees {
-        report.lock_fee(get_vault_fee(e));
+        report.lock_fee(get_vault_fee(e))?;
         set_report(e, strategy_address, &report);
     }
-    strategy_invested_funds
+    Ok(strategy_invested_funds
         .checked_sub(report.locked_fee)
-        .unwrap_or(0)
+        .unwrap_or(0))
 }
 
 /// Calculates the total funds invested in strategies for a given asset and
@@ -66,50 +67,48 @@ pub fn fetch_invested_funds_for_asset(
     e: &Env,
     asset_strategy_set: &AssetStrategySet,
     lock_fees: bool,
-) -> (i128, Vec<StrategyAllocation>) {
+) -> Result<(i128, Vec<StrategyAllocation>), ContractError> {
     let mut invested_funds: i128 = 0;
     let mut strategy_allocations: Vec<StrategyAllocation> = Vec::new(e);
     for strategy in asset_strategy_set.strategies.iter() {
-        let strategy_balance = fetch_strategy_invested_funds(e, &strategy.address, lock_fees);
+        let strategy_balance = fetch_strategy_invested_funds(e, &strategy.address, lock_fees)?;
         invested_funds = invested_funds.checked_add(strategy_balance).unwrap();
         strategy_allocations.push_back(StrategyAllocation {
             strategy_address: strategy.address.clone(),
             amount: strategy_balance,
+            paused: strategy.paused
         });
     }
-    (invested_funds, strategy_allocations)
+    Ok((invested_funds, strategy_allocations))
 }
 
 /// Fetches the total managed funds for all assets. This includes both idle and invested funds.
-/// It returns a map where the key is the asset's address and the value is the total managed balance
-/// (idle + invested). With this map we can calculate the current managed funds ratio.
+/// It returns a vector where each entry represents an asset's total managed balance
+/// (idle + invested) in the same order as the assets come.
 ///
 /// # Arguments
 /// * `e` - The current environment instance.
 ///
 /// # Returns
-/// * A map where each entry represents an asset's address and its total managed balance.
+/// * A vector where each entry represents an asset's total managed balance.
 pub fn fetch_total_managed_funds(
     e: &Env,
     lock_fees: bool,
-) -> Map<Address, CurrentAssetInvestmentAllocation> {
-    let assets = get_assets(e);
-    let mut map: Map<Address, CurrentAssetInvestmentAllocation> = Map::new(e);
-    for asset in assets {
+) -> Result<Vec<CurrentAssetInvestmentAllocation>, ContractError> {
+    let assets = get_assets(e)?;
+    let mut allocations: Vec<CurrentAssetInvestmentAllocation> = Vec::new(e);
+    for asset in &assets {
         let idle_amount = fetch_idle_funds_for_asset(e, &asset.address);
         let (invested_amount, strategy_allocations) =
-            fetch_invested_funds_for_asset(e, &asset, lock_fees);
+            fetch_invested_funds_for_asset(e, &asset, lock_fees)?;
         let total_amount = idle_amount.checked_add(invested_amount).unwrap();
-        map.set(
-            asset.address.clone(),
-            CurrentAssetInvestmentAllocation {
-                asset: asset.address.clone(),
-                total_amount,
-                idle_amount,
-                invested_amount,
-                strategy_allocations,
-            },
-        );
+        allocations.push_back(CurrentAssetInvestmentAllocation {
+            asset: asset.address.clone(),
+            total_amount,
+            idle_amount,
+            invested_amount,
+            strategy_allocations,
+        });
     }
-    map
+    Ok(allocations)
 }

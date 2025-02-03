@@ -2,7 +2,7 @@ import { Keypair } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
 import { green, purple, red, yellow } from "../common.js";
 import { checkUserBalance } from "../strategy.js";
-import { CreateVaultParams, deployVault, fetchCurrentIdleFunds, fetchCurrentInvestedFunds, fetchParsedCurrentIdleFunds } from "../vault.js";
+import { CreateVaultParams, deployVault, fetchCurrentIdleFunds, fetchCurrentInvestedFunds } from "../vault.js";
 
 export function extractAddresses(params: CreateVaultParams[]): string[] {
   return params.map(param => param.address.toString());
@@ -79,4 +79,24 @@ export async function deployDefindexVault(addressBook: AddressBook, params: Crea
       error
     };
   }
+}
+
+export function underlyingToDfTokens(underlying: number | bigint, totalSupply: number | bigint, totalUnderlying: number | bigint) {
+  // convert to BigInt
+  underlying = BigInt(underlying);
+  totalSupply = BigInt(totalSupply);
+  totalUnderlying = BigInt(totalUnderlying);
+  
+  const dfTokensAmount = underlying * totalSupply / totalUnderlying;
+  return dfTokensAmount;
+}
+
+export function dfTokensToUnderlying(dfTokens: number | bigint, totalSupply: number | bigint, totalUnderlying: number | bigint) {
+  // convert to BigInt
+  dfTokens = BigInt(dfTokens);
+  totalSupply = BigInt(totalSupply);
+  totalUnderlying = BigInt(totalUnderlying);
+  
+  const underlyingAmount = dfTokens * totalUnderlying / totalSupply;
+  return underlyingAmount;
 }

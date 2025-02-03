@@ -887,11 +887,10 @@ export async function fetchCurrentInvestedFunds(
       user,
       true
     );
-    const funds = scValToNative(res.result.retval);
-    const mappedFunds = Object.entries(funds).map(([key, value]) => {
-      const fund = value as TotalManagedFunds;
+    const funds = scValToNative(res.result.retval) as TotalManagedFunds[];
+    const mappedFunds = funds.map((fund) => {
       return {
-        asset: key,
+        asset: fund.asset,
         amount: fund.invested_amount,
       };
     });
@@ -913,11 +912,10 @@ export async function fetchCurrentIdleFunds(
       user,
       true,
     );
-    const funds = scValToNative(res.result.retval);
-    const mappedFunds = Object.entries(funds).map(([key, value]) => {
-      const fund = value as TotalManagedFunds;
+    const funds = scValToNative(res.result.retval) as TotalManagedFunds[];
+    const mappedFunds = funds.map((fund) => {
       return {
-        asset: key,
+        asset: fund.asset,
         amount: fund.idle_amount,
       };
     });
@@ -930,35 +928,14 @@ export async function fetchCurrentIdleFunds(
 
 export async function setVaultManager(
   deployedVault: string,
+  newManager: Keypair,
   manager: Keypair
 ) {
   try {
     const result = await invokeCustomContract(
       deployedVault,
       "set_manager",
-      [],
-      manager
-    );
-    const parsed_result = scValToNative(result.returnValue);
-    const { instructions, readBytes, writeBytes } = getTransactionBudget(result);
-    console.log("Set manager successful:", scValToNative(result.returnValue));
-    return { result: parsed_result, instructions, readBytes, writeBytes };
-  } catch (error) {
-    console.error("Set manager failed:", error);
-    throw error;
-  }
-}
-
-export async function queueVaultManager(
-  deployedVault: string,
-  manager: Keypair,
-  new_manager: Keypair
-) {
-  try {
-    const result = await invokeCustomContract(
-      deployedVault,
-      "queue_manager",
-      [new Address(new_manager.publicKey()).toScVal()],
+      [new Address(newManager.publicKey()).toScVal()],
       manager
     );
     const parsed_result = scValToNative(result.returnValue);
@@ -1045,4 +1022,28 @@ export async function upgradeVaultWasm(deployedVault:Address, manager:Keypair, n
     console.error("Upgrade failed:", error);
     throw error;
   }
+}
+
+export async function fetchTotalManagedFunds(deployedVault:Address, user:Keypair){
+  const res = await invokeCustomContract(
+    deployedVault.toString(),
+    "fetch_total_managed_funds",
+    [],
+    user,
+    true
+  );
+  const funds = scValToNative(res.result.retval);
+  return funds;
+}
+
+export async function fetchTotalSupply(deployedVault:Address, user:Keypair){
+  const res = await invokeCustomContract(
+    deployedVault.toString(),
+    "total_supply",
+    [],
+    user,
+    true
+  );
+  const supply = scValToNative(res.result.retval);
+  return supply;
 }
