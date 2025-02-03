@@ -195,7 +195,7 @@ pub(crate) fn create_blend_strategy(
         reserve_id,
         blend_token,
         soroswap_router,
-        vec![e, 0u32, 1u32, 2u32, 3u32]
+        vec![e, 0u32, 1u32, 2u32, 3u32],
     );
 
     address

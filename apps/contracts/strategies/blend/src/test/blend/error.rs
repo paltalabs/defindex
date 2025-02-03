@@ -1,6 +1,8 @@
 #![cfg(test)]
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
-use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils, ONE_DAY_IN_SECONDS};
+use crate::test::{
+    create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils, ONE_DAY_IN_SECONDS,
+};
 use crate::BlendStrategyClient;
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
@@ -63,12 +65,15 @@ fn deposit_below_min_dust() {
 
     //Trying to deposit below the min dust
     let deposit_below_min_dust = strategy_client.try_deposit(&9999i128, &user_2);
-    
-    assert_eq!(deposit_below_min_dust, Err(Ok(StrategyError::AmountBelowMinDust)));
+
+    assert_eq!(
+        deposit_below_min_dust,
+        Err(Ok(StrategyError::AmountBelowMinDust))
+    );
 }
 
 #[test]
-fn deposit_zero_and_negative_amount(){
+fn deposit_zero_and_negative_amount() {
     // Setting up the environment
     let e = Env::default();
     e.cost_estimate().budget().reset_unlimited();
@@ -123,18 +128,16 @@ fn deposit_zero_and_negative_amount(){
 
     //Trying to deposit below the min dust
     let deposit_negative = strategy_client.try_deposit(&-100_000i128, &user_2);
-     
+
     assert_eq!(deposit_negative, Err(Ok(StrategyError::NegativeNotAllowed)));
 
     let deposit_zero = strategy_client.try_deposit(&0i128, &user_2);
 
     assert_eq!(deposit_zero, Err(Ok(StrategyError::AmountBelowMinDust)));
-
 }
 
-
 #[test]
-fn harvest_from_random_address(){
+fn harvest_from_random_address() {
     // Setting up the environment
     let e = Env::default();
     e.cost_estimate().budget().reset_unlimited();
@@ -184,16 +187,15 @@ fn harvest_from_random_address(){
     );
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
 
-
     let starting_balance = 100_0_000_000i128;
     usdc_client.mint(&user_2, &starting_balance);
 
     strategy_client.deposit(&starting_balance, &user_2);
-    
+
     e.jump_time(ONE_DAY_IN_SECONDS * 365);
-    
+
     usdc_client.mint(&user_2, &1_0_000_000);
-    
+
     strategy_client.deposit(&1_0_000_000, &user_2);
 
     //Trying to harvest from random address
@@ -206,7 +208,7 @@ fn harvest_from_random_address(){
 }
 
 #[test]
-fn withdraw_insufficient_balance(){
+fn withdraw_insufficient_balance() {
     // Setting up the environment
     let e = Env::default();
     e.cost_estimate().budget().reset_unlimited();
@@ -257,23 +259,22 @@ fn withdraw_insufficient_balance(){
     );
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
 
-    let result = strategy_client.try_withdraw(&200_0_000_000 , &user_2, &user_2);
+    let result = strategy_client.try_withdraw(&200_0_000_000, &user_2, &user_2);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
-    
+
     let starting_balance = 10_0_000_000i128;
     usdc_client.mint(&user_2, &starting_balance);
     strategy_client.deposit(&starting_balance, &user_2);
-    
+
     let balance = strategy_client.balance(&user_2);
     let user_balance = usdc_client.balance(&user_2);
     assert_eq!(balance, starting_balance);
-    assert_eq!(user_balance, 0); 
+    assert_eq!(user_balance, 0);
 
-
-    let result = strategy_client.try_withdraw(&200_0_000_000 , &Address::generate(&e), &user_2);
+    let result = strategy_client.try_withdraw(&200_0_000_000, &Address::generate(&e), &user_2);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
 
-    /* 
+    /*
     let balance = strategy_client.balance(&user_2);
     let user_balance = usdc_client.balance(&user_2);
     assert_eq!(balance, 0);
@@ -281,7 +282,7 @@ fn withdraw_insufficient_balance(){
 }
 
 #[test]
-fn withdraw_zero_and_negative(){
+fn withdraw_zero_and_negative() {
     // Setting up the environment
     let e = Env::default();
     e.mock_all_auths();
@@ -334,32 +335,32 @@ fn withdraw_zero_and_negative(){
     let starting_balance = 10_0_000_000i128;
     usdc_client.mint(&user_2, &starting_balance);
     strategy_client.deposit(&starting_balance, &user_2);
-    
+
     let balance = strategy_client.balance(&user_2);
     let user_balance = usdc_client.balance(&user_2);
     assert_eq!(balance, starting_balance);
-    assert_eq!(user_balance, 0); 
+    assert_eq!(user_balance, 0);
 
-    let result = strategy_client.try_withdraw(&-200_0_000_000 , &user_2, &user_2);
+    let result = strategy_client.try_withdraw(&-200_0_000_000, &user_2, &user_2);
     assert_eq!(result, Err(Ok(StrategyError::NegativeNotAllowed)));
 
-    let result = strategy_client.try_withdraw(&0 , &user_2, &user_2);
+    let result = strategy_client.try_withdraw(&0, &user_2, &user_2);
     assert_eq!(result, Err(Ok(StrategyError::AmountBelowMinDust)));
 
-    let result = strategy_client.try_withdraw(&9_000 , &user_2, &user_2);
+    let result = strategy_client.try_withdraw(&9_000, &user_2, &user_2);
     assert_eq!(result, Err(Ok(StrategyError::AmountBelowMinDust)));
 }
 
 #[test]
-fn unauthorized_withdraw(){
-     // Setting up the environment
+fn unauthorized_withdraw() {
+    // Setting up the environment
     let e = Env::default();
     e.set_default_info();
 
     // Setting up the users
     let admin = Address::generate(&e);
     let user_2 = Address::generate(&e);
-    let user_3= Address::generate(&e);
+    let user_3 = Address::generate(&e);
 
     // Setting up the assets
     let blnd = e.register_stellar_asset_contract_v2(admin.clone());
@@ -377,7 +378,7 @@ fn unauthorized_withdraw(){
     let amount_b = 50000000_0_000_000;
     blnd_client.mock_all_auths().mint(&pool_admin, &amount_a);
     usdc_client.mock_all_auths().mint(&pool_admin, &amount_b);
-    
+
     let soroswap_router = create_soroswap_pool(
         &e,
         &pool_admin,
@@ -389,7 +390,7 @@ fn unauthorized_withdraw(){
 
     // End of setting up soroswap pool
     let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
-    
+
     let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
     let strategy = create_blend_strategy(
         &e,
@@ -399,61 +400,59 @@ fn unauthorized_withdraw(){
         &blnd.address(),
         &soroswap_router.address,
     );
-    let strategy_client = BlendStrategyClient::new(&e, &strategy); 
+    let strategy_client = BlendStrategyClient::new(&e, &strategy);
 
     let starting_balance = 10_0_000_000i128;
     usdc_client.mint(&user_2, &starting_balance);
-    strategy_client.mock_auths(
-        &[MockAuth {
+    strategy_client
+        .mock_auths(&[MockAuth {
             address: &user_2,
             invoke: &MockAuthInvoke {
                 contract: &strategy_client.address.clone(),
                 fn_name: "deposit",
                 args: (starting_balance.clone(), user_2.clone()).into_val(&e),
-                sub_invokes: &[
-                    MockAuthInvoke {
-                        contract: &usdc_client.address.clone(),
-                        fn_name: "transfer",
-                        args: (
-                            user_2.clone(),
-                            strategy_client.address.clone(),
-                            starting_balance.clone()
-                        ).into_val(&e),
-                        sub_invokes: &[],
-                    },
-                ],
+                sub_invokes: &[MockAuthInvoke {
+                    contract: &usdc_client.address.clone(),
+                    fn_name: "transfer",
+                    args: (
+                        user_2.clone(),
+                        strategy_client.address.clone(),
+                        starting_balance.clone(),
+                    )
+                        .into_val(&e),
+                    sub_invokes: &[],
+                }],
             },
-        }]
-    ).deposit(&starting_balance, &user_2);
-    
+        }])
+        .deposit(&starting_balance, &user_2);
+
     let balance = strategy_client.balance(&user_2);
     let user_balance = usdc_client.balance(&user_2);
     assert_eq!(balance, starting_balance);
-    assert_eq!(user_balance, 0);  
+    assert_eq!(user_balance, 0);
 
     let withdraw_amount = 8_0_000_000i128;
-    let result = strategy_client.mock_auths(
-        &[MockAuth {
+    let result = strategy_client
+        .mock_auths(&[MockAuth {
             address: &user_3,
             invoke: &MockAuthInvoke {
                 contract: &strategy_client.address.clone(),
                 fn_name: "withdraw",
                 args: (withdraw_amount.clone(), user_2.clone(), user_2.clone()).into_val(&e),
-                sub_invokes: &[
-                    MockAuthInvoke {
-                        contract: &usdc_client.address.clone(),
-                        fn_name: "transfer",
-                        args: (
-                            strategy_client.address.clone(),
-                            user_2.clone(),
-                            withdraw_amount.clone()
-                        ).into_val(&e),
-                        sub_invokes: &[],
-                    },
-                ],
+                sub_invokes: &[MockAuthInvoke {
+                    contract: &usdc_client.address.clone(),
+                    fn_name: "transfer",
+                    args: (
+                        strategy_client.address.clone(),
+                        user_2.clone(),
+                        withdraw_amount.clone(),
+                    )
+                        .into_val(&e),
+                    sub_invokes: &[],
+                }],
             },
-        }]
-    ).try_withdraw(&withdraw_amount, &user_2, &user_2);
-    
+        }])
+        .try_withdraw(&withdraw_amount, &user_2, &user_2);
+
     assert_eq!(result, Err(Err(soroban_sdk::InvokeError::Abort)));
 }

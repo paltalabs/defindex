@@ -1,10 +1,9 @@
-use soroban_sdk::{Address, Env, Map, Vec};
+use soroban_sdk::{Env, Vec};
 
 use crate::{
     models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, StrategyAllocation},
     ContractError,
 };
-use common::models::AssetStrategySet;
 
 /// Generates investment allocations for a set of assets and their associated strategies.
 ///
@@ -111,7 +110,7 @@ pub fn generate_investment_allocations(
                 };
 
                 // Update the remaining amount
-                remaining_amount -= invest_amount;
+                remaining_amount = remaining_amount.checked_sub(invest_amount).ok_or(ContractError::Underflow)?;
 
                 // Add the strategy allocation if it has a non-zero amount
                 strategy_allocations.push_back(if invest_amount > 0 && strategy_allocation.paused == false {

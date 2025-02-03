@@ -6,6 +6,25 @@ use soroban_sdk::{
 
 use crate::storage::Config;
 
+/// Performs a token swap using the Soroswap router.
+///
+/// This function swaps the specified amount of input tokens for a minimum amount of output tokens
+/// along a given path, sending the output tokens to the specified recipient address before the
+/// given deadline. It also handles the necessary authorization and contract invocations.
+///
+/// # Arguments
+///
+/// * `e` - The environment context.
+/// * `amount_in` - The amount of the input token to be swapped.
+/// * `amount_out_min` - The minimum amount of the output token expected from the swap.
+/// * `path` - The swap path, specifying the sequence of tokens to be swapped.
+/// * `to` - The recipient address for the output token.
+/// * `deadline` - The deadline timestamp by which the swap must be completed.
+/// * `config` - The configuration containing the router address.
+///
+/// # Returns
+///
+/// A result containing a vector of output amounts or a `StrategyError` if the swap fails.
 pub fn internal_swap_exact_tokens_for_tokens(
     e: &Env,
     amount_in: &i128,
@@ -15,14 +34,14 @@ pub fn internal_swap_exact_tokens_for_tokens(
     deadline: &u64,
     config: &Config,
 ) -> Result<Vec<i128>, StrategyError> {
-    let swap_args = vec!(
+    let swap_args = vec![
         e,
         amount_in.into_val(e),
         amount_out_min.into_val(e),
         path.into_val(e),
         to.to_val(),
-        deadline.into_val(e)
-    );
+        deadline.into_val(e),
+    ];
 
     // Maybe instead of using the router directly, we should use the pair for swaps
     let pair_address: Address = e.invoke_contract(

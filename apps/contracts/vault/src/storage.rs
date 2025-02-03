@@ -37,26 +37,30 @@ pub fn set_asset(e: &Env, index: u32, asset: &AssetStrategySet) {
         .instance()
         .set(&DataKey::AssetStrategySet(index), asset);
 }
-pub fn get_asset(e: &Env, index: u32) -> AssetStrategySet {
+
+pub fn get_asset(e: &Env, index: u32) -> Result<AssetStrategySet, ContractError> {
     e.storage()
         .instance()
         .get(&DataKey::AssetStrategySet(index))
-        .unwrap()
+        .ok_or(ContractError::NotInitialized)
 }
-pub fn get_assets(e: &Env) -> Vec<AssetStrategySet> {
-    let total_assets = get_total_assets(e);
+
+pub fn get_assets(e: &Env) -> Result<Vec<AssetStrategySet>, ContractError> {
+    let total_assets = get_total_assets(e)?;
     let mut assets = Vec::new(e);
     for i in 0..total_assets {
-        assets.push_back(get_asset(e, i));
+        assets.push_back(get_asset(e, i)?);
     }
-    assets
+
+    Ok(assets)
 }
+
 pub fn set_total_assets(e: &Env, n: u32) {
     e.storage().instance().set(&DataKey::TotalAssets, &n);
 }
 
-pub fn get_total_assets(e: &Env) -> u32 {
-    e.storage().instance().get(&DataKey::TotalAssets).unwrap()
+pub fn get_total_assets(e: &Env) -> Result<u32, ContractError> {
+    e.storage().instance().get(&DataKey::TotalAssets).ok_or(ContractError::NotInitialized)
 }
 
 // DeFindex Fee Receiver
@@ -66,11 +70,11 @@ pub fn set_defindex_protocol_fee_receiver(e: &Env, address: &Address) {
         .set(&DataKey::DeFindexProtocolFeeReceiver, address);
 }
 
-pub fn get_defindex_protocol_fee_receiver(e: &Env) -> Address {
+pub fn get_defindex_protocol_fee_receiver(e: &Env) -> Result<Address, ContractError> {
     e.storage()
         .instance()
         .get(&DataKey::DeFindexProtocolFeeReceiver)
-        .unwrap()
+        .ok_or(ContractError::NotInitialized)
 }
 
 // DeFindex Fee BPS
