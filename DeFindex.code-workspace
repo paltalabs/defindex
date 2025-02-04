@@ -35,6 +35,12 @@
     {
       "name": "DeFindex UI",
       "path": "packages/ui"
+    },
+    {
+      "path": "../../beans-bv/dotnet-stellar-sdk"
+    },
+    {
+      "path": "../../beans-bv/centaurus"
     }
   ],
   "settings": {

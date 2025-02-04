@@ -2,10 +2,125 @@
   "version": 3,
   "targets": {
     "net8.0": {
+      "Common.Logging/3.4.1": {
+        "type": "package",
+        "dependencies": {
+          "Common.Logging.Core": "3.4.1",
+          "Microsoft.CSharp": "4.0.1",
+          "System.Collections": "4.0.11",
+          "System.Diagnostics.Debug": "4.0.11",
+          "System.Globalization": "4.0.11",
+          "System.Reflection.TypeExtensions": "4.1.0",
+          "System.Runtime.Extensions": "4.1.0",
+          "System.Threading": "4.0.11"
+        },
+        "compile": {
+          "lib/netstandard1.3/Common.Logging.dll": {
+            "related": ".pdb"
+          }
+        },
+        "runtime": {
+          "lib/netstandard1.3/Common.Logging.dll": {
+            "related": ".pdb"
+          }
+        }
+      },
+      "Common.Logging.Core/3.4.1": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.CSharp": "4.0.1"
+        },
+        "compile": {
+          "lib/netstandard1.0/Common.Logging.Core.dll": {
+            "related": ".pdb"
+          }
+        },
+        "runtime": {
+          "lib/netstandard1.0/Common.Logging.Core.dll": {
+            "related": ".pdb"
+          }
+        }
+      },
       "coverlet.collector/6.0.0": {
         "type": "package",
         "build": {
           "build/netstandard1.0/coverlet.collector.targets": {}
+        }
+      },
+      "dotnetstandard-bip32/1.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/dotnetstandard-bip32.dll": {
+            "related": ".deps.json;.pdb"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/dotnetstandard-bip32.dll": {
+            "related": ".deps.json;.pdb"
+          }
+        }
+      },
+      "dotnetstandard-bip39/1.0.2": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/dotnetstandard-bip39.dll": {
+            "related": ".deps.json;.pdb"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/dotnetstandard-bip39.dll": {
+            "related": ".deps.json;.pdb"
+          }
+        }
+      },
+      "LaunchDarkly.EventSource/3.3.2": {
+        "type": "package",
+        "dependencies": {
+          "Common.Logging": "3.4.1",
+          "NETStandard.Library": "1.6.1"
+        },
+        "compile": {
+          "lib/netstandard1.4/LaunchDarkly.EventSource.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard1.4/LaunchDarkly.EventSource.dll": {}
+        }
+      },
+      "libsodium/1.0.18.2": {
+        "type": "package",
+        "runtimeTargets": {
+          "runtimes/linux-arm/native/libsodium.so": {
+            "assetType": "native",
+            "rid": "linux-arm"
+          },
+          "runtimes/linux-arm64/native/libsodium.so": {
+            "assetType": "native",
+            "rid": "linux-arm64"
+          },
+          "runtimes/linux-musl-x64/native/libsodium.so": {
+            "assetType": "native",
+            "rid": "linux-musl-x64"
+          },
+          "runtimes/linux-x64/native/libsodium.so": {
+            "assetType": "native",
+            "rid": "linux-x64"
+          },
+          "runtimes/osx-arm64/native/libsodium.dylib": {
+            "assetType": "native",
+            "rid": "osx-arm64"
+          },
+          "runtimes/osx-x64/native/libsodium.dylib": {
+            "assetType": "native",
+            "rid": "osx-x64"
+          },
+          "runtimes/win-x64/native/libsodium.dll": {
+            "assetType": "native",
+            "rid": "win-x64"
+          },
+          "runtimes/win-x86/native/libsodium.dll": {
+            "assetType": "native",
+            "rid": "win-x86"
+          }
         }
       },
       "Microsoft.CodeCoverage/17.8.0": {
@@ -19,6 +134,33 @@
         "build": {
           "build/netstandard2.0/Microsoft.CodeCoverage.props": {},
           "build/netstandard2.0/Microsoft.CodeCoverage.targets": {}
+        }
+      },
+      "Microsoft.CSharp/4.0.1": {
+        "type": "package",
+        "dependencies": {
+          "System.Collections": "4.0.11",
+          "System.Diagnostics.Debug": "4.0.11",
+          "System.Dynamic.Runtime": "4.0.11",
+          "System.Globalization": "4.0.11",
+          "System.Linq": "4.1.0",
+          "System.Linq.Expressions": "4.1.0",
+          "System.ObjectModel": "4.0.12",
+          "System.Reflection": "4.1.0",
+          "System.Reflection.Extensions": "4.0.1",
+          "System.Reflection.Primitives": "4.0.1",
+          "System.Reflection.TypeExtensions": "4.1.0",
+          "System.Resources.ResourceManager": "4.0.1",
+          "System.Runtime": "4.1.0",
+          "System.Runtime.Extensions": "4.1.0",
+          "System.Runtime.InteropServices": "4.1.0",
+          "System.Threading": "4.0.11"
+        },
+        "compile": {
+          "ref/netstandard1.0/Microsoft.CSharp.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard1.3/Microsoft.CSharp.dll": {}
         }
       },
       "Microsoft.NET.Test.Sdk/17.8.0": {
@@ -369,13 +511,34 @@
           "System.Xml.XDocument": "4.3.0"
         }
       },
-      "Newtonsoft.Json/13.0.1": {
+      "Nett/0.10.0": {
         "type": "package",
         "compile": {
-          "lib/netstandard2.0/Newtonsoft.Json.dll": {}
+          "lib/netstandard2.0/Nett.dll": {}
         },
         "runtime": {
-          "lib/netstandard2.0/Newtonsoft.Json.dll": {}
+          "lib/netstandard2.0/Nett.dll": {}
+        }
+      },
+      "Newtonsoft.Json/13.0.2": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/Newtonsoft.Json.dll": {}
+        },
+        "runtime": {
+          "lib/net6.0/Newtonsoft.Json.dll": {}
+        }
+      },
+      "NSec.Cryptography/22.4.0": {
+        "type": "package",
+        "dependencies": {
+          "libsodium": "[1.0.18.2, 1.0.19)"
+        },
+        "compile": {
+          "lib/net5.0/NSec.Cryptography.dll": {}
+        },
+        "runtime": {
+          "lib/net5.0/NSec.Cryptography.dll": {}
         }
       },
       "NuGet.Frameworks/6.5.0": {
@@ -558,6 +721,33 @@
           }
         }
       },
+      "stellar-dotnet-sdk/13.0.0": {
+        "type": "package",
+        "dependencies": {
+          "LaunchDarkly.EventSource": "3.3.2",
+          "NSec.Cryptography": "22.4.0",
+          "Nett": "0.10.0",
+          "Newtonsoft.Json": "13.0.2",
+          "dotnetstandard-bip32": "1.0.0",
+          "dotnetstandard-bip39": "1.0.2",
+          "stellar-dotnet-sdk-xdr": "13.0.0"
+        },
+        "compile": {
+          "lib/net8.0/StellarDotnetSdk.dll": {}
+        },
+        "runtime": {
+          "lib/net8.0/StellarDotnetSdk.dll": {}
+        }
+      },
+      "stellar-dotnet-sdk-xdr/13.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net8.0/StellarDotnetSdk.Xdr.dll": {}
+        },
+        "runtime": {
+          "lib/net8.0/StellarDotnetSdk.Xdr.dll": {}
+        }
+      },
       "System.AppContext/4.3.0": {
         "type": "package",
         "dependencies": {
@@ -678,6 +868,32 @@
         },
         "compile": {
           "ref/netstandard1.5/System.Diagnostics.Tracing.dll": {}
+        }
+      },
+      "System.Dynamic.Runtime/4.0.11": {
+        "type": "package",
+        "dependencies": {
+          "System.Collections": "4.0.11",
+          "System.Diagnostics.Debug": "4.0.11",
+          "System.Globalization": "4.0.11",
+          "System.Linq": "4.1.0",
+          "System.Linq.Expressions": "4.1.0",
+          "System.ObjectModel": "4.0.12",
+          "System.Reflection": "4.1.0",
+          "System.Reflection.Emit": "4.0.1",
+          "System.Reflection.Emit.ILGeneration": "4.0.1",
+          "System.Reflection.Primitives": "4.0.1",
+          "System.Reflection.TypeExtensions": "4.1.0",
+          "System.Resources.ResourceManager": "4.0.1",
+          "System.Runtime": "4.1.0",
+          "System.Runtime.Extensions": "4.1.0",
+          "System.Threading": "4.0.11"
+        },
+        "compile": {
+          "ref/netstandard1.3/System.Dynamic.Runtime.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard1.3/System.Dynamic.Runtime.dll": {}
         }
       },
       "System.Globalization/4.3.0": {
@@ -1048,7 +1264,7 @@
           "System.Runtime": "4.3.0"
         },
         "compile": {
-          "ref/netstandard1.5/_._": {}
+          "ref/netstandard1.5/System.Reflection.TypeExtensions.dll": {}
         },
         "runtime": {
           "lib/netstandard1.5/System.Reflection.TypeExtensions.dll": {}
@@ -1591,6 +1807,42 @@
     }
   },
   "libraries": {
+    "Common.Logging/3.4.1": {
+      "sha512": "5eZ/vgEOqzLg4PypZqnJ+wMhhgHyckicbZY4iDxqQ4FtOz0CpdYZ0xQ78aszMzeAJZiLLb5VdR9tPfunVQLz6g==",
+      "type": "package",
+      "path": "common.logging/3.4.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "common.logging.3.4.1.nupkg.sha512",
+        "common.logging.nuspec",
+        "lib/net35/Common.Logging.dll",
+        "lib/net35/Common.Logging.pdb",
+        "lib/net40/Common.Logging.dll",
+        "lib/net40/Common.Logging.pdb",
+        "lib/netstandard1.3/Common.Logging.dll",
+        "lib/netstandard1.3/Common.Logging.pdb"
+      ]
+    },
+    "Common.Logging.Core/3.4.1": {
+      "sha512": "wLHldZHvxsSD6Ahonfj00/SkfHfKqO+YT6jsUwVm8Rch1REL9IArHAcSLXxYxYfu5/4ydGtmXvOtaH3AkVPu0A==",
+      "type": "package",
+      "path": "common.logging.core/3.4.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "common.logging.core.3.4.1.nupkg.sha512",
+        "common.logging.core.nuspec",
+        "lib/net40/Common.Logging.Core.XML",
+        "lib/net40/Common.Logging.Core.dll",
+        "lib/net40/Common.Logging.Core.pdb",
+        "lib/netstandard1.0/Common.Logging.Core.dll",
+        "lib/netstandard1.0/Common.Logging.Core.pdb",
+        "lib/portable-win+net40+sl40+wp7+wpa81/Common.Logging.Core.XML",
+        "lib/portable-win+net40+sl40+wp7+wpa81/Common.Logging.Core.dll",
+        "lib/portable-win+net40+sl40+wp7+wpa81/Common.Logging.Core.pdb"
+      ]
+    },
     "coverlet.collector/6.0.0": {
       "sha512": "tW3lsNS+dAEII6YGUX/VMoJjBS1QvsxqJeqLaJXub08y1FSjasFPtQ4UBUsudE9PNrzLjooClMsPtY2cZLdXpQ==",
       "type": "package",
@@ -1642,6 +1894,74 @@
         "coverlet-icon.png",
         "coverlet.collector.6.0.0.nupkg.sha512",
         "coverlet.collector.nuspec"
+      ]
+    },
+    "dotnetstandard-bip32/1.0.0": {
+      "sha512": "YMsZb2abuvsyNikSBJaCjaqFlfhcpbodukDqE7JwqKYsRE1NmfLlqbpQrK0olqCubSh9YaF6QfwGCFSHJODAGA==",
+      "type": "package",
+      "path": "dotnetstandard-bip32/1.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "build_package.ps1",
+        "dotnetstandard-bip32.1.0.0.nupkg.sha512",
+        "dotnetstandard-bip32.nuspec",
+        "lib/netstandard2.0/dotnetstandard-bip32.deps.json",
+        "lib/netstandard2.0/dotnetstandard-bip32.dll",
+        "lib/netstandard2.0/dotnetstandard-bip32.pdb",
+        "nuget.exe"
+      ]
+    },
+    "dotnetstandard-bip39/1.0.2": {
+      "sha512": "gayw9MyG3jjxkgRvrkhuzTY3H2yOh+I2+xAY+QktogyYfTcQvgt0+RtXbHQJn691/6i+B3L7wriNuLYv956gUQ==",
+      "type": "package",
+      "path": "dotnetstandard-bip39/1.0.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "build_package.ps1",
+        "dotnetstandard-bip39.1.0.2.nupkg.sha512",
+        "dotnetstandard-bip39.nuspec",
+        "lib/netstandard2.0/dotnetstandard-bip39.deps.json",
+        "lib/netstandard2.0/dotnetstandard-bip39.dll",
+        "lib/netstandard2.0/dotnetstandard-bip39.pdb",
+        "lib/netstandard2.0/wordlists/_._",
+        "nuget.exe"
+      ]
+    },
+    "LaunchDarkly.EventSource/3.3.2": {
+      "sha512": "UxQiXx3xF4FZZv2psi2XUse/pw1mtL3RYhkBSAryfRi1F2zf7W5AUIndFUhYHXNWb1sTkyRKs6c2pkB2rBu1PQ==",
+      "type": "package",
+      "path": "launchdarkly.eventsource/3.3.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "launchdarkly.eventsource.3.3.2.nupkg.sha512",
+        "launchdarkly.eventsource.nuspec",
+        "lib/net45/LaunchDarkly.EventSource.dll",
+        "lib/netstandard1.4/LaunchDarkly.EventSource.dll"
+      ]
+    },
+    "libsodium/1.0.18.2": {
+      "sha512": "flArHoVdscSzyV8ZdPV+bqqY2TTFlaN+xZf/vIqsmHI51KVcD/mOdUPaK3n/k/wGKz8dppiktXUqSmf3AXFgig==",
+      "type": "package",
+      "path": "libsodium/1.0.18.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "AUTHORS",
+        "ChangeLog",
+        "LICENSE",
+        "libsodium.1.0.18.2.nupkg.sha512",
+        "libsodium.nuspec",
+        "runtimes/linux-arm/native/libsodium.so",
+        "runtimes/linux-arm64/native/libsodium.so",
+        "runtimes/linux-musl-x64/native/libsodium.so",
+        "runtimes/linux-x64/native/libsodium.so",
+        "runtimes/osx-arm64/native/libsodium.dylib",
+        "runtimes/osx-x64/native/libsodium.dylib",
+        "runtimes/win-x64/native/libsodium.dll",
+        "runtimes/win-x86/native/libsodium.dll"
       ]
     },
     "Microsoft.CodeCoverage/17.8.0": {
@@ -1708,6 +2028,45 @@
         "lib/netcoreapp3.1/Microsoft.VisualStudio.CodeCoverage.Shim.dll",
         "microsoft.codecoverage.17.8.0.nupkg.sha512",
         "microsoft.codecoverage.nuspec"
+      ]
+    },
+    "Microsoft.CSharp/4.0.1": {
+      "sha512": "17h8b5mXa87XYKrrVqdgZ38JefSUqLChUQpXgSnpzsM0nDOhE40FTeNWOJ/YmySGV6tG6T8+hjz6vxbknHJr6A==",
+      "type": "package",
+      "path": "microsoft.csharp/4.0.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "ThirdPartyNotices.txt",
+        "dotnet_library_license.txt",
+        "lib/MonoAndroid10/_._",
+        "lib/MonoTouch10/_._",
+        "lib/net45/_._",
+        "lib/netcore50/Microsoft.CSharp.dll",
+        "lib/netstandard1.3/Microsoft.CSharp.dll",
+        "lib/portable-net45+win8+wp8+wpa81/_._",
+        "lib/win8/_._",
+        "lib/wp80/_._",
+        "lib/wpa81/_._",
+        "lib/xamarinios10/_._",
+        "lib/xamarinmac20/_._",
+        "lib/xamarintvos10/_._",
+        "lib/xamarinwatchos10/_._",
+        "microsoft.csharp.4.0.1.nupkg.sha512",
+        "microsoft.csharp.nuspec",
+        "ref/MonoAndroid10/_._",
+        "ref/MonoTouch10/_._",
+        "ref/net45/_._",
+        "ref/netcore50/Microsoft.CSharp.dll",
+        "ref/netstandard1.0/Microsoft.CSharp.dll",
+        "ref/portable-net45+win8+wp8+wpa81/_._",
+        "ref/win8/_._",
+        "ref/wp80/_._",
+        "ref/wpa81/_._",
+        "ref/xamarinios10/_._",
+        "ref/xamarinmac20/_._",
+        "ref/xamarintvos10/_._",
+        "ref/xamarinwatchos10/_._"
       ]
     },
     "Microsoft.NET.Test.Sdk/17.8.0": {
@@ -1974,24 +2333,55 @@
         "netstandard.library.nuspec"
       ]
     },
-    "Newtonsoft.Json/13.0.1": {
-      "sha512": "ppPFpBcvxdsfUonNcvITKqLl3bqxWbDCZIzDWHzjpdAHRFfZe0Dw9HmA0+za13IdyrgJwpkDTDA9fHaxOrt20A==",
+    "Nett/0.10.0": {
+      "sha512": "qR4/qq4EZdMkVHn3YLjIZLo6kELbBbZ3v+lNfF7rNAX8ZEU7/2Phj/5sXsgv42H9NAvId3W6YLL45rrHr4xrrw==",
       "type": "package",
-      "path": "newtonsoft.json/13.0.1",
+      "path": "nett/0.10.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/Net40/Nett.dll",
+        "lib/netstandard2.0/Nett.dll",
+        "nett.0.10.0.nupkg.sha512",
+        "nett.nuspec"
+      ]
+    },
+    "Newtonsoft.Json/13.0.2": {
+      "sha512": "R2pZ3B0UjeyHShm9vG+Tu0EBb2lC8b0dFzV9gVn50ofHXh9Smjk6kTn7A/FdAsC8B5cKib1OnGYOXxRBz5XQDg==",
+      "type": "package",
+      "path": "newtonsoft.json/13.0.2",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE.md",
+        "README.md",
         "lib/net20/Newtonsoft.Json.dll",
         "lib/net35/Newtonsoft.Json.dll",
         "lib/net40/Newtonsoft.Json.dll",
         "lib/net45/Newtonsoft.Json.dll",
+        "lib/net6.0/Newtonsoft.Json.dll",
         "lib/netstandard1.0/Newtonsoft.Json.dll",
         "lib/netstandard1.3/Newtonsoft.Json.dll",
         "lib/netstandard2.0/Newtonsoft.Json.dll",
-        "newtonsoft.json.13.0.1.nupkg.sha512",
+        "newtonsoft.json.13.0.2.nupkg.sha512",
         "newtonsoft.json.nuspec",
         "packageIcon.png"
+      ]
+    },
+    "NSec.Cryptography/22.4.0": {
+      "sha512": "lEntcPYd7h3aZ8xxi/y/4TML7o8w0GEGqd+w4L1omqFLbdCBmhxJAeO2YBmv/fXbJKgKCQLm7+TD4bR605PEUQ==",
+      "type": "package",
+      "path": "nsec.cryptography/22.4.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE",
+        "NOTICE",
+        "lib/net5.0/NSec.Cryptography.dll",
+        "lib/netstandard2.1/NSec.Cryptography.dll",
+        "nsec.cryptography.22.4.0.nupkg.sha512",
+        "nsec.cryptography.nuspec",
+        "nsec.png"
       ]
     },
     "NuGet.Frameworks/6.5.0": {
@@ -2231,6 +2621,34 @@
         "runtime.ubuntu.16.10-x64.runtime.native.system.security.cryptography.openssl.4.3.0.nupkg.sha512",
         "runtime.ubuntu.16.10-x64.runtime.native.system.security.cryptography.openssl.nuspec",
         "runtimes/ubuntu.16.10-x64/native/System.Security.Cryptography.Native.OpenSsl.so"
+      ]
+    },
+    "stellar-dotnet-sdk/13.0.0": {
+      "sha512": "WmQYPQL4Az5Z3sH5c8E6bnYKJ0q6OnpJ0sjhNYzw6LeS6mMz0Ej+sU+HGQoK50ZWCmMokU7frKW/9bnm/ABxvg==",
+      "type": "package",
+      "path": "stellar-dotnet-sdk/13.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "lib/net8.0/StellarDotnetSdk.dll",
+        "nugetreadme.md",
+        "stellar-dotnet-sdk.13.0.0.nupkg.sha512",
+        "stellar-dotnet-sdk.nuspec"
+      ]
+    },
+    "stellar-dotnet-sdk-xdr/13.0.0": {
+      "sha512": "wYg3CH8dMvxOBlq+FNzU1MQKWhXPqN6YFSSqohPMLfjaFgXFYJ7QoRlv3co817sLiQGB1Yt9onMV741HzuGrlQ==",
+      "type": "package",
+      "path": "stellar-dotnet-sdk-xdr/13.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.txt",
+        "lib/net8.0/StellarDotnetSdk.Xdr.dll",
+        "nugetreadme.md",
+        "stellar-dotnet-sdk-xdr.13.0.0.nupkg.sha512",
+        "stellar-dotnet-sdk-xdr.nuspec"
       ]
     },
     "System.AppContext/4.3.0": {
@@ -2518,6 +2936,47 @@
         "ref/xamarinwatchos10/_._",
         "system.diagnostics.tracing.4.3.0.nupkg.sha512",
         "system.diagnostics.tracing.nuspec"
+      ]
+    },
+    "System.Dynamic.Runtime/4.0.11": {
+      "sha512": "db34f6LHYM0U0JpE+sOmjar27BnqTVkbLJhgfwMpTdgTigG/Hna3m2MYVwnFzGGKnEJk2UXFuoVTr8WUbU91/A==",
+      "type": "package",
+      "path": "system.dynamic.runtime/4.0.11",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "ThirdPartyNotices.txt",
+        "dotnet_library_license.txt",
+        "lib/MonoAndroid10/_._",
+        "lib/MonoTouch10/_._",
+        "lib/net45/_._",
+        "lib/netcore50/System.Dynamic.Runtime.dll",
+        "lib/netstandard1.3/System.Dynamic.Runtime.dll",
+        "lib/portable-net45+win8+wp8+wpa81/_._",
+        "lib/win8/_._",
+        "lib/wp80/_._",
+        "lib/wpa81/_._",
+        "lib/xamarinios10/_._",
+        "lib/xamarinmac20/_._",
+        "lib/xamarintvos10/_._",
+        "lib/xamarinwatchos10/_._",
+        "ref/MonoAndroid10/_._",
+        "ref/MonoTouch10/_._",
+        "ref/net45/_._",
+        "ref/netcore50/System.Dynamic.Runtime.dll",
+        "ref/netstandard1.0/System.Dynamic.Runtime.dll",
+        "ref/netstandard1.3/System.Dynamic.Runtime.dll",
+        "ref/portable-net45+win8+wp8+wpa81/_._",
+        "ref/win8/_._",
+        "ref/wp80/_._",
+        "ref/wpa81/_._",
+        "ref/xamarinios10/_._",
+        "ref/xamarinmac20/_._",
+        "ref/xamarintvos10/_._",
+        "ref/xamarinwatchos10/_._",
+        "runtimes/aot/lib/netcore50/System.Dynamic.Runtime.dll",
+        "system.dynamic.runtime.4.0.11.nupkg.sha512",
+        "system.dynamic.runtime.nuspec"
       ]
     },
     "System.Globalization/4.3.0": {
@@ -4232,6 +4691,7 @@
     "net8.0": [
       "Microsoft.NET.Test.Sdk >= 17.8.0",
       "coverlet.collector >= 6.0.0",
+      "stellar-dotnet-sdk >= 13.0.0",
       "xunit >= 2.6.2",
       "xunit.runner.visualstudio >= 2.5.4"
     ]
@@ -4285,6 +4745,10 @@
           "coverlet.collector": {
             "target": "Package",
             "version": "[6.0.0, )"
+          },
+          "stellar-dotnet-sdk": {
+            "target": "Package",
+            "version": "[13.0.0, )"
           },
           "xunit": {
             "target": "Package",

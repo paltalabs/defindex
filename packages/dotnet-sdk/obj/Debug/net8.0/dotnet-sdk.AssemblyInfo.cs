@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("DeFindex Core Library")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("0.1.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.1.0+5376da6d7e428b89d6415cfbe592769b488efe28")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.1.0+8e95f1196b380609a2d5c9a6cc7ba3d37f70f8bf")]
 [assembly: System.Reflection.AssemblyProductAttribute("dotnet-sdk")]
 [assembly: System.Reflection.AssemblyTitleAttribute("dotnet-sdk")]
 [assembly: System.Reflection.AssemblyVersionAttribute("0.1.0.0")]
