@@ -1,6 +1,6 @@
 using System;
 using System.Threading;
-using stellar_dotnet_sdk;
+using StellarDotnetSdk;
 
 class Program
 {
