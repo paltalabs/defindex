@@ -2,40 +2,36 @@
   "folders": [
     {
       "name": "Root",
-      "path": "./"
+      "path": "./",
     },
     {
       "name": "Contracts",
-      "path": "apps/contracts"
+      "path": "apps/contracts",
     },
     {
       "name": "Dapp",
-      "path": "apps/dapp"
+      "path": "apps/dapp",
     },
     {
       "name": "Docs",
-      "path": "apps/docs"
+      "path": "apps/docs",
     },
     {
       "name": "Landing",
-      "path": "apps/landing"
+      "path": "apps/landing",
     },
     {
       "name": "DeFindex Dart SDK",
-      "path": "packages/defindex-dart-sdk"
+      "path": "packages/defindex-dart-sdk",
     },
     {
-      "name": "DeFindex JS SDK",
-      "path": "packages/defindex-sdk"
-    },
-    {
-      "name": "DeFindex .NET SDK",
-      "path": "packages/dotnet-sdk"
+      "name": "DeFindex SDK",
+      "path": "packages/defindex-sdk",
     },
     {
       "name": "DeFindex UI",
-      "path": "packages/ui"
-    }
+      "path": "packages/ui",
+    },
   ],
   "settings": {
     "files.exclude": {
