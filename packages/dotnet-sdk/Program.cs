@@ -46,6 +46,18 @@ class Program
             Console.Error.WriteLine("Error while funding account: " + ex.Message);
             Console.ResetColor();
         }
+
+        //View account balances
+        var account = await server.Accounts.Account(keypair.AccountId);
+        if(account.Balances[0].BalanceString != "10000.0000000"){
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("Account not funded");
+            Console.ResetColor();
+        } else {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("Ok.");
+            Console.ResetColor();
+        }
         return;
     }
 
