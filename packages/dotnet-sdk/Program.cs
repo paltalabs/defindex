@@ -19,6 +19,8 @@ class Program
         }
         // var account = GetAccountInfo("GCEZQZLDSZQYHJ7ZDWRHTK6V4RR4W2QZ5DKK2UY62VVQZJ53L2UQ");
         // Console.WriteLine(account);
+        // var privateKey = SC4NWRMSMK6CY4ZUYOLVWSL76GZQVK5FLKRT6JUZQKV224BK3SCFHBC4
+        // var publicKey = GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE
         var network = args[0];
         switch (network) {
             case "testnet":
@@ -81,22 +83,29 @@ class Program
 
         //var contractAddress = new StellarDotnetSdk.Soroban.SCAddress("CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC");
         var contract_address = new SCContractId("CARDT45FED2I3FKESPMHDFV3ZMR6VH5ZHCFIOPH6TPSU35GPB6QBBCSU");
-
+        var keypair_1 = KeyPair.FromSecretSeed("SC4NWRMSMK6CY4ZUYOLVWSL76GZQVK5FLKRT6JUZQKV224BK3SCFHBC4");
+        var address = new StellarDotnetSdk.Soroban.SCAccountId("GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE");
         var method_symbol = new StellarDotnetSdk.Soroban.SCSymbol("balance");
-        var sc_tx_args = new StellarDotnetSdk.Soroban.SCVal[] { }; // Argumentos de ejemplo
+        var sc_tx_args = new StellarDotnetSdk.Soroban.SCVal[] {
+            address
+        };
 
-        var invokeContractOperation = new InvokeContractOperation(contract_address, method_symbol, sc_tx_args, keypair);
+        var invokeContractOperation = new InvokeContractOperation(contract_address, method_symbol, sc_tx_args);
         var transaction = new TransactionBuilder(account)
             .AddOperation(invokeContractOperation)
             .Build();
-        transaction.Sign(keypair);
+        var unsignedTransactionXdr = transaction.ToUnsignedEnvelopeXdrBase64();
 
-        Console.WriteLine(transaction.ToEnvelopeXdrBase64());
+        Console.WriteLine("Unsigned transaction XDR: " + unsignedTransactionXdr);
 
-        var res = await soroban_server.SendTransaction(transaction);
-        Console.WriteLine(res.Status);
-        Console.WriteLine(res.Hash);
-        Console.WriteLine(res.ErrorResultXdr);
+
+        var res = await soroban_server.SimulateTransaction(transaction);
+
+        Console.WriteLine("Transaction events: " + res.Events);
+        Console.WriteLine("Transaction error: " + res.Error);
+        Console.WriteLine("Transaction result: " + res.Results);
+        Console.WriteLine("Transaction data: " + res.SorobanTransactionData);
+
         return;
     }
 
