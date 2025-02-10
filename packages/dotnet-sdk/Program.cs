@@ -1,9 +1,14 @@
 using StellarDotnetSdk.Accounts;
 using StellarDotnetSdk;
+using StellarDotnetSdk.Soroban;
+using StellarDotnetSdk.Xdr;
+using StellarDotnetSdk.Operations;
+using StellarDotnetSdk.Transactions;
 
 class Program
 {
     // var server = new Server("https://horizon-testnet.stellar.org");
+    // var soroban_server = new Server("https://soroban-testnet.stellar.org/");
 
     async static Task Main(string[] args)
     {
@@ -15,8 +20,6 @@ class Program
         // var account = GetAccountInfo("GCEZQZLDSZQYHJ7ZDWRHTK6V4RR4W2QZ5DKK2UY62VVQZJ53L2UQ");
         // Console.WriteLine(account);
         var network = args[0];
-      
-        Console.ForegroundColor = ConsoleColor.Yellow;
         switch (network) {
             case "testnet":
                 Console.WriteLine("Using testnet");
@@ -58,6 +61,42 @@ class Program
             Console.WriteLine("Ok.");
             Console.ResetColor();
         }
+
+        var soroban_server = new SorobanServer("https://soroban-testnet.stellar.org/");
+  /*       var contract_address = new SCContractId("CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC");
+        var method = new StellarDotnetSdk.Soroban.SCSymbol("Balance");
+        var call_args = new StellarDotnetSdk.Soroban.SCVal[] {};
+
+        var invokeContract = new InvokeContractHostFunction(contract_address, method, call_args);
+        var xdr = new StellarDotnetSdk.Xdr.Operation { 
+            Body = new StellarDotnetSdk.Xdr.Operation.OperationBody { 
+                
+            }
+        };
+        var operation = (InvokeHostFunctionOperation.FromXdr(xdr));
+    
+        var transaction = new TransactionBuilder(account)
+            .AddOperation(operation)
+            .Build(); */
+
+        //var contractAddress = new StellarDotnetSdk.Soroban.SCAddress("CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC");
+        var contract_address = new SCContractId("CARDT45FED2I3FKESPMHDFV3ZMR6VH5ZHCFIOPH6TPSU35GPB6QBBCSU");
+
+        var method_symbol = new StellarDotnetSdk.Soroban.SCSymbol("balance");
+        var sc_tx_args = new StellarDotnetSdk.Soroban.SCVal[] { }; // Argumentos de ejemplo
+
+        var invokeContractOperation = new InvokeContractOperation(contract_address, method_symbol, sc_tx_args, keypair);
+        var transaction = new TransactionBuilder(account)
+            .AddOperation(invokeContractOperation)
+            .Build();
+        transaction.Sign(keypair);
+
+        Console.WriteLine(transaction.ToEnvelopeXdrBase64());
+
+        var res = await soroban_server.SendTransaction(transaction);
+        Console.WriteLine(res.Status);
+        Console.WriteLine(res.Hash);
+        Console.WriteLine(res.ErrorResultXdr);
         return;
     }
 
