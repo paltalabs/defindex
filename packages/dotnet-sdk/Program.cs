@@ -76,14 +76,10 @@ class Program
         var transaction = new TransactionBuilder(account_1)
             .AddOperation(invokeContractOperation)
             .Build();
-        transaction.Sign(keypair_1);
-        Console.WriteLine("Transaction: " + transaction.ToEnvelopeXdrBase64());
 
-        var res = await soroban_server.SendTransaction(transaction);
-        Console.WriteLine("Transaction status: " + res.Status);
-        Console.WriteLine("Transaction status: " + res.ErrorResultXdr);
-        Console.WriteLine("Transaction result: " + res);
-
+        Console.WriteLine("unsigned tx: " + transaction.ToUnsignedEnvelopeXdrBase64());
+        var simulated_res = await soroban_server.SimulateTransaction(transaction);
+        Console.WriteLine("Simulated transaction: " + simulated_res);
         return;
     }
 
