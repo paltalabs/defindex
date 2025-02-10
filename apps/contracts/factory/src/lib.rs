@@ -64,7 +64,6 @@ pub trait FactoryTrait {
         roles: Map<u32, Address>,
         vault_fee: u32,
         assets: Vec<AssetStrategySet>,
-        salt: BytesN<32>,
         soroswap_router: Address,
         name_symbol: Map<String, String>,
         upgradable: bool,
@@ -92,7 +91,6 @@ pub trait FactoryTrait {
         roles: Map<u32, Address>,
         vault_fee: u32,
         assets: Vec<AssetStrategySet>,
-        salt: BytesN<32>,
         soroswap_router: Address,
         name_symbol: Map<String, String>,
         upgradable: bool,
@@ -208,7 +206,6 @@ fn create_vault_internal(
     roles: Map<u32, Address>,
     vault_fee: u32,
     assets: Vec<AssetStrategySet>,
-    salt: BytesN<32>,
     soroswap_router: Address,
     name_symbol: Map<String, String>,
     upgradable: bool,
@@ -229,7 +226,7 @@ fn create_vault_internal(
     init_args.push_back(name_symbol.to_val());
     init_args.push_back(upgradable.into_val(e));
 
-    let defindex_address = create_contract(e, vault_wasm_hash, init_args, salt);
+    let defindex_address = create_contract(e, vault_wasm_hash, init_args);
     add_new_vault(e, defindex_address.clone());
 
     events::emit_create_defindex_vault(
@@ -303,7 +300,6 @@ impl FactoryTrait for DeFindexFactory {
     ///              Example roles include the manager and fee receiver.
     /// * `vault_fee` - The fee rate in basis points (1 basis point = 0.01%) allocated to the fee receiver.
     /// * `assets` - A vector of `AssetStrategySet` structs defining the strategies and assets managed by the vault.
-    /// * `salt` - A unique `BytesN<32>` value used to ensure that each deployed vault has a unique address.
     /// * `soroswap_router` - The `Address` of the Soroswap router, which facilitates swaps within the vault.
     /// * `name_symbol` - A `Map` containing the vault's name and symbol metadata (e.g., "name" -> "MyVault", "symbol" -> "MVLT").
     /// * `upgradable` - A boolean flag indicating whether the deployed vault contract should support upgrades.
@@ -315,7 +311,6 @@ impl FactoryTrait for DeFindexFactory {
         roles: Map<u32, Address>,
         vault_fee: u32,
         assets: Vec<AssetStrategySet>,
-        salt: BytesN<32>,
         soroswap_router: Address,
         name_symbol: Map<String, String>,
         upgradable: bool,
@@ -327,7 +322,6 @@ impl FactoryTrait for DeFindexFactory {
             roles.clone(),
             vault_fee,
             assets.clone(),
-            salt,
             soroswap_router,
             name_symbol,
             upgradable,
@@ -360,7 +354,6 @@ impl FactoryTrait for DeFindexFactory {
         roles: Map<u32, Address>,
         vault_fee: u32,
         assets: Vec<AssetStrategySet>,
-        salt: BytesN<32>,
         soroswap_router: Address,
         name_symbol: Map<String, String>,
         upgradable: bool,
@@ -378,7 +371,6 @@ impl FactoryTrait for DeFindexFactory {
             roles.clone(),
             vault_fee,
             assets.clone(),
-            salt,
             soroswap_router,
             name_symbol,
             upgradable,
