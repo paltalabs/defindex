@@ -103,8 +103,6 @@ pub fn create_vault_one_asset_hodl_strategy<'a>() -> VaultOneAseetHodlStrategy<'
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
-
     let mut roles: Map<u32, Address> = Map::new(&setup.env);
     roles.set(0u32, emergency_manager.clone()); // EmergencyManager enum = 0
     roles.set(1u32, fee_receiver.clone()); // VaultFeeReceiver enum = 1
@@ -119,7 +117,6 @@ pub fn create_vault_one_asset_hodl_strategy<'a>() -> VaultOneAseetHodlStrategy<'
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true,
@@ -209,9 +206,6 @@ pub fn create_vault_one_asset_fixed_strategy<'a>() -> VaultOneAseetFixedStrategy
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
-
-
     let mut roles: Map<u32, Address> = Map::new(&setup.env);
     roles.set(0u32, emergency_manager.clone()); // EmergencyManager enum = 0
     roles.set(1u32, fee_receiver.clone()); // VaultFeeReceiver enum = 1
@@ -226,7 +220,6 @@ pub fn create_vault_one_asset_fixed_strategy<'a>() -> VaultOneAseetFixedStrategy
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true
@@ -337,8 +330,6 @@ pub fn create_vault_one_blend_strategy<'a>() -> VaultOneBlendStrategy<'a> {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
-
     let mut roles: Map<u32, Address> = Map::new(&setup.env);
     roles.set(0u32, emergency_manager.clone()); // EmergencyManager enum = 0
     roles.set(1u32, fee_receiver.clone()); // VaultFeeReceiver enum = 1
@@ -353,7 +344,6 @@ pub fn create_vault_one_blend_strategy<'a>() -> VaultOneBlendStrategy<'a> {
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true
