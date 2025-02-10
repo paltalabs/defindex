@@ -52,7 +52,6 @@ pub trait FactoryTrait {
     ///              Example roles include the manager and fee receiver.
     /// * `vault_fee` - The fee rate in basis points (1 basis point = 0.01%) allocated to the fee receiver.
     /// * `assets` - A vector of `AssetStrategySet` structs defining the strategies and assets managed by the vault.
-    /// * `salt` - A unique `BytesN<32>` value used to ensure that each deployed vault has a unique address.
     /// * `soroswap_router` - The `Address` of the Soroswap router, which facilitates swaps within the vault.
     /// * `name_symbol` - A `Map` containing the vault's name and symbol metadata (e.g., "name" -> "MyVault", "symbol" -> "MVLT").
     /// * `upgradable` - A boolean flag indicating whether the deployed vault contract should support upgrades.
@@ -81,7 +80,6 @@ pub trait FactoryTrait {
     /// * `manager` - The address assigned as the vault manager.
     /// * `assets` - A vector of `AssetStrategySet` structs that define the assets managed by the vault.
     /// * `amounts` - A vector of `AssetAmounts` structs that define the initial deposit amounts.
-    /// * `salt` - A salt used for ensuring unique addresses for each deployed vault.
     ///
     /// # Returns
     /// * `Result<Address, FactoryError>` - Returns the address of the new vault, or an error if unsuccessful.
@@ -339,7 +337,6 @@ impl FactoryTrait for DeFindexFactory {
     ///             Example roles include the manager and fee receiver.
     /// * `vault_fee` - The fee rate in basis points (1 basis point = 0.01%) allocated to the fee receiver.
     /// * `assets` - A vector of `AssetStrategySet` structs defining the strategies and assets managed by the vault.
-    /// * `salt` - A unique `BytesN<32>` value used to ensure that each deployed vault has a unique address.
     /// * `soroswap_router` - The `Address` of the Soroswap router, which facilitates swaps within the vault.
     /// * `name_symbol` - A `Map` containing the vault's name and symbol metadata (e.g., "name" -> "MyVault", "symbol" -> "MVLT").
     /// * `upgradable` - A boolean flag indicating whether the deployed vault contract should support upgrades.
