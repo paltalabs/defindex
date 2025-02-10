@@ -413,7 +413,7 @@ mod tests {
         assert_eq!(vault_manager, enviroment.manager);
 
         let vault_name = enviroment.vault_contract.name();
-        assert_eq!(vault_name, String::from_str(&setup.env, "HodlVault"));
+        assert_eq!(vault_name, String::from_str(&setup.env, "DeFindex-Vault-HodlVault"));
 
         let vault_symbol = enviroment.vault_contract.symbol();
         assert_eq!(vault_symbol, String::from_str(&setup.env, "HVLT"));
@@ -461,7 +461,7 @@ mod tests {
         assert_eq!(vault_manager, enviroment.manager);
 
         let vault_name = enviroment.vault_contract.name();
-        assert_eq!(vault_name, String::from_str(&setup.env, "FixedVault"));
+        assert_eq!(vault_name, String::from_str(&setup.env, "DeFindex-Vault-FixedVault"));
 
         let vault_symbol = enviroment.vault_contract.symbol();
         assert_eq!(vault_symbol, String::from_str(&setup.env, "FVLT"));
@@ -504,7 +504,7 @@ mod tests {
         assert_eq!(vault_manager, enviroment.manager);
 
         let vault_name = enviroment.vault_contract.name();
-        assert_eq!(vault_name, String::from_str(&setup.env, "BlendVault"));
+        assert_eq!(vault_name, String::from_str(&setup.env, "DeFindex-Vault-BlendVault"));
 
         let vault_symbol = enviroment.vault_contract.symbol();
         assert_eq!(vault_symbol, String::from_str(&setup.env, "BLNDVLT"));
