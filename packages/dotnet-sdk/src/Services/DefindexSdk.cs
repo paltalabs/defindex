@@ -11,11 +11,11 @@ using DeFindex.Sdk.Interfaces;
 
 public class DefindexSdk : IDefindexSdk
 {
-    private readonly SCContractId _usdcAddress;
+    private readonly SCContractId _address;
 
-    public DefindexSdk(string usdcAddress)
+    public DefindexSdk(string address)
     {
-        _usdcAddress = new SCContractId(usdcAddress);
+        _address = new SCContractId(address);
     }
 
     public Transaction CreateBalanceTransaction(Account account, string accountIdToCheck)
@@ -25,7 +25,7 @@ public class DefindexSdk : IDefindexSdk
         };
         var balanceSymbol = new SCSymbol("balance");
 
-        var invokeContractOperation = new InvokeContractOperation(_usdcAddress, balanceSymbol, getBalanceArgs);
+        var invokeContractOperation = new InvokeContractOperation(_address, balanceSymbol, getBalanceArgs);
         
         return new TransactionBuilder(account)
             .AddOperation(invokeContractOperation)
