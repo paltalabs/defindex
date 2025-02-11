@@ -8,7 +8,7 @@ mod soroswap_setup;
 use soroswap_setup::{
     create_soroswap_pool, create_soroswap_factory, create_soroswap_router
 };
-use crate::{blend_strategy::{create_blend_strategy_contract, BlendStrategyClient}, factory::{AssetStrategySet, Strategy}, test::EnvTestUtils};
+use crate::{blend_strategy::{create_blend_strategy_contract, BlendStrategyClient}, factory::{AssetStrategySet, Strategy}};
 use crate::fixed_strategy::{create_fixed_strategy_contract, FixedStrategyClient};
 use crate::hodl_strategy::{create_hodl_strategy_contract, HodlStrategyClient};
 use crate::test::IntegrationTest;
@@ -304,6 +304,7 @@ pub fn create_vault_one_blend_strategy<'a>() -> VaultOneBlendStrategy<'a> {
         &blnd.address,
         &soroswap_router.address,
         sorobanvec![&setup.env, 0u32, 1u32, 2u32, 3u32],
+        40_0000000
     );
     let strategy_contract = BlendStrategyClient::new(&setup.env, &strategy);
 
