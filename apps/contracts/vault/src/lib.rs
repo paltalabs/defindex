@@ -44,7 +44,7 @@ use utils::{
     calculate_asset_amounts_per_vault_shares, check_initialized, check_min_amount, check_nonnegative_amount
 };
 
-use common::models::AssetStrategySet;
+use common::{models::AssetStrategySet, utils::StringExtensions};
 use defindex_strategy_core::DeFindexStrategyClient;
 
 static MINIMUM_LIQUIDITY: i128 = 1000;
@@ -130,8 +130,10 @@ impl VaultTrait for DeFindexVault {
         access_control.set_role(&RolesDataKey::VaultFeeReceiver, &roles.get(RolesDataKey::VaultFeeReceiver as u32).unwrap_or_else(|| panic_with_error!(&e, ContractError::RolesIncomplete)));
         access_control.set_role(&RolesDataKey::Manager, &roles.get(RolesDataKey::Manager as u32).unwrap_or_else(|| panic_with_error!(&e, ContractError::RolesIncomplete)));
         access_control.set_role(&RolesDataKey::RebalanceManager, &roles.get(RolesDataKey::RebalanceManager as u32).unwrap_or_else(|| panic_with_error!(&e, ContractError::RolesIncomplete)));
-        
+
+        let prefix = String::from_str(&e, "DeFindex-Vault-");
         let vault_name = name_symbol.get(String::from_str(&e, "name")).unwrap_or_else(|| panic_with_error!(&e, ContractError::MetadataIncomplete));
+        let vault_name = prefix.concat(&e, vault_name);
         let vault_symbol = name_symbol.get(String::from_str(&e, "symbol")).unwrap_or_else(|| panic_with_error!(&e, ContractError::MetadataIncomplete));
 
         set_vault_fee(&e, &vault_fee);

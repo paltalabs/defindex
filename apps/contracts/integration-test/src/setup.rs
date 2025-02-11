@@ -8,7 +8,7 @@ mod soroswap_setup;
 use soroswap_setup::{
     create_soroswap_pool, create_soroswap_factory, create_soroswap_router
 };
-use crate::{blend_strategy::{create_blend_strategy_contract, BlendStrategyClient}, factory::{AssetStrategySet, Strategy}, test::EnvTestUtils};
+use crate::{blend_strategy::{create_blend_strategy_contract, BlendStrategyClient}, factory::{AssetStrategySet, Strategy}};
 use crate::fixed_strategy::{create_fixed_strategy_contract, FixedStrategyClient};
 use crate::hodl_strategy::{create_hodl_strategy_contract, HodlStrategyClient};
 use crate::test::IntegrationTest;
@@ -103,8 +103,6 @@ pub fn create_vault_one_asset_hodl_strategy<'a>() -> VaultOneAseetHodlStrategy<'
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
-
     let mut roles: Map<u32, Address> = Map::new(&setup.env);
     roles.set(0u32, emergency_manager.clone()); // EmergencyManager enum = 0
     roles.set(1u32, fee_receiver.clone()); // VaultFeeReceiver enum = 1
@@ -119,7 +117,6 @@ pub fn create_vault_one_asset_hodl_strategy<'a>() -> VaultOneAseetHodlStrategy<'
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true,
@@ -209,9 +206,6 @@ pub fn create_vault_one_asset_fixed_strategy<'a>() -> VaultOneAseetFixedStrategy
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
-
-
     let mut roles: Map<u32, Address> = Map::new(&setup.env);
     roles.set(0u32, emergency_manager.clone()); // EmergencyManager enum = 0
     roles.set(1u32, fee_receiver.clone()); // VaultFeeReceiver enum = 1
@@ -226,7 +220,6 @@ pub fn create_vault_one_asset_fixed_strategy<'a>() -> VaultOneAseetFixedStrategy
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true
@@ -311,6 +304,7 @@ pub fn create_vault_one_blend_strategy<'a>() -> VaultOneBlendStrategy<'a> {
         &blnd.address,
         &soroswap_router.address,
         sorobanvec![&setup.env, 0u32, 1u32, 2u32, 3u32],
+        40_0000000
     );
     let strategy_contract = BlendStrategyClient::new(&setup.env, &strategy);
 
@@ -337,8 +331,6 @@ pub fn create_vault_one_blend_strategy<'a>() -> VaultOneBlendStrategy<'a> {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
-
     let mut roles: Map<u32, Address> = Map::new(&setup.env);
     roles.set(0u32, emergency_manager.clone()); // EmergencyManager enum = 0
     roles.set(1u32, fee_receiver.clone()); // VaultFeeReceiver enum = 1
@@ -353,7 +345,6 @@ pub fn create_vault_one_blend_strategy<'a>() -> VaultOneBlendStrategy<'a> {
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true
@@ -423,7 +414,7 @@ mod tests {
         assert_eq!(vault_manager, enviroment.manager);
 
         let vault_name = enviroment.vault_contract.name();
-        assert_eq!(vault_name, String::from_str(&setup.env, "HodlVault"));
+        assert_eq!(vault_name, String::from_str(&setup.env, "DeFindex-Vault-HodlVault"));
 
         let vault_symbol = enviroment.vault_contract.symbol();
         assert_eq!(vault_symbol, String::from_str(&setup.env, "HVLT"));
@@ -471,7 +462,7 @@ mod tests {
         assert_eq!(vault_manager, enviroment.manager);
 
         let vault_name = enviroment.vault_contract.name();
-        assert_eq!(vault_name, String::from_str(&setup.env, "FixedVault"));
+        assert_eq!(vault_name, String::from_str(&setup.env, "DeFindex-Vault-FixedVault"));
 
         let vault_symbol = enviroment.vault_contract.symbol();
         assert_eq!(vault_symbol, String::from_str(&setup.env, "FVLT"));
@@ -514,7 +505,7 @@ mod tests {
         assert_eq!(vault_manager, enviroment.manager);
 
         let vault_name = enviroment.vault_contract.name();
-        assert_eq!(vault_name, String::from_str(&setup.env, "BlendVault"));
+        assert_eq!(vault_name, String::from_str(&setup.env, "DeFindex-Vault-BlendVault"));
 
         let vault_symbol = enviroment.vault_contract.symbol();
         assert_eq!(vault_symbol, String::from_str(&setup.env, "BLNDVLT"));

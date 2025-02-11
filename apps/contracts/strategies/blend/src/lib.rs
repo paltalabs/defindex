@@ -48,6 +48,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
     /// 3. **blend_token** (`Address`) - The address of the reward token (e.g., BLND) given by the Blend pool.
     /// 4. **soroswap_router** (`Address`) - The address of the Soroswap AMM router, enabling asset swaps.
     /// 5. **claim_ids** (`Vec<u32>`) - A list of IDs of the claimable tokens within the pool.
+    /// 5. **reward_threshold** (`i128`) - The threshold amount of rewards that will trigger a reinvestment.
     ///
     /// # IDs and Their Use
     ///
@@ -97,6 +98,10 @@ impl DeFindexStrategyTrait for BlendStrategy {
             .get(4)
             .expect("Invalid argument: claim_ids")
             .into_val(&e);
+        let reward_threshold: i128 = init_args
+            .get(5)
+            .expect("Invalid argument: reward_threshold")
+            .into_val(&e);
 
         let config = Config {
             asset: asset.clone(),
@@ -105,6 +110,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
             blend_token,
             router: soroswap_router,
             claim_ids,
+            reward_threshold
         };
 
         storage::set_config(&e, config);

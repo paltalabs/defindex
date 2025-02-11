@@ -1,7 +1,7 @@
 extern crate std;
 
 use crate::test::{create_asset_params, create_defindex_factory, DeFindexFactoryTest};
-use soroban_sdk::{vec, Address, BytesN, Map, String, Vec};
+use soroban_sdk::{vec, Address, Map, String, Vec};
 
 #[test]
 fn budget() {
@@ -30,8 +30,6 @@ fn budget() {
 
     let asset_params = create_asset_params(&test);
 
-    let salt = BytesN::from_array(&test.env, &[0; 32]);
-
     let mut roles: Map<u32, Address> = Map::new(&test.env);
     roles.set(0u32, test.emergency_manager.clone()); // EmergencyManager enum = 0
     roles.set(1u32, test.fee_receiver.clone()); // VaultFeeReceiver enum = 1
@@ -46,7 +44,6 @@ fn budget() {
         &roles,
         &2000u32,
         &asset_params,
-        &salt,
         &test.emergency_manager, //soroswap_router,
         &name_symbol,
         &true
@@ -59,7 +56,6 @@ fn budget() {
     test.env.cost_estimate().budget().reset_unlimited();
     // create defindex vault deposit
     let asset_params = create_asset_params(&test);
-    let salt = BytesN::from_array(&test.env, &[0; 32]);
 
     let amount_0 = 1000i128;
     let amount_1 = 2000i128;
@@ -75,7 +71,6 @@ fn budget() {
         &roles,
         &2000u32,
         &asset_params,
-        &salt,
         &test.emergency_manager, //soroswap_router,
         &name_symbol,
         &true,

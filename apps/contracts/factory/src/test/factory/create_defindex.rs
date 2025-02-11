@@ -1,4 +1,4 @@
-use soroban_sdk::{vec, Address, BytesN, Map, String, Vec};
+use soroban_sdk::{vec, Address, Map, String, Vec};
 
 use crate::test::{create_asset_params, DeFindexFactoryTest};
 
@@ -7,7 +7,6 @@ fn create_success() {
     let test = DeFindexFactoryTest::setup();
 
     let asset_params = create_asset_params(&test);
-    let salt = BytesN::from_array(&test.env, &[0; 32]);
 
     let mut roles: Map<u32, Address> = Map::new(&test.env);
     roles.set(0u32, test.emergency_manager.clone()); // EmergencyManager enum = 0
@@ -24,31 +23,26 @@ fn create_success() {
         &roles,
         &2000u32,
         &asset_params,
-        &salt,
         &test.emergency_manager,
         &name_symbol,
         &true
     );
 
     // Create second vault with different salt
-    let salt_2 = BytesN::from_array(&test.env, &[1; 32]);
     test.factory_contract.create_defindex_vault(
         &roles,
         &2000u32,
         &asset_params,
-        &salt_2,
         &test.emergency_manager,
         &name_symbol,
         &true
     );
 
     // Create third vault with different salt
-    let salt_3 = BytesN::from_array(&test.env, &[2; 32]);
     test.factory_contract.create_defindex_vault(
         &roles,
         &2000u32,
         &asset_params,
-        &salt_3,
         &test.emergency_manager,
         &name_symbol,
         &true
@@ -73,7 +67,6 @@ fn create_and_deposit_success() {
     test.env.mock_all_auths();
 
     let asset_params = create_asset_params(&test);
-    let salt = BytesN::from_array(&test.env, &[0; 32]);
 
     let amount_0 = 1000i128;
     let amount_1 = 2000i128;
@@ -100,7 +93,6 @@ fn create_and_deposit_success() {
         &roles,
         &2000u32,
         &asset_params,
-        &salt,
         &test.emergency_manager,
         &name_symbol,
         &true,
@@ -112,13 +104,11 @@ fn create_and_deposit_success() {
     test.token1_admin_client.mint(&test.manager, &amount_1);
 
     // Create second vault with deposit using different salt
-    let salt_2 = BytesN::from_array(&test.env, &[1; 32]);
     test.factory_contract.create_defindex_vault_deposit(
         &test.manager,
         &roles,
         &2000u32,
         &asset_params,
-        &salt_2,
         &test.emergency_manager,
         &name_symbol,
         &true,
