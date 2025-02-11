@@ -183,6 +183,37 @@ yarn build
 npm publish --access public
 ```
 
+## Dotnet Package Development
+
+First, get the specific dotnet container up by running:
+```sh
+docker compose up -d dotnet
+```
+The genereal docker compose won't launch the dotnet service.
+
+then, once the container is up, run:
+```sh
+docker exec -it dotnet-defindex bash
+```
+If you are getting a similar error to this one:
+```
+Error response from daemon: network 9b51654ecff85fb4a6176438b85fc52f19e12f994427193e5c35bad48c9c7917 not found
+```
+You need to do 
+```
+docker rm dotnet-defindex
+```
+To run an example of how this package works,
+You need first to set the environment variables in the `packages/dotnet-sdk/.env` file.
+```sh
+cp .env.example .env
+```
+
+Then, you can run the following command:
+```sh
+dotnet run testnet # or mainnet
+```
+
 ## 📄 Whitepaper
 
 To generate a pdf version of the whitepaper, you need to install mdbook:
