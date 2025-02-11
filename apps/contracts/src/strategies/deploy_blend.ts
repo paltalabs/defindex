@@ -1,5 +1,5 @@
 import { Address, Asset, nativeToScVal, Networks, scValToNative, xdr } from "@stellar/stellar-sdk";
-import { BLEND_POOL_TESTNET, BLEND_TOKEN_TESTNET, SOROSWAP_ROUTER } from "../constants.js";
+// import { BLEND_POOL_TESTNET, BLEND_TOKEN_TESTNET, SOROSWAP_ROUTER } from "../constants.js";
 import { AddressBook } from "../utils/address_book.js";
 import {
   airdropAccount,
@@ -44,17 +44,23 @@ export async function deployBlendStrategy(addressBook: AddressBook) {
   const xlmAddress = new Address(xlmContractId);
   const xlmScVal = xlmAddress.toScVal();
 
+  // CLAIM IDs
+  // For XLM we have 
+  // * `reserve_token_ids` - The ids of the reserves to claiming emissions for
   const claim_ids = xdr.ScVal.scvVec([
-    nativeToScVal(0, { type: "u32" }),
     nativeToScVal(1, { type: "u32" }),
-    nativeToScVal(2, { type: "u32" }),
   ]);
 
+  let blendFixedXlmUsdcPool: string = othersAddressBook.getContractId("blend_fixed_xlm_usdc_pool");
+  let blndToken: string = othersAddressBook.getContractId("blnd_token");
+  let soroswapRouter: string  = othersAddressBook.getContractId("soroswap_router");
+
+
   const initArgs = xdr.ScVal.scvVec([
-    new Address(BLEND_POOL_TESTNET).toScVal(), //Blend pool on testnet!
+    new Address(blendFixedXlmUsdcPool).toScVal(), //Blend pool on testnet!
     nativeToScVal(0, { type: "u32" }), // ReserveId 0 is XLM
-    new Address(BLEND_TOKEN_TESTNET).toScVal(), // BLND Token
-    new Address(SOROSWAP_ROUTER).toScVal(), // Soroswap router
+    new Address(blndToken).toScVal(), // BLND Token
+    new Address(soroswapRouter).toScVal(), // Soroswap router
     claim_ids,
   ]);
 
@@ -75,6 +81,9 @@ export async function deployBlendStrategy(addressBook: AddressBook) {
 const network = process.argv[2];
 const loadedConfig = config(network);
 const addressBook = AddressBook.loadFromFile(network);
+console.log("🚀 ~ addressBook:", addressBook)
+const othersAddressBook = AddressBook.loadFromFile(network, "../../public");
+console.log("🚀 ~ othersAddressBook:", othersAddressBook)
 
 try {
   await deployBlendStrategy(addressBook);
