@@ -56,6 +56,12 @@ yarn deploy-fixed-xtar testnet &&
 yarn deploy-blend testnet
 ```
 
+Multi deploy blend
+```
+# yarn multi-deploy-blend <network> <number of strategies >= 2> <asset key "usdc" / "xlm">
+yarn multi-deploy-blend testnet 2 usdc
+```
+
 once you have deployed all the contracts you can run all the tests by running:
 
 ```bash
