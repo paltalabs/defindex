@@ -4,6 +4,7 @@ using StellarDotnetSdk.Soroban;
 using StellarDotnetSdk.Operations;
 using StellarDotnetSdk.Transactions;
 using dotenv.net;
+using DeFindex.Sdk.Services;
 
 class Program
 {
@@ -70,19 +71,74 @@ class Program
         }
         var soroban_server = new SorobanServer("https://soroban-testnet.stellar.org/");
         var soroswap_admin = KeyPair.FromSecretSeed(secretKey);
+        var soroswap_admin_account = await server.Accounts.Account(soroswap_admin.AccountId);
+        var usdc_string = "CARDT45FED2I3FKESPMHDFV3ZMR6VH5ZHCFIOPH6TPSU35GPB6QBBCSU";
+        var USDC_address = new SCContractId(usdc_string);
 
         var mint_args = new StellarDotnetSdk.Soroban.SCVal[] {
             new StellarDotnetSdk.Soroban.SCAccountId(account.AccountId),
             new StellarDotnetSdk.Soroban.SCInt128("100000000000"),
         };
+        var mint_symbol = new StellarDotnetSdk.Soroban.SCSymbol("mint");
 
-        var mint_result = await InvokeCustomContract("CARDT45FED2I3FKESPMHDFV3ZMR6VH5ZHCFIOPH6TPSU35GPB6QBBCSU", "mint", mint_args, soroswap_admin);
+        var mintUSDC = new InvokeContractOperation(USDC_address, mint_symbol, mint_args);
+        var mintTransaction = new TransactionBuilder(soroswap_admin_account)
+            .AddOperation(mintUSDC)
+            .SetFee(10000)
+            .Build();   
 
-        var get_balance_args = new StellarDotnetSdk.Soroban.SCVal[] {
-            new StellarDotnetSdk.Soroban.SCAccountId(keypair.AccountId),
-        };
+        var simulated_mint_transaction = await soroban_server.SimulateTransaction(mintTransaction);
 
-        var simulatedTransactionResult = await InvokeCustomContract("CARDT45FED2I3FKESPMHDFV3ZMR6VH5ZHCFIOPH6TPSU35GPB6QBBCSU", "balance", get_balance_args, keypair, true);
+        var transaction_data = simulated_mint_transaction.SorobanTransactionData;
+        var authorization_data = simulated_mint_transaction.SorobanAuthorization;
+        var resource_fee  = simulated_mint_transaction.MinResourceFee;
+
+        if (transaction_data != null && authorization_data != null && resource_fee != null)
+        {
+            mintTransaction.SetSorobanTransactionData(transaction_data);
+            mintTransaction.SetSorobanAuthorization(authorization_data);
+            mintTransaction.AddResourceFee(resource_fee.Value + 100000);
+        }
+        mintTransaction.Sign(soroswap_admin);
+        
+        var mintResult = await soroban_server.SendTransaction(mintTransaction);
+
+        Console.WriteLine($"Mint Transaction Status: {mintResult.Status}");
+        ;
+
+        while (true)
+        {
+            var tx_status = await soroban_server.GetTransaction(mintResult.Hash);
+
+
+            if (tx_status.Status.ToString() == "SUCCESS")
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"Mint Transaction Status: {tx_status.Status}");
+                Console.WriteLine($"Mint Transaction hash: {mintResult.Hash}");
+                break;
+            }
+            else if (tx_status.Status.ToString() == "FAILED" || tx_status.Status.ToString() == "ERROR")
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Mint Transaction Status: {tx_status.Status}");
+                Console.WriteLine($"Mint Transaction hash: {mintResult.Hash}");
+                break;
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"Mint Transaction Status: {tx_status.Status}, retrying in 20ms");
+                await Task.Delay(20);
+            }
+        }
+        Console.ResetColor();
+
+        var usdcInstance = new DefindexSdk(usdc_string);
+        var sourceAccount = new Account(account.AccountId, account.SequenceNumber);
+        var transaction = usdcInstance.CreateBalanceTransaction(sourceAccount, keypair.AccountId);
+
+        var simulatedTransactionResult = await soroban_server.SimulateTransaction(transaction);
         if (simulatedTransactionResult.Results != null)
         {
             foreach (var result in simulatedTransactionResult.Results)
@@ -101,85 +157,32 @@ class Program
         var result_xdr = new StellarDotnetSdk.Xdr.XdrDataInputStream(Convert.FromBase64String(xdrString));
         var xdr = StellarDotnetSdk.Xdr.SCVal.Decode(result_xdr);
         Console.WriteLine($"Balance result: {xdr.I128.Lo.InnerValue}");
-        return;
-    }
 
-    async static Task<dynamic> InvokeCustomContract(string contract_id, string method, StellarDotnetSdk.Soroban.SCVal[] args, KeyPair source, bool? simulation = false)
-    {
-        var server = new Server("https://horizon-testnet.stellar.org");
-        var soroban_server = new SorobanServer("https://soroban-testnet.stellar.org/");
+        var vault_string = "CDOQGZLNTWDQSYPSLYQ3R7LDUETUDZFYWJBLYNEGQLJLQKXTTC573LVW";
+        var vaultInstance = new DefindexSdk(vault_string);
+        var user_with_shares =  "GBI3XNPOBMTX5KUYOY742JVCSW4AWPR462IOBJZF3BM7IDAVTN5HHLM3";
+        var vault_transaction = vaultInstance.CreateBalanceTransaction(sourceAccount, user_with_shares);
 
-        var account = await server.Accounts.Account(source.AccountId);
-        var contract_address = new SCContractId(contract_id);
-        var symbol = new StellarDotnetSdk.Soroban.SCSymbol(method);
-
-        var invokeContractOperation = new InvokeContractOperation(contract_address, symbol, args);
-        var transaction = new TransactionBuilder(account)
-            .AddOperation(invokeContractOperation)
-            .Build();
-
-        var simulatedTransactionResult = await soroban_server.SimulateTransaction(transaction);
+        simulatedTransactionResult = await soroban_server.SimulateTransaction(vault_transaction);
         if (simulatedTransactionResult.Results != null)
         {
-            foreach (var resultXdr in simulatedTransactionResult.Results)
+            foreach (var result in simulatedTransactionResult.Results)
             {
-                Console.WriteLine($"🟢Result: {resultXdr.Xdr}");
+                Console.WriteLine($"🟢Result: {result.Xdr}");
             }
         }
-        string? xdrString = simulatedTransactionResult.Results?[0].Xdr;
+        xdrString = simulatedTransactionResult.Results?[0].Xdr;
         if (xdrString == null){
+
             Console.WriteLine("XDR string is null.");
-            return null;
+            return;
         }
 
-        if (simulation == true)
-        {
-            return simulatedTransactionResult;
-        }
-        var transaction_data = simulatedTransactionResult.SorobanTransactionData;
-        var authorization_data = simulatedTransactionResult.SorobanAuthorization;
-        var resource_fee  = simulatedTransactionResult.MinResourceFee;
+        result_xdr = new StellarDotnetSdk.Xdr.XdrDataInputStream(Convert.FromBase64String(xdrString));
+        xdr = StellarDotnetSdk.Xdr.SCVal.Decode(result_xdr);
+        Console.WriteLine($"Balance result: {xdr.I128.Lo.InnerValue}");
+        
 
-        if (transaction_data != null && authorization_data != null && resource_fee != null)
-        {
-            transaction.SetSorobanTransactionData(transaction_data);
-            transaction.SetSorobanAuthorization(authorization_data);
-            transaction.AddResourceFee(resource_fee.Value + 100000);
-        }
-        transaction.Sign(source);
-
-        var result = await soroban_server.SendTransaction(transaction);
-
-        Console.WriteLine($"Mint Transaction Status: {result.Status}");
-
-        while (true)
-        {
-            var tx_status = await soroban_server.GetTransaction(result.Hash);
-
-
-            if (tx_status.Status.ToString() == "SUCCESS")
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"Mint Transaction Status: {tx_status.Status}");
-                Console.WriteLine($"Mint Transaction hash: {result.Hash}");
-                Console.WriteLine($"Mint Transaction result: {tx_status.ResultValue?.ToXdrBase64()}");
-                break;
-            }
-            else if (tx_status.Status.ToString() == "FAILED" || tx_status.Status.ToString() == "ERROR")
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Mint Transaction Status: {tx_status.Status}");
-                Console.WriteLine($"Mint Transaction hash: {result.Hash}");
-                break;
-            }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine($"Mint Transaction Status: {tx_status.Status}, retrying in 20ms");
-                await Task.Delay(20);
-            }
-        }
-        Console.ResetColor();
-        return result;
+        return;
     }
 } 

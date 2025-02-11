@@ -1,7 +1,11 @@
+using StellarDotnetSdk.Transactions;
+using StellarDotnetSdk;
+using StellarDotnetSdk.Accounts;
+
 namespace DeFindex.Sdk.Interfaces;
 
 public interface IDefindexSdk
 {
-    Task<bool> InitializeAsync();
-    // Add more interface methods as needed
+    Transaction CreateBalanceTransaction(Account account, string accountIdToCheck);
+    // Add more transaction creation methods as needed
 } 
