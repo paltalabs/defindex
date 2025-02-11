@@ -2,6 +2,8 @@ import { Address, Keypair, nativeToScVal, scValToNative, xdr } from "@stellar/st
 import { AddressBook } from "../../utils/address_book.js";
 import { airdropAccount, invokeContract } from "../../utils/contract.js";
 import { getTransactionBudget } from "../../utils/tx.js";
+import dotenv from "dotenv";
+
 
 const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
@@ -11,7 +13,8 @@ const green = '\x1b[32m%s\x1b[0m';
 
 export async function testBlendStrategy(user?: Keypair) {
   // Create and fund a new user account if not provided
-  const newUser = Keypair.random();
+  const testUserPrivate = process.env.TEST_USER;
+  const newUser = Keypair.fromSecret(testUserPrivate!);
   console.log(green, '----------------------- New account created -------------------------')
   console.log(green, 'Public key: ',newUser.publicKey())
   console.log(green, '---------------------------------------------------------------------')
@@ -44,7 +47,7 @@ export async function testBlendStrategy(user?: Keypair) {
       console.log(purple, '----------------------- Depositing XLM to the Strategy -----------------------')
       console.log(purple, '---------------------------------------------------------------------------')
       const depositParams: xdr.ScVal[] = [
-        nativeToScVal(1000_0_000_000, { type: "i128" }),
+        nativeToScVal(1_0_000_000, { type: "i128" }),
         new Address(newUser.publicKey()).toScVal(),
       ]
       const depositResult = await invokeContract(
@@ -75,11 +78,11 @@ export async function testBlendStrategy(user?: Keypair) {
       console.log('error', e)
     }
   
-    // Wait for 1 minute
-    console.log(purple, '---------------------------------------------------------------------------')
-    console.log(purple, '----------------------- Waiting for 1 minute -----------------------')
-    console.log(purple, '---------------------------------------------------------------------------')
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // // Wait for 1 minute
+    // console.log(purple, '---------------------------------------------------------------------------')
+    // console.log(purple, '----------------------- Waiting for 5 minute -----------------------')
+    // console.log(purple, '---------------------------------------------------------------------------')
+    // await new Promise(resolve => setTimeout(resolve, 300000));
   
     // Withdrawing XLM from Blend Strategy
     try {
@@ -196,4 +199,4 @@ export async function testBlendStrategy(user?: Keypair) {
     }
 }
 
-//await testBlendStrategy();
+await testBlendStrategy();
