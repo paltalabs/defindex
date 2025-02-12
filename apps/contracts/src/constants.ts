@@ -1,5 +1,11 @@
-export const SOROSWAP_ROUTER = "CC6WRJYMZA574TOXNO2ZWU4HIXJ5OLKGB7JF556RKMZPSV2V62SLBTPK";
-export const SOROSWAP_USDC = "CARDT45FED2I3FKESPMHDFV3ZMR6VH5ZHCFIOPH6TPSU35GPB6QBBCSU";
-export const SOROSWAP_XTAR = "CAJFOYPQKHRVIU4N3ZTJJ6P256L3KSCYNSQD4R4KCQNO5ZAEDQP2BNCG";
-export const BLEND_POOL_TESTNET = "CD2OM6AQMIXPS6ODWAYDEKLLFX5376ZHUFCMSSQJ5ACPVKMTK5NOQC5D";
-export const BLEND_TOKEN_TESTNET = "CB22KRA3YZVCNCQI64JQ5WE7UY2VAV7WFLK6A2JN3HEX56T2EDAFO7QF";
+import { Address } from "@stellar/stellar-sdk";
+import { AddressBook } from "./utils/address_book.js";
+
+const network = process.argv[2];
+const otherAddressbook = AddressBook.loadFromFile(network, '../../public');
+
+export const USDC_ADDRESS = new Address(otherAddressbook.getContractId("soroswap_usdc"));
+export const XTAR_ADDRESS = new Address(otherAddressbook.getContractId("soroswap_xtar"));
+export const SOROSWAP_ROUTER = otherAddressbook.getContractId("soroswap_router");
+export const BLEND_POOL = otherAddressbook.getContractId("blend_fixed_xlm_usdc_pool");
+export const BLEND_TOKEN = otherAddressbook.getContractId("blnd_token");

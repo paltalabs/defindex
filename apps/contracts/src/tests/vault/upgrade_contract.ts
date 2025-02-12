@@ -1,9 +1,10 @@
 import { Keypair } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
-import { admin, CreateVaultParams, manager, upgradeVaultWasm } from "../vault.js";
+import { admin, manager, upgradeVaultWasm } from "../vault.js";
 import { green, purple, red, yellow } from "../common.js";
 import { airdropAccount, installContract } from "../../utils/contract.js";
 import { deployDefindexVault } from "./utils.js";
+import { CreateVaultParams } from "../types.js";
 
 /* 
 // Upgrade tests:

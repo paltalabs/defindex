@@ -1,5 +1,5 @@
 import { Address, Keypair, nativeToScVal, xdr } from "@stellar/stellar-sdk";
-import { SOROSWAP_USDC } from "../constants.js";
+import { USDC_ADDRESS } from "../constants.js";
 import { mintToken } from "../tests/vault.js";
 import { AddressBook } from "../utils/address_book.js";
 import {
@@ -33,14 +33,13 @@ export async function deployFixedAPRStrategy(addressBook: AddressBook) {
   console.log("-------------------------------------------------------");
   await installContract("fixed_apr_strategy", addressBook, loadedConfig.admin);
 
-  const usdcAddress = new Address(SOROSWAP_USDC);
   
   const initArgs = xdr.ScVal.scvVec([
     nativeToScVal(1000, { type: "u32" }), // 10% APR
   ]);
 
   const args: xdr.ScVal[] = [
-    usdcAddress.toScVal(),
+    USDC_ADDRESS.toScVal(),
     initArgs
   ];
 
@@ -62,7 +61,7 @@ export async function deployFixedAPRStrategy(addressBook: AddressBook) {
 
   // Mint to the admin the initailAmount
   await invokeCustomContract(
-    usdcAddress.toString(),
+    USDC_ADDRESS.toString(),
     "transfer",
     [new Address(temp_user.publicKey()).toScVal(), new Address(deployedAddress).toScVal(), nativeToScVal(9000_0000000, { type: "i128" })],
     temp_user

@@ -3,8 +3,9 @@ import { SOROSWAP_ROUTER } from "../../constants.js";
 import { AddressBook } from "../../utils/address_book.js";
 import { airdropAccount, invokeContract } from "../../utils/contract.js";
 import { config } from "../../utils/env_config.js";
-import { AssetInvestmentAllocation, depositToVault, getCreateDeFindexParams, Instruction, rebalanceManager, rebalanceVault } from "../vault.js";
+import { depositToVault, getCreateDeFindexParams, Instruction, rebalanceManager, rebalanceVault } from "../vault.js";
 import { getTransactionBudget } from "../../utils/tx.js";
+import { AssetInvestmentAllocation } from "../types.js";
 
 const network = process.argv[2];
 const loadedConfig = config(network);
