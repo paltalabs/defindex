@@ -136,7 +136,7 @@ class Program
         }
         Console.ResetColor();
 
-        var usdcInstance = new DefindexSdk(usdc_string);
+        var usdcInstance = new DefindexSdk(usdc_string, soroban_server);
         var sourceAccount = new Account(account.AccountId, account.SequenceNumber);
         var transaction = usdcInstance.CreateBalanceTransaction(sourceAccount, keypair.AccountId);
 
@@ -161,7 +161,7 @@ class Program
         Console.WriteLine($"Balance result: {xdr.I128.Lo.InnerValue}");
 
         var vault_string = "CDOQGZLNTWDQSYPSLYQ3R7LDUETUDZFYWJBLYNEGQLJLQKXTTC573LVW";
-        var vaultInstance = new DefindexSdk(vault_string);
+        var vaultInstance = new DefindexSdk(vault_string, soroban_server);
         var user_with_shares =  "GBI3XNPOBMTX5KUYOY742JVCSW4AWPR462IOBJZF3BM7IDAVTN5HHLM3";
         var vault_transaction = vaultInstance.CreateBalanceTransaction(sourceAccount, user_with_shares);
 
