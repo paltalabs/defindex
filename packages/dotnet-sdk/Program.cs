@@ -5,6 +5,8 @@ using StellarDotnetSdk.Operations;
 using StellarDotnetSdk.Transactions;
 using dotenv.net;
 using DeFindex.Sdk.Services;
+using System.Text;
+using System.Security.Cryptography.X509Certificates;
 
 class Program
 {
@@ -182,6 +184,64 @@ class Program
         xdr = StellarDotnetSdk.Xdr.SCVal.Decode(result_xdr);
         Console.WriteLine($"Balance result: {xdr.I128.Lo.InnerValue}");
         
+        var total_managed_funds_transaction = vaultInstance.FetchTotalManagedFunds(sourceAccount);
+        
+        var simulatedTotalManagedFundsResult = await soroban_server.SimulateTransaction(total_managed_funds_transaction);
+        if (simulatedTotalManagedFundsResult.Results != null)
+        {
+            foreach (var result in simulatedTotalManagedFundsResult.Results)
+            {
+                Console.WriteLine($"🟢Total Managed Funds Result: {result.Xdr}");
+            }
+        }
+        
+        xdrString = simulatedTotalManagedFundsResult.Results?[0].Xdr;
+        if (xdrString == null){
+            Console.WriteLine("XDR string for total managed funds is null.");
+            return;
+        }
+        
+        result_xdr = new StellarDotnetSdk.Xdr.XdrDataInputStream(Convert.FromBase64String(xdrString));
+        xdr = StellarDotnetSdk.Xdr.SCVal.Decode(result_xdr);
+
+        Console.WriteLine($"total managed funds result xdr: {xdr}");
+        Console.WriteLine($"Total Managed Funds result: ");
+
+        
+        foreach (var item in xdr.Vec.InnerValue[0].Map.InnerValue)
+        {
+            /* 
+                Key: asset, 
+                Key: idle_amount, 
+                Key: invested_amount, 
+                Key: strategy_allocations, 
+                Key: total_amount, 
+             */
+            Console.Write($"{item.Key.Sym.InnerValue}: ");
+            switch (item.Key.Sym.InnerValue)
+            {
+                case "asset":
+                    var contracAddress = (SCContractId)SCContractId.FromSCValXdr(item.Val);
+                    Console.WriteLine(contracAddress.InnerValue);
+                    break;
+                case "idle_amount":
+                    var idleAmount = (SCInt128)SCInt128.FromSCValXdr(item.Val);
+                    Console.WriteLine($"{idleAmount}");
+                    break;
+                case "invested_amount":
+                    Console.WriteLine($"{item.Val.I128.Lo.InnerValue}");
+                    break;
+                case "total_amount":
+                    Console.WriteLine($"{item.Val.I128.Lo.InnerValue}");
+                    break;
+                case "strategy_allocations":
+                    Console.WriteLine($"{item.Val.Vec.InnerValue[0].Map.InnerValue[0]}");
+                    break;
+                default:
+                    Console.WriteLine($"{item.Val}");
+                    break;
+            }
+        }
 
         return;
     }

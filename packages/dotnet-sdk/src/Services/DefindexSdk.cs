@@ -32,6 +32,18 @@ public class DefindexSdk : IDefindexSdk
             .Build();
     }
 
+    public Transaction FetchTotalManagedFunds(Account account)
+    {
+        var getManagedFundsArgs = new SCVal[] {};
+        var managedFundsSymbol = new SCSymbol("fetch_total_managed_funds");
+
+        var invokeContractOperation = new InvokeContractOperation(_address, managedFundsSymbol, getManagedFundsArgs);
+        
+        return new TransactionBuilder(account)
+            .AddOperation(invokeContractOperation)
+            .Build();
+    }
+
     public async Task<bool> InitializeAsync()
     {
         Console.WriteLine("Starting SDK initialization...");
