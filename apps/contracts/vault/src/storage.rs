@@ -1,14 +1,15 @@
 use soroban_sdk::{contracttype, Address, Env, Vec, panic_with_error};
-
 use common::models::AssetStrategySet;
-
 use crate::report::Report;
 use crate::error::ContractError;
+
 const DAY_IN_LEDGERS: u32 = 17280;
+
 const INSTANCE_BUMP_AMOUNT: u32 = 30 * DAY_IN_LEDGERS;
 const INSTANCE_LIFETIME_THRESHOLD: u32 = INSTANCE_BUMP_AMOUNT - DAY_IN_LEDGERS;
-const LEDGER_BUMP: u32 = 120 * DAY_IN_LEDGERS;
-const LEDGER_THRESHOLD: u32 = LEDGER_BUMP - 20 * DAY_IN_LEDGERS;
+
+const PERSISTENT_BUMP_AMOUNT: u32 = 120 * DAY_IN_LEDGERS;
+const PERSISTENT_LIFETIME_THRESHOLD: u32 = PERSISTENT_BUMP_AMOUNT - 20 * DAY_IN_LEDGERS;
 
 pub fn extend_instance_ttl(e: &Env) {
     e.storage()
@@ -133,7 +134,7 @@ pub fn set_report(e: &Env, strategy_address: &Address, report: &Report) {
         .set::<DataKey, Report>(&key, report);
     e.storage()
         .persistent()
-        .extend_ttl(&key, LEDGER_THRESHOLD, LEDGER_BUMP);
+        .extend_ttl(&key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT);
 }
 
 pub fn get_report(e: &Env, strategy_address: &Address) -> Report {
@@ -143,7 +144,7 @@ pub fn get_report(e: &Env, strategy_address: &Address) -> Report {
         Some(report) => {
             e.storage()
                 .persistent()
-                .extend_ttl(&key, LEDGER_THRESHOLD, LEDGER_BUMP);
+                .extend_ttl(&key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT);
             report
         }
         None => Report {
