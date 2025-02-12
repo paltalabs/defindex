@@ -73,21 +73,10 @@ export const AllVaults = ({
         const vaultAddressScVal: any = await factory(FactoryMethod.GET_VAULT_BY_INDEX, [nativeToScVal(i, {type: "u32"})])
         const vaultAddress = scValToNative(vaultAddressScVal)
         const vaultInfo = await getVaultInfo(vaultAddress)
-        console.log('🚀 « vaultInfo:', vaultInfo);
-        // if (!vaultInfo) continue;
-        // defindexVaultsArray.push(vaultInfo)
-        
+        if (!vaultInfo) continue;
+        defindexVaultsArray.push(vaultInfo)
       }
-
-
-      
-      // for (let vault in parsedDefindexVaults) {
-      //   vault = parsedDefindexVaults[vault]
-      //   const newData = await getVaultInfo(vault)
-      //   if (!newData) continue;
-      //   defindexVaultsArray.push(newData)
-      // }
-      // if (defindexVaultsArray.length === 0) throw new Error('No defindex vaults found');
+      if (defindexVaultsArray.length === 0) throw new Error('No defindex vaults found');
       dispatch(setVaults(defindexVaultsArray))
       dispatch(setIsVaultsLoading(false))
     } catch (e: any) {
