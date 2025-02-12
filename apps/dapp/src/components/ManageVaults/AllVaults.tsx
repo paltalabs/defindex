@@ -1,16 +1,14 @@
-import { useEffect } from 'react'
-import { scValToNative } from '@stellar/stellar-sdk'
 import { useSorobanReact } from '@soroban-react/core'
+import { useEffect } from 'react'
 
 import { shortenAddress } from '@/helpers/address'
-import { useVault } from '@/hooks/useVault'
 import { FactoryMethod, useFactoryCallback } from '@/hooks/useFactory'
+import { useVault } from '@/hooks/useVault'
 
 import { setIsVaultsLoading, setVaults, setVaultTVL, setVaultUserBalance } from '@/store/lib/features/walletStore'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { VaultData } from '@/store/lib/types'
 
-import { Tooltip } from '../ui/tooltip'
 import {
   Box,
   Skeleton,
@@ -19,6 +17,8 @@ import {
   useBreakpointValue,
   VStack,
 } from '@chakra-ui/react'
+import { nativeToScVal, scValToNative } from '@stellar/stellar-sdk'
+import { Tooltip } from '../ui/tooltip'
 
 const SkeletonRow = () => {
   const { address } = useSorobanReact()
@@ -62,18 +62,32 @@ export const AllVaults = ({
   const getDefindexVaults = async () => {
     dispatch(setIsVaultsLoading(true))
     try {
-      const defindexVaults: any = await factory(FactoryMethod.DEPLOYED_DEFINDEXES)
-      if (!defindexVaults) throw new Error('No defindex vaults found');
-      const parsedDefindexVaults = scValToNative(defindexVaults)
+      const defindexVaultsRaw: any = await factory(FactoryMethod.TOTAL_VAULTS)
+      if (!defindexVaultsRaw) throw new Error('No defindex vaults found');
+      const defindexVaults: any = scValToNative(defindexVaultsRaw)
+      // const parsedDefindexVaults = scValToNative(defindexVaults)
       const defindexVaultsArray: VaultData[] = []
       dispatch(setIsVaultsLoading(true))
-      for (let vault in parsedDefindexVaults) {
-        vault = parsedDefindexVaults[vault]
-        const newData = await getVaultInfo(vault)
-        if (!newData) continue;
-        defindexVaultsArray.push(newData)
+
+      for (let i = 0; i < defindexVaults; i++) {
+        const vaultAddressScVal: any = await factory(FactoryMethod.GET_VAULT_BY_INDEX, [nativeToScVal(i, {type: "u32"})])
+        const vaultAddress = scValToNative(vaultAddressScVal)
+        const vaultInfo = await getVaultInfo(vaultAddress)
+        console.log('🚀 « vaultInfo:', vaultInfo);
+        // if (!vaultInfo) continue;
+        // defindexVaultsArray.push(vaultInfo)
+        
       }
-      if (defindexVaultsArray.length === 0) throw new Error('No defindex vaults found');
+
+
+      
+      // for (let vault in parsedDefindexVaults) {
+      //   vault = parsedDefindexVaults[vault]
+      //   const newData = await getVaultInfo(vault)
+      //   if (!newData) continue;
+      //   defindexVaultsArray.push(newData)
+      // }
+      // if (defindexVaultsArray.length === 0) throw new Error('No defindex vaults found');
       dispatch(setVaults(defindexVaultsArray))
       dispatch(setIsVaultsLoading(false))
     } catch (e: any) {
