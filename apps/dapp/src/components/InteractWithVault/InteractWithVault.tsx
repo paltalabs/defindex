@@ -1,29 +1,28 @@
-import React, { useContext, useState } from 'react'
-import { Address, nativeToScVal, xdr } from '@stellar/stellar-sdk'
 import { useSorobanReact } from '@soroban-react/core'
+import { Address, nativeToScVal, xdr } from '@stellar/stellar-sdk'
+import { useContext, useState } from 'react'
 
-import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { updateVaultData } from '@/store/lib/features/walletStore'
+import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { Strategy, VaultData } from '@/store/lib/types'
 
-import { VaultMethod, useVaultCallback, useVault } from '@/hooks/useVault'
 import { ModalContext } from '@/contexts'
+import { VaultMethod, useVault, useVaultCallback } from '@/hooks/useVault'
 
-import { DialogBody, DialogContent, DialogHeader } from '../ui/dialog'
-import { NativeSelectRoot } from '../ui/native-select'
-import { InputGroup } from '../ui/input-group'
 import {
   Button,
-  Input,
-  Textarea,
-  Text,
   Grid,
   GridItem,
-  Stack,
-  NativeSelectField,
   HStack,
+  Input,
+  NativeSelectField,
+  Stack,
+  Text
 } from '@chakra-ui/react'
 import { ClipboardIconButton, ClipboardRoot } from '../ui/clipboard'
+import { DialogBody, DialogContent, DialogHeader } from '../ui/dialog'
+import { InputGroup } from '../ui/input-group'
+import { NativeSelectRoot } from '../ui/native-select'
 
 export const InteractWithVault = () => {
   const [amount, set_amount] = useState<number>(0)
@@ -39,7 +38,7 @@ export const InteractWithVault = () => {
 
   const vaultOperation = async () => {
     if (!address || !vaultMethod || !selectedVault.address) return;
-    if (!amount && vaultMethod != VaultMethod.EMERGENCY_WITHDRAW) throw new Error('Amount is required');
+    if (!amount && vaultMethod != VaultMethod.RESCUE) throw new Error('Amount is required');
     const parsedAmount = parseFloat(amount.toString())
     const convertedAmount = parsedAmount * Math.pow(10, 7)
     statusModal.initModal()
@@ -63,7 +62,7 @@ export const InteractWithVault = () => {
       ]
       params = withdrawParams
     };
-    if (vaultMethod === VaultMethod.EMERGENCY_WITHDRAW) {
+    if (vaultMethod === VaultMethod.RESCUE) {
       if (!selectedStrategy) throw new Error('Strategy is required')
       console.log(selectedStrategy)
       const emergencyWithdrawParams: xdr.ScVal[] = [
@@ -148,7 +147,7 @@ export const InteractWithVault = () => {
             <GridItem colSpan={6} colStart={6} textAlign={'end'}>
               <h2>User balance in vault: ${`${selectedVault.userBalance ?? 0}`} {selectedVault.assets[0]?.symbol}</h2>
             </GridItem>
-            {vaultMethod != VaultMethod.EMERGENCY_WITHDRAW &&
+            {vaultMethod != VaultMethod.RESCUE &&
               <GridItem colSpan={12} pt={6}>
                 <HStack justify={'end'}>
                   <Text fontSize='sm'>Amount to {vaultMethod}:</Text>
@@ -164,7 +163,7 @@ export const InteractWithVault = () => {
               </GridItem>
             }
             {
-              vaultMethod === VaultMethod.EMERGENCY_WITHDRAW &&
+              vaultMethod === VaultMethod.RESCUE &&
               <>
                 <GridItem colSpan={6} textAlign={'end'} alignContent={'center'}>
                   <Text fontSize='lg'>Emergency withdraw from {selectedVault?.name}:</Text>
@@ -186,8 +185,8 @@ export const InteractWithVault = () => {
           </Grid>
           <Button
             disabled={
-              vaultMethod != VaultMethod.EMERGENCY_WITHDRAW && amount < 0.0000001 ||
-              vaultMethod === VaultMethod.EMERGENCY_WITHDRAW && !selectedStrategy
+              vaultMethod != VaultMethod.RESCUE && amount < 0.0000001 ||
+              vaultMethod === VaultMethod.RESCUE && !selectedStrategy
             }
             my={4}
             w={'full'}
@@ -195,7 +194,7 @@ export const InteractWithVault = () => {
             onClick={() => vaultOperation()}>
             {selectedVault?.method === VaultMethod.DEPOSIT && 'Deposit' ||
               selectedVault?.method === VaultMethod.WITHDRAW && 'Withdraw' ||
-              selectedVault?.method === VaultMethod.EMERGENCY_WITHDRAW && 'Emergency Withdraw'}
+              selectedVault?.method === VaultMethod.RESCUE && 'Emergency Withdraw'}
           </Button>
         </DialogBody>
       </DialogContent>

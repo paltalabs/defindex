@@ -9,25 +9,41 @@ import { AssetAmmount, VaultData } from "@/store/lib/types";
 
 
 export enum VaultMethod {
+    // VaultTrait methods
     DEPOSIT = "deposit",
-    BALANCE = "balance",
     WITHDRAW = "withdraw",
-    GETMANAGER = "get_manager",
-    GETEMERGENCYMANAGER = "get_emergency_manager",
-    GETFEERECEIVER = "get_fee_receiver",
-    EMERGENCY_WITHDRAW = "emergency_withdraw",
-    GETNAME= "name",
-    TOTALMANAGEDFUNDS = "fetch_total_managed_funds",
-    TOTALSUPPLY = "total_supply",
-    GETASSETS = "get_assets",
-    GETASSETAMMOUNT = "get_asset_amounts_per_shares",
-    GETIDLEFUNDS = "fetch_current_idle_funds",
-    GETINVESTEDFUNDS = "fetch_current_invested_funds",
-    SETFEERECIEVER = "set_fee_receiver",
-    INVEST = "invest",
-    REBALANCE= "rebalance",
-    GETFEES = "get_fees",
-}   
+    RESCUE = "rescue",
+    PAUSE = "pause_strategy",
+    UNPAUSE = "unpause_strategy",
+    GET_ASSETS = "get_assets",
+    TOTAL_MANAGED_FUNDS = "fetch_total_managed_funds",
+    GET_ASSET_AMOUNT = "get_asset_amounts_per_shares",
+    GET_FEES = "get_fees",
+    REPORT = "report",
+
+    // AdminInterfaceTrait methods
+    SET_FEE_RECEIVER = "set_fee_receiver",
+    GET_FEE_RECEIVER = "get_fee_receiver",
+    SET_MANAGER = "set_manager",
+    GET_MANAGER = "get_manager",
+    SET_EMERGENCY_MANAGER = "set_emergency_manager",
+    GET_EMERGENCY_MANAGER = "get_emergency_manager",
+    SET_REBALANCE_MANAGER = "set_rebalance_manager",
+    GET_REBALANCE_MANAGER = "get_rebalance_manager",
+    UPGRADE = "upgrade",
+
+    // VaultManagementTrait methods
+    REBALANCE = "rebalance",
+    LOCK_FEES = "lock_fees",
+    RELEASE_FEES = "release_fees",
+    DISTRIBUTE_FEES = "distribute_fees",
+
+    // Additional methods
+    BALANCE = "balance",
+    GET_NAME = "name",
+    GET_SYMBOL = "symbol",
+    TOTAL_SUPPLY = "total_supply",
+}
 
 const isObject = (val: unknown) => typeof val === 'object' && val !== null && !Array.isArray(val);
 
@@ -110,7 +126,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
 
     const getVaultManager = async (selectedVault: string) => {
         try {
-        const manager = await vault(VaultMethod.GETMANAGER, selectedVault, undefined, false).then((res: any) => scValToNative(res));
+        const manager = await vault(VaultMethod.GET_MANAGER, selectedVault, undefined, false).then((res: any) => scValToNative(res));
         return manager;
         } catch (error) {
         console.error(error);
@@ -118,7 +134,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
     }
     const getVaultEmergencyManager = async (selectedVault: string) => {
         try {
-        const emergencyManager = await vault(VaultMethod.GETEMERGENCYMANAGER, selectedVault, undefined, false).then((res: any) => scValToNative(res));
+        const emergencyManager = await vault(VaultMethod.GET_EMERGENCY_MANAGER, selectedVault, undefined, false).then((res: any) => scValToNative(res));
         return emergencyManager;
         } catch (error) {
         console.error(error);
@@ -126,7 +142,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
     }
     const getVaultFeeReceiver = async (selectedVault: string) => {
         try {
-        const feeReceiver = await vault(VaultMethod.GETFEERECEIVER, selectedVault, undefined, false).then((res: any) => scValToNative(res));
+        const feeReceiver = await vault(VaultMethod.GET_FEE_RECEIVER, selectedVault, undefined, false).then((res: any) => scValToNative(res));
         return feeReceiver;
         } catch (error) {
         console.error(error);
@@ -134,7 +150,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
     }
     const getVaultName = async (selectedVault: string) => {
         try {
-        const name = await vault(VaultMethod.GETNAME, selectedVault, undefined, false).then((res: any) => scValToNative(res));
+        const name = await vault(VaultMethod.GET_NAME, selectedVault, undefined, false).then((res: any) => scValToNative(res));
         return name;
         } catch (error) {
         console.error(error);
@@ -142,7 +158,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
     }
     const getVaultAssets = async (selectedVault: string) => {
         try {
-        const assets = await vault(VaultMethod.GETASSETS, selectedVault, undefined, false).then((res: any) => scValToNative(res));
+        const assets = await vault(VaultMethod.GET_ASSETS, selectedVault, undefined, false).then((res: any) => scValToNative(res));
         return assets;
         } catch (error) {
         console.error(error);
@@ -150,7 +166,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
     }
     const getVaultTotalSupply = async (selectedVault: string) => {
         try {
-        const totalSupply = await vault(VaultMethod.TOTALSUPPLY, selectedVault, undefined, false).then((res: any) => scValToNative(res));
+        const totalSupply = await vault(VaultMethod.TOTAL_SUPPLY, selectedVault, undefined, false).then((res: any) => scValToNative(res));
         const parsedTotalSupply = Number(totalSupply) / 10 ** 7;
         return parsedTotalSupply;
         } catch (error) {
@@ -167,7 +183,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
 
     const getTVL = async (selectedVault: string) => {
         try {
-        const totalValues = await vault(VaultMethod.TOTALMANAGEDFUNDS, selectedVault, undefined, false).then((res: any) => scValToNative(res));
+        const totalValues = await vault(VaultMethod.TOTAL_MANAGED_FUNDS, selectedVault, undefined, false).then((res: any) => scValToNative(res));
         const {total_amount:value} = Object.values(totalValues)[0] as TotalManagedFunds;
         const parsedValue = Number(value) / 10 ** 7;
         return parsedValue;
@@ -180,7 +196,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
             const formattedAddress = new StellarSdk.Address(address).toScVal();
             const dfTokens = await vault(VaultMethod.BALANCE, vaultAddress, [formattedAddress], false).then((res: any) => scValToNative(res));
             if(Number(dfTokens) === 0) return 0;
-            const amount = await vault(VaultMethod.GETASSETAMMOUNT, vaultAddress, [StellarSdk.nativeToScVal(dfTokens, {type: 'i128'})], false).then((res: any) => scValToNative(res));
+            const amount = await vault(VaultMethod.GET_ASSET_AMOUNT, vaultAddress, [StellarSdk.nativeToScVal(dfTokens, {type: 'i128'})], false).then((res: any) => scValToNative(res));
             const amountValue = isObject(amount) ? Object.values(amount)[0] : 0;
             const parsedAmount = Number(amountValue) / 10 ** 7;
         return parsedAmount;
@@ -188,22 +204,26 @@ export const useVault = (vaultAddress?: string | undefined) => {
         console.error(error);
         }
     }
+    
     const getIdleFunds = async (vaultAddress: string) => {
         try {
-        const rawIdleFunds = await vault(VaultMethod.GETIDLEFUNDS, vaultAddress, undefined, false).then((res: any) => scValToNative(res));
-        const assets = Object.keys(rawIdleFunds);
-        const idleFunds: AssetAmmount[] = [];
-        assets.forEach((asset)=>{
-            idleFunds.push({address: asset, amount:  Number(rawIdleFunds[asset]) / 10 ** 7})
-        })
-        return idleFunds;
+            const assets = await getVaultAssets(vaultAddress);
+            console.log('🚀 « assets:', assets);
+            const idleFunds: AssetAmmount[] = [];
+            // for (const asset of assets) {
+            //     const balance = await vault(VaultMethod.BALANCE, vaultAddress, [StellarSdk.Address.fromString(asset.address).toScVal()], false).then((res: any) => scValToNative(res));
+            //     idleFunds.push({ address: asset.address, amount: Number(balance) / 10 ** 7 });
+            // }
+            return idleFunds;
         } catch (error) {
-        console.error(error);
+            console.error(error);
         }
     }
+
+    // TODO: Subtract idle funds to get invested funds
     const getInvestedFunds = async (vaultAddress: string) => {
         try {
-        const rawInvestedFunds = await vault(VaultMethod.GETINVESTEDFUNDS, vaultAddress, undefined, false).then((res: any) => scValToNative(res));
+        const rawInvestedFunds = await vault(VaultMethod.TOTAL_MANAGED_FUNDS, vaultAddress, undefined, false).then((res: any) => scValToNative(res));
         const assets = Object.keys(rawInvestedFunds);
         const investedFunds: AssetAmmount[] = [];
         assets.forEach((asset)=>{
@@ -214,9 +234,10 @@ export const useVault = (vaultAddress?: string | undefined) => {
         console.error(error);
         }
     }
+
     const getFees = async (vaultAddress: string) => {
         try {
-        const fees = await vault(VaultMethod.GETFEES, vaultAddress, undefined, false).then((res: any) => scValToNative(res));
+        const fees = await vault(VaultMethod.GET_FEES, vaultAddress, undefined, false).then((res: any) => scValToNative(res));
         return fees || [50,0];
         } catch (error) {
         console.error(error);
