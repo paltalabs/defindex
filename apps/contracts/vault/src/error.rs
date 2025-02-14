@@ -34,6 +34,7 @@ pub enum ContractError {
     // Arithmetic Errors (12x)
     ArithmeticError = 120,
     Overflow = 121,
+    Underflow = 127,
 
     // Authorization/Role-based Errors (13x)
     Unauthorized = 130,

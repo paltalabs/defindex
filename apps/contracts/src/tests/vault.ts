@@ -7,15 +7,18 @@ import {
 } from "@stellar/stellar-sdk";
 import { i128, u64 } from "@stellar/stellar-sdk/contract";
 import { randomBytes } from "crypto";
-import { SOROSWAP_ROUTER, SOROSWAP_USDC } from "../constants.js";
+import { SOROSWAP_ROUTER, USDC_ADDRESS } from "../constants.js";
 import { AddressBook } from "../utils/address_book.js";
 import {
   airdropAccount,
+  getTokenBalance,
   invokeContract,
   invokeCustomContract,
 } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
 import { getTransactionBudget } from "../utils/tx.js";
+import { green } from "./common.js";
+import { AssetInvestmentAllocation, CreateVaultParams, TotalManagedFunds } from "./types.js";
 
 const network = process.argv[2];
 const loadedConfig = config(network);
@@ -29,17 +32,83 @@ export const rebalanceManager = loadedConfig.getUser(
 export const feeReceiver = loadedConfig.getUser(
   "DEFINDEX_FEE_RECEIVER_SECRET_KEY"
 );
+
 export const manager = loadedConfig.getUser("DEFINDEX_MANAGER_SECRET_KEY");
 
-export interface CreateVaultParams {
-  address: Address;
-  strategies: Array<{
-    name: string;
-    address: string;
-    paused: boolean;
-  }>;
+
+export type Option<T> = T | undefined;
+
+// export type Address = string; // Simplified representation of Address as a string
+// export type i128 = bigint; // TypeScript equivalent for large integers
+// export type u64 = number; // Simplified as a number for UNIX timestamps
+
+export type Instruction =
+  | { type: "Unwind"; strategy: string; amount: i128 }
+  | { type: "Invest"; strategy: string; amount: i128 }
+  | {
+      type: "SwapExactIn";
+      token_in: string;
+      token_out: string;
+      amount_in: i128;
+      amount_out_min: i128;
+      deadline: u64;
+    }
+  | {
+      type: "SwapExactOut";
+      token_in: string;
+      token_out: string;
+      amount_out: i128;
+      amount_in_max: i128;
+      deadline: u64;
+    };
+
+
+
+
+
+export function mapInstructionsToParams(
+  instructions: Instruction[]
+): xdr.ScVal {
+  return xdr.ScVal.scvVec(
+    instructions.map((instruction) => {
+      switch (instruction.type) {
+        case "Invest":
+        case "Unwind":
+          // Handle Invest and Withdraw actions
+          return xdr.ScVal.scvVec([
+            xdr.ScVal.scvSymbol(instruction.type), // "Invest" or "Withdraw"
+            new Address(instruction.strategy).toScVal(),
+            nativeToScVal(instruction.amount, { type: "i128" }), // amount
+          ]);
+
+        case "SwapExactIn":
+          // Handle SwapExactIn action
+          return xdr.ScVal.scvVec([
+            xdr.ScVal.scvSymbol("SwapExactIn"),
+            new Address(instruction.token_in).toScVal(),
+            new Address(instruction.token_out).toScVal(),
+            nativeToScVal(instruction.amount_in, { type: "i128" }),
+            nativeToScVal(instruction.amount_out_min, { type: "i128" }),
+            nativeToScVal(instruction.deadline, { type: "u64" }),
+          ]);
+
+        case "SwapExactOut":
+          // Handle SwapExactOut action
+          return xdr.ScVal.scvVec([
+            xdr.ScVal.scvSymbol("SwapExactOut"),
+            new Address(instruction.token_in).toScVal(),
+            new Address(instruction.token_out).toScVal(),
+            nativeToScVal(instruction.amount_out, { type: "i128" }),
+            nativeToScVal(instruction.amount_in_max, { type: "i128" }),
+            nativeToScVal(instruction.deadline, { type: "u64" }),
+          ]);
+
+        default:
+          throw new Error(`Unsupported action type: ${instruction}`);
+      }
+    })
+  );
 }
-export const soroswapUSDC = new Address(SOROSWAP_USDC);
 
 /**
  * Mints a specified amount of tokens for a given user.
@@ -51,7 +120,7 @@ export const soroswapUSDC = new Address(SOROSWAP_USDC);
 export async function mintToken(user: Keypair, amount: number, tokenAddress?: Address) {
   await invokeCustomContract(
 
-    tokenAddress ? tokenAddress.toString() : soroswapUSDC.toString(),
+    tokenAddress ? tokenAddress.toString() : USDC_ADDRESS.toString(),
     "mint",
     [
       new Address(user.publicKey()).toScVal(),
@@ -335,7 +404,6 @@ export async function depositToVault(
  * @example
  * const balance = await getDfTokenBalance("CCE7MLKC7R6TIQA37A7EHWEUC3AIXIH5DSOQUSVAARCWDD7257HS4RUG", "GB6JL...");
  */
-
 export async function getDfTokenBalance(
   deployedVault: string,
   userPublicKey: string,
@@ -374,7 +442,6 @@ export async function getDfTokenBalance(
  * @example
  * const { balanceBefore, result, balanceAfter } = await withdrawFromVault("CCE7MLKC7R6TIQA37A7EHWEUC3AIXIH5DSOQUSVAARCWDD7257HS4RUG", 10000000, user);
  */
-
 export async function withdrawFromVault(
   deployedVault: string,
   withdrawAmount: number,
@@ -443,52 +510,30 @@ export async function withdrawFromVault(
   return { balanceBefore, result, balanceAfter, ...budget };
 }
 
-/**
- * Retrieves the current idle funds of the vault.
- *
- * @param {string} deployedVault - The address of the deployed vault contract.
- * @returns {Promise<Map<Address, bigint>>} A promise that resolves with a map of asset addresses to idle amounts.
- */
-export async function fetchCurrentIdleFunds(
-  deployedVault: string,
-  user: Keypair
-): Promise<Map<Address, bigint>> {
-  try {
-    const result = await invokeCustomContract(
-      deployedVault,
-      "fetch_current_idle_funds",
-      [],
-      user,
-      false
-    );
-    const parsedResult = scValToNative(result.returnValue);
-    return parsedResult; // Convert result to native format if needed
-  } catch (error) {
-    console.error("❌ Failed to fetch current idle funds:", error);
-    throw error;
-  }
-}
-
 export async function fetchParsedCurrentIdleFunds(
   deployedVault: string,
+  tokens: string[],
   user: Keypair
 ): Promise<{ address: string; amount: bigint }[]> {
   try {
-    const res = await fetchCurrentIdleFunds(deployedVault, user);
-    const mappedFunds = Object.entries(res).map(([key, value]) => ({
-      address: key,
-      amount: value,
-    }));
-    return mappedFunds;
+    const idle_funds = await Promise.all(
+      tokens.map(async (token_id) => {
+        const balance = await getTokenBalance(token_id, deployedVault, user);
+        return {
+          address: token_id,
+          amount: balance
+        };
+      })
+    );
+
+    return idle_funds;
   } catch (error) {
     console.error("Error:", error);
     throw error;
   }
 }
-export interface AssetInvestmentAllocation {
-  asset: Address;
-  strategy_investments: { amount: bigint; strategy: Address }[];
-}
+
+
 
 export async function investVault(
   deployedVault: string,
@@ -544,76 +589,6 @@ export async function investVault(
   }
 }
 
-export type Option<T> = T | undefined;
-
-// export type Address = string; // Simplified representation of Address as a string
-// export type i128 = bigint; // TypeScript equivalent for large integers
-// export type u64 = number; // Simplified as a number for UNIX timestamps
-
-export type Instruction =
-  | { type: "Unwind"; strategy: string; amount: i128 }
-  | { type: "Invest"; strategy: string; amount: i128 }
-  | {
-      type: "SwapExactIn";
-      token_in: string;
-      token_out: string;
-      amount_in: i128;
-      amount_out_min: i128;
-      deadline: u64;
-    }
-  | {
-      type: "SwapExactOut";
-      token_in: string;
-      token_out: string;
-      amount_out: i128;
-      amount_in_max: i128;
-      deadline: u64;
-    };
-
-export function mapInstructionsToParams(
-  instructions: Instruction[]
-): xdr.ScVal {
-  return xdr.ScVal.scvVec(
-    instructions.map((instruction) => {
-      switch (instruction.type) {
-        case "Invest":
-        case "Unwind":
-          // Handle Invest and Withdraw actions
-          return xdr.ScVal.scvVec([
-            xdr.ScVal.scvSymbol(instruction.type), // "Invest" or "Withdraw"
-            new Address(instruction.strategy).toScVal(),
-            nativeToScVal(instruction.amount, { type: "i128" }), // amount
-          ]);
-
-        case "SwapExactIn":
-          // Handle SwapExactIn action
-          return xdr.ScVal.scvVec([
-            xdr.ScVal.scvSymbol("SwapExactIn"),
-            new Address(instruction.token_in).toScVal(),
-            new Address(instruction.token_out).toScVal(),
-            nativeToScVal(instruction.amount_in, { type: "i128" }),
-            nativeToScVal(instruction.amount_out_min, { type: "i128" }),
-            nativeToScVal(instruction.deadline, { type: "u64" }),
-          ]);
-
-        case "SwapExactOut":
-          // Handle SwapExactOut action
-          return xdr.ScVal.scvVec([
-            xdr.ScVal.scvSymbol("SwapExactOut"),
-            new Address(instruction.token_in).toScVal(),
-            new Address(instruction.token_out).toScVal(),
-            nativeToScVal(instruction.amount_out, { type: "i128" }),
-            nativeToScVal(instruction.amount_in_max, { type: "i128" }),
-            nativeToScVal(instruction.deadline, { type: "u64" }),
-          ]);
-
-        default:
-          throw new Error(`Unsupported action type: ${instruction}`);
-      }
-    })
-  );
-}
-
 export async function rebalanceVault(deployedVault: string, instructions: Instruction[], manager: Keypair) {
   const params = mapInstructionsToParams(instructions);
 
@@ -624,10 +599,103 @@ export async function rebalanceVault(deployedVault: string, instructions: Instru
       [new Address(manager.publicKey()).toScVal(), params],
       manager
     );
+    console.log(green, 'Rebalance result:', scValToNative(rebalanceResult.returnValue));
     const budget = getTransactionBudget(rebalanceResult);
     return { result: rebalanceResult, status: true, ...budget };
   } catch (error) {
     console.error("Rebalance failed:", error);
+    throw error;
+  }
+}
+
+export async function getVaultBalance(deployedVault: string, user: Keypair) {
+  try {
+    const result = await invokeCustomContract(
+      deployedVault,
+      "balance",
+      [new Address(user.publicKey()).toScVal()],
+      user
+    );
+    return scValToNative(result.returnValue);
+  } catch (error) {
+    console.error("Failed to get vault balance:", error);
+    throw error;
+  }
+}
+
+export async function rescueFromStrategy(deployedVault:string ,strategyAddress: string, manager: Keypair) {
+  try {
+    const args: xdr.ScVal[] = [
+      new Address(strategyAddress).toScVal(),
+      new Address(manager.publicKey()).toScVal(),
+    ];
+    const result = await invokeCustomContract(
+      deployedVault,
+      "rescue",
+      args,
+      manager
+    );
+    const { instructions, readBytes, writeBytes } = getTransactionBudget(result);
+    const parsed_result = scValToNative(result.returnValue);
+    return {
+      instructions,
+      readBytes,
+      writeBytes,
+      result: parsed_result,
+    }
+  } catch (error) {
+    console.error("Failed to rescue from strategy:", error);
+    throw error;
+  }
+}
+
+export async function pauseStrategy(deployedVault:string ,strategyAddress: string, manager: Keypair) {
+  try {
+    const args: xdr.ScVal[] = [
+      new Address(strategyAddress).toScVal(),
+      new Address(manager.publicKey()).toScVal(),
+    ];
+    const result = await invokeCustomContract(
+      deployedVault,
+      "pause_strategy",
+      args,
+      manager
+    );
+    const parsed_result = scValToNative(result.returnValue);
+    const {instructions, readBytes, writeBytes} = getTransactionBudget(result);
+    return {
+      instructions,
+      readBytes,
+      writeBytes,
+      result: parsed_result,
+    };
+  } catch (error) {
+    console.error("Failed to pause strategy:", error);
+    throw error;
+  }
+}
+export async function unpauseStrategy(deployedVault:string ,strategyAddress: string, manager: Keypair) {
+  try {
+    const args: xdr.ScVal[] = [
+      new Address(strategyAddress).toScVal(),
+      new Address(manager.publicKey()).toScVal(),
+    ];
+    const result = await invokeCustomContract(
+      deployedVault,
+      "unpause_strategy",
+      args,
+      manager
+    );
+    const parsed_result = scValToNative(result.returnValue);
+    const {instructions, readBytes, writeBytes} = getTransactionBudget(result);
+    return {
+      instructions,
+      readBytes,
+      writeBytes,
+      result: parsed_result,
+    };
+  } catch (error) {
+    console.error("Failed to pause strategy:", error);
     throw error;
   }
 }
@@ -780,13 +848,7 @@ export async function rebalanceVault(deployedVault: string, instructions: Instru
 //         }),
 //     ];
 // }
-interface TotalManagedFunds {
-  asset: string,
-  idle_amount: bigint,
-  invested_amount: bigint,
-  strategy_allocations: any[],
-  total_amount: bigint
-}
+
 export async function fetchCurrentInvestedFunds(
   deployedVault: string,
   user: Keypair
@@ -796,13 +858,13 @@ export async function fetchCurrentInvestedFunds(
       deployedVault,
       "fetch_total_managed_funds",
       [],
-      user
+      user,
+      true
     );
-    const funds = scValToNative(res.returnValue);
-    const mappedFunds = Object.entries(funds).map(([key, value]) => {
-      const fund = value as TotalManagedFunds;
+    const funds = scValToNative(res.result.retval) as TotalManagedFunds[];
+    const mappedFunds = funds.map((fund) => {
       return {
-        asset: key,
+        asset: fund.asset,
         amount: fund.invested_amount,
       };
     });
@@ -811,4 +873,151 @@ export async function fetchCurrentInvestedFunds(
     console.error("Error:", error);
     throw error;
   }
+}
+export async function fetchCurrentIdleFunds(
+  deployedVault: string,
+  user: Keypair
+) {
+  try {
+    const res = await invokeCustomContract(
+      deployedVault,
+      "fetch_total_managed_funds",
+      [],
+      user,
+      true,
+    );
+    const funds = scValToNative(res.result.retval) as TotalManagedFunds[];
+    const mappedFunds = funds.map((fund) => {
+      return {
+        asset: fund.asset,
+        amount: fund.idle_amount,
+      };
+    });
+    return mappedFunds;
+  } catch (error) {
+    console.error("Error:", error);
+    throw error;
+  }
+}
+
+export async function setVaultManager(
+  deployedVault: string,
+  newManager: Keypair,
+  manager: Keypair
+) {
+  try {
+    const result = await invokeCustomContract(
+      deployedVault,
+      "set_manager",
+      [new Address(newManager.publicKey()).toScVal()],
+      manager
+    );
+    const parsed_result = scValToNative(result.returnValue);
+    const { instructions, readBytes, writeBytes } = getTransactionBudget(result);
+    console.log("Set manager successful:", scValToNative(result.returnValue));
+    return { result: parsed_result, instructions, readBytes, writeBytes };
+  } catch (error) {
+    console.error("Set manager failed:", error);
+    throw error;
+  }
+}
+
+export async function setRebalanceManager(deployedVault:Address, manager:Keypair, new_rebalance_manager:string){
+  try {
+    const result = await invokeCustomContract(
+      deployedVault.toString(),
+      "set_rebalance_manager",
+      [new Address(new_rebalance_manager).toScVal()],
+      manager
+    );
+    const parsed_result = scValToNative(result.returnValue);
+    const { instructions, readBytes, writeBytes } = getTransactionBudget(result);
+    console.log("Set rebalance manager successful:", scValToNative(result.returnValue));
+    return { result: parsed_result, instructions, readBytes, writeBytes };
+  } catch (error) {
+    console.error("Set rebalance manager failed:", error);
+    throw error;
+  }
+}
+
+export async function setFeeReceiver(deployedVault:Address, manager:Keypair, new_fee_receiver:string){
+  try {
+    const result = await invokeCustomContract(
+      deployedVault.toString(),
+      "set_fee_receiver",
+      [
+        new Address(manager.publicKey()).toScVal(),
+        new Address(new_fee_receiver).toScVal()
+      ],
+      manager
+    );
+    const parsed_result = scValToNative(result.returnValue);
+    const { instructions, readBytes, writeBytes } = getTransactionBudget(result);
+    console.log("Set fee receiver successful:", scValToNative(result.returnValue));
+    return { result: parsed_result, instructions, readBytes, writeBytes };
+  } catch (error) {
+    console.error("Set fee receiver failed:", error);
+    throw error;
+  }
+}
+
+//fn set_emergency_manager(emergency_manager: address)
+export async function setEmergencyManager(deployedVault:Address, manager:Keypair, new_emergency_manager:string){
+  try {
+    const result = await invokeCustomContract(
+      deployedVault.toString(),
+      "set_emergency_manager",
+      [new Address(new_emergency_manager).toScVal()],
+      manager
+    );
+    const parsed_result = scValToNative(result.returnValue);
+    const { instructions, readBytes, writeBytes } = getTransactionBudget(result);
+    console.log("Set emergency manager successful:", scValToNative(result.returnValue));
+    return { result: parsed_result, instructions, readBytes, writeBytes };
+  } catch (error) {
+    console.error("Set emergency manager failed:", error);
+    throw error;
+  }
+}
+
+export async function upgradeVaultWasm(deployedVault:Address, manager:Keypair, new_wasm_hash:Uint8Array){
+  try {
+    const result = await invokeCustomContract(
+      deployedVault.toString(),
+      "upgrade",
+      [nativeToScVal(new_wasm_hash)],
+      manager
+    );
+    const parsed_result = scValToNative(result.returnValue);
+    const { instructions, readBytes, writeBytes } = getTransactionBudget(result);
+    console.log("Upgrade successful:", scValToNative(result.returnValue));
+    return { result: parsed_result, instructions, readBytes, writeBytes };
+  } catch (error) {
+    console.error("Upgrade failed:", error);
+    throw error;
+  }
+}
+
+export async function fetchTotalManagedFunds(deployedVault:Address, user:Keypair): Promise<TotalManagedFunds[]>{
+  const res = await invokeCustomContract(
+    deployedVault.toString(),
+    "fetch_total_managed_funds",
+    [],
+    user,
+    true
+  );
+  const funds = scValToNative(res.result.retval);
+  return funds;
+}
+
+export async function fetchTotalSupply(deployedVault:Address, user:Keypair){
+  const res = await invokeCustomContract(
+    deployedVault.toString(),
+    "total_supply",
+    [],
+    user,
+    true
+  );
+  const supply = scValToNative(res.result.retval);
+  return supply;
 }

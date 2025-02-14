@@ -533,12 +533,13 @@ fn swap_exact_in() {
     );
 
     // check total managed funds
-    let mut total_managed_funds_expected = Map::new(&test.env);
+    let mut total_managed_funds_expected = Vec::new(&test.env);
     let strategy_investments_expected_token_0 = sorobanvec![
         &test.env,
         StrategyAllocation {
             strategy_address: test.strategy_client_token_0.address.clone(),
             amount: 0, // funds have not been invested yet!
+            paused: false,
         }
     ];
     let strategy_investments_expected_token_1 = sorobanvec![
@@ -546,10 +547,10 @@ fn swap_exact_in() {
         StrategyAllocation {
             strategy_address: test.strategy_client_token_1.address.clone(),
             amount: 0, // funds have not been invested yet!
+            paused: false,
         }
     ];
-    total_managed_funds_expected.set(
-        test.token_0.address.clone(),
+    total_managed_funds_expected.push_back(
         CurrentAssetInvestmentAllocation {
             asset: test.token_0.address.clone(),
             total_amount: amount0,
@@ -558,8 +559,7 @@ fn swap_exact_in() {
             strategy_allocations: strategy_investments_expected_token_0,
         },
     );
-    total_managed_funds_expected.set(
-        test.token_1.address.clone(),
+    total_managed_funds_expected.push_back(
         CurrentAssetInvestmentAllocation {
             asset: test.token_1.address.clone(),
             total_amount: amount1,
@@ -609,12 +609,13 @@ fn swap_exact_in() {
     .rebalance(&test.rebalance_manager, &instructions);
 
     // check total managed funds
-    let mut total_managed_funds_expected = Map::new(&test.env);
+    let mut total_managed_funds_expected = Vec::new(&test.env);
     let strategy_investments_expected_token_0 = sorobanvec![
         &test.env,
         StrategyAllocation {
             strategy_address: test.strategy_client_token_0.address.clone(),
             amount: 0, // funds have not been invested yet!
+            paused: false,
         }
     ];
     let strategy_investments_expected_token_1 = sorobanvec![
@@ -622,10 +623,10 @@ fn swap_exact_in() {
         StrategyAllocation {
             strategy_address: test.strategy_client_token_1.address.clone(),
             amount: 0, // funds have not been invested yet!
+            paused: false,
         }
     ];
-    total_managed_funds_expected.set(
-        test.token_0.address.clone(),
+    total_managed_funds_expected.push_back(
         CurrentAssetInvestmentAllocation {
             asset: test.token_0.address.clone(),
             total_amount: amount0 - amount_in,
@@ -634,8 +635,7 @@ fn swap_exact_in() {
             strategy_allocations: strategy_investments_expected_token_0,
         },
     );
-    total_managed_funds_expected.set(
-        test.token_1.address.clone(),
+    total_managed_funds_expected.push_back(
         CurrentAssetInvestmentAllocation {
             asset: test.token_1.address.clone(),
             total_amount: amount1 + expected_amount_out,
@@ -707,12 +707,13 @@ fn swap_exact_out() {
     );
 
     // check total managed funds
-    let mut total_managed_funds_expected = Map::new(&test.env);
+    let mut total_managed_funds_expected = Vec::new(&test.env);
     let strategy_investments_expected_token_0 = sorobanvec![
         &test.env,
         StrategyAllocation {
             strategy_address: test.strategy_client_token_0.address.clone(),
             amount: 0, // funds have not been invested yet!
+            paused: false,
         }
     ];
     let strategy_investments_expected_token_1 = sorobanvec![
@@ -720,10 +721,10 @@ fn swap_exact_out() {
         StrategyAllocation {
             strategy_address: test.strategy_client_token_1.address.clone(),
             amount: 0, // funds have not been invested yet!
+            paused: false,
         }
     ];
-    total_managed_funds_expected.set(
-        test.token_0.address.clone(),
+    total_managed_funds_expected.push_back(
         CurrentAssetInvestmentAllocation {
             asset: test.token_0.address.clone(),
             total_amount: amount0,
@@ -732,8 +733,7 @@ fn swap_exact_out() {
             strategy_allocations: strategy_investments_expected_token_0,
         },
     );
-    total_managed_funds_expected.set(
-        test.token_1.address.clone(),
+    total_managed_funds_expected.push_back(
         CurrentAssetInvestmentAllocation {
             asset: test.token_1.address.clone(),
             total_amount: amount1,
@@ -785,12 +785,13 @@ fn swap_exact_out() {
     .rebalance(&test.rebalance_manager, &instructions);
 
     // check total managed funds
-    let mut total_managed_funds_expected = Map::new(&test.env);
+    let mut total_managed_funds_expected = Vec::new(&test.env);
     let strategy_investments_expected_token_0 = sorobanvec![
         &test.env,
         StrategyAllocation {
             strategy_address: test.strategy_client_token_0.address.clone(),
             amount: 0, // funds have not been invested yet!
+            paused: false,
         }
     ];
     let strategy_investments_expected_token_1 = sorobanvec![
@@ -798,10 +799,10 @@ fn swap_exact_out() {
         StrategyAllocation {
             strategy_address: test.strategy_client_token_1.address.clone(),
             amount: 0, // funds have not been invested yet!
+            paused: false,
         }
     ];
-    total_managed_funds_expected.set(
-        test.token_0.address.clone(),
+    total_managed_funds_expected.push_back(
         CurrentAssetInvestmentAllocation {
             asset: test.token_0.address.clone(),
             total_amount: amount0 - amount_in_should,
@@ -810,8 +811,7 @@ fn swap_exact_out() {
             strategy_allocations: strategy_investments_expected_token_0,
         },
     );
-    total_managed_funds_expected.set(
-        test.token_1.address.clone(),
+    total_managed_funds_expected.push_back(
         CurrentAssetInvestmentAllocation {
             asset: test.token_1.address.clone(),
             total_amount: amount1 + expected_amount_out,
@@ -1285,7 +1285,7 @@ fn invest_paused_strategy(){
     assert_eq!(assets, expected_assets);
 
     // Check if invested funds are 0
-    let invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
+    let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
     assert_eq!(invested_funds, 0i128);
 
     // Rebalance from here on
@@ -1300,7 +1300,7 @@ fn invest_paused_strategy(){
     let result = defindex_contract.try_rebalance(&test.rebalance_manager, &instructions);
     
     // Check if invested funds are 0
-    let invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address).unwrap().invested_amount;
+    let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
     assert_eq!(invested_funds, 0i128);
 
 
@@ -1359,7 +1359,7 @@ fn invest_more_than_idle_funds(){
     );
 
     // Check if invested funds are 0
-    let managed_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap();
+    let managed_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap();
     assert_eq!(managed_funds.invested_amount, 0i128);
 
     let amount_to_invest = managed_funds.idle_amount + 1i128;
@@ -1511,7 +1511,7 @@ fn unwind_paused_strategy(){
     );
 
     // Check if invested funds are 0
-    let invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
+    let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
     assert_eq!(invested_funds, 0i128);
 
     let amount_to_invest = 1_000_000i128;
@@ -1524,7 +1524,7 @@ fn unwind_paused_strategy(){
     ];
     defindex_contract.rebalance(&test.rebalance_manager, &instructions);
 
-    let invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
+    let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
     assert_eq!(invested_funds, amount_to_invest);
 
     let pause_strategy_0 = defindex_contract.try_pause_strategy(&test.strategy_client_token_0.address, &test.manager);
@@ -1562,7 +1562,7 @@ fn unwind_paused_strategy(){
     let unwind_result = defindex_contract.try_rebalance(&test.rebalance_manager, &instructions);
     
     // Check if invested funds are 0
-    let invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address).unwrap().invested_amount;
+    let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
     assert_eq!(invested_funds, amount_to_invest-amount_to_unwind);
     assert_eq!(unwind_result, Ok(Ok(())));
 }
@@ -1618,7 +1618,7 @@ fn unwind_wrong_address(){
     );
 
     // Check if invested funds are 0
-    let invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
+    let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
     assert_eq!(invested_funds, 0i128);
 
     let amount_to_invest = 1_000_000i128;
@@ -1631,7 +1631,7 @@ fn unwind_wrong_address(){
     ];
     defindex_contract.rebalance(&test.rebalance_manager, &instructions);
 
-    let invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
+    let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
     assert_eq!(invested_funds, amount_to_invest);
 
     let pause_strategy_0 = defindex_contract.try_pause_strategy(&test.strategy_client_token_0.address, &test.manager);
@@ -1669,7 +1669,7 @@ fn unwind_wrong_address(){
     let unwind_result = defindex_contract.try_rebalance(&test.rebalance_manager, &instructions);
     
     // Check if invested funds are 0
-    let invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address).unwrap().invested_amount;
+    let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
     assert_eq!(invested_funds, amount_to_invest);
     assert_eq!(unwind_result, Err(Ok(ContractError::StrategyWithdrawError)));
 }
@@ -1725,7 +1725,7 @@ fn unwind_negative_amount(){
     );
 
     // Check if invested funds are 0
-    let invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
+    let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
     assert_eq!(invested_funds, 0i128);
 
     let amount_to_invest = 1_000_000i128;
@@ -1738,7 +1738,7 @@ fn unwind_negative_amount(){
     ];
     defindex_contract.rebalance(&test.rebalance_manager, &instructions);
 
-    let invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
+    let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
     assert_eq!(invested_funds, amount_to_invest);
 
     let pause_strategy_0 = defindex_contract.try_pause_strategy(&test.strategy_client_token_0.address, &test.manager);
@@ -1776,7 +1776,7 @@ fn unwind_negative_amount(){
     let unwind_result = defindex_contract.try_rebalance(&test.rebalance_manager, &instructions);
     
     // Check if invested funds are 0
-    let invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address).unwrap().invested_amount;
+    let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
     assert_eq!(invested_funds, amount_to_invest);
     assert_eq!(unwind_result, Err(Ok(ContractError::StrategyWithdrawError)));
 }

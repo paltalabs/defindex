@@ -1,9 +1,7 @@
-use common::models::AssetStrategySet;
-use soroban_sdk::{panic_with_error, token::TokenClient, Address, Env, Map, Vec};
+use soroban_sdk::{panic_with_error, token::TokenClient, Address, Env, Vec};
 
 use crate::{
     models::CurrentAssetInvestmentAllocation,
-    storage::get_assets,
     token::{internal_mint, VaultToken},
     utils::{calculate_deposit_amounts_and_shares_to_mint, check_nonnegative_amount},
     ContractError, MINIMUM_LIQUIDITY,
@@ -12,13 +10,12 @@ use crate::{
 /// Common logic for processing deposits.
 pub fn process_deposit(
     e: &Env,
-    assets: &Vec<AssetStrategySet>,
-    total_managed_funds: &Map<Address, CurrentAssetInvestmentAllocation>,
+    total_managed_funds: &Vec<CurrentAssetInvestmentAllocation>,
     amounts_desired: &Vec<i128>,
     amounts_min: &Vec<i128>,
     from: &Address,
 ) -> Result<(Vec<i128>, i128), ContractError> {
-    let assets_length = assets.len();
+    let assets_length = total_managed_funds.len();
 
     // Validate inputs
     if assets_length != amounts_desired.len() || assets_length != amounts_min.len() {
@@ -38,7 +35,6 @@ pub fn process_deposit(
         } else {
             calculate_deposit_amounts_and_shares_to_mint(
                 &e,
-                &assets,
                 &total_managed_funds,
                 amounts_desired,
                 amounts_min,
@@ -52,8 +48,8 @@ pub fn process_deposit(
             panic_with_error!(&e, ContractError::InsufficientAmount);
         }
         if amount > 0 {
-            let asset = assets.get(i as u32).unwrap();
-            let asset_client = TokenClient::new(&e, &asset.address);
+            let asset = total_managed_funds.get(i as u32).ok_or(ContractError::ArithmeticError)?; 
+            let asset_client = TokenClient::new(&e, &asset.asset);
             asset_client.transfer(&from, &e.current_contract_address(), &amount);
         }
     }
@@ -68,7 +64,7 @@ pub fn process_deposit(
 fn calculate_single_asset_shares(
     e: &Env,
     amounts_desired: &Vec<i128>,
-    total_managed_funds: &Map<Address, CurrentAssetInvestmentAllocation>,
+    total_managed_funds: &Vec<CurrentAssetInvestmentAllocation>,
     total_supply: i128,
 ) -> Result<(Vec<i128>, i128), ContractError> {
     let shares = if total_supply == 0 {
@@ -79,7 +75,7 @@ fn calculate_single_asset_shares(
             .unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError))
             .checked_div(
                 total_managed_funds
-                    .get(get_assets(&e).get(0).unwrap().address.clone())
+                    .get(0)
                     .unwrap()
                     .total_amount,
             )

@@ -11,33 +11,36 @@ pub struct Report {
 }
 
 impl Report {
-    pub fn lock_fee(&mut self, fee_rate: u32) {
+    pub fn lock_fee(&mut self, fee_rate: u32) -> Result<(), ContractError> {
         let gains_or_losses = self.gains_or_losses;
         let numerator = gains_or_losses.checked_mul(fee_rate as i128).unwrap();
         let total_fee = numerator.checked_div(MAX_BPS).unwrap();
 
-        self.locked_fee += total_fee;
+        self.locked_fee = self.locked_fee.checked_add(total_fee).ok_or(ContractError::Overflow)?;
         self.gains_or_losses = 0;
+        Ok(())
     }
 
-    pub fn release_fee(&mut self, e: &Env, amount: i128) {
+    pub fn release_fee(&mut self, e: &Env, amount: i128) -> Result<(), ContractError> {
         if self.locked_fee < amount {
             panic_with_error!(e, ContractError::InsufficientManagedFunds);
         }
-        self.locked_fee -= amount;
-        self.gains_or_losses += amount;
+        self.locked_fee = self.locked_fee.checked_sub(amount).ok_or(ContractError::Underflow)?;
+        self.gains_or_losses = self.gains_or_losses.checked_add(amount).ok_or(ContractError::Overflow)?;
+        Ok(())
     }
 
-    pub fn report(&mut self, current_balance: i128) {
+    pub fn report(&mut self, current_balance: i128) -> Result<(), ContractError> {
         let prev_balance = if self.prev_balance == 0 {
             current_balance
         } else {
             self.prev_balance
         };
 
-        let gains_or_losses = current_balance - prev_balance;
-        self.gains_or_losses += gains_or_losses;
+        let gains_or_losses = current_balance.checked_sub(prev_balance).ok_or(ContractError::Underflow)?;
+        self.gains_or_losses = self.gains_or_losses.checked_add(gains_or_losses).ok_or(ContractError::Overflow)?;
         self.prev_balance = current_balance;
+        Ok(())
     }
 
     pub fn reset(&mut self) {
@@ -51,7 +54,7 @@ pub fn distribute_strategy_fees(e: &Env, strategy_address: &Address, access_cont
     let report = get_report(&e, &strategy_address);
     
     let defindex_fee = get_defindex_protocol_fee_rate(&e);
-    let defindex_protocol_receiver = get_defindex_protocol_fee_receiver(&e);
+    let defindex_protocol_receiver = get_defindex_protocol_fee_receiver(&e)?;
     let vault_fee_receiver = access_control.get_fee_receiver()?;
 
     let mut fees_distributed: i128 = 0;
@@ -61,7 +64,7 @@ pub fn distribute_strategy_fees(e: &Env, strategy_address: &Address, access_cont
         let numerator = report.locked_fee.checked_mul(defindex_fee as i128).unwrap();
         let defindex_fee_amount = numerator.checked_div(MAX_BPS).unwrap();
 
-        let vault_fee_amount = report.locked_fee - defindex_fee_amount;
+        let vault_fee_amount = report.locked_fee.checked_sub(defindex_fee_amount).ok_or(ContractError::Underflow)?;
 
         unwind_from_strategy(
             &e,

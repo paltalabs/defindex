@@ -4,11 +4,12 @@ use std::println;
 use soroban_sdk::{ vec as sorobanvec, Address, Map, String, Vec, IntoVal,
 testutils::{MockAuth, MockAuthInvoke, Address as _}};
 
-use crate::{
-  constants::ONE_DAY_IN_SECONDS, 
-  test::{create_defindex_vault, create_fixed_strategy_params_token_0, 
+use crate::test::{create_defindex_vault, create_fixed_strategy_params_token_0, 
     defindex_vault::{ ContractError, AssetStrategySet, Instruction, RolesDataKey,}, 
-  DeFindexVaultTest, EnvTestUtils}};
+  DeFindexVaultTest, EnvTestUtils};
+
+
+pub const ONE_DAY_IN_SECONDS: u64 = 86_400;
 
 #[test]
 fn rebalance_invest(){

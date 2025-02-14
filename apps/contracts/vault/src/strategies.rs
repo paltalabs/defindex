@@ -20,7 +20,7 @@ pub fn get_strategy_asset(
     e: &Env,
     strategy_address: &Address,
 ) -> Result<AssetStrategySet, ContractError> {
-    let assets = get_assets(e);
+    let assets = get_assets(e)?;
 
     for asset in assets.iter() {
         if asset
@@ -66,11 +66,11 @@ pub fn get_strategy_struct(
 /// Pauses a strategy by setting its `paused` field to `true`.
 /// Finds the asset that contains the strategy and updates the storage.
 pub fn pause_strategy(e: &Env, strategy_address: Address) -> Result<(), ContractError> {
-    let total_assets = get_total_assets(e);
+    let total_assets = get_total_assets(e)?;
 
     // Iterate through all assets to find the one that contains the strategy
     for i in 0..total_assets {
-        let mut asset = get_asset(e, i);
+        let mut asset = get_asset(e, i)?;
 
         // Check if this asset contains the strategy
         for (j, strategy) in asset.strategies.iter().enumerate() {
@@ -97,11 +97,11 @@ pub fn pause_strategy(e: &Env, strategy_address: Address) -> Result<(), Contract
 /// Unpauses a strategy by setting its `paused` field to `false`.
 /// Finds the asset that contains the strategy and updates the storage.
 pub fn unpause_strategy(e: &Env, strategy_address: Address) -> Result<(), ContractError> {
-    let total_assets = get_total_assets(e);
+    let total_assets = get_total_assets(e)?;
 
     // Iterate through all assets to find the one that contains the strategy
     for i in 0..total_assets {
-        let mut asset = get_asset(e, i);
+        let mut asset = get_asset(e, i)?;
 
         // Check if this asset contains the strategy
         for (j, strategy) in asset.strategies.iter().enumerate() {
@@ -133,11 +133,11 @@ pub fn unwind_from_strategy(
 ) -> Result<Report, ContractError> {
     let strategy_client = get_strategy_client(e, strategy_address.clone());
     let mut report = get_report(e, strategy_address);
-    report.prev_balance -= amount;
+    report.prev_balance = report.prev_balance.checked_sub(*amount).ok_or(ContractError::Underflow)?;
    
     match strategy_client.try_withdraw(amount, &e.current_contract_address(), to) {
         Ok(Ok(result)) => {
-            report.report(result);
+            report.report(result)?;
             set_report(e, strategy_address, &report);
             Ok(report)
         }
@@ -153,7 +153,7 @@ pub fn invest_in_strategy(
 ) -> Result<Report, ContractError> {
     let strategy_client = get_strategy_client(&e, strategy_address.clone());
     let mut report = get_report(e, strategy_address);
-    report.prev_balance += amount;
+    report.prev_balance = report.prev_balance.checked_add(*amount).ok_or(ContractError::Overflow)?;
     // Now we will handle funds on behalf of the contract, not the caller (manager or user)
 
     e.authorize_as_current_contract(vec![
@@ -177,7 +177,7 @@ pub fn invest_in_strategy(
 
     // Reports
     // Store Strategy invested funds for reports
-    report.report(strategy_funds);
+    report.report(strategy_funds)?;
     set_report(e, strategy_address, &report);
 
 

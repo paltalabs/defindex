@@ -1,14 +1,15 @@
 use soroban_sdk::{contracttype, Address, Env, Vec, panic_with_error};
-
 use common::models::AssetStrategySet;
-
 use crate::report::Report;
 use crate::error::ContractError;
+
 const DAY_IN_LEDGERS: u32 = 17280;
+
 const INSTANCE_BUMP_AMOUNT: u32 = 30 * DAY_IN_LEDGERS;
 const INSTANCE_LIFETIME_THRESHOLD: u32 = INSTANCE_BUMP_AMOUNT - DAY_IN_LEDGERS;
-const LEDGER_BUMP: u32 = 120 * DAY_IN_LEDGERS;
-const LEDGER_THRESHOLD: u32 = LEDGER_BUMP - 20 * DAY_IN_LEDGERS;
+
+const PERSISTENT_BUMP_AMOUNT: u32 = 120 * DAY_IN_LEDGERS;
+const PERSISTENT_LIFETIME_THRESHOLD: u32 = PERSISTENT_BUMP_AMOUNT - 20 * DAY_IN_LEDGERS;
 
 pub fn extend_instance_ttl(e: &Env) {
     e.storage()
@@ -37,26 +38,30 @@ pub fn set_asset(e: &Env, index: u32, asset: &AssetStrategySet) {
         .instance()
         .set(&DataKey::AssetStrategySet(index), asset);
 }
-pub fn get_asset(e: &Env, index: u32) -> AssetStrategySet {
+
+pub fn get_asset(e: &Env, index: u32) -> Result<AssetStrategySet, ContractError> {
     e.storage()
         .instance()
         .get(&DataKey::AssetStrategySet(index))
-        .unwrap()
+        .ok_or(ContractError::NotInitialized)
 }
-pub fn get_assets(e: &Env) -> Vec<AssetStrategySet> {
-    let total_assets = get_total_assets(e);
+
+pub fn get_assets(e: &Env) -> Result<Vec<AssetStrategySet>, ContractError> {
+    let total_assets = get_total_assets(e)?;
     let mut assets = Vec::new(e);
     for i in 0..total_assets {
-        assets.push_back(get_asset(e, i));
+        assets.push_back(get_asset(e, i)?);
     }
-    assets
+
+    Ok(assets)
 }
+
 pub fn set_total_assets(e: &Env, n: u32) {
     e.storage().instance().set(&DataKey::TotalAssets, &n);
 }
 
-pub fn get_total_assets(e: &Env) -> u32 {
-    e.storage().instance().get(&DataKey::TotalAssets).unwrap()
+pub fn get_total_assets(e: &Env) -> Result<u32, ContractError> {
+    e.storage().instance().get(&DataKey::TotalAssets).ok_or(ContractError::NotInitialized)
 }
 
 // DeFindex Fee Receiver
@@ -66,11 +71,11 @@ pub fn set_defindex_protocol_fee_receiver(e: &Env, address: &Address) {
         .set(&DataKey::DeFindexProtocolFeeReceiver, address);
 }
 
-pub fn get_defindex_protocol_fee_receiver(e: &Env) -> Address {
+pub fn get_defindex_protocol_fee_receiver(e: &Env) -> Result<Address, ContractError> {
     e.storage()
         .instance()
         .get(&DataKey::DeFindexProtocolFeeReceiver)
-        .unwrap()
+        .ok_or(ContractError::NotInitialized)
 }
 
 // DeFindex Fee BPS
@@ -129,7 +134,7 @@ pub fn set_report(e: &Env, strategy_address: &Address, report: &Report) {
         .set::<DataKey, Report>(&key, report);
     e.storage()
         .persistent()
-        .extend_ttl(&key, LEDGER_THRESHOLD, LEDGER_BUMP);
+        .extend_ttl(&key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT);
 }
 
 pub fn get_report(e: &Env, strategy_address: &Address) -> Report {
@@ -139,7 +144,7 @@ pub fn get_report(e: &Env, strategy_address: &Address) -> Report {
         Some(report) => {
             e.storage()
                 .persistent()
-                .extend_ttl(&key, LEDGER_THRESHOLD, LEDGER_BUMP);
+                .extend_ttl(&key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT);
             report
         }
         None => Report {

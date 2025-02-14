@@ -86,9 +86,9 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
 
     // calculate result1_should by hand (put aritmentic as a comment) and check that results are ok
     // result1_should = {token_0: 0, token_1: 0}
-    let mut result1_should = Map::new(&test.env);
-    result1_should.set(test.token_0.address.clone(), 0i128);
-    result1_should.set(test.token_1.address.clone(), 0i128);
+    let mut result1_should = Vec::new(&test.env);
+    result1_should.push_back(0i128);
+    result1_should.push_back(0i128);
     assert_eq!(result1, result1_should);
 
     // next we will consider that total shares are amount0 + amount1 = 123456789 + 987654321 = 1111111110
@@ -103,9 +103,9 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
     // amount 1 * shares 0 / total supply = 987654321000 / 1111111110 = 888.888889789
     // because truncating, amount should be 888
     // result2_should = {token_0: 111, token_1: 888}
-    let mut result2_should = Map::new(&test.env);
-    result2_should.set(test.token_0.address.clone(), 111i128);
-    result2_should.set(test.token_1.address.clone(), 888i128);
+    let mut result2_should = Vec::new(&test.env);
+    result2_should.push_back(111i128);
+    result2_should.push_back(888i128);
     assert_eq!(result2, result2_should);
 
     // amount should 2 for token_0:
@@ -118,9 +118,9 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
     // amount 1 * shares 0 / total supply = 1975308642000 / 1111111110 = 1777.777779578
     // because truncating, amount should be 1777
     // result3_should = {token_0: 222, token_1: 1777}
-    let mut result3_should = Map::new(&test.env);
-    result3_should.set(test.token_0.address.clone(), 222i128);
-    result3_should.set(test.token_1.address.clone(), 1777i128);
+    let mut result3_should = Vec::new(&test.env);
+    result3_should.push_back(222i128);
+    result3_should.push_back(1777i128);
     assert_eq!(result3, result3_should);
 
     // amount should 3 for token_0:
@@ -133,9 +133,9 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
     // amount 1 * shares 0 / total supply = 2962962963000 / 1111111110 = 2666.666670633
     // because truncating, amount should be 2666
     // result4_should = {token_0: 333, token_1: 2666}
-    let mut result4_should = Map::new(&test.env);
-    result4_should.set(test.token_0.address.clone(), 333i128);
-    result4_should.set(test.token_1.address.clone(), 2666i128);
+    let mut result4_should = Vec::new(&test.env);
+    result4_should.push_back(333i128);
+    result4_should.push_back(2666i128);
     assert_eq!(result4, result4_should);
 
     // amount should 4 for token_0:
@@ -148,9 +148,9 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
     // amount 1 * shares 0 / total supply = 3950617284000 / 1111111110 = 3555.555561844
     // because truncating, amount should be 3555
     // result5_should = {token_0: 444, token_1: 3555}
-    let mut result5_should = Map::new(&test.env);
-    result5_should.set(test.token_0.address.clone(), 444i128);
-    result5_should.set(test.token_1.address.clone(), 3555i128);
+    let mut result5_should = Vec::new(&test.env);
+    result5_should.push_back(444i128);
+    result5_should.push_back(3555i128);
     assert_eq!(result5, result5_should);
 
     // amount should 5 for token_0:
@@ -163,9 +163,9 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
     // amount 1 * shares 0 / total supply = 4938271605000 / 1111111110 = 4444.444450055
     // because truncating, amount should be 4444
     // result6_should = {token_0: 555, token_1: 4444}
-    let mut result6_should = Map::new(&test.env);
-    result6_should.set(test.token_0.address.clone(), 555i128);
-    result6_should.set(test.token_1.address.clone(), 4444i128);
+    let mut result6_should = Vec::new(&test.env);
+    result6_should.push_back(555i128);
+    result6_should.push_back(4444i128);
     assert_eq!(result6, result6_should);
 
     // *************************************************
@@ -259,10 +259,10 @@ fn deposit_and_invest_several_assets_get_asset_amounts_per_shares() {
         )
     ];
     defindex_contract.rebalance(&test.rebalance_manager, &rebalance_instructions);
-    let token_0_invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
-    let token_1_invested_funds = defindex_contract.fetch_total_managed_funds().get(test.token_1.address.clone()).unwrap().invested_amount;
-    let token_0_idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
-    let token_1_idle_funds = defindex_contract.fetch_current_idle_funds().get(test.token_1.address.clone()).unwrap();
+    let token_0_invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
+    let token_1_invested_funds = defindex_contract.fetch_total_managed_funds().get(1).unwrap().invested_amount;
+    let token_0_idle_funds = test.token_0.balance(&defindex_contract.address);
+    let token_1_idle_funds = test.token_1.balance(&defindex_contract.address);
 
     assert_eq!(token_0_invested_funds, amount_to_invest);
     assert_eq!(token_1_invested_funds, amount_to_invest);
@@ -280,9 +280,9 @@ fn deposit_and_invest_several_assets_get_asset_amounts_per_shares() {
 
     // calculate result1_should by hand (put aritmentic as a comment) and check that results are ok
     // result1_should = {token_0: 0, token_1: 0}
-    let mut result1_should = Map::new(&test.env);
-    result1_should.set(test.token_0.address.clone(), 0i128);
-    result1_should.set(test.token_1.address.clone(), 0i128);
+    let mut result1_should = Vec::new(&test.env);
+    result1_should.push_back(0i128);
+    result1_should.push_back(0i128);
     assert_eq!(result1, result1_should);
 
     // next we will consider that total shares are amount0 + amount1 = 123456789 + 987654321 = 1111111110
@@ -297,9 +297,9 @@ fn deposit_and_invest_several_assets_get_asset_amounts_per_shares() {
     // amount 1 * shares 0 / total supply = 987654321000 / 1111111110 = 888.888889789
     // because truncating, amount should be 888
     // result2_should = {token_0: 111, token_1: 888}
-    let mut result2_should = Map::new(&test.env);
-    result2_should.set(test.token_0.address.clone(), 111i128);
-    result2_should.set(test.token_1.address.clone(), 888i128);
+    let mut result2_should = Vec::new(&test.env);
+    result2_should.push_back(111i128);
+    result2_should.push_back(888i128);
     assert_eq!(result2, result2_should);
 
     // amount should 2 for token_0:
@@ -312,9 +312,9 @@ fn deposit_and_invest_several_assets_get_asset_amounts_per_shares() {
     // amount 1 * shares 0 / total supply = 1975308642000 / 1111111110 = 1777.777779578
     // because truncating, amount should be 1777
     // result3_should = {token_0: 222, token_1: 1777}
-    let mut result3_should = Map::new(&test.env);
-    result3_should.set(test.token_0.address.clone(), 222i128);
-    result3_should.set(test.token_1.address.clone(), 1777i128);
+    let mut result3_should = Vec::new(&test.env);
+    result3_should.push_back(222i128);
+    result3_should.push_back(1777i128);
     assert_eq!(result3, result3_should);
 
     // amount should 3 for token_0:
@@ -327,9 +327,9 @@ fn deposit_and_invest_several_assets_get_asset_amounts_per_shares() {
     // amount 1 * shares 0 / total supply = 2962962963000 / 1111111110 = 2666.666670633
     // because truncating, amount should be 2666
     // result4_should = {token_0: 333, token_1: 2666}
-    let mut result4_should = Map::new(&test.env);
-    result4_should.set(test.token_0.address.clone(), 333i128);
-    result4_should.set(test.token_1.address.clone(), 2666i128);
+    let mut result4_should = Vec::new(&test.env);
+    result4_should.push_back(333i128);
+    result4_should.push_back(2666i128);
     assert_eq!(result4, result4_should);
 
     // amount should 4 for token_0:
@@ -342,9 +342,9 @@ fn deposit_and_invest_several_assets_get_asset_amounts_per_shares() {
     // amount 1 * shares 0 / total supply = 3950617284000 / 1111111110 = 3555.555561844
     // because truncating, amount should be 3555
     // result5_should = {token_0: 444, token_1: 3555}
-    let mut result5_should = Map::new(&test.env);
-    result5_should.set(test.token_0.address.clone(), 444i128);
-    result5_should.set(test.token_1.address.clone(), 3555i128);
+    let mut result5_should = Vec::new(&test.env);
+    result5_should.push_back(444i128);
+    result5_should.push_back(3555i128);
     assert_eq!(result5, result5_should);
 
     // amount should 5 for token_0:
@@ -357,9 +357,9 @@ fn deposit_and_invest_several_assets_get_asset_amounts_per_shares() {
     // amount 1 * shares 0 / total supply = 4938271605000 / 1111111110 = 4444.444450055
     // because truncating, amount should be 4444
     // result6_should = {token_0: 555, token_1: 4444}
-    let mut result6_should = Map::new(&test.env);
-    result6_should.set(test.token_0.address.clone(), 555i128);
-    result6_should.set(test.token_1.address.clone(), 4444i128);
+    let mut result6_should = Vec::new(&test.env);
+    result6_should.push_back(555i128);
+    result6_should.push_back(4444i128);
     assert_eq!(result6, result6_should);
 
     // *************************************************

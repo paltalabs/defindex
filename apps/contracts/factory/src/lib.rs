@@ -48,17 +48,17 @@ pub trait FactoryTrait {
     ///
     /// # Arguments
     /// * `e` - The environment in which the contract is running.
-    /// * `emergency_manager` - The address assigned emergency control over the vault.
-    /// * `fee_receiver` - The address designated to receive fees from the vault.
-    /// * `vault_fee` - The percentage share of fees allocated to the vault's fee receiver.
-    /// * `vault_name` - The name of the vault.
-    /// * `vault_symbol` - The symbol of the vault.
-    /// * `manager` - The address assigned as the vault manager.
-    /// * `assets` - A vector of `AssetStrategySet` structs that define the assets managed by the vault.
-    /// * `salt` - A salt used for ensuring unique addresses for each deployed vault.
+    /// * `roles` - A `Map` containing role identifiers (`u32`) and their corresponding `Address` assignments.
+    ///              Example roles include the manager and fee receiver.
+    /// * `vault_fee` - The fee rate in basis points (1 basis point = 0.01%) allocated to the fee receiver.
+    /// * `assets` - A vector of `AssetStrategySet` structs defining the strategies and assets managed by the vault.
+    /// * `salt` - A unique `BytesN<32>` value used to ensure that each deployed vault has a unique address.
+    /// * `soroswap_router` - The `Address` of the Soroswap router, which facilitates swaps within the vault.
+    /// * `name_symbol` - A `Map` containing the vault's name and symbol metadata (e.g., "name" -> "MyVault", "symbol" -> "MVLT").
+    /// * `upgradable` - A boolean flag indicating whether the deployed vault contract should support upgrades.
     ///
     /// # Returns
-    /// * `Result<Address, FactoryError>` - Returns the address of the new vault, or an error if unsuccessful.
+    /// * `Result<Address, FactoryError>` - Returns the address of the newly created vault if successful, or an error if creation fails.
     fn create_defindex_vault(
         e: Env,
         roles: Map<u32, Address>,
@@ -125,11 +125,11 @@ pub trait FactoryTrait {
     ///
     /// # Arguments
     /// * `e` - The environment in which the contract is running.
-    /// * `new_fee_rate` - The new annual fee rate in basis points.
+    /// * `defindex_fee` - The new annual fee rate in basis points.
     ///
     /// # Returns
     /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, or an error if not authorized.
-    fn set_defindex_fee(e: Env, new_fee_rate: u32) -> Result<(), FactoryError>;
+    fn set_defindex_fee(e: Env, defindex_fee: u32) -> Result<(), FactoryError>;
 
     // --- Read Methods ---
 
@@ -265,6 +265,21 @@ fn perform_initial_deposit(
 
 #[contractimpl]
 impl FactoryTrait for DeFindexFactory {
+    /// Initializes the factory contract with the given parameters.
+    ///
+    /// # Arguments
+    /// * `e` - The environment in which the contract is running.
+    /// * `admin` - The address of the contract administrator who can manage settings.
+    /// * `defindex_receiver` - The default address designated to receive the DeFindex portion of fees.
+    /// * `defindex_fee` - The initial fee rate in basis points (1 basis point = 0.01%).
+    /// * `vault_wasm_hash` - The hash of the DeFindex Vault's WASM file used for deploying new vaults.
+    ///
+    /// # Behavior
+    /// 1. Sets the initial admin address
+    /// 2. Sets the initial DeFindex fee receiver address
+    /// 3. Sets the initial vault WASM hash
+    /// 4. Sets the initial DeFindex fee rate
+    /// 5. Extends the contract instance's time-to-live
     fn __constructor(
         e: Env,
         admin: Address,
@@ -279,7 +294,6 @@ impl FactoryTrait for DeFindexFactory {
 
         extend_instance_ttl(&e);
     }
-
 
     /// Creates a new DeFindex Vault with the specified parameters.
     ///
@@ -419,7 +433,7 @@ impl FactoryTrait for DeFindexFactory {
     ///
     /// # Arguments
     /// * `e` - The environment in which the contract is running.
-    /// * `new_fee_rate` - The new annual fee rate in basis points.
+    /// * `defindex_fee` - The new annual fee rate in basis points.
     ///
     /// # Returns
     /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, or an error if not authorized.

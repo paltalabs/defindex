@@ -301,16 +301,16 @@ fn from_idle_one_asset_one_strategy_success() {
     assert_eq!(df_balance, amount_to_deposit - 1000); // 1000  gets locked in the vault forever
 
     // check total manage funds
-    let mut total_managed_funds_expected = Map::new(&test.env);
+    let mut total_managed_funds_expected = Vec::new(&test.env);
     let strategy_investments_expected = sorobanvec![
         &test.env,
         StrategyAllocation {
             strategy_address: test.strategy_client_token_0.address.clone(),
             amount: 0, //funds has not been invested yet!
+            paused: false,
         }
     ];
-    total_managed_funds_expected.set(
-        test.token_0.address.clone(),
+    total_managed_funds_expected.push_back(
         CurrentAssetInvestmentAllocation {
             asset: test.token_0.address.clone(),
             total_amount: amount_to_deposit,
@@ -349,16 +349,16 @@ fn from_idle_one_asset_one_strategy_success() {
     assert_eq!(df_balance, amount_to_deposit - amount_to_withdraw - 1000);
 
     // check total manage funds
-    let mut total_managed_funds_expected = Map::new(&test.env);
+    let mut total_managed_funds_expected = Vec::new(&test.env);
     let strategy_investments_expected = sorobanvec![
         &test.env,
         StrategyAllocation {
             strategy_address: test.strategy_client_token_0.address.clone(),
             amount: 0, //funds has not been invested yet!
+            paused: false,
         }
     ];
-    total_managed_funds_expected.set(
-        test.token_0.address.clone(),
+    total_managed_funds_expected.push_back(
         CurrentAssetInvestmentAllocation {
             asset: test.token_0.address.clone(),
             total_amount: amount_to_deposit - amount_to_withdraw,
@@ -393,16 +393,16 @@ fn from_idle_one_asset_one_strategy_success() {
     assert_eq!(user_balance, amount - 1000);
 
     // check total manage funds
-    let mut total_managed_funds_expected = Map::new(&test.env);
+    let mut total_managed_funds_expected = Vec::new(&test.env);
     let strategy_investments_expected = sorobanvec![
         &test.env,
         StrategyAllocation {
             strategy_address: test.strategy_client_token_0.address.clone(),
             amount: 0, //funds has not been invested yet!
+            paused: false,
         }
     ];
-    total_managed_funds_expected.set(
-        test.token_0.address.clone(),
+    total_managed_funds_expected.push_back(
         CurrentAssetInvestmentAllocation {
             asset: test.token_0.address.clone(),
             total_amount: 1000,
@@ -518,9 +518,8 @@ fn from_idle_two_assets_success() {
     assert_eq!(df_balance, 1554544);
 
     // check total manage funds
-    let mut total_managed_funds_expected = Map::new(&test.env);
-    total_managed_funds_expected.set(
-        test.token_0.address.clone(),
+    let mut total_managed_funds_expected = Vec::new(&test.env);
+    total_managed_funds_expected.push_back(
         CurrentAssetInvestmentAllocation {
             asset: test.token_0.address.clone(),
             total_amount: 567890i128,
@@ -531,13 +530,13 @@ fn from_idle_two_assets_success() {
                 StrategyAllocation {
                     strategy_address: test.strategy_client_token_0.address.clone(),
                     amount: 0, //funds has not been invested yet!
+                    paused: false,
                 }
             ],
         },
     );
 
-    total_managed_funds_expected.set(
-        test.token_1.address.clone(),
+    total_managed_funds_expected.push_back(
         CurrentAssetInvestmentAllocation {
             asset: test.token_1.address.clone(),
             total_amount: 987654i128,
@@ -548,6 +547,7 @@ fn from_idle_two_assets_success() {
                 StrategyAllocation {
                     strategy_address: test.strategy_client_token_1.address.clone(),
                     amount: 0, //funds has not been invested yet!
+                    paused: false,
                 }
             ],
         },
@@ -640,9 +640,8 @@ fn from_idle_two_assets_success() {
     assert_eq!(df_balance, 1431088);
 
     // check total manage funds
-    let mut total_managed_funds_expected = Map::new(&test.env);
-    total_managed_funds_expected.set(
-        test.token_0.address.clone(),
+    let mut total_managed_funds_expected = Vec::new(&test.env);
+    total_managed_funds_expected.push_back(
         CurrentAssetInvestmentAllocation {
             asset: test.token_0.address.clone(),
             total_amount: 567890i128 - 45070,
@@ -653,13 +652,13 @@ fn from_idle_two_assets_success() {
                 StrategyAllocation {
                     strategy_address: test.strategy_client_token_0.address.clone(),
                     amount: 0, //funds has not been invested yet!
+                    paused: false,
                 }
             ],
         },
     );
 
-    total_managed_funds_expected.set(
-        test.token_1.address.clone(),
+    total_managed_funds_expected.push_back(
         CurrentAssetInvestmentAllocation {
             asset: test.token_1.address.clone(),
             total_amount: 987654i128 - 78385,
@@ -670,6 +669,7 @@ fn from_idle_two_assets_success() {
                 StrategyAllocation {
                     strategy_address: test.strategy_client_token_1.address.clone(),
                     amount: 0, //funds has not been invested yet!
+                    paused: false,
                 }
             ],
         },
@@ -864,7 +864,7 @@ fn from_strategies_one_asset_two_strategies_success() {
 
     let strategy_1_balance_before_withdraw = test.token_0.balance(&test.strategy_client_token_0.address);
     let strategy_2_balance_before_withdraw = test.token_0.balance(&strategy_client_1.address);
-    let idle_funds_before_withdraw = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
+    let idle_funds_before_withdraw = test.token_0.balance(&defindex_contract.address);
 
     defindex_contract.withdraw(&(amount_0-1000), &users[0]);
 
@@ -1366,14 +1366,14 @@ fn from_strategy_success_no_mock_all_auths() {
     ]).deposit(&amounts_desired, &amounts_min, &from, &invest); 
  
     let total_managed_funds = defindex_contract.fetch_total_managed_funds();
-    let invested_funds_0 = total_managed_funds.get(test.token_0.address.clone()).unwrap().invested_amount;
-    let invested_funds_1 = if total_managed_funds.get(test.token_1.address.clone()).is_some() {
-        total_managed_funds.get(test.token_1.address.clone()).unwrap().invested_amount
+    let invested_funds_0 = total_managed_funds.get(0).unwrap().invested_amount;
+    let invested_funds_1 = if total_managed_funds.get(1).is_some() {
+        total_managed_funds.get(1).unwrap().invested_amount
     } else {
         0
     };
-    let idle_funds_0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
-    let idle_funds_1 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
+    let idle_funds_0 = test.token_0.balance(&defindex_contract.address);
+    let idle_funds_1 = test.token_1.balance(&defindex_contract.address);
 
     assert_eq!(idle_funds_0, deposit_amount_0);
     assert_eq!(idle_funds_1, deposit_amount_1);
@@ -1412,10 +1412,10 @@ fn from_strategy_success_no_mock_all_auths() {
     }
     ]).withdraw(&withdraw_amount_0, &from.clone());
 
-    let invested_funds_0 = defindex_contract.fetch_total_managed_funds().get(test.token_0.address.clone()).unwrap().invested_amount;
-    let invested_funds_1 = defindex_contract.fetch_total_managed_funds().get(test.token_1.address.clone()).unwrap().invested_amount;
-    let idle_funds_0 = defindex_contract.fetch_current_idle_funds().get(test.token_0.address.clone()).unwrap();
-    let idle_funds_1 = defindex_contract.fetch_current_idle_funds().get(test.token_1.address.clone()).unwrap();
+    let invested_funds_0 = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
+    let invested_funds_1 = defindex_contract.fetch_total_managed_funds().get(1).unwrap().invested_amount;
+    let idle_funds_0 = test.token_0.balance(&defindex_contract.address);
+    let idle_funds_1 = test.token_1.balance(&defindex_contract.address);
 
     assert_eq!(idle_funds_0, (deposit_amount_0 - withdraw_amount_0/2));
     assert_eq!(idle_funds_1, (deposit_amount_1 - withdraw_amount_0/2));
