@@ -5,8 +5,7 @@ using StellarDotnetSdk.Operations;
 using StellarDotnetSdk.Transactions;
 using dotenv.net;
 using DeFindex.Sdk.Services;
-using System.Text;
-using System.Security.Cryptography.X509Certificates;
+using Newtonsoft.Json;
 
 class Program
 {
@@ -138,9 +137,8 @@ class Program
 
         var usdcInstance = new DefindexSdk(usdc_string, soroban_server);
         var sourceAccount = new Account(account.AccountId, account.SequenceNumber);
-        var transaction = usdcInstance.CreateBalanceTransaction(sourceAccount, keypair.AccountId);
+        var simulatedTransactionResult = await usdcInstance.CreateBalanceTransaction(sourceAccount, keypair.AccountId);
 
-        var simulatedTransactionResult = await soroban_server.SimulateTransaction(transaction);
         if (simulatedTransactionResult.Results != null)
         {
             foreach (var result in simulatedTransactionResult.Results)
@@ -163,9 +161,8 @@ class Program
         var vault_string = "CDOQGZLNTWDQSYPSLYQ3R7LDUETUDZFYWJBLYNEGQLJLQKXTTC573LVW";
         var vaultInstance = new DefindexSdk(vault_string, soroban_server);
         var user_with_shares =  "GBI3XNPOBMTX5KUYOY742JVCSW4AWPR462IOBJZF3BM7IDAVTN5HHLM3";
-        var vault_transaction = vaultInstance.CreateBalanceTransaction(sourceAccount, user_with_shares);
+        simulatedTransactionResult = await vaultInstance.CreateBalanceTransaction(sourceAccount, user_with_shares);
 
-        simulatedTransactionResult = await soroban_server.SimulateTransaction(vault_transaction);
         if (simulatedTransactionResult.Results != null)
         {
             foreach (var result in simulatedTransactionResult.Results)
@@ -184,65 +181,15 @@ class Program
         xdr = StellarDotnetSdk.Xdr.SCVal.Decode(result_xdr);
         Console.WriteLine($"Balance result: {xdr.I128.Lo.InnerValue}");
         
-        var total_managed_funds_transaction = vaultInstance.FetchTotalManagedFunds(sourceAccount);
+        var totalManagedFunds = await vaultInstance.FetchTotalManagedFunds();
         
-        var simulatedTotalManagedFundsResult = await soroban_server.SimulateTransaction(total_managed_funds_transaction);
-        if (simulatedTotalManagedFundsResult.Results != null)
-        {
-            foreach (var result in simulatedTotalManagedFundsResult.Results)
-            {
-                Console.WriteLine($"🟢Total Managed Funds Result: {result.Xdr}");
-            }
-        }
-        
-        xdrString = simulatedTotalManagedFundsResult.Results?[0].Xdr;
-        if (xdrString == null){
-            Console.WriteLine("XDR string for total managed funds is null.");
-            return;
-        }
-        
-        result_xdr = new StellarDotnetSdk.Xdr.XdrDataInputStream(Convert.FromBase64String(xdrString));
-        xdr = StellarDotnetSdk.Xdr.SCVal.Decode(result_xdr);
+        Console.WriteLine($"Total Managed Funds: {JsonConvert.SerializeObject(totalManagedFunds, Formatting.Indented)}");
 
-        Console.WriteLine($"total managed funds result xdr: {xdr}");
-        Console.WriteLine($"Total Managed Funds result: ");
+        var userShares = await vaultInstance.GetUserShares(user_with_shares);
+        Console.WriteLine($"User Shares: {userShares}");
 
-        
-        foreach (var item in xdr.Vec.InnerValue[0].Map.InnerValue)
-        {
-            /* 
-                Key: asset, 
-                Key: idle_amount, 
-                Key: invested_amount, 
-                Key: strategy_allocations, 
-                Key: total_amount, 
-             */
-            Console.Write($"{item.Key.Sym.InnerValue}: ");
-            switch (item.Key.Sym.InnerValue)
-            {
-                case "asset":
-                    var contracAddress = (SCContractId)SCContractId.FromSCValXdr(item.Val);
-                    Console.WriteLine(contracAddress.InnerValue);
-                    break;
-                case "idle_amount":
-                    var idleAmount = (SCInt128)SCInt128.FromSCValXdr(item.Val);
-                    Console.WriteLine($"{idleAmount}");
-                    break;
-                case "invested_amount":
-                    Console.WriteLine($"{item.Val.I128.Lo.InnerValue}");
-                    break;
-                case "total_amount":
-                    Console.WriteLine($"{item.Val.I128.Lo.InnerValue}");
-                    break;
-                case "strategy_allocations":
-                    Console.WriteLine($"{item.Val.Vec.InnerValue[0].Map.InnerValue[0]}");
-                    break;
-                default:
-                    Console.WriteLine($"{item.Val}");
-                    break;
-            }
-        }
-
+        var vaultTotalShares = await vaultInstance.GetVaultTotalShares();
+        Console.WriteLine($"Vault Total Shares: {vaultTotalShares}");
         return;
     }
-} 
+}

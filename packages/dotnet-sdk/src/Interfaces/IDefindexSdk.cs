@@ -1,14 +1,49 @@
 using StellarDotnetSdk.Transactions;
-using StellarDotnetSdk;
-using StellarDotnetSdk.Accounts;
 using StellarDotnetSdk.Soroban;
 
 namespace DeFindex.Sdk.Interfaces;
 
 /// <summary>
-/// Represents user's vault shares
+/// Represents the number of vault shares a user owns
 /// </summary>
-public sealed record VaultShares(string AccountId, decimal Shares);
+/// <param name="AccountId"></param>
+/// <param name="Shares"></param>
+public sealed record VaultShares
+(
+    string AccountId, 
+    ulong Shares
+);
+
+/// <summary>
+/// Represents the result of a total managed funds query for a vault
+/// </summary>
+/// <param name="Asset"></param>
+/// <param name="IdleAmount"></param>
+/// <param name="InvestedAmount"></param>
+/// <param name="TotalAmount"></param>
+/// <param name="StrategyAllocations"></param>
+public sealed record ManagedFundsResult
+(
+    string? Asset,
+    ulong IdleAmount,
+    ulong InvestedAmount,
+    ulong TotalAmount,
+    List<StrategyAllocation> StrategyAllocations
+);
+
+/// <summary>
+/// Represents the allocation of funds to a strategy
+/// </summary>
+/// <param name="Amount"></param>
+/// <param name="Paused"></param>
+/// <param name="StrategyAddress"></param>
+public sealed record StrategyAllocation
+(
+    ulong Amount,
+    bool Paused,
+    string? StrategyAddress
+);
+
 
 /// <summary>
 /// Represents vault's total managed funds per asset
@@ -48,12 +83,12 @@ public interface IDefindexSdk
     /// <summary>
     /// Retrieves vault's total funds, idle funds, and invested funds per strategy for each underlying asset
     /// </summary>
-    Task<Dictionary<string, VaultFunds>> FetchTotalManagedFunds();
+    Task<List<ManagedFundsResult>> FetchTotalManagedFunds();
 
     /// <summary>
     /// Retrieves the total number of vault shares issued
     /// </summary>
-    Task<decimal> GetVaultTotalShares();
+    Task<ulong> GetVaultTotalShares();
 
     /// <summary>
     /// Creates an unsigned transaction to deposit into a vault

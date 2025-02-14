@@ -1,4 +1,3 @@
-using StellarDotnetSdk;
 using StellarDotnetSdk.Soroban;
 using StellarDotnetSdk.Operations;
 using StellarDotnetSdk.Transactions;
@@ -10,6 +9,7 @@ namespace DeFindex.Sdk.Services;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using StellarDotnetSdk.Responses.SorobanRpc;
 
 public class DefindexSdk : IDefindexSdk
 {
@@ -25,30 +25,55 @@ public class DefindexSdk : IDefindexSdk
     public string ContractId => _contractId.InnerValue;
     public SorobanServer Server => _server;
 
-    public Transaction CreateBalanceTransaction(Account account, string accountIdToCheck)
+    public async Task<SimulateTransactionResponse> CreateBalanceTransaction(Account account, string accountIdToCheck)
     {
         var getBalanceArgs = new SCVal[] {
             new SCAccountId(accountIdToCheck),
         };
         var balanceSymbol = new SCSymbol("balance");
-
         var invokeContractOperation = new InvokeContractOperation(_contractId, balanceSymbol, getBalanceArgs);
-        
-        return new TransactionBuilder(account)
+
+        var transaction = new TransactionBuilder(account)
             .AddOperation(invokeContractOperation)
             .Build();
+        var simulatedTransaction = await this.Server.SimulateTransaction(transaction);
+        if (simulatedTransaction.Error != null)
+        {
+            Console.WriteLine($"Error while simulating transaction: {simulatedTransaction.Error}");
+            throw new Exception($"Error while simulating transaction: {simulatedTransaction.Error}");
+        }
+        if (simulatedTransaction.Results == null || simulatedTransaction.Results.Count() == 0)
+        {
+            throw new Exception("No results found in the simulated transaction.");
+        }
+        var xdrString = simulatedTransaction.Results[0].Xdr;
+        var resultXdr = new StellarDotnetSdk.Xdr.XdrDataInputStream(Convert.FromBase64String(xdrString));
+        var xdr = StellarDotnetSdk.Xdr.SCVal.Decode(resultXdr);
+        var parsedResult = (SCInt128)SCInt128.FromSCValXdr(xdr);
+        Console.WriteLine($"Simulated transaction: {parsedResult.Lo}");
+        
+        return simulatedTransaction;
     }
 
-    public Transaction FetchTotalManagedFunds(Account account)
+    public async Task<List<ManagedFundsResult>> FetchTotalManagedFunds()
     {
-        var getManagedFundsArgs = new SCVal[] {};
-        var managedFundsSymbol = new SCSymbol("fetch_total_managed_funds");
-
-        var invokeContractOperation = new InvokeContractOperation(_contractId, managedFundsSymbol, getManagedFundsArgs);
+        var keypair = KeyPair.Random();
+        var args = new SCVal[] {};
+        var symbol = new SCSymbol("fetch_total_managed_funds");
+        var invokeContractOperation = new InvokeContractOperation(_contractId, symbol, args);
         
-        return new TransactionBuilder(account)
+        var loadedAccount = new Account(keypair.AccountId, 0); 
+        var transaction = new TransactionBuilder(loadedAccount)
             .AddOperation(invokeContractOperation)
             .Build();
+        
+        var simulatedTransaction = await _server.SimulateTransaction(transaction);
+        if (simulatedTransaction.Error != null)
+        {
+            throw new Exception($"Error while simulating transaction: {simulatedTransaction.Error}");
+        }
+        var parsedResult = DefindexResponseParser.ParseManagedFundsResult(simulatedTransaction);
+        return parsedResult;
     }
 
     public async Task<bool> InitializeAsync()
@@ -61,17 +86,52 @@ public class DefindexSdk : IDefindexSdk
 
     public async Task<VaultShares> GetUserShares(string accountId)
     {
-        return new VaultShares(accountId, 0);
+        var keypair = KeyPair.Random();
+        var args = new SCVal[] {
+            new SCAccountId(accountId),
+        };
+        var symbol = new SCSymbol("balance");
+        var invokeContractOperation = new InvokeContractOperation(_contractId, symbol, args);
+        var loadedAccount = new Account(keypair.AccountId, 0); 
+        var transaction = new TransactionBuilder(loadedAccount)
+            .AddOperation(invokeContractOperation)
+            .Build();
+        
+        var simulatedTransaction = await _server.SimulateTransaction(transaction);
+        if (simulatedTransaction.Error != null || simulatedTransaction.Results == null || simulatedTransaction.Results.Count() == 0)
+        {
+            throw new Exception($"Error while simulating transaction: {simulatedTransaction.Error}");
+        }
+        var xdrString = simulatedTransaction.Results[0].Xdr;
+        var resultXdr = new StellarDotnetSdk.Xdr.XdrDataInputStream(Convert.FromBase64String(xdrString!));
+        var xdr = StellarDotnetSdk.Xdr.SCVal.Decode(resultXdr);
+        var parsedResult = (SCInt128)SCInt128.FromSCValXdr(xdr);
+        var vaultShares = new VaultShares(accountId, parsedResult.Lo);
+        return vaultShares;
     }
 
-    public async Task<Dictionary<string, VaultFunds>> FetchTotalManagedFunds()
+    public async Task<ulong> GetVaultTotalShares()
     {
-        return new Dictionary<string, VaultFunds>();
-    }
-
-    public async Task<decimal> GetVaultTotalShares()
-    {
-        return 0;
+        //Simular llamada a la función total_supply
+         var keypair = KeyPair.Random();
+        var args = new SCVal[] {};
+        var symbol = new SCSymbol("total_supply");
+        var invokeContractOperation = new InvokeContractOperation(_contractId, symbol, args);
+        var loadedAccount = new Account(keypair.AccountId, 0); 
+        var transaction = new TransactionBuilder(loadedAccount)
+            .AddOperation(invokeContractOperation)
+            .Build();
+        
+        var simulatedTransaction = await _server.SimulateTransaction(transaction);
+        if (simulatedTransaction.Error != null || simulatedTransaction.Results == null || simulatedTransaction.Results.Count() == 0)
+        {
+            throw new Exception($"Error while simulating transaction: {simulatedTransaction.Error}");
+        }
+        var xdrString = simulatedTransaction.Results[0].Xdr;
+        var resultXdr = new StellarDotnetSdk.Xdr.XdrDataInputStream(Convert.FromBase64String(xdrString!));
+        var xdr = StellarDotnetSdk.Xdr.SCVal.Decode(resultXdr);
+        var parsedResult = (SCInt128)SCInt128.FromSCValXdr(xdr);
+        return parsedResult.Lo;
     }
 
     public async Task<Transaction> CreateDepositTransaction(
@@ -92,6 +152,8 @@ public class DefindexSdk : IDefindexSdk
 
     public async Task<TransactionResult> SubmitTransaction(Transaction transaction)
     {
+        //Simular la transacción
+        //
         return new TransactionResult(false, null, new List<long>(), 0);
     }
 } 
