@@ -105,7 +105,6 @@ class Program
         var mintResult = await soroban_server.SendTransaction(mintTransaction);
 
         Console.WriteLine($"Mint Transaction Status: {mintResult.Status}");
-        ;
 
         while (true)
         {
@@ -190,6 +189,16 @@ class Program
 
         var vaultTotalShares = await vaultInstance.GetVaultTotalShares();
         Console.WriteLine($"Vault Total Shares: {vaultTotalShares}");
+
+        var amountsDesired = new List<ulong> { 10000000 };
+        var amountsMin = new List<ulong> { 10000000 };
+        var from = user_with_shares;
+        Console.WriteLine($"Creating deposit transaction for {from}");
+        var depositTransaction = await vaultInstance.CreateDepositTransaction(amountsDesired, amountsMin, from, true);
+        Console.WriteLine($"Simulating transaction...");
+        var simulatedDepositTransaction = await soroban_server.SimulateTransaction(depositTransaction);
+        Console.WriteLine($"XDR value: {simulatedDepositTransaction.Results?[0].Xdr}");
+
         return;
     }
 }

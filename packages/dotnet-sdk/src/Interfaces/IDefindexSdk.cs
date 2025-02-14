@@ -60,7 +60,7 @@ public sealed record VaultFunds(
 public sealed record TransactionResult(
     bool IsSuccess,
     string? TransactionHash,
-    List<long> Amounts,
+    List<ulong> Amounts,
     decimal SharesChanged);
 
 public interface IDefindexSdk
@@ -94,8 +94,8 @@ public interface IDefindexSdk
     /// Creates an unsigned transaction to deposit into a vault
     /// </summary>
     Task<Transaction> CreateDepositTransaction(
-        List<long> amountsDesired,
-        List<long> amountsMin,
+        List<ulong> amountsDesired,
+        List<ulong> amountsMin,
         string from,
         bool invest);
 
@@ -103,7 +103,7 @@ public interface IDefindexSdk
     /// Creates an unsigned transaction to withdraw from a vault
     /// </summary>
     Task<Transaction> CreateWithdrawTransaction(
-        long withdrawShares,
+        ulong withdrawShares,
         string from);
 
     /// <summary>
