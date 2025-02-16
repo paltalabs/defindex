@@ -2,8 +2,9 @@ import { Keypair } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
 import { airdropAccount } from "../../utils/contract.js";
 import { green, purple, red } from "../common.js";
-import { CreateVaultParams, manager, setEmergencyManager, setFeeReceiver, setRebalanceManager, setVaultManager } from "../vault.js";
+import { manager, setEmergencyManager, setFeeReceiver, setRebalanceManager, setVaultManager } from "../vault.js";
 import { deployDefindexVault } from "./utils.js";
+import { CreateVaultParams } from "../types.js";
 
 /* 
 // Access control tests:

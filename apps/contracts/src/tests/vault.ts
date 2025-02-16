@@ -6,7 +6,7 @@ import {
   xdr,
 } from "@stellar/stellar-sdk";
 import { i128, u64 } from "@stellar/stellar-sdk/contract";
-import { SOROSWAP_ROUTER, SOROSWAP_USDC } from "../constants.js";
+import { SOROSWAP_ROUTER, USDC_ADDRESS } from "../constants.js";
 import { AddressBook } from "../utils/address_book.js";
 import {
   airdropAccount,
@@ -17,6 +17,7 @@ import {
 import { config } from "../utils/env_config.js";
 import { getTransactionBudget } from "../utils/tx.js";
 import { green } from "./common.js";
+import { AssetInvestmentAllocation, CreateVaultParams, TotalManagedFunds } from "./types.js";
 
 const network = process.argv[2];
 const loadedConfig = config(network);
@@ -30,17 +31,9 @@ export const rebalanceManager = loadedConfig.getUser(
 export const feeReceiver = loadedConfig.getUser(
   "DEFINDEX_FEE_RECEIVER_SECRET_KEY"
 );
+
 export const manager = loadedConfig.getUser("DEFINDEX_MANAGER_SECRET_KEY");
 
-export interface CreateVaultParams {
-  address: Address;
-  strategies: Array<{
-    name: string;
-    address: string;
-    paused: boolean;
-  }>;
-}
-export const soroswapUSDC = new Address(SOROSWAP_USDC);
 
 export type Option<T> = T | undefined;
 
@@ -69,18 +62,8 @@ export type Instruction =
     };
 
 
-export interface AssetInvestmentAllocation {
-  asset: Address;
-  strategy_investments: { amount: bigint; strategy: Address }[];
-}
 
-interface TotalManagedFunds {
-  asset: string,
-  idle_amount: bigint,
-  invested_amount: bigint,
-  strategy_allocations: any[],
-  total_amount: bigint
-}
+
 
 export function mapInstructionsToParams(
   instructions: Instruction[]
@@ -136,7 +119,7 @@ export function mapInstructionsToParams(
 export async function mintToken(user: Keypair, amount: number, tokenAddress?: Address) {
   await invokeCustomContract(
 
-    tokenAddress ? tokenAddress.toString() : soroswapUSDC.toString(),
+    tokenAddress ? tokenAddress.toString() : USDC_ADDRESS.toString(),
     "mint",
     [
       new Address(user.publicKey()).toScVal(),
@@ -547,10 +530,7 @@ export async function fetchParsedCurrentIdleFunds(
   }
 }
 
-export interface AssetInvestmentAllocation {
-  asset: Address;
-  strategy_investments: { amount: bigint; strategy: Address }[];
-}
+
 
 export async function investVault(
   deployedVault: string,
@@ -865,13 +845,7 @@ export async function unpauseStrategy(deployedVault:string ,strategyAddress: str
 //         }),
 //     ];
 // }
-interface TotalManagedFunds {
-  asset: string,
-  idle_amount: bigint,
-  invested_amount: bigint,
-  strategy_allocations: any[],
-  total_amount: bigint
-}
+
 export async function fetchCurrentInvestedFunds(
   deployedVault: string,
   user: Keypair
@@ -1021,7 +995,7 @@ export async function upgradeVaultWasm(deployedVault:Address, manager:Keypair, n
   }
 }
 
-export async function fetchTotalManagedFunds(deployedVault:Address, user:Keypair){
+export async function fetchTotalManagedFunds(deployedVault:Address, user:Keypair): Promise<TotalManagedFunds[]>{
   const res = await invokeCustomContract(
     deployedVault.toString(),
     "fetch_total_managed_funds",
