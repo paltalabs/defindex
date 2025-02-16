@@ -210,10 +210,18 @@ export const useVault = (vaultAddress?: string | undefined) => {
             const assets = await getVaultAssets(vaultAddress);
             console.log('🚀 « assets:', assets);
             const idleFunds: AssetAmmount[] = [];
-            // for (const asset of assets) {
-            //     const balance = await vault(VaultMethod.BALANCE, vaultAddress, [StellarSdk.Address.fromString(asset.address).toScVal()], false).then((res: any) => scValToNative(res));
-            //     idleFunds.push({ address: asset.address, amount: Number(balance) / 10 ** 7 });
-            // }
+            for (const asset of assets) {
+                const rawBalance: any = await contractInvoke({
+                    contractAddress: asset.address,
+                    method: "balance",
+                    args: [new StellarSdk.Address(vaultAddress).toScVal()],
+                    sorobanContext,
+                    signAndSend: false,
+                });
+                const balance = scValToNative(rawBalance);
+                console.log('🚀 « balance:', balance);
+                idleFunds.push({ address: asset.address, amount: Number(balance) / 10 ** 7 });
+            }
             return idleFunds;
         } catch (error) {
             console.error(error);
