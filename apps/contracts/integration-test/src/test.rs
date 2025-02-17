@@ -97,7 +97,7 @@ impl<'a> IntegrationTest<'a> {
             &vault_wasm_hash,
         );
 
-        env.budget().reset_unlimited();
+        env.cost_estimate().budget().reset_unlimited();
 
         IntegrationTest {
             env,
@@ -121,3 +121,4 @@ impl<'a> IntegrationTest<'a> {
 mod vault_one_fixed_strategy;
 mod vault_one_hodl_strategy;
 mod vault_blend_strategy;
+mod limits;

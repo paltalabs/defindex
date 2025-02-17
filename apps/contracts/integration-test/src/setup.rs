@@ -5,7 +5,7 @@ use soroban_sdk::{
 };
 
 mod soroswap_setup;
-use soroswap_setup::{
+pub use soroswap_setup::{
     create_soroswap_pool, create_soroswap_factory, create_soroswap_router
 };
 use crate::{blend_strategy::{create_blend_strategy_contract, BlendStrategyClient}, factory::{AssetStrategySet, Strategy}};
@@ -76,7 +76,7 @@ pub fn create_vault_one_asset_hodl_strategy<'a>() -> VaultOneAseetHodlStrategy<'
     
      // let soroswap_pair = soroswap_factory.get_pair(&token_0.address, &token_1.address);
 
-     setup.env.budget().reset_unlimited();
+     setup.env.cost_estimate().budget().reset_unlimited();
 
     let strategy_contract = create_hodl_strategy_contract(&setup.env, &token.address);
 
@@ -176,7 +176,7 @@ pub fn create_vault_one_asset_fixed_strategy<'a>() -> VaultOneAseetFixedStrategy
 
     // let soroswap_pair = soroswap_factory.get_pair(&token_0.address, &token_1.address);
 
-    setup.env.budget().reset_unlimited();
+    setup.env.cost_estimate().budget().reset_unlimited();
 
 
     setup.env.mock_all_auths();
