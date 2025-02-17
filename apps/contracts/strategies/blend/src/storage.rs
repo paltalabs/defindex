@@ -10,6 +10,7 @@ pub struct Config {
     pub blend_token: Address,
     pub router: Address,
     pub claim_ids: Vec<u32>,
+    pub reward_threshold: i128
 }
 
 #[derive(Clone)]

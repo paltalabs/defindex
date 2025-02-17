@@ -6,7 +6,6 @@ import {
   xdr,
 } from "@stellar/stellar-sdk";
 import { i128, u64 } from "@stellar/stellar-sdk/contract";
-import { randomBytes } from "crypto";
 import { SOROSWAP_ROUTER, USDC_ADDRESS } from "../constants.js";
 import { AddressBook } from "../utils/address_book.js";
 import {
@@ -191,7 +190,6 @@ export function getCreateDeFindexParams(
         roles: Map<u32, Address>,
         vault_fee: u32,
         assets: Vec<AssetStrategySet>,
-        salt: BytesN<32>,
         soroswap_router: Address,
         name_symbol: Map<String, String>,
     ) -> Result<Address, FactoryError>;
@@ -200,7 +198,6 @@ export function getCreateDeFindexParams(
     roles,
     nativeToScVal(100, { type: "u32" }), // Setting vault_fee as 100 bps for demonstration
     xdr.ScVal.scvVec(assetAllocations),
-    nativeToScVal(randomBytes(32)), //salt
     router_address.toScVal(),
     nameSymbol,
     nativeToScVal(upgradable, { type: "bool" })
