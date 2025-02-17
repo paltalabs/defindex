@@ -1,4 +1,5 @@
 using DeFindex.Sdk.Interfaces;
+using Newtonsoft.Json;
 using StellarDotnetSdk.Responses.SorobanRpc;
 using StellarDotnetSdk.Soroban;
 
@@ -86,5 +87,38 @@ public class DefindexResponseParser
       managedFundsResults.Add(result);
     }
     return managedFundsResults;
+  }
+  public static List<TransactionResult> ParseSubmittedTransaction(SCVal result, string txHash) 
+  {
+    List<ulong> Amounts = new List<ulong>();
+    ulong SharesChanged = 0;
+    var res = result.ToXdr().Vec.InnerValue;
+    if (res.Length == 3)
+    {
+        var depositedAmounts = res[0];
+        SharesChanged = res[1].I128.Lo.InnerValue;
+        foreach (var depositedAmount in depositedAmounts.Vec.InnerValue)
+        {
+            var amount = (SCInt128)SCInt128.FromSCValXdr(depositedAmount);
+            Amounts.Add(amount.Lo);
+        }
+    } 
+    else if (res.Length == 1)
+    {
+        foreach (var i in res)
+        {
+            var amount = (SCInt128)SCInt128.FromSCValXdr(i);
+            SharesChanged += amount.Lo;
+            Amounts.Add(amount.Lo);
+        }
+    }
+    else
+    {
+        Console.WriteLine("Unexpected number of results received.");
+        return new List<TransactionResult>();
+    }
+    var response = new TransactionResult(true, txHash, Amounts, SharesChanged);
+    Console.WriteLine($"Transaction result: {JsonConvert.SerializeObject(response, Formatting.Indented)}");    
+    return new List<TransactionResult> { response };
   }
 }

@@ -109,5 +109,5 @@ public interface IDefindexSdk
     /// <summary>
     /// Submits a signed transaction to the network
     /// </summary>
-    Task<TransactionResult> SubmitTransaction(Transaction transaction);
-} 
+    Task<List<TransactionResult>> SubmitTransaction(Transaction transaction);
+}

@@ -107,7 +107,6 @@ class Program
         Console.WriteLine($"Simulating transaction...");
         var simulatedDepositTransaction = await soroban_server.SimulateTransaction(depositTransaction);
         Console.WriteLine($"XDR value: {simulatedDepositTransaction.Results?[0].Xdr}");
-        var fromAccount = await soroban_server.GetAccount(from);
         depositTransaction.SetSorobanTransactionData(simulatedDepositTransaction.SorobanTransactionData);
         depositTransaction.SetSorobanAuthorization(simulatedDepositTransaction.SorobanAuthorization);
         depositTransaction.AddResourceFee(simulatedDepositTransaction.MinResourceFee.Value + 100000);

@@ -183,7 +183,7 @@ public class DefindexSdk : IDefindexSdk
         return transaction;
     }
 
-    public async Task<TransactionResult> SubmitTransaction(Transaction transaction)
+    public async Task<List<TransactionResult>> SubmitTransaction(Transaction transaction)
     {
         //
         Console.WriteLine("Submitting transaction...");
@@ -192,36 +192,37 @@ public class DefindexSdk : IDefindexSdk
         if (submittedTx.ErrorResultXdr != null || submittedTx.Status.ToString() == "3")
         {
             Console.WriteLine($"Error submitting transaction: {submittedTx.ErrorResultXdr}");
-            return new TransactionResult(false, null, new List<ulong>(), 0);
-        } else 
+            return new List<TransactionResult> { new TransactionResult(false, null, new List<ulong>(), 0) };
+        } 
+        else 
         while (true)
         {
             var checkedTx = await this._server.GetTransaction(submittedTx.Hash);
-            if (checkedTx.Status.ToString() == "SUCCESS")
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"Transaction Status: {checkedTx.Status}");
-                Console.WriteLine($"Transaction hash: {submittedTx.Hash}");
-                Console.ResetColor();
-                if (checkedTx.ResultValue == null) throw new Exception("Transaction result value is null.");
-                var result = (SCVal)SCVal.FromXdrBase64(checkedTx.ResultValue.ToXdrBase64());
-                Console.WriteLine($"{JsonConvert.SerializeObject(result, Formatting.Indented)}");
-                var Amounts = new List<ulong>();
-                var response = new TransactionResult(true, submittedTx.Hash, new List<ulong>(), 0);
-                return response;
-            }
-            else if (checkedTx.Status.ToString() == "FAILED" || checkedTx.Status.ToString() == "ERROR")
+            if (checkedTx.Status.ToString() == "FAILED" || checkedTx.Status.ToString() == "ERROR")
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Transaction status: {checkedTx.Status}");
                 Console.WriteLine($"Transaction hash: {submittedTx.Hash}");
                 throw new Exception("Transaction failed.");
             }
+            else if (checkedTx.Status.ToString() == "SUCCESS")
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"Transaction Status: {checkedTx.Status}");
+                Console.WriteLine($"Transaction hash: {submittedTx.Hash}");
+                Console.ResetColor();
+                if (checkedTx.ResultValue == null) throw new Exception("Transaction result value is null.");
+                var result = (SCVal)SCVal.FromXdrBase64(checkedTx.ResultValue.ToXdrBase64());;
+                var response = DefindexResponseParser.ParseSubmittedTransaction(result, submittedTx.Hash);
+                return response;
+            }
+       
             else
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine($"Transaction Status: {checkedTx.Status}, retrying in 20ms");
-                await Task.Delay(20);
+                var timeout = 50;
+                Console.Write($"...");
+                await Task.Delay(timeout);
             }
         }
     }
