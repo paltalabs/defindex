@@ -61,7 +61,7 @@ public sealed record TransactionResult(
     bool IsSuccess,
     string? TransactionHash,
     List<ulong> Amounts,
-    decimal SharesChanged);
+    ulong SharesChanged);
 
 public interface IDefindexSdk
 {
