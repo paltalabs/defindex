@@ -64,14 +64,12 @@ fn n_assets_one_strategy_hodl() {
         });
     }
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
     setup.env.cost_estimate().budget().reset_unlimited();
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true,
@@ -248,14 +246,12 @@ fn n_assets_one_strategy_fixed() {
         });
     }
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
     setup.env.cost_estimate().budget().reset_unlimited();
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true,
@@ -407,7 +403,8 @@ fn n_assets_one_strategy_blend() {
         &0u32,
         &blnd.address,
         &soroswap_router.address,
-        svec![&setup.env, 0u32, 1u32, 2u32, 3u32]
+        svec![&setup.env, 0u32, 1u32, 2u32, 3u32],
+        40_0000000i128
     );
     let usdc_strategy_contract = BlendStrategyClient::new(&setup.env, &usdc_strategy);
 
@@ -418,7 +415,8 @@ fn n_assets_one_strategy_blend() {
         &1u32,
         &blnd.address,
         &soroswap_router.address,
-        svec![&setup.env, 0u32, 1u32, 2u32, 3u32]
+        svec![&setup.env, 0u32, 1u32, 2u32, 3u32],
+        40_0000000i128
     );
     let xlm_strategy_contract = BlendStrategyClient::new(&setup.env, &xlm_strategy);
 
@@ -443,14 +441,12 @@ fn n_assets_one_strategy_blend() {
         }],
     });
     
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
     setup.env.cost_estimate().budget().reset_unlimited();
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true,

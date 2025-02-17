@@ -54,13 +54,10 @@ fn asset_one_strategy_hodl_rebalance() {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
-
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true,
@@ -83,7 +80,7 @@ fn asset_one_strategy_hodl_rebalance() {
         &false,
     );
 
-    let num_investments = 29;
+    let num_investments = 28;
 
     // Prepare rebalance instructions for all strategies
     let mut invest_instructions = svec![&setup.env];
@@ -101,7 +98,7 @@ fn asset_one_strategy_hodl_rebalance() {
 
     // Checking unwind limit
     let balance_on_strategy = strategy_contract.balance(&vault_contract.address);
-    let num_unwinds = 29;
+    let num_unwinds = 28;
 
     let mut unwind_instructions = svec![&setup.env];
     for _ in 0..num_unwinds {
@@ -168,13 +165,10 @@ fn asset_one_strategy_hodl_rebalance_panic_invest() {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
-
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true,
@@ -265,13 +259,10 @@ fn asset_one_strategy_hodl_rebalance_panic_unwind() {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
-
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true,
@@ -376,13 +367,10 @@ fn asset_one_strategy_fixed_rebalance() {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
-
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true,
@@ -430,7 +418,7 @@ fn asset_one_strategy_fixed_rebalance() {
     vault_contract.distribute_fees(&manager);
 
     let balance_on_strategy = strategy_contract.balance(&vault_contract.address);
-    let num_unwinds = 25;
+    let num_unwinds = 24;
 
     // Prepare rebalance instructions for all strategies
     let mut unwind_instructions = svec![&setup.env];
@@ -498,13 +486,10 @@ fn asset_one_strategy_fixed_rebalance_panic_invest() {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
-
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true,
@@ -594,13 +579,10 @@ fn asset_one_strategy_fixed_rebalance_panic_unwind() {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
-
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true,
@@ -712,7 +694,8 @@ fn asset_one_strategy_blend_rebalance() {
         &0u32,
         &blnd.address,
         &soroswap_router.address,
-        svec![&setup.env, 0u32, 1u32, 2u32, 3u32]
+        svec![&setup.env, 0u32, 1u32, 2u32, 3u32],
+        40_0000000i128,
     );
     let strategy_contract = BlendStrategyClient::new(&setup.env, &strategy);
 
@@ -738,8 +721,6 @@ fn asset_one_strategy_blend_rebalance() {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
-
     let mut roles: Map<u32, Address> = Map::new(&setup.env);
     roles.set(0u32, emergency_manager.clone()); // EmergencyManager enum = 0
     roles.set(1u32, fee_receiver.clone()); // VaultFeeReceiver enum = 1
@@ -754,7 +735,6 @@ fn asset_one_strategy_blend_rebalance() {
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true
@@ -860,7 +840,8 @@ fn asset_one_strategy_blend_rebalance_panic_invest() {
         &0u32,
         &blnd.address,
         &soroswap_router.address,
-        svec![&setup.env, 0u32, 1u32, 2u32, 3u32]
+        svec![&setup.env, 0u32, 1u32, 2u32, 3u32],
+        40_0000000i128
     );
     let strategy_contract = BlendStrategyClient::new(&setup.env, &strategy);
 
@@ -886,8 +867,6 @@ fn asset_one_strategy_blend_rebalance_panic_invest() {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
-
     let mut roles: Map<u32, Address> = Map::new(&setup.env);
     roles.set(0u32, emergency_manager.clone()); // EmergencyManager enum = 0
     roles.set(1u32, fee_receiver.clone()); // VaultFeeReceiver enum = 1
@@ -902,7 +881,6 @@ fn asset_one_strategy_blend_rebalance_panic_invest() {
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true
@@ -993,8 +971,10 @@ fn asset_one_strategy_blend_rebalance_panic_unwind() {
         &0u32,
         &blnd.address,
         &soroswap_router.address,
-        svec![&setup.env, 0u32, 1u32, 2u32, 3u32]
+        svec![&setup.env, 0u32, 1u32, 2u32, 3u32],
+        40_0000000i128
     );
+
     let strategy_contract = BlendStrategyClient::new(&setup.env, &strategy);
 
     strategies.push_back(Strategy {
@@ -1019,8 +999,6 @@ fn asset_one_strategy_blend_rebalance_panic_unwind() {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
-
     let mut roles: Map<u32, Address> = Map::new(&setup.env);
     roles.set(0u32, emergency_manager.clone()); // EmergencyManager enum = 0
     roles.set(1u32, fee_receiver.clone()); // VaultFeeReceiver enum = 1
@@ -1035,7 +1013,6 @@ fn asset_one_strategy_blend_rebalance_panic_unwind() {
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true
@@ -1164,13 +1141,10 @@ fn two_assets_swap_limits_rebalance() {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
-
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true,
@@ -1304,13 +1278,10 @@ fn two_assets_swap_limits_rebalance_panic_exact_in() {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
-
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true,
@@ -1427,13 +1398,10 @@ fn two_assets_swap_limits_rebalance_panic_exact_out() {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
-
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true,

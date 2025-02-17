@@ -59,14 +59,12 @@ fn asset_n_strategies_hodl() {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
     setup.env.cost_estimate().budget().reset_unlimited();
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true,
@@ -149,7 +147,7 @@ fn asset_n_strategies_hodl_panic() {
     name_symbol.set(String::from_str(&setup.env, "symbol"), vault_symbol);
 
     let mut strategies = svec![&setup.env];
-    let num_strategies = 14; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
+    let num_strategies = 15; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
 
     for i in 0..num_strategies {
         let strategy_name = format!("Strategy_{}", i);
@@ -169,14 +167,12 @@ fn asset_n_strategies_hodl_panic() {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
     setup.env.cost_estimate().budget().reset_unlimited();
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true,
@@ -279,14 +275,12 @@ fn asset_n_strategies_fixed() {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
     setup.env.cost_estimate().budget().reset_unlimited();
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true,
@@ -383,7 +377,7 @@ fn asset_n_strategies_fixed_panic() {
     name_symbol.set(String::from_str(&setup.env, "symbol"), vault_symbol);
 
     let mut strategies = svec![&setup.env];
-    let num_strategies = 12; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
+    let num_strategies = 13; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
 
     for i in 0..num_strategies {
         let strategy_name = format!("Strategy_{}", i);
@@ -403,14 +397,12 @@ fn asset_n_strategies_fixed_panic() {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
     setup.env.cost_estimate().budget().reset_unlimited();
     let vault_contract_address = setup.factory_contract.create_defindex_vault(
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true,
@@ -524,7 +516,8 @@ fn asset_n_strategies_blend() {
             &0u32,
             &blnd.address,
             &soroswap_router.address,
-            svec![&setup.env, 0u32, 1u32, 2u32, 3u32]
+            svec![&setup.env, 0u32, 1u32, 2u32, 3u32],
+            40_0000000i128
         );
         let strategy_contract = BlendStrategyClient::new(&setup.env, &strategy);
 
@@ -551,7 +544,6 @@ fn asset_n_strategies_blend() {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
     let mut roles: Map<u32, Address> = Map::new(&setup.env);
     roles.set(0u32, emergency_manager.clone()); // EmergencyManager enum = 0
@@ -568,7 +560,6 @@ fn asset_n_strategies_blend() {
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true
@@ -753,7 +744,8 @@ fn asset_n_strategies_blend_panic() {
             &0u32,
             &blnd.address,
             &soroswap_router.address,
-            svec![&setup.env, 0u32, 1u32, 2u32, 3u32]
+            svec![&setup.env, 0u32, 1u32, 2u32, 3u32],
+            40_0000000i128
         );
         let strategy_contract = BlendStrategyClient::new(&setup.env, &strategy);
 
@@ -780,7 +772,6 @@ fn asset_n_strategies_blend_panic() {
         }
     ];
 
-    let salt = BytesN::from_array(&setup.env, &[0; 32]);
 
     let mut roles: Map<u32, Address> = Map::new(&setup.env);
     roles.set(0u32, emergency_manager.clone()); // EmergencyManager enum = 0
@@ -797,7 +788,6 @@ fn asset_n_strategies_blend_panic() {
         &roles,
         &vault_fee,
         &assets,
-        &salt,
         &soroswap_router.address,
         &name_symbol,
         &true
