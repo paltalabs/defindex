@@ -8,8 +8,8 @@ import {
 } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
 import { mintToken } from "../tests/vault.js";
-import { usdcAddress } from "../tests/common.js";
-import { SOROSWAP_USDC } from "../constants.js";
+import { USDC_ADDRESS } from "../constants.js";
+
 
 export async function deployContracts(addressBook: AddressBook) {
   if (network != "mainnet") await airdropAccount(loadedConfig.admin);
@@ -26,8 +26,7 @@ export async function deployContracts(addressBook: AddressBook) {
   await installContract("hodl_strategy", addressBook, loadedConfig.admin);
 
 
-  const soroswapUSDC = new Address(SOROSWAP_USDC);
-  const usdcScVal = soroswapUSDC.toScVal();
+  const usdcScVal = USDC_ADDRESS.toScVal();
 
   const emptyVecScVal = xdr.ScVal.scvVec([]);
 
@@ -44,12 +43,12 @@ export async function deployContracts(addressBook: AddressBook) {
     const temp_user = Keypair.random();
     if (network != "mainnet"){ 
       await airdropAccount(temp_user);
-      await mintToken(temp_user, 9000_0000000, usdcAddress);
+      await mintToken(temp_user, 9000_0000000, USDC_ADDRESS);
     }
   
     // Mint to the admin the initailAmount
     await invokeCustomContract(
-      usdcAddress.toString(),
+      USDC_ADDRESS.toString(),
       "transfer",
       [new Address(temp_user.publicKey()).toScVal(), new Address(deployedAddress).toScVal(), nativeToScVal(9000_0000000, { type: "i128" })],
       temp_user

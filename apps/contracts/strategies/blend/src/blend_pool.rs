@@ -6,7 +6,6 @@ use soroban_sdk::{
 };
 
 use crate::{
-    constants::REWARD_THRESHOLD,
     reserves,
     soroswap::internal_swap_exact_tokens_for_tokens,
     storage::{self, Config},
@@ -247,7 +246,7 @@ pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError>
         TokenClient::new(e, &config.blend_token).balance(&e.current_contract_address());
 
     // If balance does not exceed threshold, skip harvest
-    if blnd_balance < REWARD_THRESHOLD {
+    if blnd_balance < config.reward_threshold {
         return Ok(false);
     }
 
