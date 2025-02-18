@@ -5,10 +5,9 @@ import { airdropAccount } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
 import { testBlendStrategy } from "./blend/test_strategy.js";
 import { testBlendVault } from "./blend/test_vault.js";
-import { green, red, usdcAddress, xtarAddress, yellow } from "./common.js";
+import { green, red, yellow } from "./common.js";
 import {
   admin,
-  CreateVaultParams,
   emergencyManager,
   feeReceiver,
   manager,
@@ -18,6 +17,8 @@ import { testVaultOneAssetTwoStrategies } from "./vault/one_aset_two_strategies.
 import { testVaultOneAssetOneStrategy } from "./vault/one_asset_one_strategy.js";
 import { testVaultTwoAssetsOneStrategy } from "./vault/two_assets_one_strategy.js";
 import { testVaultTwoAssetsTwoStrategies } from "./vault/two_assets_two_strategies.js";
+import { CreateVaultParams } from "./types.js";
+import { USDC_ADDRESS } from "../constants.js";
 
 const args = process.argv.slice(2);
 const network = args[0];
@@ -33,84 +34,87 @@ const xlmAddress = new Address(
 const testUser = Keypair.random();
 
 
-const oneStrategyParams: CreateVaultParams[] = [
-  {
-    address: xlmAddress,
-    strategies: [
-      {
-        name: "Hodl Strategy",
-        address: addressBook.getContractId("hodl_strategy"),
-        paused: false,
-      },
-    ],
-  },
-];
-const twoStrategyParams: CreateVaultParams[] = [
+const oneAssetOneStrategyParams: CreateVaultParams[] = [
   {
     address: xlmAddress,
     strategies: [
       {
         name: "Blend Strategy",
-        address: addressBook.getContractId("blend_strategy"),
-        paused: false,
-      },
-      {
-        name: "Fixed Strategy",
-        address: addressBook.getContractId("fixed_apr_strategy"),
+        address: addressBook.getContractId("xlm_blend_strategy_0"),
         paused: false,
       },
     ],
   },
 ];
-const twoAssetOneStrategyParams: CreateVaultParams[] = [
-  {
-    address: xtarAddress,
-    strategies: [
-      {
-        name: "Strategy 1",
-        address: addressBook.getContractId("fixed_xtar_strategy"),
-        paused: false,
-      },
-    ],
-  },
-  {
-    address: usdcAddress,
-    strategies: [
-      {
-        name: "Stretegy 2",
-        address: addressBook.getContractId("fixed_usdc_strategy"),
-        paused: false,
-      },
-    ],
-  },
-];
-const twoAssetTwoStrategyParams: CreateVaultParams[] = [
+
+const oneAssetTwoStrategyParams: CreateVaultParams[] = [
   {
     address: xlmAddress,
     strategies: [
       {
-        name: "A0 S1",
-        address: addressBook.getContractId("blend_strategy"),
+        name: "Blend Strategy 0",
+        address: addressBook.getContractId("xlm_blend_strategy_0"),
         paused: false,
       },
       {
-        name: "A0 S2",
-        address: addressBook.getContractId("fixed_apr_strategy"),
+        name: "Blend Strategy 1",
+        address: addressBook.getContractId("xlm_blend_strategy_1"),
+        paused: false,
+      },
+    ],
+  },
+];
+
+const twoAssetOneStrategyParams: CreateVaultParams[] = [
+  {
+    address: xlmAddress,
+    strategies: [
+      {
+        name: "Blend xlm Strategy",
+        address: addressBook.getContractId("xlm_blend_strategy_0"),
         paused: false,
       },
     ],
   },
   {
-    address: usdcAddress,
+    address: USDC_ADDRESS,
     strategies: [
       {
-        name: "A1 S1",
-        address: addressBook.getContractId("hodl_usdc_strategy"),
+        name: "Blend usdc Strategy",
+        address: addressBook.getContractId("usdc_blend_strategy_0"),
+        paused: false,
+      },
+    ],
+  },
+];
+
+const twoAssetTwoStrategiesParams: CreateVaultParams[] = [
+  {
+    address: xlmAddress,
+    strategies: [
+      {
+        name: "blend xlm Strategy 0",
+        address: addressBook.getContractId("xlm_blend_strategy_0"),
         paused: false,
       },
       {
-        name: "A1 S2",
-        address: addressBook.getContractId("fixed_usdc_strategy"),
+        name: "blend xlm Strategy 1",
+        address: addressBook.getContractId("xlm_blend_strategy_1"),
+        paused: false,
+      },
+    ],
+  },
+  {
+    address: USDC_ADDRESS,
+    strategies: [
+      {
+        name: "blend usdc Strategy 0",
+        address: addressBook.getContractId("usdc_blend_strategy_0"),
+        paused: false,
+      },
+      {
+        name: "blend usdc Strategy 1",
+        address: addressBook.getContractId("usdc_blend_strategy_1"),
         paused: false,
       },
     ],
@@ -128,7 +132,6 @@ async function prepareEnvironment() {
     await airdropAccount(manager);
     await airdropAccount(testUser);
     await mintToken(testUser, 987654321)
-    await mintToken(testUser, 987654321, xtarAddress)
   }
 }
 
@@ -160,9 +163,10 @@ switch (tests) {
     console.log(yellow, "Running all tests");
     try {
       await prepareEnvironment();
-      const oneAssetOneStrategy = await testVaultOneAssetOneStrategy(addressBook, oneStrategyParams, testUser);
-      const oneAssetTwoStrategies = await testVaultOneAssetTwoStrategies(addressBook, twoStrategyParams, testUser, xlmAddress);
+      const oneAssetOneStrategy = await testVaultOneAssetOneStrategy(addressBook, oneAssetOneStrategyParams, testUser);
+      const oneAssetTwoStrategies = await testVaultOneAssetTwoStrategies(addressBook, oneAssetTwoStrategyParams, testUser, xlmAddress);
       const twoAssetsOneStrategy = await testVaultTwoAssetsOneStrategy(addressBook, twoAssetOneStrategyParams, testUser, xlmAddress);
+      const twoAssetsTwoStrategies = await testVaultTwoAssetsTwoStrategies(addressBook, twoAssetTwoStrategiesParams, testUser, xlmAddress);
       const blendStrategy = await testBlendStrategy();
       const blendVault = await testBlendVault();
       console.log(yellow, "----------------------------------------------------------------------------------------------------------------------------------------------")
@@ -188,6 +192,12 @@ switch (tests) {
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log("");
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
+      console.log(green, "Two asssets two strategies results");
+      console.table(twoAssetsTwoStrategies.tableData);
+      console.table(twoAssetsTwoStrategies.budgetData);
+      console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
+      console.log("");
+      console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log(green, "Blend strategy test status");
       console.table(blendStrategy.status);
       console.table(blendStrategy.budget);
@@ -207,7 +217,7 @@ switch (tests) {
     console.log(yellow, "Testing one strategy vault");
     try {
       await prepareEnvironment();
-      await testVaultOneAssetOneStrategy(addressBook, oneStrategyParams, testUser);
+      await testVaultOneAssetOneStrategy(addressBook, oneAssetOneStrategyParams, testUser);
       exit(0);
     } catch (error) {
       console.log(red, "Tests failed:", error);
@@ -217,7 +227,7 @@ switch (tests) {
     console.log(yellow, "Testing two strategies vault");
     try {
       await prepareEnvironment();
-      await testVaultOneAssetTwoStrategies(addressBook, twoStrategyParams, testUser, xlmAddress);
+      await testVaultOneAssetTwoStrategies(addressBook, oneAssetTwoStrategyParams, testUser, xlmAddress);
       exit(0);
     } catch (error) {
       console.log(red, "Tests failed:", error);
@@ -237,7 +247,7 @@ switch (tests) {
     console.log(yellow, "Testing two assets one strategy vault");
     try {
       await prepareEnvironment();
-      await testVaultTwoAssetsTwoStrategies(addressBook, twoAssetTwoStrategyParams, testUser, xlmAddress);
+      await testVaultTwoAssetsTwoStrategies(addressBook, twoAssetTwoStrategiesParams, testUser, xlmAddress);
       exit(0);
     } catch (error) {
       console.log(red, "Tests failed:", error);

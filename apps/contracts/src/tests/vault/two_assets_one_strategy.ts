@@ -1,7 +1,6 @@
 import { Address, Keypair } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
 import {
-  CreateVaultParams,
   depositToVault,
   Instruction,
   manager,
@@ -9,10 +8,12 @@ import {
   rescueFromStrategy,
   withdrawFromVault
 } from "../vault.js";
-import { green, purple, red, usdcAddress, xtarAddress, yellow } from "../common.js";
+import { green, purple, red, yellow } from "../common.js";
 import { airdropAccount } from "../../utils/contract.js";
 import { deployDefindexVault, fetchBalances, fetchStrategiesBalances } from "./utils.js";
 import { getCurrentTimePlusOneHour } from "../../utils/tx.js";
+import { CreateVaultParams } from "../types.js";
+import { USDC_ADDRESS } from "../../constants.js";
 /* 
 // Two assets one strategy tests:
   - [x] deposit
@@ -527,7 +528,7 @@ export async function testVaultTwoAssetsOneStrategy(addressBook: AddressBook, pa
               amount_in: BigInt(1_0_000),
               amount_out_min: BigInt(1_0_000),
               token_in: xlmAddress.toString(),
-              token_out: usdcAddress.toString(),
+              token_out: USDC_ADDRESS.toString(),
               deadline: BigInt(getCurrentTimePlusOneHour()),
             }
           ];
@@ -560,8 +561,8 @@ export async function testVaultTwoAssetsOneStrategy(addressBook: AddressBook, pa
             type: "SwapExactIn",
             amount_in: BigInt(5_000_000),
             amount_out_min: BigInt(5_000_000),
-            token_in: usdcAddress.toString(),
-            token_out: xtarAddress.toString(),
+            token_in: USDC_ADDRESS.toString(),
+            token_out: xlmAddress.toString(),
             deadline: BigInt(getCurrentTimePlusOneHour()),
           },
           {
@@ -664,7 +665,7 @@ export async function testVaultTwoAssetsOneStrategy(addressBook: AddressBook, pa
               type: "SwapExactIn",
               amount_in: BigInt(1_0_000),
               amount_out_min: BigInt(0),
-              token_in: usdcAddress.toString(),
+              token_in: USDC_ADDRESS.toString(),
               token_out: xlmAddress.toString(),
               deadline: BigInt(getCurrentTimePlusOneHour()),
             }
@@ -698,8 +699,8 @@ export async function testVaultTwoAssetsOneStrategy(addressBook: AddressBook, pa
             type: "SwapExactOut",
             amount_out: BigInt(5_000_000),
             amount_in_max: BigInt(10_0_000_000),
-            token_in: usdcAddress.toString(),
-            token_out: xtarAddress.toString(),
+            token_in: USDC_ADDRESS.toString(),
+            token_out: xlmAddress.toString(),
             deadline: BigInt(getCurrentTimePlusOneHour()),
           },
           {

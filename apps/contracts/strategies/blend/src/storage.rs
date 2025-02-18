@@ -10,6 +10,7 @@ pub struct Config {
     pub blend_token: Address,
     pub router: Address,
     pub claim_ids: Vec<u32>,
+    pub reward_threshold: i128
 }
 
 #[derive(Clone)]
@@ -20,13 +21,13 @@ pub enum DataKey {
     VaultPos(Address), // Vaults Positions
 }
 
-pub const DAY_IN_LEDGERS: u32 = 17280;
+pub const DAY_IN_LEDGERS: u32 = 17280; 
 
 pub const INSTANCE_BUMP_AMOUNT: u32 = 30 * DAY_IN_LEDGERS;
 pub const INSTANCE_LIFETIME_THRESHOLD: u32 = INSTANCE_BUMP_AMOUNT - DAY_IN_LEDGERS;
 
-const PERSISTENT_BUMP: u32 = 120 * DAY_IN_LEDGERS;
-const PERSISTANT_THRESHOLD: u32 = PERSISTENT_BUMP - 20 * DAY_IN_LEDGERS;
+const PERSISTENT_BUMP_AMOUNT: u32 = 120 * DAY_IN_LEDGERS;
+const PERSISTENT_LIFETIME_THRESHOLD: u32 = PERSISTENT_BUMP_AMOUNT - 20 * DAY_IN_LEDGERS;
 
 pub fn extend_instance_ttl(e: &Env) {
     e.storage()
@@ -54,7 +55,7 @@ pub fn set_vault_shares(e: &Env, address: &Address, shares: i128) {
     e.storage().persistent().set::<DataKey, i128>(&key, &shares);
     e.storage()
         .persistent()
-        .extend_ttl(&key, PERSISTANT_THRESHOLD, PERSISTENT_BUMP);
+        .extend_ttl(&key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT);
 }
 
 /// Get the number of strategy shares a user owns. Shares are stored with 7 decimal places of precision.
@@ -67,8 +68,8 @@ pub fn get_vault_shares(e: &Env, address: &Address) -> i128 {
         Some(shares) => {
             e.storage().persistent().extend_ttl(
                 &DataKey::VaultPos(address.clone()),
-                PERSISTANT_THRESHOLD,
-                PERSISTENT_BUMP,
+                PERSISTENT_LIFETIME_THRESHOLD,
+                PERSISTENT_BUMP_AMOUNT,
             );
             shares
         }
