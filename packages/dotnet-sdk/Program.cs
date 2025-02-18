@@ -107,6 +107,10 @@ class Program
         Console.WriteLine($"Simulating transaction...");
         var simulatedDepositTransaction = await soroban_server.SimulateTransaction(depositTransaction);
         Console.WriteLine($"XDR value: {simulatedDepositTransaction.Results?[0].Xdr}");
+        if(simulatedDepositTransaction.SorobanTransactionData == null || simulatedDepositTransaction.SorobanAuthorization == null || simulatedDepositTransaction.MinResourceFee == null){
+            Console.WriteLine("Simulated transaction data is null.");
+            return;
+        }
         depositTransaction.SetSorobanTransactionData(simulatedDepositTransaction.SorobanTransactionData);
         depositTransaction.SetSorobanAuthorization(simulatedDepositTransaction.SorobanAuthorization);
         depositTransaction.AddResourceFee(simulatedDepositTransaction.MinResourceFee.Value + 100000);
@@ -122,6 +126,10 @@ class Program
         Console.WriteLine($"Simulating withdraw transaction...");
         var simulatedWithdrawTransaction = await soroban_server.SimulateTransaction(withdrawTransaction);
         Console.WriteLine($"XDR value: {simulatedWithdrawTransaction.Results?[0].Xdr}");
+        if(simulatedWithdrawTransaction.SorobanTransactionData == null || simulatedWithdrawTransaction.SorobanAuthorization == null || simulatedWithdrawTransaction.MinResourceFee == null){
+            Console.WriteLine("Simulated transaction data is null.");
+            return;
+        }
         withdrawTransaction.SetSorobanTransactionData(simulatedWithdrawTransaction.SorobanTransactionData);
         withdrawTransaction.SetSorobanAuthorization(simulatedWithdrawTransaction.SorobanAuthorization);
         withdrawTransaction.AddResourceFee(simulatedWithdrawTransaction.MinResourceFee.Value + 100000);

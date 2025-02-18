@@ -48,6 +48,10 @@ public class DefindexSdk : IDefindexSdk
             throw new Exception("No results found in the simulated transaction.");
         }
         var xdrString = simulatedTransaction.Results[0].Xdr;
+        if (string.IsNullOrEmpty(xdrString))
+        {
+            throw new Exception("XDR string is null or empty.");
+        }
         var resultXdr = new StellarDotnetSdk.Xdr.XdrDataInputStream(Convert.FromBase64String(xdrString));
         var xdr = StellarDotnetSdk.Xdr.SCVal.Decode(resultXdr);
         var parsedResult = (SCInt128)SCInt128.FromSCValXdr(xdr);
@@ -77,7 +81,7 @@ public class DefindexSdk : IDefindexSdk
         return parsedResult;
     }
 
-    public async Task<bool> InitializeAsync()
+    public bool InitializeAsync()
     {
         Console.WriteLine("Starting SDK initialization...");
         // Implementation here
