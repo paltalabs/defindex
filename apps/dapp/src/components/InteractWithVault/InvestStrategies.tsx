@@ -1,16 +1,16 @@
-import { Box, Button, For, HStack, NumberInputRoot, Stack, Text } from "@chakra-ui/react"
-import { DialogBody, DialogContent, DialogHeader } from "../ui/dialog"
-import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
+import { ModalContext } from "@/contexts"
+import { AssetInvestmentAllocation } from "@/hooks/types"
 import { useVault, useVaultCallback, VaultMethod } from "@/hooks/useVault"
 import { setStrategyTempAmount, updateVaultData } from "@/store/lib/features/walletStore"
+import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
+import { Button, For, HStack, NumberInputRoot, Stack, Text } from "@chakra-ui/react"
+import { useSorobanReact } from "@soroban-react/core"
+import { Address, nativeToScVal, xdr } from "@stellar/stellar-sdk"
 import { useContext, useEffect, useState } from "react"
+import { DialogBody, DialogContent, DialogHeader } from "../ui/dialog"
+import { Field } from "../ui/field"
 import { InputGroup } from "../ui/input-group"
 import { NumberInputField } from "../ui/number-input"
-import { AssetInvestmentAllocation } from "@/hooks/types"
-import { Address, Asset, nativeToScVal, xdr } from "@stellar/stellar-sdk"
-import { ModalContext } from "@/contexts"
-import { useSorobanReact } from "@soroban-react/core"
-import { Field } from "../ui/field"
 
 interface InvestState extends AssetInvestmentAllocation {
   total: number
@@ -69,7 +69,8 @@ export const InvestStrategies = () => {
       )
     );
     try {
-      const response = await vaultCB(VaultMethod.INVEST, selectedVault.address, [mappedParam], true)
+      //TODO: Fix INVEST to do it through rebalance method
+      const response = await vaultCB(VaultMethod.REBALANCE, selectedVault.address, [mappedParam], true)
       await txModal.handleSuccess(response.txHash)
       const newInvestedFunds = await getInvestedFunds(selectedVault.address)
       const newIdleFunds = await getIdleFunds(selectedVault.address)

@@ -1,4 +1,3 @@
-import React, { useContext, useEffect, useState } from "react";
 import { useSorobanReact } from "@soroban-react/core";
 import {
   Address,
@@ -7,19 +6,21 @@ import {
   xdr,
 } from "@stellar/stellar-sdk";
 import { randomBytes } from "crypto";
+import { useContext, useEffect, useState } from "react";
 
-import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
-import { pushVault } from '@/store/lib/features/walletStore'
-import { Asset, NewVaultState, VaultData } from "@/store/lib/types";
+import { pushVault } from '@/store/lib/features/walletStore';
+import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks";
+import { NewVaultState, VaultData } from "@/store/lib/types";
 
-import { useFactoryCallback, FactoryMethod } from '@/hooks/useFactory'
 import { ModalContext, TransactionStatusModalStatus } from "@/contexts";
+import { FactoryMethod, useFactoryCallback } from '@/hooks/useFactory';
 
-import { AccordionItems, FormControlInterface, VaultPreview } from "./VaultPreview";
-import { DialogBody, DialogCloseTrigger, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
-import { Button } from "@chakra-ui/react"
-import { resetNewVault } from "@/store/lib/features/vaultStore";
+import { soroswapRouter } from "@/constants/constants";
 import { useVault } from "@/hooks/useVault";
+import { resetNewVault } from "@/store/lib/features/vaultStore";
+import { Button } from "@chakra-ui/react";
+import { DialogBody, DialogCloseTrigger, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
+import { AccordionItems, FormControlInterface, VaultPreview } from "./VaultPreview";
 
 interface Status {
   isSuccess: boolean,
@@ -48,6 +49,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   const indexShare = useAppSelector(state => state.newVault.vaultShare)
   const managerString = useAppSelector(state => state.newVault.manager)
   const emergencyManagerString = useAppSelector(state => state.newVault.emergencyManager)
+  const rebalanceManagerString = useAppSelector(state => state.newVault.rebalanceManager)
   const feeReceiverString = useAppSelector(state => state.newVault.feeReceiver)
   const { transactionStatusModal: txModal, deployVaultModal: deployModal } = useContext(ModalContext);
   const dispatch = useAppDispatch();
@@ -59,6 +61,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     if (
       managerString !== ""
       && emergencyManagerString !== ""
+      && rebalanceManagerString !== ""
       && feeReceiverString !== ""
       && !indexShare
     ) {
@@ -66,7 +69,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     } else {
       setDeployDisabled(true);
     }
-  }, [managerString, emergencyManagerString, feeReceiverString])
+  }, [managerString, emergencyManagerString, rebalanceManagerString, feeReceiverString])
 
   const autoCloseModal = async () => {
     await new Promise(resolve => setTimeout(resolve, 30000))
@@ -90,15 +93,20 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       isValid: undefined,
       value: undefined
     },
+    rebalanceManager: {
+      isValid: undefined,
+      value: undefined
+    },
     feeReceiver: {
       isValid: undefined,
       value: undefined
     },
-    vaultShare: 0
+    vaultShare: 0,
+    upgradable: true,
   })
 
   useEffect(() => {
-    if (managerString === '' || emergencyManagerString === '') {
+    if (managerString === '' || emergencyManagerString === '' || rebalanceManagerString === '') {
       setButtonText('Fill manager info')
       return
     } else if (feeReceiverString === '' || indexShare === 0) {
@@ -108,10 +116,10 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       setButtonText('Deploy')
     }
 
-  }, [managerString, emergencyManagerString, feeReceiverString, indexShare])
+  }, [managerString, emergencyManagerString, rebalanceManagerString, feeReceiverString, indexShare])
 
   const deployDefindex = async () => {
-    if (managerString === '' || emergencyManagerString === '') {
+    if (managerString === '' || emergencyManagerString === '' || rebalanceManagerString === '') {
       console.log('please fill manager config')
       setAccordionValue([AccordionItems.MANAGER_CONFIGS])
       return
@@ -128,6 +136,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     const vaultSymbol = nativeToScVal(indexSymbol, { type: "string" })
     const vaultShare = nativeToScVal(indexShare, { type: "u32" })
     const emergencyManager = new Address(emergencyManagerString)
+    const rebalanceManager = new Address(rebalanceManagerString)
     const feeReceiver = new Address(feeReceiverString)
     const manager = new Address(managerString)
     const salt = randomBytes(32)
@@ -197,17 +206,49 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
 */
     let result: any;
 
+    const roles = xdr.ScVal.scvMap([
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvU32(0),
+        val: emergencyManager.toScVal(),
+      }),
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvU32(1),
+        val: feeReceiver.toScVal(),
+      }),
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvU32(2),
+        val: manager.toScVal(),
+      }),
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvU32(3),
+        val: rebalanceManager.toScVal(),
+      }),
+    ]);
+
+    const nameSymbol = xdr.ScVal.scvMap([
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvString("name"),
+        val: nativeToScVal(vaultName, { type: "string" }),
+      }),
+      new xdr.ScMapEntry({
+        key: xdr.ScVal.scvString("symbol"),
+        val: nativeToScVal(vaultSymbol, { type: "string" }),
+      }),
+    ]);
+
+    const upgradable = nativeToScVal(true)
+
+    const soroswapRouterAddress = new Address(activeChain?.id == "testnet" ? soroswapRouter.testnet : soroswapRouter.mainnet);
 
     if (newVault.assets[0]?.amount === undefined) {
       const createDefindexParams: xdr.ScVal[] = [
-        emergencyManager.toScVal(),
-        feeReceiver.toScVal(),
+        roles,
         vaultShare,
-        vaultName,
-        vaultSymbol,
-        manager.toScVal(),
         assetParamsScValVec,
         nativeToScVal(salt),
+        soroswapRouterAddress.toScVal(),
+        nameSymbol,
+        upgradable,
       ];
       try {
         result = await factory(
@@ -227,16 +268,16 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
       const caller = new Address(address);
       const createDefindexParams: xdr.ScVal[] = [
         caller.toScVal(),
-        emergencyManager.toScVal(),
-        feeReceiver.toScVal(),
+        roles,
         vaultShare,
-        vaultName,
-        vaultSymbol,
-        manager.toScVal(),
         assetParamsScValVec,
-        amountsScValVec,
         nativeToScVal(salt),
+        soroswapRouterAddress.toScVal(),
+        nameSymbol,
+        upgradable,
+        amountsScValVec,
       ];
+
       try {
         result = await factory(
           FactoryMethod.CREATE_DEFINDEX_VAULT_DEPOSIT,

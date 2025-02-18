@@ -1,11 +1,12 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { getRemoteConfig } from '@/helpers/getRemoteConfig';
-import type { RootState } from '../store'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { RootState } from '../store';
 import { Asset, NewVaultState, Strategy, VaultData } from '../types';
 // Define the initial state using that type
 const initialState: NewVaultState = {
   address: "",
   emergencyManager: "",
+  rebalanceManager: "",
   feeReceiver: "",
   manager: "",
   name: "",
@@ -13,6 +14,7 @@ const initialState: NewVaultState = {
   vaultShare: 0,
   assets: [],
   TVL: 0,
+  upgradable: true,
 }
 
 //Filtrar Strategies por network y retornar array de Strategies
@@ -57,6 +59,9 @@ export const newVaultSlice = createSlice({
     }),
     setEmergencyManager: ((state, action: PayloadAction<string>) => {
       state.emergencyManager = action.payload;
+    }),
+    setRebalanceManager: ((state, action: PayloadAction<string>) => {
+      state.rebalanceManager = action.payload;
     }),
     setFeeReceiver: ((state, action: PayloadAction<string>) => {
       state.feeReceiver = action.payload;
@@ -113,6 +118,9 @@ export const newVaultSlice = createSlice({
         asset.strategies = asset.strategies.filter(strategy => strategy.address !== action.payload.address);
       });
     }),
+    setUpgradable: ((state, action: PayloadAction<boolean>) => {
+      state.upgradable = action.payload;
+    }),
   }
 })
 
@@ -121,6 +129,7 @@ export const {
   setSymbol,
   setManager,
   setEmergencyManager,
+  setRebalanceManager,
   setFeeReceiver,
   setVaultShare,
   pushAsset,
@@ -130,6 +139,7 @@ export const {
   resetNewVault,
   removeStrategy,
   setAssetAmount,
+  setUpgradable,
 } = newVaultSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
