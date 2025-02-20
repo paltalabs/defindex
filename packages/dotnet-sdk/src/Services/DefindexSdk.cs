@@ -9,7 +9,6 @@ namespace DeFindex.Sdk.Services;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using StellarDotnetSdk.Responses.SorobanRpc;
 
 public class DefindexSdk : IDefindexSdk
@@ -187,6 +186,16 @@ public class DefindexSdk : IDefindexSdk
         return transaction;
     }
 
+    public Task<List<TransactionResult>>ParseVaultTransaction(GetTransactionResponse TxResponse)
+    {
+        if (TxResponse.ResultValue == null || TxResponse.TxHash == null){
+            throw new Exception("Transaction result value is null.");
+        }
+        var result = (SCVal)SCVal.FromXdrBase64(TxResponse.ResultValue.ToXdrBase64());
+        var response = DefindexResponseParser.ParseSubmittedTransaction(result, TxResponse.TxHash);
+        return Task.FromResult(response);
+    }
+
     public async Task<List<TransactionResult>> SubmitTransaction(Transaction transaction)
     {
         //
@@ -216,11 +225,9 @@ public class DefindexSdk : IDefindexSdk
                 Console.WriteLine($"Transaction hash: {submittedTx.Hash}");
                 Console.ResetColor();
                 if (checkedTx.ResultValue == null) throw new Exception("Transaction result value is null.");
-                var result = (SCVal)SCVal.FromXdrBase64(checkedTx.ResultValue.ToXdrBase64());;
-                var response = DefindexResponseParser.ParseSubmittedTransaction(result, submittedTx.Hash);
+                var response = this.ParseVaultTransaction(checkedTx).Result;
                 return response;
             }
-       
             else
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;

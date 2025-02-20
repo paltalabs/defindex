@@ -1,5 +1,4 @@
 using DeFindex.Sdk.Interfaces;
-using Newtonsoft.Json;
 using StellarDotnetSdk.Responses.SorobanRpc;
 using StellarDotnetSdk.Soroban;
 
@@ -118,7 +117,6 @@ public class DefindexResponseParser
         return new List<TransactionResult>();
     }
     var response = new TransactionResult(true, txHash, Amounts, SharesChanged);
-    Console.WriteLine($"Transaction result: {JsonConvert.SerializeObject(response, Formatting.Indented)}");    
     return new List<TransactionResult> { response };
   }
 }
