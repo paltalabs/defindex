@@ -1,5 +1,6 @@
 using StellarDotnetSdk.Transactions;
 using StellarDotnetSdk.Soroban;
+using StellarDotnetSdk.Responses.SorobanRpc;
 
 namespace DeFindex.Sdk.Interfaces;
 
@@ -105,6 +106,12 @@ public interface IDefindexSdk
     Task<Transaction> CreateWithdrawTransaction(
         ulong withdrawShares,
         string from);
+
+
+    /// <summary>
+    /// Parse a successful transaction response
+    /// </summary>
+    Task<List<TransactionResult>> ParseTransactionResponse(GetTransactionResponse response);
 
     /// <summary>
     /// Submits a signed transaction to the network

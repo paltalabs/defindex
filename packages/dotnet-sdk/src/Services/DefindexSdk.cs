@@ -186,14 +186,15 @@ public class DefindexSdk : IDefindexSdk
         return transaction;
     }
 
-    public Task<List<TransactionResult>>ParseVaultTransaction(GetTransactionResponse TxResponse)
+    public Task<List<TransactionResult>> ParseTransactionResponse(GetTransactionResponse txResponse)
     {
-        if (TxResponse.ResultValue == null || TxResponse.TxHash == null){
+        if (txResponse.ResultValue == null || txResponse.TxHash == null)
+        {
             throw new Exception("Transaction result value is null.");
         }
-        var result = (SCVal)SCVal.FromXdrBase64(TxResponse.ResultValue.ToXdrBase64());
-        var response = DefindexResponseParser.ParseSubmittedTransaction(result, TxResponse.TxHash);
-        return Task.FromResult(response);
+        var result = (SCVal)SCVal.FromXdrBase64(txResponse.ResultValue.ToXdrBase64());
+        var parsedResponse = DefindexResponseParser.ParseSubmittedTransaction(result, txResponse.TxHash);
+        return Task.FromResult(parsedResponse);
     }
 
     public async Task<List<TransactionResult>> SubmitTransaction(Transaction transaction)
@@ -225,7 +226,7 @@ public class DefindexSdk : IDefindexSdk
                 Console.WriteLine($"Transaction hash: {submittedTx.Hash}");
                 Console.ResetColor();
                 if (checkedTx.ResultValue == null) throw new Exception("Transaction result value is null.");
-                var response = this.ParseVaultTransaction(checkedTx).Result;
+                var response = this.ParseTransactionResponse(checkedTx).Result;
                 return response;
             }
             else
