@@ -14,7 +14,7 @@
     
     <!-- Package Information -->
     <PackageId>DeFindex.Sdk</PackageId>
-    <Version>0.1.1</Version>
+    <Version>0.1.2</Version>
     <Authors>paltalabs</Authors>
     <Company>paltalabs</Company>
     <Description>Defindex core SDK.</Description>
