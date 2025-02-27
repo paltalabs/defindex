@@ -12,17 +12,11 @@ use soroban_sdk::{
 };
 use storage::{
     add_new_vault, extend_instance_ttl, get_admin, get_defindex_receiver,
-    get_total_vaults, get_vault_by_index, get_fee_rate, get_vault_wasm_hash, has_admin, put_admin,
+    get_total_vaults, get_vault_by_index, get_fee_rate, get_vault_wasm_hash, put_admin,
     put_defindex_fee, put_defindex_receiver, put_vault_wasm_hash,
 };
 pub use vault::create_contract;
 
-fn check_initialized(e: &Env) -> Result<(), FactoryError> {
-    if !has_admin(e) {
-        return Err(FactoryError::NotInitialized);
-    }
-    Ok(())
-}
 
 pub trait FactoryTrait {
     /// Initializes the factory contract with the given parameters.
@@ -389,7 +383,6 @@ impl FactoryTrait for DeFindexFactory {
     /// # Returns
     /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, or an error if not authorized.
     fn set_new_admin(e: Env, new_admin: Address) -> Result<(), FactoryError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
         let admin = get_admin(&e)?;
         admin.require_auth();
@@ -408,7 +401,6 @@ impl FactoryTrait for DeFindexFactory {
     /// # Returns
     /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, or an error if not authorized.
     fn set_defindex_receiver(e: Env, new_fee_receiver: Address) -> Result<(), FactoryError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
         let admin = get_admin(&e)?;
         admin.require_auth();
@@ -427,7 +419,6 @@ impl FactoryTrait for DeFindexFactory {
     /// # Returns
     /// * `Result<(), FactoryError>` - Returns Ok(()) if successful, or an error if not authorized.
     fn set_defindex_fee(e: Env, defindex_fee: u32) -> Result<(), FactoryError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
         let admin = get_admin(&e)?;
         admin.require_auth();
@@ -438,7 +429,6 @@ impl FactoryTrait for DeFindexFactory {
     }
 
     fn set_vault_wasm_hash(e: Env, new_vault_wasm_hash: BytesN<32>) -> Result<(), FactoryError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
         let admin = get_admin(&e)?;
         admin.require_auth();
@@ -459,7 +449,6 @@ impl FactoryTrait for DeFindexFactory {
     /// # Returns
     /// * `Result<Address, FactoryError>` - Returns the admin's address or an error if not found.
     fn admin(e: Env) -> Result<Address, FactoryError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
         Ok(get_admin(&e)?)
     }
@@ -472,7 +461,6 @@ impl FactoryTrait for DeFindexFactory {
     /// # Returns
     /// * `Result<Address, FactoryError>` - Returns the DeFindex receiver's address or an error if not found.
     fn defindex_receiver(e: Env) -> Result<Address, FactoryError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
         Ok(get_defindex_receiver(&e)?)
     }
@@ -485,7 +473,6 @@ impl FactoryTrait for DeFindexFactory {
     /// # Returns
     /// * `Result<u32, FactoryError>` - Returns the total number of deployed vaults or an error if retrieval fails.
     fn total_vaults(e: Env) -> Result<u32, FactoryError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
         let vaults = get_total_vaults(&e);
         Ok(vaults)
@@ -500,7 +487,6 @@ impl FactoryTrait for DeFindexFactory {
     /// # Returns
     /// * `Result<Address, FactoryError>` - Returns the vault address at the specified index or an error if not found.
     fn get_vault_by_index(e: Env, index: u32) -> Result<Address, FactoryError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
 
         get_vault_by_index(&e, index)
@@ -514,7 +500,6 @@ impl FactoryTrait for DeFindexFactory {
     /// # Returns
     /// * `Result<u32, FactoryError>` - Returns the fee rate in basis points or an error if not found.
     fn defindex_fee(e: Env) -> Result<u32, FactoryError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
         Ok(get_fee_rate(&e)?)
     }
@@ -529,11 +514,10 @@ impl FactoryTrait for DeFindexFactory {
     ///   or an error if the contract is not properly initialized.
     ///
     /// # Behavior
-    /// 1. Ensures the contract is initialized by calling `check_initialized(&e)`.
+    /// 1. Assumes that the contract is initialized by the constructor.
     /// 2. Extends the instance's time-to-live (TTL) by invoking `extend_instance_ttl(&e)`.
     /// 3. Retrieves and returns the vault WASM hash by calling `get_vault_wasm_hash(&e)`.
     fn vault_wasm_hash(e: Env) -> Result<BytesN<32>, FactoryError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
         get_vault_wasm_hash(&e)
     }

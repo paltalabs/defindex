@@ -41,7 +41,7 @@ use strategies::{
 };
 use token::{internal_burn, write_metadata};
 use utils::{
-    calculate_asset_amounts_per_vault_shares, check_initialized, check_min_amount, check_nonnegative_amount
+    calculate_asset_amounts_per_vault_shares, check_min_amount, check_nonnegative_amount
 };
 
 use common::{models::AssetStrategySet, utils::StringExtensions};
@@ -240,7 +240,6 @@ impl VaultTrait for DeFindexVault {
         invest: bool,
     ) -> Result<(Vec<i128>, i128, Option<Vec<Option<AssetInvestmentAllocation>>>), ContractError> {
         extend_instance_ttl(&e);
-        check_initialized(&e)?;
         from.require_auth();
 
         let total_managed_funds = fetch_total_managed_funds(&e, false)?;
@@ -300,7 +299,6 @@ impl VaultTrait for DeFindexVault {
     /// - `ContractError::WrongAmountsLength`: If there is a mismatch in asset allocation data.
     fn withdraw(e: Env, withdraw_shares: i128, from: Address) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
-        check_initialized(&e)?;
         check_nonnegative_amount(withdraw_shares)?;
         from.require_auth();
 
@@ -403,7 +401,6 @@ impl VaultTrait for DeFindexVault {
         caller: Address,
     ) -> Result<(), ContractError> {
         extend_instance_ttl(&e);
-        check_initialized(&e)?;
 
         // Ensure the caller is the Manager or Emergency Manager
         let access_control = AccessControl::new(&e);
@@ -806,7 +803,6 @@ impl VaultManagementTrait for DeFindexVault {
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn rebalance(e: Env, caller: Address, instructions: Vec<Instruction>) -> Result<(), ContractError> {
         extend_instance_ttl(&e);
-        check_initialized(&e)?;
 
         let access_control = AccessControl::new(&e);
         access_control.require_any_role(
@@ -918,7 +914,6 @@ impl VaultManagementTrait for DeFindexVault {
     /// * `Result<Vec<(Address, i128)>, ContractError>` - A vector of tuples with strategy addresses and locked fee amounts in their underlying_asset.
     fn lock_fees(e: Env, new_fee_bps: Option<u32>) -> Result<Vec<Report>, ContractError> {
         extend_instance_ttl(&e);
-        check_initialized(&e)?;
 
         let access_control = AccessControl::new(&e);
         access_control.require_role(&RolesDataKey::Manager);
@@ -961,7 +956,6 @@ impl VaultManagementTrait for DeFindexVault {
     /// * `Result<Report, ContractError>` - A report of the released fees or a `ContractError` if the operation fails.
     fn release_fees(e: Env, strategy: Address, amount: i128) -> Result<Report, ContractError> {
         extend_instance_ttl(&e);
-        check_initialized(&e)?;
 
         let access_control = AccessControl::new(&e);
         access_control.require_role(&RolesDataKey::Manager);
@@ -987,7 +981,6 @@ impl VaultManagementTrait for DeFindexVault {
     /// * `Result<Vec<(Address, i128)>, ContractError>` - A vector of tuples with asset addresses and the total distributed fee amounts.
     fn distribute_fees(e: Env, caller: Address) -> Result<Vec<(Address, i128)>, ContractError> {
         extend_instance_ttl(&e);
-        // check_initialized(&e)?;
 
         let access_control = AccessControl::new(&e);
         access_control.require_any_role(

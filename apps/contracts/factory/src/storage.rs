@@ -82,11 +82,11 @@ pub fn add_new_vault(e: &Env, vault_address: Address) {
     put_total_vaults(e, total_vaults.checked_add(1).unwrap());
 }
 
-
+/* 
 // Admin
 pub fn has_admin(e: &Env) -> bool {
     e.storage().instance().has(&DataKey::Admin)
-}
+} */
 
 pub fn put_admin(e: &Env, admin: &Address) {
     e.storage().instance().set(&DataKey::Admin, admin);
