@@ -33,5 +33,8 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore packages/dotnet-sdk
 
+      - name: Verify dependencies
+        run: dotnet build packages/dotnet-sdk
+
       - name: Run tests with coverage
         run: dotnet test packages/dotnet-sdk --no-restore
