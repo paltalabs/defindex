@@ -37,4 +37,4 @@ jobs:
         run: dotnet build packages/dotnet-sdk
 
       - name: Run tests with coverage
-        run: dotnet test packages/dotnet-sdk --no-restore --verbosity diag
+        run: dotnet test packages/dotnet-sdk --no-restore
