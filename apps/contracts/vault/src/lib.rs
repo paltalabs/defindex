@@ -642,11 +642,11 @@ impl VaultTrait for DeFindexVault {
 impl AdminInterfaceTrait for DeFindexVault {
     /// Sets the fee receiver for the vault.
     ///
-    /// This function allows the manager or emergency manager to set a new fee receiver address for the vault.
+    /// This function allows the manager or the vault fee receiver to set a new fee receiver address for the vault.
     ///
     /// # Arguments:
     /// * `e` - The environment.
-    /// * `caller` - The address initiating the change (must be the manager or emergency manager).
+    /// * `caller` - The address initiating the change (must be the manager or the vault fee receiver).
     /// * `vault_fee_receiver` - The new fee receiver address.
     ///
     /// # Returns:
