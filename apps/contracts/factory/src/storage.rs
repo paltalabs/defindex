@@ -1,4 +1,4 @@
-use crate::error::FactoryError;
+use crate::{error::FactoryError, constants::MAX_DEFINDEX_FEE};
 use soroban_sdk::{contracttype, Address, BytesN, Env, TryFromVal, Val};
 
 #[derive(Clone)]
@@ -111,8 +111,13 @@ pub fn get_defindex_receiver(e: &Env) -> Result<Address, FactoryError> {
 }
 
 // Fee Rate BPS (MAX BPS = 10000)
-pub fn put_defindex_fee(e: &Env, value: &u32) {
-    e.storage().instance().set(&DataKey::FeeRate, value);
+pub fn put_defindex_fee(e: &Env, value: &u32) -> Result<(), FactoryError> {
+    if *value <= MAX_DEFINDEX_FEE {
+        e.storage().instance().set(&DataKey::FeeRate, value);
+        Ok(()) 
+    } else {
+        Err(FactoryError::FeeTooHigh)
+    }
 }
 
 pub fn get_fee_rate(e: &Env) -> Result<u32, FactoryError> {

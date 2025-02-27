@@ -9,4 +9,5 @@ pub enum FactoryError {
     EmptyMap = 403,
     AssetLengthMismatch = 404,
     IndexDoesNotExist = 405,
+    FeeTooHigh = 406,
 }

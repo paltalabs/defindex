@@ -1,6 +1,7 @@
 #![no_std]
 
 mod error;
+mod constants;
 mod events;
 mod storage;
 mod vault;
@@ -36,7 +37,7 @@ pub trait FactoryTrait {
         defindex_receiver: Address,
         defindex_fee: u32,
         vault_wasm_hash: BytesN<32>,
-    );
+    ) -> Result<(), FactoryError>;
 
     /// Creates a new DeFindex Vault with specified parameters.
     ///
@@ -275,13 +276,15 @@ impl FactoryTrait for DeFindexFactory {
         defindex_receiver: Address,
         defindex_fee: u32,
         vault_wasm_hash: BytesN<32>,
-    ) {
+    ) -> Result<(), FactoryError> {
         put_admin(&e, &admin);
         put_defindex_receiver(&e, &defindex_receiver);
         put_vault_wasm_hash(&e, vault_wasm_hash);
-        put_defindex_fee(&e, &defindex_fee);
-
         extend_instance_ttl(&e);
+        match put_defindex_fee(&e, &defindex_fee) {
+            Ok(_) => Ok(()),
+            Err(err) => return Err(err),
+        }
     }
 
     /// Creates a new DeFindex Vault with the specified parameters.
@@ -423,8 +426,10 @@ impl FactoryTrait for DeFindexFactory {
         let admin = get_admin(&e)?;
         admin.require_auth();
 
-        put_defindex_fee(&e, &defindex_fee);
-        events::emit_new_defindex_fee(&e, defindex_fee);
+        match put_defindex_fee(&e, &defindex_fee) {
+            Ok(_) => events::emit_new_defindex_fee(&e, defindex_fee),
+            Err(err) => return Err(err),
+        }
         Ok(())
     }
 
