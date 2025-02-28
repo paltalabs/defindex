@@ -196,7 +196,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
     /// * `Result<(), StrategyError>` - An empty result or an error.
     fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
         extend_instance_ttl(&e);
-
+        from.require_auth();
         let config = storage::get_config(&e)?;
         let harvested_blend = blend_pool::claim(&e, &e.current_contract_address(), &config);
 
