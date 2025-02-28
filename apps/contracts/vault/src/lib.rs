@@ -124,6 +124,7 @@ impl VaultTrait for DeFindexVault {
         name_symbol: Map<String, String>,
         upgradable: bool,
     ) {
+        factory.require_auth();
         let access_control = AccessControl::new(&e);
 
         access_control.set_role(&RolesDataKey::EmergencyManager, &roles.get(RolesDataKey::EmergencyManager as u32).unwrap_or_else(|| panic_with_error!(&e, ContractError::RolesIncomplete)));
