@@ -71,6 +71,7 @@ pub fn create_defindex_vault<'a>(
         name_symbol,
         upgradable
     );
+    e.mock_all_auths();
     let address = &e.register(defindex_vault::WASM, args);
     let client = DeFindexVaultClient::new(e, address);
     client

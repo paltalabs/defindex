@@ -1,5 +1,5 @@
 #![allow(unused)]
-use soroban_sdk::{contracterror, contracttype, xdr::ToXdr, Address, Bytes, BytesN, Env, Val, Vec};
+use soroban_sdk::{auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation}, contracterror, contracttype, vec, xdr::ToXdr, Address, Bytes, BytesN, Env, Symbol, Val, Vec};
 
 use crate::storage::get_total_vaults;
 
@@ -19,6 +19,22 @@ pub fn create_contract(
         salt_bytes[..len].copy_from_slice(&total_vaults_bytes);
         BytesN::from_array(e, &salt_bytes)
     };
+
+    let new_contract_address = e.deployer()
+        .with_current_contract(salt.clone())
+        .deployed_address();
+
+    e.authorize_as_current_contract(vec![
+        &e,
+        InvokerContractAuthEntry::Contract(SubContractInvocation {
+            context: ContractContext {
+                contract: new_contract_address,
+                fn_name: Symbol::new(&e, "__constructor"),
+                args: constructor_args.clone(),
+            },
+            sub_invocations: vec![&e],
+        }),
+    ]);
 
     e.deployer()
         .with_current_contract(salt)
