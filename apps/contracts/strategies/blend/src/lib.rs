@@ -241,6 +241,9 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         let config = storage::get_config(&e)?;
 
+        blend_pool::claim(&e, &e.current_contract_address(), &config);
+        blend_pool::perform_reinvest(&e, &config)?;
+
         let (tokens_withdrawn, b_tokens_burnt) = blend_pool::withdraw(&e, &to, &amount, &config)?;
 
         let (vault_shares, reserves) = reserves::withdraw(
