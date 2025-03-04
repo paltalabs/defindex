@@ -3,7 +3,7 @@ use soroban_sdk::{panic_with_error, token::TokenClient, Address, Env, Vec};
 use crate::{
     models::CurrentAssetInvestmentAllocation,
     token::{internal_mint, VaultToken},
-    utils::{calculate_deposit_amounts_and_shares_to_mint, check_nonnegative_amount},
+    utils::{calculate_deposit_amounts_and_shares_to_mint, validate_amount},
     ContractError, MINIMUM_LIQUIDITY,
 };
 
@@ -23,7 +23,7 @@ pub fn process_deposit(
     }
 
     for amount in amounts_desired.iter() {
-        check_nonnegative_amount(amount)?;
+        validate_amount(amount)?;
     }
 
     let total_supply = VaultToken::total_supply(e.clone());

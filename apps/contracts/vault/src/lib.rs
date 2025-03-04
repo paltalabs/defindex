@@ -41,7 +41,7 @@ use strategies::{
 };
 use token::{internal_burn, write_metadata};
 use utils::{
-    calculate_asset_amounts_per_vault_shares, check_initialized, check_min_amount, check_nonnegative_amount
+    calculate_asset_amounts_per_vault_shares, check_initialized, check_min_amount, validate_amount,
 };
 
 use common::{models::AssetStrategySet, utils::StringExtensions};
@@ -301,7 +301,7 @@ impl VaultTrait for DeFindexVault {
     fn withdraw(e: Env, withdraw_shares: i128, from: Address) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
         check_initialized(&e)?;
-        check_nonnegative_amount(withdraw_shares)?;
+        validate_amount(withdraw_shares)?;
         from.require_auth();
 
         check_min_amount(withdraw_shares, MIN_WITHDRAW_AMOUNT)?;
