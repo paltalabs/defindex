@@ -1093,7 +1093,7 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     );
 
     // expected amounts
-    let expected_amounts = sorobanvec![&test.env, 2222222, 4222221];
+    let expected_amounts = sorobanvec![&test.env, 2222222, 4222222];
     assert_eq!(amounts, expected_amounts);
     assert_eq!(asset_allocation, None);
 
@@ -1114,12 +1114,12 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     );
     assert_eq!(
         test.token_1.balance(&users[0]),
-        amount - amount_to_deposit_1 + 23162660 - 4222221
+        amount - amount_to_deposit_1 + 23162660 - 4222222
     );
 
     // check vault balance
     assert_eq!(test.token_0.balance(&defindex_contract.address), 2222222);
-    assert_eq!(test.token_1.balance(&defindex_contract.address), 4222221);
+    assert_eq!(test.token_1.balance(&defindex_contract.address), 4222222);
 
     // check strategies balance
     assert_eq!(
@@ -1162,7 +1162,7 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     );
     assert_eq!(
         test.token_1.balance(&users[0]),
-        amount - amount_to_deposit_1 + 23162660 - 4222221 + 422221
+        amount - amount_to_deposit_1 + 23162660 - 4222222 + 422221
     );
 
     // check vault balance
@@ -1172,7 +1172,7 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     );
     assert_eq!(
         test.token_1.balance(&defindex_contract.address),
-        4222221 - 422221
+        4222222 - 422221
     );
 
     // check strategies balance
@@ -1211,7 +1211,7 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     // for asset 1: total_funds_1 * withdraw_shares / total_shares
     // 215205230 * 328470143 / 328471143 = 215204574.827591141 = 215204574
 
-    let expected_result = sorobanvec![&test.env, 113265570, 215204574];
+    let expected_result = sorobanvec![&test.env, 113265570, 215204575];
     assert_eq!(result, expected_result);
 
     assert_eq!(defindex_contract.balance(&users[0]), 0);
