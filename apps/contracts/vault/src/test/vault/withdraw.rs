@@ -47,7 +47,7 @@ fn negative_amount() {
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
     let result = defindex_contract.try_withdraw(&-100i128, &users[0]);
-    assert_eq!(result, Err(Ok(ContractError::NegativeNotAllowed)));
+    assert_eq!(result, Err(Ok(ContractError::AmountNotAllowed)));
 }
 
 // check that withdraw with amount below min returns error
