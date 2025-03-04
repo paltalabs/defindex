@@ -25,9 +25,9 @@ pub fn check_initialized(e: &Env) -> Result<(), ContractError> {
     }
 }
 
-pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
-    if amount < 0 {
-        Err(ContractError::NegativeNotAllowed)
+pub fn validate_amount(amount: i128) -> Result<(), ContractError> {
+    if amount <= 0 {
+        Err(ContractError::AmountNotAllowed)
     } else {
         Ok(())
     }

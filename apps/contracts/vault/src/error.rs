@@ -15,7 +15,7 @@ pub enum ContractError {
     MaximumFeeExceeded = 106,
 
     // Validation Errors (11x)
-    NegativeNotAllowed = 110,
+    AmountNotAllowed = 110,
     InsufficientBalance = 111,
     WrongAmountsLength = 112,
     NotEnoughIdleFunds = 113,
