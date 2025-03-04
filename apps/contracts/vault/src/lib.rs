@@ -733,6 +733,7 @@ impl AdminInterfaceTrait for DeFindexVault {
     /// # Returns:
     /// * `Result<Address, ContractError>` - The emergency manager address if successful, otherwise returns a ContractError.
     fn get_emergency_manager(e: Env) -> Result<Address, ContractError> {
+        extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         access_control.get_emergency_manager()
     }
@@ -784,7 +785,7 @@ impl AdminInterfaceTrait for DeFindexVault {
         if !storage::is_upgradable(&e) {
             return Err(ContractError::NotUpgradable);
         }
-        
+        extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         access_control.require_role(&RolesDataKey::Manager);
         
