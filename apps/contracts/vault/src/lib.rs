@@ -707,7 +707,7 @@ impl AdminInterfaceTrait for DeFindexVault {
 
     /// Sets the emergency manager for the vault.
     ///
-    /// This function allows the current manager or emergency manager to set a new emergency manager for the vault.
+    /// This function allows the current manager to set a new emergency manager for the vault.
     ///
     /// # Arguments:
     /// * `e` - The environment.
