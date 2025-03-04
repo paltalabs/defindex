@@ -41,7 +41,7 @@ use strategies::{
 };
 use token::{internal_burn, write_metadata};
 use utils::{
-    calculate_asset_amounts_per_vault_shares, check_initialized, check_min_amount, validate_amount,
+    calculate_asset_amounts_per_vault_shares, check_initialized, check_min_amount, validate_amount, validate_assets
 };
 
 use common::{models::AssetStrategySet, utils::StringExtensions};
@@ -150,11 +150,9 @@ impl VaultTrait for DeFindexVault {
 
         set_soroswap_router(&e, &soroswap_router);
 
+        // Validate assets
+        validate_assets(&e, &assets);
         let total_assets = assets.len();
-
-        if total_assets == 0 {
-            panic_with_error!(&e, ContractError::NoAssetAllocation);
-        }
 
         set_total_assets(&e, total_assets as u32);
         for (i, asset) in assets.iter().enumerate() {

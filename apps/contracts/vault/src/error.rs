@@ -13,6 +13,8 @@ pub enum ContractError {
     RolesIncomplete = 104,
     MetadataIncomplete = 105,
     MaximumFeeExceeded = 106,
+    DuplicatedAsset = 107,
+    DuplicatedStrategy = 108,
 
     // Validation Errors (11x)
     AmountNotAllowed = 110,
