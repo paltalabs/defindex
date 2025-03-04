@@ -72,7 +72,9 @@ pub fn create_defindex_vault<'a>(
         upgradable
     );
     // e.mock_all_auths(); // TODO: add a way to mock the required auth from the factory
+    e.mock_all_auths_allowing_non_root_auth();
     let address = &e.register(defindex_vault::WASM, args);
+    
     let client = DeFindexVaultClient::new(e, address);
     client
 }
