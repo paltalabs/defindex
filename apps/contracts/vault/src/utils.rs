@@ -41,6 +41,15 @@ pub fn check_min_amount(amount: i128, min_amount: i128) -> Result<(), ContractEr
     }
 }
 
+fn divide_rounding_up(a: i128, b: i128) -> Result<i128, ContractError> {
+    let result = a.checked_div(b).ok_or(ContractError::ArithmeticError)?;
+    if a % b != 0 {
+        Ok(result.checked_add(1).ok_or(ContractError::ArithmeticError)?)
+    } else {
+        Ok(result)
+    }
+}
+
 // /// From an amount, calculates how much to withdraw from each strategy;
 // /// returns a map of strategy address to token amount
 // pub fn calculate_withdrawal_amounts(
@@ -186,11 +195,15 @@ pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
         } else {
             // Calculate the proportional allocation for non-enforced assets
             let reserve = asset_allocation.total_amount;
-            let amount = reserve
-                .checked_mul(amount_desired_target)
-                .unwrap_or_else(|| panic_with_error!(e, ContractError::ArithmeticError))
-                .checked_div(reserve_target)
-                .unwrap_or_else(|| panic_with_error!(e, ContractError::ArithmeticError));
+            let amount = match divide_rounding_up(
+                reserve
+                    .checked_mul(amount_desired_target)
+                    .unwrap_or_else(|| panic_with_error!(e, ContractError::ArithmeticError)),
+                reserve_target
+            ){
+                Ok(amount) => amount,
+                Err(_) => panic_with_error!(e, ContractError::ArithmeticError)
+            };
             optimal_amounts.push_back(amount);
         }
     }
