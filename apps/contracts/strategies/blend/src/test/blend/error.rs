@@ -3,12 +3,15 @@ use crate::test::blend::soroswap_setup::create_soroswap_pool;
 use crate::test::{
     create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils, ONE_DAY_IN_SECONDS,
 };
+use crate::StrategyReserves;
+use crate::reserves;
+
 use crate::BlendStrategyClient;
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::testutils::{Address as _, MockAuth, MockAuthInvoke};
 use soroban_sdk::{Address, Env, IntoVal};
-extern crate std;
+
 #[test]
 fn deposit_below_min_dust() {
     // Setting up the environment
@@ -551,4 +554,61 @@ fn unauthorized_withdraw() {
         .try_withdraw(&withdraw_amount, &user_2, &user_2);
 
     assert_eq!(result, Err(Err(soroban_sdk::InvokeError::Abort)));
+}
+
+#[test]
+fn arithmetic_error_deposit() {
+    // Setting up the environment
+    let e = Env::default();
+    e.set_default_info();
+    let admin = Address::generate(&e);
+
+    let blnd = e.register_stellar_asset_contract_v2(admin.clone());
+    let usdc = e.register_stellar_asset_contract_v2(admin.clone());
+    let xlm = e.register_stellar_asset_contract_v2(admin.clone());
+
+    let blnd_client = MockTokenClient::new(&e, &blnd.address());
+    let usdc_client = MockTokenClient::new(&e, &usdc.address());
+    let xlm_client = MockTokenClient::new(&e, &xlm.address());
+
+    let pool_admin = Address::generate(&e);
+    let amount_a = 100000000_0_000_000;
+    let amount_b = 50000000_0_000_000;
+    blnd_client.mock_all_auths().mint(&pool_admin, &amount_a);
+    usdc_client.mock_all_auths().mint(&pool_admin, &amount_b);
+
+    let soroswap_router = create_soroswap_pool(
+        &e,
+        &pool_admin,
+        &blnd.address(),
+        &usdc.address(),
+        &amount_a,
+        &amount_b,
+    );
+    let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
+
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
+    let strategy = create_blend_strategy(
+        &e,
+        &usdc.address(),
+        &pool,
+        &0u32,
+        &blnd.address(),
+        &soroswap_router.address,
+    );
+
+    let reserve = StrategyReserves {
+        total_shares: 0,
+        total_b_tokens: 0,
+        b_rate: 0,
+    };
+    
+    let from = Address::generate(&e);
+    let underlying_amount = i128::MAX;
+    let b_tokens_amount = 1;
+
+    
+    let result = e.as_contract(&&strategy, || reserves::deposit(&e, reserve, &from, underlying_amount, b_tokens_amount ));
+
+    assert_eq!(result, Err(StrategyError::ArithmeticError));
 }
