@@ -7,7 +7,6 @@ use crate::{
     ContractError,
 };
 
-}
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
     if amount < 0 {
