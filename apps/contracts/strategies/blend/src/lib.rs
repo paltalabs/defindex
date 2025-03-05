@@ -234,16 +234,15 @@ impl DeFindexStrategyTrait for BlendStrategy {
         // protect against rouding of reserve_vault::update_rate, as small amounts
         // can cause incorrect b_rate calculations due to the pool rounding
         if amount < MIN_DUST {
-            return Err(StrategyError::AmountBelowMinDust); //TODO: create a new error type for this
+            return Err(StrategyError::AmountBelowMinDust);
         }
-
-        let reserves = storage::get_strategy_reserves(&e);
 
         let config = storage::get_config(&e)?;
 
         blend_pool::claim(&e, &e.current_contract_address(), &config);
         blend_pool::perform_reinvest(&e, &config)?;
 
+        let reserves = storage::get_strategy_reserves(&e);
         let (tokens_withdrawn, b_tokens_burnt) = blend_pool::withdraw(&e, &to, &amount, &config)?;
 
         let (vault_shares, reserves) = reserves::withdraw(
