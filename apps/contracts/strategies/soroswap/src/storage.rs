@@ -17,10 +17,6 @@ pub fn extend_instance_ttl(e: &Env) {
         .extend_ttl(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
 }
 
-pub fn has_soroswap_router_address(e: &Env) -> bool {
-    e.storage().instance().has(&DataKey::SoroswapRouterAddress)
-}
-
 // Soroswap Router Address
 pub fn set_soroswap_router_address(e: &Env, address: Address) {
     e.storage()

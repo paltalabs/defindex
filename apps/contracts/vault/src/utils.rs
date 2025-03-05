@@ -1,20 +1,12 @@
 use soroban_sdk::{panic_with_error, Env, Vec};
 
 use crate::{
-    access::{AccessControl, AccessControlTrait, RolesDataKey},
+    //access::{AccessControl, AccessControlTrait, RolesDataKey},
     models::CurrentAssetInvestmentAllocation,
     token::VaultToken,
     ContractError,
 };
 
-pub fn check_initialized(e: &Env) -> Result<(), ContractError> {
-    //TODO: Should also check if adapters/strategies have been set
-    let access_control = AccessControl::new(&e);
-    if access_control.has_role(&RolesDataKey::Manager) {
-        Ok(())
-    } else {
-        panic_with_error!(&e, ContractError::NotInitialized);
-    }
 }
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
