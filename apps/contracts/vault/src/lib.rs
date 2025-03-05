@@ -816,6 +816,7 @@ impl VaultManagementTrait for DeFindexVault {
         for instruction in instructions.iter() {
             match instruction {
                 Instruction::Unwind(strategy_address, amount) => {
+                    report::distribute_strategy_fees(&e, &strategy_address, &access_control)?;
                     let report = unwind_from_strategy(
                         &e,
                         &strategy_address,
