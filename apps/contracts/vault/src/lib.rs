@@ -41,7 +41,7 @@ use strategies::{
 };
 use token::{internal_burn, write_metadata};
 use utils::{
-    calculate_asset_amounts_per_vault_shares, check_initialized, check_min_amount, validate_amount, validate_assets
+    calculate_asset_amounts_per_vault_shares, check_min_amount, validate_amount, validate_assets
 };
 
 use common::{models::AssetStrategySet, utils::StringExtensions};
@@ -297,7 +297,6 @@ impl VaultTrait for DeFindexVault {
     /// - `ContractError::WrongAmountsLength`: If there is a mismatch in asset allocation data.
     fn withdraw(e: Env, withdraw_shares: i128, from: Address) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
-        check_initialized(&e)?;
         validate_amount(withdraw_shares)?;
         from.require_auth();
 
