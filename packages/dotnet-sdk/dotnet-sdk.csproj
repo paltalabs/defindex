@@ -1,8 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-<PropertyGroup>
+  <PropertyGroup>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>dotnet_sdk</RootNamespace>
@@ -12,25 +14,29 @@
     
     <!-- Package Information -->
     <PackageId>DeFindex.Sdk</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.1.2</Version>
     <Authors>paltalabs</Authors>
     <Company>paltalabs</Company>
-    <Description>DeFindex Core Library</Description>
+    <Description>Defindex core SDK.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/paltalabs/defindex</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>Defindex;SDK;.Net;Paltalabs;Stellar</PackageTags>
+    <PackageProjectUrl>https://github.com/paltalabs/defindex</PackageProjectUrl>
+    <PackageReleaseNotes>Initial release</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="dotenv.net" Version="3.2.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
-    <PackageReference Include="Moq" Version="4.20.72" />
-    <PackageReference Include="MSTest.TestAdapter" Version="3.8.0" />
-    <PackageReference Include="MSTest.TestFramework" Version="3.8.0" />
-    <PackageReference Include="NUnit" Version="4.3.2" />
     <PackageReference Include="stellar-dotnet-sdk" Version="13.0.0" />
     <PackageReference Include="xunit" Version="2.6.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.4" />
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
+     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.8.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.8.0" />
+    <PackageReference Include="NUnit" Version="4.3.2" />
   </ItemGroup>
 
   <ItemGroup>

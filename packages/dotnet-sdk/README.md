@@ -160,8 +160,30 @@ public async Task<Transaction> CreateWithdrawTransaction(
 - `Transaction`: The unsigned withdrawal transaction.
 
 ---
+### **6. ParseTransactionResponse**
 
-### **6. SubmitTransaction**
+Parses the transaction response from the network.
+
+**Method Signature:**
+
+```csharp
+public async Task<List<TransactionResult>> ParseTransactionResponse(GetTransactionResponse response)
+
+```
+
+**Inputs:**
+
+- `response`: A previously validated transaction response from the network.
+
+**Returns:**
+  
+- `TransactionResult`: A sealed record containing:
+    - `IsSuccess`: Boolean indicating if the transaction succeeded.
+    - `TransactionHash`: The hash of the submitted transaction (if successful).
+    - `Amounts`: An array of amounts deposited or withdrawn.
+    - `SharesChanged`: The amount of shares minted or burned.
+
+### **7. SubmitTransaction**
 
 Submits a signed transaction to the network.
 
