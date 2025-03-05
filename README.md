@@ -213,6 +213,7 @@ Then, you can run the following command:
 ```sh
 dotnet run testnet # or mainnet
 ```
+You may check the specific README for the dotnet package [here](./packages/dotnet-sdk/README.md).
 
 ## 📄 Whitepaper
 
