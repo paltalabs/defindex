@@ -1,0 +1,1 @@
+pub(crate) const MAX_DEFINDEX_FEE: u32 = 9000;

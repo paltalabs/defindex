@@ -12,8 +12,7 @@ use defindex_strategy_core::{DeFindexStrategyTrait, StrategyError};
 use soroswap_pair::SoroswapPairClient;
 use soroswap_router::SoroswapRouterClient;
 use storage::{
-    extend_instance_ttl, get_soroswap_router_address, has_soroswap_router_address,
-    set_soroswap_router_address,
+    extend_instance_ttl, get_soroswap_router_address, set_soroswap_router_address,
 };
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
@@ -21,14 +20,6 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
         Err(StrategyError::NegativeNotAllowed)
     } else {
         Ok(())
-    }
-}
-
-fn check_initialized(e: &Env) -> Result<(), StrategyError> {
-    if has_soroswap_router_address(e) {
-        Ok(())
-    } else {
-        Err(StrategyError::NotInitialized)
     }
 }
 
@@ -48,7 +39,6 @@ impl DeFindexStrategyTrait for SoroswapAdapter {
     }
 
     fn asset(e: Env) -> Result<Address, StrategyError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
 
         let protocol_address = get_soroswap_router_address(&e);
@@ -57,7 +47,6 @@ impl DeFindexStrategyTrait for SoroswapAdapter {
 
     fn deposit(e: Env, amount: i128, from: Address) -> Result<i128, StrategyError> {
         from.require_auth();
-        check_initialized(&e)?;
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
 
@@ -132,7 +121,6 @@ impl DeFindexStrategyTrait for SoroswapAdapter {
     }
 
     fn harvest(e: Env, _from: Address) -> Result<(), StrategyError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
 
         Ok(())
@@ -140,7 +128,6 @@ impl DeFindexStrategyTrait for SoroswapAdapter {
 
     fn withdraw(e: Env, _amount: i128, from: Address, _to: Address) -> Result<i128, StrategyError> {
         from.require_auth();
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
 
         // let usdc_address = Address::from_string(&String::from_str(&e, "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75"));
