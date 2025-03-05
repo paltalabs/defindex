@@ -21,14 +21,6 @@ pub fn extend_instance_ttl(e: &Env) {
         .extend_ttl(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
 }
 
-pub fn set_initialized(e: &Env) {
-    e.storage().instance().set(&DataKey::Initialized, &true);
-}
-
-pub fn is_initialized(e: &Env) -> bool {
-    e.storage().instance().has(&DataKey::Initialized)
-}
-
 // Underlying asset
 pub fn set_underlying_asset(e: &Env, address: &Address) {
     e.storage()

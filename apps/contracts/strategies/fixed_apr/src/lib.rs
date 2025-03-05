@@ -11,8 +11,8 @@ mod yield_balance;
 
 use balance::{read_balance, receive_balance, spend_balance};
 use storage::{
-    extend_instance_ttl, get_apr, get_last_harvest_time, get_underlying_asset, is_initialized,
-    set_apr, set_initialized, set_last_harvest_time, set_underlying_asset,
+    extend_instance_ttl, get_apr, get_last_harvest_time, get_underlying_asset,
+    set_apr, set_last_harvest_time, set_underlying_asset,
 };
 
 pub use defindex_strategy_core::{event, DeFindexStrategyTrait, StrategyError};
@@ -23,14 +23,6 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
         Err(StrategyError::NegativeNotAllowed)
     } else {
         Ok(())
-    }
-}
-
-fn check_initialized(e: &Env) -> Result<(), StrategyError> {
-    if is_initialized(e) {
-        Ok(())
-    } else {
-        Err(StrategyError::NotInitialized)
     }
 }
 
@@ -49,19 +41,16 @@ impl DeFindexStrategyTrait for FixAprStrategy {
             .unwrap()
             .into_val(&e);
 
-        set_initialized(&e);
         set_underlying_asset(&e, &asset);
         set_apr(&e, apr_bps);
     }
 
     fn asset(e: Env) -> Result<Address, StrategyError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
         Ok(get_underlying_asset(&e))
     }
 
     fn deposit(e: Env, amount: i128, from: Address) -> Result<i128, StrategyError> {
-        check_initialized(&e)?;
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
         from.require_auth();
@@ -86,7 +75,6 @@ impl DeFindexStrategyTrait for FixAprStrategy {
     }
 
     fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
 
         let yield_balance = update_yield_balance(&e, &from);
@@ -106,7 +94,6 @@ impl DeFindexStrategyTrait for FixAprStrategy {
 
     fn withdraw(e: Env, amount: i128, from: Address, to: Address) -> Result<i128, StrategyError> {
         from.require_auth();
-        check_initialized(&e)?;
         check_nonnegative_amount(amount)?;
         extend_instance_ttl(&e);
 
@@ -126,7 +113,6 @@ impl DeFindexStrategyTrait for FixAprStrategy {
     }
 
     fn balance(e: Env, from: Address) -> Result<i128, StrategyError> {
-        check_initialized(&e)?;
         extend_instance_ttl(&e);
         Ok(read_balance(&e, from))
     }

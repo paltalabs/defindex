@@ -2,7 +2,7 @@ use common::models::{AssetStrategySet, Strategy};
 use soroban_sdk::{panic_with_error, Env, Map, Vec};
 
 use crate::{
-    access::{AccessControl, AccessControlTrait, RolesDataKey},
+    //access::{AccessControl, AccessControlTrait, RolesDataKey},
     models::CurrentAssetInvestmentAllocation,
     token::VaultToken,
     ContractError,
@@ -14,16 +14,6 @@ pub fn bump_instance(e: &Env) {
     let max_ttl = e.storage().max_ttl();
     let new_ttl = max_ttl.checked_sub(DAY_IN_LEDGERS).unwrap_or_else(|| panic_with_error!(e, ContractError::Underflow));
     e.storage().instance().extend_ttl(new_ttl, max_ttl);
-}
-
-pub fn check_initialized(e: &Env) -> Result<(), ContractError> {
-    //TODO: Should also check if adapters/strategies have been set
-    let access_control = AccessControl::new(&e);
-    if access_control.has_role(&RolesDataKey::Manager) {
-        Ok(())
-    } else {
-        panic_with_error!(&e, ContractError::NotInitialized);
-    }
 }
 
 pub fn validate_amount(amount: i128) -> Result<(), ContractError> {
