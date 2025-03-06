@@ -37,20 +37,6 @@ impl RequestType {
     }
 }
 
-/// Panics if the specified deadline has passed.
-///
-/// # Arguments
-/// * `e` - The runtime environment.
-/// * `timestamp` - The deadline timestamp to compare against the current ledger timestamp.
-fn ensure_deadline(e: &Env, timestamp: u64) -> Result<(), StrategyError> {
-    let ledger_timestamp = e.ledger().timestamp();
-    if ledger_timestamp >= timestamp {
-        Err(StrategyError::DeadlineExpired)
-    } else {
-        Ok(())
-    }
-}
-
 /// Supplies the underlying asset to the Blend pool as defined in the contract's configuration.
 ///
 /// This function transfers the specified `amount` of the underlying asset from the strategy contract
@@ -268,11 +254,7 @@ pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError>
 
     let deadline = e
         .ledger()
-        .timestamp()
-        .checked_add(600)
-        .ok_or(StrategyError::UnderflowOverflow)?;
-
-    ensure_deadline(e, deadline)?;
+        .timestamp();
 
     // Swapping BLND tokens to Underlying Asset
     let swapped_amounts = internal_swap_exact_tokens_for_tokens(
