@@ -45,15 +45,15 @@ fn get_persistent_extend_or_error<V: TryFromVal<Env, Val>>(
 
 pub fn get_vault_wasm_hash(e: &Env) -> Result<BytesN<32>, FactoryError> {
     let key = DataKey::DeFindexWasmHash;
-    get_persistent_extend_or_error(&e, &key, FactoryError::NotInitialized)
+    e.storage().instance().get(&key).ok_or(FactoryError::NotInitialized)
 }
 
 pub fn put_vault_wasm_hash(e: &Env, vault_wasm_hash: BytesN<32>) {
     let key = DataKey::DeFindexWasmHash;
-    e.storage().persistent().set(&key, &vault_wasm_hash);
+    e.storage().instance().set(&key, &vault_wasm_hash);
     e.storage()
-        .persistent()
-        .extend_ttl(&key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT)
+        .instance()
+        .extend_ttl(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
 }
 
 // Storing deployed vaults
