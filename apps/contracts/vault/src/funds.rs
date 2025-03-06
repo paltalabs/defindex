@@ -35,12 +35,13 @@ pub fn fetch_idle_funds_for_asset(e: &Env, asset: &Address) -> i128 {
 /// # Returns
 /// The total invested funds in the strategy as an `i128`, excluding locked fees.
 pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address, lock_fees: bool) -> Result<i128, ContractError> {
-    let strategy_client = get_strategy_client(e, strategy_address.clone());
+    let strategy_client: defindex_strategy_core::DeFindexStrategyClient<'_> = get_strategy_client(e, strategy_address.clone());
     let strategy_invested_funds = strategy_client.balance(&e.current_contract_address());
 
     let mut report = get_report(e, strategy_address);
 
     if lock_fees {
+        report.report(strategy_invested_funds)?;
         report.lock_fee(get_vault_fee(e))?;
         set_report(e, strategy_address, &report);
     }
