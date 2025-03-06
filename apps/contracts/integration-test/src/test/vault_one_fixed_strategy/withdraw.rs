@@ -207,8 +207,10 @@ fn fixed_apr_invest_withdraw_success() {
         df_balance_before_withdraw,
         deposit_amount - MINIMUM_LIQUIDITY
     );
+    let report_b4_withdraw = enviroment.vault_contract.report();
+    println!("{:?}", report_b4_withdraw);
 
-    enviroment
+    let withdraw_result = enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
             address: &user.clone(),
@@ -221,15 +223,22 @@ fn fixed_apr_invest_withdraw_success() {
         }])
         .withdraw(&df_balance_before_withdraw, &user);
 
+    let report_after_withdraw = enviroment.vault_contract.report();
+    let locked_fee = report_after_withdraw.get(0).unwrap().locked_fee;
+    println!("{:?}", report_after_withdraw);
+
+    std::println!("{:?}", withdraw_result);
+
     let apr_bps = 1000u32;
     let user_expected_reward =
         calculate_yield(deposit_amount.clone(), apr_bps, ONE_YEAR_IN_SECONDS);
+    let total_yield = user_expected_reward - locked_fee;
 
     let minimum_liquidity_reward = calculate_yield(MINIMUM_LIQUIDITY, apr_bps, ONE_YEAR_IN_SECONDS);
 
     assert_eq!(minimum_liquidity_reward, 100);
     let expected_amount_user =
-        deposit_amount + user_expected_reward - MINIMUM_LIQUIDITY - minimum_liquidity_reward;
+        deposit_amount + total_yield - MINIMUM_LIQUIDITY - minimum_liquidity_reward;
 
     let user_balance_after_withdraw = enviroment.token.balance(user);
     assert_eq!(user_balance_after_withdraw, expected_amount_user);
