@@ -129,7 +129,7 @@ pub(crate) fn create_blend_pool(
         r_three: 0,
         reactivity: 0,
         index: 0,
-        collateral_cap: 1000000000000000000,
+        collateral_cap: 170_141_183_460_469_231_731_687_303_715_884_105_727,
         enabled: true,
     };
     pool_client.queue_set_reserve(&usdc.address, &reserve_config);
@@ -163,11 +163,12 @@ pub(crate) fn create_blend_pool(
     pool_client.set_status(&0);
     blend_fixture.backstop.add_reward(&pool.clone(), &Some(pool.clone()));
 
-    // wait a week and start emissions
+    // wait a week and start emissions 
     e.jump(DAY_IN_LEDGERS * 7);
     blend_fixture.emitter.distribute();
+    blend_fixture.backstop.distribute();
     blend_fixture.backstop.gulp_emissions(&pool);
-    pool_client.gulp_emissions();
+    // pool_client.gulp_emissions();
 
     // admin joins pool
     let requests = vec![
