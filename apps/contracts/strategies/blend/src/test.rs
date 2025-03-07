@@ -11,10 +11,11 @@ use crate::{
 };
 use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::{
-    testutils::{BytesN as _, Ledger as _, LedgerInfo},
+    testutils::{BytesN as _, Ledger as _, LedgerInfo, Address as _},
     token::StellarAssetClient,
     vec, Address, BytesN, Env, IntoVal, String, Symbol, Val, Vec,
 };
+
 
 mod blend_factory_pool {
     soroban_sdk::contractimport!(file = "../external_wasms/blend/pool_factory.wasm");
@@ -90,30 +91,46 @@ pub(crate) fn create_blend_pool(
     );
     oracle_client.set_price_stable(&vec![e, 1_000_0000, 100_0000]);
     let salt = BytesN::<32>::random(&e);
+
+    // fn deploy(
+    //     e: Env, 
+    //     admin: Address,
+    //     name: String,
+    //     salt: BytesN<32>,
+    //     oracle: Address,
+    //     backstop_take_rate: u32,
+    //     max_positions: u32,
+    //     min_collateral: i128,
+    // ) -> Address;
+    
     let pool = blend_fixture.pool_factory.deploy(
-        &admin,
+        &admin, 
         &String::from_str(e, "TEST"),
         &salt,
         &oracle,
         &0,
         &4,
+        &0,
     );
+
     let pool_client = BlendPoolClient::new(e, &pool);
     blend_fixture
         .backstop
         .deposit(&admin, &pool, &20_0000_0000000);
     let reserve_config = ReserveConfig {
-        c_factor: 900_0000,
         decimals: 7,
-        index: 0,
+        c_factor: 900_0000,
         l_factor: 900_0000,
+        util: 0,
         max_util: 900_0000,
-        reactivity: 0,
         r_base: 100_0000,
         r_one: 0,
         r_two: 0,
         r_three: 0,
-        util: 0,
+        reactivity: 0,
+        index: 0,
+        collateral_cap: 1000000000000000000,
+        enabled: true,
     };
     pool_client.queue_set_reserve(&usdc.address, &reserve_config);
     pool_client.set_reserve(&usdc.address);
@@ -144,12 +161,12 @@ pub(crate) fn create_blend_pool(
     ];
     pool_client.set_emissions_config(&emission_config);
     pool_client.set_status(&0);
-    blend_fixture.backstop.add_reward(&pool, &pool);
+    blend_fixture.backstop.add_reward(&pool.clone(), &Some(pool.clone()));
 
     // wait a week and start emissions
     e.jump(DAY_IN_LEDGERS * 7);
     blend_fixture.emitter.distribute();
-    blend_fixture.backstop.gulp_emissions();
+    blend_fixture.backstop.gulp_emissions(&pool);
     pool_client.gulp_emissions();
 
     // admin joins pool
@@ -317,10 +334,9 @@ impl<'a> BlendFixture<'a> {
         usdc: &Address,
     ) -> BlendFixture<'a> {
         env.cost_estimate().budget().reset_unlimited();
-        let backstop = env.register(blend_backstop::WASM, ());
         let emitter = env.register(blend_emitter::WASM, ());
         let comet = env.register(blend_comet::WASM, ());
-        let pool_factory = env.register(blend_factory_pool::WASM, ());
+        let pool_factory_address = Address::generate(env);
         let blnd_client = StellarAssetClient::new(env, &blnd);
         let usdc_client = StellarAssetClient::new(env, &usdc);
         blnd_client
@@ -344,35 +360,44 @@ impl<'a> BlendFixture<'a> {
             &vec![env, 1_000_0000000 * 2000, 25_0000000 * 2000],
             deployer,
         );
-
+        
         blnd_client.mock_all_auths().set_admin(&emitter);
         let emitter_client: blend_emitter::Client<'a> = blend_emitter::Client::new(env, &emitter);
+        
+        let dummy_vec: Vec<(Address, i128) > = vec![env];
+        let backstop = env.register(
+            blend_backstop::WASM, (
+                comet.clone(),
+                emitter.clone(),
+                blnd.clone(),
+                usdc.clone(),
+                pool_factory_address.clone(),
+                dummy_vec,
+
+            ));
         emitter_client
             .mock_all_auths()
             .initialize(&blnd, &backstop, &comet);
 
         let backstop_client: blend_backstop::Client<'a> =
             blend_backstop::Client::new(env, &backstop);
-        backstop_client.mock_all_auths().initialize(
-            &comet,
-            &emitter,
-            &usdc,
-            &blnd,
-            &pool_factory,
-            &Vec::new(env),
-        );
 
         let pool_hash = env.deployer().upload_contract_wasm(blend_pool::WASM);
 
-        let pool_factory_client = blend_factory_pool::Client::new(env, &pool_factory);
-        pool_factory_client
-            .mock_all_auths()
-            .initialize(&blend_factory_pool::PoolInitMeta {
-                backstop,
-                blnd_id: blnd.clone(),
-                pool_hash,
-            });
-        backstop_client.update_tkn_val();
+        let pool_init_meta = blend_factory_pool::PoolInitMeta {
+            backstop: backstop.clone(),
+            pool_hash: pool_hash.clone(),
+            blnd_id: blnd.clone(),
+        };
+
+        env.register_at(
+            &pool_factory_address,
+            blend_factory_pool::WASM, (pool_init_meta,));
+
+        let pool_factory_client = blend_factory_pool::Client::new(env, &pool_factory_address);
+
+        // TODO? Has this been moved?
+        //backstop_client.update_tkn_val();
 
         BlendFixture {
             backstop: backstop_client,
