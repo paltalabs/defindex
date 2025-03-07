@@ -41,7 +41,7 @@ use strategies::{
 };
 use token::{internal_burn, write_metadata};
 use utils::{
-    calculate_asset_amounts_per_vault_shares, check_min_amount, check_nonnegative_amount
+    calculate_asset_amounts_per_vault_shares, check_min_amount, validate_amount, validate_assets
 };
 
 use common::{models::AssetStrategySet, utils::StringExtensions};
@@ -150,11 +150,9 @@ impl VaultTrait for DeFindexVault {
 
         set_soroswap_router(&e, &soroswap_router);
 
+        // Validate assets
+        validate_assets(&e, &assets);
         let total_assets = assets.len();
-
-        if total_assets == 0 {
-            panic_with_error!(&e, ContractError::NoAssetAllocation);
-        }
 
         set_total_assets(&e, total_assets as u32);
         for (i, asset) in assets.iter().enumerate() {
@@ -299,7 +297,7 @@ impl VaultTrait for DeFindexVault {
     /// - `ContractError::WrongAmountsLength`: If there is a mismatch in asset allocation data.
     fn withdraw(e: Env, withdraw_shares: i128, from: Address) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
-        check_nonnegative_amount(withdraw_shares)?;
+        validate_amount(withdraw_shares)?;
         from.require_auth();
 
         check_min_amount(withdraw_shares, MIN_WITHDRAW_AMOUNT)?;
@@ -706,7 +704,7 @@ impl AdminInterfaceTrait for DeFindexVault {
 
     /// Sets the emergency manager for the vault.
     ///
-    /// This function allows the current manager or emergency manager to set a new emergency manager for the vault.
+    /// This function allows the current manager to set a new emergency manager for the vault.
     ///
     /// # Arguments:
     /// * `e` - The environment.
@@ -730,6 +728,7 @@ impl AdminInterfaceTrait for DeFindexVault {
     /// # Returns:
     /// * `Result<Address, ContractError>` - The emergency manager address if successful, otherwise returns a ContractError.
     fn get_emergency_manager(e: Env) -> Result<Address, ContractError> {
+        extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         access_control.get_emergency_manager()
     }
@@ -781,7 +780,7 @@ impl AdminInterfaceTrait for DeFindexVault {
         if !storage::is_upgradable(&e) {
             return Err(ContractError::NotUpgradable);
         }
-        
+        extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         access_control.require_role(&RolesDataKey::Manager);
         
@@ -817,6 +816,7 @@ impl VaultManagementTrait for DeFindexVault {
         for instruction in instructions.iter() {
             match instruction {
                 Instruction::Unwind(strategy_address, amount) => {
+                    report::distribute_strategy_fees(&e, &strategy_address, &access_control)?;
                     let report = unwind_from_strategy(
                         &e,
                         &strategy_address,

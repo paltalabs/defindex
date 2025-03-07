@@ -312,7 +312,7 @@ fn fixed_apr_deposit_zero_amount() {
         &false,
     );
 
-    assert_eq!(result, Err(Ok(VaultContractError::InsufficientAmount)));
+    assert_eq!(result, Err(Ok(VaultContractError::AmountNotAllowed)));
 }
 
 #[test]
@@ -348,7 +348,7 @@ fn fixed_apr_deposit_negative_amount() {
         &false,
     );
 
-    assert_eq!(result, Err(Ok(VaultContractError::NegativeNotAllowed)));
+    assert_eq!(result, Err(Ok(VaultContractError::AmountNotAllowed)));
 }
 
 #[test]
