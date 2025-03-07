@@ -531,6 +531,6 @@ fn n_assets_one_strategy_blend() {
     // Simulate a user withdrawal touching all strategies
     setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&user);
-    vault_contract.withdraw(&(balance/2), &user);
+    let _ = vault_contract.try_withdraw(&(balance/2), &user);
     check_limits(&setup.env, "Withdraw");
 }
