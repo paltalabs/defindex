@@ -242,7 +242,7 @@ impl VaultTrait for DeFindexVault {
         extend_instance_ttl(&e);
         from.require_auth();
 
-        let total_managed_funds = fetch_total_managed_funds(&e, false)?;
+        let total_managed_funds = fetch_total_managed_funds(&e, true)?;
 
         let (amounts, shares_to_mint) = process_deposit(
             &e,
