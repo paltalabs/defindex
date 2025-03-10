@@ -1388,9 +1388,14 @@ fn test_dos_deposit() {
     );
     std::println!("deposit_result second balance: {:?}", deposit_result);
     assert_eq!(deposit_result.is_err(), false);
-    // User[0] should have deposit_amount shares minted
+    // User[0] should have deposit_amount_token_1 + deposit_amount_token_2 shares minted
+    // Total supply should be 2*(deposit_amount_token_1 + deposit_amount_token_2)
     let user_balance = defindex_contract.balance(&users[0]);
+    let total_supply = defindex_contract.total_supply();
+    std::println!("user_balance: {:?}", user_balance);
+    std::println!("total_supply: {:?}", total_supply);
     assert_eq!(user_balance, deposit_amount_token_1 + deposit_amount_token_2);
+    assert_eq!(total_supply, 2*(deposit_amount_token_1 + deposit_amount_token_2));
 
     // User 1 attempts to deposit 100_000_000 from each token
     let amount = 100_000_000;
