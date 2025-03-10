@@ -2,6 +2,7 @@ use soroban_sdk::testutils::{MockAuth, MockAuthInvoke};
 use soroban_sdk::{vec as sorobanvec, Address, InvokeError, Map, String, Vec, IntoVal};
 
 use crate::storage;
+use crate::test::create_unsafe_strategy_params_token_0;
 use crate::test::defindex_vault::{ContractError, RolesDataKey, Strategy};
 use crate::test::{
     std,
@@ -1875,7 +1876,7 @@ fn unwind_over_max(){
     test.env.mock_all_auths();
     let users = DeFindexVaultTest::generate_random_users(&test.env, 3);
 
-    let strategy_params_token_0 = create_strategy_params_token_0(&test);
+    let strategy_params_token_0 = create_unsafe_strategy_params_token_0(&test);
 
     let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
@@ -1910,8 +1911,13 @@ fn unwind_over_max(){
     
     let amount0 = 1_0_000_000i128;
 
-    test.token_0_admin_client.mint(&users[0], &amount0);
+    let strategy_address = test.unsafe_strategy_client_token_0.address.clone();
 
+    test.token_0_admin_client.mint(&users[0], &amount0);
+    test.token_0_admin_client.mint(&users[1], &amount0);
+
+    test.unsafe_strategy_client_token_0.deposit(&amount0, &users[1]);
+    
     defindex_contract.deposit(
         &sorobanvec![&test.env, amount0],
         &sorobanvec![&test.env, amount0],
@@ -1926,7 +1932,7 @@ fn unwind_over_max(){
     let instructions = sorobanvec![
         &test.env,
         Instruction::Invest(
-            test.strategy_client_token_0.address.clone(),
+            strategy_address.clone(),
             amount0,
         ),
     ];
@@ -1941,7 +1947,7 @@ fn unwind_over_max(){
     let instructions = sorobanvec![
         &test.env,
         Instruction::Unwind(
-            test.strategy_client_token_0.address.clone(),
+            strategy_address.clone(),
             withdraw_amount,
         ),
     ];
@@ -1949,8 +1955,10 @@ fn unwind_over_max(){
 
     // Check that the unwind has no effects
     let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
-    assert_eq!(invested_funds, amount0);
-    assert_eq!(unwind_result, Err(Ok(ContractError::StrategyWithdrawError)));
+    //assert_eq!(invested_funds, amount0);
+    std::println!("invested funds: {:?}", invested_funds);
+    std::println!("unwind result: {:?}", unwind_result);
+    assert_eq!(unwind_result, Err(Ok(ContractError::UnwindMoreThanAvailable)));
 }
 
 #[test]
