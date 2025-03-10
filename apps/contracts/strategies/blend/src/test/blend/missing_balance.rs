@@ -1,11 +1,9 @@
 #![cfg(test)]
 use crate::blend_pool::{BlendPoolClient, Request};
-// use crate::constants::MIN_DUST;
-use crate::storage::DAY_IN_LEDGERS;
+use crate::storage::ONE_DAY_IN_LEDGERS;
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
 use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils};
 use crate::BlendStrategyClient;
-// use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{vec, Address, Env};
@@ -57,6 +55,36 @@ fn missing_balance() {
     // emits to each reserve token evently, and starts emissions
     let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
     let pool_client = BlendPoolClient::new(&e, &pool);
+
+    // Setup pool util rate
+    // admins deposits 200k tokens and borrows 100k tokens for a 50% util rate
+    let requests = vec![
+        &e,
+        Request {
+            address: usdc.address().clone(),
+            amount: 200_000_0000000,
+            request_type: 2,
+        },
+        Request {
+            address: usdc.address().clone(),
+            amount: 100_000_0000000,
+            request_type: 4,
+        },
+        Request {
+            address: xlm.address().clone(),
+            amount: 200_000_0000000,
+            request_type: 2,
+        },
+        Request {
+            address: xlm.address().clone(),
+            amount: 100_000_0000000,
+            request_type: 4,
+        },
+    ];
+    pool_client
+        .mock_all_auths()
+        .submit(&admin, &admin, &admin, &requests);
+        
     let strategy = create_blend_strategy(
         &e,
         &usdc.address(),
@@ -159,7 +187,7 @@ fn missing_balance() {
     /*
      * Allow 1 week to pass
      */
-    e.jump(DAY_IN_LEDGERS * 7);
+    e.jump(ONE_DAY_IN_LEDGERS * 7);
 
     /*
      * Withdraw from pool
