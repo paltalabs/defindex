@@ -387,7 +387,7 @@ fn insufficient_balance() {
     .try_rebalance(&test.rebalance_manager, &withdraw_no_funds_instructions);
     assert_eq!(
         withdraw_no_funds,
-        Err(Ok(ContractError::StrategyWithdrawError))
+        Err(Ok(ContractError::UnwindMoreThanAvailable))
     ); //Contract should respond 'Insuficient balance'?
 
     let invest_no_funds_instructions = sorobanvec![
@@ -447,7 +447,7 @@ fn insufficient_balance() {
         },
     }])
     .try_rebalance(&test.rebalance_manager, &withdraw_instructions);
-    assert_eq!(rebalance, Err(Ok(ContractError::StrategyWithdrawError)));
+    assert_eq!(rebalance, Err(Ok(ContractError::UnwindMoreThanAvailable)));
 
     let invest_instructions = sorobanvec![
         &test.env,
@@ -1612,6 +1612,8 @@ fn unwind_wrong_address(){
     let amount0 = 123456789i128;
 
     test.token_0_admin_client.mint(&users[0], &amount0);
+    test.token_0_admin_client.mint(&users[1], &amount0);
+    test.token_0_admin_client.mint(&test.unsafe_strategy_client_token_0.address, &amount0);
 
     defindex_contract.deposit(
         &sorobanvec![&test.env, amount0],
@@ -1661,11 +1663,11 @@ fn unwind_wrong_address(){
     assert_eq!(assets, expected_assets);
 
     // Rebalance from here on
-    let amount_to_unwind = 1_000_000i128;
+    let amount_to_unwind = 1i128;
     let instructions = sorobanvec![
         &test.env,
         Instruction::Unwind(
-            users[0].clone(),
+            test.unsafe_strategy_client_token_0.address.clone(),
             amount_to_unwind,
         ),
     ];
@@ -1674,7 +1676,7 @@ fn unwind_wrong_address(){
     // Check if invested funds are 0
     let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
     assert_eq!(invested_funds, amount_to_invest);
-    assert_eq!(unwind_result, Err(Ok(ContractError::StrategyWithdrawError)));
+    assert_eq!(unwind_result, Err(Ok(ContractError::UnwindMoreThanAvailable)));
 }
 
 #[test]
@@ -1915,6 +1917,7 @@ fn unwind_over_max(){
 
     test.token_0_admin_client.mint(&users[0], &amount0);
     test.token_0_admin_client.mint(&users[1], &amount0);
+    test.token_0_admin_client.mint(&test.unsafe_strategy_client_token_0.address, &amount0);
 
     test.unsafe_strategy_client_token_0.deposit(&amount0, &users[1]);
     
@@ -1925,7 +1928,7 @@ fn unwind_over_max(){
         &false,
     );
 
-    // Check if invested funds are 0
+    // Check if invested funds are amount0
     let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
     assert_eq!(invested_funds, 0i128);
 
