@@ -433,7 +433,6 @@ impl VaultTrait for DeFindexVault {
             report.reset();
             set_report(&e, &strategy_address, &report);
         }
-        report::distribute_strategy_fees(&e, &strategy_address, &access_control)?;
 
         // Pause the strategy
         pause_strategy(&e, strategy_address.clone())?;
