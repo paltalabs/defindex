@@ -254,7 +254,9 @@ pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError>
 
     let deadline = e
         .ledger()
-        .timestamp();
+        .timestamp()
+        .checked_add(1)
+        .ok_or( StrategyError::UnderflowOverflow)?;
 
     // Swapping BLND tokens to Underlying Asset
     let swapped_amounts = internal_swap_exact_tokens_for_tokens(
