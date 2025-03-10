@@ -104,7 +104,7 @@ pub fn deposit(
         panic_with_error!(e, StrategyError::BTokensAmountBelowMin);
     }
 
-    let _ = reserves.update_rate(underlying_amount, b_tokens_amount);
+    reserves.update_rate(underlying_amount, b_tokens_amount)?;
 
     let old_vault_shares = storage::get_vault_shares(&e, &from);
     let new_minted_shares: i128 = reserves.b_tokens_to_shares_down(b_tokens_amount)?;

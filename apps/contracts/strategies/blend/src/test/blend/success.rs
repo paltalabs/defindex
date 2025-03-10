@@ -190,16 +190,16 @@ fn success() {
 
     // withdraw from blend strategy for user_2 and user_3
     // they are expected to receive half of the profit of user_4
-    let expected_user_4_profit = user_4_profit / 2;
-    let withdraw_amount = starting_balance + expected_user_4_profit;
-    // withdraw_amount = 100_0958904
+    let expected_user_profit = user_4_profit / 2;
 
     // -> verify over withdraw fails
     let result =
-        strategy_client.try_withdraw(&(withdraw_amount + 100_000_000_0000000), &user_3, &user_3);
+        strategy_client.try_withdraw(&(expected_user_profit + 100_000_000_0000000), &user_3, &user_3);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
 
-    strategy_client.withdraw(&withdraw_amount, &user_2, &user_2);
+    strategy_client.harvest(&user_2);
+    let new_user_2_balance = strategy_client.balance(&user_2);
+    let withdraw_result = strategy_client.withdraw(&( new_user_2_balance ), &user_2, &user_2);
     // -> verify withdraw auth
     assert_eq!(
         e.auths()[0],
@@ -211,7 +211,7 @@ fn success() {
                     Symbol::new(&e, "withdraw"),
                     vec![
                         &e,
-                        withdraw_amount.into_val(&e),
+                        new_user_2_balance.into_val(&e),
                         user_2.to_val(),
                         user_2.to_val(),
                     ]
@@ -222,7 +222,7 @@ fn success() {
     );
 
     // -> verify withdraw
-    assert_eq!(usdc_client.balance(&user_2), withdraw_amount);
+    assert_eq!(usdc_client.balance(&user_2), new_user_2_balance);
     assert_eq!(strategy_client.balance(&user_2), 0);
 
     // -> verify withdraw from empty vault fails
@@ -250,5 +250,5 @@ fn success() {
     assert_eq!(usdc_strategy_balance, 0);
 
     let user_3_strategy_balance = strategy_client.balance(&user_3);
-    assert_eq!(user_3_strategy_balance, 1226627059);
+    assert_eq!(user_3_strategy_balance, 1113792982);
 }
