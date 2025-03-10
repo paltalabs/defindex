@@ -281,10 +281,8 @@ impl FactoryTrait for DeFindexFactory {
         put_defindex_receiver(&e, &defindex_receiver);
         put_vault_wasm_hash(&e, vault_wasm_hash);
         extend_instance_ttl(&e);
-        match put_defindex_fee(&e, &defindex_fee) {
-            Ok(_) => Ok(()),
-            Err(err) => return Err(err),
-        }
+        put_defindex_fee(&e, &defindex_fee)?;
+        Ok(())
     }
 
     /// Creates a new DeFindex Vault with the specified parameters.
@@ -426,10 +424,7 @@ impl FactoryTrait for DeFindexFactory {
         let admin = get_admin(&e)?;
         admin.require_auth();
 
-        match put_defindex_fee(&e, &defindex_fee) {
-            Ok(_) => events::emit_new_defindex_fee(&e, defindex_fee),
-            Err(err) => return Err(err),
-        }
+        put_defindex_fee(&e, &defindex_fee)?;
         Ok(())
     }
 

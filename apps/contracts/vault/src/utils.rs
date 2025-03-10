@@ -1,4 +1,5 @@
-use soroban_sdk::{panic_with_error, Env, Vec};
+use common::models::{AssetStrategySet, Strategy};
+use soroban_sdk::{panic_with_error, Env, Map, Vec};
 
 use crate::{
     //access::{AccessControl, AccessControlTrait, RolesDataKey},
@@ -8,9 +9,9 @@ use crate::{
 };
 
 
-pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
-    if amount < 0 {
-        Err(ContractError::NegativeNotAllowed)
+pub fn validate_amount(amount: i128) -> Result<(), ContractError> {
+    if amount <= 0 {
+        Err(ContractError::AmountNotAllowed)
     } else {
         Ok(())
     }
@@ -21,6 +22,40 @@ pub fn check_min_amount(amount: i128, min_amount: i128) -> Result<(), ContractEr
         Err(ContractError::InsufficientAmount)
     } else {
         Ok(())
+    }
+}
+
+fn divide_rounding_up(a: i128, b: i128) -> Result<i128, ContractError> {
+    let result = a.checked_div(b).ok_or(ContractError::ArithmeticError)?;
+    if a % b != 0 {
+        Ok(result.checked_add(1).ok_or(ContractError::ArithmeticError)?)
+    } else {
+        Ok(result)
+    }
+}
+
+pub fn validate_assets( e: &Env, assets: &Vec<AssetStrategySet>){
+    if assets.len() == 0 || assets.is_empty(){
+        panic_with_error!(&e, ContractError::NoAssetAllocation);
+    }
+    let mut asset_addresses = Map::new(&e);
+
+    for (_, asset) in assets.iter().enumerate(){
+        if asset_addresses.contains_key(asset.address.clone()){
+            panic_with_error!(&e, ContractError::DuplicatedAsset);
+        }
+        asset_addresses.set(asset.address.clone(), true);
+        validate_strategies(e, &asset.strategies);
+    }
+}
+
+pub fn validate_strategies(e: &Env, strategies: &Vec<Strategy>){
+    let mut strategy_addresses = Map::new(&e);
+    for strategy in strategies.iter() {
+        if strategy_addresses.contains_key(strategy.address.clone()){
+            panic_with_error!(&e, ContractError::DuplicatedStrategy);
+        }
+        strategy_addresses.set(strategy.address.clone(), true);
     }
 }
 
@@ -169,11 +204,15 @@ pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
         } else {
             // Calculate the proportional allocation for non-enforced assets
             let reserve = asset_allocation.total_amount;
-            let amount = reserve
-                .checked_mul(amount_desired_target)
-                .unwrap_or_else(|| panic_with_error!(e, ContractError::ArithmeticError))
-                .checked_div(reserve_target)
-                .unwrap_or_else(|| panic_with_error!(e, ContractError::ArithmeticError));
+            let amount = match divide_rounding_up(
+                reserve
+                    .checked_mul(amount_desired_target)
+                    .unwrap_or_else(|| panic_with_error!(e, ContractError::ArithmeticError)),
+                reserve_target
+            ){
+                Ok(amount) => amount,
+                Err(_) => panic_with_error!(e, ContractError::ArithmeticError)
+            };
             optimal_amounts.push_back(amount);
         }
     }
