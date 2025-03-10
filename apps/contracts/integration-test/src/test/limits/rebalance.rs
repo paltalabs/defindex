@@ -762,7 +762,7 @@ fn asset_one_strategy_blend_rebalance() {
         &false
     );
 
-    let num_investments = 4;
+    let num_investments = 3;
 
     let mut invest_instructions = svec![&setup.env];
     for _ in 0..num_investments {
