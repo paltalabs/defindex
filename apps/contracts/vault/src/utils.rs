@@ -17,7 +17,7 @@ pub fn bump_instance(e: &Env) {
 }
 
 pub fn validate_amount(amount: i128) -> Result<(), ContractError> {
-    if amount <= 0 {
+    if amount < 0 {
         Err(ContractError::AmountNotAllowed)
     } else {
         Ok(())
@@ -194,9 +194,9 @@ pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
         .total_amount;
 
     // If reserve target is zero, we cannot calculate the optimal amounts
-    if reserve_target == 0 {
-        panic_with_error!(e, ContractError::InsufficientManagedFunds);
-    }
+    // if reserve_target == 0 {
+    //     panic_with_error!(e, ContractError::InsufficientManagedFunds);
+    // }
 
     let amount_desired_target = amounts_desired
         .get(enforced_asset_index)
@@ -242,6 +242,9 @@ pub fn calculate_deposit_amounts_and_shares_to_mint(
 ) -> Result<(Vec<i128>, i128), ContractError> {
     for i in 0..total_managed_funds.len() {
         // Calculate the optimal amounts and shares to mint for the enforced asset
+        if total_managed_funds.get(i).unwrap().total_amount == 0 {
+            continue;
+        }
         let (optimal_amounts, shares_to_mint) =
             calculate_optimal_amounts_and_shares_with_enforced_asset(
                 e,

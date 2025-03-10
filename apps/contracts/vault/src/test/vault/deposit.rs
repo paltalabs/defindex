@@ -4,10 +4,11 @@ use crate::test::defindex_vault::{
     AssetStrategySet, ContractError, CurrentAssetInvestmentAllocation, RolesDataKey, StrategyAllocation
 };
 use crate::test::{
-    create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1,
+    create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1, create_strategy_params,
     DeFindexVaultTest,
 };
 use crate::MINIMUM_LIQUIDITY;
+extern crate std;
 
 #[test]
 fn amounts_desired_less_length() {
@@ -1292,19 +1293,25 @@ fn insufficient_funds_with_error_message() {
 fn test_dos_deposit() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
+
     let strategy_params_token_0 = create_strategy_params_token_0(&test);
     let strategy_params_token_1 = create_strategy_params_token_1(&test);
+    let strategy_params_token_2 = create_strategy_params(&test, test.strategy_client_token_2.address.clone());
 
     // initialize with 2 assets
     let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetStrategySet {
+        AssetStrategySet {  
             address: test.token_0.address.clone(),
             strategies: strategy_params_token_0.clone()
         },
         AssetStrategySet {
             address: test.token_1.address.clone(),
             strategies: strategy_params_token_1.clone()
+        },
+        AssetStrategySet {
+            address: test.token_2.address.clone(),
+            strategies: strategy_params_token_2.clone()
         }
     ];
 
@@ -1347,23 +1354,43 @@ fn test_dos_deposit() {
     );
 
     // Deposit more than min liquidity
-    let deposit_amount = MINIMUM_LIQUIDITY + 1;
-
+    let deposit_amount_token_1 = MINIMUM_LIQUIDITY + 1;
+    let deposit_amount_token_2 = 2*deposit_amount_token_1;
     let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
 
-    // Balances before deposit
-    test.token_1_admin_client.mint(&users[0], &deposit_amount);
-
-    // The "attacker" deposits 0 token_0 and 1001 token1.
-    // Due to the 0 amount, any subsequent deposits will fail.
+    test.token_1_admin_client.mint(&users[0], &deposit_amount_token_1);
+    test.token_2_admin_client.mint(&users[0], &deposit_amount_token_2);
+    // One should be allowed to deposit 0 amount for the any token
     let deposit_result = defindex_contract.try_deposit(
-        &sorobanvec![&test.env, 0, deposit_amount],
-        &sorobanvec![&test.env, 0, 0],
+        &sorobanvec![&test.env, 0, deposit_amount_token_1, deposit_amount_token_2],
+        &sorobanvec![&test.env, 0, 0, 0],
         &users[0],
         &false,
     );
-    
-    assert_eq!(deposit_result, Err(Ok(ContractError::AmountNotAllowed)));
+    std::println!("deposit_result: {:?}", deposit_result);
+    // user[0] should have deposit_amount*2 - MINIMUM_LIQUIDITY shares minted
+    // Total supply should be deposit_amount*2
+    assert_eq!(deposit_result.is_err(), false);
+    let total_supply = defindex_contract.total_supply();
+    let user_balance = defindex_contract.balance(&users[0]);
+    assert_eq!(user_balance, deposit_amount_token_1 + deposit_amount_token_2 - MINIMUM_LIQUIDITY);
+    assert_eq!(total_supply, deposit_amount_token_1 + deposit_amount_token_2);
+
+
+    // one should be allowed to deposit 0 amount for the any token and the other token with a positive amount
+    test.token_1_admin_client.mint(&users[1], &deposit_amount_token_1);
+    test.token_2_admin_client.mint(&users[1], &deposit_amount_token_2);
+    let deposit_result = defindex_contract.try_deposit(
+        &sorobanvec![&test.env, 0, deposit_amount_token_1, deposit_amount_token_2],
+        &sorobanvec![&test.env, 0, 0, 0],
+        &users[1],
+        &false,
+    );
+    std::println!("deposit_result second balance: {:?}", deposit_result);
+    assert_eq!(deposit_result.is_err(), false);
+    // User[0] should have deposit_amount shares minted
+    let user_balance = defindex_contract.balance(&users[0]);
+    assert_eq!(user_balance, deposit_amount_token_1 + deposit_amount_token_2);
 
     // User 1 attempts to deposit 100_000_000 from each token
     let amount = 100_000_000;
