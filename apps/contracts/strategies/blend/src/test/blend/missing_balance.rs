@@ -55,6 +55,36 @@ fn missing_balance() {
     // emits to each reserve token evently, and starts emissions
     let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
     let pool_client = BlendPoolClient::new(&e, &pool);
+
+    // Setup pool util rate
+    // admins deposits 200k tokens and borrows 100k tokens for a 50% util rate
+    let requests = vec![
+        &e,
+        Request {
+            address: usdc.address().clone(),
+            amount: 200_000_0000000,
+            request_type: 2,
+        },
+        Request {
+            address: usdc.address().clone(),
+            amount: 100_000_0000000,
+            request_type: 4,
+        },
+        Request {
+            address: xlm.address().clone(),
+            amount: 200_000_0000000,
+            request_type: 2,
+        },
+        Request {
+            address: xlm.address().clone(),
+            amount: 100_000_0000000,
+            request_type: 4,
+        },
+    ];
+    pool_client
+        .mock_all_auths()
+        .submit(&admin, &admin, &admin, &requests);
+        
     let strategy = create_blend_strategy(
         &e,
         &usdc.address(),
@@ -133,119 +163,119 @@ fn missing_balance() {
     // admin borrow back to 50% util rate
     println!("--- ADMIN Borrowing from Blend ---");
     let borrow_amount = (user_4_starting_balance + starting_balance * 2) / 2;
-    // pool_client.submit(
-    //     &admin,
-    //     &admin,
-    //     &admin,
-    //     &vec![
-    //         &e,
-    //         Request {
-    //             request_type: 4,
-    //             address: usdc.address().clone(),
-    //             amount: borrow_amount,
-    //         },
-    //     ],
-    // );
+    pool_client.submit(
+        &admin,
+        &admin,
+        &admin,
+        &vec![
+            &e,
+            Request {
+                request_type: 4,
+                address: usdc.address().clone(),
+                amount: borrow_amount,
+            },
+        ],
+    );
 
-    // println!("admin borrows {}", borrow_amount);
+    println!("admin borrows {}", borrow_amount);
 
-    // assert_eq!(
-    //     usdc_client.balance(&pool),
-    //     starting_balance * 2 + pool_usdc_balace_start + user_4_starting_balance - borrow_amount
-    // );
+    assert_eq!(
+        usdc_client.balance(&pool),
+        starting_balance * 2 + pool_usdc_balace_start + user_4_starting_balance - borrow_amount
+    );
 
-    // /*
-    //  * Allow 1 week to pass
-    //  */
-    // e.jump(ONE_DAY_IN_LEDGERS * 7);
+    /*
+     * Allow 1 week to pass
+     */
+    e.jump(ONE_DAY_IN_LEDGERS * 7);
 
-    // /*
-    //  * Withdraw from pool
-    //  * -> withdraw all funds from pool for user_4
-    //  * -> withdraw (excluding dust) from blend strategy for user_2 and user_3
-    //  * -> verify a withdraw from an uninitialized vault fails
-    //  * -> verify a withdraw from an empty vault fails
-    //  * -> verify an over withdraw fails
-    //  */
+    /*
+     * Withdraw from pool
+     * -> withdraw all funds from pool for user_4
+     * -> withdraw (excluding dust) from blend strategy for user_2 and user_3
+     * -> verify a withdraw from an uninitialized vault fails
+     * -> verify a withdraw from an empty vault fails
+     * -> verify an over withdraw fails
+     */
 
-    // // withdraw all funds from pool for user_4
-    // println!("USER 4 Withdraws from Blend Pool: 200_1_917_808");
-    // pool_client.submit(
-    //     &user_4,
-    //     &user_4,
-    //     &user_4,
-    //     &vec![
-    //         &e,
-    //         Request {
-    //             request_type: 1,
-    //             address: usdc.address().clone(),
-    //             amount: user_4_starting_balance * 2,
-    //         },
-    //     ],
-    // );
-    // let user_4_final_balance = usdc_client.balance(&user_4);
-    // let user_4_profit = user_4_final_balance - user_4_starting_balance; //1_917_808
-    // println!("USER 4 Profit: {}", user_4_profit);
+    // withdraw all funds from pool for user_4
+    println!("USER 4 Withdraws from Blend Pool: 200_1_917_808");
+    pool_client.submit(
+        &user_4,
+        &user_4,
+        &user_4,
+        &vec![
+            &e,
+            Request {
+                request_type: 1,
+                address: usdc.address().clone(),
+                amount: user_4_starting_balance * 2,
+            },
+        ],
+    );
+    let user_4_final_balance = usdc_client.balance(&user_4);
+    let user_4_profit = user_4_final_balance - user_4_starting_balance; //1_917_808
+    println!("USER 4 Profit: {}", user_4_profit);
 
-    // // withdraw from blend strategy for user_2 and user_3
-    // // they are expected to receive half of the profit of user_4
-    // let expected_user_2_profit = user_4_profit / 2;
-    // let withdraw_amount = starting_balance + expected_user_2_profit;
-    // println!("Withdraw Amount USER 2 and USER 3: {}", withdraw_amount);
-    // // withdraw_amount = 100_0958904
+    // withdraw from blend strategy for user_2 and user_3
+    // they are expected to receive half of the profit of user_4
+    let expected_user_2_profit = user_4_profit / 2;
+    let withdraw_amount = starting_balance + expected_user_2_profit;
+    println!("Withdraw Amount USER 2 and USER 3: {}", withdraw_amount);
+    // withdraw_amount = 100_0958904
 
-    // println!("Withdrawing USER 2: 1000958904");
-    // strategy_client.withdraw(&withdraw_amount, &user_2, &user_2);
+    println!("Withdrawing USER 2: 1000958904");
+    strategy_client.withdraw(&withdraw_amount, &user_2, &user_2);
 
-    // // -> verify withdraw
-    // assert_eq!(usdc_client.balance(&user_2), withdraw_amount);
-    // assert_eq!(strategy_client.balance(&user_2), 0);
+    // -> verify withdraw
+    assert_eq!(usdc_client.balance(&user_2), withdraw_amount);
+    assert_eq!(strategy_client.balance(&user_2), 0);
 
-    // // harvest
-    // let blnd_strategy_balance = blnd_client.balance(&strategy);
-    // assert_eq!(blnd_strategy_balance, 0);
+    // harvest
+    let blnd_strategy_balance = blnd_client.balance(&strategy);
+    assert_eq!(blnd_strategy_balance, 0);
 
-    // println!("--- Harvesting ---");
-    // strategy_client.harvest(&user_3);
+    println!("--- Harvesting ---");
+    strategy_client.harvest(&user_3);
 
-    // // After harvest the swapped blend is 22_5_668_156
-    // // Before harvest the USER 3 balance is 100_0_958_904
-    // // After harvest the USER 3 balance is 122_6_627_059
+    // After harvest the swapped blend is 22_5_668_156
+    // Before harvest the USER 3 balance is 100_0_958_904
+    // After harvest the USER 3 balance is 122_6_627_059
 
-    // let blnd_strategy_balance = blnd_client.balance(&strategy);
-    // assert_eq!(blnd_strategy_balance, 0);
+    let blnd_strategy_balance = blnd_client.balance(&strategy);
+    assert_eq!(blnd_strategy_balance, 0);
 
-    // let usdc_strategy_balance = usdc_client.balance(&strategy);
-    // assert_eq!(usdc_strategy_balance, 0);
+    let usdc_strategy_balance = usdc_client.balance(&strategy);
+    assert_eq!(usdc_strategy_balance, 0);
 
-    // let user_3_strategy_balance = strategy_client.balance(&user_3);
-    // assert_eq!(user_3_strategy_balance, 1226627059);
+    let user_3_strategy_balance = strategy_client.balance(&user_3);
+    assert_eq!(user_3_strategy_balance, 1226627059);
 
-    // println!("-----------------------------------------------");
-    // println!("--- Simulating Distributing fees ---");
-    // println!("-----------------------------------------------");
-    // let fee_amount = 20000i128;
-    // println!(
-    //     "It sends {} USDC from the USER 3 aka the vault to the fee receiver",
-    //     fee_amount
-    // );
-    // let user_3_balance_prev_sim = strategy_client.balance(&user_3);
-    // println!(
-    //     "USER 3 strategy balance previous simulation {}",
-    //     user_3_balance_prev_sim
-    // );
-    // let fee_receiver = Address::generate(&e);
-    // strategy_client.withdraw(&fee_amount, &user_3, &fee_receiver);
+    println!("-----------------------------------------------");
+    println!("--- Simulating Distributing fees ---");
+    println!("-----------------------------------------------");
+    let fee_amount = 20000i128;
+    println!(
+        "It sends {} USDC from the USER 3 aka the vault to the fee receiver",
+        fee_amount
+    );
+    let user_3_balance_prev_sim = strategy_client.balance(&user_3);
+    println!(
+        "USER 3 strategy balance previous simulation {}",
+        user_3_balance_prev_sim
+    );
+    let fee_receiver = Address::generate(&e);
+    strategy_client.withdraw(&fee_amount, &user_3, &fee_receiver);
 
-    // let user_3_balance_after_sim = strategy_client.balance(&user_3);
-    // assert_eq!(
-    //     (user_3_balance_prev_sim - fee_amount),
-    //     user_3_balance_after_sim
-    // );
+    let user_3_balance_after_sim = strategy_client.balance(&user_3);
+    assert_eq!(
+        (user_3_balance_prev_sim - fee_amount),
+        user_3_balance_after_sim
+    );
 
-    // println!(
-    //     "USER 3 strategy balance after sim {}",
-    //     user_3_balance_after_sim
-    // );
-    // strategy_client.withdraw(&(user_3_balance_after_sim * 2), &user_3, &user_3);
+    println!(
+        "USER 3 strategy balance after sim {}",
+        user_3_balance_after_sim
+    );
+    strategy_client.withdraw(&(user_3_balance_after_sim * 2), &user_3, &user_3);
 }

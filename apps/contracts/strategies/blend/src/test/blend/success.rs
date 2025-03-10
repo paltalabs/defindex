@@ -53,6 +53,36 @@ fn success() {
     // emits to each reserve token evently, and starts emissions
     let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
     let pool_client = BlendPoolClient::new(&e, &pool);
+    
+    // Setup pool util rate
+    // admins deposits 200k tokens and borrows 100k tokens for a 50% util rate
+    let requests = vec![
+        &e,
+        Request {
+            address: usdc.address().clone(),
+            amount: 200_000_0000000,
+            request_type: 2,
+        },
+        Request {
+            address: usdc.address().clone(),
+            amount: 100_000_0000000,
+            request_type: 4,
+        },
+        Request {
+            address: xlm.address().clone(),
+            amount: 200_000_0000000,
+            request_type: 2,
+        },
+        Request {
+            address: xlm.address().clone(),
+            amount: 100_000_0000000,
+            request_type: 4,
+        },
+    ];
+    pool_client
+        .mock_all_auths()
+        .submit(&admin, &admin, &admin, &requests);
+
     let strategy = create_blend_strategy(
         &e,
         &usdc.address(),
@@ -62,6 +92,8 @@ fn success() {
         &soroswap_router.address,
     );
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
+
+    
 
     /*
      * Deposit into pool
@@ -112,7 +144,6 @@ fn success() {
     let deposit_result_1 = strategy_client.deposit(&starting_balance, &user_3);
     assert_eq!(deposit_result_1, starting_balance);
 
-    // verify deposit (pool b_rate still 1 as no time has passed)
     assert_eq!(usdc_client.balance(&user_2), 0);
     assert_eq!(usdc_client.balance(&user_3), 0);
     assert_eq!(strategy_client.balance(&user_2), starting_balance);
@@ -123,6 +154,9 @@ fn success() {
     );
     let vault_positions = pool_client.get_positions(&strategy);
     assert_eq!(vault_positions.supply.get(0).unwrap(), starting_balance * 2);
+    
+    // verify deposit (pool b_rate still 1 as no time has passed)
+    assert_eq!(pool_client.get_reserve(&usdc.address().clone()).data.b_rate, 1000000000000);
 
     // user_4 deposit directly into pool
     let user_4_starting_balance = 200_0000000;
