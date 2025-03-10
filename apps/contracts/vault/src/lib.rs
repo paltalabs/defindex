@@ -433,6 +433,7 @@ impl VaultTrait for DeFindexVault {
             report.reset();
             set_report(&e, &strategy_address, &report);
         }
+        report::distribute_strategy_fees(&e, &strategy_address, &access_control)?;
 
         // Pause the strategy
         pause_strategy(&e, strategy_address.clone())?;
@@ -816,14 +817,14 @@ impl VaultManagementTrait for DeFindexVault {
         for instruction in instructions.iter() {
             match instruction {
                 Instruction::Unwind(strategy_address, amount) => {
-                    report::distribute_strategy_fees(&e, &strategy_address, &access_control)?;
                     let report = unwind_from_strategy(
                         &e,
                         &strategy_address,
                         &amount,
                         &e.current_contract_address(),
                     )?;
-                    let call_params = vec![&e, (strategy_address, amount, e.current_contract_address())];
+                    let call_params = vec![&e, (strategy_address.clone(), amount, e.current_contract_address())];
+                    report::distribute_strategy_fees(&e, &strategy_address, &access_control)?;
                     events::emit_rebalance_unwind_event(&e, call_params, report);
                 }
                 Instruction::Invest(strategy_address, amount) => {
@@ -844,6 +845,7 @@ impl VaultManagementTrait for DeFindexVault {
                             paused: strategy.paused
                         })],
                     };
+                    report::distribute_strategy_fees(&e, &strategy_address, &access_control)?;
                     events::emit_rebalance_invest_event(&e, vec![&e, call_params], report);
                 }
                 Instruction::SwapExactIn(
