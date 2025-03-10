@@ -5,7 +5,7 @@ pub const ONE_DAY_IN_SECONDS: u64 = 86_400;
 pub const REWARD_THRESHOLD: i128 = 40_0000000;
 
 use crate::{
-    blend_pool::{self, BlendPoolClient, Request},
+    blend_pool::{self, BlendPoolClient},
     storage::ONE_DAY_IN_LEDGERS,
     BlendStrategy,
 };
@@ -17,7 +17,7 @@ use soroban_sdk::{
 };
 
 use blend_contract_sdk::pool::{
-    Client as PoolClient, ReserveConfig, ReserveEmissionMetadata,
+    Client as PoolClient, ReserveConfig, ReserveEmissionMetadata, Request,
 }; 
 use blend_contract_sdk::testutils::BlendFixture;
 
@@ -152,6 +152,36 @@ pub(crate) fn create_blend_pool(
     // wait a week and start emissions
     e.jump(ONE_DAY_IN_LEDGERS * 7);
     blend_fixture.emitter.distribute();
+
+    // Setup pool util rate
+    // admins deposits 200k tokens and borrows 100k tokens for a 50% util rate
+    let requests = vec![
+        e,
+        Request {
+            address: usdc.address.clone(),
+            amount: 200_000_0000000,
+            request_type: 2,
+        },
+        Request {
+            address: usdc.address.clone(),
+            amount: 100_000_0000000,
+            request_type: 4,
+        },
+        Request {
+            address: xlm.address.clone(),
+            amount: 200_000_0000000,
+            request_type: 2,
+        },
+        Request {
+            address: xlm.address.clone(),
+            amount: 100_000_0000000,
+            request_type: 4,
+        },
+    ];
+    pool_client
+        .mock_all_auths()
+        .submit(&admin, &admin, &admin, &requests);
+
     return pool;
 }
 
