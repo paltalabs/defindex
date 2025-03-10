@@ -1,7 +1,7 @@
 #![cfg(test)]
 use crate::blend_pool::{BlendPoolClient, Request};
 use crate::constants::MIN_DUST;
-use crate::storage::DAY_IN_LEDGERS;
+use crate::storage::ONE_DAY_IN_LEDGERS;
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
 use crate::test::std;
 use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils};
@@ -44,7 +44,7 @@ fn success() {
         &amount_a,
         &amount_b,
     );
-    // End of setting up soroswap pool
+    // End of setting up soroswap pool 
 
     let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
 
@@ -160,7 +160,7 @@ fn success() {
     /*
      * Allow 1 week to pass
      */
-    e.jump(DAY_IN_LEDGERS * 7);
+    e.jump(ONE_DAY_IN_LEDGERS * 7);
 
     /*
      * Withdraw from pool

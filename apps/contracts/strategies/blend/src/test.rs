@@ -5,8 +5,8 @@ pub const ONE_DAY_IN_SECONDS: u64 = 86_400;
 pub const REWARD_THRESHOLD: i128 = 40_0000000;
 
 use crate::{
-    blend_pool::{self, BlendPoolClient, Request, ReserveConfig, ReserveEmissionMetadata},
-    storage::DAY_IN_LEDGERS,
+    blend_pool::{self, BlendPoolClient, Request},
+    storage::ONE_DAY_IN_LEDGERS,
     BlendStrategy,
 };
 use sep_41_token::testutils::MockTokenClient;
@@ -15,6 +15,11 @@ use soroban_sdk::{
     token::StellarAssetClient,
     vec, Address, BytesN, Env, IntoVal, String, Symbol, Val, Vec,
 };
+
+use blend_contract_sdk::pool::{
+    Client as PoolClient, ReserveConfig, ReserveEmissionMetadata,
+}; 
+use blend_contract_sdk::testutils::BlendFixture;
 
 
 mod blend_factory_pool {
@@ -57,12 +62,6 @@ pub(crate) fn register_blend_strategy(
     e.register(BlendStrategy, args)
 }
 
-pub struct BlendFixture<'a> {
-    pub backstop: blend_backstop::Client<'a>,
-    pub emitter: blend_emitter::Client<'a>,
-    pub _backstop_token: blend_comet::Client<'a>,
-    pub pool_factory: blend_factory_pool::Client<'a>,
-}
 
 pub(crate) fn create_blend_pool(
     e: &Env,
@@ -72,7 +71,7 @@ pub(crate) fn create_blend_pool(
     xlm: &MockTokenClient,
 ) -> Address {
     // Mint usdc to admin
-    usdc.mint(admin, &200_000_0000000);
+    usdc.mint(&admin, &200_000_0000000);
     // Mint xlm to admin
     xlm.mint(&admin, &200_000_0000000);
 
@@ -91,44 +90,31 @@ pub(crate) fn create_blend_pool(
     );
     oracle_client.set_price_stable(&vec![e, 1_000_0000, 100_0000]);
     let salt = BytesN::<32>::random(&e);
-
-    // fn deploy(
-    //     e: Env, 
-    //     admin: Address,
-    //     name: String,
-    //     salt: BytesN<32>,
-    //     oracle: Address,
-    //     backstop_take_rate: u32,
-    //     max_positions: u32,
-    //     min_collateral: i128,
-    // ) -> Address;
-    
     let pool = blend_fixture.pool_factory.deploy(
-        &admin, 
+        &admin,
         &String::from_str(e, "TEST"),
         &salt,
         &oracle,
         &0,
         &4,
-        &0,
+        &1_0000000
     );
-
-    let pool_client = BlendPoolClient::new(e, &pool);
+    let pool_client = PoolClient::new(e, &pool);
     blend_fixture
         .backstop
         .deposit(&admin, &pool, &20_0000_0000000);
     let reserve_config = ReserveConfig {
-        decimals: 7,
         c_factor: 900_0000,
+        decimals: 7,
+        index: 0,
         l_factor: 900_0000,
-        util: 0,
         max_util: 900_0000,
+        reactivity: 0,
         r_base: 100_0000,
         r_one: 0,
         r_two: 0,
         r_three: 0,
-        reactivity: 0,
-        index: 0,
+        util: 0,
         collateral_cap: 170_141_183_460_469_231_731_687_303_715_884_105_727,
         enabled: true,
     };
@@ -161,42 +147,11 @@ pub(crate) fn create_blend_pool(
     ];
     pool_client.set_emissions_config(&emission_config);
     pool_client.set_status(&0);
-    blend_fixture.backstop.add_reward(&pool.clone(), &Some(pool.clone()));
+    blend_fixture.backstop.add_reward(&pool, &None);
 
-    // wait a week and start emissions 
-    e.jump(DAY_IN_LEDGERS * 7);
+    // wait a week and start emissions
+    e.jump(ONE_DAY_IN_LEDGERS * 7);
     blend_fixture.emitter.distribute();
-    blend_fixture.backstop.distribute();
-    blend_fixture.backstop.gulp_emissions(&pool);
-    // pool_client.gulp_emissions();
-
-    // admin joins pool
-    let requests = vec![
-        e,
-        Request {
-            address: usdc.address.clone(),
-            amount: 200_000_0000000,
-            request_type: 2,
-        },
-        Request {
-            address: usdc.address.clone(),
-            amount: 100_000_0000000,
-            request_type: 4,
-        },
-        Request {
-            address: xlm.address.clone(),
-            amount: 200_000_0000000,
-            request_type: 2,
-        },
-        Request {
-            address: xlm.address.clone(),
-            amount: 100_000_0000000,
-            request_type: 4,
-        },
-    ];
-    pool_client
-        .mock_all_auths()
-        .submit(&admin, &admin, &admin, &requests);
     return pool;
 }
 
@@ -245,9 +200,9 @@ impl EnvTestUtils for Env {
             sequence_number: self.ledger().sequence().saturating_add(ledgers),
             network_id: Default::default(),
             base_reserve: 10,
-            min_temp_entry_ttl: 30 * DAY_IN_LEDGERS,
-            min_persistent_entry_ttl: 30 * DAY_IN_LEDGERS,
-            max_entry_ttl: 365 * DAY_IN_LEDGERS,
+            min_temp_entry_ttl: 30 * ONE_DAY_IN_LEDGERS,
+            min_persistent_entry_ttl: 30 * ONE_DAY_IN_LEDGERS,
+            max_entry_ttl: 365 * ONE_DAY_IN_LEDGERS,
         });
     }
 
@@ -258,9 +213,9 @@ impl EnvTestUtils for Env {
             sequence_number: self.ledger().sequence().saturating_add(1),
             network_id: Default::default(),
             base_reserve: 10,
-            min_temp_entry_ttl: 30 * DAY_IN_LEDGERS,
-            min_persistent_entry_ttl: 30 * DAY_IN_LEDGERS,
-            max_entry_ttl: 365 * DAY_IN_LEDGERS,
+            min_temp_entry_ttl: 30 * ONE_DAY_IN_LEDGERS,
+            min_persistent_entry_ttl: 30 * ONE_DAY_IN_LEDGERS,
+            max_entry_ttl: 365 * ONE_DAY_IN_LEDGERS,
         });
     }
 
@@ -271,142 +226,108 @@ impl EnvTestUtils for Env {
             sequence_number: 100,
             network_id: Default::default(),
             base_reserve: 10,
-            min_temp_entry_ttl: 30 * DAY_IN_LEDGERS,
-            min_persistent_entry_ttl: 30 * DAY_IN_LEDGERS,
-            max_entry_ttl: 365 * DAY_IN_LEDGERS,
+            min_temp_entry_ttl: 30 * ONE_DAY_IN_LEDGERS,
+            min_persistent_entry_ttl: 30 * ONE_DAY_IN_LEDGERS,
+            max_entry_ttl: 365 * ONE_DAY_IN_LEDGERS,
         });
     }
 }
-
-// pub fn assert_approx_eq_abs(a: i128, b: i128, delta: i128) {
-//     assert!(
-//         a > b - delta && a < b + delta,
-//         "assertion failed: `(left != right)` \
-//          (left: `{:?}`, right: `{:?}`, epsilon: `{:?}`)",
-//         a,
-//         b,
-//         delta
-//     );
-// }
-
-/// Asset that `b` is within `percentage` of `a` where `percentage`
-/// is a percentage in decimal form as a fixed-point number with 7 decimal
-/// places
-// pub fn assert_approx_eq_rel(a: i128, b: i128, percentage: i128) {
-//     let rel_delta = b.fixed_mul_floor(percentage, SCALAR_7).unwrap();
-
-//     assert!(
-//         a > b - rel_delta && a < b + rel_delta,
-//         "assertion failed: `(left != right)` \
-//          (left: `{:?}`, right: `{:?}`, epsilon: `{:?}`)",
-//         a,
-//         b,
-//         rel_delta
-//     );
-// }
 
 /// Oracle
 use sep_40_oracle::testutils::{Asset, MockPriceOracleClient, MockPriceOracleWASM};
 
 pub fn create_mock_oracle<'a>(e: &Env) -> (Address, MockPriceOracleClient<'a>) {
-    let contract_id = e.register(MockPriceOracleWASM, ());
+    let contract_id = Address::generate(e);
+    e.register_at(&contract_id, MockPriceOracleWASM, ());
     (
         contract_id.clone(),
         MockPriceOracleClient::new(e, &contract_id),
     )
 }
 
-impl<'a> BlendFixture<'a> {
-    /// Deploy a new set of Blend Protocol contracts. Mints 200k backstop
-    /// tokens to the deployer that can be used in the future to create up to 4
-    /// reward zone pools (50k tokens each).
-    ///
-    /// This function also resets the env budget via `reset_unlimited`.
-    ///
-    /// ### Arguments
-    /// * `env` - The environment to deploy the contracts in
-    /// * `deployer` - The address of the deployer
-    /// * `blnd` - The address of the BLND token
-    /// * `usdc` - The address of the USDC token
-    pub fn deploy(
-        env: &Env,
-        deployer: &Address,
-        blnd: &Address,
-        usdc: &Address,
-    ) -> BlendFixture<'a> {
-        env.cost_estimate().budget().reset_unlimited();
-        let emitter = env.register(blend_emitter::WASM, ());
-        let comet = env.register(blend_comet::WASM, ());
-        let pool_factory_address = Address::generate(env);
-        let blnd_client = StellarAssetClient::new(env, &blnd);
-        let usdc_client = StellarAssetClient::new(env, &usdc);
-        blnd_client
-            .mock_all_auths()
-            .mint(deployer, &(1_000_0000000 * 2001));
-        usdc_client
-            .mock_all_auths()
-            .mint(deployer, &(25_0000000 * 2001));
+/// Mock pool to test b_rate updates
+pub mod mockpool {
 
-        let comet_client: blend_comet::Client<'a> = blend_comet::Client::new(env, &comet);
-        comet_client.mock_all_auths().init(
-            &deployer,
-            &vec![env, blnd.clone(), usdc.clone()],
-            &vec![env, 0_8000000, 0_2000000],
-            &vec![env, 1_000_0000000, 25_0000000],
-            &0_0030000,
-        );
+    use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, Env, Symbol};
 
-        comet_client.mock_all_auths().join_pool(
-            &199_900_0000000, // finalize mints 100
-            &vec![env, 1_000_0000000 * 2000, 25_0000000 * 2000],
-            deployer,
-        );
-        
-        blnd_client.mock_all_auths().set_admin(&emitter);
-        let emitter_client: blend_emitter::Client<'a> = blend_emitter::Client::new(env, &emitter);
-        
-        let dummy_vec: Vec<(Address, i128) > = vec![env];
-        let backstop = env.register(
-            blend_backstop::WASM, (
-                comet.clone(),
-                emitter.clone(),
-                blnd.clone(),
-                usdc.clone(),
-                pool_factory_address.clone(),
-                dummy_vec,
+    use super::EnvTestUtils;
 
-            ));
-        emitter_client
-            .mock_all_auths()
-            .initialize(&blnd, &backstop, &comet);
+    const BRATE: Symbol = symbol_short!("b_rate");
+    #[derive(Clone, Debug)]
+    #[contracttype]
+    pub struct Reserve {
+        pub asset: Address,        // the underlying asset address
+        pub config: ReserveConfig, // the reserve configuration
+        pub data: ReserveData,     // the reserve data
+        pub scalar: i128,
+    }
 
-        let backstop_client: blend_backstop::Client<'a> =
-            blend_backstop::Client::new(env, &backstop);
+    #[derive(Clone, Debug, Default)]
+    #[contracttype]
+    pub struct ReserveConfig {
+        pub index: u32,           // the index of the reserve in the list
+        pub decimals: u32,        // the decimals used in both the bToken and underlying contract
+        pub c_factor: u32, // the collateral factor for the reserve scaled expressed in 7 decimals
+        pub l_factor: u32, // the liability factor for the reserve scaled expressed in 7 decimals
+        pub util: u32,     // the target utilization rate scaled expressed in 7 decimals
+        pub max_util: u32, // the maximum allowed utilization rate scaled expressed in 7 decimals
+        pub r_base: u32, // the R0 value (base rate) in the interest rate formula scaled expressed in 7 decimals
+        pub r_one: u32,  // the R1 value in the interest rate formula scaled expressed in 7 decimals
+        pub r_two: u32,  // the R2 value in the interest rate formula scaled expressed in 7 decimals
+        pub r_three: u32, // the R3 value in the interest rate formula scaled expressed in 7 decimals
+        pub reactivity: u32, // the reactivity constant for the reserve scaled expressed in 7 decimals
+        pub collateral_cap: i128, // the total amount of underlying tokens that can be used as collateral
+        pub enabled: bool,        // the flag of the reserve
+    }
 
-        let pool_hash = env.deployer().upload_contract_wasm(blend_pool::WASM);
+    #[derive(Clone, Debug, Default)]
+    #[contracttype]
+    pub struct ReserveData {
+        pub d_rate: i128,   // the conversion rate from dToken to underlying with 12 decimals
+        pub b_rate: i128,   // the conversion rate from bToken to underlying with 12 decimals
+        pub ir_mod: i128,   // the interest rate curve modifier with 7 decimals
+        pub b_supply: i128, // the total supply of b tokens, in the underlying token's decimals
+        pub d_supply: i128, // the total supply of d tokens, in the underlying token's decimals
+        pub backstop_credit: i128, // the amount of underlying tokens currently owed to the backstop
+        pub last_time: u64, // the last block the data was updated
+    }
 
-        let pool_init_meta = blend_factory_pool::PoolInitMeta {
-            backstop: backstop.clone(),
-            pool_hash: pool_hash.clone(),
-            blnd_id: blnd.clone(),
-        };
+    #[contract]
+    pub struct MockPool;
 
-        env.register_at(
-            &pool_factory_address,
-            blend_factory_pool::WASM, (pool_init_meta,));
+    #[contractimpl]
+    impl MockPool {
+        pub fn __constructor(e: Env, b_rate: i128) {
+            e.storage().instance().set(&BRATE, &b_rate);
+        }
 
-        let pool_factory_client = blend_factory_pool::Client::new(env, &pool_factory_address);
+        pub fn set_b_rate(e: Env, b_rate: i128) {
+            e.storage().instance().set(&BRATE, &b_rate);
+        }
 
-        // TODO? Has this been moved?
-        //backstop_client.update_tkn_val();
-
-        BlendFixture {
-            backstop: backstop_client,
-            emitter: emitter_client,
-            _backstop_token: comet_client,
-            pool_factory: pool_factory_client,
+        /// Note: We're only interested in the `b_rate`
+        pub fn get_reserve(e: Env, reserve: Address) -> Reserve {
+            let mut r_data = ReserveData::default();
+            r_data.b_rate = e.storage().instance().get(&BRATE).unwrap_or(0);
+            Reserve {
+                asset: reserve,
+                config: ReserveConfig::default(),
+                data: r_data,
+                scalar: 0,
+            }
         }
     }
-}
 
+    pub fn register_mock_pool_with_b_rate(e: &Env, b_rate: i128) -> MockPoolClient {
+        let pool_address = e.register(MockPool {}, (b_rate,));
+        MockPoolClient::new(e, &pool_address)
+    }
+
+    /// Updates the mock pool's b_rate and also updates
+    /// the timestamp to make sure `reserve_vault::update_rate` doesn't return early.
+    pub fn set_b_rate(e: &Env, mock_pool_client: &MockPoolClient, b_rate: i128) {
+        e.jump(5);
+        mock_pool_client.set_b_rate(&b_rate);
+    }
+}
 mod blend;

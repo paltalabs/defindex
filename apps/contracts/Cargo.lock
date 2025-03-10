@@ -187,9 +187,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c3c1a368f70d6cf7302d78f8f7093da241fb8e8807c05cc9e51a125895a6d5b"
 
 [[package]]
+name = "blend-contract-sdk"
+version = "2.22.0-beta.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25d33aa2a5652a7295a6f7b63799ff51d2bf858d16ecbf1609da0ea391c07f50"
+dependencies = [
+ "soroban-sdk",
+]
+
+[[package]]
 name = "blend_strategy"
 version = "0.1.0"
 dependencies = [
+ "blend-contract-sdk",
  "defindex-strategy-core",
  "sep-40-oracle",
  "sep-41-token",
