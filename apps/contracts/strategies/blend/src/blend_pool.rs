@@ -280,8 +280,22 @@ pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError>
     // Supplying underlying asset into blend pool
     let b_tokens_minted = supply(&e, &e.current_contract_address(), &amount_out, &config)?;
 
-    let reserves = storage::get_strategy_reserves(&e);
-    reserves::harvest(&e, reserves, amount_out, b_tokens_minted)?;
+    reserves::harvest(&e, amount_out, b_tokens_minted, &config)?;
 
     Ok(true)
+}
+
+
+/// Fetches the asset's b_rate from the pool
+///
+/// ### Arguments
+///
+/// ### Returns
+/// * `i128` - The b_rate of the asset
+pub fn reserve_b_rate(
+    e: &Env, 
+    config: &Config
+) -> i128 {
+    let pool_client = BlendPoolClient::new(e, &config.pool);
+    pool_client.get_reserve(&config.asset).data.b_rate
 }

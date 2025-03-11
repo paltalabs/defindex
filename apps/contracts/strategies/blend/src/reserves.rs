@@ -1,8 +1,13 @@
+use crate::{
+    constants::{SCALAR_9, SCALAR_12}, 
+    storage, storage::Config,
+    blend_pool,
+};
+
 use defindex_strategy_core::StrategyError;
 use soroban_fixed_point_math::{i128, FixedPoint};
 use soroban_sdk::{contracttype, panic_with_error, Address, Env};
 
-use crate::{constants::SCALAR_9, storage};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -13,10 +18,10 @@ pub struct StrategyReserves {
     pub total_b_tokens: i128,
     /// The reserve's last bRate
     pub b_rate: i128,
-}
+} 
 
 // Useful functions to handle with reserves and b tokens
-// taken from https://github.com/script3/fee-vault/blob/433ae359b24f15dee66fc624fa09479890e249f5/src/reserve_vault.rs#L24
+// taken from https://github.com/script3/fee-vault/
 
 impl StrategyReserves {
     /// Converts a b_token amount to shares rounding down
@@ -46,23 +51,49 @@ impl StrategyReserves {
             .fixed_div_floor(self.total_shares, self.total_b_tokens)
             .ok_or_else(|| StrategyError::DivisionByZero)
     }
+    
+    /// Coverts a b_token amount to an underlying token amount rounding down
+    pub fn b_tokens_to_underlying_down(&self, amount: i128) -> i128 {
+        amount.fixed_mul_floor(self.b_rate, SCALAR_12).unwrap()
+    }
+
+    /// Coverts an underlying amount to a b_token amount rounding down
+    pub fn underlying_to_b_tokens_down(&self, amount: i128) -> i128 {
+        amount.fixed_div_floor(self.b_rate, SCALAR_12).unwrap()
+    }
+
+    /// Coverts an underlying amount to a b_token amount rounding up
+    pub fn underlying_to_b_tokens_up(&self, amount: i128) -> i128 {
+        amount.fixed_div_ceil(self.b_rate, SCALAR_12).unwrap()
+    }
 
     pub fn update_rate(
         &mut self,
-        underlying_amount: i128,
-        b_tokens_amount: i128,
-    ) -> Result<(), StrategyError> {
-        // Calculate the new bRate - 9 decimal places of precision
-        // Update the reserve's bRate
-        let new_rate = underlying_amount
-            .fixed_div_floor(b_tokens_amount, SCALAR_9)
-            .ok_or_else(|| StrategyError::ArithmeticError)?;
-
+        e: &Env,
+        config: &Config,
+    ) {
+        let new_rate = blend_pool::reserve_b_rate(e, &config);
         self.b_rate = new_rate;
-
-        Ok(())
+        return;
     }
 }
+
+/// Get the strategy reserve from storage and update the bRate
+///
+/// ### Arguments
+/// * `asset` - The underlying asset address
+///
+/// ### Returns
+/// * `StrategyReserves` - The updated reserve vault
+pub fn get_strategy_reserve_updated(
+    e: &Env, 
+    config: &Config,    
+) -> StrategyReserves {
+    let mut reserve = storage::get_strategy_reserves(&e);
+    reserve.update_rate(&e, &config);
+    reserve
+}
+
 
 /// Accounts for a deposit into the Blend pool.
 ///
@@ -91,23 +122,23 @@ impl StrategyReserves {
 ///   vault shares of the depositor and the updated strategy reserves.
 pub fn deposit(
     e: &Env,
-    mut reserves: StrategyReserves,
     from: &Address,
-    underlying_amount: i128,
     b_tokens_amount: i128,
+    config: &Config,
 ) -> Result<(i128, StrategyReserves), StrategyError> {
-    if underlying_amount <= 0 {
-        panic_with_error!(e, StrategyError::UnderlyingAmountBelowMin);
-    }
+    
+    let mut reserves = get_strategy_reserve_updated(e, &config);
 
     if b_tokens_amount <= 0 {
         panic_with_error!(e, StrategyError::BTokensAmountBelowMin);
     }
 
-    let _ = reserves.update_rate(underlying_amount, b_tokens_amount);
-
     let old_vault_shares = storage::get_vault_shares(&e, &from);
     let new_minted_shares: i128 = reserves.b_tokens_to_shares_down(b_tokens_amount)?;
+
+    if new_minted_shares <= 0 {
+        panic_with_error!(e, StrategyError::InvalidSharesMinted);
+    }
 
     reserves.total_shares = reserves
         .total_shares
@@ -154,14 +185,13 @@ pub fn deposit(
 ///   shares of the depositor and the updated strategy reserves.
 pub fn withdraw(
     e: &Env,
-    mut reserves: StrategyReserves,
     from: &Address,
-    underlying_amount: i128,
     b_tokens_amount: i128,
+    config: &Config,
 ) -> Result<(i128, StrategyReserves), StrategyError> {
-    if underlying_amount <= 0 {
-        return Err(StrategyError::UnderlyingAmountBelowMin);
-    }
+
+    let mut reserves = get_strategy_reserve_updated(e, &config);
+
     if b_tokens_amount <= 0 {
         return Err(StrategyError::BTokensAmountBelowMin);
     }
@@ -222,19 +252,15 @@ pub fn withdraw(
 /// * `StrategyError::UnderflowOverflow` - If an arithmetic operation fails due to an overflow/underflow.
 pub fn harvest(
     e: &Env,
-    mut reserves: StrategyReserves,
     underlying_amount: i128,
     b_tokens_amount: i128,
+    config: &Config,
 ) -> Result<(), StrategyError> {
-    if underlying_amount <= 0 {
-        panic_with_error!(e, StrategyError::UnderlyingAmountBelowMin);
-    }
+    let mut reserves = get_strategy_reserve_updated(e, &config);
 
     if b_tokens_amount <= 0 {
         panic_with_error!(e, StrategyError::BTokensAmountBelowMin);
     }
-
-    let _ = reserves.update_rate(underlying_amount, b_tokens_amount)?;
 
     reserves.total_b_tokens = reserves
         .total_b_tokens

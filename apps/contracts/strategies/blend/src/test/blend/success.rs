@@ -9,8 +9,10 @@ use crate::BlendStrategyClient;
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
-use soroban_sdk::{vec, Address, Env, IntoVal, Symbol};
+use soroban_sdk::{vec, Address, Env, IntoVal, Symbol, Vec};
 use crate::test::std::println;
+use crate::blend_pool::RequestType;
+
 
 #[test]
 fn success() {
@@ -100,8 +102,8 @@ fn success() {
 
     /*
      * Deposit into pool
-     * -> deposit 100 into blend strategy for each user_2 and user_3
-     * -> deposit 200 directlyinto pool for both usdc and xlm for user_4
+     * -> deposit 100 into blend strategy for each user_2 and user_3 (Total 200 USDC deposited through the Strategy)
+     * -> deposit 200 directlyinto pool for both usdc and xlm for user_4 (Total 200 USDC deposited direclty on the pool)
      * -> admin borrow from pool to return to 50% util rate
      */
     let pool_usdc_balace_start = usdc_client.balance(&pool);
@@ -117,6 +119,15 @@ fn success() {
 
     // * -> deposit 100 into blend strategy for each user_2 and user_3
     // for user 2 we will also check auths
+    let requests: Vec<Request> = vec![
+        &e,
+        Request {
+            address: usdc.address().clone(),
+            amount: starting_balance.clone(),
+            request_type: 0u32,
+        },
+    ];
+        
     assert_eq!(
         e.auths()[0],
         (
@@ -125,20 +136,36 @@ fn success() {
                 function: AuthorizedFunction::Contract((
                     strategy.clone(),
                     Symbol::new(&e, "deposit"),
-                    vec![&e, starting_balance.into_val(&e), user_2.to_val(),]
+                    vec![&e, 
+                    starting_balance.into_val(&e), 
+                    user_2.to_val(),]
                 )),
                 sub_invocations: std::vec![AuthorizedInvocation {
                     function: AuthorizedFunction::Contract((
-                        usdc.address().clone(),
-                        Symbol::new(&e, "transfer"),
+                        pool.clone(),
+                        Symbol::new(&e, "submit"),
                         vec![
                             &e,
-                            user_2.to_val(),
                             strategy.to_val(),
-                            starting_balance.into_val(&e)
+                            user_2.to_val(),
+                            user_2.to_val(),
+                            requests.into_val(&e)
                         ]
                     )),
-                    sub_invocations: std::vec![]
+                    sub_invocations: std::vec![AuthorizedInvocation {
+                            function: AuthorizedFunction::Contract((
+                                usdc.address().clone(),
+                                Symbol::new(&e, "transfer"),
+                                vec![
+                                    &e,
+                                    user_2.to_val(),
+                                    pool.to_val(),
+                                    starting_balance.into_val(&e)
+                                ]
+                            )),
+                            sub_invocations: std::vec![]
+                        }
+                    ]
                 }]
             }
         )
@@ -179,6 +206,11 @@ fn success() {
         ],
     );
 
+    assert_eq!(
+        usdc_client.balance(&pool),
+        pool_usdc_balace_start + starting_balance * 4
+    );
+
     // admin borrow from pool to return USDC to 50% util rate
     let borrow_amount = (user_4_starting_balance + starting_balance * 2) / 2;
     pool_client.submit(
@@ -195,6 +227,12 @@ fn success() {
         ],
     );
 
+    assert_eq!(
+        usdc_client.balance(&pool),
+        pool_usdc_balace_start + starting_balance * 2
+    );
+    
+
     /*
      * Allow 1 week to pass
      */
@@ -202,8 +240,10 @@ fn success() {
 
     /*
      * Withdraw from pool
-     * -> withdraw all funds from pool for user_4
+     * -> withdraw all funds from pool for user_4 so we can calculate USDC that the strategy should earn
+        
      * -> withdraw (excluding dust) from blend strategy for user_2 and user_3
+        * -> TODO: Here we consider that we dont do harvest on withdraw
      * -> verify a withdraw from an uninitialized vault fails
      * -> verify a withdraw from an empty vault fails
      * -> verify an over withdraw fails
@@ -230,23 +270,31 @@ fn success() {
 
     let user_4_profit = user_4_final_balance - user_4_starting_balance;
 
+    /*
+        We are expecting that user_4 profit 
+        is equal to the profit of the strategy
+    
+    */
     // withdraw from blend strategy for user_2 and user_3
     // they are expected to receive half of the profit of user_4
     let expected_users_profit = user_4_profit / 2;
+    let expected_strategy_profit = user_4_profit;
+
     println!("Expected users profit {}", expected_users_profit);
-    let withdraw_amount = starting_balance + expected_users_profit;
-    println!("Withdraw amount for users {}", withdraw_amount);
-    // withdraw_amount = 100_0958904
+    let expected_withdraw_amount = starting_balance + expected_users_profit;
+    println!("Withdraw amount for users {}", expected_withdraw_amount);
+    // expected_withdraw_amount = 100_0958904
 
     // -> verify over withdraw fails
     let result =
-        strategy_client.try_withdraw(&(withdraw_amount + 1), &user_2, &user_2);
+        strategy_client.try_withdraw(&(expected_withdraw_amount + 1), &user_2, &user_2);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
     let result =
-        strategy_client.try_withdraw(&(withdraw_amount + 1), &user_3, &user_3);
+        strategy_client.try_withdraw(&(expected_withdraw_amount + 1), &user_3, &user_3);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
 
-    strategy_client.withdraw(&withdraw_amount, &user_2, &user_2);
+    // Test that user can also withdraw their funds
+    strategy_client.withdraw(&expected_withdraw_amount, &user_2, &user_2);
     // -> verify withdraw auth
     assert_eq!(
         e.auths()[0],
@@ -258,7 +306,7 @@ fn success() {
                     Symbol::new(&e, "withdraw"),
                     vec![
                         &e,
-                        withdraw_amount.into_val(&e),
+                        expected_withdraw_amount.into_val(&e),
                         user_2.to_val(),
                         user_2.to_val(),
                     ]
@@ -269,12 +317,12 @@ fn success() {
     );
 
     // withdraw also for user 3
-    strategy_client.withdraw(&withdraw_amount, &user_3, &user_3);
+    strategy_client.withdraw(&expected_withdraw_amount, &user_3, &user_3);
     
     
     // -> verify withdraw for user 3
-    assert_eq!(usdc_client.balance(&user_2), withdraw_amount);
-    assert_eq!(usdc_client.balance(&user_3), withdraw_amount);
+    assert_eq!(usdc_client.balance(&user_2), expected_withdraw_amount);
+    assert_eq!(usdc_client.balance(&user_3), expected_withdraw_amount);
     assert_eq!(strategy_client.balance(&user_2), 0);
     assert_eq!(strategy_client.balance(&user_3), 0);
 
@@ -299,7 +347,19 @@ fn success() {
 
     let merry_emissions = blnd_client.balance(&user_4);
     println!("merry_emissions {}", merry_emissions);
+    assert_eq!(amounts_claimed, merry_emissions);
+    // This emissions are for Merry (user 4), who deposited directly into the pool a double amount than
+    // user 2 and user 3.
+    // this means that is expected that the emissions for Merry to be equal to the emissions for the
+    // strategy
+    // ????
+    let expected_usdc=soroswap_router
+        .router_get_amounts_out(
+            &merry_emissions, 
+            &vec![&e, blnd.address().clone(), usdc.address().clone()])
+        .get(1).unwrap();
 
+    println!("Expected USDC {}", expected_usdc);
 
     let initial_blnd_strategy_balance = blnd_client.balance(&strategy);
     let initial_usdc_pool_balance = usdc_client.balance(&pool);
@@ -321,15 +381,17 @@ fn success() {
     let usdc_pool_increased_in_harvest= usdc_client.balance(&pool) - initial_usdc_pool_balance;
     println!("Pool USDC Increased in  {}", usdc_pool_increased_in_harvest);
 
+    assert_eq!(usdc_pool_increased_in_harvest, expected_usdc);
+
       /*
         TODO:
-            - Calculate how much BLND should have been harvested
-            - Calculate the USDC swap output amount given soroswap formulas
+            - Calculate how much BLND should have been harvested OK 
+            - Calculate the USDC swap output amount given soroswap formulas OK 
             - Verify harvest function output amount
             - Verify harvest event with correct amount
             - Verify swap event with correct amount
             - Verify claim event with correct amount
-            - Verify usdc_pool_increased_in_harvest is equal to the amount swapped
+            - Verify usdc_pool_increased_in_harvest is equal to the amount swapped OK 
             - Verify that the strategy increased its positions in equal amount
             - Veriy that every user increased its position proportionally
     */

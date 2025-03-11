@@ -1,5 +1,5 @@
 #![no_std]
-use constants::{MIN_DUST, SCALAR_9};
+use constants::{MIN_DUST, SCALAR_12};
 use reserves::StrategyReserves;
 use soroban_fixed_point_math::{i128, FixedPoint};
 use soroban_sdk::{
@@ -164,13 +164,16 @@ impl DeFindexStrategyTrait for BlendStrategy {
         // will reinvest only if blnd_balance > REWARD_THRESHOLD
         blend_pool::perform_reinvest(&e, &config)?;
 
-        let reserves = storage::get_strategy_reserves(&e);
-
         let b_tokens_minted = blend_pool::supply(&e, &from, &amount, &config)?;
 
         // Keeping track of the total deposited amount and the total bTokens owned by the strategy depositors
         let (vault_shares, reserves) =
-            reserves::deposit(&e, reserves.clone(), &from, amount, b_tokens_minted)?;
+            reserves::deposit(
+                &e, 
+                &from, 
+                b_tokens_minted,
+                &config
+            )?;
 
         let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
 
@@ -234,18 +237,15 @@ impl DeFindexStrategyTrait for BlendStrategy {
             return Err(StrategyError::AmountBelowMinDust); //TODO: create a new error type for this
         }
 
-        let reserves = storage::get_strategy_reserves(&e);
-
         let config = storage::get_config(&e)?;
 
         let (tokens_withdrawn, b_tokens_burnt) = blend_pool::withdraw(&e, &to, &amount, &config)?;
 
         let (vault_shares, reserves) = reserves::withdraw(
             &e,
-            reserves.clone(),
             &from,
-            tokens_withdrawn,
             b_tokens_burnt,
+            &config
         )?;
         let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
 
@@ -311,7 +311,7 @@ fn shares_to_underlying(shares: i128, reserves: StrategyReserves) -> Result<i128
 
     // Use the b_rate to convert bTokens to underlying assets
     vault_b_tokens
-        .fixed_div_floor(SCALAR_9, reserves.b_rate)
+        .fixed_div_floor(SCALAR_12, reserves.b_rate)
         .ok_or_else(|| StrategyError::DivisionByZero)
 }
 mod test;
