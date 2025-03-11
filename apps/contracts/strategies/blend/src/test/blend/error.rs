@@ -49,7 +49,7 @@ fn deposit_below_min_dust() {
 
     let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
 
-    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
     let strategy = create_blend_strategy(
         &e,
         &usdc.address(),
@@ -112,7 +112,7 @@ fn deposit_zero_and_negative_amount() {
 
     let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
 
-    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
     let strategy = create_blend_strategy(
         &e,
         &usdc.address(),
@@ -176,7 +176,7 @@ fn harvest_from_random_address() {
 
     let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
 
-    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
     let strategy = create_blend_strategy(
         &e,
         &usdc.address(),
@@ -248,7 +248,7 @@ fn withdraw_insufficient_balance() {
 
     let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
 
-    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
     let strategy = create_blend_strategy(
         &e,
         &usdc.address(),
@@ -321,7 +321,7 @@ fn withdraw_zero_and_negative() {
 
     let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
 
-    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
     let strategy = create_blend_strategy(
         &e,
         &usdc.address(),
@@ -391,7 +391,7 @@ fn unauthorized_withdraw() {
     // End of setting up soroswap pool
     let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
 
-    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
     let strategy = create_blend_strategy(
         &e,
         &usdc.address(),

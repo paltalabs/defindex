@@ -24,7 +24,7 @@ pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
     }
 }
 
-const STARETEGY_NAME: &str = "BlendStrategy";
+const STRATEGY_NAME: &str = "BlendStrategy";
 
 #[contract]
 pub struct BlendStrategy;
@@ -177,7 +177,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
 
-        event::emit_deposit(&e, String::from_str(&e, STARETEGY_NAME), amount, from);
+        event::emit_deposit(&e, String::from_str(&e, STRATEGY_NAME), amount, from);
         Ok(underlying_balance)
     }
 
@@ -204,7 +204,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         event::emit_harvest(
             &e,
-            String::from_str(&e, STARETEGY_NAME),
+            String::from_str(&e, STRATEGY_NAME),
             harvested_blend,
             from,
         );
@@ -252,7 +252,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
         )?;
         let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
 
-        event::emit_withdraw(&e, String::from_str(&e, STARETEGY_NAME), amount, from);
+        event::emit_withdraw(&e, String::from_str(&e, STRATEGY_NAME), amount, from);
 
         Ok(underlying_balance)
     }

@@ -1,6 +1,6 @@
 #![cfg(test)]
 use crate::blend_pool::{BlendPoolClient, Request};
-use crate::storage::ONE_DAY_IN_LEDGERS;
+use crate::storage::ONE_DAY_LEDGERS;
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
 use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils};
 use crate::BlendStrategyClient;
@@ -53,7 +53,7 @@ fn missing_balance() {
     // usdc (0) and xlm (1) charge a fixed 10% borrow rate with 0% backstop take rate
     // admin deposits 200m tokens and borrows 100m tokens for a 50% util rate
     // emits to each reserve token evently, and starts emissions
-    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
     let pool_client = BlendPoolClient::new(&e, &pool);
 
     // Setup pool util rate
@@ -84,7 +84,6 @@ fn missing_balance() {
     pool_client
         .mock_all_auths()
         .submit(&admin, &admin, &admin, &requests);
-        
     let strategy = create_blend_strategy(
         &e,
         &usdc.address(),
@@ -187,7 +186,7 @@ fn missing_balance() {
     /*
      * Allow 1 week to pass
      */
-    e.jump(ONE_DAY_IN_LEDGERS * 7);
+    e.jump(ONE_DAY_LEDGERS * 7);
 
     /*
      * Withdraw from pool

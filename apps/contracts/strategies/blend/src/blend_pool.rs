@@ -11,7 +11,7 @@ use crate::{
     storage::{self, Config},
 };
 
-soroban_sdk::contractimport!(file = "../external_wasms/blend/blend_pool.wasm");
+soroban_sdk::contractimport!(file = "../external_wasms/blend/pool.wasm");
 pub type BlendPoolClient<'a> = Client<'a>;
 
 // Define the RequestType enum with explicit u32 values
