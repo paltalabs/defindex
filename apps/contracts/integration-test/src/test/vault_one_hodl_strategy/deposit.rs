@@ -312,7 +312,7 @@ fn test_deposit_zero_amount() {
         &false,
     );
 
-    assert_eq!(result, Err(Ok(VaultContractError::AmountNotAllowed)));
+    assert_eq!(result, Err(Ok(VaultContractError::InsufficientAmount)));
 }
 
 #[test]

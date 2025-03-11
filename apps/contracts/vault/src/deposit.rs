@@ -45,7 +45,7 @@ pub fn process_deposit(
     // Transfer assets
     for (i, amount) in amounts.iter().enumerate() {
         if amount < amounts_min.get(i as u32).unwrap() {
-            panic_with_error!(&e, ContractError::InsufficientAmount);
+            panic_with_error!(&e, ContractError::NoOptimalAmounts);
         }
         if amount > 0 {
             let asset = total_managed_funds.get(i as u32).ok_or(ContractError::ArithmeticError)?; 
