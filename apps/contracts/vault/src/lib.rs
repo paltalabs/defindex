@@ -957,7 +957,7 @@ impl VaultManagementTrait for DeFindexVault {
     /// * `Result<Report, ContractError>` - A report of the released fees or a `ContractError` if the operation fails.
     fn release_fees(e: Env, strategy: Address, amount: i128) -> Result<Report, ContractError> {
         extend_instance_ttl(&e);
-
+        validate_amount(amount)?;
         let access_control = AccessControl::new(&e);
         access_control.require_role(&RolesDataKey::Manager);
 
