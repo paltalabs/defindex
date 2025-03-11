@@ -1207,7 +1207,7 @@ fn amounts_desired_zero() {
     );
 
     // Verify that the returned error is ContractError::InsufficientAmount
-    assert_eq!(deposit_result, Err(Ok(ContractError::AmountNotAllowed)));
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
 }
 
 // Deposit with insufficient funds and check for specific error message
@@ -1290,7 +1290,7 @@ fn insufficient_funds_with_error_message() {
 
 
 #[test]
-fn test_dos_deposit() {
+fn test_deposit_with_zero_amounts() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
 
@@ -1368,8 +1368,8 @@ fn test_dos_deposit() {
         &false,
     );
     std::println!("deposit_result: {:?}", deposit_result);
-    // user[0] should have deposit_amount*2 - MINIMUM_LIQUIDITY shares minted
-    // Total supply should be deposit_amount*2
+    // user[0] should have deposit_amount_token_1 + deposit_amount_token_2 - MINIMUM_LIQUIDITY shares minted
+    // Total supply should be deposit_amount_token_1 + deposit_amount_token_2
     assert_eq!(deposit_result.is_err(), false);
     let total_supply = defindex_contract.total_supply();
     let user_balance = defindex_contract.balance(&users[0]);
@@ -1390,7 +1390,7 @@ fn test_dos_deposit() {
     assert_eq!(deposit_result.is_err(), false);
     // User[0] should have deposit_amount_token_1 + deposit_amount_token_2 shares minted
     // Total supply should be 2*(deposit_amount_token_1 + deposit_amount_token_2)
-    let user_balance = defindex_contract.balance(&users[0]);
+    let user_balance = defindex_contract.balance(&users[1]);
     let total_supply = defindex_contract.total_supply();
     std::println!("user_balance: {:?}", user_balance);
     std::println!("total_supply: {:?}", total_supply);
@@ -1403,13 +1403,57 @@ fn test_dos_deposit() {
     test.token_1_admin_client.mint(&users[1], &amount);
     // We don't care about the min amounts for the purpose of the PoC
     let deposit_result = defindex_contract.try_deposit(
-        &sorobanvec![&test.env, amount, 0],
-        &sorobanvec![&test.env, 0, 0],
+        &sorobanvec![&test.env, amount, amount, 0],
+        &sorobanvec![&test.env, amount*9/10, amount*9/10, 0],
+        &users[1],
+        &false,
+    );
+    // this call will fail because the last amount should not be 0
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+
+    // Test depositing all zeros
+    // It should fail with InsufficientAmount because mint_shares are 0
+    let deposit_result = defindex_contract.try_deposit(
+        &sorobanvec![&test.env, amount, 0, 0],
+        &sorobanvec![&test.env, amount*9/10, 0, 0], 
         &users[1],
         &false,
     );
 
-    // This call and any other deposit attempt will fail with `InsufficientManagedFunds`,
-    // because the `reserve_target` of asset index 0 is 0.
-    assert_eq!(deposit_result, Err(Ok(ContractError::AmountNotAllowed)));
+    // Should fail since we can't deposit all zeros
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+
+    // Test depositing all zeros
+    // It should fail with InsufficientAmount because mint_shares are 0
+    let deposit_result = defindex_contract.try_deposit(
+        &sorobanvec![&test.env, 0, 0, 0],
+        &sorobanvec![&test.env, 0, 0, 0],
+        &users[1], 
+        &false,
+    );
+
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+
+    // Test depositing [0, amount, 0]
+    // It should fail with InsufficientAmount since last amount is 0
+    let deposit_result = defindex_contract.try_deposit(
+        &sorobanvec![&test.env, 0, amount, 0],
+        &sorobanvec![&test.env, 0, amount*9/10, 0],
+        &users[1],
+        &false,
+    );
+
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+
+    // Test depositing [0, 0, amount]
+    // It should fail with InsufficientAmount since first two amounts are 0
+    let deposit_result = defindex_contract.try_deposit(
+        &sorobanvec![&test.env, 0, 0, amount],
+        &sorobanvec![&test.env, 0, 0, amount*9/10],
+        &users[1],
+        &false,
+    );
+
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+
 }
