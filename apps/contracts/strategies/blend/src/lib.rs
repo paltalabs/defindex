@@ -166,9 +166,6 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         let reserves = storage::get_strategy_reserves(&e);
 
-        // transfer tokens from the vault to this (strategy) contract
-        TokenClient::new(&e, &config.asset).transfer(&from, &e.current_contract_address(), &amount);
-
         let b_tokens_minted = blend_pool::supply(&e, &from, &amount, &config)?;
 
         // Keeping track of the total deposited amount and the total bTokens owned by the strategy depositors

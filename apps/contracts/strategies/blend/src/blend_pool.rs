@@ -85,27 +85,30 @@ pub fn supply(
         },
     ];
 
-    e.authorize_as_current_contract(vec![
-        &e,
-        InvokerContractAuthEntry::Contract(SubContractInvocation {
-            context: ContractContext {
-                contract: config.asset.clone(),
-                fn_name: Symbol::new(&e, "transfer"),
-                args: (
-                    e.current_contract_address(),
-                    config.pool.clone(),
-                    amount.clone(),
-                )
-                    .into_val(e),
-            },
-            sub_invocations: vec![&e],
-        }),
-    ]);
+    // this authorization is only needed when reinvesting swapped harvested rewards
+    if from == &e.current_contract_address() {
+        e.authorize_as_current_contract(vec![
+            &e,
+            InvokerContractAuthEntry::Contract(SubContractInvocation {
+                context: ContractContext {
+                    contract: config.asset.clone(),
+                    fn_name: Symbol::new(&e, "transfer"),
+                    args: (
+                        e.current_contract_address(),
+                        config.pool.clone(),
+                        amount.clone(),
+                    )
+                        .into_val(e),
+                },
+                sub_invocations: vec![&e],
+            }),
+        ]);
+    }
 
     let new_positions = pool_client.submit(
-        &e.current_contract_address(),
-        &e.current_contract_address(),
-        &from,
+        &e.current_contract_address(), // * `from` - The address of the user whose positions are being modified
+        &from, /// * `spender` - The address of the user who is sending tokens to the pool
+        &from, // * `to` - The address of the user who is receiving tokens from the pool
         &requests,
     );
 
@@ -272,6 +275,7 @@ pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError>
         .get(1)
         .ok_or(StrategyError::InternalSwapError)?
         .into_val(e);
+    
 
     // Supplying underlying asset into blend pool
     let b_tokens_minted = supply(&e, &e.current_contract_address(), &amount_out, &config)?;
