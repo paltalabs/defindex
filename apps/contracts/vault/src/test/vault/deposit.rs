@@ -1290,7 +1290,7 @@ fn insufficient_funds_with_error_message() {
 
 
 #[test]
-fn test_deposit_with_zero_amounts() {
+fn with_zero_amounts() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
 
