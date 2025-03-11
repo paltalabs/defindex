@@ -4,9 +4,7 @@ use std::println;
 use soroban_sdk::{ vec as sorobanvec, Address, Map, String, Vec, IntoVal,
 testutils::{MockAuth, MockAuthInvoke, Address as _}};
 
-use crate::test::{create_defindex_vault, create_fixed_strategy_params_token_0, 
-    defindex_vault::{ ContractError, AssetStrategySet, Instruction, RolesDataKey,}, 
-  DeFindexVaultTest, EnvTestUtils};
+use crate::test::{create_defindex_vault, create_fixed_strategy_params_token_0, create_strategy_params_token_0, defindex_vault::{ AssetStrategySet, ContractError, Instruction, Report, RolesDataKey}, DeFindexVaultTest, EnvTestUtils};
 
 
 pub const ONE_DAY_IN_SECONDS: u64 = 86_400;
@@ -323,4 +321,90 @@ fn test_distribute_fees_auth(){
     },
   }]).distribute_fees(&test.vault_fee_receiver);
   assert_eq!(distribute_fees_result, Vec::new(&test.env));
+}
+
+#[test]
+fn release_negative_or_zero_fees (){
+  let test = DeFindexVaultTest::setup();
+  test.env.mock_all_auths();
+  let strategy_params_token_0 = create_strategy_params_token_0(&test);
+  let assets: Vec<AssetStrategySet> = sorobanvec![
+      &test.env,
+      AssetStrategySet {
+          address: test.token_0.address.clone(),
+          strategies: strategy_params_token_0.clone()
+      }
+  ];
+
+  let mut roles: Map<u32, Address> = Map::new(&test.env);
+  roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+  roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+  roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+  roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+  let mut name_symbol: Map<String, String> = Map::new(&test.env);
+  name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+  name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+  let defindex_contract = create_defindex_vault(
+      &test.env,
+      assets,
+      roles,
+      2000u32,
+      test.defindex_protocol_receiver.clone(),
+      2500u32,
+      test.defindex_factory.clone(),
+      test.soroswap_router.address.clone(),
+      name_symbol,
+      true
+  );
+  let amount = 10_0_000_000i128;
+
+  let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+
+  test.token_0_admin_client.mint(&users[0], &amount);
+
+  // Deposit
+  defindex_contract.deposit(
+      &sorobanvec![&test.env, amount],
+      &sorobanvec![&test.env, amount],
+      &users[0],
+      &false,
+  );
+
+  // Rebalance -> Invest
+  let invest_instructions = sorobanvec![
+      &test.env,
+      Instruction::Invest(test.strategy_client_token_0.address.clone(), amount),
+  ];
+  defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
+
+
+  // Simulate earning on the strategy
+  test.token_0_admin_client.mint(&defindex_contract.address, &10_0_000_000i128);
+  test.strategy_client_token_0.deposit(&10_0_000_000i128, &defindex_contract.address);
+
+  defindex_contract.report();
+  // Locking fees
+  let report = defindex_contract.lock_fees(&None).get(0).unwrap();
+  let fees = report.locked_fee;
+  assert_eq!(fees, 2_0_000_000i128);
+
+  // Release fees border cases
+  let release_more_than_avaliable = defindex_contract.try_release_fees(&test.strategy_client_token_0.address.clone(), &3_0_000_000i128);
+  let release_zero_fees_result = defindex_contract.try_release_fees(&test.strategy_client_token_0.address.clone(), &0i128);
+  let release_negative_fees_result = defindex_contract.try_release_fees(&test.strategy_client_token_0.address.clone(), &-1_0_000_000i128);
+
+  assert_eq!(release_more_than_avaliable, Err(Ok(ContractError::InsufficientManagedFunds)));
+  assert_eq!(release_zero_fees_result, Err(Ok(ContractError::AmountNotAllowed)));
+  assert_eq!(release_negative_fees_result, Err(Ok(ContractError::AmountNotAllowed)));
+
+  // Release fees
+  let release_fees_result = defindex_contract.release_fees(&test.strategy_client_token_0.address.clone(), &1_0_000_000i128);
+  let expected_report = Report {
+    gains_or_losses: 1_0_000_000i128,
+    locked_fee: 1_0_000_000i128,
+    prev_balance: 20_0_000_000i128,
+  };
+  assert_eq!(release_fees_result, expected_report);
 }
