@@ -520,7 +520,7 @@ fn one_asset_min_more_than_desired() {
         &false,
     );
     // this should fail
-    assert_eq!(result, Err(Ok(ContractError::InsufficientAmount)));
+    assert_eq!(result, Err(Ok(ContractError::NoOptimalAmounts)));
 }
 
 // test deposit of several asset, considering different proportion of assets
@@ -885,7 +885,7 @@ fn several_assets_min_greater_than_optimal() {
     );
 
     // this should fail
-    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+    assert_eq!(deposit_result, Err(Ok(ContractError::NoOptimalAmounts)));
 
     // now we manage to deposit
     defindex_contract.deposit(
@@ -917,7 +917,7 @@ fn several_assets_min_greater_than_optimal() {
 
     // this should fail
 
-    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+    assert_eq!(deposit_result, Err(Ok(ContractError::NoOptimalAmounts)));
 }
 
 //test deposit amounts_min greater than amounts_desired
@@ -989,7 +989,7 @@ fn amounts_min_greater_than_amounts_desired() {
     );
 
     // this should fail
-    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+    assert_eq!(deposit_result, Err(Ok(ContractError::NoOptimalAmounts)));
 }
 
 //Test token transfer from user to vault on deposit
