@@ -379,10 +379,10 @@ fn distribute_fees_on_rescue() {
     );
 
     let balance_defindex_protocol = test.token_0.balance(&test.defindex_protocol_receiver);
-    assert_eq!(balance_defindex_protocol, 5_000_000i128);
-
     let balance_vault_fee_receiver = test.token_0.balance(&test.vault_fee_receiver);
-    assert_eq!(balance_vault_fee_receiver, 1_5_000_000i128);
+    
+    assert_eq!(balance_defindex_protocol, 0_3_750_000i128);
+    assert_eq!(balance_vault_fee_receiver, 1_1_250_000i128);
 
     // Balance of the vault on the strategy should be 0
     let strategy_balance = test
@@ -392,7 +392,7 @@ fn distribute_fees_on_rescue() {
 
     // Balance of the token_0 on the vault should be `amount`
     let vault_balance_of_token = test.token_0.balance(&defindex_contract.address);
-    assert_eq!(vault_balance_of_token, amount + 8_0_000_000);
+    assert_eq!(vault_balance_of_token, amount + 8_5_000_000);
 
     // check if strategy is paused
     let asset = defindex_contract.get_assets().first().unwrap();
