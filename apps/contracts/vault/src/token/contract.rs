@@ -10,14 +10,14 @@ use soroban_sdk::token::{self, Interface as _};
 use soroban_sdk::{contract, contractimpl, Address, Env, String};
 use soroban_token_sdk::TokenUtils;
 
-pub fn validate_amount(amount: i128) {
-    if amount <= 0 {
-        panic!("negative or zero amount is not allowed: {}", amount)
+fn check_nonnegative_amount(amount: i128) {
+    if amount < 0 {
+        panic!("negative amount is not allowed: {}", amount)
     }
 }
 
 pub fn internal_burn(e: Env, from: Address, amount: i128) {
-    validate_amount(amount);
+    check_nonnegative_amount(amount);
 
     e.storage()
         .instance()
@@ -30,7 +30,7 @@ pub fn internal_burn(e: Env, from: Address, amount: i128) {
 }
 
 pub fn internal_mint(e: Env, to: Address, amount: i128) {
-    validate_amount(amount);
+    check_nonnegative_amount(amount);
 
     e.storage()
         .instance()
@@ -66,7 +66,7 @@ impl token::Interface for VaultToken {
     fn approve(e: Env, from: Address, spender: Address, amount: i128, expiration_ledger: u32) {
         from.require_auth();
 
-        validate_amount(amount);
+        check_nonnegative_amount(amount);
 
         e.storage()
             .instance()
@@ -88,7 +88,7 @@ impl token::Interface for VaultToken {
     fn transfer(e: Env, from: Address, to: Address, amount: i128) {
         from.require_auth();
 
-        validate_amount(amount);
+        check_nonnegative_amount(amount);
 
         e.storage()
             .instance()
@@ -102,7 +102,7 @@ impl token::Interface for VaultToken {
     fn transfer_from(e: Env, spender: Address, from: Address, to: Address, amount: i128) {
         spender.require_auth();
 
-        validate_amount(amount);
+        check_nonnegative_amount(amount);
 
         e.storage()
             .instance()
@@ -122,7 +122,7 @@ impl token::Interface for VaultToken {
     fn burn_from(e: Env, spender: Address, from: Address, amount: i128) {
         spender.require_auth();
 
-        validate_amount(amount);
+        check_nonnegative_amount(amount);
 
         e.storage()
             .instance()
