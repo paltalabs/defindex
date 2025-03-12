@@ -132,6 +132,14 @@ pub fn unwind_from_strategy(
     to: &Address,
 ) -> Result<Report, ContractError> {
     let strategy_client = get_strategy_client(e, strategy_address.clone());
+
+    //TODO: Add check for strategy exists
+
+    //Validate amount
+    let current_strategy_balance = strategy_client.balance(&e.current_contract_address());
+    if current_strategy_balance < *amount {
+        return Err(ContractError::UnwindMoreThanAvailable);
+    } 
     let mut report = get_report(e, strategy_address);
     report.prev_balance = report.prev_balance.checked_sub(*amount).ok_or(ContractError::Underflow)?;
    

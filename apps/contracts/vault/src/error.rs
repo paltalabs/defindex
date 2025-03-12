@@ -32,6 +32,7 @@ pub enum ContractError {
     AmountOverTotalSupply = 124,
     NoInstructions = 125,
     NotUpgradable = 126,
+    UnwindMoreThanAvailable = 128,
 
     // Arithmetic Errors (12x)
     ArithmeticError = 120,

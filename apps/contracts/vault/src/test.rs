@@ -24,6 +24,19 @@ pub fn create_hodl_strategy<'a>(e: &Env, asset: &Address) -> HodlStrategyClient<
     let args = (asset, init_args);
     HodlStrategyClient::new(e, &e.register(hodl_strategy::WASM, args))
 }
+pub mod unsafe_hodl_strategy {
+    soroban_sdk::contractimport!(
+        file = "../target/wasm32-unknown-unknown/release/unsafe_hodl_strategy.optimized.wasm"
+    );
+    pub type UnsafeHodlStrategyClient<'a> = Client<'a>;
+}
+use unsafe_hodl_strategy::UnsafeHodlStrategyClient;
+
+pub fn create_unsafe_hodl_strategy<'a>(e: &Env, asset: &Address) -> UnsafeHodlStrategyClient<'a> {
+    let init_args: Vec<Val> = sorobanvec![e];
+    let args = (asset, init_args);
+    UnsafeHodlStrategyClient::new(e, &e.register(unsafe_hodl_strategy::WASM, args))
+}
 pub mod fixed_strategy {
     soroban_sdk::contractimport!(
         file = "../target/wasm32-unknown-unknown/release/fixed_apr_strategy.optimized.wasm"
@@ -94,6 +107,16 @@ pub(crate) fn get_token_admin_client<'a>(
 
 pub(crate) fn create_strategy_params_token_0(test: &DeFindexVaultTest) -> Vec<Strategy> {
     create_strategy_params(test, test.strategy_client_token_0.address.clone())
+}
+pub(crate) fn create_unsafe_strategy_params_token_0(test: &DeFindexVaultTest) -> Vec<Strategy> {
+    sorobanvec![
+        &test.env,
+        Strategy {
+            name: String::from_str(&test.env, "Strategy 1"),
+            address: test.unsafe_strategy_client_token_0.address.clone(),
+            paused: false,
+        }
+    ]
 }
 
 pub(crate) fn create_strategy_params_token_1(test: &DeFindexVaultTest) -> Vec<Strategy> {
@@ -212,6 +235,7 @@ pub struct DeFindexVaultTest<'a> {
     strategy_client_token_0: HodlStrategyClient<'a>,
     strategy_client_token_1: HodlStrategyClient<'a>,
     strategy_client_token_2: HodlStrategyClient<'a>,
+    unsafe_strategy_client_token_0: UnsafeHodlStrategyClient<'a>,
     fixed_strategy_client_token_0: FixedStrategyClient<'a>,
     fixed_strategy_client_token_1: FixedStrategyClient<'a>,
     soroswap_router: SoroswapRouterClient<'a>,
@@ -251,6 +275,8 @@ impl<'a> DeFindexVaultTest<'a> {
         let strategy_client_token_0 = create_hodl_strategy(&env, &token_0.address.clone());
         let strategy_client_token_1 = create_hodl_strategy(&env, &token_1.address.clone());
         let strategy_client_token_2 = create_hodl_strategy(&env, &token_2.address);
+
+        let unsafe_strategy_client_token_0 = create_unsafe_hodl_strategy(&env, &token_0.address);
 
         let fixed_strategy_client_token_0 = create_fixed_strategy(&env, &token_0.address.clone());
         let fixed_strategy_client_token_1 = create_fixed_strategy(&env, &token_1.address.clone());
@@ -365,6 +391,7 @@ impl<'a> DeFindexVaultTest<'a> {
             strategy_client_token_0,
             strategy_client_token_1,
             strategy_client_token_2,
+            unsafe_strategy_client_token_0,
             fixed_strategy_client_token_0,
             fixed_strategy_client_token_1,
             soroswap_router,
