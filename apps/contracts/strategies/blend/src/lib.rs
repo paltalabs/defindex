@@ -3,7 +3,7 @@ use constants::{MIN_DUST, SCALAR_12};
 use reserves::StrategyReserves;
 use soroban_fixed_point_math::{i128, FixedPoint};
 use soroban_sdk::{
-    contract, contractimpl, token::TokenClient, Address, Env, IntoVal, String, Val, Vec,
+    contract, contractimpl, Address, Env, IntoVal, String, Val, Vec,
 };
 
 mod blend_pool;
@@ -239,7 +239,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         let config = storage::get_config(&e)?;
 
-        let (tokens_withdrawn, b_tokens_burnt) = blend_pool::withdraw(&e, &to, &amount, &config)?;
+        let (_tokens_withdrawn, b_tokens_burnt) = blend_pool::withdraw(&e, &to, &amount, &config)?;
 
         let (vault_shares, reserves) = reserves::withdraw(
             &e,

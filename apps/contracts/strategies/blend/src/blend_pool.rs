@@ -8,7 +8,7 @@ use soroban_sdk::{
 use crate::{
     reserves,
     soroswap::internal_swap_exact_tokens_for_tokens,
-    storage::{self, Config},
+    storage::{Config},
 };
 
 soroban_sdk::contractimport!(file = "../external_wasms/blend/pool.wasm");
@@ -107,7 +107,7 @@ pub fn supply(
 
     let new_positions = pool_client.submit(
         &e.current_contract_address(), // * `from` - The address of the user whose positions are being modified
-        &from, /// * `spender` - The address of the user who is sending tokens to the pool
+        &from, // * `spender` - The address of the user who is sending tokens to the pool
         &from, // * `to` - The address of the user who is receiving tokens from the pool
         &requests,
     );
@@ -280,7 +280,7 @@ pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError>
     // Supplying underlying asset into blend pool
     let b_tokens_minted = supply(&e, &e.current_contract_address(), &amount_out, &config)?;
 
-    reserves::harvest(&e, amount_out, b_tokens_minted, &config)?;
+    reserves::harvest(&e, b_tokens_minted, &config)?;
 
     Ok(true)
 }

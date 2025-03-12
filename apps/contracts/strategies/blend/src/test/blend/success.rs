@@ -12,8 +12,6 @@ use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
 use soroban_sdk::{vec, Address, Env, IntoVal, Symbol, Vec};
 use crate::test::std::println;
-use crate::blend_pool::RequestType;
-
 
 #[test]
 fn success() {

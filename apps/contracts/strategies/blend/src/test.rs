@@ -349,17 +349,6 @@ impl EnvTestUtils for Env {
     }
 }
 
-pub fn assert_approx_eq_abs(a: i128, b: i128, delta: i128) {
-    assert!(
-        a > b - delta && a < b + delta,
-        "assertion failed: `(left != right)` \
-         (left: `{:?}`, right: `{:?}`, epsilon: `{:?}`)",
-        a,
-        b,
-        delta
-    );
-}
-
 /// Asset that `b` is within `percentage` of `a` where `percentage`
 /// is a percentage in decimal form as a fixed-point number with 7 decimal
 /// places
@@ -392,8 +381,6 @@ pub fn create_mock_oracle<'a>(e: &Env) -> (Address, MockPriceOracleClient<'a>) {
 pub mod mockpool {
 
     use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, Env, Symbol};
-
-    use super::EnvTestUtils;
 
     const BRATE: Symbol = symbol_short!("b_rate");
     #[derive(Clone, Debug)]
@@ -461,17 +448,6 @@ pub mod mockpool {
         }
     }
 
-    // pub fn register_mock_pool_with_b_rate(e: &Env, b_rate: i128) -> MockPoolClient {
-    //     let pool_address = e.register(MockPool {}, (b_rate,));
-    //     MockPoolClient::new(e, &pool_address)
-    // }
-
-    // /// Updates the mock pool's b_rate and also updates
-    // /// the timestamp to make sure `reserve_vault::update_rate` doesn't return early.
-    // pub fn set_b_rate(e: &Env, mock_pool_client: &MockPoolClient, b_rate: i128) {
-    //     e.jump(5);
-    //     mock_pool_client.set_b_rate(&b_rate);
-    // }
 }
 
 // Blend Strategy

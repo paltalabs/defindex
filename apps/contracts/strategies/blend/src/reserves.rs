@@ -1,5 +1,5 @@
 use crate::{
-    constants::{SCALAR_9, SCALAR_12}, 
+    constants::SCALAR_12, 
     storage, storage::Config,
     blend_pool,
 };
@@ -233,26 +233,23 @@ pub fn withdraw(
 /// into the Blend pool and only updates the reserves accordingly.
 ///
 /// # Process
-/// 1. Validate that `underlying_amount` and `b_tokens_amount` are positive.
-/// 2. Update the reserve rate using the newly acquired underlying assets and bTokens.
-/// 3. Increase the total bTokens stored in the strategy reserves.
-/// 4. Store the updated reserves in persistent storage.
+/// 1. Validates that `b_tokens_amount` is positive.
+/// 2. Retrieves the updated reserves with the new `b_rate` directly from the Blend contract.
+/// 3. Increases the total bTokens stored in the strategy reserves based on the reinvestment amount.
+/// 4. Stores the updated reserves in persistent storage.
 ///
 /// # Arguments
 /// * `e` - The execution environment.
-/// * `reserves` - The current strategy reserves.
-/// * `underlying_amount` - The amount of the underlying asset obtained from rewards.
 /// * `b_tokens_amount` - The amount of bTokens minted from the reinvestment.
 ///
 /// # Returns
 /// * `Result<(), StrategyError>` - Returns `Ok(())` if successful, otherwise an error.
 ///
 /// # Errors
-/// * `StrategyError::InvalidArgument` - If `underlying_amount` or `b_tokens_amount` are not positive.
-/// * `StrategyError::UnderflowOverflow` - If an arithmetic operation fails due to an overflow/underflow.
+/// * `StrategyError::InvalidArgument` - If `b_tokens_amount` is not positive.
+/// * `StrategyError::UnderflowOverflow` - If an arithmetic operation fails due to overflow/underflow.
 pub fn harvest(
     e: &Env,
-    underlying_amount: i128,
     b_tokens_amount: i128,
     config: &Config,
 ) -> Result<(), StrategyError> {

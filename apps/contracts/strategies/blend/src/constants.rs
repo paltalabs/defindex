@@ -1,5 +1,3 @@
-/// 1 with 9 decimal places
-pub const SCALAR_9: i128 = 1_000_000_000;
 /// 1 with 12 decimal places
 pub const SCALAR_12: i128 = 1_000_000_000_000;
 /// The minimum amount of tokens than can be deposited or withdrawn from the vault
