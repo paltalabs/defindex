@@ -8,13 +8,6 @@ use crate::{
     ContractError,
 };
 
-pub const DAY_IN_LEDGERS: u32 = 17280;
-
-pub fn bump_instance(e: &Env) {
-    let max_ttl = e.storage().max_ttl();
-    let new_ttl = max_ttl.checked_sub(DAY_IN_LEDGERS).unwrap_or_else(|| panic_with_error!(e, ContractError::Underflow));
-    e.storage().instance().extend_ttl(new_ttl, max_ttl);
-}
 
 pub fn validate_amount(amount: i128) -> Result<(), ContractError> {
     if amount <= 0 {
