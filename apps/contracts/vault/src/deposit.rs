@@ -106,3 +106,14 @@ fn mint_shares(
     }
     Ok(())
 }
+
+#[cfg(test)]
+pub fn test_mint_shares(
+    e: &Env,
+    total_supply: &i128,
+    shares_to_mint: i128,
+    from: Address,
+) -> Result<(), ContractError> {
+    let result = mint_shares(e, total_supply, shares_to_mint, from)?;
+    Ok(result)
+}
