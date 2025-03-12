@@ -87,8 +87,8 @@ pub fn get_strategy_reserve_updated(
 /// underlying asset and bTokens.
 ///
 /// # Process
-/// 1. Validate that `underlying_amount` and `b_tokens_amount` are above zero.
-/// 2. Update the strategy's rate based on the deposit.
+/// 1. Gets the current strategy reserves with updated bRate.
+/// 2. Validate that `b_tokens_amount` is above zero.
 /// 3. Retrieve the caller's existing vault shares.
 /// 4. Compute the new shares to be minted based on bTokens deposited.
 /// 5. Update total strategy shares and bTokens held.
@@ -96,10 +96,9 @@ pub fn get_strategy_reserve_updated(
 ///
 /// # Arguments
 /// * `e` - The execution environment.
-/// * `reserves` - The current strategy reserves.
 /// * `from` - The address of the depositor (user/vault)
-/// * `underlying_amount` - The amount of the underlying asset deposited.
 /// * `b_tokens_amount` - The amount of bTokens received from the deposit.
+/// * `config` - The configuration parameters for the strategy.
 ///
 /// # Returns
 /// * `Result<(i128, StrategyReserves), StrategyError>` - A tuple containing the updated
@@ -150,19 +149,18 @@ pub fn deposit(
 /// underlying asset and bTokens.
 ///
 /// # Process
-/// 1. Validate that `underlying_amount` and `b_tokens_amount` are above zero.
-/// 2. Update the strategy's rate based on the deposit.
-/// 3. Retrieve the caller (vault)'s existing shares (vault_shares)
-/// 4. Compute the new shares to be minted based on bTokens deposited.
+/// 1. Get the current strategy reserves with updated bRate.
+/// 2. Validate that `b_tokens_amount` is above zero.
+/// 3. Retrieve the caller's existing vault shares.
+/// 4. Compute the shares to be burned based on bTokens withdrawn.
 /// 5. Update total strategy shares and bTokens held.
 /// 6. Store the updated strategy reserves and user/vault shares.
 ///
 /// # Arguments
 /// * `e` - The execution environment.
-/// * `reserves` - The current strategy reserves.
 /// * `from` - The address of the depositor.
-/// * `underlying_amount` - The amount of the underlying asset deposited.
 /// * `b_tokens_amount` - The amount of bTokens received from the deposit.
+/// * `config` - The configuration parameters for the strategy.
 ///
 /// # Returns
 /// * `Result<(i128, StrategyReserves), StrategyError>` - A tuple containing the updated
