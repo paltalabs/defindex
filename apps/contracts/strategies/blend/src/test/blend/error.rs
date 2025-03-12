@@ -6,12 +6,11 @@ use crate::test::{
 use crate::reserves;
 
 use crate::BlendStrategyClient;
-use crate::blend_pool::Request;
 use crate::storage;
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::testutils::{Address as _, MockAuth, MockAuthInvoke};
-use soroban_sdk::{Address, Env, IntoVal, Vec, vec};
+use soroban_sdk::{Address, Env, IntoVal};
 
 
 #[test]
@@ -506,14 +505,6 @@ fn unauthorized_withdraw() {
     
     let starting_balance = 10_0_000_000i128;
     usdc_client.mint(&user_2, &starting_balance);
-    let requests: Vec<Request> = vec![
-        &e,
-        Request {
-            address: usdc.address().clone(),
-            amount: starting_balance.clone(),
-            request_type: 0u32,
-        },
-    ];
     strategy_client
         .mock_auths(&[MockAuth {
             address: &user_2,
@@ -522,26 +513,15 @@ fn unauthorized_withdraw() {
                 fn_name: "deposit",
                 args: (starting_balance.clone(), user_2.clone()).into_val(&e),
                 sub_invokes: &[MockAuthInvoke {
-                    contract: &pool.clone(),
-                    fn_name: "submit",
+                    contract: &usdc_client.address.clone(),
+                    fn_name: "transfer",
                     args: (
+                        user_2.clone(),
                         strategy_client.address.clone(),
-                        user_2.clone(),
-                        user_2.clone(),
-                        requests.clone(),
+                        starting_balance.clone(),
                     )
                         .into_val(&e),
-                    sub_invokes: &[MockAuthInvoke {
-                        contract: &usdc_client.address.clone(),
-                        fn_name: "transfer",
-                        args: (
-                            user_2.clone(),
-                            pool.clone(),
-                            starting_balance.clone(),
-                        )
-                            .into_val(&e),
-                        sub_invokes: &[],
-                    }],
+                    sub_invokes: &[],
                 }],
             },
         }])

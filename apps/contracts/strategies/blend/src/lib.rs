@@ -2,6 +2,7 @@
 use constants::{MIN_DUST};
 use reserves::StrategyReserves;
 use soroban_sdk::{
+    token::TokenClient,
     contract, contractimpl, Address, Env, IntoVal, String, Val, Vec,
 };
 
@@ -162,6 +163,9 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         // will reinvest only if blnd_balance > REWARD_THRESHOLD
         blend_pool::perform_reinvest(&e, &config)?;
+
+        // transfer tokens from the vault to this (strategy) contract
+        TokenClient::new(&e, &config.asset).transfer(&from, &e.current_contract_address(), &amount);
 
         let b_tokens_minted = blend_pool::supply(&e, &from, &amount, &config)?;
 

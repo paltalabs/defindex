@@ -10,7 +10,7 @@ use crate::BlendStrategyClient;
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
-use soroban_sdk::{vec, Address, Env, IntoVal, Symbol, Vec};
+use soroban_sdk::{vec, Address, Env, IntoVal, Symbol};
 use crate::test::std::println;
 
 #[test]
@@ -118,14 +118,6 @@ fn success() {
 
     // * -> deposit 100 into blend strategy for each user_2 and user_3
     // for user 2 we will also check auths
-    let requests: Vec<Request> = vec![
-        &e,
-        Request {
-            address: usdc.address().clone(),
-            amount: starting_balance.clone(),
-            request_type: 0u32,
-        },
-    ];
         
     assert_eq!(
         e.auths()[0],
@@ -141,31 +133,18 @@ fn success() {
                 )),
                 sub_invocations: std::vec![AuthorizedInvocation {
                     function: AuthorizedFunction::Contract((
-                        pool.clone(),
-                        Symbol::new(&e, "submit"),
+                        usdc.address().clone(),
+                        Symbol::new(&e, "transfer"),
                         vec![
                             &e,
+                            user_2.to_val(),
                             strategy.to_val(),
-                            user_2.to_val(),
-                            user_2.to_val(),
-                            requests.into_val(&e)
+                            starting_balance.into_val(&e)
                         ]
                     )),
-                    sub_invocations: std::vec![AuthorizedInvocation {
-                            function: AuthorizedFunction::Contract((
-                                usdc.address().clone(),
-                                Symbol::new(&e, "transfer"),
-                                vec![
-                                    &e,
-                                    user_2.to_val(),
-                                    pool.to_val(),
-                                    starting_balance.into_val(&e)
-                                ]
-                            )),
-                            sub_invocations: std::vec![]
-                        }
-                    ]
-                }]
+                    sub_invocations: std::vec![]
+                }
+            ]
             }
         )
     );
