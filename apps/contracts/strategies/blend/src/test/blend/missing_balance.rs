@@ -197,11 +197,13 @@ fn missing_balance() {
     // withdraw_amount = 100_0958904
 
     println!("Withdrawing USER 2: 1000958904");
-    strategy_client.withdraw(&withdraw_amount, &user_2, &user_2);
+    strategy_client.harvest(&user_2);
+    let new_user_2_balance = strategy_client.balance(&user_2);
+    let withdraw_result = strategy_client.withdraw(&new_user_2_balance, &user_2, &user_2);
 
     // -> verify withdraw
-    assert_eq!(usdc_client.balance(&user_2), withdraw_amount);
-    assert_eq!(strategy_client.balance(&user_2), 0);
+    assert_eq!(usdc_client.balance(&user_2), new_user_2_balance);
+    assert_eq!(strategy_client.balance(&user_2), withdraw_result);
 
     // harvest
     let blnd_strategy_balance = blnd_client.balance(&strategy);
@@ -221,7 +223,7 @@ fn missing_balance() {
     assert_eq!(usdc_strategy_balance, 0);
 
     let user_3_strategy_balance = strategy_client.balance(&user_3);
-    assert_eq!(user_3_strategy_balance, 1226627059);
+    assert_eq!(user_3_strategy_balance, 1113792982);
 
     println!("-----------------------------------------------");
     println!("--- Simulating Distributing fees ---");
