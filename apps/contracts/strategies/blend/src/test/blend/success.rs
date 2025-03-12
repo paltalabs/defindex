@@ -4,6 +4,7 @@ use crate::constants::{MIN_DUST, SCALAR_12};
 use crate::storage::ONE_DAY_LEDGERS;
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
 use crate::test::std;
+use crate::test::assert_approx_eq_rel;
 use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils};
 use crate::BlendStrategyClient;
 use defindex_strategy_core::StrategyError;
@@ -388,6 +389,7 @@ fn success() {
 
     let user_3_starting_balance = strategy_client.balance(&user_3);
     println!("Strategy USER 3 Balance before harvest {}", user_3_starting_balance);
+    assert_eq!(user_3_starting_balance, expected_withdraw_amount);
     
     println!("=======       HARVEST  =======");
 
@@ -409,9 +411,31 @@ fn success() {
 
     */
 
-    let user_3_after_balance = strategy_client.balance(&user_3);
+    // We verify that the strategy now holds the expected_usdc
+    // Get Strategy btokens & brate to get the USDC balance of the strategy in the pool
+    let strategy_b_tokens = pool_client.get_positions(&strategy).supply.get(0).unwrap();
+    let b_rate = pool_client.get_reserve(&usdc.address().clone()).data.b_rate;
     
-    println!("Strategy USER 3 After before harvest {}", user_3_after_balance);
+    // Check Helthy Strategy USDC Balance in the pool
+    assert_approx_eq_rel(
+        (strategy_b_tokens * b_rate) / SCALAR_12,
+        starting_balance * 2 + expected_strategy_profit - expected_withdraw_amount + expected_usdc,
+        0_0100000,
+    );
+
+
+    /*
+            Now that we only have one user that has a balance in the strategy
+            we are expecting that the user_3 balance increased in expected_usdc
+    */
+    let user_3_after_balance = strategy_client.balance(&user_3);
+    println!("Strategy USER 3 after harvest {}", user_3_after_balance);
+    assert_approx_eq_rel(
+        user_3_after_balance,
+        user_3_starting_balance + expected_usdc,
+        0_0100000,
+    );
+
     println!("Strategy USER 3 Increased in {}", user_3_after_balance - user_3_starting_balance);
     println!("Strategy BLND Balance after harvest {}", blnd_client.balance(&strategy));
     println!("Strategy USDC Balance after harvest {}", usdc_client.balance(&strategy));
@@ -422,33 +446,4 @@ fn success() {
 
     assert_eq!(usdc_pool_increased_in_harvest, expected_usdc);
 
-    // We verify that the strategy now holds the expected_usdc
-    // Get Strategy btokens & brate to get the USDC balance of the strategy in the pool
-    let strategy_b_tokens = pool_client.get_positions(&strategy).supply.get(0).unwrap();
-    let b_rate = pool_client.get_reserve(&usdc.address().clone()).data.b_rate;
-    // Check Helthy Strategy USDC Balance in the pool
-    assert_eq!((strategy_b_tokens * b_rate) / SCALAR_12, 
-    starting_balance * 2 + expected_strategy_profit - expected_withdraw_amount + expected_usdc);
-    
-
-      
-
-      
-    // check healthy balances
-    let blnd_strategy_balance = blnd_client.balance(&strategy);
-    assert_eq!(blnd_strategy_balance, 0);
-    let usdc_strategy_balance = usdc_client.balance(&strategy);
-    assert_eq!(usdc_strategy_balance, 0);
-    
-    // Veriy that every user increased its position proportionally
-    /*
-            Because we are not doing any harvest on withdraw, we are only harvesting after withdraw
-            we are expecting that the user_3 balance increased with the same amount as the user_4 profit
-    
-    */
-
-    let user_3_strategy_balance = strategy_client.balance(&user_3);
-    
-    // assert_eq!(user_3_strategy_balance, 1226627059);
-    todo!();
 }
