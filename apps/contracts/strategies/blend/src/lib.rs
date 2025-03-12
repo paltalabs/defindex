@@ -271,15 +271,19 @@ impl DeFindexStrategyTrait for BlendStrategy {
     fn balance(e: Env, from: Address) -> Result<i128, StrategyError> {
         extend_instance_ttl(&e);
 
-        // Get the vault's shares
         let vault_shares = storage::get_vault_shares(&e, &from);
+        if vault_shares > 0 {
+            // Get the  updated strategy's total shares and bTokens
+            let config = storage::get_config(&e)?;
+            let reserves = reserves::get_strategy_reserve_updated(&e, &config);
+            let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
 
-        // Get the strategy's total shares and bTokens
-        let reserves = storage::get_strategy_reserves(&e);
+            Ok(underlying_balance)
+        } else {
+            Ok(0)
+        }
 
-        let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
-
-        Ok(underlying_balance)
+        
     }
 }
 

@@ -1,6 +1,6 @@
 #![cfg(test)]
 use crate::blend_pool::{BlendPoolClient, Request};
-use crate::constants::MIN_DUST;
+use crate::constants::{MIN_DUST, SCALAR_12};
 use crate::storage::ONE_DAY_LEDGERS;
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
 use crate::test::std;
@@ -170,11 +170,13 @@ fn success() {
             }
         )
     );
+    
 
     // for user 3 we check the result
     let deposit_result_1 = strategy_client.deposit(&starting_balance, &user_3);
     assert_eq!(deposit_result_1, starting_balance);
 
+    // Check balances are healthy
     assert_eq!(usdc_client.balance(&user_2), 0);
     assert_eq!(usdc_client.balance(&user_3), 0);
     assert_eq!(strategy_client.balance(&user_2), starting_balance);
@@ -185,11 +187,10 @@ fn success() {
     );
     let strategy_positions = pool_client.get_positions(&strategy);
     assert_eq!(strategy_positions.supply.get(0).unwrap(), starting_balance * 2);
-    
     // (pool b_rate still 1 as no time has passed)
     assert_eq!(pool_client.get_reserve(&usdc.address().clone()).data.b_rate, 1000000000000);
-
-    // user_4 deposit directly into pool
+    
+    // user_4 deposit directly into pool. This will help us guess the emissions
     let user_4_starting_balance = starting_balance * 2;
     usdc_client.mint(&user_4, &user_4_starting_balance);
     pool_client.submit(
@@ -231,6 +232,12 @@ fn success() {
         usdc_client.balance(&pool),
         pool_usdc_balace_start + starting_balance * 2
     );
+
+    // Get Strategy btokens & brate to get the USDC balance of the strategy in the pool
+    let strategy_b_tokens = pool_client.get_positions(&strategy).supply.get(0).unwrap();
+    let b_rate = pool_client.get_reserve(&usdc.address().clone()).data.b_rate;
+    // Check Helthy Strategy USDC Balance in the pool
+    assert_eq!((strategy_b_tokens * b_rate) / SCALAR_12, starting_balance * 2);
     
 
     /*
@@ -242,14 +249,15 @@ fn success() {
      * Withdraw from pool
      * -> withdraw all funds from pool for user_4 so we can calculate USDC that the strategy should earn
         
-     * -> withdraw (excluding dust) from blend strategy for user_2 and user_3
+     * -> withdraw (excluding dust) from blend strategy for user_2
         * -> TODO: Here we consider that we dont do harvest on withdraw
+        and we are only harvesting afterwards
      * -> verify a withdraw from an uninitialized vault fails
      * -> verify a withdraw from an empty vault fails
      * -> verify an over withdraw fails
      */
 
-    // withdraw all funds from pool for user_4
+    // withdraw all funds directly from pool for user_4
     println!("USER 4 Withdraws from Blend Pool: 200_1_917_808");
     println!("User 4 Balance before withdrawal {}", usdc_client.balance(&user_4));
     pool_client.submit(
@@ -267,23 +275,32 @@ fn success() {
     );
     let user_4_final_balance = usdc_client.balance(&user_4);
     println!("User 4 Balance after withdrawal {}", usdc_client.balance(&user_4));
-
     let user_4_profit = user_4_final_balance - user_4_starting_balance;
+
 
     /*
         We are expecting that user_4 profit 
         is equal to the profit of the strategy
     
     */
-    // withdraw from blend strategy for user_2 and user_3
-    // they are expected to receive half of the profit of user_4
+
     let expected_users_profit = user_4_profit / 2;
     let expected_strategy_profit = user_4_profit;
-
     println!("Expected users profit {}", expected_users_profit);
+    println!("Expected strategy profit {}", expected_strategy_profit);
+
+    // Get Strategy btokens & brate to get the USDC balance of the strategy in the pool
+    let strategy_b_tokens = pool_client.get_positions(&strategy).supply.get(0).unwrap();
+    let b_rate = pool_client.get_reserve(&usdc.address().clone()).data.b_rate;
+    // Check Helthy Strategy USDC Balance in the pool
+    assert_eq!((strategy_b_tokens * b_rate) / SCALAR_12, starting_balance * 2 + expected_strategy_profit);
+
+
+    // withdraw from blend strategy for user_2
+    // each of the users are expected to receive half of the profit of user_4
+
     let expected_withdraw_amount = starting_balance + expected_users_profit;
-    println!("Withdraw amount for users {}", expected_withdraw_amount);
-    // expected_withdraw_amount = 100_0958904
+    println!("Expected withdraw amount for users {}", expected_withdraw_amount);
 
     // -> verify over withdraw fails
     let result =
@@ -293,7 +310,7 @@ fn success() {
         strategy_client.try_withdraw(&(expected_withdraw_amount + 1), &user_3, &user_3);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
 
-    // Test that user can also withdraw their funds
+    // Only user 2 will withdraw its amount
     strategy_client.withdraw(&expected_withdraw_amount, &user_2, &user_2);
     // -> verify withdraw auth
     assert_eq!(
@@ -316,21 +333,23 @@ fn success() {
         )
     );
 
-    // withdraw also for user 3
-    strategy_client.withdraw(&expected_withdraw_amount, &user_3, &user_3);
-    
-    
-    // -> verify withdraw for user 3
+    // -> verify healthy balances
     assert_eq!(usdc_client.balance(&user_2), expected_withdraw_amount);
-    assert_eq!(usdc_client.balance(&user_3), expected_withdraw_amount);
+    assert_eq!(usdc_client.balance(&user_3), 0);
     assert_eq!(strategy_client.balance(&user_2), 0);
-    assert_eq!(strategy_client.balance(&user_3), 0);
+    assert_eq!(strategy_client.balance(&user_3), expected_withdraw_amount);
 
+    // Get Strategy btokens & brate to get the USDC balance of the strategy in the pool
+    let strategy_b_tokens = pool_client.get_positions(&strategy).supply.get(0).unwrap();
+    let b_rate = pool_client.get_reserve(&usdc.address().clone()).data.b_rate;
+    // Check Helthy Strategy USDC Balance in the pool
+    assert_eq!((strategy_b_tokens * b_rate) / SCALAR_12, starting_balance * 2 + expected_strategy_profit - expected_withdraw_amount);
+    
+    
     // -> verify withdraw from empty vault fails
     let result = strategy_client.try_withdraw(&MIN_DUST, &user_2, &user_2);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
 
-    // TODO: Finish harvest testings, pending soroswap router setup with a blend token pair with the underlying asset
     /*
      * Harvest
      * -> claim emissions for the strategy
@@ -340,19 +359,18 @@ fn success() {
 
     // harvest
 
-    // claim emissions for user_4 (that deposited directly on the pool)
+    // Claim emissions for user_4 (that deposited directly on the pool). We do this to guess the emissions for the strategy
     let reserve_token_ids = vec![&e, 0, 1, 2, 3];
     let amounts_claimed = pool_client.claim(&user_4, &reserve_token_ids, &user_4);
-    println!("amounts_claimed {}", amounts_claimed);
-
+    println!("Merry amounts_claimed {}", amounts_claimed);
     let merry_emissions = blnd_client.balance(&user_4);
-    println!("merry_emissions {}", merry_emissions);
+    println!("Merry emissions {}", merry_emissions);
     assert_eq!(amounts_claimed, merry_emissions);
+
     // This emissions are for Merry (user 4), who deposited directly into the pool a double amount than
     // user 2 and user 3.
     // this means that is expected that the emissions for Merry to be equal to the emissions for the
     // strategy
-    // ????
     let expected_usdc=soroswap_router
         .router_get_amounts_out(
             &merry_emissions, 
@@ -367,13 +385,34 @@ fn success() {
     println!("Strategy BLND Balance before harvest {}", blnd_client.balance(&strategy));
     println!("Strategy USDC Balance before harvest {}", usdc_client.balance(&strategy));
     println!("Pool USDC Balance before harvest {}", initial_usdc_pool_balance);
+
+    let user_3_starting_balance = strategy_client.balance(&user_3);
+    println!("Strategy USER 3 Balance before harvest {}", user_3_starting_balance);
     
-    println!("==============");
+    println!("=======       HARVEST  =======");
 
     
     strategy_client.harvest(&user_3);
-    
 
+    /*
+        TODO:
+            - Verify harvest  event, Should provide the correct harvested_BLND amount
+
+            that should be equal to merry_emissions
+        
+            event::emit_harvest(
+            &e,
+            String::from_str(&e, STRATEGY_NAME),
+            harvested_blend,
+            from,
+        );
+
+    */
+
+    let user_3_after_balance = strategy_client.balance(&user_3);
+    
+    println!("Strategy USER 3 After before harvest {}", user_3_after_balance);
+    println!("Strategy USER 3 Increased in {}", user_3_after_balance - user_3_starting_balance);
     println!("Strategy BLND Balance after harvest {}", blnd_client.balance(&strategy));
     println!("Strategy USDC Balance after harvest {}", usdc_client.balance(&strategy));
     println!("Pool USDC Balance after harvest {}", usdc_client.balance(&pool));
@@ -383,26 +422,33 @@ fn success() {
 
     assert_eq!(usdc_pool_increased_in_harvest, expected_usdc);
 
-      /*
-        TODO:
-            - Calculate how much BLND should have been harvested OK 
-            - Calculate the USDC swap output amount given soroswap formulas OK 
-            - Verify harvest function output amount
-            - Verify harvest event with correct amount
-            - Verify swap event with correct amount
-            - Verify claim event with correct amount
-            - Verify usdc_pool_increased_in_harvest is equal to the amount swapped OK 
-            - Verify that the strategy increased its positions in equal amount
-            - Veriy that every user increased its position proportionally
-    */
+    // We verify that the strategy now holds the expected_usdc
+    // Get Strategy btokens & brate to get the USDC balance of the strategy in the pool
+    let strategy_b_tokens = pool_client.get_positions(&strategy).supply.get(0).unwrap();
+    let b_rate = pool_client.get_reserve(&usdc.address().clone()).data.b_rate;
+    // Check Helthy Strategy USDC Balance in the pool
+    assert_eq!((strategy_b_tokens * b_rate) / SCALAR_12, 
+    starting_balance * 2 + expected_strategy_profit - expected_withdraw_amount + expected_usdc);
+    
 
+      
+
+      
+    // check healthy balances
     let blnd_strategy_balance = blnd_client.balance(&strategy);
     assert_eq!(blnd_strategy_balance, 0);
-
     let usdc_strategy_balance = usdc_client.balance(&strategy);
     assert_eq!(usdc_strategy_balance, 0);
+    
+    // Veriy that every user increased its position proportionally
+    /*
+            Because we are not doing any harvest on withdraw, we are only harvesting after withdraw
+            we are expecting that the user_3 balance increased with the same amount as the user_4 profit
+    
+    */
 
-    // let user_3_strategy_balance = strategy_client.balance(&user_3);
+    let user_3_strategy_balance = strategy_client.balance(&user_3);
+    
     // assert_eq!(user_3_strategy_balance, 1226627059);
     todo!();
 }
