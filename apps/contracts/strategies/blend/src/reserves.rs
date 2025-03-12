@@ -1,4 +1,5 @@
 use crate::{
+    constants::SCALAR_12,
     storage, storage::Config,
     blend_pool,
 };
@@ -51,6 +52,13 @@ impl StrategyReserves {
             .ok_or_else(|| StrategyError::DivisionByZero)
     }
 
+    /// Coverts a b_token amount to an underlying token amount rounding down
+    pub fn b_tokens_to_underlying_down(&self, amount: i128) -> Result<i128, StrategyError> {
+        return amount
+            .fixed_mul_floor(self.b_rate, SCALAR_12)
+            .ok_or_else(|| StrategyError::ArithmeticError);
+    }
+
     pub fn update_rate(
         &mut self,
         e: &Env,
@@ -65,7 +73,8 @@ impl StrategyReserves {
 /// Get the strategy reserve from storage and update the bRate
 ///
 /// ### Arguments
-/// * `asset` - The underlying asset address
+/// * `e` - The execution environment
+/// * `config` - The configuration parameters for the strategy
 ///
 /// ### Returns
 /// * `StrategyReserves` - The updated reserve vault

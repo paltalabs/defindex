@@ -289,6 +289,8 @@ pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError>
 /// Fetches the asset's b_rate from the pool
 ///
 /// ### Arguments
+/// * `e` - The execution environment
+/// * `config` - The configuration parameters for the strategy
 ///
 /// ### Returns
 /// * `i128` - The b_rate of the asset

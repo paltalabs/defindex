@@ -1,7 +1,6 @@
 #![no_std]
-use constants::{MIN_DUST, SCALAR_12};
+use constants::{MIN_DUST};
 use reserves::StrategyReserves;
-use soroban_fixed_point_math::{i128, FixedPoint};
 use soroban_sdk::{
     contract, contractimpl, Address, Env, IntoVal, String, Val, Vec,
 };
@@ -312,10 +311,7 @@ fn shares_to_underlying(shares: i128, reserves: StrategyReserves) -> Result<i128
     }
     // Calculate the bTokens corresponding to the vault's shares
     let vault_b_tokens = reserves.shares_to_b_tokens_down(shares)?;
-
     // Use the b_rate to convert bTokens to underlying assets
-    vault_b_tokens
-        .fixed_div_floor(SCALAR_12, reserves.b_rate)
-        .ok_or_else(|| StrategyError::DivisionByZero)
+    reserves.b_tokens_to_underlying_down(vault_b_tokens)
 }
 mod test;
