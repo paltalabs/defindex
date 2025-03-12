@@ -91,6 +91,9 @@ fn mint_shares(
     shares_to_mint: i128,
     from: Address,
 ) -> Result<(), ContractError> {
+    if shares_to_mint <= 0 {
+        panic_with_error!(&e, ContractError::InsufficientAmount);
+    }
     if *total_supply == 0 {
         if shares_to_mint < MINIMUM_LIQUIDITY {
             panic_with_error!(&e, ContractError::InsufficientAmount);
