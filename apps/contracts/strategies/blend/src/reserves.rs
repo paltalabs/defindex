@@ -122,7 +122,7 @@ pub fn deposit(
     let mut reserves = get_strategy_reserve_updated(e, &config);
 
     if b_tokens_amount <= 0 {
-        panic_with_error!(e, StrategyError::BTokensAmountBelowMin);
+        return Err(StrategyError::BTokensAmountBelowMin);
     }
 
     let old_vault_shares = storage::get_vault_shares(&e, &from);
