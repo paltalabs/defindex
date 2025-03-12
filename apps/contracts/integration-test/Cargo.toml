@@ -11,6 +11,8 @@ soroban-sdk = { workspace = true, features = ["testutils"] }
 factory = { path = "../factory", package = "defindex-factory" }
 vault = { path = "../vault", package = "defindex-vault"}
 hodl-strategy={ path="../strategies/hodl", package="hodl_strategy"}
+soroban-fixed-point-math = "1.3.0"
+
 common = { workspace = true }
 sep-41-token = { version = "1.2.0", features = ["testutils"] }
 sep-40-oracle = { version = "1.2.0", features = ["testutils"] }
