@@ -1388,6 +1388,7 @@ fn test_dos_deposit() {
 fn mint_zero_shares(){
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
+    /* ------------------------------------------- Vault  setup ------------------------------------------- */
     let strategy_params_token_0 = create_strategy_params_token_0(&test);
 
     // initialize with 1 assets
@@ -1441,7 +1442,9 @@ fn mint_zero_shares(){
         &users[0],
         &false,
     );
+    /* ---------------------------------------- End of vault setup ---------------------------------------- */
 
+    /* -------------------------------------- Test mint zero shares --------------------------------------- */
     // total_supply
     let total_supply = defindex_contract.total_supply();
 
@@ -1453,6 +1456,7 @@ fn mint_zero_shares(){
 fn mint_negative_shares(){
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
+    /* ------------------------------------------- Vault  setup ------------------------------------------- */
     let strategy_params_token_0 = create_strategy_params_token_0(&test);
 
     // initialize with 1 assets
@@ -1506,20 +1510,24 @@ fn mint_negative_shares(){
         &users[0],
         &false,
     );
+    /* ---------------------------------------- End of vault setup ---------------------------------------- */
 
+    /* ------------------------------------ Test mint negative shares ------------------------------------- */
     // total_supply
     let total_supply = defindex_contract.total_supply();
 
     // mint negative shares
-    let _ = test.env.as_contract(&defindex_contract.address, || deposit::test_mint_shares(&test.env, &total_supply, -20, users[0].clone()));
+    let _ = test.env.as_contract(&defindex_contract.address, || deposit::test_mint_shares(&test.env, &total_supply, -2000, users[0].clone()));
 }
 
 #[test]
 fn mint_shares(){
+    
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
-    let strategy_params_token_0 = create_strategy_params_token_0(&test);
 
+    /* ------------------------------------------- Vault  setup ------------------------------------------- */
+    let strategy_params_token_0 = create_strategy_params_token_0(&test);
     // initialize with 1 assets
     let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
@@ -1571,7 +1579,9 @@ fn mint_shares(){
         &users[0],
         &false,
     );
+    /* ---------------------------------------- End of vault setup ---------------------------------------- */
 
+    /* ------------------------------------- Test mint shares success ------------------------------------- */
     // total_supply
     let total_supply = defindex_contract.total_supply();
     
