@@ -511,7 +511,7 @@ fn asset_one_strategy_fixed_rebalance_panic_invest() {
         &false,
     );
 
-    let num_investments = 20;
+    let num_investments = 25;
 
     // Prepare rebalance instructions for all strategies
     let mut invest_instructions = svec![&setup.env];
