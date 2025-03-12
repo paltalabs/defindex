@@ -50,14 +50,21 @@ impl Report {
     }
 }
 
-pub fn distribute_strategy_fees(e: &Env, strategy_address: &Address, access_control: &AccessControl) -> Result<i128, ContractError> {
+pub fn update_and_lock_fees(e: &Env, strategy_address: &Address) -> Result<Report, ContractError> {
     let mut report = get_report(&e, &strategy_address);
     let strategy_balance = fetch_strategy_invested_funds(e, strategy_address, false)?;
     report.report(strategy_balance)?;
-    
+
     let defindex_fee = get_defindex_protocol_fee_rate(&e);
     report.lock_fee(defindex_fee)?;
 
+    Ok(report)
+}
+
+pub fn distribute_strategy_fees(e: &Env, strategy_address: &Address, access_control: &AccessControl) -> Result<i128, ContractError> {
+    let report = get_report(e, strategy_address);
+    
+    let defindex_fee = get_defindex_protocol_fee_rate(&e);
     let defindex_protocol_receiver = get_defindex_protocol_fee_receiver(&e)?;
     let vault_fee_receiver = access_control.get_fee_receiver()?;
 

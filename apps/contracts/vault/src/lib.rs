@@ -411,7 +411,7 @@ impl VaultTrait for DeFindexVault {
         let asset = get_strategy_asset(&e, &strategy_address)?;
         // This ensures that the vault has this strategy in its list of assets
         let strategy = get_strategy_struct(&strategy_address, &asset)?;
-
+        report::update_and_lock_fees(&e, &strategy.address)?;
         let distribution_result = report::distribute_strategy_fees(&e, &strategy.address, &access_control)?;
         if distribution_result > 0 {
             let mut distributed_fees: Vec<(Address, i128)> = Vec::new(&e);
@@ -823,6 +823,7 @@ impl VaultManagementTrait for DeFindexVault {
                         &e.current_contract_address(),
                     )?;
                     let call_params = vec![&e, (strategy_address.clone(), amount, e.current_contract_address())];
+                    report::update_and_lock_fees(&e, &strategy_address)?;
                     report::distribute_strategy_fees(&e, &strategy_address, &access_control)?;
                     events::emit_rebalance_unwind_event(&e, call_params, report);
                 }
