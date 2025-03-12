@@ -1,5 +1,4 @@
 use crate::{
-    constants::SCALAR_12, 
     storage, storage::Config,
     blend_pool,
 };
@@ -50,21 +49,6 @@ impl StrategyReserves {
         amount
             .fixed_div_floor(self.total_shares, self.total_b_tokens)
             .ok_or_else(|| StrategyError::DivisionByZero)
-    }
-    
-    /// Coverts a b_token amount to an underlying token amount rounding down
-    pub fn b_tokens_to_underlying_down(&self, amount: i128) -> i128 {
-        amount.fixed_mul_floor(self.b_rate, SCALAR_12).unwrap()
-    }
-
-    /// Coverts an underlying amount to a b_token amount rounding down
-    pub fn underlying_to_b_tokens_down(&self, amount: i128) -> i128 {
-        amount.fixed_div_floor(self.b_rate, SCALAR_12).unwrap()
-    }
-
-    /// Coverts an underlying amount to a b_token amount rounding up
-    pub fn underlying_to_b_tokens_up(&self, amount: i128) -> i128 {
-        amount.fixed_div_ceil(self.b_rate, SCALAR_12).unwrap()
     }
 
     pub fn update_rate(
