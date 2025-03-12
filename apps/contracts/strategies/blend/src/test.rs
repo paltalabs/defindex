@@ -85,7 +85,7 @@ pub struct BlendFixture<'a> {
     // pub dummy: Address<'a>,
     pub backstop: backstop::Client<'a>,
     pub emitter: emitter::Client<'a>,
-    pub backstop_token: comet::Client<'a>,
+    // pub backstop_token: comet::Client<'a>,
     pub pool_factory: pool_factory::Client<'a>,
 }
 
@@ -175,7 +175,7 @@ impl<'a> BlendFixture<'a> {
         BlendFixture {
             backstop: backstop_client,
             emitter: emitter_client,
-            backstop_token: comet_client,
+            // backstop_token: comet_client,
             pool_factory: pool_factory_client,
         }
     }

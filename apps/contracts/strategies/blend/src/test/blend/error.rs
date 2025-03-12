@@ -4,10 +4,12 @@ use crate::test::{
     create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils, ONE_DAY_IN_SECONDS,
 };
 use crate::BlendStrategyClient;
+use crate::blend_pool::Request;
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::testutils::{Address as _, MockAuth, MockAuthInvoke};
-use soroban_sdk::{Address, Env, IntoVal};
+use soroban_sdk::{Address, Env, IntoVal, Vec, vec};
+
 
 #[test]
 fn deposit_below_min_dust() {
@@ -402,8 +404,17 @@ fn unauthorized_withdraw() {
     );
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
 
+    
     let starting_balance = 10_0_000_000i128;
     usdc_client.mint(&user_2, &starting_balance);
+    let requests: Vec<Request> = vec![
+        &e,
+        Request {
+            address: usdc.address().clone(),
+            amount: starting_balance.clone(),
+            request_type: 0u32,
+        },
+    ];
     strategy_client
         .mock_auths(&[MockAuth {
             address: &user_2,
@@ -412,15 +423,26 @@ fn unauthorized_withdraw() {
                 fn_name: "deposit",
                 args: (starting_balance.clone(), user_2.clone()).into_val(&e),
                 sub_invokes: &[MockAuthInvoke {
-                    contract: &usdc_client.address.clone(),
-                    fn_name: "transfer",
+                    contract: &pool.clone(),
+                    fn_name: "submit",
                     args: (
-                        user_2.clone(),
                         strategy_client.address.clone(),
-                        starting_balance.clone(),
+                        user_2.clone(),
+                        user_2.clone(),
+                        requests.clone(),
                     )
                         .into_val(&e),
-                    sub_invokes: &[],
+                    sub_invokes: &[MockAuthInvoke {
+                        contract: &usdc_client.address.clone(),
+                        fn_name: "transfer",
+                        args: (
+                            user_2.clone(),
+                            pool.clone(),
+                            starting_balance.clone(),
+                        )
+                            .into_val(&e),
+                        sub_invokes: &[],
+                    }],
                 }],
             },
         }])
