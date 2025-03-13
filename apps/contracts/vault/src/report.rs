@@ -1,6 +1,6 @@
 use soroban_sdk::{contracttype, panic_with_error, Address, Env};
 
-use crate::{access::AccessControl, constants::MAX_BPS, funds::fetch_strategy_invested_funds, storage::{get_defindex_protocol_fee_rate, get_defindex_protocol_fee_receiver, get_report, set_report}, strategies::unwind_from_strategy, ContractError};
+use crate::{access::AccessControl, constants::MAX_BPS, funds::fetch_strategy_invested_funds, storage::{get_defindex_protocol_fee_rate, get_defindex_protocol_fee_receiver, get_report, set_report, get_vault_fee}, strategies::unwind_from_strategy, ContractError};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -55,8 +55,7 @@ pub fn update_and_lock_fees(e: &Env, strategy_address: &Address) -> Result<Repor
     let strategy_balance = fetch_strategy_invested_funds(e, strategy_address, false)?;
     report.report(strategy_balance)?;
 
-    let defindex_fee = get_defindex_protocol_fee_rate(&e);
-    report.lock_fee(defindex_fee)?;
+    report.lock_fee(get_vault_fee(&e))?;
 
     Ok(report)
 }
