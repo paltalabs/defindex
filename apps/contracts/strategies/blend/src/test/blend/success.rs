@@ -102,7 +102,7 @@ fn success() {
     /*
      * Deposit into pool
      * -> deposit 100 into blend strategy for each user_2 and user_3 (Total 200 USDC deposited through the Strategy)
-     * -> deposit 200 directlyinto pool for both usdc and xlm for user_4 (Total 200 USDC deposited direclty on the pool)
+     * -> deposit 200 directly into pool for both usdc and xlm for user_4 (Total 200 USDC deposited direclty on the pool)
      * -> admin borrow from pool to return to 50% util rate
      */
     let pool_usdc_balace_start = usdc_client.balance(&pool);

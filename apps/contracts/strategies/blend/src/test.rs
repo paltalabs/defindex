@@ -349,7 +349,7 @@ impl EnvTestUtils for Env {
     }
 }
 
-/// Asset that `b` is within `percentage` of `a` where `percentage`
+/// Assert that `a` is within `percentage` of `b` where `percentage`
 /// is a percentage in decimal form as a fixed-point number with 7 decimal
 /// places
 pub fn assert_approx_eq_rel(a: i128, b: i128, percentage: i128) {
