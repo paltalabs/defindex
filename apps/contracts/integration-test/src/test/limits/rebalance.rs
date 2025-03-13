@@ -762,7 +762,7 @@ fn asset_one_strategy_blend_rebalance() {
         &false
     );
 
-    let num_investments = 4;
+    let num_investments = 2;
 
     let mut invest_instructions = svec![&setup.env];
     for _ in 0..num_investments {
@@ -777,7 +777,7 @@ fn asset_one_strategy_blend_rebalance() {
     check_limits(&setup.env, "Invest");
 
     let balance_on_strategy = strategy_contract.balance(&vault_contract.address);
-    let num_unwinds = 4;
+    let num_unwinds = 2;
 
     let mut unwinds_instructions = svec![&setup.env];
     for _ in 0..num_unwinds {

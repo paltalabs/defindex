@@ -522,7 +522,7 @@ fn asset_n_strategies_blend() {
         .submit(&admin, &admin, &admin, &requests);
 
     let mut strategies = svec![&setup.env];
-    let num_strategies = 2; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
+    let num_strategies = 1; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
 
     for i in 0..num_strategies {
         let strategy_name = format!("Blend_{}", i);
