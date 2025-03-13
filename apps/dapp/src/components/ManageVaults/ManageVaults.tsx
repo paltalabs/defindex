@@ -1,23 +1,14 @@
-import React, { useContext } from "react"
 import { useSorobanReact } from "@soroban-react/core"
+import { useContext } from "react"
 
-import { VaultMethod } from "@/hooks/useVault"
 import { ModalContext } from "@/contexts"
+import { VaultMethod } from "@/hooks/useVault"
 
 import { openEditVault, resetAssets } from "@/store/lib/features/vaultStore"
-import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
 import { setSelectedVault } from "@/store/lib/features/walletStore"
+import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
 import { VaultData } from "@/store/lib/types"
 
-import { InputGroup } from "../ui/input-group"
-import { DialogBackdrop, DialogRoot, DialogTrigger } from "../ui/dialog"
-import AllVaults from "./AllVaults"
-import { DeployVault } from "../DeployVault/DeployVault"
-import { InspectVault } from "./InspectVault"
-import { InteractWithVault } from "../InteractWithVault/InteractWithVault"
-import { TransactionStatusModal } from "../Web3/TransactionStatusModal"
-import ConnectButton from "../Web3/ConnectButton"
-import { CiSearch } from "react-icons/ci";
 import {
   Button,
   Grid,
@@ -26,9 +17,18 @@ import {
   Input,
   Stack,
 } from "@chakra-ui/react"
+import { CiSearch } from "react-icons/ci"
+import { DeployVault } from "../DeployVault/DeployVault"
 import { EditVaultModal } from "../InteractWithVault/EditVault"
-import RebalanceVault from "../InteractWithVault/RebalanceVault"
+import { InteractWithVault } from "../InteractWithVault/InteractWithVault"
 import { InvestStrategies } from "../InteractWithVault/InvestStrategies"
+import RebalanceVault from "../InteractWithVault/RebalanceVault"
+import { DialogBackdrop, DialogRoot, DialogTrigger } from "../ui/dialog"
+import { InputGroup } from "../ui/input-group"
+import ConnectButton from "../Web3/ConnectButton"
+import { TransactionStatusModal } from "../Web3/TransactionStatusModal"
+import AllVaults from "./AllVaults"
+import { InspectVault } from "./InspectVault"
 
 export const ManageVaults = () => {
   const { address, activeChain } = useSorobanReact()
@@ -76,9 +76,9 @@ export const ManageVaults = () => {
         await dispatch(setSelectedVault({ ...args, method: VaultMethod.WITHDRAW }))
         console.log(args)
         break
-      case VaultMethod.EMERGENCY_WITHDRAW:
+      case VaultMethod.RESCUE:
         interactModal.setIsOpen(true)
-        await dispatch(setSelectedVault({ ...args, method: VaultMethod.EMERGENCY_WITHDRAW }))
+        await dispatch(setSelectedVault({ ...args, method: VaultMethod.RESCUE }))
         console.log(args)
         break
     }

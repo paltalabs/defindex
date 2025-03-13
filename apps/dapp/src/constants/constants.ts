@@ -1,12 +1,11 @@
-import axios from 'axios'
 
 
 const contract_addresses = {
   testnet: {
-    defindex_factory: "CBYZ5BCEFAIUZSJIDW3M5PJJ2YUVN6HUI372OZCPKJXYGGUJFJQOY7IJ",
-    hodl_strategy: "CBCVWGWQEZZGMZZMYFGD262YX5MY4CU4ZSENPY4XIM4ICH3WRBPENFLC",
-    fixed_apr_strategy: "CCATEYC2XAOYFQKIQLZLJLFMLQQ56FAA3IHCPUQ2COCMGSKMLEPOQVEH",
-    blend_strategy: "CDKKD3T65UAHXXBXUQPKSF2JMPFYU5XCJP2R26HWH5ZHGSHINLZL3P72"
+    defindex_factory: "CBHQCFAC7WVFAHGZKMCYAAOEDKF3SQR4QWY227YL4U5JHD63T3DDRJTR",
+    hodl_strategy: "CA5MAP7G67SLUFPEOJHI5W6H63NH2IQIRIMBLWV25JM6YMBVXASNEKXX",
+    fixed_apr_strategy: "CCJCLHAZKPBUPO25LDWC7QDIG6JFHWE7KBLNMQRSHHBDLFFRDJXWZUGH",
+    blend_strategy: "CACGSCVVWZJNGU6P3RKTG4JP3DHCKWUXIUL366T76X56AEIPUTSE3VD6"
   },
   mainnet: {
     defindex_factory: undefined,
@@ -15,6 +14,12 @@ const contract_addresses = {
     blend_strategy: undefined
   }
 }
+
+export const soroswapRouter = {
+  testnet: "CC6WRJYMZA574TOXNO2ZWU4HIXJ5OLKGB7JF556RKMZPSV2V62SLBTPK",
+  mainnet: "CAG5LRYQ5JVEUI5TEID72EYOVX44TTUJT5BQR2J6J77FH65PCCFAJDDH"
+}
+
 export const configFile = async (network: string) => {
   /* if(network != 'testnet' && network != 'mainnet' && network!= 'standalone') throw new Error(`Invalid network: ${network}. It should be testnet, mainnet or standalone`)
   const url = `https://raw.githubusercontent.com/paltalabs/defindex/refs/heads/main/public/${network}.contracts.json`
