@@ -1,8 +1,8 @@
 use soroban_sdk::Env;
 
-mod asset_n_strategies;
-mod rebalance;
-mod n_asset_one_strategy;
+// mod asset_n_strategies;
+// mod rebalance;
+// mod n_asset_one_strategy;
 
 pub const CPU_LIMIT: u64 = 100000000;
 pub const MEM_LIMIT: u64 = 41943040;

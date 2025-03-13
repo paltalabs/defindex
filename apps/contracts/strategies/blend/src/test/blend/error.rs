@@ -3,14 +3,15 @@ use crate::test::blend::soroswap_setup::create_soroswap_pool;
 use crate::test::{
     create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils, ONE_DAY_IN_SECONDS,
 };
-use crate::StrategyReserves;
 use crate::reserves;
 
 use crate::BlendStrategyClient;
+use crate::storage;
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::testutils::{Address as _, MockAuth, MockAuthInvoke};
 use soroban_sdk::{Address, Env, IntoVal};
+
 
 #[test]
 fn deposit_below_min_dust() {
@@ -52,7 +53,7 @@ fn deposit_below_min_dust() {
 
     let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
 
-    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
     let strategy = create_blend_strategy(
         &e,
         &usdc.address(),
@@ -115,7 +116,7 @@ fn deposit_zero_and_negative_amount() {
 
     let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
 
-    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
     let strategy = create_blend_strategy(
         &e,
         &usdc.address(),
@@ -179,7 +180,7 @@ fn harvest_from_random_address() {
 
     let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
 
-    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
     let strategy = create_blend_strategy(
         &e,
         &usdc.address(),
@@ -250,7 +251,7 @@ fn unauthorized_harvest() {
     // End of setting up soroswap pool
 
     let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
-    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
     let strategy = create_blend_strategy(
         &e,
         &usdc.address(),
@@ -347,7 +348,7 @@ fn withdraw_insufficient_balance() {
 
     let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
 
-    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
     let strategy = create_blend_strategy(
         &e,
         &usdc.address(),
@@ -420,7 +421,7 @@ fn withdraw_zero_and_negative() {
 
     let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
 
-    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
     let strategy = create_blend_strategy(
         &e,
         &usdc.address(),
@@ -490,7 +491,7 @@ fn unauthorized_withdraw() {
     // End of setting up soroswap pool
     let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
 
-    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
     let strategy = create_blend_strategy(
         &e,
         &usdc.address(),
@@ -501,6 +502,7 @@ fn unauthorized_withdraw() {
     );
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
 
+    
     let starting_balance = 10_0_000_000i128;
     usdc_client.mint(&user_2, &starting_balance);
     strategy_client
@@ -587,7 +589,7 @@ fn arithmetic_error_deposit() {
     );
     let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
 
-    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client);
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
     let strategy = create_blend_strategy(
         &e,
         &usdc.address(),
@@ -597,18 +599,12 @@ fn arithmetic_error_deposit() {
         &soroswap_router.address,
     );
 
-    let reserve = StrategyReserves {
-        total_shares: 0,
-        total_b_tokens: 0,
-        b_rate: 0,
-    };
     
     let from = Address::generate(&e);
-    let underlying_amount = i128::MAX;
-    let b_tokens_amount = 1;
+    let b_tokens_amount = 0;
 
-    
-    let result = e.as_contract(&&strategy, || reserves::deposit(&e, reserve, &from, underlying_amount, b_tokens_amount ));
+    let config = e.as_contract(&strategy, || storage::get_config(&e)).unwrap();
+    let result = e.as_contract(&strategy, || reserves::deposit(&e, &from, b_tokens_amount, &config));
 
-    assert_eq!(result, Err(StrategyError::ArithmeticError));
+    assert_eq!(result, Err(StrategyError::BTokensAmountBelowMin));
 }
