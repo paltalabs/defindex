@@ -749,6 +749,7 @@ dependencies = [
  "hodl_strategy",
  "sep-40-oracle",
  "sep-41-token",
+ "soroban-fixed-point-math",
  "soroban-sdk",
 ]
 
@@ -1526,6 +1527,14 @@ name = "unicode-ident"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "11cd88e12b17c6494200a9c1b683a04fcac9573ed74cd1b62aeb2727c5592243"
+
+[[package]]
+name = "unsafe_hodl_strategy"
+version = "0.1.0"
+dependencies = [
+ "defindex-strategy-core",
+ "soroban-sdk",
+]
 
 [[package]]
 name = "version_check"

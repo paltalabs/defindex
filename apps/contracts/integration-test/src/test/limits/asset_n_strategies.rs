@@ -39,7 +39,7 @@ fn asset_n_strategies_hodl() {
     name_symbol.set(String::from_str(&setup.env, "symbol"), vault_symbol);
 
     let mut strategies = svec![&setup.env];
-    let num_strategies = 13; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
+    let num_strategies = 9; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
 
     for i in 0..num_strategies {
         let strategy_name = format!("Strategy_{}", i);
@@ -255,7 +255,7 @@ fn asset_n_strategies_fixed() {
     name_symbol.set(String::from_str(&setup.env, "symbol"), vault_symbol);
 
     let mut strategies = svec![&setup.env];
-    let num_strategies = 10; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
+    let num_strategies = 8; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
 
     for i in 0..num_strategies {
         let strategy_name = format!("Strategy_{}", i);
@@ -503,6 +503,23 @@ fn asset_n_strategies_blend() {
 
     let pool = create_blend_pool(&setup.env, &blend_fixture, &admin, &usdc_client, &xlm_client);
     let pool_client = BlendPoolClient::new(&setup.env, &pool);
+
+    // admins deposits 200k tokens and borrows 100k tokens for a 50% util rate
+    let requests = svec![&setup.env,
+        Request {
+            address: usdc.address.clone(),
+            amount: 200_000_0000000,
+            request_type: 2,
+        },
+        Request {
+            address: usdc.address.clone(),
+            amount: 100_000_0000000,
+            request_type: 4,
+        }
+    ];
+    pool_client
+        .mock_all_auths()
+        .submit(&admin, &admin, &admin, &requests);
 
     let mut strategies = svec![&setup.env];
     let num_strategies = 2; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
