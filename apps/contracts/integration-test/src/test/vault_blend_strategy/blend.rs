@@ -1,7 +1,33 @@
-use crate::{setup::create_vault_one_blend_strategy, test::{EnvTestUtils, IntegrationTest, DAY_IN_LEDGERS}, vault::defindex_vault_contract::{AssetInvestmentAllocation, Instruction, StrategyAllocation}};
-use soroban_sdk::{testutils::{AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke, Address as _}, vec as svec, IntoVal, Symbol, Vec, Address};
-use crate::setup::blend_setup::Request;
-
+use crate::{
+    setup::{
+        blend_setup::Request,
+        create_vault_one_blend_strategy,
+    },
+    test::{
+        DAY_IN_LEDGERS,
+        EnvTestUtils,
+        IntegrationTest,
+    },
+    vault::defindex_vault_contract::{
+        AssetInvestmentAllocation,
+        Instruction,
+        StrategyAllocation,
+    },
+};
+use soroban_sdk::{
+    testutils::{
+        Address as _,
+        AuthorizedFunction,
+        AuthorizedInvocation,
+        MockAuth,
+        MockAuthInvoke,
+    },
+    vec as svec,
+    Address,
+    IntoVal,
+    Symbol,
+    Vec,
+};
 #[test]
 fn success() {
     let enviroment = create_vault_one_blend_strategy();
@@ -13,6 +39,25 @@ fn success() {
     let vault_contract = enviroment.vault_contract;
 
     let users = IntegrationTest::generate_random_users(&setup.env, 3);
+
+    // Setup pool util rate
+    // admins deposits 200k tokens and borrows 100k tokens for a 50% util rate
+    let requests = svec![&setup.env,
+        Request {
+            address: usdc.address.clone(),
+            amount: 200_000_0000000,
+            request_type: 2,
+        },
+        Request {
+            address: usdc.address.clone(),
+            amount: 100_000_0000000,
+            request_type: 4,
+        }
+    ];
+    enviroment.blend_pool_client
+        .mock_all_auths()
+        .submit(&enviroment.admin, &enviroment.admin, &enviroment.admin, &requests);
+
     /*
      * Deposit into pool
      * -> deposit 100 into blend strategy for each users[0] and users[1]
@@ -159,6 +204,7 @@ fn success() {
     // admin borrow back to 50% util rate
     let borrow_amount = (user_2_starting_balance + starting_balance * 2) / 2;
     println!("user 2, borrows from blend pool");
+    usdc_client.mint(&enviroment.admin, &borrow_amount);
     enviroment.blend_pool_client.submit(
         &enviroment.admin,
         &enviroment.admin,
