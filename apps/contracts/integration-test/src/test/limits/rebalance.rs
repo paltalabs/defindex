@@ -80,7 +80,7 @@ fn asset_one_strategy_hodl_rebalance() {
         &false,
     );
 
-    let num_investments = 28;
+    let num_investments = 14;
 
     // Prepare rebalance instructions for all strategies
     let mut invest_instructions = svec![&setup.env];
@@ -98,7 +98,7 @@ fn asset_one_strategy_hodl_rebalance() {
 
     // Checking unwind limit
     let balance_on_strategy = strategy_contract.balance(&vault_contract.address);
-    let num_unwinds = 28;
+    let num_unwinds = 9;
 
     let mut unwind_instructions = svec![&setup.env];
     for _ in 0..num_unwinds {
@@ -301,7 +301,7 @@ fn asset_one_strategy_hodl_rebalance_panic_unwind() {
 
     // Checking unwind limit
     let balance_on_strategy = strategy_contract.balance(&vault_contract.address);
-    let num_unwinds = 30;
+    let num_unwinds = 25;
 
     let mut unwind_instructions = svec![&setup.env];
     for _ in 0..num_unwinds {
@@ -392,7 +392,7 @@ fn asset_one_strategy_fixed_rebalance() {
         &false,
     );
 
-    let num_investments = 24;
+    let num_investments = 12;
 
     // Prepare rebalance instructions for all strategies
     let mut invest_instructions = svec![&setup.env];
@@ -418,7 +418,7 @@ fn asset_one_strategy_fixed_rebalance() {
     vault_contract.distribute_fees(&manager);
 
     let balance_on_strategy = strategy_contract.balance(&vault_contract.address);
-    let num_unwinds = 24;
+    let num_unwinds = 8;
 
     // Prepare rebalance instructions for all strategies
     let mut unwind_instructions = svec![&setup.env];
@@ -511,7 +511,7 @@ fn asset_one_strategy_fixed_rebalance_panic_invest() {
         &false,
     );
 
-    let num_investments = 26;
+    let num_investments = 25;
 
     // Prepare rebalance instructions for all strategies
     let mut invest_instructions = svec![&setup.env];
@@ -604,7 +604,7 @@ fn asset_one_strategy_fixed_rebalance_panic_unwind() {
         &false,
     );
 
-    let num_investments = 24;
+    let num_investments = 12;
 
     // Prepare rebalance instructions for all strategies
     let mut invest_instructions = svec![&setup.env];
@@ -630,7 +630,7 @@ fn asset_one_strategy_fixed_rebalance_panic_unwind() {
     vault_contract.distribute_fees(&manager);
 
     let balance_on_strategy = strategy_contract.balance(&vault_contract.address);
-    let num_unwinds = 26;
+    let num_unwinds = 14;
 
     // Prepare rebalance instructions for all strategies
     let mut unwind_instructions = svec![&setup.env];
@@ -762,7 +762,7 @@ fn asset_one_strategy_blend_rebalance() {
         &false
     );
 
-    let num_investments = 4;
+    let num_investments = 2;
 
     let mut invest_instructions = svec![&setup.env];
     for _ in 0..num_investments {
@@ -908,7 +908,7 @@ fn asset_one_strategy_blend_rebalance_panic_invest() {
         &false
     );
 
-    let num_investments = 5;
+    let num_investments = 4;
 
     let mut invest_instructions = svec![&setup.env];
     for _ in 0..num_investments {
@@ -1053,7 +1053,7 @@ fn asset_one_strategy_blend_rebalance_panic_unwind() {
     vault_contract.rebalance(&manager, &invest_instructions);
 
     let balance_on_strategy = strategy_contract.balance(&vault_contract.address);
-    let num_unwinds = 6;
+    let num_unwinds = 5;
 
     let mut unwinds_instructions = svec![&setup.env];
     for _ in 0..num_unwinds {

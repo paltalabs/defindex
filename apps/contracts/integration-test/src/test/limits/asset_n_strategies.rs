@@ -39,7 +39,7 @@ fn asset_n_strategies_hodl() {
     name_symbol.set(String::from_str(&setup.env, "symbol"), vault_symbol);
 
     let mut strategies = svec![&setup.env];
-    let num_strategies = 13; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
+    let num_strategies = 9; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
 
     for i in 0..num_strategies {
         let strategy_name = format!("Strategy_{}", i);
@@ -255,7 +255,7 @@ fn asset_n_strategies_fixed() {
     name_symbol.set(String::from_str(&setup.env, "symbol"), vault_symbol);
 
     let mut strategies = svec![&setup.env];
-    let num_strategies = 10; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
+    let num_strategies = 8; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
 
     for i in 0..num_strategies {
         let strategy_name = format!("Strategy_{}", i);

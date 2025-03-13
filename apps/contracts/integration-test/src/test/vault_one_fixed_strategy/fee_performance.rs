@@ -222,5 +222,5 @@ fn fee_performance() {
         .get(0)
         .unwrap()
         .total_amount;
-    assert_eq!(total_funds_after_distribute, total_funds_after_lock);
+    assert_eq!(total_funds_after_distribute, lock_fees_result_after.get(0).unwrap().prev_balance);
 }

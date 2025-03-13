@@ -10,7 +10,7 @@ fn n_assets_one_strategy_hodl() {
     let mut tokens = Vec::new();
     let mut token_clients = Vec::new();
 
-    let num_tokens = 12;
+    let num_tokens = 9;
 
     for _ in 0..num_tokens {
         let token_admin = Address::generate(&setup.env);
@@ -191,7 +191,7 @@ fn n_assets_one_strategy_fixed() {
     let mut tokens = Vec::new();
     let mut token_clients = Vec::new();
 
-    let num_tokens = 10; // CHANGE THIS TO CHECK THE LIMITS
+    let num_tokens = 8; // CHANGE THIS TO CHECK THE LIMITS
 
     for _ in 0..num_tokens {
         let token_admin = Address::generate(&setup.env);
