@@ -11,6 +11,28 @@ pub struct Report {
 }
 
 impl Report {
+    /// Locks a portion of the gains or losses as a fee based on the specified fee rate, 
+    /// separating it from the current gains/losses and resetting the gains/losses to zero.
+    /// 
+    /// The fee is calculated as (gains_or_losses * fee_rate) / SCALAR_BPS, where SCALAR_BPS 
+    /// is a constant equal to 10,000 (representing basis points). 
+    /// This should be done before any deposit and any withdraw from any strategy. 
+    ///
+    /// By increasing or decreasing the fee_rate, the manager can manipulate the APY of a strategy
+    /// by locking fees when the APY exceeds a certain threshold, effectively reducing the reported gains. The calculated fee is added to 
+    /// `locked_fee`, and `gains_or_losses` is reset to 0.
+    ///
+    /// # Arguments
+    /// * `fee_rate` - The fee rate (as a u32, in basis points) to apply to the current gains or losses.
+    ///
+    /// # Returns
+    /// * `Result<(), ContractError>` - Returns `Ok(())` on success, or a `ContractError::Overflow` 
+    ///   if an arithmetic overflow occurs during fee calculation or locked fee update.
+    ///
+    /// # Examples
+    /// If `gains_or_losses = 50`, `fee_rate = 1000` (10%), and `SCALAR_BPS = 10,000`, 
+    /// then `total_fee = (50 * 1000) / 10,000 = 5`. This fee is added to `locked_fee`, 
+    /// and `gains_or_losses` is reset to 0.
     pub fn lock_fee(&mut self, fee_rate: u32) -> Result<(), ContractError> {
         let gains_or_losses = self.gains_or_losses;
         let numerator = gains_or_losses.checked_mul(fee_rate as i128).unwrap();
@@ -21,6 +43,31 @@ impl Report {
         Ok(())
     }
 
+    /// Releases a specified amount of previously locked fees back to the users, reducing the manager's gains 
+    /// and adding the amount to the current gains or losses.
+    /// 
+    /// This function is used when the APY is too low, allowing the manager to return some or all of the fees 
+    /// that were previously locked via `lock_fee` to the users. The released amount is subtracted from 
+    /// `locked_fee` and added to `gains_or_losses`. If the requested amount exceeds the available 
+    /// `locked_fee`, the function panics with an `InsufficientManagedFunds` error.
+    ///
+    /// # Arguments
+    /// * `e` - A reference to the environment (`Env`), used for error handling.
+    /// * `amount` - The amount of locked fees (as an i128) to release back to the users.
+    ///
+    /// # Returns
+    /// * `Result<(), ContractError>` - Returns `Ok(())` on success, or a `ContractError` if:
+    ///   - An underflow occurs when subtracting from `locked_fee` (`ContractError::Underflow`).
+    ///   - An overflow occurs when adding to `gains_or_losses` (`ContractError::Overflow`).
+    ///
+    /// # Panics
+    /// Panics with `ContractError::InsufficientManagedFunds` if the requested `amount` exceeds the 
+    /// available `locked_fee`.
+    ///
+    /// # Examples
+    /// If `locked_fee = 10` and `gains_or_losses = 0`, calling `release_fee(e, 5)` will set 
+    /// `locked_fee = 5` and `gains_or_losses = 5`. If `amount = 15`, it will panic with 
+    /// `InsufficientManagedFunds`.
     pub fn release_fee(&mut self, e: &Env, amount: i128) -> Result<(), ContractError> {
         if self.locked_fee < amount {
             panic_with_error!(e, ContractError::InsufficientManagedFunds);
@@ -43,6 +90,20 @@ impl Report {
         Ok(())
     }
 
+    /// Resets the strategy's financial tracking fields to zero, intended for use only when rescuing funds 
+    /// after fully unwinding a strategy.
+    ///
+    /// This function clears the `prev_balance`, `gains_or_losses`, and `locked_fee` fields, effectively 
+    /// resetting the state of the strategy. It is designed to be called in emergency situations where all 
+    /// funds have been withdrawn from the strategy, ensuring no residual values remain in the tracking 
+    /// variables.
+    ///
+    /// # Notes
+    /// - This function does not return a result as it performs a simple state reset without the possibility 
+    ///   of failure.
+    /// - Should only be invoked after all funds have been unwound from the strategy to avoid losing track 
+    ///   of active balances or fees.
+    ///
     pub fn reset(&mut self) {
         self.prev_balance = 0;
         self.gains_or_losses = 0;
