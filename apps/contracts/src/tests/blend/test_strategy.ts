@@ -2,7 +2,6 @@ import { Address, Keypair, nativeToScVal, scValToNative, xdr } from "@stellar/st
 import { AddressBook } from "../../utils/address_book.js";
 import { airdropAccount, invokeContract } from "../../utils/contract.js";
 import { getTransactionBudget } from "../../utils/tx.js";
-import dotenv from "dotenv";
 
 
 const network = process.argv[2];
@@ -21,6 +20,7 @@ export async function testBlendStrategy(user?: Keypair) {
   let depositStatus: boolean;
   let withdrawStatus: boolean;
   let harvestStatus: boolean;
+  let balanceStatus: boolean;
 
   let depositInstructions: number = 0;
   let depositReadBytes: number = 0;
@@ -33,6 +33,10 @@ export async function testBlendStrategy(user?: Keypair) {
   let harvestInstructions: number = 0;
   let harvestReadBytes: number = 0;
   let harvestWriteBytes: number = 0;
+
+  let balanceInstructions: number = 0;
+  let balanceReadBytes: number = 0;
+  let balanceWriteBytes: number = 0;
 
   if (network !== "mainnet") {
     console.log(purple, '-------------------------------------------------------------------')
@@ -83,6 +87,44 @@ export async function testBlendStrategy(user?: Keypair) {
     // console.log(purple, '----------------------- Waiting for 5 minute -----------------------')
     // console.log(purple, '---------------------------------------------------------------------------')
     // await new Promise(resolve => setTimeout(resolve, 300000));
+
+    // Fetch strategy balance
+    try {
+      console.log(purple, '---------------------------------------------------------------------------')
+      console.log(purple, '----------------------- Fetching strategy balance -----------------------')
+      console.log(purple, '---------------------------------------------------------------------------')
+
+      const balanceParams: xdr.ScVal[] = [
+        new Address(newUser.publicKey()).toScVal(),
+      ]
+      const balanceResult = await invokeContract(
+        'blend_strategy',
+        addressBook,
+        'balance',
+        balanceParams,
+        newUser,
+        false
+      );
+      const {
+        instructions,
+        readBytes,
+        writeBytes
+      } = getTransactionBudget(balanceResult);
+      const balanceResultValue = scValToNative(balanceResult.returnValue);
+
+      balanceInstructions = instructions;
+      balanceReadBytes = readBytes;
+      balanceWriteBytes = writeBytes;
+      
+      console.log(green, '------------ Strategy balance fetched ------------')
+      console.log(green, 'balanceResult', balanceResultValue)
+      console.log(green, '----------------------------------------------------')
+      balanceStatus = true
+    }catch(e){
+      balanceStatus = false
+      console.log('error', e)
+    }
+
   
     // Withdrawing XLM from Blend Strategy
     try {
@@ -172,10 +214,11 @@ export async function testBlendStrategy(user?: Keypair) {
       harvestStatus = false
       console.log('error', e)
     }
-
+    
     return { 
       status:{
         depositStatus: depositStatus ?  '✅ Success' : '❌ Failed', 
+        balanceStatus: balanceStatus ? '✅ Success' : '❌ Failed',
         withdrawStatus: withdrawStatus ?  '✅ Success' : '❌ Failed',
         harvestStatus: harvestStatus ?  '✅ Success' : '❌ Failed',
       },
@@ -184,6 +227,11 @@ export async function testBlendStrategy(user?: Keypair) {
           instructions: depositInstructions,
           readBytes: depositReadBytes,
           writeBytes: depositWriteBytes
+        },
+        balance: {
+          instructions: balanceInstructions,
+          readBytes: balanceReadBytes,
+          writeBytes: balanceWriteBytes
         },
         withdraw: {
           instructions: withdrawInstructions,
@@ -194,9 +242,9 @@ export async function testBlendStrategy(user?: Keypair) {
           instructions: harvestInstructions,
           readBytes: harvestReadBytes,
           writeBytes: harvestWriteBytes
-        }
+        },
       }
     }
 }
 
-await testBlendStrategy();
+//await testBlendStrategy();
