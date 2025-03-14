@@ -34,6 +34,9 @@ impl Report {
     /// then `total_fee = (50 * 1000) / 10,000 = 5`. This fee is added to `locked_fee`, 
     /// and `gains_or_losses` is reset to 0.
     pub fn lock_fee(&mut self, fee_rate: u32) -> Result<(), ContractError> {
+        if self.gains_or_losses <= 0 {
+            return Ok(());
+        }
         let gains_or_losses = self.gains_or_losses;
         let numerator = gains_or_losses.checked_mul(fee_rate as i128).unwrap();
         let total_fee = numerator.checked_div(MAX_BPS).unwrap();
