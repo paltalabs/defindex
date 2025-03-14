@@ -80,16 +80,16 @@ impl Report {
     ///   - An overflow occurs when adding to `gains_or_losses` (`ContractError::Overflow`).
     ///
     /// # Panics
-    /// Panics with `ContractError::InsufficientManagedFunds` if the requested `amount` exceeds the 
+    /// Panics with `ContractError::InsufficientFeesToRelease` if the requested `amount` exceeds the 
     /// available `locked_fee`.
     ///
     /// # Examples
     /// If `locked_fee = 10` and `gains_or_losses = 0`, calling `release_fee(e, 5)` will set 
     /// `locked_fee = 5` and `gains_or_losses = 5`. If `amount = 15`, it will panic with 
-    /// `InsufficientManagedFunds`.
+    /// `InsufficientFeesToRelease`.
     pub fn release_fee(&mut self, e: &Env, amount: i128) -> Result<(), ContractError> {
         if self.locked_fee < amount {
-            panic_with_error!(e, ContractError::InsufficientManagedFunds);
+            panic_with_error!(e, ContractError::InsufficientFeesToRelease);
         }
         self.locked_fee = self.locked_fee.checked_sub(amount).ok_or(ContractError::Underflow)?;
         self.gains_or_losses = self.gains_or_losses.checked_add(amount).ok_or(ContractError::Overflow)?;
