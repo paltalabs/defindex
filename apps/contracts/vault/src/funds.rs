@@ -55,18 +55,22 @@ pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address, lock_f
 }
 
 /// Calculates the total funds invested in strategies for a given asset and
-/// provides a detailed breakdown of allocations.
+/// provides a detailed breakdown of allocations, optionally excluding locked fees.
 ///
 /// This function aggregates the balances of all strategies linked to the specified
-/// asset and returns both the total invested amount and a detailed allocation.
+/// asset. The total invested amount can either include or exclude locked fees, 
+/// depending on the value of the `lock_fees` flag. If `lock_fees` is `true`, 
+/// the locked fees are excluded from the total balance. The function returns both 
+/// the total invested amount and a detailed allocation of funds for each strategy.
 ///
 /// # Arguments
 /// * `e` - The current environment instance.
 /// * `asset_strategy_set` - The asset and its associated set of strategies to evaluate.
-///
+/// * `lock_fees` - A flag indicating whether to exclude locked fees from the total balance. 
+///   If `true`, locked fees are excluded from the total; otherwise, the full balance is included.
 /// # Returns
 /// A tuple containing:
-/// * `i128`: The total funds invested across all strategies.
+/// * `i128`: The total funds invested across all strategies, optionally excluding locked fees.
 /// * `Vec<StrategyAllocation>`: A vector with the allocation details for each strategy.
 pub fn fetch_invested_funds_for_asset(
     e: &Env,
@@ -87,15 +91,20 @@ pub fn fetch_invested_funds_for_asset(
     Ok((invested_funds, strategy_allocations))
 }
 
-/// Fetches the total managed funds for all assets. This includes both idle and invested funds.
-/// It returns a vector where each entry represents an asset's total managed balance
-/// (idle + invested) in the same order as the assets come.
+/// Fetches the total managed funds for all assets, including both idle and invested funds.
+/// The `lock_fees` flag determines whether to exclude locked fees from the invested funds when calculating the total.
+///
+/// This function returns a vector where each entry represents an asset's total managed balance 
+/// (idle + invested) in the same order as the assets are listed.
 ///
 /// # Arguments
 /// * `e` - The current environment instance.
+/// * `lock_fees` - A flag indicating whether to exclude locked fees from the invested funds. 
+///   If `true`, the invested funds will exclude any locked fees; otherwise, they include locked fees.
 ///
 /// # Returns
-/// * A vector where each entry represents an asset's total managed balance.
+/// * A vector where each entry represents an asset's total managed balance, including idle and invested funds. 
+///   Each entry is a `CurrentAssetInvestmentAllocation` containing the total balance, idle funds, invested funds, and the strategy allocations for the asset.
 pub fn fetch_total_managed_funds(
     e: &Env,
     lock_fees: bool,
