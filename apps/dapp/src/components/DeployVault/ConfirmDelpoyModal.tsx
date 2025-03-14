@@ -10,7 +10,7 @@ import { randomBytes } from "crypto";
 
 import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
 import { pushVault } from '@/store/lib/features/walletStore'
-import { Asset, NewVaultState, VaultData } from "@/store/lib/types";
+import { NewVaultState, VaultData } from "@/store/lib/types";
 
 import { useFactoryCallback, FactoryMethod } from '@/hooks/useFactory'
 import { ModalContext, TransactionStatusModalStatus } from "@/contexts";
@@ -20,6 +20,7 @@ import { DialogBody, DialogCloseTrigger, DialogFooter, DialogHeader, DialogTitle
 import { Button } from "@chakra-ui/react"
 import { resetNewVault } from "@/store/lib/features/vaultStore";
 import { useVault } from "@/hooks/useVault";
+import { getAssetAmountsSCVal, getAssetParamsSCVal, getCreateDeFindexVaultParams } from "@/helpers/vault";
 
 interface Status {
   isSuccess: boolean,
@@ -132,87 +133,51 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     const manager = new Address(managerString)
     const salt = randomBytes(32)
 
-    /*
-        pub struct AssetAllocation {
-          pub address: Address,
-          pub strategies: Vec<Strategy>,
-        } 
-        pub struct Strategy {
-          pub address: Address,
-          pub name: String,
-          pub paused: bool,
-        }
-    */
 
-    const assetParamsScVal = newVault.assets.map((asset) => {
-      const strategyParamsScVal = asset.strategies.map((param) => {
-        return xdr.ScVal.scvMap([
-          new xdr.ScMapEntry({
-            key: xdr.ScVal.scvSymbol('address'),
-            val: new Address(param.address).toScVal(),
-          }),
-          new xdr.ScMapEntry({
-            key: xdr.ScVal.scvSymbol('name'),
-            val: nativeToScVal(param.name, { type: "string" }),
-          }),
-          new xdr.ScMapEntry({
-            key: xdr.ScVal.scvSymbol('paused'),
-            val: nativeToScVal(false, { type: "bool" }),
-          }),
-        ]);
-      });
-      const strategyParamsScValVec = xdr.ScVal.scvVec(strategyParamsScVal);
-      return xdr.ScVal.scvMap([
-        new xdr.ScMapEntry({
-          key: xdr.ScVal.scvSymbol('address'),
-          val: new Address(asset.address).toScVal(),
-        }),
-        new xdr.ScMapEntry({
-          key: xdr.ScVal.scvSymbol('strategies'),
-          val: strategyParamsScValVec,
-        }),
-      ]);
-    });
+    const assetParamsScVal = getAssetParamsSCVal(newVault.assets);
     const assetParamsScValVec = xdr.ScVal.scvVec(assetParamsScVal);
-    const amountsScVal = newVault.assets.map((asset, index) => {
-      const parsedAmount = newVault.assets[index]?.amount || 0;
-      const truncatedAmount = Math.floor(parsedAmount * 1e7) / 1e7;
-      const convertedAmount = Number(truncatedAmount) * Math.pow(10, 7)
-      if (newVault.assets[index]?.amount === 0) return nativeToScVal(0, { type: "i128" });
-      return nativeToScVal(convertedAmount, { type: "i128" });
-    });
-    /*  const amountsScVal = newVault.amounts.map((amount) => {
-       return nativeToScVal((amount * Math.pow(10, 7)), { type: "i128" });
-     }); */
+    const amountsScVal = getAssetAmountsSCVal(newVault.assets);
     const amountsScValVec = xdr.ScVal.scvVec(amountsScVal);
-    /*  fn create_defindex_vault(
-     emergency_manager: address, 
-     fee_receiver: address, 
-     vault_share: u32, 
-     vault_name: string, 
-     vault_symbol: string, 
-     manager: address, 
-     assets: vec<AssetAllocation>, 
-     salt: bytesn<32>) -> result<address,FactoryError>
+    /*
+
+    roles: Map<u32, Address>,
+    vault_fee: u32,
+    assets: Vec<AssetStrategySet>,
+    soroswap_router: Address,
+    name_symbol: Map<String, String>,
+    upgradable: bool,
 */
     let result: any;
-
-
+    /* 
+      emergency_manager: Keypair,
+      rebalance_manager: Keypair,
+      fee_receiver: Keypair,
+      manager: Keypair,
+      vault_fee: number,
+      vault_name: string,
+      vault_symbol: string,
+      asset_allocations: xdr.ScVal[],
+      router_address: Address,
+      upgradable: boolean,
+    */
+    const routerAddress = 'CC6WRJYMZA574TOXNO2ZWU4HIXJ5OLKGB7JF556RKMZPSV2V62SLBTPK';
     if (newVault.assets[0]?.amount === undefined) {
-      const createDefindexParams: xdr.ScVal[] = [
-        emergencyManager.toScVal(),
-        feeReceiver.toScVal(),
-        vaultShare,
-        vaultName,
-        vaultSymbol,
-        manager.toScVal(),
-        assetParamsScValVec,
-        nativeToScVal(salt),
-      ];
+      const vault_params: xdr.ScVal[] = getCreateDeFindexVaultParams(
+        emergencyManager.toString(),
+        emergencyManager.toString(),
+        feeReceiver.toString(),
+        manager.toString(),
+        indexShare,
+        indexName,
+        indexSymbol,
+        assetParamsScVal,
+        routerAddress,
+        true
+      );
       try {
         result = await factory(
           FactoryMethod.CREATE_DEFINDEX_VAULT,
-          createDefindexParams,
+          vault_params,
           true,
         )
       }
@@ -279,7 +244,6 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
     return result;
   }
 
-  //to-do Use chakra-ui stepper component
   return (
 
     <>
