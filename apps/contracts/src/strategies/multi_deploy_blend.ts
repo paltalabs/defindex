@@ -85,6 +85,7 @@ export async function multiDeployBlendStrategies(quantity: number, asset_key: st
       new Address(blndToken).toScVal(), // BLND Token
       new Address(soroswapRouter).toScVal(), // Soroswap router
       init_args.claim_id,
+      nativeToScVal(10_0_000_0000, { type: "i128" }), 
     ]);
   
     const args: xdr.ScVal[] = [
