@@ -27,24 +27,26 @@ pub struct Report {
 }
 
 impl Report {
-    /// Locks a portion of the gains or losses as a fee based on the specified fee rate, 
-    /// separating it from the current gains/losses and resetting the gains/losses to zero.
+    /// Locks a portion of the current gains or losses as a fee, based on the specified fee rate. 
+    /// This separates the fee from the current gains/losses and resets the gains/losses to zero.
     /// 
-    /// The fee is calculated as (gains_or_losses * fee_rate) / SCALAR_BPS, where SCALAR_BPS 
-    /// is a constant equal to 10,000 (representing basis points). 
-    /// This should be done before any deposit and any withdraw from any strategy. 
-    ///
-    /// By increasing or decreasing the fee_rate, the manager can manipulate the APY of a strategy
-    /// by locking fees when the APY exceeds a certain threshold, effectively reducing the reported gains. The calculated fee is added to 
-    /// `locked_fee`, and `gains_or_losses` is reset to 0.
-    ///
+    /// The fee is calculated using the formula: 
+    /// (gains_or_losses * fee_rate) / SCALAR_BPS, where SCALAR_BPS is a constant (10,000) 
+    /// representing basis points. This operation should be performed or withdrawal as this 
+    ///  ensures users always get the least amount possible, preventing the pool from losing value
+    /// from any strategy.
+    /// 
+    /// By adjusting the `fee_rate`, the manager can influence the reported APY of a strategy by locking
+    /// a fee when the APY exceeds a threshold, thus reducing the displayed gains. The calculated fee is 
+    /// added to `locked_fee`, and the `gains_or_losses` are reset to zero.
+    /// 
     /// # Arguments
     /// * `fee_rate` - The fee rate (as a u32, in basis points) to apply to the current gains or losses.
-    ///
+    /// 
     /// # Returns
-    /// * `Result<(), ContractError>` - Returns `Ok(())` on success, or a `ContractError::Overflow` 
+    /// * `Result<(), ContractError>` - Returns `Ok(())` on success, or a `ContractError::Overflow`
     ///   if an arithmetic overflow occurs during fee calculation or locked fee update.
-    ///
+    /// 
     /// # Examples
     /// If `gains_or_losses = 50`, `fee_rate = 1000` (10%), and `SCALAR_BPS = 10,000`, 
     /// then `total_fee = (50 * 1000) / 10,000 = 5`. This fee is added to `locked_fee`, 
@@ -68,7 +70,7 @@ impl Report {
     /// This function is used when the APY is too low, allowing the manager to return some or all of the fees 
     /// that were previously locked via `lock_fee` to the users. The released amount is subtracted from 
     /// `locked_fee` and added to `gains_or_losses`. If the requested amount exceeds the available 
-    /// `locked_fee`, the function panics with an `InsufficientManagedFunds` error.
+    /// `locked_fee`, the function panics with an `InsufficientFeesToRelease` error.
     ///
     /// # Arguments
     /// * `e` - A reference to the environment (`Env`), used for error handling.
@@ -96,16 +98,44 @@ impl Report {
         Ok(())
     }
 
+    /// Updates the current balance, calculates the gains or losses, and updates the total 
+    /// accumulated gains or losses for the contract. The previous balance is updated for the next report.
+    ///
+    /// If this is the first report (i.e., `prev_balance` is 0), the current balance is used as the 
+    /// reference for the previous balance and no gains or losses are recorded.
+    ///
+    /// # Arguments
+    /// * `current_balance` - The current balance to compare against the previous balance to calculate the gains or losses.
+    ///
+    /// # Returns
+    /// * `Result<(), ContractError>` - Returns `Ok(())` on success, or a `ContractError::Underflow` 
+    ///   if there is an underflow when calculating the current gains/losses, or `ContractError::Overflow` 
+    ///   if the accumulated gains/losses exceed the allowable range.
+    ///
+    /// # Examples
+    /// If `prev_balance = 1000` and `current_balance = 1200`, the `current_gains_or_losses` will be 200, 
+    /// and the `gains_or_losses` will be updated accordingly. The `prev_balance` will also be updated to `1200`.
     pub fn report(&mut self, current_balance: i128) -> Result<(), ContractError> {
+        // Use current balance as previous balance if this is the first report (prev_balance is 0)
         let prev_balance = if self.prev_balance == 0 {
             current_balance
         } else {
             self.prev_balance
         };
 
-        let gains_or_losses = current_balance.checked_sub(prev_balance).ok_or(ContractError::Underflow)?;
-        self.gains_or_losses = self.gains_or_losses.checked_add(gains_or_losses).ok_or(ContractError::Overflow)?;
+        // Calculate gains or losses and handle potential underflow
+        let current_gains_or_losses = current_balance
+            .checked_sub(prev_balance)
+            .ok_or(ContractError::Underflow)?;
+
+        // Update the accumulated gains or losses, handle overflow
+        self.gains_or_losses = self.gains_or_losses
+            .checked_add(current_gains_or_losses)
+            .ok_or(ContractError::Overflow)?;
+
+        // Update the previous balance for the next report
         self.prev_balance = current_balance;
+
         Ok(())
     }
 
