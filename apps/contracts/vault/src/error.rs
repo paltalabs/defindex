@@ -33,6 +33,7 @@ pub enum ContractError {
     NoInstructions = 125,
     NotUpgradable = 126,
     UnwindMoreThanAvailable = 128,
+    InsufficientFeesToRelease = 129,
 
     // Arithmetic Errors (12x)
     ArithmeticError = 120,

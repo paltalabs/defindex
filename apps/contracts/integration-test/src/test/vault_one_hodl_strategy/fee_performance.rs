@@ -218,7 +218,7 @@ fn fee_performance() {
 
     assert_eq!(
         release_fees_result,
-        Err(Ok(VaultContractError::InsufficientManagedFunds))
+        Err(Ok(VaultContractError::InsufficientFeesToRelease))
     );
 
     let _distribute_fees_result = enviroment
