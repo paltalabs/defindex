@@ -1,6 +1,22 @@
-use soroban_sdk::{contracttype, panic_with_error, Address, Env};
-
-use crate::{access::AccessControl, constants::MAX_BPS, funds::fetch_strategy_invested_funds, storage::{get_defindex_protocol_fee_rate, get_defindex_protocol_fee_receiver, get_report, set_report}, strategies::unwind_from_strategy, ContractError};
+use soroban_sdk::{
+    contracttype, 
+    panic_with_error, 
+    Address, 
+    Env
+};
+use crate::{
+    access::AccessControl,
+    constants::SCALAR_BPS,
+    funds::fetch_strategy_invested_funds,
+    storage::{
+        get_defindex_protocol_fee_rate,
+        get_defindex_protocol_fee_receiver,
+        get_report,
+        set_report
+    },
+    strategies::unwind_from_strategy,
+    ContractError
+};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -39,7 +55,7 @@ impl Report {
         }
         let gains_or_losses = self.gains_or_losses;
         let numerator = gains_or_losses.checked_mul(fee_rate as i128).unwrap();
-        let total_fee = numerator.checked_div(MAX_BPS).unwrap();
+        let total_fee = numerator.checked_div(SCALAR_BPS).unwrap();
 
         self.locked_fee = self.locked_fee.checked_add(total_fee).ok_or(ContractError::Overflow)?;
         self.gains_or_losses = 0;
@@ -137,7 +153,7 @@ pub fn distribute_strategy_fees(e: &Env, strategy_address: &Address, access_cont
     if report.locked_fee > 0 {
         // Calculate shares for each receiver based on their fee proportion
         let numerator = report.locked_fee.checked_mul(defindex_fee as i128).unwrap();
-        let defindex_fee_amount = numerator.checked_div(MAX_BPS).unwrap();
+        let defindex_fee_amount = numerator.checked_div(SCALAR_BPS).unwrap();
 
         let vault_fee_amount = report.locked_fee.checked_sub(defindex_fee_amount).ok_or(ContractError::Underflow)?;
 
