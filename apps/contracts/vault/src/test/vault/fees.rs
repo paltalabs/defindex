@@ -5,6 +5,7 @@ use soroban_sdk::{ vec as sorobanvec, Address, Map, String, Vec, IntoVal,
 testutils::{MockAuth, MockAuthInvoke, Address as _}};
 
 use crate::test::{create_defindex_vault, create_fixed_strategy_params_token_0, create_strategy_params_token_0, defindex_vault::{ AssetStrategySet, ContractError, Instruction, Report, RolesDataKey}, DeFindexVaultTest, EnvTestUtils};
+use crate::storage;
 
 
 pub const ONE_DAY_IN_SECONDS: u64 = 86_400;
@@ -183,11 +184,30 @@ fn rebalance_unwind(){
   let vault_balance = test.token_0.balance(&defindex_contract.address);
   assert_eq!(vault_balance, instruction_amount_0); 
 
+  // This report should have 0 gains_or_losses
   defindex_contract.report();
+
 
   test.env.jump_time(ONE_DAY_IN_SECONDS*365);
 
+  println!("instruction_amount_0:            {}", instruction_amount_0);
+  // strategy balance before harvest, 
+  println!("strategy balance before harvest: {}", test.fixed_strategy_client_token_0.balance(&defindex_contract.address));
+  // Simulate earning on the strategy
+  // It should be 10% of the instruction amount
   test.fixed_strategy_client_token_0.harvest(&defindex_contract.address);
+
+  println!("strategy balance after harvest:  {}", test.fixed_strategy_client_token_0.balance(&defindex_contract.address));
+
+  // Defindex protocol fee receiver balance before rebalance
+  let defindex_protocol_balance_before = test.token_0.balance(&test.defindex_protocol_receiver);
+  println!("defindex_protocol_balance_before: {}", defindex_protocol_balance_before);
+
+  // Get report from storage before rebalance
+  let report = test.env.as_contract(&defindex_contract.address, || {
+      storage::get_report(&test.env, &test.fixed_strategy_client_token_0.address)
+  });
+  println!("report before rebalance: {:?}", report);
 
   let instruction_amount_1 = 300_0_000_000i128;
 
@@ -199,12 +219,33 @@ fn rebalance_unwind(){
       ),
   ];
 
+  // This rebalance should update report, lock fees and distribute fees
   defindex_contract.rebalance(&test.rebalance_manager, &instructions);
-  let report = defindex_contract.report().get(0).unwrap().gains_or_losses;
+  // Get report from storage after rebalance
+  let report = test.env.as_contract(&defindex_contract.address, || {
+      storage::get_report(&test.env, &test.fixed_strategy_client_token_0.address)
+  });
+  println!("report after rebalance: {:?}", report);
+  
 
-  let expected_reward = instruction_amount_0 / 10;
+  // Get report after rebalance - should have gains_or_losses = 0 and locked_fee = 0
+  let report = defindex_contract.report().get(0).unwrap();
+  assert_eq!(report.gains_or_losses, 0);
+  assert_eq!(report.locked_fee, 0);
 
-  assert_eq!(report, expected_reward);
+  // Check fee distributions
+  let expected_total_fee = instruction_amount_0 * 20 / 100 / 10; // 10% of invested amount
+  
+  println!("expected_total_fee:              {}", expected_total_fee);
+  // DeFindex protocol fee receiver should get 25% of total fee
+  let defindex_fee = expected_total_fee * 25 / 100;
+  let defindex_balance = test.token_0.balance(&test.defindex_protocol_receiver);
+  assert_eq!(defindex_balance, defindex_fee);
+
+  // Vault fee receiver should get 75% of total fee  
+  let vault_fee = expected_total_fee * 75 / 100;
+  let vault_fee_balance = test.token_0.balance(&test.vault_fee_receiver);
+  assert_eq!(vault_fee_balance, vault_fee);
 }
 
 #[test]
