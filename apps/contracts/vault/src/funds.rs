@@ -2,8 +2,9 @@ use soroban_sdk::token::TokenClient;
 use soroban_sdk::{Address, Env, Vec};
 
 use crate::models::{CurrentAssetInvestmentAllocation, StrategyAllocation};
-use crate::storage::{get_assets, get_report, get_vault_fee, set_report};
+use crate::storage::{get_assets};
 use crate::strategies::get_strategy_client;
+use crate::report;
 use crate::ContractError;
 use common::models::AssetStrategySet;
 
@@ -22,32 +23,35 @@ pub fn fetch_idle_funds_for_asset(e: &Env, asset: &Address) -> i128 {
     TokenClient::new(e, &asset).balance(&e.current_contract_address())
 }
 
-/// Retrieves the total funds invested in a specified strategy, excluding any locked fees.
+/// Retrieves the total funds invested in a specified strategy, with an option to exclude any locked fees.
 ///
-/// This function performs a cross-contract call to the strategy to fetch the current balance
-/// of the investment. It then subtracts any locked fees from the total to provide an accurate
-/// representation of the funds that are actively invested and available to the user.
+/// This function performs a cross-contract call to the strategy contract to fetch the current balance
+/// of the investment. If `lock_fees` is set to `true`, it will subtract any locked fees from the total balance 
+/// to provide an accurate representation of the funds that are actively invested and available to the user. 
+/// Additionally, when `lock_fees` is `true`, it will update the report and save the changes, ensuring that the 
+/// locked fees are accounted for and the report is up to date.
 ///
 /// # Arguments
-/// * `e` - The current environment instance.
+/// * `e` - The current environment instance, which provides access to the contract's storage and functions.
 /// * `strategy_address` - The address of the strategy whose investment balance is to be retrieved.
-///
+/// * `lock_fees` - A boolean flag that indicates whether to exclude locked fees from the total balance. 
+///   If `true`, the function will subtract the locked fees and update the report; if `false`, the full balance is returned.
+/// 
 /// # Returns
-/// The total invested funds in the strategy as an `i128`, excluding locked fees.
+/// * `Result<i128, ContractError>` - Returns the total invested funds in the strategy as an `i128`. If 
+///   `lock_fees` is `true`, the function excludes locked fees from the balance. If an error occurs during the 
+///   process (such as an overflow or underflow), a `ContractError` will be returned.
+///
 pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address, lock_fees: bool) -> Result<i128, ContractError> {
-    let strategy_client: defindex_strategy_core::DeFindexStrategyClient<'_> = get_strategy_client(e, strategy_address.clone());
+    let strategy_client = get_strategy_client(e, strategy_address.clone());
     let strategy_invested_funds = strategy_client.balance(&e.current_contract_address());
-
-    let mut report = get_report(e, strategy_address);
-
-    if lock_fees {
-        report.report(strategy_invested_funds)?;
-        report.lock_fee(get_vault_fee(e))?;
-        set_report(e, strategy_address, &report);
+    
+    if !lock_fees {
+        return Ok(strategy_invested_funds);
+    } else {
+        let report = report::update_report_and_lock_fees(e, strategy_address, strategy_invested_funds)?;
+        Ok(strategy_invested_funds.checked_sub(report.locked_fee).unwrap_or(0))
     }
-    Ok(strategy_invested_funds
-        .checked_sub(report.locked_fee)
-        .unwrap_or(0))
 }
 
 /// Calculates the total funds invested in strategies for a given asset and

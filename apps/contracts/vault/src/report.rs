@@ -7,7 +7,6 @@ use soroban_sdk::{
 use crate::{
     access::AccessControl,
     constants::SCALAR_BPS,
-    funds::fetch_strategy_invested_funds,
     storage::{
         get_defindex_protocol_fee_rate,
         get_defindex_protocol_fee_receiver,
@@ -161,12 +160,31 @@ impl Report {
     }
 }
 
-pub fn update_and_lock_fees(e: &Env, strategy_address: &Address) -> Result<Report, ContractError> {
-    let mut report = get_report(&e, &strategy_address);
-    let strategy_balance = fetch_strategy_invested_funds(e, strategy_address, false)?;
-    report.report(strategy_balance)?;
+/// Updates the strategy report and locks fees based on the current strategy balance and fee rate.
+/// 
+/// This function retrieves the current strategy report, updates it with the current invested funds,
+/// and locks any applicable fees based on the vault's fee rate. The updated report is then saved back 
+/// to the storage to reflect the most recent financial data for the strategy.
+///
+/// # Arguments
+/// * `e` - The environment context that provides access to storage and functions.
+/// * `strategy_address` - The address of the strategy for which the report and fee will be updated.
+/// * `strategy_invested_funds` - The current balance of funds invested in the strategy to update the report with.
+///
+/// # Returns
+/// * `Result<Report, ContractError>` - Returns `Ok(report)` with the updated report on success, or
+///   a `ContractError` if an error occurs during the update process, such as an overflow/underflow 
+///   or invalid fee calculation.
+pub fn update_report_and_lock_fees(
+    e: &Env, 
+    strategy_address: &Address,
+    strategy_invested_funds: i128
+) -> Result<Report, ContractError> {
 
+    let mut report = get_report(&e, &strategy_address);
+    report.report(strategy_invested_funds)?;
     report.lock_fee(get_vault_fee(&e))?;
+    set_report(&e, &strategy_address, &report);
 
     Ok(report)
 }
@@ -178,15 +196,17 @@ pub fn distribute_strategy_fees(e: &Env, strategy_address: &Address, access_cont
     let defindex_protocol_receiver = get_defindex_protocol_fee_receiver(&e)?;
     let vault_fee_receiver = access_control.get_fee_receiver()?;
 
-    let mut fees_distributed: i128 = 0;
+    let fees_to_distribute = report.locked_fee;
 
-    if report.locked_fee > 0 {
+    if fees_to_distribute > 0 {
         // Calculate shares for each receiver based on their fee proportion
-        let numerator = report.locked_fee.checked_mul(defindex_fee as i128).unwrap();
+        let numerator = fees_to_distribute.checked_mul(defindex_fee as i128).unwrap();
         let defindex_fee_amount = numerator.checked_div(SCALAR_BPS).unwrap();
 
-        let vault_fee_amount = report.locked_fee.checked_sub(defindex_fee_amount).ok_or(ContractError::Underflow)?;
+        let vault_fee_amount = fees_to_distribute.checked_sub(defindex_fee_amount).ok_or(ContractError::Underflow)?;
 
+        // TODO: Some of the amounts might be zerop
+        // TODO: What about minting vault shares instead of transferring the tokens?
         unwind_from_strategy(
             &e,
             &strategy_address,
@@ -200,10 +220,9 @@ pub fn distribute_strategy_fees(e: &Env, strategy_address: &Address, access_cont
             &vault_fee_receiver,
         )?;
         
-        fees_distributed = report.locked_fee;
         report.locked_fee = 0;
         set_report(&e, &strategy_address, &report);
     }
 
-    Ok(fees_distributed)
+    Ok(fees_to_distribute)
 }
