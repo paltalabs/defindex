@@ -240,6 +240,8 @@ impl VaultTrait for DeFindexVault {
         extend_instance_ttl(&e);
         from.require_auth();
 
+        // Fetches the total managed funds for all assets, including idle and invested funds (net of locked fees).
+        // Setting the flag to `true` ensures that strategy reports are updated and new fees are locked during the process.
         let total_managed_funds = fetch_total_managed_funds(&e, true)?;
 
         let (amounts, shares_to_mint) = process_deposit(
@@ -301,9 +303,12 @@ impl VaultTrait for DeFindexVault {
         from.require_auth();
 
         check_min_amount(withdraw_shares, MIN_WITHDRAW_AMOUNT)?;
-        // Calculate the withdrawal amounts for each asset based on the share amounts
-        let total_managed_funds = fetch_total_managed_funds(&e, true)?;
 
+        // Fetches the total managed funds for all assets, including idle and invested funds (net of locked fees).
+        // Setting the flag to `true` ensures that strategy reports are updated and new fees are locked during the process.
+        let total_managed_funds = fetch_total_managed_funds(&e, true)?;
+        
+        // Calculate the withdrawal amounts for each asset based on the share amounts
         let asset_withdrawal_amounts =
             calculate_asset_amounts_per_vault_shares(&e, withdraw_shares, &total_managed_funds)?;
 
@@ -549,6 +554,8 @@ impl VaultTrait for DeFindexVault {
     ) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
 
+        // Fetches the total managed funds for all assets, including idle and invested funds (net of locked fees).
+        // Setting the flag to `true` ensures that strategy reports are updated and new fees are locked during the process.
         let total_managed_funds = fetch_total_managed_funds(&e, true)?;
         Ok(calculate_asset_amounts_per_vault_shares(
             &e,
