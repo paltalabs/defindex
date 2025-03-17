@@ -23,24 +23,22 @@ pub fn fetch_idle_funds_for_asset(e: &Env, asset: &Address) -> i128 {
     TokenClient::new(e, &asset).balance(&e.current_contract_address())
 }
 
-/// Retrieves the total funds invested in a specified strategy, with an option to exclude any locked fees.
+/// Retrieves the total funds invested in a specified strategy, excluding current locked fees, with an option to lock new fees.
 ///
-/// This function performs a cross-contract call to the strategy contract to fetch the current balance
-/// of the investment. If `lock_fees` is set to `true`, it will subtract any locked fees from the total balance 
-/// to provide an accurate representation of the funds that are actively invested and available to the user. 
-/// Additionally, when `lock_fees` is `true`, it will update the report and save the changes, ensuring that the 
-/// locked fees are accounted for and the report is up to date.
+/// This function performs a cross-contract call to the strategy contract to fetch the current investment balance.
+/// It always returns the balance minus the current locked fees, representing the actively invested funds available 
+/// to the user. If `lock_fees` is `true`, it updates the report and locks new fees before calculating the result; 
+/// if `false`, it uses the existing locked fees without updating the report.
 ///
 /// # Arguments
-/// * `e` - The current environment instance, which provides access to the contract's storage and functions.
+/// * `e` - The current environment instance, providing access to the contract's storage and functions.
 /// * `strategy_address` - The address of the strategy whose investment balance is to be retrieved.
-/// * `lock_fees` - A boolean flag that indicates whether to exclude locked fees from the total balance. 
-///   If `true`, the function will subtract the locked fees and update the report; if `false`, the full balance is returned.
-/// 
+/// * `lock_fees` - A boolean flag indicating whether to update the report and lock new fees before calculating 
+///   the balance. If `true`, new fees are locked; if `false`, only existing locked fees are subtracted.
+///
 /// # Returns
-/// * `Result<i128, ContractError>` - Returns the total invested funds in the strategy as an `i128`. If 
-///   `lock_fees` is `true`, the function excludes locked fees from the balance. If an error occurs during the 
-///   process (such as an overflow or underflow), a `ContractError` will be returned.
+/// * `Result<i128, ContractError>` - Returns the total invested funds in the strategy (excluding locked fees) as 
+///   an `i128`. Returns a `ContractError` if an error occurs (e.g., overflow, underflow, or report update failure).
 ///
 pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address, lock_fees: bool) -> Result<i128, ContractError> {
     let strategy_client = get_strategy_client(e, strategy_address.clone());
