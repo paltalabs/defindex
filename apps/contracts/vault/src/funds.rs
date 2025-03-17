@@ -55,23 +55,22 @@ pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address, lock_f
     }
 }
 
-/// Calculates the total funds invested in strategies for a given asset and
-/// provides a detailed breakdown of allocations, optionally excluding locked fees.
+/// Calculates the total funds invested in strategies for a given asset and provides a detailed breakdown of allocations.
 ///
-/// This function aggregates the balances of all strategies linked to the specified
-/// asset. The total invested amount can either include or exclude locked fees, 
-/// depending on the value of the `lock_fees` flag. If `lock_fees` is `true`, 
-/// the locked fees are excluded from the total balance. The function returns both 
-/// the total invested amount and a detailed allocation of funds for each strategy.
+/// This function aggregates the balances of all strategies linked to the specified asset, always excluding current locked fees 
+/// from the total. The `lock_fees` flag determines whether new fees are locked during the calculation: if `true`, the report 
+/// for each strategy is updated and new fees are locked before excluding them; if `false`, only existing locked fees are excluded.
+/// The function returns both the total invested amount (net of locked fees) and a detailed allocation of funds for each strategy.
 ///
 /// # Arguments
 /// * `e` - The current environment instance.
 /// * `asset_strategy_set` - The asset and its associated set of strategies to evaluate.
-/// * `lock_fees` - A flag indicating whether to exclude locked fees from the total balance. 
-///   If `true`, locked fees are excluded from the total; otherwise, the full balance is included.
+/// * `lock_fees` - A flag indicating whether to update strategy reports and lock new fees before calculating balances. 
+///   If `true`, new fees are locked; if `false`, only existing locked fees are subtracted.
+///
 /// # Returns
 /// A tuple containing:
-/// * `i128`: The total funds invested across all strategies, optionally excluding locked fees.
+/// * `i128`: The total funds invested across all strategies, excluding locked fees.
 /// * `Vec<StrategyAllocation>`: A vector with the allocation details for each strategy.
 pub fn fetch_invested_funds_for_asset(
     e: &Env,
