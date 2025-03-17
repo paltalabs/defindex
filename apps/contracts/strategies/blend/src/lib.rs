@@ -3,7 +3,7 @@ use constants::{MIN_DUST};
 use reserves::StrategyReserves;
 use soroban_sdk::{
     token::TokenClient,
-    contract, contractimpl, Address, Env, IntoVal, String, Val, Vec,
+    contract, contractimpl, Address, Env, IntoVal, String, Val, Vec, vec,
 };
 
 mod blend_pool;
@@ -90,18 +90,32 @@ impl DeFindexStrategyTrait for BlendStrategy {
             .get(3)
             .expect("Invalid argument: soroswap_router")
             .into_val(&e);
-        let claim_ids: Vec<u32> = init_args
-            .get(4)
-            .expect("Invalid argument: claim_ids")
-            .into_val(&e);
         let reward_threshold: i128 = init_args
             .get(5)
             .expect("Invalid argument: reward_threshold")
             .into_val(&e);
 
-        // **reserve_id** (`u32`) - The identifier for the specific reserve within the Blend pool.
+        // reserve_id (u32): A unique identifier for a specific reserve within the Blend pool.
         let blend_pool_client = blend_pool::BlendPoolClient::new(&e, &blend_pool_address);
         let reserve_id = blend_pool_client.get_reserve(&asset).config.index;
+
+        // claim_ids: A list of identifiers for tokens that can be claimed from the pool.
+        // Each eligible token has a unique ID, enabling precise tracking and claiming of rewards.
+        //
+        // Token IDs for a reserve are derived from its reserve_index:
+        // - d_token_id = reserve_index * 2
+        // - b_token_id = reserve_index * 2 + 1
+        // This ensures each reserve has distinct IDs for its d_token and b_token.
+        // To reverse this and find the reserve_index from a reserve_token_id:
+        //   reserve_index = floor(reserve_token_id / 2)
+        //
+        // bTokens represent a supply made to a Blend pool. Each reserve has a unique, non-transferable
+        // bToken per pool. Since we're supplying to the pool, we focus on b_tokens.
+        //
+        // Here, we calculate the claim_id for the bToken (since we're only claiming emissions for it):
+        let claim_id = reserve_id * 2 + 1;
+        let claim_ids: Vec<u32> = vec![&e, claim_id];
+
 
         let config = Config {
             asset: asset.clone(),
