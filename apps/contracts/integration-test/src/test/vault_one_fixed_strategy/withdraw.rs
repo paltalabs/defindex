@@ -86,6 +86,7 @@ fn fixed_apr_no_invest_withdraw_success() {
         deposit_amount - MINIMUM_LIQUIDITY
     );
 
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, 0i128];
     enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
@@ -93,11 +94,11 @@ fn fixed_apr_no_invest_withdraw_success() {
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
                 fn_name: "withdraw",
-                args: (df_balance_before_withdraw.clone(), user.clone()).into_val(&setup.env),
+                args: (df_balance_before_withdraw.clone(), withdraw_min_amounts_out.clone(), user.clone()).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .withdraw(&df_balance_before_withdraw, &user);
+        .withdraw(&df_balance_before_withdraw, &withdraw_min_amounts_out, &user);
 
     let expected_amount_user = deposit_amount - MINIMUM_LIQUIDITY;
 
@@ -207,7 +208,8 @@ fn fixed_apr_invest_withdraw_success() {
         df_balance_before_withdraw,
         deposit_amount - MINIMUM_LIQUIDITY
     );
-
+    
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, 0i128];
     enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
@@ -215,11 +217,11 @@ fn fixed_apr_invest_withdraw_success() {
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
                 fn_name: "withdraw",
-                args: (df_balance_before_withdraw.clone(), user.clone()).into_val(&setup.env),
+                args: (df_balance_before_withdraw.clone(), withdraw_min_amounts_out.clone(), user.clone()).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .withdraw(&df_balance_before_withdraw, &user);
+        .withdraw(&df_balance_before_withdraw, &withdraw_min_amounts_out, &user);
 
     let apr_bps = 1000u32;
     let user_expected_reward =

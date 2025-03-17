@@ -71,6 +71,7 @@ fn test_withdraw_no_invest_success() {
     let df_balance = enviroment.vault_contract.balance(&user);
     assert_eq!(df_balance, deposit_amount - MINIMUM_LIQUIDITY);
 
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, 0i128];
     enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
@@ -78,11 +79,11 @@ fn test_withdraw_no_invest_success() {
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
                 fn_name: "withdraw",
-                args: (df_balance.clone(), user.clone()).into_val(&setup.env),
+                args: (df_balance.clone(), withdraw_min_amounts_out.clone(), user.clone()).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .withdraw(&df_balance, &user);
+        .withdraw(&df_balance, &withdraw_min_amounts_out, &user);
 
     let df_balance = enviroment.vault_contract.balance(&user);
     assert_eq!(df_balance, 0);
@@ -167,6 +168,7 @@ fn test_withdraw_partial_success() {
     assert_eq!(df_balance, deposit_amount - MINIMUM_LIQUIDITY);
 
     let withdraw_amount = df_balance / 2;
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, 0i128];
     enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
@@ -174,11 +176,11 @@ fn test_withdraw_partial_success() {
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
                 fn_name: "withdraw",
-                args: (withdraw_amount.clone(), user.clone()).into_val(&setup.env),
+                args: (withdraw_amount.clone(), withdraw_min_amounts_out.clone(), user.clone()).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .withdraw(&withdraw_amount, &user);
+        .withdraw(&withdraw_amount, &withdraw_min_amounts_out, &user);
 
     let df_balance = enviroment.vault_contract.balance(&user);
     assert_eq!(df_balance, withdraw_amount);
@@ -260,6 +262,7 @@ fn test_withdraw_insufficient_balance() {
     assert_eq!(df_balance, deposit_amount - MINIMUM_LIQUIDITY);
 
     let withdraw_amount = df_balance + 1; // Attempt to withdraw more than the balance
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, 0i128];
     let result = enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
@@ -267,11 +270,11 @@ fn test_withdraw_insufficient_balance() {
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
                 fn_name: "withdraw",
-                args: (withdraw_amount.clone(), user.clone()).into_val(&setup.env),
+                args: (withdraw_amount.clone(), withdraw_min_amounts_out.clone(), user.clone()).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .try_withdraw(&withdraw_amount, &user);
+        .try_withdraw(&withdraw_amount, &withdraw_min_amounts_out, &user);
     assert_eq!(result, Err(Ok(VaultContractError::InsufficientBalance)));
 
     let df_balance = enviroment.vault_contract.balance(&user);
@@ -388,6 +391,7 @@ fn test_withdraw_after_invest() {
         .balance(&enviroment.vault_contract.address);
     assert_eq!(strategy_balance, deposit_amount);
 
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, 0i128];
     enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
@@ -395,11 +399,11 @@ fn test_withdraw_after_invest() {
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
                 fn_name: "withdraw",
-                args: (df_balance.clone(), user.clone()).into_val(&setup.env),
+                args: (df_balance.clone(), withdraw_min_amounts_out.clone(), user.clone()).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .withdraw(&df_balance, &user);
+        .withdraw(&df_balance, &withdraw_min_amounts_out, &user);
 
     let df_balance = enviroment.vault_contract.balance(&user);
     assert_eq!(df_balance, 0);
@@ -536,6 +540,7 @@ fn test_withdraw_multiple_users() {
     assert_eq!(df_balance_user1, deposit_amount - MINIMUM_LIQUIDITY);
     assert_eq!(df_balance_user2, deposit_amount);
 
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, 0i128];
     enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
@@ -543,11 +548,11 @@ fn test_withdraw_multiple_users() {
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
                 fn_name: "withdraw",
-                args: (df_balance_user1.clone(), user1.clone()).into_val(&setup.env),
+                args: (df_balance_user1.clone(), withdraw_min_amounts_out.clone(), user1.clone()).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .withdraw(&df_balance_user1, &user1);
+        .withdraw(&df_balance_user1, &withdraw_min_amounts_out, &user1);
 
     enviroment
         .vault_contract
@@ -556,11 +561,11 @@ fn test_withdraw_multiple_users() {
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
                 fn_name: "withdraw",
-                args: (df_balance_user2.clone(), user2.clone()).into_val(&setup.env),
+                args: (df_balance_user2.clone(), withdraw_min_amounts_out.clone(), user2.clone()).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .withdraw(&df_balance_user2, &user2);
+        .withdraw(&df_balance_user2, &withdraw_min_amounts_out, &user2);
 
     let df_balance_user1 = enviroment.vault_contract.balance(&user1);
     let df_balance_user2 = enviroment.vault_contract.balance(&user2);
@@ -731,6 +736,7 @@ fn test_withdraw_after_invest_multiple_users() {
         .balance(&enviroment.vault_contract.address);
     assert_eq!(strategy_balance, deposit_amount * 2);
 
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, 0i128];
     enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
@@ -738,11 +744,11 @@ fn test_withdraw_after_invest_multiple_users() {
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
                 fn_name: "withdraw",
-                args: (df_balance_user1.clone(), user1.clone()).into_val(&setup.env),
+                args: (df_balance_user1.clone(), withdraw_min_amounts_out.clone(), user1.clone()).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .withdraw(&df_balance_user1, &user1);
+        .withdraw(&df_balance_user1, &withdraw_min_amounts_out, &user1);
 
     enviroment
         .vault_contract
@@ -751,11 +757,11 @@ fn test_withdraw_after_invest_multiple_users() {
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
                 fn_name: "withdraw",
-                args: (df_balance_user2.clone(), user2.clone()).into_val(&setup.env),
+                args: (df_balance_user2.clone(), withdraw_min_amounts_out.clone(), user2.clone()).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .withdraw(&df_balance_user2, &user2);
+        .withdraw(&df_balance_user2, &withdraw_min_amounts_out, &user2);
 
     let df_balance_user1 = enviroment.vault_contract.balance(&user1);
     let df_balance_user2 = enviroment.vault_contract.balance(&user2);
