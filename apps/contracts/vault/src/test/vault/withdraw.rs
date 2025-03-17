@@ -45,8 +45,9 @@ fn negative_amount() {
     );
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+    let min_amounts_out = sorobanvec![&test.env, 0i128, 0i128];
 
-    let result = defindex_contract.try_withdraw(&-100i128, &users[0]);
+    let result = defindex_contract.try_withdraw(&-100i128, &min_amounts_out, &users[0]);
     assert_eq!(result, Err(Ok(ContractError::AmountNotAllowed)));
 }
 
@@ -95,10 +96,12 @@ fn below_min() {
 
     defindex_contract.deposit(&sorobanvec![&test.env, amount_1],&sorobanvec![&test.env, amount_1], &users[0], &false);
 
-    let result = defindex_contract.try_withdraw(&99i128, &users[0]);
+    let min_amounts_out = sorobanvec![&test.env, 0i128, 0i128];
+
+    let result = defindex_contract.try_withdraw(&99i128, &min_amounts_out, &users[0]);
     assert_eq!(result, Err(Ok(ContractError::InsufficientAmount)));
     
-    let result = defindex_contract.withdraw(&100i128, &users[0]);
+    let result = defindex_contract.withdraw(&100i128, &min_amounts_out, &users[0]);
     assert_eq!(result, sorobanvec![&test.env, 100i128]);
 }
 
@@ -141,7 +144,8 @@ fn zero_total_supply() {
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
-    let result = defindex_contract.try_withdraw(&100i128, &users[0]);
+    let min_amounts_out = sorobanvec![&test.env, 0i128, 0i128];
+    let result = defindex_contract.try_withdraw(&100i128, &min_amounts_out, &users[0]);
     assert_eq!(result, Err(Ok(ContractError::AmountOverTotalSupply)));
 }
 
@@ -219,8 +223,9 @@ fn not_enough_balance() {
     assert_eq!(defindex_contract.total_supply(), amount_to_deposit * 2);
 
     // now user 0 tries to withdraw amount_to_deposit - 1000 +1 (more that it has)
-
-    let result = defindex_contract.try_withdraw(&(amount_to_deposit - 1000 + 1), &users[0]);
+    
+    let min_amounts_out = sorobanvec![&test.env, 0i128, 0i128];
+    let result = defindex_contract.try_withdraw(&(amount_to_deposit - 1000 + 1), &min_amounts_out, &users[0]);
     assert_eq!(result, Err(Ok(ContractError::InsufficientBalance)));
 }
 
@@ -325,7 +330,9 @@ fn from_idle_one_asset_one_strategy_success() {
 
     // user decides to withdraw a portion of deposited amount
     let amount_to_withdraw = 123456i128;
-    defindex_contract.withdraw(&amount_to_withdraw, &users[0]);
+    let min_amounts_out = sorobanvec![&test.env, 0i128, 0i128];
+
+    defindex_contract.withdraw(&amount_to_withdraw, &min_amounts_out, &users[0]);
 
     // Check Balances after withdraw
 
@@ -373,13 +380,13 @@ fn from_idle_one_asset_one_strategy_success() {
 
     // user tries to withdraw more than deposited amount
     let amount_to_withdraw_more = amount_to_deposit + 1;
-    let result = defindex_contract.try_withdraw(&amount_to_withdraw_more, &users[0]);
+    let result = defindex_contract.try_withdraw(&amount_to_withdraw_more, &min_amounts_out, &users[0]);
 
     assert_eq!(result, Err(Ok(ContractError::AmountOverTotalSupply)));
 
     // // withdraw remaining balance
     let result =
-        defindex_contract.withdraw(&(amount_to_deposit - amount_to_withdraw - 1000), &users[0]);
+        defindex_contract.withdraw(&(amount_to_deposit - amount_to_withdraw - 1000), &min_amounts_out, &users[0]);
 
     assert_eq!(
         result,
@@ -562,7 +569,9 @@ fn from_idle_two_assets_success() {
     // asset 1 = withdaw_shares*total_asset_1/total_shares = 123456*987654/1555544 = 78385.318720653 = 78385
 
     let amount_to_withdraw = 123456i128;
-    let result = defindex_contract.withdraw(&amount_to_withdraw, &users[0]);
+    let min_amounts_out = sorobanvec![&test.env, 0i128, 0i128];
+    
+    let result = defindex_contract.withdraw(&amount_to_withdraw, &min_amounts_out, &users[0]);
 
     // expected asset vec Vec<AssetStrategySet>
     // pub struct AssetStrategySet {
@@ -749,7 +758,9 @@ fn from_strategy_one_asset_one_strategy_success() {
     let vault_balance = test.token_0.balance(&defindex_contract.address);
     assert_eq!(vault_balance, 0);
 
-    defindex_contract.withdraw(&df_balance, &users[0]);
+    let min_amounts_out = sorobanvec![&test.env, 0i128, 0i128];
+
+    defindex_contract.withdraw(&df_balance, &min_amounts_out, &users[0]);
 
     let df_balance = defindex_contract.balance(&users[0]);
     assert_eq!(df_balance, 0i128);
@@ -866,7 +877,9 @@ fn from_strategies_one_asset_two_strategies_success() {
     let strategy_2_balance_before_withdraw = test.token_0.balance(&strategy_client_1.address);
     let idle_funds_before_withdraw = test.token_0.balance(&defindex_contract.address);
 
-    defindex_contract.withdraw(&(amount_0-1000), &users[0]);
+    let min_amounts_out = sorobanvec![&test.env, 0i128, 0i128];
+        
+    defindex_contract.withdraw(&(amount_0-1000), &min_amounts_out, &users[0]);
 
     let unwind_amount = (amount_0 - 1000)-idle_funds_before_withdraw;
     let strategy_1_expected_unwind = (unwind_amount as f64 * 0.8) as i128;
@@ -1030,7 +1043,9 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     // user will get asset 1: 234567890 * 35353535 / 358024679 = 23162660.552210564 = 23162660
 
     let amount_to_withdraw = 35353535i128;
-    let result = defindex_contract.withdraw(&amount_to_withdraw, &users[0]);
+    let min_amounts_out = sorobanvec![&test.env, 0i128, 0i128];
+    
+    let result = defindex_contract.withdraw(&amount_to_withdraw, &min_amounts_out, &users[0]);
 
     assert_eq!(defindex_contract.total_supply(), 322671144); //358024679- 35353535
 
@@ -1135,7 +1150,7 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     //  this should only affect idle funds
 
     let amount_to_withdraw = 644444i128;
-    let result = defindex_contract.withdraw(&amount_to_withdraw, &users[0]);
+    let result = defindex_contract.withdraw(&amount_to_withdraw, &min_amounts_out, &users[0]);
 
     assert_eq!(defindex_contract.total_supply(), 328471143); //358024679- 35353535 + 6444443 - 644444
 
@@ -1193,7 +1208,7 @@ fn from_strategies_two_asset_each_one_strategy_success() {
 
     // // Now we will wihdraw the total remineder amount of vault shares of the user
     // // 328471143 - 1000 = 328470143
-    let result = defindex_contract.withdraw(&328470143, &users[0]);
+    let result = defindex_contract.withdraw(&328470143, &min_amounts_out, &users[0]);
 
     // from the total supply 328471143, the user will take 328470143 (almost all)
     // for asset 0 this means
@@ -1380,6 +1395,7 @@ fn from_strategy_success_no_mock_all_auths() {
     assert_eq!(invested_funds_0, 0);
     assert_eq!(invested_funds_1, 0);
 
+    let min_amounts_out = sorobanvec![&test.env, 0i128, 0i128];
     let withdraw_amount_0 = deposit_amount_0/2;
     defindex_contract.mock_auths(&[MockAuth {
         address: &from.clone(),
@@ -1404,13 +1420,14 @@ fn from_strategy_success_no_mock_all_auths() {
                         defindex_contract.address.clone(),
                         from.clone(),
                         withdraw_amount_0,
+                        min_amounts_out.clone(),
                     ).into_val(&test.env),
                     sub_invokes: &[],
                 },
             ],
         },
     }
-    ]).withdraw(&withdraw_amount_0, &from.clone());
+    ]).withdraw(&withdraw_amount_0, &min_amounts_out, &from.clone());
 
     let invested_funds_0 = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
     let invested_funds_1 = defindex_contract.fetch_total_managed_funds().get(1).unwrap().invested_amount;
@@ -1540,6 +1557,8 @@ fn unauthorized_withdraw(){
     ]).deposit(&amounts_desired, &amounts_min, &from, &invest); 
 
     let withdraw_amount_0 = deposit_amount_0/2;
+    let min_amounts_out = sorobanvec![&test.env, 0i128, 0i128];
+
     let withdraw_response = defindex_contract.mock_auths(
         &[MockAuth {
             address: &users[1].clone(),
@@ -1548,6 +1567,7 @@ fn unauthorized_withdraw(){
                 fn_name: "withdraw",
                 args: (
                     withdraw_amount_0,
+                    min_amounts_out.clone(),
                     from,
                 ).into_val(&test.env),
                 sub_invokes: &[
@@ -1570,7 +1590,7 @@ fn unauthorized_withdraw(){
                 ],
             },
         }
-    ]).try_withdraw(&withdraw_amount_0, &from.clone());
+    ]).try_withdraw(&withdraw_amount_0, &min_amounts_out, &from.clone());
     assert_eq!(withdraw_response.is_err(), true);
 }
 

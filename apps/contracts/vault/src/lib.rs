@@ -284,6 +284,7 @@ impl VaultTrait for DeFindexVault {
     /// ## Parameters:
     /// - `e`: The contract environment (`Env`).
     /// - `withdraw_shares`: The number of vault shares to withdraw.
+    /// - `min_amounts_out`: A vector of minimum amounts required for each asset to be withdrawn.
     /// - `from`: The address initiating the withdrawal.
     ///
     /// ## Returns
@@ -295,7 +296,7 @@ impl VaultTrait for DeFindexVault {
     /// - `ContractError::AmountOverTotalSupply`: If the specified shares exceed the total supply.
     /// - `ContractError::ArithmeticError`: If any arithmetic operation fails during calculations.
     /// - `ContractError::WrongAmountsLength`: If there is a mismatch in asset allocation data.
-    fn withdraw(e: Env, withdraw_shares: i128, from: Address) -> Result<Vec<i128>, ContractError> {
+    fn withdraw(e: Env, withdraw_shares: i128, min_amounts_out: Vec<i128>, from: Address) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
         validate_amount(withdraw_shares)?;
         from.require_auth();
