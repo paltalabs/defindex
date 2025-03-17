@@ -88,11 +88,12 @@ fn success() {
         &e, 
         &usdc.address(),
         &pool,
-        &0u32,
         &blnd.address(),
         &soroswap_router.address,
     );
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
+    assert_eq!(pool_client.get_reserve(&usdc.address().clone()).config.index, 0);
+
 
     // get asset returns correct asset
     assert_eq!(strategy_client.asset(), usdc.address().clone());

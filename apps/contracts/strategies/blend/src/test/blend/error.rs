@@ -58,7 +58,6 @@ fn deposit_below_min_dust() {
         &e,
         &usdc.address(),
         &pool,
-        &0u32,
         &blnd.address(),
         &soroswap_router.address,
     );
@@ -121,7 +120,6 @@ fn deposit_zero_and_negative_amount() {
         &e,
         &usdc.address(),
         &pool,
-        &0u32,
         &blnd.address(),
         &soroswap_router.address,
     );
@@ -185,7 +183,6 @@ fn harvest_from_random_address() {
         &e,
         &usdc.address(),
         &pool,
-        &0u32,
         &blnd.address(),
         &soroswap_router.address,
     );
@@ -256,7 +253,6 @@ fn unauthorized_harvest() {
         &e,
         &usdc.address(),
         &pool,
-        &0u32,
         &blnd.address(),
         &soroswap_router.address,
     );
@@ -353,7 +349,6 @@ fn withdraw_insufficient_balance() {
         &e,
         &usdc.address(),
         &pool,
-        &0u32,
         &blnd.address(),
         &soroswap_router.address,
     );
@@ -426,7 +421,6 @@ fn withdraw_zero_and_negative() {
         &e,
         &usdc.address(),
         &pool,
-        &0u32,
         &blnd.address(),
         &soroswap_router.address,
     );
@@ -496,7 +490,6 @@ fn unauthorized_withdraw() {
         &e,
         &usdc.address(),
         &pool,
-        &0u32,
         &blnd.address(),
         &soroswap_router.address,
     );
@@ -594,7 +587,6 @@ fn arithmetic_error_deposit() {
         &e,
         &usdc.address(),
         &pool,
-        &0u32,
         &blnd.address(),
         &soroswap_router.address,
     );
