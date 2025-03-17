@@ -1,5 +1,4 @@
 #![no_std]
-use constants::{MIN_DUST};
 use reserves::StrategyReserves;
 use soroban_sdk::{
     token::TokenClient,
@@ -16,9 +15,9 @@ use storage::{extend_instance_ttl, Config};
 
 pub use defindex_strategy_core::{event, DeFindexStrategyTrait, StrategyError};
 
-pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
-    if amount < 0 {
-        Err(StrategyError::NegativeNotAllowed)
+pub fn check_positive_amount(amount: i128) -> Result<(), StrategyError> {
+    if amount <= 0 {
+        Err(StrategyError::OnlyPositiveAmountAllowed)
     } else {
         Ok(())
     }
@@ -157,15 +156,9 @@ impl DeFindexStrategyTrait for BlendStrategy {
     ///
     /// * `Result<i128, StrategyError>` - The underlying balance after the deposit or an error.
     fn deposit(e: Env, amount: i128, from: Address) -> Result<i128, StrategyError> {
-        check_nonnegative_amount(amount)?;
+        check_positive_amount(amount)?;
         extend_instance_ttl(&e);
         from.require_auth();
-
-        // protect against rouding of reserve_vault::update_rate, as small amounts
-        // can cause incorrect b_rate calculations due to the pool rounding
-        if amount < MIN_DUST {
-            return Err(StrategyError::AmountBelowMinDust);
-        }
 
         let config = storage::get_config(&e)?;
         blend_pool::claim(&e, &e.current_contract_address(), &config);
@@ -239,18 +232,11 @@ impl DeFindexStrategyTrait for BlendStrategy {
     ///
     /// * `Result<i128, StrategyError>` - The remaining balance of the vault after the withdrawal or an error.
     fn withdraw(e: Env, amount: i128, from: Address, to: Address) -> Result<i128, StrategyError> {
-        check_nonnegative_amount(amount)?;
+        check_positive_amount(amount)?; 
         extend_instance_ttl(&e);
         from.require_auth();
 
-        // protect against rouding of reserve_vault::update_rate, as small amounts
-        // can cause incorrect b_rate calculations due to the pool rounding
-        if amount < MIN_DUST {
-            return Err(StrategyError::AmountBelowMinDust);
-        }
-
         let config = storage::get_config(&e)?;
-
 
         blend_pool::claim(&e, &e.current_contract_address(), &config);
         blend_pool::perform_reinvest(&e, &config)?;
