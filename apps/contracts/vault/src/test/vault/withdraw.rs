@@ -1659,35 +1659,36 @@ fn withdraw_min_amounts_invalid_length(){
     );
 
     // mint 
-    let amount = 10_0_000_000i128;
+    let deposit_amount = 10_0_000_000i128;
     
-    test.token_0_admin_client.mint(&users[0], &amount);
-    test.token_1_admin_client.mint(&users[0], &amount);
+    test.token_0_admin_client.mint(&users[0], &deposit_amount);
+    test.token_1_admin_client.mint(&users[0], &deposit_amount);
 
-    let amounts_desired = sorobanvec![&test.env, 10_0_000_000i128, 10_0_000_000i128];
-    let amounts_min = sorobanvec![&test.env, 10_0_000_000i128, 10_0_000_000i128];
-    defindex_contract.deposit(&amounts_desired, &amounts_min, &users[0], &false);
+    let deposit_amounts_desired = sorobanvec![&test.env, deposit_amount.clone(), deposit_amount.clone()];
+    let deposit_amounts_min = sorobanvec![&test.env, deposit_amount.clone(), deposit_amount.clone()];
+    defindex_contract.deposit(&deposit_amounts_desired, &deposit_amounts_min, &users[0], &false);
     /*----------------------------------- End of test setup -----------------------------------*/
     /*------------------------- Created vault with 20 lumens balance -------------------------*/
 
     let withdraw_amount = 10_0_000_000i128;
-    let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, 1_0_000_000i128, 1_0_000_000i128, 1_0_000_000i128];
 
-    let result = defindex_contract.try_withdraw(&withdraw_amount, &withdraw_min_amounts_out, &users[0]);
+    /* --------------------- Try withdraw min_amounts.len() > assets.len() --------------------- */
+    let min_amounts_out_more_than_assets: Vec<i128> = sorobanvec![&test.env, 1_0_000_000i128, 1_0_000_000i128, 1_0_000_000i128];
+    
+    let result = defindex_contract.try_withdraw(&withdraw_amount, &min_amounts_out_more_than_assets, &users[0]);
     assert_eq!(result.is_err(), true);
     assert_eq!(result, Err(Ok(ContractError::WrongAmountsLength)));
 
-    let withdraw_amount = 10_0_000_000i128;
-    let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, 1_0_000_000i128];
-
-    let result = defindex_contract.try_withdraw(&withdraw_amount, &withdraw_min_amounts_out, &users[0]);
+    
+    /* --------------------- Try withdraw min_amounts.len() < assets.len() --------------------- */
+    let min_amounts_out_less_than_assets: Vec<i128> = sorobanvec![&test.env, 1_0_000_000i128];
+    let result = defindex_contract.try_withdraw(&withdraw_amount, &min_amounts_out_less_than_assets, &users[0]);
     assert_eq!(result.is_err(), true);
     assert_eq!(result, Err(Ok(ContractError::WrongAmountsLength)));
 
-    let withdraw_amount = 10_0_000_000i128;
-    let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, 1_0_000_000i128, 1_0_000_000i128];
-
-    let result = defindex_contract.try_withdraw(&withdraw_amount, &withdraw_min_amounts_out, &users[0]);
+    /* -------------------------- Try withdraw min_amounts.len() == 0 -------------------------- */
+    let min_amounts_out_empty: Vec<i128> = sorobanvec![&test.env];
+    let result = defindex_contract.try_withdraw(&withdraw_amount, &min_amounts_out_empty, &users[0]);
     assert_eq!(result.is_err(), true);
     assert_eq!(result, Err(Ok(ContractError::WrongAmountsLength)));
 }
@@ -1756,32 +1757,207 @@ fn withdraw_min_amounts_negative(){
     );
 
     // mint 
-    let amount = 10_0_000_000i128;
+    let deposit_amount = 10_0_000_000i128;
     
-    test.token_0_admin_client.mint(&users[0], &amount);
-    test.token_1_admin_client.mint(&users[0], &amount);
+    test.token_0_admin_client.mint(&users[0], &deposit_amount);
+    test.token_1_admin_client.mint(&users[0], &deposit_amount);
 
-    let amounts_desired = sorobanvec![&test.env, 10_0_000_000i128, 10_0_000_000i128];
-    let amounts_min = sorobanvec![&test.env, 10_0_000_000i128, 10_0_000_000i128];
-    defindex_contract.deposit(&amounts_desired, &amounts_min, &users[0], &false);
+    let deposit_amounts_desired = sorobanvec![&test.env, deposit_amount.clone(), deposit_amount.clone()];
+    let deposit_amounts_min = sorobanvec![&test.env, deposit_amount.clone(), deposit_amount.clone()];
+    defindex_contract.deposit(&deposit_amounts_desired, &deposit_amounts_min, &users[0], &false);
     /*----------------------------------- End of test setup -----------------------------------*/
     /*------------------------- Created vault with 20 lumens balance -------------------------*/
 
     let withdraw_amount = 10_0_000_000i128;
+    
+    /* ------------------------ Withdraw min_amounts_out[1] negative ------------------------ */
     let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, 1_0_000_000i128, -1_0_000_000i128];
-
     let result = defindex_contract.try_withdraw(&withdraw_amount, &withdraw_min_amounts_out, &users[0]);
     assert_eq!(result.is_err(), true);
     assert_eq!(result, Err(Ok(ContractError::AmountNotAllowed)));
 
-    let withdraw_amount = 10_0_000_000i128;
+    /* ------------------------ Withdraw min_amounts_out[0] negative ------------------------ */
     let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, -1_0_000_000i128, 1_0_000_000i128];
-
     let result = defindex_contract.try_withdraw(&withdraw_amount, &withdraw_min_amounts_out, &users[0]);
     assert_eq!(result.is_err(), true);
     assert_eq!(result, Err(Ok(ContractError::AmountNotAllowed)));
 }
 
+#[test]
+fn withdraw_under_min_amounts(){
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
+
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: sorobanvec![&test.env, 
+                Strategy{
+                    address: test.strategy_client_token_0.address.clone(),
+                    name: String::from_str(&test.env, "Strategy 1"),
+                    paused: false
+                },     
+                Strategy{
+                    address: test.fixed_strategy_client_token_0.address.clone(),
+                    name: String::from_str(&test.env, "Fixed Strategy 1"),
+                    paused: false
+                },     
+            ]     
+        },
+        AssetStrategySet {
+            address: test.token_1.address.clone(),
+            strategies: sorobanvec![&test.env, 
+                Strategy{
+                    address: test.strategy_client_token_1.address.clone(),
+                    name: String::from_str(&test.env, "Strategy 2"),
+                    paused: false
+                },     
+                Strategy{
+                    address: test.fixed_strategy_client_token_1.address.clone(),
+                    name: String::from_str(&test.env, "Fixed Strategy 2"),
+                    paused: false
+                },     
+            ]
+        }
+    ];
+
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        roles,
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
+        name_symbol,
+        true
+    );
+
+    // mint 
+    let deposit_amount = 10_0_000_000i128;
+    
+    test.token_0_admin_client.mint(&users[0], &deposit_amount);
+    test.token_1_admin_client.mint(&users[0], &deposit_amount);
+
+    let deposit_amounts_desired = sorobanvec![&test.env, deposit_amount.clone(), deposit_amount.clone()];
+    let deposit_amounts_min = sorobanvec![&test.env, deposit_amount.clone(), deposit_amount.clone()];
+    defindex_contract.deposit(&deposit_amounts_desired, &deposit_amounts_min, &users[0], &false);
+    /*----------------------------------- End of test setup -----------------------------------*/
+    /*------------------------- Created vault with 20 lumens balance --------------------------*/
+    
+    let withdraw_amount = 10_0_000_000i128;
+    /* ------------ set min_amounts_out over expected requested_withdrawal_amount ------------ */
+    /* 
+        If vault has 20 lumens as total supply and no investments and I want to withdraw 10, the expected requested withdrawal amount should be 5 & 5.
+        So... in order to test this, I will set the min_amounts_out to 6 & 4.
+    */
+    let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, 6_0_000_000i128, 4_0_000_000i128];
+
+    let result = defindex_contract.try_withdraw(&withdraw_amount, &withdraw_min_amounts_out, &users[0]);
+    assert_eq!(result.is_err(), true);
+    assert_eq!(result, Err(Ok(ContractError::InsufficientManagedFunds)));
+}
+
+#[test]
+fn withdraw_min_amounts_over_total_supply(){
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
+
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: sorobanvec![&test.env, 
+                Strategy{
+                    address: test.strategy_client_token_0.address.clone(),
+                    name: String::from_str(&test.env, "Strategy 1"),
+                    paused: false
+                },     
+                Strategy{
+                    address: test.fixed_strategy_client_token_0.address.clone(),
+                    name: String::from_str(&test.env, "Fixed Strategy 1"),
+                    paused: false
+                },     
+            ]     
+        },
+        AssetStrategySet {
+            address: test.token_1.address.clone(),
+            strategies: sorobanvec![&test.env, 
+                Strategy{
+                    address: test.strategy_client_token_1.address.clone(),
+                    name: String::from_str(&test.env, "Strategy 2"),
+                    paused: false
+                },     
+                Strategy{
+                    address: test.fixed_strategy_client_token_1.address.clone(),
+                    name: String::from_str(&test.env, "Fixed Strategy 2"),
+                    paused: false
+                },     
+            ]
+        }
+    ];
+
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        roles,
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
+        name_symbol,
+        true
+    );
+
+    // mint 
+    let deposit_amount = 10_0_000_000i128;
+    
+    test.token_0_admin_client.mint(&users[0], &deposit_amount);
+    test.token_1_admin_client.mint(&users[0], &deposit_amount);
+
+    let deposit_amounts_desired = sorobanvec![&test.env, deposit_amount.clone(), deposit_amount.clone()];
+    let deposit_amounts_min = sorobanvec![&test.env, deposit_amount.clone(), deposit_amount.clone()];
+    defindex_contract.deposit(&deposit_amounts_desired, &deposit_amounts_min, &users[0], &false);
+    /*----------------------------------- End of test setup -----------------------------------*/
+    /*------------------------- Created vault with 20 lumens balance --------------------------*/
+    
+    let withdraw_amount = 10_0_000_000i128;
+    /* ------------------------ set min_amounts_out over total_supply ------------------------ */
+    /* 
+        If vault has 20 lumens as total supply and no investments and I want to withdraw 10, the expected requested withdrawal amount should be 5 & 5.
+        So... in order to test this, I will set the total of min_amounts_out over 20 lumens.
+    */
+    let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, 11_0_000_000i128, 10_0_000_000i128];
+
+    let result = defindex_contract.try_withdraw(&withdraw_amount, &withdraw_min_amounts_out, &users[0]);
+    assert_eq!(result.is_err(), true);
+    assert_eq!(result, Err(Ok(ContractError::InsufficientManagedFunds)));
+}
 #[test]
 fn withdraw_min_amounts_success(){
     let test = DeFindexVaultTest::setup();
@@ -1846,21 +2022,25 @@ fn withdraw_min_amounts_success(){
     );
 
     // mint 
-    let amount = 10_0_000_000i128;
+    let deposit_amount = 10_0_000_000i128;
     
-    test.token_0_admin_client.mint(&users[0], &amount);
-    test.token_1_admin_client.mint(&users[0], &amount);
+    test.token_0_admin_client.mint(&users[0], &deposit_amount);
+    test.token_1_admin_client.mint(&users[0], &deposit_amount);
 
-    let amounts_desired = sorobanvec![&test.env, 10_0_000_000i128, 10_0_000_000i128];
-    let amounts_min = sorobanvec![&test.env, 10_0_000_000i128, 10_0_000_000i128];
-    defindex_contract.deposit(&amounts_desired, &amounts_min, &users[0], &false);
+    let deposit_amounts_desired = sorobanvec![&test.env, deposit_amount, deposit_amount];
+    let deposit_amounts_min = sorobanvec![&test.env, deposit_amount, deposit_amount];
+    defindex_contract.deposit(&deposit_amounts_desired, &deposit_amounts_min, &users[0], &false);
     /*----------------------------------- End of test setup -----------------------------------*/
-    /*------------------------- Created vault with 20 lumens balance -------------------------*/
+    /*------------------------- Created vault with 20 lumens balance --------------------------*/
 
     let withdraw_amount = 10_0_000_000i128;
-    let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, 5_0_000_000i128, 5_0_000_000i128];
+    /* --------------------------------- set min_amounts_out --------------------------------- */
+    /* 
+        If vault has 20 lumens as total supply and no investments and I want to withdraw 10, the expected requested withdrawal amount should be 5 & 5.
+        So... in order to succeed the test the amounts shouldn't exceed 5 lumens.
+    */
+    let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, 4_0_000_000i128, 3_0_000_000i128];
 
     let result = defindex_contract.withdraw(&withdraw_amount, &withdraw_min_amounts_out, &users[0]);
     assert_eq!(result, sorobanvec![&test.env, 5_0_000_000i128, 5_0_000_000i128]);
-    //Ok()
 }
