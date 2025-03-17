@@ -223,15 +223,20 @@ fn fixed_apr_invest_withdraw_success() {
         }])
         .withdraw(&df_balance_before_withdraw, &withdraw_min_amounts_out, &user);
 
+    let report_after_withdraw = enviroment.vault_contract.report();
+    let locked_fee = report_after_withdraw.get(0).unwrap().locked_fee;
+
     let apr_bps = 1000u32;
     let user_expected_reward =
         calculate_yield(deposit_amount.clone(), apr_bps, ONE_YEAR_IN_SECONDS);
+    let total_yield = user_expected_reward - locked_fee;
 
     let minimum_liquidity_reward = calculate_yield(MINIMUM_LIQUIDITY, apr_bps, ONE_YEAR_IN_SECONDS);
+    let underlying_minimun_liquidity = enviroment.vault_contract.get_asset_amounts_per_shares(&MINIMUM_LIQUIDITY).get(0).unwrap();
 
     assert_eq!(minimum_liquidity_reward, 100);
-    let expected_amount_user =
-        deposit_amount + user_expected_reward - MINIMUM_LIQUIDITY - minimum_liquidity_reward;
+    let expected_amount_user = 
+        deposit_amount + total_yield - underlying_minimun_liquidity;
 
     let user_balance_after_withdraw = enviroment.token.balance(user);
     assert_eq!(user_balance_after_withdraw, expected_amount_user);

@@ -25,7 +25,7 @@ mod utils;
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use router::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
 use deposit::process_deposit;
-use funds::fetch_total_managed_funds;
+use funds::{fetch_strategy_invested_funds, fetch_total_managed_funds};
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::generate_investment_allocations;
 use models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction, StrategyAllocation};
@@ -67,7 +67,7 @@ impl VaultTrait for DeFindexVault {
     ///   - Vault Fee Receiver: For receiving vault fees
     ///   - Manager: For primary vault control
     ///   - Rebalance Manager: For rebalancing operations
-    /// * `vault_fee` - Vault-specific fee in basis points (0-2000 for 0-20%)
+    /// * `vault_fee` - Vault-specific fee in basis points (0_2000 for 0.20%)
     /// * `defindex_protocol_receiver` - Address receiving protocol fees
     /// * `defindex_protocol_rate` - Protocol fee rate in basis points (0-9000 for 0-90%)
     /// * `factory` - Factory contract address
@@ -240,7 +240,9 @@ impl VaultTrait for DeFindexVault {
         extend_instance_ttl(&e);
         from.require_auth();
 
-        let total_managed_funds = fetch_total_managed_funds(&e, false)?;
+        // Fetches the total managed funds for all assets, including idle and invested funds (net of locked fees).
+        // Setting the flag to `true` ensures that strategy reports are updated and new fees are locked during the process.
+        let total_managed_funds = fetch_total_managed_funds(&e, true)?;
 
         let (amounts, shares_to_mint) = process_deposit(
             &e,
@@ -302,18 +304,23 @@ impl VaultTrait for DeFindexVault {
         from.require_auth();
 
         check_min_amount(withdraw_shares, MIN_WITHDRAW_AMOUNT)?;
-        // Calculate the withdrawal amounts for each asset based on the share amounts
-        let total_managed_funds = fetch_total_managed_funds(&e, true)?;
 
+        // Fetches the total managed funds for all assets, including idle and invested funds (net of locked fees).
+        // Setting the flag to `true` ensures that strategy reports are updated and new fees are locked during the process.
+        let total_managed_funds = fetch_total_managed_funds(&e, true)?;
+        
+        //Validate min_amounts_out length
         if min_amounts_out.len() != total_managed_funds.len() {
             panic_with_error!(&e, ContractError::WrongAmountsLength);
         }
+        //Validate min_amounts_out values
         for amount in min_amounts_out.iter() {
             if amount < 0 {
                 panic_with_error!(&e, ContractError::AmountNotAllowed);
             }
         }
-
+        
+        // Calculate the withdrawal amounts for each asset based on the share amounts
         let asset_withdrawal_amounts =
             calculate_asset_amounts_per_vault_shares(&e, withdraw_shares, &total_managed_funds)?;
 
@@ -424,7 +431,8 @@ impl VaultTrait for DeFindexVault {
         let asset = get_strategy_asset(&e, &strategy_address)?;
         // This ensures that the vault has this strategy in its list of assets
         let strategy = get_strategy_struct(&strategy_address, &asset)?;
-        report::update_and_lock_fees(&e, &strategy.address)?;
+        let strategy_invested_funds = fetch_strategy_invested_funds(&e, &strategy_address, false)?;
+        report::update_report_and_lock_fees(&e, &strategy_address, strategy_invested_funds)?;
         let distribution_result = report::distribute_strategy_fees(&e, &strategy.address, &access_control)?;
         if distribution_result > 0 {
             let mut distributed_fees: Vec<(Address, i128)> = Vec::new(&e);
@@ -561,6 +569,8 @@ impl VaultTrait for DeFindexVault {
     ) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
 
+        // Fetches the total managed funds for all assets, including idle and invested funds (net of locked fees).
+        // Setting the flag to `true` ensures that strategy reports are updated and new fees are locked during the process.
         let total_managed_funds = fetch_total_managed_funds(&e, true)?;
         Ok(calculate_asset_amounts_per_vault_shares(
             &e,
@@ -836,7 +846,8 @@ impl VaultManagementTrait for DeFindexVault {
                         &e.current_contract_address(),
                     )?;
                     let call_params = vec![&e, (strategy_address.clone(), amount, e.current_contract_address())];
-                    report::update_and_lock_fees(&e, &strategy_address)?;
+                    let strategy_invested_funds = fetch_strategy_invested_funds(&e, &strategy_address, false)?;
+                    report::update_report_and_lock_fees(&e, &strategy_address, strategy_invested_funds)?;
                     report::distribute_strategy_fees(&e, &strategy_address, &access_control)?;
                     events::emit_rebalance_unwind_event(&e, call_params, report);
                 }
