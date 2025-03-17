@@ -1573,3 +1573,273 @@ fn unauthorized_withdraw(){
     ]).try_withdraw(&withdraw_amount_0, &from.clone());
     assert_eq!(withdraw_response.is_err(), true);
 }
+
+#[test]
+fn withdraw_min_amounts_invalid_length(){
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
+
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: sorobanvec![&test.env, 
+                Strategy{
+                    address: test.strategy_client_token_0.address.clone(),
+                    name: String::from_str(&test.env, "Strategy 1"),
+                    paused: false
+                },     
+                Strategy{
+                    address: test.fixed_strategy_client_token_0.address.clone(),
+                    name: String::from_str(&test.env, "Fixed Strategy 1"),
+                    paused: false
+                },     
+            ]     
+        },
+        AssetStrategySet {
+            address: test.token_1.address.clone(),
+            strategies: sorobanvec![&test.env, 
+                Strategy{
+                    address: test.strategy_client_token_1.address.clone(),
+                    name: String::from_str(&test.env, "Strategy 2"),
+                    paused: false
+                },     
+                Strategy{
+                    address: test.fixed_strategy_client_token_1.address.clone(),
+                    name: String::from_str(&test.env, "Fixed Strategy 2"),
+                    paused: false
+                },     
+            ]
+        }
+    ];
+
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        roles,
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
+        name_symbol,
+        true
+    );
+
+    // mint 
+    let amount = 10_0_000_000i128;
+    
+    test.token_0_admin_client.mint(&users[0], &amount);
+    test.token_1_admin_client.mint(&users[0], &amount);
+
+    let amounts_desired = sorobanvec![&test.env, 10_0_000_000i128, 10_0_000_000i128];
+    let amounts_min = sorobanvec![&test.env, 10_0_000_000i128, 10_0_000_000i128];
+    defindex_contract.deposit(&amounts_desired, &amounts_min, &users[0], &false);
+    /*----------------------------------- End of test setup -----------------------------------*/
+    /*------------------------- Created vault with 20 lumens balance -------------------------*/
+
+    let withdraw_amount = 10_0_000_000i128;
+    let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, 1_0_000_000i128, 1_0_000_000i128, 1_0_000_000i128];
+
+    let result = defindex_contract.try_withdraw(&withdraw_amount, &withdraw_min_amounts_out, &users[0]);
+    assert_eq!(result.is_err(), true);
+    assert_eq!(result, Err(Ok(ContractError::WrongAmountsLength)));
+
+    let withdraw_amount = 10_0_000_000i128;
+    let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, 1_0_000_000i128];
+
+    let result = defindex_contract.try_withdraw(&withdraw_amount, &withdraw_min_amounts_out, &users[0]);
+    assert_eq!(result.is_err(), true);
+    assert_eq!(result, Err(Ok(ContractError::WrongAmountsLength)));
+
+    let withdraw_amount = 10_0_000_000i128;
+    let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, 1_0_000_000i128, 1_0_000_000i128];
+
+    let result = defindex_contract.try_withdraw(&withdraw_amount, &withdraw_min_amounts_out, &users[0]);
+    assert_eq!(result.is_err(), true);
+    assert_eq!(result, Err(Ok(ContractError::WrongAmountsLength)));
+}
+
+#[test]
+fn withdraw_min_amounts_negative(){
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
+
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: sorobanvec![&test.env, 
+                Strategy{
+                    address: test.strategy_client_token_0.address.clone(),
+                    name: String::from_str(&test.env, "Strategy 1"),
+                    paused: false
+                },     
+                Strategy{
+                    address: test.fixed_strategy_client_token_0.address.clone(),
+                    name: String::from_str(&test.env, "Fixed Strategy 1"),
+                    paused: false
+                },     
+            ]     
+        },
+        AssetStrategySet {
+            address: test.token_1.address.clone(),
+            strategies: sorobanvec![&test.env, 
+                Strategy{
+                    address: test.strategy_client_token_1.address.clone(),
+                    name: String::from_str(&test.env, "Strategy 2"),
+                    paused: false
+                },     
+                Strategy{
+                    address: test.fixed_strategy_client_token_1.address.clone(),
+                    name: String::from_str(&test.env, "Fixed Strategy 2"),
+                    paused: false
+                },     
+            ]
+        }
+    ];
+
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        roles,
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
+        name_symbol,
+        true
+    );
+
+    // mint 
+    let amount = 10_0_000_000i128;
+    
+    test.token_0_admin_client.mint(&users[0], &amount);
+    test.token_1_admin_client.mint(&users[0], &amount);
+
+    let amounts_desired = sorobanvec![&test.env, 10_0_000_000i128, 10_0_000_000i128];
+    let amounts_min = sorobanvec![&test.env, 10_0_000_000i128, 10_0_000_000i128];
+    defindex_contract.deposit(&amounts_desired, &amounts_min, &users[0], &false);
+    /*----------------------------------- End of test setup -----------------------------------*/
+    /*------------------------- Created vault with 20 lumens balance -------------------------*/
+
+    let withdraw_amount = 10_0_000_000i128;
+    let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, 1_0_000_000i128, -1_0_000_000i128];
+
+    let result = defindex_contract.try_withdraw(&withdraw_amount, &withdraw_min_amounts_out, &users[0]);
+    assert_eq!(result.is_err(), true);
+    assert_eq!(result, Err(Ok(ContractError::AmountNotAllowed)));
+
+    let withdraw_amount = 10_0_000_000i128;
+    let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, -1_0_000_000i128, 1_0_000_000i128];
+
+    let result = defindex_contract.try_withdraw(&withdraw_amount, &withdraw_min_amounts_out, &users[0]);
+    assert_eq!(result.is_err(), true);
+    assert_eq!(result, Err(Ok(ContractError::AmountNotAllowed)));
+}
+
+#[test]
+fn withdraw_min_amounts_success(){
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
+
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: sorobanvec![&test.env, 
+                Strategy{
+                    address: test.strategy_client_token_0.address.clone(),
+                    name: String::from_str(&test.env, "Strategy 1"),
+                    paused: false
+                },     
+                Strategy{
+                    address: test.fixed_strategy_client_token_0.address.clone(),
+                    name: String::from_str(&test.env, "Fixed Strategy 1"),
+                    paused: false
+                },     
+            ]     
+        },
+        AssetStrategySet {
+            address: test.token_1.address.clone(),
+            strategies: sorobanvec![&test.env, 
+                Strategy{
+                    address: test.strategy_client_token_1.address.clone(),
+                    name: String::from_str(&test.env, "Strategy 2"),
+                    paused: false
+                },     
+                Strategy{
+                    address: test.fixed_strategy_client_token_1.address.clone(),
+                    name: String::from_str(&test.env, "Fixed Strategy 2"),
+                    paused: false
+                },     
+            ]
+        }
+    ];
+
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        roles,
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.defindex_factory.clone(),
+        test.soroswap_router.address.clone(),
+        name_symbol,
+        true
+    );
+
+    // mint 
+    let amount = 10_0_000_000i128;
+    
+    test.token_0_admin_client.mint(&users[0], &amount);
+    test.token_1_admin_client.mint(&users[0], &amount);
+
+    let amounts_desired = sorobanvec![&test.env, 10_0_000_000i128, 10_0_000_000i128];
+    let amounts_min = sorobanvec![&test.env, 10_0_000_000i128, 10_0_000_000i128];
+    defindex_contract.deposit(&amounts_desired, &amounts_min, &users[0], &false);
+    /*----------------------------------- End of test setup -----------------------------------*/
+    /*------------------------- Created vault with 20 lumens balance -------------------------*/
+
+    let withdraw_amount = 10_0_000_000i128;
+    let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, 5_0_000_000i128, 5_0_000_000i128];
+
+    let result = defindex_contract.withdraw(&withdraw_amount, &withdraw_min_amounts_out, &users[0]);
+    assert_eq!(result, sorobanvec![&test.env, 5_0_000_000i128, 5_0_000_000i128]);
+    //Ok()
+}
