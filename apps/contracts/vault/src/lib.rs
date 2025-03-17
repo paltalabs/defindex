@@ -305,6 +305,15 @@ impl VaultTrait for DeFindexVault {
         // Calculate the withdrawal amounts for each asset based on the share amounts
         let total_managed_funds = fetch_total_managed_funds(&e, true)?;
 
+        if min_amounts_out.len() != total_managed_funds.len() {
+            panic_with_error!(&e, ContractError::WrongAmountsLength);
+        }
+        for amount in min_amounts_out.iter() {
+            if amount < 0 {
+                panic_with_error!(&e, ContractError::AmountNotAllowed);
+            }
+        }
+
         let asset_withdrawal_amounts =
             calculate_asset_amounts_per_vault_shares(&e, withdraw_shares, &total_managed_funds)?;
 
@@ -322,6 +331,9 @@ impl VaultTrait for DeFindexVault {
             if let Some(requested_withdrawal_amount) =
                 asset_withdrawal_amounts.get(i as u32)
             {
+                if requested_withdrawal_amount < min_amounts_out.get(i as u32).unwrap() {
+                    panic_with_error!(&e, ContractError::InsufficientManagedFunds);
+                }
                 let idle_funds = asset.idle_amount;
 
                 if idle_funds >= requested_withdrawal_amount {
