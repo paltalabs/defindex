@@ -82,10 +82,6 @@ impl DeFindexStrategyTrait for BlendStrategy {
             .get(0)
             .expect("Invalid argument: blend_pool_address")
             .into_val(&e);
-        let reserve_id: u32 = init_args
-            .get(1)
-            .expect("Invalid argument: reserve_id")
-            .into_val(&e);
         let blend_token: Address = init_args
             .get(2)
             .expect("Invalid argument: blend_token")
@@ -102,6 +98,10 @@ impl DeFindexStrategyTrait for BlendStrategy {
             .get(5)
             .expect("Invalid argument: reward_threshold")
             .into_val(&e);
+
+        // **reserve_id** (`u32`) - The identifier for the specific reserve within the Blend pool.
+        let blend_pool_client = blend_pool::BlendPoolClient::new(&e, &blend_pool_address);
+        let reserve_id = blend_pool_client.get_reserve(&asset).config.index;
 
         let config = Config {
             asset: asset.clone(),
