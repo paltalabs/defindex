@@ -14,6 +14,7 @@ pub enum StrategyError {
     UnderflowOverflow= 413,
     ArithmeticError = 414,
     DivisionByZero = 415,
+    InvalidSharesMinted= 416,
 
     // Protocol Errors
     ProtocolAddressNotFound = 420,

@@ -4,7 +4,9 @@ use soroban_sdk::{
     testutils::{Address as _, Ledger, LedgerInfo, MockAuth, MockAuthInvoke}, token::{StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient}, vec as sorobanvec, Address, Env, IntoVal, Map, String, Val, Vec
 };
 use std::vec;
-use crate::utils::DAY_IN_LEDGERS;
+
+pub const DAY_IN_LEDGERS: u32 = 17280;
+
 
 use soroswap_setup::{
     create_soroswap_factory, create_soroswap_pool, create_soroswap_router, SoroswapRouterClient,

@@ -2,8 +2,9 @@ use soroban_sdk::token::TokenClient;
 use soroban_sdk::{Address, Env, Vec};
 
 use crate::models::{CurrentAssetInvestmentAllocation, StrategyAllocation};
-use crate::storage::{get_assets, get_report, get_vault_fee, set_report};
+use crate::storage::{get_assets, get_report};
 use crate::strategies::get_strategy_client;
+use crate::report;
 use crate::ContractError;
 use common::models::AssetStrategySet;
 
@@ -22,46 +23,54 @@ pub fn fetch_idle_funds_for_asset(e: &Env, asset: &Address) -> i128 {
     TokenClient::new(e, &asset).balance(&e.current_contract_address())
 }
 
-/// Retrieves the total funds invested in a specified strategy, excluding any locked fees.
+/// Retrieves the total funds invested in a specified strategy, excluding current locked fees, with an option to lock new fees.
 ///
-/// This function performs a cross-contract call to the strategy to fetch the current balance
-/// of the investment. It then subtracts any locked fees from the total to provide an accurate
-/// representation of the funds that are actively invested and available to the user.
+/// This function performs a cross-contract call to the strategy contract to fetch the current investment balance.
+/// It always returns the balance minus the current locked fees, representing the actively invested funds available 
+/// to the user. If `lock_fees` is `true`, it updates the report and locks new fees before calculating the result; 
+/// if `false`, it uses the existing locked fees without updating the report.
 ///
 /// # Arguments
-/// * `e` - The current environment instance.
+/// * `e` - The current environment instance, providing access to the contract's storage and functions.
 /// * `strategy_address` - The address of the strategy whose investment balance is to be retrieved.
+/// * `lock_fees` - A boolean flag indicating whether to update the report and lock new fees before calculating 
+///   the balance. If `true`, new fees are locked; if `false`, only existing locked fees are subtracted.
 ///
 /// # Returns
-/// The total invested funds in the strategy as an `i128`, excluding locked fees.
+/// * `Result<i128, ContractError>` - Returns the total invested funds in the strategy (excluding locked fees) as 
+///   an `i128`. Returns a `ContractError` if an error occurs (e.g., overflow, underflow, or report update failure).
+///
 pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address, lock_fees: bool) -> Result<i128, ContractError> {
     let strategy_client = get_strategy_client(e, strategy_address.clone());
     let strategy_invested_funds = strategy_client.balance(&e.current_contract_address());
-
-    let mut report = get_report(e, strategy_address);
-
-    if lock_fees {
-        report.lock_fee(get_vault_fee(e))?;
-        set_report(e, strategy_address, &report);
+    
+    if !lock_fees {
+        return Ok(strategy_invested_funds
+            .checked_sub(
+                get_report(e, strategy_address).locked_fee
+            ).unwrap_or(0))
+    } else {
+        let report = report::update_report_and_lock_fees(e, strategy_address, strategy_invested_funds)?;
+        Ok(strategy_invested_funds.checked_sub(report.locked_fee).unwrap_or(0))
     }
-    Ok(strategy_invested_funds
-        .checked_sub(report.locked_fee)
-        .unwrap_or(0))
 }
 
-/// Calculates the total funds invested in strategies for a given asset and
-/// provides a detailed breakdown of allocations.
+/// Calculates the total funds invested in strategies for a given asset and provides a detailed breakdown of allocations.
 ///
-/// This function aggregates the balances of all strategies linked to the specified
-/// asset and returns both the total invested amount and a detailed allocation.
+/// This function aggregates the balances of all strategies linked to the specified asset, always excluding current locked fees 
+/// from the total. The `lock_fees` flag determines whether new fees are locked during the calculation: if `true`, the report 
+/// for each strategy is updated and new fees are locked before excluding them; if `false`, only existing locked fees are excluded.
+/// The function returns both the total invested amount (net of locked fees) and a detailed allocation of funds for each strategy.
 ///
 /// # Arguments
 /// * `e` - The current environment instance.
 /// * `asset_strategy_set` - The asset and its associated set of strategies to evaluate.
+/// * `lock_fees` - A flag indicating whether to update strategy reports and lock new fees before calculating balances. 
+///   If `true`, new fees are locked; if `false`, only existing locked fees are subtracted.
 ///
 /// # Returns
 /// A tuple containing:
-/// * `i128`: The total funds invested across all strategies.
+/// * `i128`: The total funds invested across all strategies, excluding locked fees.
 /// * `Vec<StrategyAllocation>`: A vector with the allocation details for each strategy.
 pub fn fetch_invested_funds_for_asset(
     e: &Env,
@@ -82,15 +91,22 @@ pub fn fetch_invested_funds_for_asset(
     Ok((invested_funds, strategy_allocations))
 }
 
-/// Fetches the total managed funds for all assets. This includes both idle and invested funds.
-/// It returns a vector where each entry represents an asset's total managed balance
-/// (idle + invested) in the same order as the assets come.
+/// Fetches the total managed funds for all assets, including both idle and invested funds.
+/// The `lock_fees` flag determines whether to exclude locked fees from the invested funds when calculating the total.
+///
+/// This function calculates the total managed balance (idle + invested funds) for each asset, where invested funds always 
+/// exclude current locked fees. The `lock_fees` flag determines whether strategy reports are updated and new fees are locked 
+/// before calculating the invested funds: if `true`, new fees are locked; if `false`, only existing locked fees are excluded.
+/// The result is a vector of asset allocations in the same order as the assets are listed.
 ///
 /// # Arguments
 /// * `e` - The current environment instance.
+/// * `lock_fees` - A flag indicating whether to update strategy reports and lock new fees before calculating invested funds.
+///   If `true`, new fees are locked; if `false`, only existing locked fees are subtracted from invested funds.
 ///
 /// # Returns
-/// * A vector where each entry represents an asset's total managed balance.
+/// * A vector where each entry represents an asset's total managed balance, including idle and invested funds (net of locked fees).
+///   Each entry is a `CurrentAssetInvestmentAllocation` containing the total balance, idle funds, invested funds, and the strategy allocations for the asset.
 pub fn fetch_total_managed_funds(
     e: &Env,
     lock_fees: bool,

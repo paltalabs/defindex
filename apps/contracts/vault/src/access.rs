@@ -1,5 +1,4 @@
 use crate::error::ContractError;
-use crate::utils::bump_instance;
 use soroban_sdk::{contracttype, panic_with_error, Address, Env};
 
 #[contracttype]
@@ -31,17 +30,14 @@ pub trait AccessControlTrait {
 
 impl AccessControlTrait for AccessControl {
     fn has_role(&self, key: &RolesDataKey) -> bool {
-        bump_instance(&self.0);
         self.0.storage().instance().has(key)
     }
 
     fn get_role(&self, key: &RolesDataKey) -> Option<Address> {
-        bump_instance(&self.0);
         self.0.storage().instance().get(key)
     }
 
     fn set_role(&self, key: &RolesDataKey, role: &Address) {
-        bump_instance(&self.0);
         self.0.storage().instance().set(key, role);
     }
 

@@ -91,6 +91,9 @@ fn mint_shares(
     shares_to_mint: i128,
     from: Address,
 ) -> Result<(), ContractError> {
+    if shares_to_mint <= 0 {
+        panic_with_error!(&e, ContractError::InsufficientAmount);
+    }
     if *total_supply == 0 {
         if shares_to_mint < MINIMUM_LIQUIDITY {
             panic_with_error!(&e, ContractError::InsufficientAmount);
@@ -105,4 +108,15 @@ fn mint_shares(
         internal_mint(e.clone(), from, shares_to_mint);
     }
     Ok(())
+}
+
+#[cfg(test)]
+pub fn test_mint_shares(
+    e: &Env,
+    total_supply: &i128,
+    shares_to_mint: i128,
+    from: Address,
+) -> Result<(), ContractError> {
+    let result = mint_shares(e, total_supply, shares_to_mint, from)?;
+    Ok(result)
 }
