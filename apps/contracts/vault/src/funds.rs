@@ -2,7 +2,7 @@ use soroban_sdk::token::TokenClient;
 use soroban_sdk::{Address, Env, Vec};
 
 use crate::models::{CurrentAssetInvestmentAllocation, StrategyAllocation};
-use crate::storage::{get_assets};
+use crate::storage::{get_assets, get_report};
 use crate::strategies::get_strategy_client;
 use crate::report;
 use crate::ContractError;
@@ -47,7 +47,10 @@ pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address, lock_f
     let strategy_invested_funds = strategy_client.balance(&e.current_contract_address());
     
     if !lock_fees {
-        return Ok(strategy_invested_funds);
+        return Ok(strategy_invested_funds
+            .checked_sub(
+                get_report(e, strategy_address).locked_fee
+            ).unwrap_or(0))
     } else {
         let report = report::update_report_and_lock_fees(e, strategy_address, strategy_invested_funds)?;
         Ok(strategy_invested_funds.checked_sub(report.locked_fee).unwrap_or(0))
