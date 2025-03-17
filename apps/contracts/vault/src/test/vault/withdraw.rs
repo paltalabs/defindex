@@ -96,7 +96,7 @@ fn below_min() {
 
     defindex_contract.deposit(&sorobanvec![&test.env, amount_1],&sorobanvec![&test.env, amount_1], &users[0], &false);
 
-    let min_amounts_out = sorobanvec![&test.env, 0i128, 0i128];
+    let min_amounts_out = sorobanvec![&test.env, 0i128];
 
     let result = defindex_contract.try_withdraw(&99i128, &min_amounts_out, &users[0]);
     assert_eq!(result, Err(Ok(ContractError::InsufficientAmount)));
@@ -144,7 +144,7 @@ fn zero_total_supply() {
 
     let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
 
-    let min_amounts_out = sorobanvec![&test.env, 0i128, 0i128];
+    let min_amounts_out = sorobanvec![&test.env, 0i128];
     let result = defindex_contract.try_withdraw(&100i128, &min_amounts_out, &users[0]);
     assert_eq!(result, Err(Ok(ContractError::AmountOverTotalSupply)));
 }
@@ -224,7 +224,7 @@ fn not_enough_balance() {
 
     // now user 0 tries to withdraw amount_to_deposit - 1000 +1 (more that it has)
     
-    let min_amounts_out = sorobanvec![&test.env, 0i128, 0i128];
+    let min_amounts_out = sorobanvec![&test.env, 0i128];
     let result = defindex_contract.try_withdraw(&(amount_to_deposit - 1000 + 1), &min_amounts_out, &users[0]);
     assert_eq!(result, Err(Ok(ContractError::InsufficientBalance)));
 }
@@ -330,7 +330,7 @@ fn from_idle_one_asset_one_strategy_success() {
 
     // user decides to withdraw a portion of deposited amount
     let amount_to_withdraw = 123456i128;
-    let min_amounts_out = sorobanvec![&test.env, 0i128, 0i128];
+    let min_amounts_out = sorobanvec![&test.env, 0i128];
 
     defindex_contract.withdraw(&amount_to_withdraw, &min_amounts_out, &users[0]);
 
@@ -758,7 +758,7 @@ fn from_strategy_one_asset_one_strategy_success() {
     let vault_balance = test.token_0.balance(&defindex_contract.address);
     assert_eq!(vault_balance, 0);
 
-    let min_amounts_out = sorobanvec![&test.env, 0i128, 0i128];
+    let min_amounts_out = sorobanvec![&test.env, 0i128];
 
     defindex_contract.withdraw(&df_balance, &min_amounts_out, &users[0]);
 
@@ -877,7 +877,7 @@ fn from_strategies_one_asset_two_strategies_success() {
     let strategy_2_balance_before_withdraw = test.token_0.balance(&strategy_client_1.address);
     let idle_funds_before_withdraw = test.token_0.balance(&defindex_contract.address);
 
-    let min_amounts_out = sorobanvec![&test.env, 0i128, 0i128];
+    let min_amounts_out = sorobanvec![&test.env, 0i128];
         
     defindex_contract.withdraw(&(amount_0-1000), &min_amounts_out, &users[0]);
 
@@ -1404,6 +1404,7 @@ fn from_strategy_success_no_mock_all_auths() {
             fn_name: "withdraw",
             args: (
                 withdraw_amount_0,
+                min_amounts_out.clone(),
                 from,
             ).into_val(&test.env),
             sub_invokes: &[
