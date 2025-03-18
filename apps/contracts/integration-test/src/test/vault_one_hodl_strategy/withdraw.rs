@@ -71,7 +71,8 @@ fn test_withdraw_no_invest_success() {
     let df_balance = enviroment.vault_contract.balance(&user);
     assert_eq!(df_balance, deposit_amount - MINIMUM_LIQUIDITY);
 
-    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, 0i128];
+    let min_amount_out = df_balance.clone() * (10_000 - 2_000) / 10_000; // amount * (BPS - slippage) / BPS = 20% of tolerance over the amount
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, min_amount_out];
     enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
@@ -168,7 +169,8 @@ fn test_withdraw_partial_success() {
     assert_eq!(df_balance, deposit_amount - MINIMUM_LIQUIDITY);
 
     let withdraw_amount = df_balance / 2;
-    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, 0i128];
+    let min_amount_out = withdraw_amount.clone() * (10_000 - 2_000) / 10_000; // amount * (BPS - slippage) / BPS = 20% of tolerance over the amount
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, min_amount_out];
     enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
@@ -262,7 +264,8 @@ fn test_withdraw_insufficient_balance() {
     assert_eq!(df_balance, deposit_amount - MINIMUM_LIQUIDITY);
 
     let withdraw_amount = df_balance + 1; // Attempt to withdraw more than the balance
-    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, 0i128];
+    let min_amount_out = withdraw_amount.clone() * (10_000 - 2_000) / 10_000; // amount * (BPS - slippage) / BPS = 20% of tolerance over the amount
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, min_amount_out];
     let result = enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
@@ -391,7 +394,8 @@ fn test_withdraw_after_invest() {
         .balance(&enviroment.vault_contract.address);
     assert_eq!(strategy_balance, deposit_amount);
 
-    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, 0i128];
+    let min_amount_out = df_balance.clone() * (10_000 - 2_000) / 10_000; // amount * (BPS - slippage) / BPS = 20% of tolerance over the amount
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, min_amount_out];
     enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
@@ -540,7 +544,8 @@ fn test_withdraw_multiple_users() {
     assert_eq!(df_balance_user1, deposit_amount - MINIMUM_LIQUIDITY);
     assert_eq!(df_balance_user2, deposit_amount);
 
-    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, 0i128];
+    let min_amount_out = df_balance_user1.clone() * (10_000 - 2_000) / 10_000; // amount * (BPS - slippage) / BPS = 20% of tolerance over the amount
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, min_amount_out];
     enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
@@ -736,7 +741,8 @@ fn test_withdraw_after_invest_multiple_users() {
         .balance(&enviroment.vault_contract.address);
     assert_eq!(strategy_balance, deposit_amount * 2);
 
-    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, 0i128];
+    let min_amount_out = df_balance_user1.clone() * (10_000 - 2_000) / 10_000; // amount * (BPS - slippage) / BPS = 20% of tolerance over the amount
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, min_amount_out];
     enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
