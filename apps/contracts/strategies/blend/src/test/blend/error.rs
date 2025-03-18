@@ -76,6 +76,108 @@ fn deposit_zero_and_negative_amount() {
 }
 
 #[test]
+fn deposit_first_depositor_less_than_1000() {
+    // Setting up the environment
+    let e = Env::default();
+    e.cost_estimate().budget().reset_unlimited();
+    e.mock_all_auths();
+    e.set_default_info();
+
+    // Setting up the users
+    let admin = Address::generate(&e);
+    let user_2 = Address::generate(&e);
+    let user_3 = Address::generate(&e);
+
+    // Setting up the assets
+    let blnd = e.register_stellar_asset_contract_v2(admin.clone());
+    let usdc = e.register_stellar_asset_contract_v2(admin.clone());
+    let xlm = e.register_stellar_asset_contract_v2(admin.clone());
+
+    // Setting up the token clients
+    let blnd_client = MockTokenClient::new(&e, &blnd.address());
+    let usdc_client = MockTokenClient::new(&e, &usdc.address());
+    let xlm_client = MockTokenClient::new(&e, &xlm.address());
+
+    // Setting up soroswap pool
+    let pool_admin = Address::generate(&e);
+    let amount_a = 100000000_0_000_000;
+    let amount_b = 50000000_0_000_000;
+    blnd_client.mint(&pool_admin, &amount_a);
+    usdc_client.mint(&pool_admin, &amount_b);
+    let soroswap_router = create_soroswap_pool(
+        &e,
+        &pool_admin,
+        &blnd.address(),
+        &usdc.address(),
+        &amount_a,
+        &amount_b,
+    );
+    // End of setting up soroswap pool
+
+    let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
+
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
+    let strategy = create_blend_strategy(
+        &e,
+        &usdc.address(),
+        &pool,
+        &blnd.address(),
+        &soroswap_router.address,
+    );
+    let strategy_client = BlendStrategyClient::new(&e, &strategy);
+
+    let starting_balance = 100_0000000;
+    usdc_client.mint(&user_2, &starting_balance);
+    usdc_client.mint(&user_3, &starting_balance);
+
+    //Trying to deposit below the min dust
+    let deposit_1000 = strategy_client.try_deposit(&1000i128, &user_2);
+    assert_eq!(deposit_1000, Err(Ok(StrategyError::InvalidSharesMinted)));
+
+    // with 1001 is possible
+    strategy_client.deposit(&1001i128, &user_2);
+    // check balance of user 2
+    let balance = strategy_client.balance(&user_2);
+    assert_eq!(balance, 1001 - 1000);
+
+    // as contract get reserves
+    e.as_contract(&strategy, || {
+
+        let config = storage::get_config(&e).unwrap();
+        let reserves=reserves::get_strategy_reserve_updated(&e, &config);
+        assert_eq!(reserves.total_shares, 1001);
+    }
+    );
+
+
+    // use 3 is the second depositor and he can even deposit 1 unit
+
+    let deposit_1 = strategy_client.try_deposit(&99i128, &user_3);
+    assert!(deposit_1.is_ok(), "Expected successful deposit for user 3, got {:?}", deposit_1);
+
+    e.as_contract(&strategy, || {
+
+        let config = storage::get_config(&e).unwrap();
+        let reserves=reserves::get_strategy_reserve_updated(&e, &config);
+        assert_eq!(reserves.total_shares, 1100);
+        assert_eq!(reserves.total_b_tokens, 1100);
+        let user_3_shares = storage::get_vault_shares(&e, &user_3);
+
+        // new shares minted are
+        // amount * total shares / total b tokens
+        // (99*1101)/1101 = 99
+        assert_eq!(user_3_shares, 99);
+    }
+    );
+    
+
+    // check balance of user 3
+    let balance = strategy_client.balance(&user_3);
+    assert_eq!(balance, 99);
+
+}
+
+#[test]
 fn harvest_from_random_address() {
     // Setting up the environment
     let e = Env::default();

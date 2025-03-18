@@ -130,13 +130,16 @@ pub fn deposit(
     let new_minted_shares: i128 = reserves.b_tokens_to_shares_down(b_tokens_amount)?;
 
     
-    if new_minted_shares <= 1000 {
-        panic_with_error!(e, StrategyError::InvalidSharesMinted);
-    }
+    
 
     // for the first depositor, the protocol will take out 1000 stroop units from the user shares in order to
     // avoid inflation attacks
     let new_vault_minted_shares = if reserves.total_shares == 0 {
+        
+        if new_minted_shares <= 1000 {
+            panic_with_error!(e, StrategyError::InvalidSharesMinted);
+        }
+
         new_minted_shares.checked_sub(1000).ok_or_else(|| StrategyError::UnderflowOverflow)?
     } else {
         new_minted_shares
