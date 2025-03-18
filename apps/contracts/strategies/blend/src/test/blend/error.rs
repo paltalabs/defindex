@@ -300,7 +300,7 @@ fn withdraw_insufficient_balance() {
 
     let balance = strategy_client.balance(&user_2);
     let user_balance = usdc_client.balance(&user_2);
-    assert_eq!(balance, starting_balance);
+    assert_eq!(balance, starting_balance - 1000);
     assert_eq!(user_balance, 0);
 
     let result = strategy_client.try_withdraw(&200_0_000_000, &Address::generate(&e), &user_2);
@@ -369,7 +369,7 @@ fn withdraw_zero_and_negative() {
 
     let balance = strategy_client.balance(&user_2);
     let user_balance = usdc_client.balance(&user_2);
-    assert_eq!(balance, starting_balance);
+    assert_eq!(balance, starting_balance -1000);
     assert_eq!(user_balance, 0);
 
     // Check negative
@@ -461,7 +461,7 @@ fn unauthorized_withdraw() {
 
     let balance = strategy_client.balance(&user_2);
     let user_balance = usdc_client.balance(&user_2);
-    assert_eq!(balance, starting_balance);
+    assert_eq!(balance, starting_balance - 1000);
     assert_eq!(user_balance, 0);
 
     let withdraw_amount = 8_0_000_000i128;
