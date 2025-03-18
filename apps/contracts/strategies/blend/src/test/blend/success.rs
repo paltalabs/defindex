@@ -270,7 +270,7 @@ fn success() {
     
     */
 
-    let expected_users_profit = (user_4_profit / 2);
+    let expected_users_profit = user_4_profit / 2;
     let expected_strategy_profit = (user_4_profit * 3) / 2;
     println!("Expected strategy profit {}", expected_strategy_profit);
     println!("Expected users profit {}", expected_users_profit);
