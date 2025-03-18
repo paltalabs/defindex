@@ -1596,7 +1596,7 @@ fn unauthorized_withdraw(){
 }
 
 #[test]
-fn withdraw_min_amounts_invalid_length(){
+fn min_amounts_invalid_length(){
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
@@ -1694,7 +1694,7 @@ fn withdraw_min_amounts_invalid_length(){
 }
 
 #[test]
-fn withdraw_min_amounts_negative(){
+fn min_amounts_negative(){
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
@@ -1788,7 +1788,7 @@ fn withdraw_min_amounts_negative(){
 }
 
 #[test]
-fn withdraw_under_min_amounts(){
+fn under_min_amounts(){
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
@@ -1876,7 +1876,7 @@ fn withdraw_under_min_amounts(){
 }
 
 #[test]
-fn withdraw_min_amounts_over_total_supply(){
+fn min_amounts_over_total_supply(){
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
@@ -1964,7 +1964,7 @@ fn withdraw_min_amounts_over_total_supply(){
     assert_eq!(result, Err(Ok(ContractError::InsufficientOutputAmount)));
 }
 #[test]
-fn withdraw_min_amounts_success(){
+fn min_amounts_success(){
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
