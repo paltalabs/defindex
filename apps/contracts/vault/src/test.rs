@@ -220,7 +220,6 @@ impl EnvTestUtils for Env {
 
 pub struct DeFindexVaultTest<'a> {
     env: Env,
-    defindex_factory: Address,
     token_0_admin_client: SorobanTokenAdminClient<'a>,
     token_0: SorobanTokenClient<'a>,
     token_1_admin_client: SorobanTokenAdminClient<'a>,
@@ -249,7 +248,6 @@ impl<'a> DeFindexVaultTest<'a> {
         // env.mock_all_auths();
         env.set_default_info();
         // Mockup, should be the factory contract
-        let defindex_factory = Address::generate(&env);
         env.cost_estimate().budget().reset_unlimited();
         let emergency_manager = Address::generate(&env);
         let vault_fee_receiver = Address::generate(&env);
@@ -376,7 +374,6 @@ impl<'a> DeFindexVaultTest<'a> {
 
         DeFindexVaultTest {
             env,
-            defindex_factory,
             token_0_admin_client,
             token_0,
             token_1_admin_client,
