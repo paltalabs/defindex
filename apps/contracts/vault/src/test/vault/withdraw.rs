@@ -1872,7 +1872,7 @@ fn withdraw_under_min_amounts(){
 
     let result = defindex_contract.try_withdraw(&withdraw_amount, &withdraw_min_amounts_out, &users[0]);
     assert_eq!(result.is_err(), true);
-    assert_eq!(result, Err(Ok(ContractError::InsufficientManagedFunds)));
+    assert_eq!(result, Err(Ok(ContractError::InsufficientOutputAmount)));
 }
 
 #[test]

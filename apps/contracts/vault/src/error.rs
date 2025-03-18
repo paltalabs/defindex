@@ -58,6 +58,9 @@ pub enum ContractError {
     AssetNotFound = 150,
     NoAssetsProvided = 151,
 
+    // Input errors
+    InsufficientOutputAmount = 160,
+
     // Add mappings for SoroswapLibraryError
     LibrarySortIdenticalTokens = 190,
 }

@@ -339,7 +339,7 @@ impl VaultTrait for DeFindexVault {
                 asset_withdrawal_amounts.get(i as u32)
             {
                 if requested_withdrawal_amount < min_amounts_out.get(i as u32).unwrap() {
-                    panic_with_error!(&e, ContractError::InsufficientManagedFunds);
+                    panic_with_error!(&e, ContractError::InsufficientOutputAmount);
                 }
                 let idle_funds = asset.idle_amount;
 
