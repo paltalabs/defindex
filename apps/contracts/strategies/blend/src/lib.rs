@@ -1,9 +1,8 @@
 #![no_std]
-use constants::{MIN_DUST};
 use reserves::StrategyReserves;
 use soroban_sdk::{
     token::TokenClient,
-    contract, contractimpl, Address, Env, IntoVal, String, Val, Vec,
+    contract, contractimpl, Address, Env, IntoVal, String, Val, Vec, vec,
 };
 
 mod blend_pool;
@@ -16,9 +15,9 @@ use storage::{extend_instance_ttl, Config};
 
 pub use defindex_strategy_core::{event, DeFindexStrategyTrait, StrategyError};
 
-pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
-    if amount < 0 {
-        Err(StrategyError::NegativeNotAllowed)
+pub fn check_positive_amount(amount: i128) -> Result<(), StrategyError> {
+    if amount <= 0 {
+        Err(StrategyError::OnlyPositiveAmountAllowed)
     } else {
         Ok(())
     }
@@ -31,50 +30,45 @@ pub struct BlendStrategy;
 
 #[contractimpl]
 impl DeFindexStrategyTrait for BlendStrategy {
-    /// Constructor function to initialize the contract's configuration with the necessary parameters.
+    /// Initializes the contract with the necessary configuration parameters.
     ///
     /// # Arguments
     ///
-    /// * `e: Env` - The execution environment (provided automatically when the contract is invoked).
-    /// * `asset: Address` - The address of the asset being managed by the contract.
-    /// * `init_args: Vec<Val>` - A vector of initialization arguments required for configuring the contract.
+    /// * `e` - The execution environment, provided automatically when the contract is invoked.
+    /// * `asset` - The address of the asset managed by the contract.
+    /// * `init_args` - A vector of initialization arguments required for configuration.
     ///
-    /// # Process
+    /// # Parameters in `init_args`
     ///
-    /// This constructor function takes in the following arguments:
+    /// The `init_args` vector must contain the following, in order:
     ///
-    /// 1. **blend_pool_address** (`Address`) - The address of the Blend pool where assets will be deposited.
-    /// 2. **reserve_id** (`u32`) - The identifier for the specific reserve within the Blend pool.
-    /// 3. **blend_token** (`Address`) - The address of the reward token (e.g., BLND) given by the Blend pool.
-    /// 4. **soroswap_router** (`Address`) - The address of the Soroswap AMM router, enabling asset swaps.
-    /// 5. **claim_ids** (`Vec<u32>`) - A list of IDs of the claimable tokens within the pool.
-    /// 5. **reward_threshold** (`i128`) - The threshold amount of rewards that will trigger a reinvestment.
+    /// 1. `blend_pool_address: Address` - The address of the Blend pool where assets are deposited.
+    /// 2. `blend_token: Address` - The address of the reward token (e.g., BLND) issued by the Blend pool.
+    /// 3. `soroswap_router: Address` - The address of the Soroswap AMM router for asset swaps.
+    /// 4. `reward_threshold: i128` - The minimum reward amount that triggers reinvestment.
     ///
-    /// # IDs and Their Use
+    /// # Behavior
     ///
-    /// - **reserve_id**: A unique identifier for the reserve within the Blend pool. This ID allows the contract to interact with a specific reserve and differentiate it from other reserves in the pool.
+    /// This function:
+    /// - Fetches the `reserve_id` from the Blend pool for the given `asset`.
+    /// - Calculates `claim_ids` for the asset bTokens.
+    /// - Stores all parameters in a `Config` struct in the contract's storage.
     ///
-    /// - **claim_ids**: These are the identifiers for tokens that can be claimed from the pool. Each token that is eligible for claim has a unique ID, allowing for precise tracking and claiming of rewards.
+    /// # Token IDs
     ///
-    /// The **reserve_token_id** is calculated based on the **reserve_index**:
-    /// - `d_token_id = reserve_index * 2`
-    /// - `b_token_id = reserve_index * 2 + 1`
-    ///
-    /// This ensures each reserve has distinct token IDs for its d_token and b_token.
-    /// You can retrieve the **reserve_index** from a **reserve_token_id** by using the formula:
-    /// `reserve_index = floor(reserve_token_id / 2)`
-    ///
-    /// A bToken represents a supply made to a Blend pool. Each reserve has a unique bToken per pool, and they are non-transferable.
-    /// We are interested in the b_tokens as we are supplying into the pool
-    ///
-    /// The function sets these parameters into a configuration struct (`Config`) and stores it in the contract's storage.
+    /// - The `reserve_id` identifies a specific reserve in the Blend pool.
+    /// - Token IDs are derived from the `reserve_index`:
+    ///   - `d_token_id = reserve_index * 2`
+    ///   - `b_token_id = reserve_index * 2 + 1`
+    /// - To find the `reserve_index` from a token ID: `reserve_index = floor(reserve_token_id / 2)`.
+    /// - Only bTokens are used here, as they represent supplied assets.
     ///
     /// # Example
     ///
     /// ```rust
-    /// let e: Env = ...;
-    /// let asset: Address = ...;
-    /// let init_args: Vec<Val> = ...;
+    /// let e: Env = /* ... */;
+    /// let asset: Address = /* ... */;
+    /// let init_args: Vec<Val> = /* ... */;
     /// __constructor(e, asset, init_args);
     /// ```
     fn __constructor(e: Env, asset: Address, init_args: Vec<Val>) {
@@ -82,26 +76,40 @@ impl DeFindexStrategyTrait for BlendStrategy {
             .get(0)
             .expect("Invalid argument: blend_pool_address")
             .into_val(&e);
-        let reserve_id: u32 = init_args
-            .get(1)
-            .expect("Invalid argument: reserve_id")
-            .into_val(&e);
         let blend_token: Address = init_args
-            .get(2)
+            .get(1)
             .expect("Invalid argument: blend_token")
             .into_val(&e);
         let soroswap_router: Address = init_args
-            .get(3)
+            .get(2)
             .expect("Invalid argument: soroswap_router")
             .into_val(&e);
-        let claim_ids: Vec<u32> = init_args
-            .get(4)
-            .expect("Invalid argument: claim_ids")
-            .into_val(&e);
         let reward_threshold: i128 = init_args
-            .get(5)
+            .get(3)
             .expect("Invalid argument: reward_threshold")
             .into_val(&e);
+
+        // reserve_id (u32): A unique identifier for a specific reserve within the Blend pool.
+        let blend_pool_client = blend_pool::BlendPoolClient::new(&e, &blend_pool_address);
+        let reserve_id = blend_pool_client.get_reserve(&asset).config.index;
+
+        // claim_ids: A list of identifiers for tokens that can be claimed from the pool.
+        // Each eligible token has a unique ID, enabling precise tracking and claiming of rewards.
+        //
+        // Token IDs for a reserve are derived from its reserve_index:
+        // - d_token_id = reserve_index * 2
+        // - b_token_id = reserve_index * 2 + 1
+        // This ensures each reserve has distinct IDs for its d_token and b_token.
+        // To reverse this and find the reserve_index from a reserve_token_id:
+        //   reserve_index = floor(reserve_token_id / 2)
+        //
+        // bTokens represent a supply made to a Blend pool. Each reserve has a unique, non-transferable
+        // bToken per pool. Since we're supplying to the pool, we focus on b_tokens.
+        //
+        // Here, we calculate the claim_id for the bToken (since we're only claiming emissions for it):
+        let claim_id = reserve_id * 2 + 1;
+        let claim_ids: Vec<u32> = vec![&e, claim_id];
+
 
         let config = Config {
             asset: asset.clone(),
@@ -148,15 +156,9 @@ impl DeFindexStrategyTrait for BlendStrategy {
     ///
     /// * `Result<i128, StrategyError>` - The underlying balance after the deposit or an error.
     fn deposit(e: Env, amount: i128, from: Address) -> Result<i128, StrategyError> {
-        check_nonnegative_amount(amount)?;
+        check_positive_amount(amount)?;
         extend_instance_ttl(&e);
         from.require_auth();
-
-        // protect against rouding of reserve_vault::update_rate, as small amounts
-        // can cause incorrect b_rate calculations due to the pool rounding
-        if amount < MIN_DUST {
-            return Err(StrategyError::AmountBelowMinDust);
-        }
 
         let config = storage::get_config(&e)?;
         blend_pool::claim(&e, &e.current_contract_address(), &config);
@@ -230,18 +232,11 @@ impl DeFindexStrategyTrait for BlendStrategy {
     ///
     /// * `Result<i128, StrategyError>` - The remaining balance of the vault after the withdrawal or an error.
     fn withdraw(e: Env, amount: i128, from: Address, to: Address) -> Result<i128, StrategyError> {
-        check_nonnegative_amount(amount)?;
+        check_positive_amount(amount)?; 
         extend_instance_ttl(&e);
         from.require_auth();
 
-        // protect against rouding of reserve_vault::update_rate, as small amounts
-        // can cause incorrect b_rate calculations due to the pool rounding
-        if amount < MIN_DUST {
-            return Err(StrategyError::AmountBelowMinDust);
-        }
-
         let config = storage::get_config(&e)?;
-
 
         blend_pool::claim(&e, &e.current_contract_address(), &config);
         blend_pool::perform_reinvest(&e, &config)?;

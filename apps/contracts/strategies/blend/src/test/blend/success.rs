@@ -1,6 +1,6 @@
 #![cfg(test)]
 use crate::blend_pool::{BlendPoolClient, Request};
-use crate::constants::{MIN_DUST, SCALAR_12};
+use crate::constants::{SCALAR_12};
 use crate::storage::ONE_DAY_LEDGERS;
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
 use crate::test::std;
@@ -15,6 +15,8 @@ use crate::test::std::println;
 
 #[test]
 fn success() {
+    let min_dust: i128 = 0_0010000;
+
     let e = Env::default();
     e.cost_estimate().budget().reset_unlimited();
     e.mock_all_auths();
@@ -88,11 +90,12 @@ fn success() {
         &e, 
         &usdc.address(),
         &pool,
-        &0u32,
         &blnd.address(),
         &soroswap_router.address,
     );
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
+    assert_eq!(pool_client.get_reserve(&usdc.address().clone()).config.index, 0);
+
 
     // get asset returns correct asset
     assert_eq!(strategy_client.asset(), usdc.address().clone());
@@ -349,7 +352,7 @@ fn success() {
     );    
     
     // -> verify withdraw from empty vault fails
-    let result = strategy_client.try_withdraw(&MIN_DUST, &user_2, &user_2);
+    let result = strategy_client.try_withdraw(&min_dust, &user_2, &user_2);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
 
     /*
