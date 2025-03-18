@@ -203,7 +203,6 @@ fn create_vault_internal(
     name_symbol: Map<String, String>,
     upgradable: bool,
 ) -> Result<Address, FactoryError> {
-    let current_contract = e.current_contract_address();
     let vault_wasm_hash = get_vault_wasm_hash(e)?;
     let defindex_receiver = get_defindex_receiver(e)?;
     let defindex_fee = get_fee_rate(e)?;
@@ -214,7 +213,6 @@ fn create_vault_internal(
     init_args.push_back(vault_fee.into_val(e));
     init_args.push_back(defindex_receiver.to_val());
     init_args.push_back(defindex_fee.into_val(e));
-    init_args.push_back(current_contract.to_val());
     init_args.push_back(soroswap_router.to_val());
     init_args.push_back(name_symbol.to_val());
     init_args.push_back(upgradable.into_val(e));
