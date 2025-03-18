@@ -1,11 +1,11 @@
 use soroban_sdk::{testutils::{MockAuth, MockAuthInvoke}, vec as sorobanvec, Address, IntoVal, Map, String, Vec};
 
 // use super::hodl_strategy::StrategyError;
-use crate::test::{
+use crate::{constants::SCALAR_BPS, test::{
     create_defindex_vault, create_fixed_strategy, create_strategy_params_token_0, create_strategy_params_token_1, defindex_vault::{
         AssetStrategySet, ContractError, CurrentAssetInvestmentAllocation, Instruction, RolesDataKey, Strategy, StrategyAllocation
     }, DeFindexVaultTest
-};
+}};
 
 // check that withdraw with negative amount after initialized returns error
 #[test]
@@ -1668,7 +1668,7 @@ fn withdraw_min_amounts_invalid_length(){
     let deposit_amounts_min = sorobanvec![&test.env, deposit_amount.clone(), deposit_amount.clone()];
     defindex_contract.deposit(&deposit_amounts_desired, &deposit_amounts_min, &users[0], &false);
     /*----------------------------------- End of test setup -----------------------------------*/
-    /*------------------------- Created vault with 20 lumens balance -------------------------*/
+    /*------------------ Created vault with 10 token_0 & 10 token_1 balance -------------------*/
 
     let withdraw_amount = 10_0_000_000i128;
 
@@ -1766,18 +1766,22 @@ fn withdraw_min_amounts_negative(){
     let deposit_amounts_min = sorobanvec![&test.env, deposit_amount.clone(), deposit_amount.clone()];
     defindex_contract.deposit(&deposit_amounts_desired, &deposit_amounts_min, &users[0], &false);
     /*----------------------------------- End of test setup -----------------------------------*/
-    /*------------------------- Created vault with 20 lumens balance -------------------------*/
+    /*------------------ Created vault with 10 token_0 & 10 token_1 balance -------------------*/
+
 
     let withdraw_amount = 10_0_000_000i128;
     
     /* ------------------------ Withdraw min_amounts_out[1] negative ------------------------ */
-    let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, 1_0_000_000i128, -1_0_000_000i128];
+    let min_amount_out = 1_0_000_000i128 * (10_000 - 2_000) / 10_000;
+
+    let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, min_amount_out, -min_amount_out];
     let result = defindex_contract.try_withdraw(&withdraw_amount, &withdraw_min_amounts_out, &users[0]);
     assert_eq!(result.is_err(), true);
     assert_eq!(result, Err(Ok(ContractError::AmountNotAllowed)));
 
     /* ------------------------ Withdraw min_amounts_out[0] negative ------------------------ */
-    let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, -1_0_000_000i128, 1_0_000_000i128];
+    let min_amount_out = 1_0_000_000i128;
+    let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, -min_amount_out, min_amount_out];
     let result = defindex_contract.try_withdraw(&withdraw_amount, &withdraw_min_amounts_out, &users[0]);
     assert_eq!(result.is_err(), true);
     assert_eq!(result, Err(Ok(ContractError::AmountNotAllowed)));
@@ -1856,12 +1860,12 @@ fn withdraw_under_min_amounts(){
     let deposit_amounts_min = sorobanvec![&test.env, deposit_amount.clone(), deposit_amount.clone()];
     defindex_contract.deposit(&deposit_amounts_desired, &deposit_amounts_min, &users[0], &false);
     /*----------------------------------- End of test setup -----------------------------------*/
-    /*------------------------- Created vault with 20 lumens balance --------------------------*/
+    /*------------------ Created vault with 10 token_0 & 10 token_1 balance -------------------*/
     
     let withdraw_amount = 10_0_000_000i128;
     /* ------------ set min_amounts_out over expected requested_withdrawal_amount ------------ */
     /* 
-        If vault has 20 lumens as total supply and no investments and I want to withdraw 10, the expected requested withdrawal amount should be 5 & 5.
+        If vault has 10 token_0 & 10 token_1 as total supply and no investments and I want to withdraw 10, the expected requested withdrawal amount should be 5 & 5.
         So... in order to test this, I will set the min_amounts_out to 6 & 4.
     */
     let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, 6_0_000_000i128, 4_0_000_000i128];
@@ -1944,13 +1948,14 @@ fn withdraw_min_amounts_over_total_supply(){
     let deposit_amounts_min = sorobanvec![&test.env, deposit_amount.clone(), deposit_amount.clone()];
     defindex_contract.deposit(&deposit_amounts_desired, &deposit_amounts_min, &users[0], &false);
     /*----------------------------------- End of test setup -----------------------------------*/
-    /*------------------------- Created vault with 20 lumens balance --------------------------*/
+    /*------------------ Created vault with 10 token_0 & 10 token_1 balance -------------------*/
+
     
     let withdraw_amount = 10_0_000_000i128;
     /* ------------------------ set min_amounts_out over total_supply ------------------------ */
     /* 
-        If vault has 20 lumens as total supply and no investments and I want to withdraw 10, the expected requested withdrawal amount should be 5 & 5.
-        So... in order to test this, I will set the total of min_amounts_out over 20 lumens.
+        If vault has 10 token_0 & 10 token_1 as total supply and no investments and I want to withdraw 10, the expected requested withdrawal amount should be 5 & 5.
+        So... in order to test this, I will set the total of min_amounts_out over 5 token_0 & 5 token_1.
     */
     let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, 11_0_000_000i128, 10_0_000_000i128];
 
@@ -2031,7 +2036,7 @@ fn withdraw_min_amounts_success(){
     let deposit_amounts_min = sorobanvec![&test.env, deposit_amount, deposit_amount];
     defindex_contract.deposit(&deposit_amounts_desired, &deposit_amounts_min, &users[0], &false);
     /*----------------------------------- End of test setup -----------------------------------*/
-    /*------------------------- Created vault with 20 lumens balance --------------------------*/
+    /*------------------ Created vault with 10 token_0 & 10 token_1 balance -------------------*/
 
     let withdraw_amount = 10_0_000_000i128;
     /* --------------------------------- set min_amounts_out --------------------------------- */
@@ -2039,7 +2044,18 @@ fn withdraw_min_amounts_success(){
         If vault has 20 lumens as total supply and no investments and I want to withdraw 10, the expected requested withdrawal amount should be 5 & 5.
         So... in order to succeed the test the amounts shouldn't exceed 5 lumens.
     */
-    let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, 4_0_000_000i128, 3_0_000_000i128];
+    //we will consider a slippage of 10% for the test
+    //to calculate the min_amounts_out we will use the price_per_shares using the following formula:
+    //min_amounts_out = (withdraw_amount * price_per_shares) * (BPS - slippage_bps) / BPS
+    let slippage_bps = 2000; // 20% slippage in basis points
+    let price_per_shares = defindex_contract.get_asset_amounts_per_shares(&withdraw_amount);
+    let price_per_shares_token_0 = price_per_shares.get(0).unwrap();
+    let price_per_shares_token_1 = price_per_shares.get(1).unwrap();
+
+    let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, 
+        price_per_shares_token_0 * (SCALAR_BPS as i128 - slippage_bps) / SCALAR_BPS as i128, // amount * (BPS - slippage) / BPS = 20% of tolerance over the amount
+        price_per_shares_token_1 * (SCALAR_BPS as i128 - slippage_bps) / SCALAR_BPS as i128
+    ];
 
     let result = defindex_contract.withdraw(&withdraw_amount, &withdraw_min_amounts_out, &users[0]);
     assert_eq!(result, sorobanvec![&test.env, 5_0_000_000i128, 5_0_000_000i128]);
