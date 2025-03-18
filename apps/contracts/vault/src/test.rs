@@ -108,14 +108,7 @@ pub(crate) fn get_token_admin_client<'a>(
 }
 
 pub(crate) fn create_strategy_params_token_0(test: &DeFindexVaultTest) -> Vec<Strategy> {
-    sorobanvec![
-        &test.env,
-        Strategy {
-            name: String::from_str(&test.env, "Strategy 1"),
-            address: test.strategy_client_token_0.address.clone(),
-            paused: false,
-        }
-    ]
+    create_strategy_params(test, test.strategy_client_token_0.address.clone())
 }
 pub(crate) fn create_unsafe_strategy_params_token_0(test: &DeFindexVaultTest) -> Vec<Strategy> {
     sorobanvec![
@@ -129,15 +122,20 @@ pub(crate) fn create_unsafe_strategy_params_token_0(test: &DeFindexVaultTest) ->
 }
 
 pub(crate) fn create_strategy_params_token_1(test: &DeFindexVaultTest) -> Vec<Strategy> {
+    create_strategy_params(test, test.strategy_client_token_1.address.clone())
+}
+
+pub(crate) fn create_strategy_params(test: &DeFindexVaultTest, address: Address) -> Vec<Strategy> {
     sorobanvec![
         &test.env,
         Strategy {
             name: String::from_str(&test.env, "Strategy 1"),
-            address: test.strategy_client_token_1.address.clone(),
+            address: address,
             paused: false,
         }
     ]
 }
+
 pub(crate) fn create_fixed_strategy_params_token_0(test: &DeFindexVaultTest) -> Vec<Strategy> {
     sorobanvec![
         &test.env,
