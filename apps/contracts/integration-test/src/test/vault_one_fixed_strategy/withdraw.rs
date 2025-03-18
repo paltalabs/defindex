@@ -85,8 +85,8 @@ fn fixed_apr_no_invest_withdraw_success() {
         df_balance_before_withdraw,
         deposit_amount - MINIMUM_LIQUIDITY
     );
-    let min_amount_out = df_balance_before_withdraw.clone() * (10_000 - 2_000) / 10_000; // amount * (BPS - slippage) / BPS = 20% of tolerance over the amount
-    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, min_amount_out];
+
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, df_balance_before_withdraw];
     enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
@@ -209,8 +209,7 @@ fn fixed_apr_invest_withdraw_success() {
         deposit_amount - MINIMUM_LIQUIDITY
     );
     
-    let min_amount_out = df_balance_before_withdraw.clone() * (10_000 - 2_000) / 10_000; // amount * (BPS - slippage) / BPS = 20% of tolerance over the amount
-    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, min_amount_out];
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, df_balance_before_withdraw.clone()];
     enviroment
         .vault_contract
         .mock_auths(&[MockAuth {

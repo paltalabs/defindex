@@ -412,7 +412,7 @@ fn with_one_asset_no_strategies(){
     let vault_shares = defindex_contract.balance(&users[0]);
     let withdraw_amount = defindex_contract.try_get_asset_amounts_per_shares(&vault_shares).unwrap().unwrap().get(0).unwrap();
 
-    let min_amounts_out = sorobanvec![&test.env, 0i128];
+    let min_amounts_out = sorobanvec![&test.env, withdraw_amount];
     
     let _withdraw_result = defindex_contract.withdraw(
         &withdraw_amount,
