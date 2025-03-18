@@ -136,7 +136,7 @@ pub fn deposit(
 
     // for the first depositor, the protocol will take out 1000 stroop units from the user shares in order to
     // avoid inflation attacks
-    let new_vault_minted_shares = if old_vault_shares == 0 {
+    let new_vault_minted_shares = if reserves.total_shares == 0 {
         new_minted_shares.checked_sub(1000).ok_or_else(|| StrategyError::UnderflowOverflow)?
     } else {
         new_minted_shares
