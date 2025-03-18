@@ -70,7 +70,6 @@ pub fn create_defindex_vault<'a>(
     vault_fee: u32,
     defindex_protocol_receiver: Address,
     defindex_protocol_rate: u32,
-    factory: Address,
     soroswap_router: Address,
     name_symbol: Map<String, String>,
     upgradable: bool,
@@ -81,7 +80,6 @@ pub fn create_defindex_vault<'a>(
         vault_fee,
         defindex_protocol_receiver,
         defindex_protocol_rate,
-        factory,
         soroswap_router,
         name_symbol,
         upgradable

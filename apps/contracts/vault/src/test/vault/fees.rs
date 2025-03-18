@@ -40,7 +40,6 @@ fn rebalance_invest(){
       2000u32,
       test.defindex_protocol_receiver.clone(),
       2500u32,
-      test.defindex_factory.clone(),
       test.soroswap_router.address.clone(),
       name_symbol,
       true
@@ -139,7 +138,6 @@ fn rebalance_unwind(){
       2000u32,
       test.defindex_protocol_receiver.clone(),
       2500u32,
-      test.defindex_factory.clone(),
       test.soroswap_router.address.clone(),
       name_symbol,
       true
@@ -278,7 +276,6 @@ fn test_distribute_fees_auth(){
       2000u32,
       test.defindex_protocol_receiver.clone(),
       2500u32,
-      test.defindex_factory.clone(),
       test.soroswap_router.address.clone(),
       name_symbol,
       true
@@ -394,7 +391,6 @@ fn release_negative_or_zero_fees (){
       2000u32,
       test.defindex_protocol_receiver.clone(),
       2500u32,
-      test.defindex_factory.clone(),
       test.soroswap_router.address.clone(),
       name_symbol,
       true
