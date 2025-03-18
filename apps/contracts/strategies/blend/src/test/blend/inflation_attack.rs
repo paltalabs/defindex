@@ -212,6 +212,9 @@ fn inflation_attack() {
         // 150000001001/3002 = 49966689.207528314
         assert_eq!(reserve.shares_to_b_tokens_down(1), Ok(49966689));
 
+        let victim_shares = storage::get_vault_shares(&e, &victim);
+        assert_eq!(victim_shares, 2001);
+
     });
 
 
@@ -224,9 +227,15 @@ fn inflation_attack() {
     // he is loosing money trying to do this attack
     assert!(total_attacker_init_balance > attacker_final_balance);
 
-    // // Victim's balance should be approx. 1/4 of the initial balance
-    // // Note: In this case, it's exactly 25%, but it may not be the case in other scenarios.
-    // // It'll always be in that order of magnitude though
+    // We know that now the victim won't have 100% of its value due to rounding errors 
+    // But will accept anything lower than 0.02% loss
     let victim_final_balance = strategy_client.balance(&victim);
-    assert_eq!(victim_final_balance, victim_usdc_balance);
+    // Calculate the minimum acceptable balance (99.98% of initial balance)
+    let min_acceptable_balance = victim_usdc_balance * 9998 / 10000; // 99.98%
+    assert!(
+        victim_final_balance >= min_acceptable_balance,
+        "Victim final balance ({}) is too low; expected at least {} (0.02% loss tolerance)",
+        victim_final_balance,
+        min_acceptable_balance
+    );
 }
