@@ -13,6 +13,7 @@ use soroban_sdk::{
     testutils::{Ledger, MockAuth, MockAuthInvoke},
     vec as svec, IntoVal, Vec,
 };
+extern crate std;
 
 #[test]
 fn fixed_apr_no_invest_withdraw_success() {
@@ -77,8 +78,6 @@ fn fixed_apr_no_invest_withdraw_success() {
         .ledger()
         .set_timestamp(setup.env.ledger().timestamp() + ONE_YEAR_IN_SECONDS);
 
-    // // TODO: The vault should call harvest method on the strategy contract
-    // enviroment.strategy_contract.mock_all_auths().harvest(&enviroment.vault_contract.address);
 
     let df_balance_before_withdraw = enviroment.vault_contract.balance(&user);
     assert_eq!(
@@ -86,6 +85,7 @@ fn fixed_apr_no_invest_withdraw_success() {
         deposit_amount - MINIMUM_LIQUIDITY
     );
 
+    // In this case, since the strategy hasn't gained any yield, neither loss, the df_balance matches the expected amount
     let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, df_balance_before_withdraw];
     enviroment
         .vault_contract
@@ -210,7 +210,7 @@ fn fixed_apr_invest_withdraw_success() {
     );
     
     let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, df_balance_before_withdraw.clone()];
-    enviroment
+    let result = enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
             address: &user.clone(),
@@ -222,6 +222,8 @@ fn fixed_apr_invest_withdraw_success() {
             },
         }])
         .withdraw(&df_balance_before_withdraw, &withdraw_min_amounts_out, &user);
+    std::println!("result: {:?}", result);
+    std::println!("withdraw_min_amounts_out: {:?}", withdraw_min_amounts_out);
 
     let report_after_withdraw = enviroment.vault_contract.report();
     let locked_fee = report_after_withdraw.get(0).unwrap().locked_fee;
