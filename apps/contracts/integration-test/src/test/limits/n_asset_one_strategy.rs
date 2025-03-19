@@ -400,10 +400,8 @@ fn n_assets_one_strategy_blend() {
         &setup.env,
         &usdc.address,
         &pool,
-        &0u32,
         &blnd.address,
         &soroswap_router.address,
-        svec![&setup.env, 0u32, 1u32, 2u32, 3u32],
         40_0000000i128
     );
     let usdc_strategy_contract = BlendStrategyClient::new(&setup.env, &usdc_strategy);
@@ -412,10 +410,8 @@ fn n_assets_one_strategy_blend() {
         &setup.env,
         &xlm.address,
         &pool,
-        &1u32,
         &blnd.address,
         &soroswap_router.address,
-        svec![&setup.env, 0u32, 1u32, 2u32, 3u32],
         40_0000000i128
     );
     let xlm_strategy_contract = BlendStrategyClient::new(&setup.env, &xlm_strategy);

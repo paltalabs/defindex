@@ -19,7 +19,6 @@ pub trait VaultTrait {
     /// * `vault_fee` - Vault-specific fee in basis points (0-2000 for 0-20%)
     /// * `defindex_protocol_receiver` - Address receiving protocol fees
     /// * `defindex_protocol_rate` - Protocol fee rate in basis points (0-9000 for 0-90%)
-    /// * `factory` - Factory contract address
     /// * `soroswap_router` - Soroswap router address
     /// * `name_symbol` - Map containing:
     ///   - "name": Vault token name
@@ -68,7 +67,6 @@ pub trait VaultTrait {
         vault_fee: u32,
         defindex_protocol_receiver: Address,
         defindex_protocol_rate: u32,
-        factory: Address,
         soroswap_router: Address,
         name_symbol: Map<String, String>,
         upgradable: bool,

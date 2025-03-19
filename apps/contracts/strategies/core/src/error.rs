@@ -15,6 +15,7 @@ pub enum StrategyError {
     ArithmeticError = 414,
     DivisionByZero = 415,
     InvalidSharesMinted= 416,
+    OnlyPositiveAmountAllowed = 417,
 
     // Protocol Errors
     ProtocolAddressNotFound = 420,

@@ -4,11 +4,12 @@ use crate::test::defindex_vault::{
     AssetStrategySet, ContractError, CurrentAssetInvestmentAllocation, RolesDataKey, StrategyAllocation
 };
 use crate::test::{
-    create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1,
+    create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1, create_strategy_params,
     DeFindexVaultTest,
 };
 use crate::deposit;
 use crate::MINIMUM_LIQUIDITY;
+extern crate std;
 
 #[test]
 fn amounts_desired_less_length() {
@@ -47,7 +48,6 @@ fn amounts_desired_less_length() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -101,7 +101,6 @@ fn amounts_desired_more_length() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -159,7 +158,6 @@ fn amounts_min_less_length() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -217,7 +215,6 @@ fn amounts_min_more_length() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -275,7 +272,6 @@ fn amounts_desired_negative() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -328,7 +324,6 @@ fn one_asset_success() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -494,7 +489,6 @@ fn one_asset_min_more_than_desired() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -520,7 +514,7 @@ fn one_asset_min_more_than_desired() {
         &false,
     );
     // this should fail
-    assert_eq!(result, Err(Ok(ContractError::InsufficientAmount)));
+    assert_eq!(result, Err(Ok(ContractError::NoOptimalAmounts)));
 }
 
 // test deposit of several asset, considering different proportion of assets
@@ -561,7 +555,6 @@ fn several_assets_success() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -854,7 +847,6 @@ fn several_assets_min_greater_than_optimal() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -885,7 +877,7 @@ fn several_assets_min_greater_than_optimal() {
     );
 
     // this should fail
-    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+    assert_eq!(deposit_result, Err(Ok(ContractError::NoOptimalAmounts)));
 
     // now we manage to deposit
     defindex_contract.deposit(
@@ -917,7 +909,7 @@ fn several_assets_min_greater_than_optimal() {
 
     // this should fail
 
-    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+    assert_eq!(deposit_result, Err(Ok(ContractError::NoOptimalAmounts)));
 }
 
 //test deposit amounts_min greater than amounts_desired
@@ -958,7 +950,6 @@ fn amounts_min_greater_than_amounts_desired() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -989,7 +980,7 @@ fn amounts_min_greater_than_amounts_desired() {
     );
 
     // this should fail
-    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+    assert_eq!(deposit_result, Err(Ok(ContractError::NoOptimalAmounts)));
 }
 
 //Test token transfer from user to vault on deposit
@@ -1030,7 +1021,6 @@ fn transfers_tokens_from_user_to_vault() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1100,7 +1090,6 @@ fn arithmetic_error() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1174,7 +1163,6 @@ fn amounts_desired_zero() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1207,7 +1195,7 @@ fn amounts_desired_zero() {
     );
 
     // Verify that the returned error is ContractError::InsufficientAmount
-    assert_eq!(deposit_result, Err(Ok(ContractError::AmountNotAllowed)));
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
 }
 
 // Deposit with insufficient funds and check for specific error message
@@ -1248,7 +1236,6 @@ fn insufficient_funds_with_error_message() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1290,22 +1277,28 @@ fn insufficient_funds_with_error_message() {
 
 
 #[test]
-fn test_dos_deposit() {
+fn with_zero_amounts() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
+
     let strategy_params_token_0 = create_strategy_params_token_0(&test);
     let strategy_params_token_1 = create_strategy_params_token_1(&test);
+    let strategy_params_token_2 = create_strategy_params(&test, test.strategy_client_token_2.address.clone());
 
     // initialize with 2 assets
     let assets: Vec<AssetStrategySet> = sorobanvec![
         &test.env,
-        AssetStrategySet {
+        AssetStrategySet {  
             address: test.token_0.address.clone(),
             strategies: strategy_params_token_0.clone()
         },
         AssetStrategySet {
             address: test.token_1.address.clone(),
             strategies: strategy_params_token_1.clone()
+        },
+        AssetStrategySet {
+            address: test.token_2.address.clone(),
+            strategies: strategy_params_token_2.clone()
         }
     ];
 
@@ -1341,30 +1334,54 @@ fn test_dos_deposit() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true,
     );
 
     // Deposit more than min liquidity
-    let deposit_amount = MINIMUM_LIQUIDITY + 1;
-
+    let deposit_amount_token_1 = MINIMUM_LIQUIDITY + 1;
+    let deposit_amount_token_2 = 2*deposit_amount_token_1;
     let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
 
-    // Balances before deposit
-    test.token_1_admin_client.mint(&users[0], &deposit_amount);
-
-    // The "attacker" deposits 0 token_0 and 1001 token1.
-    // Due to the 0 amount, any subsequent deposits will fail.
+    test.token_1_admin_client.mint(&users[0], &deposit_amount_token_1);
+    test.token_2_admin_client.mint(&users[0], &deposit_amount_token_2);
+    // One should be allowed to deposit 0 amount for the any token
     let deposit_result = defindex_contract.try_deposit(
-        &sorobanvec![&test.env, 0, deposit_amount],
-        &sorobanvec![&test.env, 0, 0],
+        &sorobanvec![&test.env, 0, deposit_amount_token_1, deposit_amount_token_2],
+        &sorobanvec![&test.env, 0, 0, 0],
         &users[0],
         &false,
     );
-    
-    assert_eq!(deposit_result, Err(Ok(ContractError::AmountNotAllowed)));
+    std::println!("deposit_result: {:?}", deposit_result);
+    // user[0] should have deposit_amount_token_1 + deposit_amount_token_2 - MINIMUM_LIQUIDITY shares minted
+    // Total supply should be deposit_amount_token_1 + deposit_amount_token_2
+    assert_eq!(deposit_result.is_err(), false);
+    let total_supply = defindex_contract.total_supply();
+    let user_balance = defindex_contract.balance(&users[0]);
+    assert_eq!(user_balance, deposit_amount_token_1 + deposit_amount_token_2 - MINIMUM_LIQUIDITY);
+    assert_eq!(total_supply, deposit_amount_token_1 + deposit_amount_token_2);
+
+
+    // one should be allowed to deposit 0 amount for the any token and the other token with a positive amount
+    test.token_1_admin_client.mint(&users[1], &deposit_amount_token_1);
+    test.token_2_admin_client.mint(&users[1], &deposit_amount_token_2);
+    let deposit_result = defindex_contract.try_deposit(
+        &sorobanvec![&test.env, 0, deposit_amount_token_1, deposit_amount_token_2],
+        &sorobanvec![&test.env, 0, 0, 0],
+        &users[1],
+        &false,
+    );
+    std::println!("deposit_result second balance: {:?}", deposit_result);
+    assert_eq!(deposit_result.is_err(), false);
+    // User[0] should have deposit_amount_token_1 + deposit_amount_token_2 shares minted
+    // Total supply should be 2*(deposit_amount_token_1 + deposit_amount_token_2)
+    let user_balance = defindex_contract.balance(&users[1]);
+    let total_supply = defindex_contract.total_supply();
+    std::println!("user_balance: {:?}", user_balance);
+    std::println!("total_supply: {:?}", total_supply);
+    assert_eq!(user_balance, deposit_amount_token_1 + deposit_amount_token_2);
+    assert_eq!(total_supply, 2*(deposit_amount_token_1 + deposit_amount_token_2));
 
     // User 1 attempts to deposit 100_000_000 from each token
     let amount = 100_000_000;
@@ -1372,15 +1389,59 @@ fn test_dos_deposit() {
     test.token_1_admin_client.mint(&users[1], &amount);
     // We don't care about the min amounts for the purpose of the PoC
     let deposit_result = defindex_contract.try_deposit(
-        &sorobanvec![&test.env, amount, 0],
-        &sorobanvec![&test.env, 0, 0],
+        &sorobanvec![&test.env, amount, amount, 0],
+        &sorobanvec![&test.env, amount*9/10, amount*9/10, 0],
+        &users[1],
+        &false,
+    );
+    // this call will fail because the last amount should not be 0
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+
+    // Test depositing all zeros
+    // It should fail with InsufficientAmount because mint_shares are 0
+    let deposit_result = defindex_contract.try_deposit(
+        &sorobanvec![&test.env, amount, 0, 0],
+        &sorobanvec![&test.env, amount*9/10, 0, 0], 
         &users[1],
         &false,
     );
 
-    // This call and any other deposit attempt will fail with `InsufficientManagedFunds`,
-    // because the `reserve_target` of asset index 0 is 0.
-    assert_eq!(deposit_result, Err(Ok(ContractError::AmountNotAllowed)));
+    // Should fail since we can't deposit all zeros
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+
+    // Test depositing all zeros
+    // It should fail with InsufficientAmount because mint_shares are 0
+    let deposit_result = defindex_contract.try_deposit(
+        &sorobanvec![&test.env, 0, 0, 0],
+        &sorobanvec![&test.env, 0, 0, 0],
+        &users[1], 
+        &false,
+    );
+
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+
+    // Test depositing [0, amount, 0]
+    // It should fail with InsufficientAmount since last amount is 0
+    let deposit_result = defindex_contract.try_deposit(
+        &sorobanvec![&test.env, 0, amount, 0],
+        &sorobanvec![&test.env, 0, amount*9/10, 0],
+        &users[1],
+        &false,
+    );
+
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+
+    // Test depositing [0, 0, amount]
+    // It should fail with InsufficientAmount since first two amounts are 0
+    let deposit_result = defindex_contract.try_deposit(
+        &sorobanvec![&test.env, 0, 0, amount],
+        &sorobanvec![&test.env, 0, 0, amount*9/10],
+        &users[1],
+        &false,
+    );
+
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+
 }
 
 #[test]
@@ -1417,7 +1478,6 @@ fn mint_zero_shares(){
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1485,7 +1545,6 @@ fn mint_negative_shares(){
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1554,7 +1613,6 @@ fn mint_shares(){
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true

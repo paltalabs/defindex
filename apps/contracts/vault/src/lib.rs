@@ -32,7 +32,7 @@ use models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instru
 use storage::{
     extend_instance_ttl, get_assets, get_defindex_protocol_fee_rate,
     get_report, get_vault_fee, set_asset,
-    set_defindex_protocol_fee_rate, set_defindex_protocol_fee_receiver, set_factory, set_report,
+    set_defindex_protocol_fee_rate, set_defindex_protocol_fee_receiver, set_report,
     set_soroswap_router, set_total_assets, set_vault_fee, set_is_upgradable
 };
 use strategies::{
@@ -70,7 +70,6 @@ impl VaultTrait for DeFindexVault {
     /// * `vault_fee` - Vault-specific fee in basis points (0_2000 for 0.20%)
     /// * `defindex_protocol_receiver` - Address receiving protocol fees
     /// * `defindex_protocol_rate` - Protocol fee rate in basis points (0-9000 for 0-90%)
-    /// * `factory` - Factory contract address
     /// * `soroswap_router` - Soroswap router address
     /// * `name_symbol` - Map containing:
     ///   - "name": Vault token name
@@ -119,7 +118,6 @@ impl VaultTrait for DeFindexVault {
         vault_fee: u32,
         defindex_protocol_receiver: Address,
         defindex_protocol_rate: u32,
-        factory: Address,
         soroswap_router: Address,
         name_symbol: Map<String, String>,
         upgradable: bool,
@@ -145,7 +143,6 @@ impl VaultTrait for DeFindexVault {
         }
         set_defindex_protocol_fee_rate(&e, &defindex_protocol_rate);
 
-        set_factory(&e, &factory);
         set_is_upgradable(&e, &upgradable);
 
         set_soroswap_router(&e, &soroswap_router);

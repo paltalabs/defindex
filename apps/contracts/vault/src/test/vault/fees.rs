@@ -40,7 +40,6 @@ fn rebalance_invest(){
       2000u32,
       test.defindex_protocol_receiver.clone(),
       2500u32,
-      test.defindex_factory.clone(),
       test.soroswap_router.address.clone(),
       name_symbol,
       true
@@ -139,7 +138,6 @@ fn rebalance_unwind(){
       2000u32,
       test.defindex_protocol_receiver.clone(),
       2500u32,
-      test.defindex_factory.clone(),
       test.soroswap_router.address.clone(),
       name_symbol,
       true
@@ -278,7 +276,6 @@ fn test_distribute_fees_auth(){
       2000u32,
       test.defindex_protocol_receiver.clone(),
       2500u32,
-      test.defindex_factory.clone(),
       test.soroswap_router.address.clone(),
       name_symbol,
       true
@@ -394,7 +391,6 @@ fn release_negative_or_zero_fees (){
       2000u32,
       test.defindex_protocol_receiver.clone(),
       2500u32,
-      test.defindex_factory.clone(),
       test.soroswap_router.address.clone(),
       name_symbol,
       true
@@ -433,11 +429,9 @@ fn release_negative_or_zero_fees (){
 
   // Release fees border cases
   let release_more_than_avaliable = defindex_contract.try_release_fees(&test.strategy_client_token_0.address.clone(), &3_0_000_000i128);
-  let release_zero_fees_result = defindex_contract.try_release_fees(&test.strategy_client_token_0.address.clone(), &0i128);
   let release_negative_fees_result = defindex_contract.try_release_fees(&test.strategy_client_token_0.address.clone(), &-1_0_000_000i128);
 
   assert_eq!(release_more_than_avaliable, Err(Ok(ContractError::InsufficientFeesToRelease)));
-  assert_eq!(release_zero_fees_result, Err(Ok(ContractError::AmountNotAllowed)));
   assert_eq!(release_negative_fees_result, Err(Ok(ContractError::AmountNotAllowed)));
 
   // Release fees

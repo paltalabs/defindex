@@ -10,7 +10,7 @@ use crate::{
 
 
 pub fn validate_amount(amount: i128) -> Result<(), ContractError> {
-    if amount <= 0 {
+    if amount < 0 {
         Err(ContractError::AmountNotAllowed)
     } else {
         Ok(())
@@ -151,14 +151,13 @@ pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
         .unwrap_or_else(|| panic_with_error!(e, ContractError::WrongAmountsLength))
         .total_amount;
 
-    // If reserve target is zero, we cannot calculate the optimal amounts
-    if reserve_target == 0 {
-        panic_with_error!(e, ContractError::InsufficientManagedFunds);
-    }
-
     let amount_desired_target = amounts_desired
         .get(enforced_asset_index)
         .unwrap_or_else(|| panic_with_error!(e, ContractError::WrongAmountsLength));
+
+    if amount_desired_target == 0 {
+        panic_with_error!(e, ContractError::InsufficientAmount);
+    }
 
     let mut optimal_amounts = Vec::new(e);
 
@@ -199,7 +198,11 @@ pub fn calculate_deposit_amounts_and_shares_to_mint(
     amounts_min: &Vec<i128>,
 ) -> Result<(Vec<i128>, i128), ContractError> {
     for i in 0..total_managed_funds.len() {
-        // Calculate the optimal amounts and shares to mint for the enforced asset
+        // Skip zero balance assets
+        if total_managed_funds.get(i).unwrap().total_amount == 0 {
+            continue;
+        }
+
         let (optimal_amounts, shares_to_mint) =
             calculate_optimal_amounts_and_shares_with_enforced_asset(
                 e,
@@ -210,7 +213,13 @@ pub fn calculate_deposit_amounts_and_shares_to_mint(
 
         let mut should_skip = false;
 
-        for j in i + 1..total_managed_funds.len() {
+        // Check ALL other assets
+        for j in 0..total_managed_funds.len() {
+            // Skip the reference asset and zero balance assets
+            if j == i || total_managed_funds.get(j).unwrap().total_amount == 0 {
+                continue;
+            }
+
             let desired_amount = amounts_desired
                 .get(j)
                 .ok_or(ContractError::WrongAmountsLength)?;
@@ -223,21 +232,42 @@ pub fn calculate_deposit_amounts_and_shares_to_mint(
 
             if optimal_amount <= desired_amount {
                 if optimal_amount < min_amount {
-                    return Err(ContractError::InsufficientAmount);
+                    should_skip = true;
+                    break;  // Try next enforced asset instead of returning error
                 }
             } else {
                 should_skip = true;
-
-                // If all assets have been analyzed and no valid solution is found, return an error
-                if i == total_managed_funds.len().checked_sub(1).ok_or(ContractError::Underflow)? {
-                    return Err(ContractError::NoOptimalAmounts);
-                }
                 break;
             }
         }
 
         if !should_skip {
             return Ok((optimal_amounts, shares_to_mint));
+        }
+
+        // Only return NoOptimalAmounts if this was the last valid reference asset
+        if i == total_managed_funds.len().checked_sub(1).ok_or(ContractError::Underflow)? {
+            // If we got here and all attempts failed, check if any failure was due to insufficient amounts
+            let (final_amounts, _) = calculate_optimal_amounts_and_shares_with_enforced_asset(
+                e,
+                total_managed_funds,
+                amounts_desired,
+                i,
+            );
+            
+            for j in 0..total_managed_funds.len() {
+                if j == i || total_managed_funds.get(j).unwrap().total_amount == 0 {
+                    continue;
+                }
+                let min_amount = amounts_min.get(j)
+                    .ok_or(ContractError::WrongAmountsLength)?;
+                let optimal_amount = final_amounts.get(j)
+                    .ok_or(ContractError::WrongAmountsLength)?;
+                if optimal_amount < min_amount {
+                    return Err(ContractError::NoOptimalAmounts);
+                }
+            }
+            return Err(ContractError::NoOptimalAmounts);
         }
     }
 

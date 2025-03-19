@@ -23,7 +23,6 @@ enum DataKey {
     TotalAssets,           // Total number of tokens
     AssetStrategySet(u32), // AssetStrategySet Addresse by index
     DeFindexProtocolFeeReceiver,
-    DeFindexFactory,
     Upgradable,
     VaultFee,
     SoroswapRouter,
@@ -90,13 +89,6 @@ pub fn get_defindex_protocol_fee_rate(e: &Env) -> u32 {
         .instance()
         .get(&DataKey::DeFindexProtocolFeeRate)
         .unwrap()
-}
-
-// DeFindex Factory
-pub fn set_factory(e: &Env, address: &Address) {
-    e.storage()
-        .instance()
-        .set(&DataKey::DeFindexFactory, address);
 }
 
 // Soroswap Router

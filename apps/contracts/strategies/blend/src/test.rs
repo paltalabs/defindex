@@ -242,6 +242,7 @@ pub(crate) fn create_blend_pool(
     pool_client.set_reserve(&usdc.address);
     pool_client.queue_set_reserve(&xlm.address, &reserve_config);
     pool_client.set_reserve(&xlm.address);
+
     let emission_config = vec![
         e,
         ReserveEmissionMetadata {
@@ -456,43 +457,31 @@ pub(crate) fn register_blend_strategy(
     e: &Env,
     asset: &Address,
     blend_pool: &Address,
-    reserve_id: &u32,
     blend_token: &Address,
     soroswap_router: &Address,
-    claim_ids: Vec<u32>,
     reward_threshold: i128,
 ) -> Address {
     // let blend_pool_address: Address = init_args
     //         .get(0)
     //         .expect("Invalid argument: blend_pool_address")
     //         .into_val(&e);
-    //     let reserve_id: u32 = init_args
-    //         .get(1)
-    //         .expect("Invalid argument: reserve_id")
-    //         .into_val(&e);
     //     let blend_token: Address = init_args
-    //         .get(2)
+    //         .get(1)
     //         .expect("Invalid argument: blend_token")
     //         .into_val(&e);
     //     let soroswap_router: Address = init_args
-    //         .get(3)
+    //         .get(2)
     //         .expect("Invalid argument: soroswap_router")
     //         .into_val(&e);
-    //     let claim_ids: Vec<u32> = init_args
-    //         .get(4)
-    //         .expect("Invalid argument: claim_ids")
-    //         .into_val(&e);
     //     let reward_threshold: i128 = init_args
-    //         .get(5)
+    //         .get(3)
     //         .expect("Invalid argument: reward_threshold")
     //         .into_val(&e);
     let init_args: Vec<Val> = vec![
         e,
         blend_pool.into_val(e),
-        reserve_id.into_val(e),
         blend_token.into_val(e),
         soroswap_router.into_val(e),
-        claim_ids.into_val(e),
         reward_threshold.into_val(e),
     ];
 
@@ -507,7 +496,6 @@ pub(crate) fn create_blend_strategy(
     e: &Env,
     underlying_asset: &Address,
     blend_pool: &Address,
-    reserve_id: &u32,
     blend_token: &Address,
     soroswap_router: &Address,
 ) -> Address {
@@ -522,10 +510,8 @@ pub(crate) fn create_blend_strategy(
         e,
         underlying_asset, 
         blend_pool,
-        reserve_id,
         blend_token,
         soroswap_router,
-        vec![e, 0u32, 1u32, 2u32, 3u32],
         REWARD_THRESHOLD
     );
 
