@@ -86,7 +86,8 @@ fn fixed_apr_no_invest_withdraw_success() {
     );
 
     // In this case, since the strategy hasn't gained any yield, neither loss, the df_balance matches the expected amount
-    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, df_balance_before_withdraw];
+    let df_to_asset = enviroment.vault_contract.get_asset_amounts_per_shares(&df_balance_before_withdraw);
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, df_to_asset.get(0).unwrap()];
     enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
@@ -209,7 +210,8 @@ fn fixed_apr_invest_withdraw_success() {
         deposit_amount - MINIMUM_LIQUIDITY
     );
     
-    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, df_balance_before_withdraw.clone()];
+    let df_to_asset = enviroment.vault_contract.get_asset_amounts_per_shares(&df_balance_before_withdraw);
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, df_to_asset.get(0).unwrap()];
     let result = enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
