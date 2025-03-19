@@ -425,6 +425,7 @@ impl FactoryTrait for DeFindexFactory {
         admin.require_auth();
 
         put_defindex_fee(&e, &defindex_fee)?;
+        events::emit_new_defindex_fee(&e, defindex_fee);
         Ok(())
     }
 
