@@ -45,7 +45,6 @@ fn deposit_several_assets_get_asset_amounts_per_shares() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -212,7 +211,6 @@ fn deposit_and_invest_several_assets_get_asset_amounts_per_shares() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true

@@ -38,7 +38,6 @@ fn report_on_fetch_strategy_invested_funds() {
       2000u32,
       test.defindex_protocol_receiver.clone(),
       2500u32,
-      test.defindex_factory.clone(),
       test.soroswap_router.address.clone(),
       name_symbol,
       true

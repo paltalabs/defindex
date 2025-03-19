@@ -64,7 +64,6 @@ fn check_rebalance_events(){
       2000u32,
       test.defindex_protocol_receiver.clone(),
       2500u32,
-      test.defindex_factory.clone(),
       test.soroswap_router.address.clone(),
       name_symbol,
       true,
@@ -302,7 +301,6 @@ fn set_new_manager_by_manager() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true

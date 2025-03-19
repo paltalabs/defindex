@@ -53,7 +53,6 @@ fn get_roles() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -168,7 +167,6 @@ fn deploy_unsupported_strategy() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -201,7 +199,6 @@ fn initialize_with_empty_asset_allocation() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -261,7 +258,6 @@ fn with_one_asset_and_several_strategies() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -355,7 +351,6 @@ fn with_one_asset_no_strategies(){
         1u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -458,7 +453,6 @@ fn initialize_with_excessive_vault_fee() {
         9500u32, // Fee greater than 9000 basis points (90%)
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -501,7 +495,6 @@ fn initialize_with_excessive_protocol_fee() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         9500u32, // Protocol fee greater than 9000 basis points (90%)
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -544,7 +537,6 @@ fn initialize_duplicated_asset_address(){
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -585,7 +577,6 @@ fn initialize_duplicated_strategy_address(){
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
