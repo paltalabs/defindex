@@ -26,6 +26,7 @@ fn success() {
     let user_2 = Address::generate(&e);
     let user_3 = Address::generate(&e);
     let user_4 = Address::generate(&e);
+    let initial_depositor = Address::generate(&e);
 
     let blnd = e.register_stellar_asset_contract_v2(admin.clone());
     let usdc = e.register_stellar_asset_contract_v2(admin.clone());
@@ -112,8 +113,14 @@ fn success() {
     let starting_balance = 100_0000000;
     usdc_client.mint(&user_2, &starting_balance);
     usdc_client.mint(&user_3, &starting_balance);
+    usdc_client.mint(&initial_depositor, &starting_balance);
 
     assert_eq!(usdc_client.balance(&user_3), starting_balance);
+
+    let deposit_result_initial_depositor = strategy_client.deposit(&starting_balance, &initial_depositor);
+    assert_eq!(deposit_result_initial_depositor, starting_balance - 1000);
+
+
 
     let deposit_result_0 = strategy_client.deposit(&starting_balance, &user_2);
     assert_eq!(deposit_result_0, starting_balance);
@@ -164,10 +171,10 @@ fn success() {
     assert_eq!(strategy_client.balance(&user_3), starting_balance);
     assert_eq!(
         usdc_client.balance(&pool),
-        pool_usdc_balace_start + starting_balance * 2
+        pool_usdc_balace_start + starting_balance * 3
     );
     let strategy_positions = pool_client.get_positions(&strategy);
-    assert_eq!(strategy_positions.supply.get(0).unwrap(), starting_balance * 2);
+    assert_eq!(strategy_positions.supply.get(0).unwrap(), starting_balance * 3);
     // (pool b_rate still 1 as no time has passed)
     assert_eq!(pool_client.get_reserve(&usdc.address().clone()).data.b_rate, 1000000000000);
     
@@ -190,7 +197,7 @@ fn success() {
 
     assert_eq!(
         usdc_client.balance(&pool),
-        pool_usdc_balace_start + starting_balance * 4
+        pool_usdc_balace_start + starting_balance * 5
     );
 
     // admin borrow from pool to return USDC to 50% util rate
@@ -211,14 +218,14 @@ fn success() {
 
     assert_eq!(
         usdc_client.balance(&pool),
-        pool_usdc_balace_start + starting_balance * 2
+        pool_usdc_balace_start + starting_balance * 3
     );
 
     // Get Strategy btokens & brate to get the USDC balance of the strategy in the pool
     let strategy_b_tokens = pool_client.get_positions(&strategy).supply.get(0).unwrap();
     let b_rate = pool_client.get_reserve(&usdc.address().clone()).data.b_rate;
     // Check Helthy Strategy USDC Balance in the pool
-    assert_eq!((strategy_b_tokens * b_rate) / SCALAR_12, starting_balance * 2);
+    assert_eq!((strategy_b_tokens * b_rate) / SCALAR_12, starting_balance * 3);
     
 
     /*
@@ -264,7 +271,7 @@ fn success() {
     */
 
     let expected_users_profit = user_4_profit / 2;
-    let expected_strategy_profit = user_4_profit;
+    let expected_strategy_profit = (user_4_profit * 3) / 2;
     println!("Expected strategy profit {}", expected_strategy_profit);
     println!("Expected users profit {}", expected_users_profit);
 
@@ -272,7 +279,12 @@ fn success() {
     let strategy_b_tokens = pool_client.get_positions(&strategy).supply.get(0).unwrap();
     let b_rate = pool_client.get_reserve(&usdc.address().clone()).data.b_rate;
     // Check Helthy Strategy USDC Balance in the pool
-    assert_eq!((strategy_b_tokens * b_rate) / SCALAR_12, starting_balance * 2 + expected_strategy_profit);
+
+    assert_approx_eq_rel(
+        (strategy_b_tokens * b_rate) / SCALAR_12,
+        starting_balance * 3 + expected_strategy_profit,
+        0_00001000,
+    );  
 
     // Now User 4 will claim so we can calculate the emissions:
     // Claim emissions for user_4 (that deposited directly on the pool). We do this to guess the emissions for the strategy
@@ -282,6 +294,8 @@ fn success() {
     let merry_emissions = blnd_client.balance(&user_4);
     println!("Merry emissions {}", merry_emissions);
     assert_eq!(amounts_claimed, merry_emissions);
+    // if user 4 got merry_emissions, then the strategy should get 
+    let strategy_emissions = (merry_emissions * 3) / 2;
 
     // This emissions are for Merry (user 4), who deposited directly into the pool a double amount than
     // user 2 and user 3.
@@ -289,25 +303,37 @@ fn success() {
     // strategy
     let expected_usdc=soroswap_router
         .router_get_amounts_out(
-            &merry_emissions, 
+            &strategy_emissions, 
             &vec![&e, blnd.address().clone(), usdc.address().clone()])
         .get(1).unwrap();
+
+    // Get Strategy btokens & brate to get the USDC balance of the strategy in the pool
+    let strategy_b_tokens = pool_client.get_positions(&strategy).supply.get(0).unwrap();
+    let b_rate = pool_client.get_reserve(&usdc.address().clone()).data.b_rate;
+    // Check Helthy Strategy USDC Balance in the pool
+    assert_approx_eq_rel(
+        (strategy_b_tokens * b_rate) / SCALAR_12,
+        starting_balance * 3 + expected_strategy_profit,
+        0_00001000,
+    );   
 
     // withdraw from blend strategy for user_2
     // each of the users are expected to receive half of the profit of user_4 + the profit for the sold emissions:
 
     // print expected usdc earned by sold emissions
     println!("Expected USDC earned by the strategy by sold emissions {}", expected_usdc);
-    println!("Expected USDC earned by each user  by sold emissions {}", expected_usdc/2);
-    let expected_withdraw_amount = starting_balance + expected_users_profit + expected_usdc/2;
+    println!("Expected USDC earned by each user  by sold emissions {}", expected_usdc/3);
+    let expected_withdraw_amount = starting_balance + expected_users_profit + expected_usdc / 3 + 1; // one stroop in rounding calculations 
+
     println!("Expected withdraw amount for users {}", expected_withdraw_amount);
+
 
     // -> verify over withdraw fails
     let result =
         strategy_client.try_withdraw(&(expected_withdraw_amount + 1), &user_2, &user_2);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
     let result =
-        strategy_client.try_withdraw(&(expected_withdraw_amount + 1), &user_3, &user_3);
+        strategy_client.try_withdraw(&(expected_withdraw_amount + 1 ), &user_3, &user_3); 
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
     println!("Expected withdraw amount for users {}", expected_withdraw_amount);
 
@@ -338,7 +364,7 @@ fn success() {
     assert_eq!(usdc_client.balance(&user_2), expected_withdraw_amount);
     assert_eq!(usdc_client.balance(&user_3), 0);
     assert_eq!(strategy_client.balance(&user_2), 0);
-    assert_eq!(remain_underlying, 0);
+    assert_eq!(remain_underlying, 0);   
     assert_eq!(strategy_client.balance(&user_3), expected_withdraw_amount);
 
     // Get Strategy btokens & brate to get the USDC balance of the strategy in the pool
@@ -347,8 +373,8 @@ fn success() {
     // Check Helthy Strategy USDC Balance in the pool
     assert_approx_eq_rel(
         (strategy_b_tokens * b_rate) / SCALAR_12,
-        starting_balance * 2 + expected_strategy_profit + expected_usdc - expected_withdraw_amount,
-        0_0100000,
+        starting_balance * 3 + expected_strategy_profit + expected_usdc - expected_withdraw_amount,
+        0_0000010,
     );    
     
     // -> verify withdraw from empty vault fails
@@ -397,14 +423,14 @@ fn success() {
     assert_approx_eq_rel(
         user_4_b_tokens,
         strategy_b_tokens,
-        0_0100000,
+        0_0000010,
     );
 
     let b_rate = pool_client.get_reserve(&usdc.address().clone()).data.b_rate;
     // Check Helthy Strategy USDC Balance in the pool
     assert_approx_eq_rel(
         (strategy_b_tokens * b_rate) / SCALAR_12,
-        starting_balance * 2 + expected_strategy_profit + expected_usdc - expected_withdraw_amount,
+        starting_balance * 3 + expected_strategy_profit + expected_usdc - expected_withdraw_amount,
         0_0100000,
     );
 
@@ -435,6 +461,7 @@ fn success() {
     println!("User 4 Balance after withdrawal {}", usdc_client.balance(&user_4));
     let new_user_4_profit = user_4_final_balance - user_4_before - user_4_new_investment ;
     println!("User 4 Balance new profit {}", new_user_4_profit);
+    
 
 
      // We verify that the strategy now holds the new_expected_usdc
@@ -445,8 +472,8 @@ fn success() {
     // Check Helthy Strategy USDC Balance in the pool
     assert_approx_eq_rel(
         (strategy_b_tokens * b_rate) / SCALAR_12,
-        starting_balance * 2 + expected_strategy_profit  + expected_usdc - expected_withdraw_amount + new_user_4_profit,
-        0_0100000,
+        starting_balance * 3 + expected_strategy_profit  + expected_usdc - expected_withdraw_amount + new_user_4_profit,
+        0_0000010,
     );
 
 
@@ -467,9 +494,11 @@ fn success() {
     // user 2 and user 3.
     // this means that is expected that the emissions for Merry to be equal to the emissions for the
     // strategy
+    let strategy_emissions = merry_emissions;
+
     let new_expected_usdc=soroswap_router
         .router_get_amounts_out(
-            &merry_emissions, 
+            &strategy_emissions, 
             &vec![&e, blnd.address().clone(), usdc.address().clone()])
         .get(1).unwrap();
 
@@ -513,7 +542,7 @@ fn success() {
     // Check Helthy Strategy USDC Balance in the pool
     assert_approx_eq_rel(
         (strategy_b_tokens * b_rate) / SCALAR_12,
-        starting_balance * 2 + expected_strategy_profit  + expected_usdc - expected_withdraw_amount + new_user_4_profit + new_expected_usdc,
+        starting_balance * 3 + expected_strategy_profit  + expected_usdc - expected_withdraw_amount + new_user_4_profit + new_expected_usdc,
         0_0100000,
     );
     /*
@@ -524,8 +553,8 @@ fn success() {
     println!("Strategy USER 3 after harvest {}", user_3_after_balance);
     assert_approx_eq_rel(
         user_3_after_balance,
-        user_3_starting_balance + new_expected_usdc,
-        0_0100000,
+        user_3_starting_balance + new_expected_usdc/2, //this new expected usdc is shared with the initial depositor
+        0_0000100,
     );
 
     println!("Strategy USER 3 Increased in {}", user_3_after_balance - user_3_starting_balance);
