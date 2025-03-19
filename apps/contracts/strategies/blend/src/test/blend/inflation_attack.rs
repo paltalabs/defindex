@@ -5,7 +5,7 @@ use crate::test::blend::soroswap_setup::create_soroswap_pool;
 // use crate::test::std::println;
 use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils};
 use crate::BlendStrategyClient;
-// use defindex_strategy_core::StrategyError;
+use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::testutils::{Address as _};
 use soroban_sdk::{vec, Address, Env};
@@ -156,7 +156,7 @@ fn inflation_attack() {
     // Step 2: Atacker donates some his BLND and harvests
     // Note: Tried to find an amount that maximizes the profit, as explained below
     blnd_client.transfer(&attacker, &strategy, &5015_0_453_863);
-    // this amount will be swapped for 5000 * scale7 usdc, in fact
+    // this amount is selected because it will give 5000 * scale7 usdc after swap, in fact
     let expeced_usdc_output_amount = soroswap_router.router_get_amounts_out(
         &5015_0_453_863, 
         &vec![&e, blnd.address().clone(), usdc.address().clone()])
