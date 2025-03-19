@@ -137,8 +137,7 @@ fn inflation_attack() {
     // He cannot withdraw all but one because there are 1,000 stroop units that where blocked for the first depositor
     let try_result = strategy_client.try_withdraw(&(attacker_usdc_balance - 1), &attacker, &attacker);
     assert!(try_result.is_err());
-
-    
+    assert_eq!(try_result, Err(Ok(StrategyError::InsufficientBalance)));
 
     // But he can try to withdraw everything but 1 of this minted units (attacker_usdc_balance - 1000)
     strategy_client.withdraw(&(attacker_usdc_balance - 1000 - 1), &attacker, &attacker);
