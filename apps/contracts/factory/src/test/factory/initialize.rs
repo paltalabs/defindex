@@ -1,7 +1,7 @@
 use soroban_sdk::{testutils::Address as _, Address, Env, BytesN};
 use crate::error::FactoryError;
 use crate::storage::DataKey;
-use crate::test::{create_defindex_factory, defindex_vault_contract, DeFindexFactoryTest, DeFindexFactoryClient};
+use crate::test::{create_defindex_factory, defindex_vault_contract, DeFindexFactoryTest};
 use crate::constants::MAX_DEFINDEX_FEE;
 
 fn retrieve_value(env: &Env, key: DataKey) -> Result<BytesN<32>, FactoryError> {
