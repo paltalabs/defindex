@@ -356,7 +356,7 @@ impl FactoryTrait for DeFindexFactory {
             return Err(FactoryError::AssetLengthMismatch);
         }
 
-        let vault_addreess = create_vault_internal(
+        let vault_address = create_vault_internal(
             &e,
             roles.clone(),
             vault_fee,
@@ -366,9 +366,9 @@ impl FactoryTrait for DeFindexFactory {
             upgradable,
         )?;
 
-        perform_initial_deposit(&e, &vault_addreess, &caller, &amounts);
+        perform_initial_deposit(&e, &vault_address, &caller, &amounts);
 
-        Ok(vault_addreess)
+        Ok(vault_address)
     }
 
     // --- Admin Functions ---
