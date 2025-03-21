@@ -283,6 +283,7 @@ impl VaultTrait for DeFindexVault {
     /// ## Parameters:
     /// - `e`: The contract environment (`Env`).
     /// - `withdraw_shares`: The number of vault shares to withdraw.
+    /// - `min_amounts_out`: A vector of minimum amounts required for each asset to be withdrawn.
     /// - `from`: The address initiating the withdrawal.
     ///
     /// ## Returns
@@ -294,7 +295,7 @@ impl VaultTrait for DeFindexVault {
     /// - `ContractError::AmountOverTotalSupply`: If the specified shares exceed the total supply.
     /// - `ContractError::ArithmeticError`: If any arithmetic operation fails during calculations.
     /// - `ContractError::WrongAmountsLength`: If there is a mismatch in asset allocation data.
-    fn withdraw(e: Env, withdraw_shares: i128, from: Address) -> Result<Vec<i128>, ContractError> {
+    fn withdraw(e: Env, withdraw_shares: i128, min_amounts_out: Vec<i128>, from: Address) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
         validate_amount(withdraw_shares)?;
         from.require_auth();
@@ -304,6 +305,17 @@ impl VaultTrait for DeFindexVault {
         // Fetches the total managed funds for all assets, including idle and invested funds (net of locked fees).
         // Setting the flag to `true` ensures that strategy reports are updated and new fees are locked during the process.
         let total_managed_funds = fetch_total_managed_funds(&e, true)?;
+        
+        //Validate min_amounts_out length
+        if min_amounts_out.len() != total_managed_funds.len() {
+            panic_with_error!(&e, ContractError::WrongAmountsLength);
+        }
+        //Validate min_amounts_out values
+        for amount in min_amounts_out.iter() {
+            if amount < 0 {
+                panic_with_error!(&e, ContractError::AmountNotAllowed);
+            }
+        }
         
         // Calculate the withdrawal amounts for each asset based on the share amounts
         let asset_withdrawal_amounts =
@@ -323,6 +335,9 @@ impl VaultTrait for DeFindexVault {
             if let Some(requested_withdrawal_amount) =
                 asset_withdrawal_amounts.get(i as u32)
             {
+                if requested_withdrawal_amount < min_amounts_out.get(i as u32).unwrap() {
+                    panic_with_error!(&e, ContractError::InsufficientOutputAmount);
+                }
                 let idle_funds = asset.idle_amount;
 
                 if idle_funds >= requested_withdrawal_amount {

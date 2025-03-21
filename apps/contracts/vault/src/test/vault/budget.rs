@@ -110,7 +110,8 @@ fn budget() {
     test.env.cost_estimate().budget().reset_unlimited();
 
     // withdraw
-    let _ = defindex_contract.withdraw(&5_0_000i128, &users[0]);
+    let min_amounts_out = sorobanvec![&test.env, 2_5_000i128, 2_0_000i128];
+    let _ = defindex_contract.withdraw(&5_0_000i128, &min_amounts_out,&users[0]);
 
     let mem = test.env.cost_estimate().budget().memory_bytes_cost();
     let cpu = test.env.cost_estimate().budget().cpu_instruction_cost();
