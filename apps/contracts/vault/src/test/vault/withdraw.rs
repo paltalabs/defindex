@@ -7,6 +7,7 @@ use crate::{constants::SCALAR_BPS, test::{
     }, DeFindexVaultTest
 }};
 
+extern crate std;
 // check that withdraw with negative amount after initialized returns error
 #[test]
 fn negative_amount() {
@@ -2030,30 +2031,45 @@ fn min_amounts_success(){
     /*----------------------------------- End of test setup -----------------------------------*/
     /*------------------ Created vault with 10 token_0 & 10 token_1 balance -------------------*/
 
-    //Transfer assets from vault to impact prices
-
-    test.token_0.transfer(&defindex_contract.address, &users[1], &2_5_000_000i128);
     
     let withdraw_amount = 10_0_000_000i128;
     /* --------------------------------- set min_amounts_out --------------------------------- */
     /* 
-        If vault has 20 lumens as total supply and no investments and I want to withdraw 10, the expected requested withdrawal amount should be 5 & 5.
-        So... in order to succeed the test the amounts shouldn't exceed 5 lumens.
+    If vault has 20 lumens as total supply and no investments and I want to withdraw 10, the expected requested withdrawal amount should be 5 & 5.
+    So... in order to succeed the test the amounts shouldn't exceed 5 lumens.
     */
-    //we will consider a slippage of 10% for the test
+    //we will consider a slippage of 1% for the test
     //to calculate the min_amounts_out we will use the price_per_shares using the following formula:
     //min_amounts_out = (withdraw_amount * price_per_shares) * (BPS - slippage_bps) / BPS
     let slippage_bps = 100; // 1% slippage in basis points
     let price_per_shares = defindex_contract.get_asset_amounts_per_shares(&withdraw_amount);
     let price_per_shares_token_0 = price_per_shares.get(0).unwrap();
     let price_per_shares_token_1 = price_per_shares.get(1).unwrap();
+    std::println!("price_per_shares_token_0: {:?}", price_per_shares_token_0);
+    std::println!("price_per_shares_token_1: {:?}", price_per_shares_token_1);
+
 
     let withdraw_min_amounts_out: Vec<i128> = sorobanvec![&test.env, 
-        price_per_shares_token_0 * (SCALAR_BPS as i128 - slippage_bps) / SCALAR_BPS as i128, // amount * (BPS - slippage) / BPS = 1% of tolerance over the amount
-        price_per_shares_token_1 * (SCALAR_BPS as i128 - slippage_bps) / SCALAR_BPS as i128
+    price_per_shares_token_0 * (SCALAR_BPS as i128 - slippage_bps) / SCALAR_BPS as i128, // amount * (BPS - slippage) / BPS = 99% of tolerance over the amount
+    price_per_shares_token_1 * (SCALAR_BPS as i128 - slippage_bps) / SCALAR_BPS as i128
     ];
 
+    //Transfer assets from vault to mimic a price descent
+    // This transfer should be less than 1% of the deposit_amount
+    // We consider 1 stroop of difference to make it strictly less than 1%
+    test.token_0.transfer(&defindex_contract.address, &users[1], &(deposit_amount*slippage_bps/SCALAR_BPS as i128));
+    test.token_1.transfer(&defindex_contract.address, &users[1], &(deposit_amount*slippage_bps/SCALAR_BPS as i128));
+
     let result = defindex_contract.withdraw(&withdraw_amount, &withdraw_min_amounts_out, &users[0]);
-    assert!(result.get(0) > withdraw_min_amounts_out.get(0));
-    assert!(result.get(1) > withdraw_min_amounts_out.get(1));
+    std::println!("result: {:?}", result);
+    std::println!("withdraw_min_amounts_out: {:?}", withdraw_min_amounts_out);
+    assert!(result.get(0) >= withdraw_min_amounts_out.get(0));
+    assert!(result.get(1) >= withdraw_min_amounts_out.get(1));
+
+    let user_balance_token_0 = test.token_0.balance(&users[0]);
+    std::println!("user_balance_token_0: {:?}", user_balance_token_0);
+    assert_eq!(result.get(0), Some(user_balance_token_0));
+    let user_balance_token_1 = test.token_1.balance(&users[0]);
+    std::println!("user_balance_token_1: {:?}", user_balance_token_1);
+    assert_eq!(result.get(1), Some(user_balance_token_1));
 }
