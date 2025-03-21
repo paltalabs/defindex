@@ -153,7 +153,7 @@ pub fn withdraw(
     to: &Address,
     amount: &i128,
     config: &Config,
-) -> Result<(i128, i128), StrategyError> {
+) -> Result<i128, StrategyError> {
     let pool_client = BlendPoolClient::new(e, &config.pool);
 
     let pre_supply_amount = pool_client
@@ -191,16 +191,13 @@ pub fn withdraw(
 
     // Calculate the amount of tokens withdrawn and bTokens burnt
     let post_withdrawal_balance = TokenClient::new(&e, &config.asset).balance(&to);
-    let real_amount = post_withdrawal_balance
-        .checked_sub(pre_withdrawal_balance)
-        .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     // position entry is deleted if the position is cleared
     let b_tokens_amount = pre_supply_amount
         .checked_sub(new_supply_amount)
         .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
-    Ok((real_amount, b_tokens_amount))
+    Ok(b_tokens_amount)
 }
 
 /// Claims rewards for the given address from the Blend pool.
