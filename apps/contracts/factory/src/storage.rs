@@ -51,9 +51,6 @@ pub fn get_vault_wasm_hash(e: &Env) -> Result<BytesN<32>, FactoryError> {
 pub fn put_vault_wasm_hash(e: &Env, vault_wasm_hash: BytesN<32>) {
     let key = DataKey::DeFindexWasmHash;
     e.storage().instance().set(&key, &vault_wasm_hash);
-    e.storage()
-        .instance()
-        .extend_ttl(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
 }
 
 // Storing deployed vaults
