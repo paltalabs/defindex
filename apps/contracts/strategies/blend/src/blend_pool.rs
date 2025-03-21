@@ -163,9 +163,6 @@ pub fn withdraw(
         .map_err(|_| StrategyError::InsufficientBalance)? // Convert Result to Error
         .ok_or_else(|| StrategyError::InsufficientBalance)?; // Convert Option to Error if None
 
-    // Get balance pre-withdraw, as the pool can modify the withdrawal amount
-    let pre_withdrawal_balance = TokenClient::new(&e, &config.asset).balance(&to);
-
     let requests: Vec<Request> = vec![
         &e,
         Request {
@@ -189,9 +186,7 @@ pub fn withdraw(
         .unwrap_or(Some(0))
         .unwrap_or(0);
 
-    // Calculate the amount of tokens withdrawn and bTokens burnt
-    let post_withdrawal_balance = TokenClient::new(&e, &config.asset).balance(&to);
-
+    // Calculate the amount of bTokens burnt
     // position entry is deleted if the position is cleared
     let b_tokens_amount = pre_supply_amount
         .checked_sub(new_supply_amount)
