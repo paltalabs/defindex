@@ -118,6 +118,10 @@ export const InteractWithVault = () => {
       set_amount(0 + input)
       return
     }
+    if (input.startsWith('0') && input.length > 1 && !input.includes('.')) {
+      set_amount(input.slice(1))
+      return
+    }
     set_amount(input)
   }
   if (!selectedVault) return null
