@@ -228,18 +228,19 @@ export const useVault = (vaultAddress?: string | undefined) => {
         }
     }
 
-    // TODO: Subtract idle funds to get invested funds
     const getInvestedFunds = async (vaultAddress: string) => {
         try {
         const rawInvestedFunds = await vault(VaultMethod.TOTAL_MANAGED_FUNDS, vaultAddress, undefined, false).then((res: any) => scValToNative(res));
         const assets = Object.keys(rawInvestedFunds);
         const investedFunds: AssetAmmount[] = [];
         assets.forEach((asset)=>{
-            investedFunds.push({address: asset, amount:  Number(rawInvestedFunds[asset]) / 10 ** 7})
+            const address = rawInvestedFunds[asset].asset;
+            const amount =  Number(rawInvestedFunds[asset].invested_amount) / 10 ** 7;
+            investedFunds.push({address: address, amount: amount});
         })
         return investedFunds;
         } catch (error) {
-        console.error(error);
+            console.error(error);
         }
     }
 
