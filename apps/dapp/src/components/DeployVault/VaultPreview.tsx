@@ -7,6 +7,7 @@ import {
   AccordionItemContent,
   AccordionItemTrigger,
   AccordionRoot,
+  Checkbox,
   Fieldset,
   Grid,
   GridItem,
@@ -100,9 +101,9 @@ const CustomInputField = ({
   onChange: (e: any) => void,
   handleClick: (address: string) => void,
   placeholder: string,
-    invalid: boolean,
-    description?: string,
-    href?: string,
+  invalid: boolean,
+  description?: string,
+  href?: string,
 }) => {
   const { address } = useSorobanReact()
   return (
@@ -134,7 +135,7 @@ const CustomInputField = ({
               <FaRegPaste />
             </IconButton>
           </Tooltip>
-          }
+        }
         >
           <Input
             value={value}
@@ -423,7 +424,7 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
                     href={dropdownData.feeReceiver.href}
                     colorPalette={'blue'}
                     target='_blank'
-            >
+                  >
                     Learn more.
                   </Link>
 
@@ -443,28 +444,46 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
             </Fieldset.Root>
           </AccordionItemContent>
         </AccordionItem>
-        {/* <AccordionItem value={AccordionItems.UPGRADABLE_CONTRACT}>
+        <AccordionItem value={AccordionItems.UPGRADABLE_CONTRACT}>
           <CustomAccordionTrigger
             setAccordionValue={setAccordionValue}
-            title='Upgradable'
+            title='Upgrade'
             type={AccordionItems.UPGRADABLE_CONTRACT}
             accordionValue={accordionValue} />
-          <AccordionItemContent>
+          <AccordionItemContent
+            px={4}
+            mb={4}
+          >
             <Fieldset.Root>
-              <Fieldset.Legend>Upgradable</Fieldset.Legend>
-              <Stack direction="row" alignItems="center">
-          <Text fontSize={'md'}>The contract can be upgraded by the manager.</Text>
-          <InputGroup>
-            <Input
-              type="checkbox"
-              checked={formControl.upgradable}
-              onChange={(e) => handleUpgradableChange(e.target.checked)}
-            />
-          </InputGroup>
-              </Stack>
+              <Checkbox.Root
+                alignItems="center"
+                checked={formControl.upgradable}
+                gap="4"
+                onCheckedChange={(e) => handleUpgradableChange(!!e.checked)}
+              >
+                <Checkbox.HiddenInput />
+                <Checkbox.Label>
+                  Upgradable <InfoTip content={
+                    <>
+                      <Text fontSize={'xs'} maxW={'25vw'}>{dropdownData.upgradableContract.description}</Text>
+                      <Link
+                        href={dropdownData.upgradableContract.href}
+                        colorPalette={'blue'}
+                        target='_blank'
+                      >
+                        Learn more.
+                      </Link>
+                    </>
+                  } />
+                </Checkbox.Label>
+                <Checkbox.Control>
+                  <Checkbox.Indicator />
+                </Checkbox.Control>
+
+              </Checkbox.Root>
             </Fieldset.Root>
           </AccordionItemContent>
-        </AccordionItem> */}
+        </AccordionItem>
       </AccordionRoot >
     </>
   )
