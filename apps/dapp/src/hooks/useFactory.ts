@@ -90,7 +90,8 @@ export function useFactoryCallback() {
         if (error.includes('ExistingValue')) throw new Error('Index already exists.')
         if (error.includes('Sign')) throw new Error('Request denied by user. Please try to sign again.')
         if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
-        throw new Error('Failed to create index.', e)
+        if (error.includes('UnexpectedSize')) throw new Error('Invalid arguments length.')
+        throw new Error('Failed to create vault.', e)
       }
     }, [sorobanContext, factoryAddress])
 }
