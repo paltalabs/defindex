@@ -194,10 +194,11 @@ export const useVault = (vaultAddress?: string | undefined) => {
     const getUserBalance = async (vaultAddress: string, address: string) => {
         try {
             const formattedAddress = new StellarSdk.Address(address).toScVal();
-            const dfTokens = await vault(VaultMethod.BALANCE, vaultAddress, [formattedAddress], false).then((res: any) => scValToNative(res));
-            if(Number(dfTokens) === 0) return 0;
-            const amount = await vault(VaultMethod.GET_ASSET_AMOUNT, vaultAddress, [StellarSdk.nativeToScVal(dfTokens, {type: 'i128'})], false).then((res: any) => scValToNative(res));
-            const amountValue = isObject(amount) ? Object.values(amount)[0] : 0;
+            const dfTokens = await vault(VaultMethod.BALANCE, vaultAddress, [formattedAddress], false).then((res: any) => res);
+            const parsedDfTokens = scValToNative(dfTokens);
+            if(parsedDfTokens == '0') return 0;
+            const amount = await vault(VaultMethod.GET_ASSET_AMOUNT, vaultAddress, [dfTokens], false).then((res: any) => scValToNative(res));
+            const amountValue = amount[0];
             const parsedAmount = Number(amountValue) / 10 ** 7;
         return parsedAmount;
         } catch (error) {
