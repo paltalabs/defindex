@@ -47,7 +47,6 @@ fn set_new_fee_receiver_by_fee_receiver() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -124,7 +123,6 @@ fn set_new_fee_receiver_by_manager() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -199,7 +197,6 @@ fn set_new_fee_receiver_by_emergency_manager() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -248,7 +245,6 @@ fn set_new_fee_receiver_invalid_sender() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -295,7 +291,6 @@ fn set_new_manager_by_manager() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -358,7 +353,6 @@ fn set_new_manager_by_unauthorized_user() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -419,7 +413,6 @@ fn lock_fees_with_new_fee() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true

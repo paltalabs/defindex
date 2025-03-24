@@ -1,4 +1,4 @@
-use crate::error::FactoryError;
+use crate::{error::FactoryError, constants::MAX_DEFINDEX_FEE};
 use soroban_sdk::{contracttype, Address, BytesN, Env, TryFromVal, Val};
 
 #[derive(Clone)]
@@ -45,15 +45,15 @@ fn get_persistent_extend_or_error<V: TryFromVal<Env, Val>>(
 
 pub fn get_vault_wasm_hash(e: &Env) -> Result<BytesN<32>, FactoryError> {
     let key = DataKey::DeFindexWasmHash;
-    get_persistent_extend_or_error(&e, &key, FactoryError::NotInitialized)
+    e.storage().instance().get(&key).ok_or(FactoryError::NotInitialized)
 }
 
 pub fn put_vault_wasm_hash(e: &Env, vault_wasm_hash: BytesN<32>) {
     let key = DataKey::DeFindexWasmHash;
-    e.storage().persistent().set(&key, &vault_wasm_hash);
+    e.storage().instance().set(&key, &vault_wasm_hash);
     e.storage()
-        .persistent()
-        .extend_ttl(&key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT)
+        .instance()
+        .extend_ttl(INSTANCE_LIFETIME_THRESHOLD, INSTANCE_BUMP_AMOUNT);
 }
 
 // Storing deployed vaults
@@ -82,11 +82,11 @@ pub fn add_new_vault(e: &Env, vault_address: Address) {
     put_total_vaults(e, total_vaults.checked_add(1).unwrap());
 }
 
-
+/* 
 // Admin
 pub fn has_admin(e: &Env) -> bool {
     e.storage().instance().has(&DataKey::Admin)
-}
+} */
 
 pub fn put_admin(e: &Env, admin: &Address) {
     e.storage().instance().set(&DataKey::Admin, admin);
@@ -111,8 +111,13 @@ pub fn get_defindex_receiver(e: &Env) -> Result<Address, FactoryError> {
 }
 
 // Fee Rate BPS (MAX BPS = 10000)
-pub fn put_defindex_fee(e: &Env, value: &u32) {
-    e.storage().instance().set(&DataKey::FeeRate, value);
+pub fn put_defindex_fee(e: &Env, value: &u32) -> Result<(), FactoryError> {
+    if *value <= MAX_DEFINDEX_FEE {
+        e.storage().instance().set(&DataKey::FeeRate, value);
+        Ok(()) 
+    } else {
+        Err(FactoryError::FeeTooHigh)
+    }
 }
 
 pub fn get_fee_rate(e: &Env) -> Result<u32, FactoryError> {

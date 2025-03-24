@@ -1,6 +1,6 @@
 services:
   defindex-soroban:
-    image: esteblock/soroban-preview:22.0.1@sha256:8a543bb4b96c9af2d647c2d43c27db85b9c0b0078869f654a1a0afe811b4d6b5
+    image: esteblock/soroban-preview:22.0.1@sha256:186404e5df5d0a791d31807958486ef1d5549c1bc90e96ebabb7cc0fdd195740
     container_name: defindex-soroban
     volumes:
       - .:/workspace
@@ -24,6 +24,19 @@ services:
     command: --local --protocol-version 22
     stdin_open: true
     tty: true
+
+  dotnet:
+    image: mcr.microsoft.com/dotnet/sdk:8.0
+    container_name: dotnet-defindex
+    profiles:
+      - on-demand
+    networks:
+      - defindex-network
+    volumes:
+      - .:/workspace
+    tty: true
+    stdin_open: true
+    working_dir: /workspace/packages/dotnet-sdk
 
   dart:
     image: ghcr.io/cirruslabs/flutter:3.24.4

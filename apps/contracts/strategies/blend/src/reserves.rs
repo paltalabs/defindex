@@ -1,8 +1,13 @@
+use crate::{
+    constants::SCALAR_12,
+    storage, storage::Config,
+    blend_pool,
+};
+
 use defindex_strategy_core::StrategyError;
 use soroban_fixed_point_math::{i128, FixedPoint};
 use soroban_sdk::{contracttype, panic_with_error, Address, Env};
 
-use crate::{constants::SCALAR_9, storage};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -13,10 +18,10 @@ pub struct StrategyReserves {
     pub total_b_tokens: i128,
     /// The reserve's last bRate
     pub b_rate: i128,
-}
+} 
 
 // Useful functions to handle with reserves and b tokens
-// taken from https://github.com/script3/fee-vault/blob/433ae359b24f15dee66fc624fa09479890e249f5/src/reserve_vault.rs#L24
+// taken from https://github.com/script3/fee-vault/
 
 impl StrategyReserves {
     /// Converts a b_token amount to shares rounding down
@@ -47,22 +52,41 @@ impl StrategyReserves {
             .ok_or_else(|| StrategyError::DivisionByZero)
     }
 
+    /// Coverts a b_token amount to an underlying token amount rounding down
+    pub fn b_tokens_to_underlying_down(&self, amount: i128) -> Result<i128, StrategyError> {
+        return amount
+            .fixed_mul_floor(self.b_rate, SCALAR_12)
+            .ok_or_else(|| StrategyError::ArithmeticError);
+    }
+
     pub fn update_rate(
         &mut self,
-        underlying_amount: i128,
-        b_tokens_amount: i128,
-    ) -> Result<(), StrategyError> {
-        // Calculate the new bRate - 9 decimal places of precision
-        // Update the reserve's bRate
-        let new_rate = underlying_amount
-            .fixed_div_floor(b_tokens_amount, SCALAR_9)
-            .ok_or_else(|| StrategyError::ArithmeticError)?;
-
+        e: &Env,
+        config: &Config,
+    ) {
+        let new_rate = blend_pool::reserve_b_rate(e, &config);
         self.b_rate = new_rate;
-
-        Ok(())
+        return;
     }
 }
+
+/// Get the strategy reserve from storage and update the bRate
+///
+/// ### Arguments
+/// * `e` - The execution environment
+/// * `config` - The configuration parameters for the strategy
+///
+/// ### Returns
+/// * `StrategyReserves` - The updated reserve vault
+pub fn get_strategy_reserve_updated(
+    e: &Env, 
+    config: &Config,    
+) -> StrategyReserves {
+    let mut reserve = storage::get_strategy_reserves(&e);
+    reserve.update_rate(&e, &config);
+    reserve
+}
+
 
 /// Accounts for a deposit into the Blend pool.
 ///
@@ -72,8 +96,8 @@ impl StrategyReserves {
 /// underlying asset and bTokens.
 ///
 /// # Process
-/// 1. Validate that `underlying_amount` and `b_tokens_amount` are above zero.
-/// 2. Update the strategy's rate based on the deposit.
+/// 1. Gets the current strategy reserves with updated bRate.
+/// 2. Validate that `b_tokens_amount` is above zero.
 /// 3. Retrieve the caller's existing vault shares.
 /// 4. Compute the new shares to be minted based on bTokens deposited.
 /// 5. Update total strategy shares and bTokens held.
@@ -81,34 +105,46 @@ impl StrategyReserves {
 ///
 /// # Arguments
 /// * `e` - The execution environment.
-/// * `reserves` - The current strategy reserves.
 /// * `from` - The address of the depositor (user/vault)
-/// * `underlying_amount` - The amount of the underlying asset deposited.
 /// * `b_tokens_amount` - The amount of bTokens received from the deposit.
+/// * `config` - The configuration parameters for the strategy.
 ///
 /// # Returns
 /// * `Result<(i128, StrategyReserves), StrategyError>` - A tuple containing the updated
 ///   vault shares of the depositor and the updated strategy reserves.
 pub fn deposit(
     e: &Env,
-    mut reserves: StrategyReserves,
     from: &Address,
-    underlying_amount: i128,
     b_tokens_amount: i128,
+    config: &Config,
 ) -> Result<(i128, StrategyReserves), StrategyError> {
-    if underlying_amount <= 0 {
-        panic_with_error!(e, StrategyError::UnderlyingAmountBelowMin);
-    }
+    
+    let mut reserves = get_strategy_reserve_updated(e, &config);
 
     if b_tokens_amount <= 0 {
-        panic_with_error!(e, StrategyError::BTokensAmountBelowMin);
+        return Err(StrategyError::BTokensAmountBelowMin);
     }
 
-    let _ = reserves.update_rate(underlying_amount, b_tokens_amount);
-
     let old_vault_shares = storage::get_vault_shares(&e, &from);
+    
     let new_minted_shares: i128 = reserves.b_tokens_to_shares_down(b_tokens_amount)?;
 
+    
+    
+
+    // for the first depositor, the protocol will take out 1000 stroop units from the user shares in order to
+    // avoid inflation attacks
+    let new_vault_minted_shares = if reserves.total_shares == 0 {
+        
+        if new_minted_shares <= 1000 {
+            panic_with_error!(e, StrategyError::InvalidSharesMinted);
+        }
+
+        new_minted_shares.checked_sub(1000).ok_or_else(|| StrategyError::UnderflowOverflow)?
+    } else {
+        new_minted_shares
+    };
+    
     reserves.total_shares = reserves
         .total_shares
         .checked_add(new_minted_shares)
@@ -118,8 +154,9 @@ pub fn deposit(
         .checked_add(b_tokens_amount)
         .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
+    // The vault shares are updated with the new vault minted shares (For the first depositor will be 1000 less)
     let new_vault_shares = old_vault_shares
-        .checked_add(new_minted_shares)
+        .checked_add(new_vault_minted_shares)
         .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     storage::set_strategy_reserves(&e, reserves.clone());
@@ -135,33 +172,31 @@ pub fn deposit(
 /// underlying asset and bTokens.
 ///
 /// # Process
-/// 1. Validate that `underlying_amount` and `b_tokens_amount` are above zero.
-/// 2. Update the strategy's rate based on the deposit.
-/// 3. Retrieve the caller (vault)'s existing shares (vault_shares)
-/// 4. Compute the new shares to be minted based on bTokens deposited.
+/// 1. Get the current strategy reserves with updated bRate.
+/// 2. Validate that `b_tokens_amount` is above zero.
+/// 3. Retrieve the caller's existing vault shares.
+/// 4. Compute the shares to be burned based on bTokens withdrawn.
 /// 5. Update total strategy shares and bTokens held.
 /// 6. Store the updated strategy reserves and user/vault shares.
 ///
 /// # Arguments
 /// * `e` - The execution environment.
-/// * `reserves` - The current strategy reserves.
 /// * `from` - The address of the depositor.
-/// * `underlying_amount` - The amount of the underlying asset deposited.
 /// * `b_tokens_amount` - The amount of bTokens received from the deposit.
+/// * `config` - The configuration parameters for the strategy.
 ///
 /// # Returns
 /// * `Result<(i128, StrategyReserves), StrategyError>` - A tuple containing the updated
 ///   shares of the depositor and the updated strategy reserves.
 pub fn withdraw(
     e: &Env,
-    mut reserves: StrategyReserves,
     from: &Address,
-    underlying_amount: i128,
     b_tokens_amount: i128,
+    config: &Config,
 ) -> Result<(i128, StrategyReserves), StrategyError> {
-    if underlying_amount <= 0 {
-        return Err(StrategyError::UnderlyingAmountBelowMin);
-    }
+
+    let mut reserves = get_strategy_reserve_updated(e, &config);
+
     if b_tokens_amount <= 0 {
         return Err(StrategyError::BTokensAmountBelowMin);
     }
@@ -203,38 +238,31 @@ pub fn withdraw(
 /// into the Blend pool and only updates the reserves accordingly.
 ///
 /// # Process
-/// 1. Validate that `underlying_amount` and `b_tokens_amount` are positive.
-/// 2. Update the reserve rate using the newly acquired underlying assets and bTokens.
-/// 3. Increase the total bTokens stored in the strategy reserves.
-/// 4. Store the updated reserves in persistent storage.
+/// 1. Validates that `b_tokens_amount` is positive.
+/// 2. Retrieves the updated reserves with the new `b_rate` directly from the Blend contract.
+/// 3. Increases the total bTokens stored in the strategy reserves based on the reinvestment amount.
+/// 4. Stores the updated reserves in persistent storage.
 ///
 /// # Arguments
 /// * `e` - The execution environment.
-/// * `reserves` - The current strategy reserves.
-/// * `underlying_amount` - The amount of the underlying asset obtained from rewards.
 /// * `b_tokens_amount` - The amount of bTokens minted from the reinvestment.
 ///
 /// # Returns
 /// * `Result<(), StrategyError>` - Returns `Ok(())` if successful, otherwise an error.
 ///
 /// # Errors
-/// * `StrategyError::InvalidArgument` - If `underlying_amount` or `b_tokens_amount` are not positive.
-/// * `StrategyError::UnderflowOverflow` - If an arithmetic operation fails due to an overflow/underflow.
+/// * `StrategyError::InvalidArgument` - If `b_tokens_amount` is not positive.
+/// * `StrategyError::UnderflowOverflow` - If an arithmetic operation fails due to overflow/underflow.
 pub fn harvest(
     e: &Env,
-    mut reserves: StrategyReserves,
-    underlying_amount: i128,
     b_tokens_amount: i128,
+    config: &Config,
 ) -> Result<(), StrategyError> {
-    if underlying_amount <= 0 {
-        panic_with_error!(e, StrategyError::UnderlyingAmountBelowMin);
-    }
+    let mut reserves = get_strategy_reserve_updated(e, &config);
 
     if b_tokens_amount <= 0 {
         panic_with_error!(e, StrategyError::BTokensAmountBelowMin);
     }
-
-    let _ = reserves.update_rate(underlying_amount, b_tokens_amount)?;
 
     reserves.total_b_tokens = reserves
         .total_b_tokens

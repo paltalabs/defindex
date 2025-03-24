@@ -19,7 +19,6 @@ pub trait VaultTrait {
     /// * `vault_fee` - Vault-specific fee in basis points (0-2000 for 0-20%)
     /// * `defindex_protocol_receiver` - Address receiving protocol fees
     /// * `defindex_protocol_rate` - Protocol fee rate in basis points (0-9000 for 0-90%)
-    /// * `factory` - Factory contract address
     /// * `soroswap_router` - Soroswap router address
     /// * `name_symbol` - Map containing:
     ///   - "name": Vault token name
@@ -68,7 +67,6 @@ pub trait VaultTrait {
         vault_fee: u32,
         defindex_protocol_receiver: Address,
         defindex_protocol_rate: u32,
-        factory: Address,
         soroswap_router: Address,
         name_symbol: Map<String, String>,
         upgradable: bool,
@@ -153,7 +151,7 @@ pub trait VaultTrait {
     /// - `ContractError::AmountOverTotalSupply`: If the specified shares exceed the total supply.
     /// - `ContractError::ArithmeticError`: If any arithmetic operation fails during calculations.
     /// - `ContractError::WrongAmountsLength`: If there is a mismatch in asset allocation data.
-    fn withdraw(e: Env, df_amount: i128, from: Address) -> Result<Vec<i128>, ContractError>;
+    fn withdraw(e: Env, df_amount: i128, min_amounts_out: Vec<i128>, from: Address) -> Result<Vec<i128>, ContractError>;
 
     /// Executes rescue (formerly emergency withdrawal) from a specific strategy.
     ///

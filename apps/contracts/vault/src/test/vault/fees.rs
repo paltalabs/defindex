@@ -4,9 +4,8 @@ use std::println;
 use soroban_sdk::{ vec as sorobanvec, Address, Map, String, Vec, IntoVal,
 testutils::{MockAuth, MockAuthInvoke, Address as _}};
 
-use crate::test::{create_defindex_vault, create_fixed_strategy_params_token_0, 
-    defindex_vault::{ ContractError, AssetStrategySet, Instruction, RolesDataKey,}, 
-  DeFindexVaultTest, EnvTestUtils};
+use crate::test::{create_defindex_vault, create_fixed_strategy_params_token_0, create_strategy_params_token_0, defindex_vault::{ AssetStrategySet, ContractError, Instruction, Report, RolesDataKey}, DeFindexVaultTest, EnvTestUtils};
+use crate::storage;
 
 
 pub const ONE_DAY_IN_SECONDS: u64 = 86_400;
@@ -41,7 +40,6 @@ fn rebalance_invest(){
       2000u32,
       test.defindex_protocol_receiver.clone(),
       2500u32,
-      test.defindex_factory.clone(),
       test.soroswap_router.address.clone(),
       name_symbol,
       true
@@ -140,7 +138,6 @@ fn rebalance_unwind(){
       2000u32,
       test.defindex_protocol_receiver.clone(),
       2500u32,
-      test.defindex_factory.clone(),
       test.soroswap_router.address.clone(),
       name_symbol,
       true
@@ -185,11 +182,30 @@ fn rebalance_unwind(){
   let vault_balance = test.token_0.balance(&defindex_contract.address);
   assert_eq!(vault_balance, instruction_amount_0); 
 
+  // This report should have 0 gains_or_losses
   defindex_contract.report();
+
 
   test.env.jump_time(ONE_DAY_IN_SECONDS*365);
 
+  println!("instruction_amount_0:            {}", instruction_amount_0);
+  // strategy balance before harvest, 
+  println!("strategy balance before harvest: {}", test.fixed_strategy_client_token_0.balance(&defindex_contract.address));
+  // Simulate earning on the strategy
+  // It should be 10% of the instruction amount
   test.fixed_strategy_client_token_0.harvest(&defindex_contract.address);
+
+  println!("strategy balance after harvest:  {}", test.fixed_strategy_client_token_0.balance(&defindex_contract.address));
+
+  // Defindex protocol fee receiver balance before rebalance
+  let defindex_protocol_balance_before = test.token_0.balance(&test.defindex_protocol_receiver);
+  println!("defindex_protocol_balance_before: {}", defindex_protocol_balance_before);
+
+  // Get report from storage before rebalance
+  let report = test.env.as_contract(&defindex_contract.address, || {
+      storage::get_report(&test.env, &test.fixed_strategy_client_token_0.address)
+  });
+  println!("report before rebalance: {:?}", report);
 
   let instruction_amount_1 = 300_0_000_000i128;
 
@@ -201,12 +217,33 @@ fn rebalance_unwind(){
       ),
   ];
 
+  // This rebalance should update report, lock fees and distribute fees
   defindex_contract.rebalance(&test.rebalance_manager, &instructions);
-  let report = defindex_contract.report().get(0).unwrap().gains_or_losses;
+  // Get report from storage after rebalance
+  let report = test.env.as_contract(&defindex_contract.address, || {
+      storage::get_report(&test.env, &test.fixed_strategy_client_token_0.address)
+  });
+  println!("report after rebalance: {:?}", report);
+  
 
-  let expected_reward = instruction_amount_0 / 10;
+  // Get report after rebalance - should have gains_or_losses = 0 and locked_fee = 0
+  let report = defindex_contract.report().get(0).unwrap();
+  assert_eq!(report.gains_or_losses, 0);
+  assert_eq!(report.locked_fee, 0);
 
-  assert_eq!(report, expected_reward);
+  // Check fee distributions
+  let expected_total_fee = instruction_amount_0 * 20 / 100 / 10; // 10% of invested amount
+  
+  println!("expected_total_fee:              {}", expected_total_fee);
+  // DeFindex protocol fee receiver should get 25% of total fee
+  let defindex_fee = expected_total_fee * 25 / 100;
+  let defindex_balance = test.token_0.balance(&test.defindex_protocol_receiver);
+  assert_eq!(defindex_balance, defindex_fee);
+
+  // Vault fee receiver should get 75% of total fee  
+  let vault_fee = expected_total_fee * 75 / 100;
+  let vault_fee_balance = test.token_0.balance(&test.vault_fee_receiver);
+  assert_eq!(vault_fee_balance, vault_fee);
 }
 
 #[test]
@@ -239,7 +276,6 @@ fn test_distribute_fees_auth(){
       2000u32,
       test.defindex_protocol_receiver.clone(),
       2500u32,
-      test.defindex_factory.clone(),
       test.soroswap_router.address.clone(),
       name_symbol,
       true
@@ -323,4 +359,87 @@ fn test_distribute_fees_auth(){
     },
   }]).distribute_fees(&test.vault_fee_receiver);
   assert_eq!(distribute_fees_result, Vec::new(&test.env));
+}
+
+#[test]
+fn release_negative_or_zero_fees (){
+  let test = DeFindexVaultTest::setup();
+  test.env.mock_all_auths();
+  let strategy_params_token_0 = create_strategy_params_token_0(&test);
+  let assets: Vec<AssetStrategySet> = sorobanvec![
+      &test.env,
+      AssetStrategySet {
+          address: test.token_0.address.clone(),
+          strategies: strategy_params_token_0.clone()
+      }
+  ];
+
+  let mut roles: Map<u32, Address> = Map::new(&test.env);
+  roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+  roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+  roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+  roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+  let mut name_symbol: Map<String, String> = Map::new(&test.env);
+  name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+  name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+  let defindex_contract = create_defindex_vault(
+      &test.env,
+      assets,
+      roles,
+      2000u32,
+      test.defindex_protocol_receiver.clone(),
+      2500u32,
+      test.soroswap_router.address.clone(),
+      name_symbol,
+      true
+  );
+  let amount = 10_0_000_000i128;
+
+  let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+
+  test.token_0_admin_client.mint(&users[0], &amount);
+
+  // Deposit
+  defindex_contract.deposit(
+      &sorobanvec![&test.env, amount],
+      &sorobanvec![&test.env, amount],
+      &users[0],
+      &false,
+  );
+
+  // Rebalance -> Invest
+  let invest_instructions = sorobanvec![
+      &test.env,
+      Instruction::Invest(test.strategy_client_token_0.address.clone(), amount),
+  ];
+  defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
+
+
+  // Simulate earning on the strategy
+  test.token_0_admin_client.mint(&defindex_contract.address, &10_0_000_000i128);
+  test.strategy_client_token_0.deposit(&10_0_000_000i128, &defindex_contract.address);
+
+  defindex_contract.report();
+  // Locking fees
+  let report = defindex_contract.lock_fees(&None).get(0).unwrap();
+  let fees = report.locked_fee;
+  assert_eq!(fees, 2_0_000_000i128);
+
+  // Release fees border cases
+  let release_more_than_avaliable = defindex_contract.try_release_fees(&test.strategy_client_token_0.address.clone(), &3_0_000_000i128);
+  let release_negative_fees_result = defindex_contract.try_release_fees(&test.strategy_client_token_0.address.clone(), &-1_0_000_000i128);
+
+  assert_eq!(release_more_than_avaliable, Err(Ok(ContractError::InsufficientFeesToRelease)));
+  assert_eq!(release_negative_fees_result, Err(Ok(ContractError::AmountNotAllowed)));
+
+  // Release fees
+  let release_fees_result = defindex_contract.release_fees(&test.strategy_client_token_0.address.clone(), &1_0_000_000i128);
+  let expected_report = Report {
+    gains_or_losses: 1_0_000_000i128,
+    locked_fee: 1_0_000_000i128,
+    prev_balance: 20_0_000_000i128,
+  };
+  assert_eq!(release_fees_result, expected_report);
 }

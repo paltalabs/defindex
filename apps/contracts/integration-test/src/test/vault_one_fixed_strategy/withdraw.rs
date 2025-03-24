@@ -13,6 +13,7 @@ use soroban_sdk::{
     testutils::{Ledger, MockAuth, MockAuthInvoke},
     vec as svec, IntoVal, Vec,
 };
+extern crate std;
 
 #[test]
 fn fixed_apr_no_invest_withdraw_success() {
@@ -77,8 +78,6 @@ fn fixed_apr_no_invest_withdraw_success() {
         .ledger()
         .set_timestamp(setup.env.ledger().timestamp() + ONE_YEAR_IN_SECONDS);
 
-    // // TODO: The vault should call harvest method on the strategy contract
-    // enviroment.strategy_contract.mock_all_auths().harvest(&enviroment.vault_contract.address);
 
     let df_balance_before_withdraw = enviroment.vault_contract.balance(&user);
     assert_eq!(
@@ -86,6 +85,9 @@ fn fixed_apr_no_invest_withdraw_success() {
         deposit_amount - MINIMUM_LIQUIDITY
     );
 
+    // In this case, since the strategy hasn't gained any yield, neither loss, the df_balance matches the expected amount
+    let df_to_asset = enviroment.vault_contract.get_asset_amounts_per_shares(&df_balance_before_withdraw);
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, df_to_asset.get(0).unwrap()];
     enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
@@ -93,11 +95,11 @@ fn fixed_apr_no_invest_withdraw_success() {
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
                 fn_name: "withdraw",
-                args: (df_balance_before_withdraw.clone(), user.clone()).into_val(&setup.env),
+                args: (df_balance_before_withdraw.clone(), withdraw_min_amounts_out.clone(), user.clone()).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .withdraw(&df_balance_before_withdraw, &user);
+        .withdraw(&df_balance_before_withdraw, &withdraw_min_amounts_out, &user);
 
     let expected_amount_user = deposit_amount - MINIMUM_LIQUIDITY;
 
@@ -207,29 +209,38 @@ fn fixed_apr_invest_withdraw_success() {
         df_balance_before_withdraw,
         deposit_amount - MINIMUM_LIQUIDITY
     );
-
-    enviroment
+    
+    let df_to_asset = enviroment.vault_contract.get_asset_amounts_per_shares(&df_balance_before_withdraw);
+    let withdraw_min_amounts_out: Vec<i128> = svec![&setup.env, df_to_asset.get(0).unwrap()];
+    let result = enviroment
         .vault_contract
         .mock_auths(&[MockAuth {
             address: &user.clone(),
             invoke: &MockAuthInvoke {
                 contract: &enviroment.vault_contract.address.clone(),
                 fn_name: "withdraw",
-                args: (df_balance_before_withdraw.clone(), user.clone()).into_val(&setup.env),
+                args: (df_balance_before_withdraw.clone(), withdraw_min_amounts_out.clone(), user.clone()).into_val(&setup.env),
                 sub_invokes: &[],
             },
         }])
-        .withdraw(&df_balance_before_withdraw, &user);
+        .withdraw(&df_balance_before_withdraw, &withdraw_min_amounts_out, &user);
+    std::println!("result: {:?}", result);
+    std::println!("withdraw_min_amounts_out: {:?}", withdraw_min_amounts_out);
+
+    let report_after_withdraw = enviroment.vault_contract.report();
+    let locked_fee = report_after_withdraw.get(0).unwrap().locked_fee;
 
     let apr_bps = 1000u32;
     let user_expected_reward =
         calculate_yield(deposit_amount.clone(), apr_bps, ONE_YEAR_IN_SECONDS);
+    let total_yield = user_expected_reward - locked_fee;
 
     let minimum_liquidity_reward = calculate_yield(MINIMUM_LIQUIDITY, apr_bps, ONE_YEAR_IN_SECONDS);
+    let underlying_minimun_liquidity = enviroment.vault_contract.get_asset_amounts_per_shares(&MINIMUM_LIQUIDITY).get(0).unwrap();
 
     assert_eq!(minimum_liquidity_reward, 100);
-    let expected_amount_user =
-        deposit_amount + user_expected_reward - MINIMUM_LIQUIDITY - minimum_liquidity_reward;
+    let expected_amount_user = 
+        deposit_amount + total_yield - underlying_minimun_liquidity;
 
     let user_balance_after_withdraw = enviroment.token.balance(user);
     assert_eq!(user_balance_after_withdraw, expected_amount_user);

@@ -4,7 +4,9 @@ use soroban_sdk::{
     testutils::{Address as _, Ledger, LedgerInfo, MockAuth, MockAuthInvoke}, token::{StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient}, vec as sorobanvec, Address, Env, IntoVal, Map, String, Val, Vec
 };
 use std::vec;
-use crate::utils::DAY_IN_LEDGERS;
+
+pub const DAY_IN_LEDGERS: u32 = 17280;
+
 
 use soroswap_setup::{
     create_soroswap_factory, create_soroswap_pool, create_soroswap_router, SoroswapRouterClient,
@@ -23,6 +25,19 @@ pub fn create_hodl_strategy<'a>(e: &Env, asset: &Address) -> HodlStrategyClient<
     let init_args: Vec<Val> = sorobanvec![e];
     let args = (asset, init_args);
     HodlStrategyClient::new(e, &e.register(hodl_strategy::WASM, args))
+}
+pub mod unsafe_hodl_strategy {
+    soroban_sdk::contractimport!(
+        file = "../target/wasm32-unknown-unknown/release/unsafe_hodl_strategy.optimized.wasm"
+    );
+    pub type UnsafeHodlStrategyClient<'a> = Client<'a>;
+}
+use unsafe_hodl_strategy::UnsafeHodlStrategyClient;
+
+pub fn create_unsafe_hodl_strategy<'a>(e: &Env, asset: &Address) -> UnsafeHodlStrategyClient<'a> {
+    let init_args: Vec<Val> = sorobanvec![e];
+    let args = (asset, init_args);
+    UnsafeHodlStrategyClient::new(e, &e.register(unsafe_hodl_strategy::WASM, args))
 }
 pub mod fixed_strategy {
     soroban_sdk::contractimport!(
@@ -55,7 +70,6 @@ pub fn create_defindex_vault<'a>(
     vault_fee: u32,
     defindex_protocol_receiver: Address,
     defindex_protocol_rate: u32,
-    factory: Address,
     soroswap_router: Address,
     name_symbol: Map<String, String>,
     upgradable: bool,
@@ -66,7 +80,6 @@ pub fn create_defindex_vault<'a>(
         vault_fee,
         defindex_protocol_receiver,
         defindex_protocol_rate,
-        factory,
         soroswap_router,
         name_symbol,
         upgradable
@@ -93,26 +106,34 @@ pub(crate) fn get_token_admin_client<'a>(
 }
 
 pub(crate) fn create_strategy_params_token_0(test: &DeFindexVaultTest) -> Vec<Strategy> {
+    create_strategy_params(test, test.strategy_client_token_0.address.clone())
+}
+pub(crate) fn create_unsafe_strategy_params_token_0(test: &DeFindexVaultTest) -> Vec<Strategy> {
     sorobanvec![
         &test.env,
         Strategy {
             name: String::from_str(&test.env, "Strategy 1"),
-            address: test.strategy_client_token_0.address.clone(),
+            address: test.unsafe_strategy_client_token_0.address.clone(),
             paused: false,
         }
     ]
 }
 
 pub(crate) fn create_strategy_params_token_1(test: &DeFindexVaultTest) -> Vec<Strategy> {
+    create_strategy_params(test, test.strategy_client_token_1.address.clone())
+}
+
+pub(crate) fn create_strategy_params(test: &DeFindexVaultTest, address: Address) -> Vec<Strategy> {
     sorobanvec![
         &test.env,
         Strategy {
             name: String::from_str(&test.env, "Strategy 1"),
-            address: test.strategy_client_token_1.address.clone(),
+            address: address,
             paused: false,
         }
     ]
 }
+
 pub(crate) fn create_fixed_strategy_params_token_0(test: &DeFindexVaultTest) -> Vec<Strategy> {
     sorobanvec![
         &test.env,
@@ -199,7 +220,6 @@ impl EnvTestUtils for Env {
 
 pub struct DeFindexVaultTest<'a> {
     env: Env,
-    defindex_factory: Address,
     token_0_admin_client: SorobanTokenAdminClient<'a>,
     token_0: SorobanTokenClient<'a>,
     token_1_admin_client: SorobanTokenAdminClient<'a>,
@@ -214,6 +234,7 @@ pub struct DeFindexVaultTest<'a> {
     strategy_client_token_0: HodlStrategyClient<'a>,
     strategy_client_token_1: HodlStrategyClient<'a>,
     strategy_client_token_2: HodlStrategyClient<'a>,
+    unsafe_strategy_client_token_0: UnsafeHodlStrategyClient<'a>,
     fixed_strategy_client_token_0: FixedStrategyClient<'a>,
     fixed_strategy_client_token_1: FixedStrategyClient<'a>,
     soroswap_router: SoroswapRouterClient<'a>,
@@ -227,7 +248,6 @@ impl<'a> DeFindexVaultTest<'a> {
         // env.mock_all_auths();
         env.set_default_info();
         // Mockup, should be the factory contract
-        let defindex_factory = Address::generate(&env);
         env.cost_estimate().budget().reset_unlimited();
         let emergency_manager = Address::generate(&env);
         let vault_fee_receiver = Address::generate(&env);
@@ -253,6 +273,8 @@ impl<'a> DeFindexVaultTest<'a> {
         let strategy_client_token_0 = create_hodl_strategy(&env, &token_0.address.clone());
         let strategy_client_token_1 = create_hodl_strategy(&env, &token_1.address.clone());
         let strategy_client_token_2 = create_hodl_strategy(&env, &token_2.address);
+
+        let unsafe_strategy_client_token_0 = create_unsafe_hodl_strategy(&env, &token_0.address);
 
         let fixed_strategy_client_token_0 = create_fixed_strategy(&env, &token_0.address.clone());
         let fixed_strategy_client_token_1 = create_fixed_strategy(&env, &token_1.address.clone());
@@ -352,7 +374,6 @@ impl<'a> DeFindexVaultTest<'a> {
 
         DeFindexVaultTest {
             env,
-            defindex_factory,
             token_0_admin_client,
             token_0,
             token_1_admin_client,
@@ -367,6 +388,7 @@ impl<'a> DeFindexVaultTest<'a> {
             strategy_client_token_0,
             strategy_client_token_1,
             strategy_client_token_2,
+            unsafe_strategy_client_token_0,
             fixed_strategy_client_token_0,
             fixed_strategy_client_token_1,
             soroswap_router,

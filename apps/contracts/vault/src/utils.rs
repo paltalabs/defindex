@@ -1,33 +1,17 @@
-use soroban_sdk::{panic_with_error, Env, Vec};
+use common::models::{AssetStrategySet, Strategy};
+use soroban_sdk::{panic_with_error, Env, Map, Vec};
 
 use crate::{
-    access::{AccessControl, AccessControlTrait, RolesDataKey},
+    //access::{AccessControl, AccessControlTrait, RolesDataKey},
     models::CurrentAssetInvestmentAllocation,
     token::VaultToken,
     ContractError,
 };
 
-pub const DAY_IN_LEDGERS: u32 = 17280;
 
-pub fn bump_instance(e: &Env) {
-    let max_ttl = e.storage().max_ttl();
-    let new_ttl = max_ttl.checked_sub(DAY_IN_LEDGERS).unwrap_or_else(|| panic_with_error!(e, ContractError::Underflow));
-    e.storage().instance().extend_ttl(new_ttl, max_ttl);
-}
-
-pub fn check_initialized(e: &Env) -> Result<(), ContractError> {
-    //TODO: Should also check if adapters/strategies have been set
-    let access_control = AccessControl::new(&e);
-    if access_control.has_role(&RolesDataKey::Manager) {
-        Ok(())
-    } else {
-        panic_with_error!(&e, ContractError::NotInitialized);
-    }
-}
-
-pub fn check_nonnegative_amount(amount: i128) -> Result<(), ContractError> {
+pub fn validate_amount(amount: i128) -> Result<(), ContractError> {
     if amount < 0 {
-        Err(ContractError::NegativeNotAllowed)
+        Err(ContractError::AmountNotAllowed)
     } else {
         Ok(())
     }
@@ -38,6 +22,40 @@ pub fn check_min_amount(amount: i128, min_amount: i128) -> Result<(), ContractEr
         Err(ContractError::InsufficientAmount)
     } else {
         Ok(())
+    }
+}
+
+fn divide_rounding_up(a: i128, b: i128) -> Result<i128, ContractError> {
+    let result = a.checked_div(b).ok_or(ContractError::ArithmeticError)?;
+    if a % b != 0 {
+        Ok(result.checked_add(1).ok_or(ContractError::ArithmeticError)?)
+    } else {
+        Ok(result)
+    }
+}
+
+pub fn validate_assets( e: &Env, assets: &Vec<AssetStrategySet>){
+    if assets.len() == 0 || assets.is_empty(){
+        panic_with_error!(&e, ContractError::NoAssetAllocation);
+    }
+    let mut asset_addresses = Map::new(&e);
+
+    for (_, asset) in assets.iter().enumerate(){
+        if asset_addresses.contains_key(asset.address.clone()){
+            panic_with_error!(&e, ContractError::DuplicatedAsset);
+        }
+        asset_addresses.set(asset.address.clone(), true);
+        validate_strategies(e, &asset.strategies);
+    }
+}
+
+pub fn validate_strategies(e: &Env, strategies: &Vec<Strategy>){
+    let mut strategy_addresses = Map::new(&e);
+    for strategy in strategies.iter() {
+        if strategy_addresses.contains_key(strategy.address.clone()){
+            panic_with_error!(&e, ContractError::DuplicatedStrategy);
+        }
+        strategy_addresses.set(strategy.address.clone(), true);
     }
 }
 
@@ -121,41 +139,6 @@ pub fn calculate_asset_amounts_per_vault_shares(
     Ok(asset_amounts)
 }
 
-// pub fn calculate_dftokens_from_asset_amounts(
-//     env: &Env,
-//     asset_amounts: Map<Address, i128>, // The input asset amounts
-//     total_managed_funds: Map<Address, i128>, // The total managed funds for each asset
-// ) -> Result<i128, ContractError> {
-//     let total_supply = VaultToken::total_supply(env.clone()); // Total dfToken supply
-
-//     // Initialize the minimum dfTokens corresponding to each asset
-//     let mut min_df_tokens: Option<i128> = None;
-
-//     // Iterate over each asset in the input map
-//     for (asset_address, input_amount) in asset_amounts.iter() {
-//         // Get the total managed amount for this asset
-//         let managed_amount = total_managed_funds.get(asset_address.clone()).unwrap_or(0);
-
-//         // Ensure the managed amount is not zero to prevent division by zero
-//         if managed_amount == 0 {
-//             return Err(ContractError::InsufficientManagedFunds);
-//         }
-
-//         // Calculate the dfTokens corresponding to this asset's amount
-//         let df_tokens_for_asset = (input_amount * total_supply) / managed_amount;
-
-//         // If this is the first asset or if the calculated df_tokens_for_asset is smaller, update the minimum df_tokens
-//         if let Some(current_min_df_tokens) = min_df_tokens {
-//             min_df_tokens = Some(current_min_df_tokens.min(df_tokens_for_asset));
-//         } else {
-//             min_df_tokens = Some(df_tokens_for_asset);
-//         }
-//     }
-
-//     // Return the minimum dfTokens across all assets
-//     min_df_tokens.ok_or(ContractError::NoAssetsProvided)
-// }
-
 pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
     e: &Env,
     total_managed_funds: &Vec<CurrentAssetInvestmentAllocation>,
@@ -168,14 +151,13 @@ pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
         .unwrap_or_else(|| panic_with_error!(e, ContractError::WrongAmountsLength))
         .total_amount;
 
-    // If reserve target is zero, we cannot calculate the optimal amounts
-    if reserve_target == 0 {
-        panic_with_error!(e, ContractError::InsufficientManagedFunds);
-    }
-
     let amount_desired_target = amounts_desired
         .get(enforced_asset_index)
         .unwrap_or_else(|| panic_with_error!(e, ContractError::WrongAmountsLength));
+
+    if amount_desired_target == 0 {
+        panic_with_error!(e, ContractError::InsufficientAmount);
+    }
 
     let mut optimal_amounts = Vec::new(e);
 
@@ -186,11 +168,15 @@ pub fn calculate_optimal_amounts_and_shares_with_enforced_asset(
         } else {
             // Calculate the proportional allocation for non-enforced assets
             let reserve = asset_allocation.total_amount;
-            let amount = reserve
-                .checked_mul(amount_desired_target)
-                .unwrap_or_else(|| panic_with_error!(e, ContractError::ArithmeticError))
-                .checked_div(reserve_target)
-                .unwrap_or_else(|| panic_with_error!(e, ContractError::ArithmeticError));
+            let amount = match divide_rounding_up(
+                reserve
+                    .checked_mul(amount_desired_target)
+                    .unwrap_or_else(|| panic_with_error!(e, ContractError::ArithmeticError)),
+                reserve_target
+            ){
+                Ok(amount) => amount,
+                Err(_) => panic_with_error!(e, ContractError::ArithmeticError)
+            };
             optimal_amounts.push_back(amount);
         }
     }
@@ -212,7 +198,11 @@ pub fn calculate_deposit_amounts_and_shares_to_mint(
     amounts_min: &Vec<i128>,
 ) -> Result<(Vec<i128>, i128), ContractError> {
     for i in 0..total_managed_funds.len() {
-        // Calculate the optimal amounts and shares to mint for the enforced asset
+        // Skip zero balance assets
+        if total_managed_funds.get(i).unwrap().total_amount == 0 {
+            continue;
+        }
+
         let (optimal_amounts, shares_to_mint) =
             calculate_optimal_amounts_and_shares_with_enforced_asset(
                 e,
@@ -223,7 +213,13 @@ pub fn calculate_deposit_amounts_and_shares_to_mint(
 
         let mut should_skip = false;
 
-        for j in i + 1..total_managed_funds.len() {
+        // Check ALL other assets
+        for j in 0..total_managed_funds.len() {
+            // Skip the reference asset and zero balance assets
+            if j == i || total_managed_funds.get(j).unwrap().total_amount == 0 {
+                continue;
+            }
+
             let desired_amount = amounts_desired
                 .get(j)
                 .ok_or(ContractError::WrongAmountsLength)?;
@@ -236,21 +232,42 @@ pub fn calculate_deposit_amounts_and_shares_to_mint(
 
             if optimal_amount <= desired_amount {
                 if optimal_amount < min_amount {
-                    return Err(ContractError::InsufficientAmount);
+                    should_skip = true;
+                    break;  // Try next enforced asset instead of returning error
                 }
             } else {
                 should_skip = true;
-
-                // If all assets have been analyzed and no valid solution is found, return an error
-                if i == total_managed_funds.len().checked_sub(1).ok_or(ContractError::Underflow)? {
-                    return Err(ContractError::NoOptimalAmounts);
-                }
                 break;
             }
         }
 
         if !should_skip {
             return Ok((optimal_amounts, shares_to_mint));
+        }
+
+        // Only return NoOptimalAmounts if this was the last valid reference asset
+        if i == total_managed_funds.len().checked_sub(1).ok_or(ContractError::Underflow)? {
+            // If we got here and all attempts failed, check if any failure was due to insufficient amounts
+            let (final_amounts, _) = calculate_optimal_amounts_and_shares_with_enforced_asset(
+                e,
+                total_managed_funds,
+                amounts_desired,
+                i,
+            );
+            
+            for j in 0..total_managed_funds.len() {
+                if j == i || total_managed_funds.get(j).unwrap().total_amount == 0 {
+                    continue;
+                }
+                let min_amount = amounts_min.get(j)
+                    .ok_or(ContractError::WrongAmountsLength)?;
+                let optimal_amount = final_amounts.get(j)
+                    .ok_or(ContractError::WrongAmountsLength)?;
+                if optimal_amount < min_amount {
+                    return Err(ContractError::NoOptimalAmounts);
+                }
+            }
+            return Err(ContractError::NoOptimalAmounts);
         }
     }
 

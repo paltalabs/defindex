@@ -65,7 +65,6 @@ pub fn internal_swap_exact_tokens_for_tokens(
         swap_args.clone(),
     );
     Ok(())
-    // TODO: Do something with the result
 }
 
 pub fn internal_swap_tokens_for_exact_tokens(

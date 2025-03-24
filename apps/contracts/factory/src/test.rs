@@ -5,8 +5,7 @@ use common::models::{AssetStrategySet, Strategy};
 use soroban_sdk::token::{
     StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient,
 };
-use soroban_sdk::{testutils::Address as _, vec as sorobanvec, Address, Env, String, Vec};
-use soroban_sdk::{BytesN, Val};
+use soroban_sdk::{testutils::Address as _, vec as sorobanvec, Address, Env, String, Vec, BytesN, Val};
 use std::vec;
 
 // DeFindex Hodl Strategy Contract

@@ -1,10 +1,10 @@
 use soroban_sdk::{vec as sorobanvec, Address, Map, String, Vec};
 
-use crate::test::{
+use crate::{storage, test::{
     create_defindex_vault, create_strategy_params_token_0,
     defindex_vault::{ AssetStrategySet, ContractError, Instruction, RolesDataKey},
     DeFindexVaultTest,
-};
+}};
 
 extern crate std;
 
@@ -38,7 +38,6 @@ fn rescue_success() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true,
@@ -136,7 +135,6 @@ fn rescue_errors() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -210,7 +208,6 @@ fn pause_then_rescue() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -312,7 +309,6 @@ fn distribute_fees_on_rescue() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -397,4 +393,73 @@ fn distribute_fees_on_rescue() {
     // check if strategy is paused
     let asset = defindex_contract.get_assets().first().unwrap();
     assert_eq!(asset.strategies.first().unwrap().paused, true);
+}
+
+#[test]
+fn should_report() {
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let strategy_params_token_0 = create_strategy_params_token_0(&test);
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: strategy_params_token_0.clone()
+        }
+    ];
+
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        roles,
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.soroswap_router.address.clone(),
+        name_symbol,
+        true,
+    );
+
+    let amount = 987654321i128;
+
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+
+    test.token_0_admin_client.mint(&users[0], &amount);
+
+    // Deposit
+    defindex_contract.deposit(
+        &sorobanvec![&test.env, amount],
+        &sorobanvec![&test.env, amount],
+        &users[0],
+        &false,
+    );
+
+    let invest_instructions = sorobanvec![
+        &test.env,
+        Instruction::Invest(test.strategy_client_token_0.address.clone(), amount),
+        ];
+        defindex_contract.rebalance(&test.rebalance_manager, &invest_instructions);
+        
+    
+    let initial_report = defindex_contract.env.as_contract(&defindex_contract.address, || storage::get_report(&test.env, &test.strategy_client_token_0.address.clone()));
+
+    defindex_contract.rescue(
+        &strategy_params_token_0.first().unwrap().address,
+        &test.emergency_manager,
+    );
+
+    let report_after_rescue = defindex_contract.env.as_contract(&defindex_contract.address, || storage::get_report(&test.env, &test.strategy_client_token_0.address.clone()));
+    std::println!("initial_report: {:?}", initial_report);
+    std::println!("report_after_rescue: {:?}", report_after_rescue);
+    assert_ne!(initial_report, report_after_rescue);
 }

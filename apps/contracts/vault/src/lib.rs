@@ -25,14 +25,14 @@ mod utils;
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use router::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
 use deposit::process_deposit;
-use funds::fetch_total_managed_funds;
+use funds::{fetch_strategy_invested_funds, fetch_total_managed_funds};
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::generate_investment_allocations;
 use models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction, StrategyAllocation};
 use storage::{
     extend_instance_ttl, get_assets, get_defindex_protocol_fee_rate,
     get_report, get_vault_fee, set_asset,
-    set_defindex_protocol_fee_rate, set_defindex_protocol_fee_receiver, set_factory, set_report,
+    set_defindex_protocol_fee_rate, set_defindex_protocol_fee_receiver, set_report,
     set_soroswap_router, set_total_assets, set_vault_fee, set_is_upgradable
 };
 use strategies::{
@@ -41,7 +41,7 @@ use strategies::{
 };
 use token::{internal_burn, write_metadata};
 use utils::{
-    calculate_asset_amounts_per_vault_shares, check_initialized, check_min_amount, check_nonnegative_amount
+    calculate_asset_amounts_per_vault_shares, check_min_amount, validate_amount, validate_assets
 };
 
 use common::{models::AssetStrategySet, utils::StringExtensions};
@@ -67,10 +67,9 @@ impl VaultTrait for DeFindexVault {
     ///   - Vault Fee Receiver: For receiving vault fees
     ///   - Manager: For primary vault control
     ///   - Rebalance Manager: For rebalancing operations
-    /// * `vault_fee` - Vault-specific fee in basis points (0-2000 for 0-20%)
+    /// * `vault_fee` - Vault-specific fee in basis points (0_2000 for 0.20%)
     /// * `defindex_protocol_receiver` - Address receiving protocol fees
     /// * `defindex_protocol_rate` - Protocol fee rate in basis points (0-9000 for 0-90%)
-    /// * `factory` - Factory contract address
     /// * `soroswap_router` - Soroswap router address
     /// * `name_symbol` - Map containing:
     ///   - "name": Vault token name
@@ -119,7 +118,6 @@ impl VaultTrait for DeFindexVault {
         vault_fee: u32,
         defindex_protocol_receiver: Address,
         defindex_protocol_rate: u32,
-        factory: Address,
         soroswap_router: Address,
         name_symbol: Map<String, String>,
         upgradable: bool,
@@ -145,16 +143,13 @@ impl VaultTrait for DeFindexVault {
         }
         set_defindex_protocol_fee_rate(&e, &defindex_protocol_rate);
 
-        set_factory(&e, &factory);
         set_is_upgradable(&e, &upgradable);
 
         set_soroswap_router(&e, &soroswap_router);
 
+        // Validate assets
+        validate_assets(&e, &assets);
         let total_assets = assets.len();
-
-        if total_assets == 0 {
-            panic_with_error!(&e, ContractError::NoAssetAllocation);
-        }
 
         set_total_assets(&e, total_assets as u32);
         for (i, asset) in assets.iter().enumerate() {
@@ -240,10 +235,11 @@ impl VaultTrait for DeFindexVault {
         invest: bool,
     ) -> Result<(Vec<i128>, i128, Option<Vec<Option<AssetInvestmentAllocation>>>), ContractError> {
         extend_instance_ttl(&e);
-        check_initialized(&e)?;
         from.require_auth();
 
-        let total_managed_funds = fetch_total_managed_funds(&e, false)?;
+        // Fetches the total managed funds for all assets, including idle and invested funds (net of locked fees).
+        // Setting the flag to `true` ensures that strategy reports are updated and new fees are locked during the process.
+        let total_managed_funds = fetch_total_managed_funds(&e, true)?;
 
         let (amounts, shares_to_mint) = process_deposit(
             &e,
@@ -287,6 +283,7 @@ impl VaultTrait for DeFindexVault {
     /// ## Parameters:
     /// - `e`: The contract environment (`Env`).
     /// - `withdraw_shares`: The number of vault shares to withdraw.
+    /// - `min_amounts_out`: A vector of minimum amounts required for each asset to be withdrawn.
     /// - `from`: The address initiating the withdrawal.
     ///
     /// ## Returns
@@ -298,16 +295,29 @@ impl VaultTrait for DeFindexVault {
     /// - `ContractError::AmountOverTotalSupply`: If the specified shares exceed the total supply.
     /// - `ContractError::ArithmeticError`: If any arithmetic operation fails during calculations.
     /// - `ContractError::WrongAmountsLength`: If there is a mismatch in asset allocation data.
-    fn withdraw(e: Env, withdraw_shares: i128, from: Address) -> Result<Vec<i128>, ContractError> {
+    fn withdraw(e: Env, withdraw_shares: i128, min_amounts_out: Vec<i128>, from: Address) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
-        check_initialized(&e)?;
-        check_nonnegative_amount(withdraw_shares)?;
+        validate_amount(withdraw_shares)?;
         from.require_auth();
 
         check_min_amount(withdraw_shares, MIN_WITHDRAW_AMOUNT)?;
-        // Calculate the withdrawal amounts for each asset based on the share amounts
-        let total_managed_funds = fetch_total_managed_funds(&e, true)?;
 
+        // Fetches the total managed funds for all assets, including idle and invested funds (net of locked fees).
+        // Setting the flag to `true` ensures that strategy reports are updated and new fees are locked during the process.
+        let total_managed_funds = fetch_total_managed_funds(&e, true)?;
+        
+        //Validate min_amounts_out length
+        if min_amounts_out.len() != total_managed_funds.len() {
+            panic_with_error!(&e, ContractError::WrongAmountsLength);
+        }
+        //Validate min_amounts_out values
+        for amount in min_amounts_out.iter() {
+            if amount < 0 {
+                panic_with_error!(&e, ContractError::AmountNotAllowed);
+            }
+        }
+        
+        // Calculate the withdrawal amounts for each asset based on the share amounts
         let asset_withdrawal_amounts =
             calculate_asset_amounts_per_vault_shares(&e, withdraw_shares, &total_managed_funds)?;
 
@@ -325,6 +335,9 @@ impl VaultTrait for DeFindexVault {
             if let Some(requested_withdrawal_amount) =
                 asset_withdrawal_amounts.get(i as u32)
             {
+                if requested_withdrawal_amount < min_amounts_out.get(i as u32).unwrap() {
+                    panic_with_error!(&e, ContractError::InsufficientOutputAmount);
+                }
                 let idle_funds = asset.idle_amount;
 
                 if idle_funds >= requested_withdrawal_amount {
@@ -403,7 +416,6 @@ impl VaultTrait for DeFindexVault {
         caller: Address,
     ) -> Result<(), ContractError> {
         extend_instance_ttl(&e);
-        check_initialized(&e)?;
 
         // Ensure the caller is the Manager or Emergency Manager
         let access_control = AccessControl::new(&e);
@@ -416,7 +428,8 @@ impl VaultTrait for DeFindexVault {
         let asset = get_strategy_asset(&e, &strategy_address)?;
         // This ensures that the vault has this strategy in its list of assets
         let strategy = get_strategy_struct(&strategy_address, &asset)?;
-
+        let strategy_invested_funds = fetch_strategy_invested_funds(&e, &strategy_address, false)?;
+        report::update_report_and_lock_fees(&e, &strategy_address, strategy_invested_funds)?;
         let distribution_result = report::distribute_strategy_fees(&e, &strategy.address, &access_control)?;
         if distribution_result > 0 {
             let mut distributed_fees: Vec<(Address, i128)> = Vec::new(&e);
@@ -553,6 +566,8 @@ impl VaultTrait for DeFindexVault {
     ) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
 
+        // Fetches the total managed funds for all assets, including idle and invested funds (net of locked fees).
+        // Setting the flag to `true` ensures that strategy reports are updated and new fees are locked during the process.
         let total_managed_funds = fetch_total_managed_funds(&e, true)?;
         Ok(calculate_asset_amounts_per_vault_shares(
             &e,
@@ -645,11 +660,11 @@ impl VaultTrait for DeFindexVault {
 impl AdminInterfaceTrait for DeFindexVault {
     /// Sets the fee receiver for the vault.
     ///
-    /// This function allows the manager or emergency manager to set a new fee receiver address for the vault.
+    /// This function allows the manager or the vault fee receiver to set a new fee receiver address for the vault.
     ///
     /// # Arguments:
     /// * `e` - The environment.
-    /// * `caller` - The address initiating the change (must be the manager or emergency manager).
+    /// * `caller` - The address initiating the change (must be the manager or the vault fee receiver).
     /// * `vault_fee_receiver` - The new fee receiver address.
     ///
     /// # Returns:
@@ -709,7 +724,7 @@ impl AdminInterfaceTrait for DeFindexVault {
 
     /// Sets the emergency manager for the vault.
     ///
-    /// This function allows the current manager or emergency manager to set a new emergency manager for the vault.
+    /// This function allows the current manager to set a new emergency manager for the vault.
     ///
     /// # Arguments:
     /// * `e` - The environment.
@@ -733,6 +748,7 @@ impl AdminInterfaceTrait for DeFindexVault {
     /// # Returns:
     /// * `Result<Address, ContractError>` - The emergency manager address if successful, otherwise returns a ContractError.
     fn get_emergency_manager(e: Env) -> Result<Address, ContractError> {
+        extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         access_control.get_emergency_manager()
     }
@@ -784,7 +800,7 @@ impl AdminInterfaceTrait for DeFindexVault {
         if !storage::is_upgradable(&e) {
             return Err(ContractError::NotUpgradable);
         }
-        
+        extend_instance_ttl(&e);
         let access_control = AccessControl::new(&e);
         access_control.require_role(&RolesDataKey::Manager);
         
@@ -806,7 +822,6 @@ impl VaultManagementTrait for DeFindexVault {
     /// * `Result<(), ContractError>` - Ok if successful, otherwise returns a ContractError.
     fn rebalance(e: Env, caller: Address, instructions: Vec<Instruction>) -> Result<(), ContractError> {
         extend_instance_ttl(&e);
-        check_initialized(&e)?;
 
         let access_control = AccessControl::new(&e);
         access_control.require_any_role(
@@ -827,7 +842,10 @@ impl VaultManagementTrait for DeFindexVault {
                         &amount,
                         &e.current_contract_address(),
                     )?;
-                    let call_params = vec![&e, (strategy_address, amount, e.current_contract_address())];
+                    let call_params = vec![&e, (strategy_address.clone(), amount, e.current_contract_address())];
+                    let strategy_invested_funds = fetch_strategy_invested_funds(&e, &strategy_address, false)?;
+                    report::update_report_and_lock_fees(&e, &strategy_address, strategy_invested_funds)?;
+                    report::distribute_strategy_fees(&e, &strategy_address, &access_control)?;
                     events::emit_rebalance_unwind_event(&e, call_params, report);
                 }
                 Instruction::Invest(strategy_address, amount) => {
@@ -848,6 +866,7 @@ impl VaultManagementTrait for DeFindexVault {
                             paused: strategy.paused
                         })],
                     };
+                    report::distribute_strategy_fees(&e, &strategy_address, &access_control)?;
                     events::emit_rebalance_invest_event(&e, vec![&e, call_params], report);
                 }
                 Instruction::SwapExactIn(
@@ -918,7 +937,6 @@ impl VaultManagementTrait for DeFindexVault {
     /// * `Result<Vec<(Address, i128)>, ContractError>` - A vector of tuples with strategy addresses and locked fee amounts in their underlying_asset.
     fn lock_fees(e: Env, new_fee_bps: Option<u32>) -> Result<Vec<Report>, ContractError> {
         extend_instance_ttl(&e);
-        check_initialized(&e)?;
 
         let access_control = AccessControl::new(&e);
         access_control.require_role(&RolesDataKey::Manager);
@@ -961,8 +979,7 @@ impl VaultManagementTrait for DeFindexVault {
     /// * `Result<Report, ContractError>` - A report of the released fees or a `ContractError` if the operation fails.
     fn release_fees(e: Env, strategy: Address, amount: i128) -> Result<Report, ContractError> {
         extend_instance_ttl(&e);
-        check_initialized(&e)?;
-
+        validate_amount(amount)?;
         let access_control = AccessControl::new(&e);
         access_control.require_role(&RolesDataKey::Manager);
 
@@ -987,7 +1004,6 @@ impl VaultManagementTrait for DeFindexVault {
     /// * `Result<Vec<(Address, i128)>, ContractError>` - A vector of tuples with asset addresses and the total distributed fee amounts.
     fn distribute_fees(e: Env, caller: Address) -> Result<Vec<(Address, i128)>, ContractError> {
         extend_instance_ttl(&e);
-        // check_initialized(&e)?;
 
         let access_control = AccessControl::new(&e);
         access_control.require_any_role(

@@ -4,9 +4,12 @@ use crate::test::defindex_vault::{
     AssetStrategySet, ContractError, CurrentAssetInvestmentAllocation, RolesDataKey, StrategyAllocation
 };
 use crate::test::{
-    create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1,
+    create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1, create_strategy_params,
     DeFindexVaultTest,
 };
+use crate::deposit;
+use crate::MINIMUM_LIQUIDITY;
+extern crate std;
 
 #[test]
 fn amounts_desired_less_length() {
@@ -45,7 +48,6 @@ fn amounts_desired_less_length() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -99,7 +101,6 @@ fn amounts_desired_more_length() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -157,7 +158,6 @@ fn amounts_min_less_length() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -215,7 +215,6 @@ fn amounts_min_more_length() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -273,7 +272,6 @@ fn amounts_desired_negative() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -290,7 +288,7 @@ fn amounts_desired_negative() {
         &false,
     );
 
-    assert_eq!(response, Err(Ok(ContractError::NegativeNotAllowed)));
+    assert_eq!(response, Err(Ok(ContractError::AmountNotAllowed)));
 }
 
 // test deposit one asset success
@@ -326,7 +324,6 @@ fn one_asset_success() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -492,7 +489,6 @@ fn one_asset_min_more_than_desired() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -518,7 +514,7 @@ fn one_asset_min_more_than_desired() {
         &false,
     );
     // this should fail
-    assert_eq!(result, Err(Ok(ContractError::InsufficientAmount)));
+    assert_eq!(result, Err(Ok(ContractError::NoOptimalAmounts)));
 }
 
 // test deposit of several asset, considering different proportion of assets
@@ -559,7 +555,6 @@ fn several_assets_success() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -852,7 +847,6 @@ fn several_assets_min_greater_than_optimal() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -883,7 +877,7 @@ fn several_assets_min_greater_than_optimal() {
     );
 
     // this should fail
-    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+    assert_eq!(deposit_result, Err(Ok(ContractError::NoOptimalAmounts)));
 
     // now we manage to deposit
     defindex_contract.deposit(
@@ -915,7 +909,7 @@ fn several_assets_min_greater_than_optimal() {
 
     // this should fail
 
-    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+    assert_eq!(deposit_result, Err(Ok(ContractError::NoOptimalAmounts)));
 }
 
 //test deposit amounts_min greater than amounts_desired
@@ -956,7 +950,6 @@ fn amounts_min_greater_than_amounts_desired() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -987,7 +980,7 @@ fn amounts_min_greater_than_amounts_desired() {
     );
 
     // this should fail
-    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+    assert_eq!(deposit_result, Err(Ok(ContractError::NoOptimalAmounts)));
 }
 
 //Test token transfer from user to vault on deposit
@@ -1028,7 +1021,6 @@ fn transfers_tokens_from_user_to_vault() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1098,7 +1090,6 @@ fn arithmetic_error() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1172,7 +1163,6 @@ fn amounts_desired_zero() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1246,7 +1236,6 @@ fn insufficient_funds_with_error_message() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1284,4 +1273,381 @@ fn insufficient_funds_with_error_message() {
     } else {
         panic!("Expected error not returned");
     }
+}
+
+
+#[test]
+fn with_zero_amounts() {
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+
+    let strategy_params_token_0 = create_strategy_params_token_0(&test);
+    let strategy_params_token_1 = create_strategy_params_token_1(&test);
+    let strategy_params_token_2 = create_strategy_params(&test, test.strategy_client_token_2.address.clone());
+
+    // initialize with 2 assets
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {  
+            address: test.token_0.address.clone(),
+            strategies: strategy_params_token_0.clone()
+        },
+        AssetStrategySet {
+            address: test.token_1.address.clone(),
+            strategies: strategy_params_token_1.clone()
+        },
+        AssetStrategySet {
+            address: test.token_2.address.clone(),
+            strategies: strategy_params_token_2.clone()
+        }
+    ];
+
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(
+        RolesDataKey::EmergencyManager as u32,
+        test.emergency_manager.clone(),
+    );
+    roles.set(
+        RolesDataKey::VaultFeeReceiver as u32,
+        test.vault_fee_receiver.clone(),
+    );
+    roles.set(
+        RolesDataKey::RebalanceManager as u32,
+        test.rebalance_manager.clone(),
+    );
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(
+        String::from_str(&test.env, "name"),
+        String::from_str(&test.env, "dfToken"),
+    );
+    name_symbol.set(
+        String::from_str(&test.env, "symbol"),
+        String::from_str(&test.env, "DFT"),
+    );
+
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        roles,
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.soroswap_router.address.clone(),
+        name_symbol,
+        true,
+    );
+
+    // Deposit more than min liquidity
+    let deposit_amount_token_1 = MINIMUM_LIQUIDITY + 1;
+    let deposit_amount_token_2 = 2*deposit_amount_token_1;
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
+
+    test.token_1_admin_client.mint(&users[0], &deposit_amount_token_1);
+    test.token_2_admin_client.mint(&users[0], &deposit_amount_token_2);
+    // One should be allowed to deposit 0 amount for the any token
+    let deposit_result = defindex_contract.try_deposit(
+        &sorobanvec![&test.env, 0, deposit_amount_token_1, deposit_amount_token_2],
+        &sorobanvec![&test.env, 0, 0, 0],
+        &users[0],
+        &false,
+    );
+    std::println!("deposit_result: {:?}", deposit_result);
+    // user[0] should have deposit_amount_token_1 + deposit_amount_token_2 - MINIMUM_LIQUIDITY shares minted
+    // Total supply should be deposit_amount_token_1 + deposit_amount_token_2
+    assert_eq!(deposit_result.is_err(), false);
+    let total_supply = defindex_contract.total_supply();
+    let user_balance = defindex_contract.balance(&users[0]);
+    assert_eq!(user_balance, deposit_amount_token_1 + deposit_amount_token_2 - MINIMUM_LIQUIDITY);
+    assert_eq!(total_supply, deposit_amount_token_1 + deposit_amount_token_2);
+
+
+    // one should be allowed to deposit 0 amount for the any token and the other token with a positive amount
+    test.token_1_admin_client.mint(&users[1], &deposit_amount_token_1);
+    test.token_2_admin_client.mint(&users[1], &deposit_amount_token_2);
+    let deposit_result = defindex_contract.try_deposit(
+        &sorobanvec![&test.env, 0, deposit_amount_token_1, deposit_amount_token_2],
+        &sorobanvec![&test.env, 0, 0, 0],
+        &users[1],
+        &false,
+    );
+    std::println!("deposit_result second balance: {:?}", deposit_result);
+    assert_eq!(deposit_result.is_err(), false);
+    // User[0] should have deposit_amount_token_1 + deposit_amount_token_2 shares minted
+    // Total supply should be 2*(deposit_amount_token_1 + deposit_amount_token_2)
+    let user_balance = defindex_contract.balance(&users[1]);
+    let total_supply = defindex_contract.total_supply();
+    std::println!("user_balance: {:?}", user_balance);
+    std::println!("total_supply: {:?}", total_supply);
+    assert_eq!(user_balance, deposit_amount_token_1 + deposit_amount_token_2);
+    assert_eq!(total_supply, 2*(deposit_amount_token_1 + deposit_amount_token_2));
+
+    // User 1 attempts to deposit 100_000_000 from each token
+    let amount = 100_000_000;
+    test.token_0_admin_client.mint(&users[1], &amount);
+    test.token_1_admin_client.mint(&users[1], &amount);
+    // We don't care about the min amounts for the purpose of the PoC
+    let deposit_result = defindex_contract.try_deposit(
+        &sorobanvec![&test.env, amount, amount, 0],
+        &sorobanvec![&test.env, amount*9/10, amount*9/10, 0],
+        &users[1],
+        &false,
+    );
+    // this call will fail because the last amount should not be 0
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+
+    // Test depositing all zeros
+    // It should fail with InsufficientAmount because mint_shares are 0
+    let deposit_result = defindex_contract.try_deposit(
+        &sorobanvec![&test.env, amount, 0, 0],
+        &sorobanvec![&test.env, amount*9/10, 0, 0], 
+        &users[1],
+        &false,
+    );
+
+    // Should fail since we can't deposit all zeros
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+
+    // Test depositing all zeros
+    // It should fail with InsufficientAmount because mint_shares are 0
+    let deposit_result = defindex_contract.try_deposit(
+        &sorobanvec![&test.env, 0, 0, 0],
+        &sorobanvec![&test.env, 0, 0, 0],
+        &users[1], 
+        &false,
+    );
+
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+
+    // Test depositing [0, amount, 0]
+    // It should fail with InsufficientAmount since last amount is 0
+    let deposit_result = defindex_contract.try_deposit(
+        &sorobanvec![&test.env, 0, amount, 0],
+        &sorobanvec![&test.env, 0, amount*9/10, 0],
+        &users[1],
+        &false,
+    );
+
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+
+    // Test depositing [0, 0, amount]
+    // It should fail with InsufficientAmount since first two amounts are 0
+    let deposit_result = defindex_contract.try_deposit(
+        &sorobanvec![&test.env, 0, 0, amount],
+        &sorobanvec![&test.env, 0, 0, amount*9/10],
+        &users[1],
+        &false,
+    );
+
+    assert_eq!(deposit_result, Err(Ok(ContractError::InsufficientAmount)));
+
+}
+
+#[test]
+#[should_panic(expected="HostError: Error(Contract, #117)")] // ContractError::InsufficientAmount
+fn mint_zero_shares(){
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    /* ------------------------------------------- Vault  setup ------------------------------------------- */
+    let strategy_params_token_0 = create_strategy_params_token_0(&test);
+
+    // initialize with 1 assets
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: strategy_params_token_0.clone()
+        }
+    ];
+
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        roles,
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.soroswap_router.address.clone(),
+        name_symbol,
+        true
+    );
+    
+    let amount = 10_0_000_000i128;
+
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+
+    // Balances before deposit
+    test.token_0_admin_client.mint(&users[0], &amount);
+    let user_balance = test.token_0.balance(&users[0]);
+    assert_eq!(user_balance, amount);
+
+    let df_balance = defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, 0i128);
+
+    // deposit
+    defindex_contract.deposit(
+        &sorobanvec![&test.env, amount],
+        &sorobanvec![&test.env, amount],
+        &users[0],
+        &false,
+    );
+    /* ---------------------------------------- End of vault setup ---------------------------------------- */
+
+    /* -------------------------------------- Test mint zero shares --------------------------------------- */
+    // total_supply
+    let total_supply = defindex_contract.total_supply();
+
+    // mint zero shares
+    let _ = test.env.as_contract(&defindex_contract.address, || deposit::test_mint_shares(&test.env, &total_supply, 0, users[0].clone()));
+}
+#[test]
+#[should_panic(expected="HostError: Error(Contract, #117)")] // ContractError::InsufficientAmount
+fn mint_negative_shares(){
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    /* ------------------------------------------- Vault  setup ------------------------------------------- */
+    let strategy_params_token_0 = create_strategy_params_token_0(&test);
+
+    // initialize with 1 assets
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: strategy_params_token_0.clone()
+        }
+    ];
+
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        roles,
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.soroswap_router.address.clone(),
+        name_symbol,
+        true
+    );
+    
+    let amount = 10_0_000_000i128;
+
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 1);
+
+    // Balances before deposit
+    test.token_0_admin_client.mint(&users[0], &amount);
+    let user_balance = test.token_0.balance(&users[0]);
+    assert_eq!(user_balance, amount);
+
+    let df_balance = defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, 0i128);
+
+    // deposit
+    defindex_contract.deposit(
+        &sorobanvec![&test.env, amount],
+        &sorobanvec![&test.env, amount],
+        &users[0],
+        &false,
+    );
+    /* ---------------------------------------- End of vault setup ---------------------------------------- */
+
+    /* ------------------------------------ Test mint negative shares ------------------------------------- */
+    // total_supply
+    let total_supply = defindex_contract.total_supply();
+
+    // mint negative shares
+    let _ = test.env.as_contract(&defindex_contract.address, || deposit::test_mint_shares(&test.env, &total_supply, -2000, users[0].clone()));
+}
+
+#[test]
+fn mint_shares(){
+    
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+
+    /* ------------------------------------------- Vault  setup ------------------------------------------- */
+    let strategy_params_token_0 = create_strategy_params_token_0(&test);
+    // initialize with 1 assets
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: strategy_params_token_0.clone()
+        }
+    ];
+
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        roles,
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.soroswap_router.address.clone(),
+        name_symbol,
+        true
+    );
+    
+    let amount = 10_0_000_000i128;
+
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
+
+    // Balances before deposit
+    test.token_0_admin_client.mint(&users[0], &amount);
+    let user_balance = test.token_0.balance(&users[0]);
+    assert_eq!(user_balance, amount);
+
+    let df_balance = defindex_contract.balance(&users[0]);
+    assert_eq!(df_balance, 0i128);
+
+    // deposit
+    defindex_contract.deposit(
+        &sorobanvec![&test.env, amount],
+        &sorobanvec![&test.env, amount],
+        &users[0],
+        &false,
+    );
+    /* ---------------------------------------- End of vault setup ---------------------------------------- */
+
+    /* ------------------------------------- Test mint shares success ------------------------------------- */
+    // total_supply
+    let total_supply = defindex_contract.total_supply();
+    
+    let shares_to_mint = 2000i128;
+    let result = test.env.as_contract(&defindex_contract.address, || deposit::test_mint_shares(&test.env, &total_supply, shares_to_mint, users[1].clone()));
+    assert!(result.is_ok());
+    assert_eq!(result, Ok(()));
+    
+    let new_balance = defindex_contract.balance(&users[1]);
+    assert_eq!(new_balance, shares_to_mint);
 }

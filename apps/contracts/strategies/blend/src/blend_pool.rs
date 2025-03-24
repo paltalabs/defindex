@@ -8,10 +8,10 @@ use soroban_sdk::{
 use crate::{
     reserves,
     soroswap::internal_swap_exact_tokens_for_tokens,
-    storage::{self, Config},
+    storage::{Config},
 };
 
-soroban_sdk::contractimport!(file = "../external_wasms/blend/blend_pool.wasm");
+soroban_sdk::contractimport!(file = "../external_wasms/blend/pool.wasm");
 pub type BlendPoolClient<'a> = Client<'a>;
 
 // Define the RequestType enum with explicit u32 values
@@ -153,7 +153,7 @@ pub fn withdraw(
     to: &Address,
     amount: &i128,
     config: &Config,
-) -> Result<(i128, i128), StrategyError> {
+) -> Result<i128, StrategyError> {
     let pool_client = BlendPoolClient::new(e, &config.pool);
 
     let pre_supply_amount = pool_client
@@ -162,9 +162,6 @@ pub fn withdraw(
         .try_get(config.reserve_id)
         .map_err(|_| StrategyError::InsufficientBalance)? // Convert Result to Error
         .ok_or_else(|| StrategyError::InsufficientBalance)?; // Convert Option to Error if None
-
-    // Get balance pre-withdraw, as the pool can modify the withdrawal amount
-    let pre_withdrawal_balance = TokenClient::new(&e, &config.asset).balance(&to);
 
     let requests: Vec<Request> = vec![
         &e,
@@ -189,18 +186,13 @@ pub fn withdraw(
         .unwrap_or(Some(0))
         .unwrap_or(0);
 
-    // Calculate the amount of tokens withdrawn and bTokens burnt
-    let post_withdrawal_balance = TokenClient::new(&e, &config.asset).balance(&to);
-    let real_amount = post_withdrawal_balance
-        .checked_sub(pre_withdrawal_balance)
-        .ok_or_else(|| StrategyError::UnderflowOverflow)?;
-
+    // Calculate the amount of bTokens burnt
     // position entry is deleted if the position is cleared
     let b_tokens_amount = pre_supply_amount
         .checked_sub(new_supply_amount)
         .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
-    Ok((real_amount, b_tokens_amount))
+    Ok(b_tokens_amount)
 }
 
 /// Claims rewards for the given address from the Blend pool.
@@ -255,8 +247,8 @@ pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError>
     let deadline = e
         .ledger()
         .timestamp()
-        .checked_add(600)
-        .ok_or(StrategyError::UnderflowOverflow)?;
+        .checked_add(1)
+        .ok_or( StrategyError::UnderflowOverflow)?;
 
     // Swapping BLND tokens to Underlying Asset
     let swapped_amounts = internal_swap_exact_tokens_for_tokens(
@@ -276,8 +268,24 @@ pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError>
     // Supplying underlying asset into blend pool
     let b_tokens_minted = supply(&e, &e.current_contract_address(), &amount_out, &config)?;
 
-    let reserves = storage::get_strategy_reserves(&e);
-    reserves::harvest(&e, reserves, amount_out, b_tokens_minted)?;
+    reserves::harvest(&e, b_tokens_minted, &config)?;
 
     Ok(true)
+}
+
+
+/// Fetches the asset's b_rate from the pool
+///
+/// ### Arguments
+/// * `e` - The execution environment
+/// * `config` - The configuration parameters for the strategy
+///
+/// ### Returns
+/// * `i128` - The b_rate of the asset
+pub fn reserve_b_rate(
+    e: &Env, 
+    config: &Config
+) -> i128 {
+    let pool_client = BlendPoolClient::new(e, &config.pool);
+    pool_client.get_reserve(&config.asset).data.b_rate
 }

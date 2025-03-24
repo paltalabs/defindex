@@ -1,8 +1,11 @@
 use soroban_sdk::testutils::{MockAuth, MockAuthInvoke};
 use soroban_sdk::{vec as sorobanvec, Address, InvokeError, Map, String, Vec, IntoVal};
 
+use crate::storage;
+use crate::test::create_unsafe_strategy_params_token_0;
 use crate::test::defindex_vault::{ContractError, RolesDataKey, Strategy};
 use crate::test::{
+    std,
     create_defindex_vault, create_strategy_params_token_0, create_strategy_params_token_1,
     defindex_vault::{
         AssetStrategySet, CurrentAssetInvestmentAllocation, Instruction,
@@ -41,7 +44,6 @@ fn multi_instructions() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -162,7 +164,6 @@ fn one_instruction() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -277,7 +278,6 @@ fn no_instructions() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -347,7 +347,6 @@ fn insufficient_balance() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -384,7 +383,7 @@ fn insufficient_balance() {
     .try_rebalance(&test.rebalance_manager, &withdraw_no_funds_instructions);
     assert_eq!(
         withdraw_no_funds,
-        Err(Ok(ContractError::StrategyWithdrawError))
+        Err(Ok(ContractError::UnwindMoreThanAvailable))
     ); //Contract should respond 'Insuficient balance'?
 
     let invest_no_funds_instructions = sorobanvec![
@@ -444,7 +443,7 @@ fn insufficient_balance() {
         },
     }])
     .try_rebalance(&test.rebalance_manager, &withdraw_instructions);
-    assert_eq!(rebalance, Err(Ok(ContractError::StrategyWithdrawError)));
+    assert_eq!(rebalance, Err(Ok(ContractError::UnwindMoreThanAvailable)));
 
     let invest_instructions = sorobanvec![
         &test.env,
@@ -511,7 +510,6 @@ fn swap_exact_in() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -685,7 +683,6 @@ fn swap_exact_out() {
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -860,7 +857,6 @@ fn swap_from_unauthorized(){
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -949,7 +945,6 @@ fn swap_wrong_asset_in(){
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1026,7 +1021,6 @@ fn swap_wrong_asset_out(){
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1103,7 +1097,6 @@ fn invest_negative_amount(){
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1175,7 +1168,6 @@ fn invest_wrong_address(){
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1243,7 +1235,6 @@ fn invest_paused_strategy(){
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1341,7 +1332,6 @@ fn invest_more_than_idle_funds(){
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1411,7 +1401,6 @@ fn invest_unauthorized(){
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1493,7 +1482,6 @@ fn unwind_paused_strategy(){
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1600,7 +1588,6 @@ fn unwind_wrong_address(){
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1609,6 +1596,8 @@ fn unwind_wrong_address(){
     let amount0 = 123456789i128;
 
     test.token_0_admin_client.mint(&users[0], &amount0);
+    test.token_0_admin_client.mint(&users[1], &amount0);
+    test.token_0_admin_client.mint(&test.unsafe_strategy_client_token_0.address, &amount0);
 
     defindex_contract.deposit(
         &sorobanvec![&test.env, amount0],
@@ -1658,11 +1647,11 @@ fn unwind_wrong_address(){
     assert_eq!(assets, expected_assets);
 
     // Rebalance from here on
-    let amount_to_unwind = 1_000_000i128;
+    let amount_to_unwind = 1i128;
     let instructions = sorobanvec![
         &test.env,
         Instruction::Unwind(
-            users[0].clone(),
+            test.unsafe_strategy_client_token_0.address.clone(),
             amount_to_unwind,
         ),
     ];
@@ -1671,7 +1660,7 @@ fn unwind_wrong_address(){
     // Check if invested funds are 0
     let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
     assert_eq!(invested_funds, amount_to_invest);
-    assert_eq!(unwind_result, Err(Ok(ContractError::StrategyWithdrawError)));
+    assert_eq!(unwind_result, Err(Ok(ContractError::UnwindMoreThanAvailable)));
 }
 
 #[test]
@@ -1707,7 +1696,6 @@ fn unwind_negative_amount(){
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1818,7 +1806,6 @@ fn unwind_unauthorized(){
         2000u32,
         test.defindex_protocol_receiver.clone(),
         2500u32,
-        test.defindex_factory.clone(),
         test.soroswap_router.address.clone(),
         name_symbol,
         true
@@ -1865,4 +1852,189 @@ fn unwind_unauthorized(){
         },
     }])
     .rebalance(&test.rebalance_manager, &instructions);
+}
+
+#[test]
+fn unwind_over_max(){
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 3);
+
+    let strategy_params_token_0 = create_unsafe_strategy_params_token_0(&test);
+
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: strategy_params_token_0.clone()
+        }
+    ];
+
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        roles,
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.soroswap_router.address.clone(),
+        name_symbol,
+        true
+    );
+    
+    let amount0 = 1_0_000_000i128;
+
+    let strategy_address = test.unsafe_strategy_client_token_0.address.clone();
+
+    test.token_0_admin_client.mint(&users[0], &amount0);
+    test.token_0_admin_client.mint(&users[1], &amount0);
+    test.token_0_admin_client.mint(&test.unsafe_strategy_client_token_0.address, &amount0);
+
+    test.unsafe_strategy_client_token_0.deposit(&amount0, &users[1]);
+    
+    defindex_contract.deposit(
+        &sorobanvec![&test.env, amount0],
+        &sorobanvec![&test.env, amount0],
+        &users[0],
+        &false,
+    );
+
+    // Check if invested funds are amount0
+    let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
+    assert_eq!(invested_funds, 0i128);
+
+    let instructions = sorobanvec![
+        &test.env,
+        Instruction::Invest(
+            strategy_address.clone(),
+            amount0,
+        ),
+    ];
+    defindex_contract.rebalance(&test.rebalance_manager, &instructions);
+
+    let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
+    assert_eq!(invested_funds, amount0);
+
+    let withdraw_amount = amount0 + 1;
+
+    // Try to unwind more than invested (should fail)
+    let instructions = sorobanvec![
+        &test.env,
+        Instruction::Unwind(
+            strategy_address.clone(),
+            withdraw_amount,
+        ),
+    ];
+    let unwind_result = defindex_contract.try_rebalance(&test.rebalance_manager, &instructions);
+
+    // Check that the unwind has no effects
+    let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
+    //assert_eq!(invested_funds, amount0);
+    std::println!("invested funds: {:?}", invested_funds);
+    std::println!("unwind result: {:?}", unwind_result);
+    assert_eq!(unwind_result, Err(Ok(ContractError::UnwindMoreThanAvailable)));
+}
+
+#[test]
+fn should_report(){
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+    let users = DeFindexVaultTest::generate_random_users(&test.env, 3);
+
+    let strategy_params_token_0 = create_strategy_params_token_0(&test);
+
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: strategy_params_token_0.clone()
+        }
+    ];
+
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        roles,
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.soroswap_router.address.clone(),
+        name_symbol,
+        true
+    );
+    
+    let amount0 = 1_0_000_000i128;
+
+    test.token_0_admin_client.mint(&users[0], &amount0);
+
+    defindex_contract.deposit(
+        &sorobanvec![&test.env, amount0],
+        &sorobanvec![&test.env, amount0],
+        &users[0],
+        &false,
+    );
+
+    // Check if invested funds are 0
+    let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
+    assert_eq!(invested_funds, 0i128);
+
+    // Get the initial report
+    let initial_report = test.env.as_contract(&defindex_contract.address, || storage::get_report(&test.env, &test.strategy_client_token_0.address.clone()));
+    std::println!("Initial report: {:?}", initial_report);
+    //Invest
+    let instructions = sorobanvec![
+        &test.env,
+        Instruction::Invest(
+            test.strategy_client_token_0.address.clone(),
+            amount0,
+        ),
+    ];
+    defindex_contract.rebalance(&test.rebalance_manager, &instructions);
+
+    // Check investment effects
+    let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
+    assert_eq!(invested_funds, amount0);
+
+    // Get the report after investment
+    let report_after_investment = test.env.as_contract(&defindex_contract.address, || storage::get_report(&test.env, &test.strategy_client_token_0.address.clone()));
+    std::println!("Report after investment: {:?}", report_after_investment);
+    // Compare reports
+    assert_ne!(initial_report, report_after_investment);
+
+    // Unwind
+    let withdraw_amount = amount0;
+
+    let instructions = sorobanvec![
+        &test.env,
+        Instruction::Unwind(
+            test.strategy_client_token_0.address.clone(),
+            withdraw_amount,
+        ),
+    ];
+    defindex_contract.rebalance(&test.rebalance_manager, &instructions);
+    // Get report after unwind
+    let report_after_unwind = test.env.as_contract(&defindex_contract.address, || storage::get_report(&test.env, &test.strategy_client_token_0.address.clone()));
+
+    assert_ne!(report_after_investment, report_after_unwind);
+    std::println!("Report after unwind: {:?}", report_after_unwind);
 }

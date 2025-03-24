@@ -3,7 +3,7 @@ use soroban_sdk::{panic_with_error, token::TokenClient, Address, Env, Vec};
 use crate::{
     models::CurrentAssetInvestmentAllocation,
     token::{internal_mint, VaultToken},
-    utils::{calculate_deposit_amounts_and_shares_to_mint, check_nonnegative_amount},
+    utils::{calculate_deposit_amounts_and_shares_to_mint, validate_amount},
     ContractError, MINIMUM_LIQUIDITY,
 };
 
@@ -23,7 +23,7 @@ pub fn process_deposit(
     }
 
     for amount in amounts_desired.iter() {
-        check_nonnegative_amount(amount)?;
+        validate_amount(amount)?;
     }
 
     let total_supply = VaultToken::total_supply(e.clone());
@@ -45,7 +45,7 @@ pub fn process_deposit(
     // Transfer assets
     for (i, amount) in amounts.iter().enumerate() {
         if amount < amounts_min.get(i as u32).unwrap() {
-            panic_with_error!(&e, ContractError::InsufficientAmount);
+            panic_with_error!(&e, ContractError::NoOptimalAmounts);
         }
         if amount > 0 {
             let asset = total_managed_funds.get(i as u32).ok_or(ContractError::ArithmeticError)?; 
@@ -91,6 +91,9 @@ fn mint_shares(
     shares_to_mint: i128,
     from: Address,
 ) -> Result<(), ContractError> {
+    if shares_to_mint <= 0 {
+        panic_with_error!(&e, ContractError::InsufficientAmount);
+    }
     if *total_supply == 0 {
         if shares_to_mint < MINIMUM_LIQUIDITY {
             panic_with_error!(&e, ContractError::InsufficientAmount);
@@ -105,4 +108,15 @@ fn mint_shares(
         internal_mint(e.clone(), from, shares_to_mint);
     }
     Ok(())
+}
+
+#[cfg(test)]
+pub fn test_mint_shares(
+    e: &Env,
+    total_supply: &i128,
+    shares_to_mint: i128,
+    from: Address,
+) -> Result<(), ContractError> {
+    let result = mint_shares(e, total_supply, shares_to_mint, from)?;
+    Ok(result)
 }
