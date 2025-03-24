@@ -351,7 +351,9 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
                         {strategy.address ? shortenAddress(strategy.address) : '-'}
                       </Table.Cell>
                       <Table.Cell textAlign={'center'}>{asset.symbol}</Table.Cell>
-                      <Table.Cell textAlign={'center'}>${strategy.tempAmount} {asset.symbol}</Table.Cell>
+                      {asset.amount &&
+                        <Table.Cell textAlign={'center'}>${strategy.tempAmount} {asset.symbol}</Table.Cell>
+                      }
                     </Table.Row>
 
                   ))
