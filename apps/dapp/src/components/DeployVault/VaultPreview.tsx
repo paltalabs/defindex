@@ -344,16 +344,17 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
               </Table.Header>
               <Table.Body>
                 {data.map((asset: Asset, index: number) => (
-                  <Table.Row key={index}>
-                    <Table.Cell>{asset.strategies[0]?.name}</Table.Cell>
-                    <Table.Cell textAlign={'center'}>
-                      {asset.strategies[0]?.address ? shortenAddress(asset.strategies[0]?.address) : '-'}
-                    </Table.Cell>
-                    <Table.Cell textAlign={'center'}>{asset.symbol}</Table.Cell>
-                    {(asset.amount && asset.amount > 0) && (
-                      <Table.Cell textAlign={'center'}>${asset.amount} {asset.symbol}</Table.Cell>
-                    )}
-                  </Table.Row>
+                  asset.strategies.map((strategy, j) => (
+                    <Table.Row key={strategy.address}>
+                      <Table.Cell>{strategy.name}</Table.Cell>
+                      <Table.Cell textAlign={'center'}>
+                        {strategy.address ? shortenAddress(strategy.address) : '-'}
+                      </Table.Cell>
+                      <Table.Cell textAlign={'center'}>{asset.symbol}</Table.Cell>
+                      <Table.Cell textAlign={'center'}>${strategy.tempAmount} {asset.symbol}</Table.Cell>
+                    </Table.Row>
+
+                  ))
                 ))}
               </Table.Body>
             </Table.Root>

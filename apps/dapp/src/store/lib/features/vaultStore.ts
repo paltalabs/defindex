@@ -116,6 +116,10 @@ export const newVaultSlice = createSlice({
     }),
     removeStrategy: ((state, action: PayloadAction<Strategy>) => {
       state.assets.forEach(asset => {
+        const strategy = asset.strategies.find(strategy => strategy.address === action.payload.address);
+        if(asset.amount && strategy) {
+          asset.amount -= strategy.tempAmount;
+        }
         asset.strategies = asset.strategies.filter(strategy => strategy.address !== action.payload.address);
       });
     }),
