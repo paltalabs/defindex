@@ -94,3 +94,34 @@ export function getCreateDeFindexVaultParams(
     nativeToScVal(!!upgradable, { type: "bool" })
   ];
 }
+
+export function getCreateDeFindexVaultDepositParams(
+  caller: string,
+  emergency_manager: string,
+  rebalance_manager: string,
+  fee_receiver: string,
+  manager: string,
+  vault_fee: number,
+  vault_name: string,
+  vault_symbol: string,
+  asset_allocations: xdr.ScVal[],
+  router_address: string,
+  upgradable: boolean,
+  assets: Asset[]
+){
+  const defindexVaultParams = getCreateDeFindexVaultParams(
+    emergency_manager,
+    rebalance_manager,
+    fee_receiver,
+    manager,
+    vault_fee,
+    vault_name,
+    vault_symbol,
+    asset_allocations,
+    router_address,
+    upgradable
+  );
+  const callerAddress = new Address(caller);
+  const amounts = getAssetAmountsSCVal(assets);
+  return [callerAddress.toScVal(), ...defindexVaultParams, xdr.ScVal.scvVec(amounts)];
+}
