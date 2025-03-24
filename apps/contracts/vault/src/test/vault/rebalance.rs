@@ -747,6 +747,38 @@ fn swap_exact_out() {
     // (1000000000000000000*5000000)*1000 / ((4000000000000000000 - 5000000)*997) + 1 = 1253762,2
     // because cealing div = 1253763
     let amount_in_should = 1253763;
+    
+    // Test that rebalance fails with ExcessiveInputAmount when amount_in_max is too small
+    let insufficient_amount_in_max = amount_in_should - 100; // Set a max that's too small
+    
+    let insufficient_instructions = sorobanvec![
+        &test.env,
+        Instruction::SwapExactOut(
+            test.token_0.address.clone(),
+            test.token_1.address.clone(),
+            expected_amount_out,
+            insufficient_amount_in_max,
+            test.env.ledger().timestamp() + 3600u64
+        ),
+    ];
+
+    let rebalance_result = defindex_contract
+        .mock_auths(&[MockAuth {
+            address: &test.rebalance_manager.clone(),
+            invoke: &MockAuthInvoke {
+                contract: &defindex_contract.address.clone(),
+                fn_name: "rebalance",
+                args: (
+                    test.rebalance_manager.clone(),
+                    insufficient_instructions.clone(),
+                )
+                    .into_val(&test.env),
+                sub_invokes: &[],
+            },
+        }])
+        .try_rebalance(&test.rebalance_manager, &insufficient_instructions);
+    
+    assert_eq!(rebalance_result, Err(Ok(ContractError::ExcessiveInputAmount)));
 
     // add one with part 1 and other with part 0
     let mut path: Vec<Address> = Vec::new(&test.env);
