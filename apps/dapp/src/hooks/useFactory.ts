@@ -91,6 +91,7 @@ export function useFactoryCallback() {
         if (error.includes('Sign')) throw new Error('Request denied by user. Please try to sign again.')
         if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
         if (error.includes('UnexpectedSize')) throw new Error('Invalid arguments length.')
+        if (error.includes('Error(Contract, #10)')) throw new Error('Insufficient funds.')
         throw new Error('Failed to create vault.', e)
       }
     }, [sorobanContext, factoryAddress])
