@@ -25,8 +25,9 @@ export const getDefaultStrategies = async (network: string) => {
     for (let strategy in remoteStrategies) {
       if (strategy.includes('strategy')) {
         const parsedName = strategy.split('_')[0]
+        const parsedSymbol = strategy.split('_')[1]?.length! <= 4 ? strategy.split('_')[1] : ''
         if (!parsedName) continue
-        const prettierName = parsedName.charAt(0).toUpperCase() + parsedName.slice(1)
+        const prettierName = parsedName.charAt(0).toUpperCase() + parsedName.slice(1) + ' ' + (parsedSymbol ? parsedSymbol.toUpperCase() : '')
         strategies.push({
           address: remoteStrategies[strategy],
           name: parsedName ? prettierName : '',
