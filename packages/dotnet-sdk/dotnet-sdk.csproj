@@ -22,7 +22,7 @@
     <RepositoryUrl>https://github.com/paltalabs/defindex</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Defindex;SDK;.Net;Paltalabs;Stellar</PackageTags>
-    <PackageProjectUrl>https://github.com/paltalabs/defindex</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/paltalabs/defindex/tree/main/packages/dotnet-sdk</PackageProjectUrl>
     <PackageReleaseNotes>Add minAmountsOut to create withdraw transaction method</PackageReleaseNotes>
   </PropertyGroup>
 
