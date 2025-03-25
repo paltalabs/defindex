@@ -27,6 +27,7 @@ fn success() {
     let user_3 = Address::generate(&e);
     let user_4 = Address::generate(&e);
     let initial_depositor = Address::generate(&e);
+    let keeper = Address::generate(&e);
 
     let blnd = e.register_stellar_asset_contract_v2(admin.clone());
     let usdc = e.register_stellar_asset_contract_v2(admin.clone());
@@ -93,6 +94,7 @@ fn success() {
         &pool,
         &blnd.address(),
         &soroswap_router.address,
+        &keeper,
     );
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
     assert_eq!(pool_client.get_reserve(&usdc.address().clone()).config.index, 0);
@@ -327,6 +329,8 @@ fn success() {
 
     println!("Expected withdraw amount for users {}", expected_withdraw_amount);
 
+    // we harvest first
+    strategy_client.harvest(&keeper);
 
     // -> verify over withdraw fails
     let result =
@@ -516,7 +520,7 @@ fn success() {
     println!("=======       HARVEST  =======");
 
     
-    strategy_client.harvest(&user_3);
+    strategy_client.harvest(&keeper);
 
     /*
         TODO:
@@ -567,4 +571,24 @@ fn success() {
 
     assert_eq!(usdc_pool_increased_in_harvest, new_expected_usdc);
 
+
+    // get keeper
+    let old_keeper = strategy_client.get_keeper();
+    assert_eq!(old_keeper, keeper);
+    // set keeper to a new address
+    let new_keeper = Address::generate(&e);
+    strategy_client.set_keeper(&keeper, &new_keeper);
+    assert_eq!(strategy_client.get_keeper(), new_keeper);
+
+    // try to harvest with the new keeper
+    let harvest_result = strategy_client.try_harvest(&new_keeper);
+    assert_eq!(harvest_result, Ok(Ok(())));
+
+    // try to harvest with the old keeper
+    let harvest_result = strategy_client.try_harvest(&keeper);
+    assert_eq!(harvest_result, Err(Ok(StrategyError::NotAuthorized)));
+
+    // get keeper
+    let keeper = strategy_client.get_keeper();
+    assert_eq!(keeper, new_keeper);
 }
