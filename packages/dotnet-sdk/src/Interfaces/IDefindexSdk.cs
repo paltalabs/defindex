@@ -105,6 +105,7 @@ public interface IDefindexSdk
     /// </summary>
     Task<Transaction> CreateWithdrawTransaction(
         ulong withdrawShares,
+        List<ulong> amountsMinOut,
         string from);
 
 
@@ -112,9 +113,4 @@ public interface IDefindexSdk
     /// Parse a successful transaction response
     /// </summary>
     Task<List<TransactionResult>> ParseTransactionResponse(GetTransactionResponse response);
-
-    /// <summary>
-    /// Submits a signed transaction to the network
-    /// </summary>
-    Task<List<TransactionResult>> SubmitTransaction(Transaction transaction);
 }
