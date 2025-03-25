@@ -11,6 +11,8 @@ import { VaultMethod, useVault, useVaultCallback } from '@/hooks/useVault'
 
 import {
   Button,
+  Checkbox,
+  Fieldset,
   Grid,
   GridItem,
   HStack,
@@ -31,6 +33,7 @@ export const InteractWithVault = () => {
 
   const { address } = useSorobanReact();
   const [selectedStrategy, setSelectedStrategy] = useState<string | undefined>(undefined)
+  const [withdrawTolerance, setWithdrawTolerance] = useState<{ allowed: boolean, amount: number }>({ allowed: false, amount: 0.1 })
   const vaultCB = useVaultCallback()
   const vault = useVault()
   const dispatch = useAppDispatch()
@@ -43,33 +46,51 @@ export const InteractWithVault = () => {
     const convertedAmount = parsedAmount * Math.pow(10, 7)
     statusModal.initModal()
     let params: xdr.ScVal[] = []
-    if (vaultMethod === VaultMethod.DEPOSIT) {
-      const depositParams: xdr.ScVal[] = [
-        xdr.ScVal.scvVec([nativeToScVal(parseFloat(convertedAmount.toString()), { type: "i128" })]),
-        xdr.ScVal.scvVec([nativeToScVal((convertedAmount * 0.9), { type: "i128" })]),
-        new Address(address).toScVal(),
-        xdr.ScVal.scvBool(false)
-      ]
-      params = depositParams
-    };
-    if (vaultMethod === VaultMethod.WITHDRAW) {
-      const withdrawAmount = ((amount * selectedVault.totalSupply) / selectedVault.TVL)
-      const truncatedWithdrawAmount = Math.floor(withdrawAmount * 1e7) / 1e7;
-      const convertedWithdrawAmount = Number(truncatedWithdrawAmount) * Math.pow(10, 7)
-      const withdrawParams: xdr.ScVal[] = [
-        nativeToScVal(Math.ceil(convertedWithdrawAmount), { type: "i128" }),
-        new Address(address).toScVal(),
-      ]
-      params = withdrawParams
-    };
-    if (vaultMethod === VaultMethod.RESCUE) {
-      if (!selectedStrategy) throw new Error('Strategy is required')
-      console.log(selectedStrategy)
-      const emergencyWithdrawParams: xdr.ScVal[] = [
-        new Address(selectedStrategy!).toScVal(),
-        new Address(address).toScVal(),
-      ]
-      params = emergencyWithdrawParams
+
+    switch (vaultMethod) {
+      case VaultMethod.DEPOSIT:
+        const depositParams: xdr.ScVal[] = [
+          xdr.ScVal.scvVec([nativeToScVal(parseFloat(convertedAmount.toString()), { type: "i128" })]),
+          xdr.ScVal.scvVec([nativeToScVal((convertedAmount * 0.9), { type: "i128" })]),
+          new Address(address).toScVal(),
+          xdr.ScVal.scvBool(false)
+        ]
+        params = depositParams
+        break;
+      case VaultMethod.WITHDRAW:
+        const withdrawAmount = ((amount * selectedVault.totalSupply) / selectedVault.TVL);
+        const truncatedWithdrawAmount = Math.floor(withdrawAmount * 1e7) / 1e7;
+        const convertedWithdrawAmount = Number(truncatedWithdrawAmount) * Math.pow(10, 7);
+        if (withdrawTolerance.allowed) {
+          const tolerance = (withdrawTolerance.amount / 100) * convertedWithdrawAmount;
+          const minWithdrawAmount = convertedWithdrawAmount - tolerance;
+          const minAmountsOut = xdr.ScVal.scvVec([nativeToScVal(Math.ceil(minWithdrawAmount), { type: "i128" })]);
+          const withdrawParams: xdr.ScVal[] = [
+            nativeToScVal(Math.ceil(convertedWithdrawAmount), { type: "i128" }),
+            minAmountsOut,
+            new Address(address).toScVal(),
+          ];
+          params = withdrawParams;
+          break;
+        }
+        const withdrawParams: xdr.ScVal[] = [
+          nativeToScVal(Math.ceil(convertedWithdrawAmount), { type: "i128" }),
+          xdr.ScVal.scvVec([nativeToScVal((convertedWithdrawAmount), { type: "i128" })]),
+          new Address(address).toScVal(),
+        ];
+        params = withdrawParams;
+        break;
+      case VaultMethod.RESCUE:
+        if (!selectedStrategy) throw new Error('Strategy is required')
+        console.log(selectedStrategy)
+        const emergencyWithdrawParams: xdr.ScVal[] = [
+          new Address(selectedStrategy!).toScVal(),
+          new Address(address).toScVal(),
+        ]
+        params = emergencyWithdrawParams
+        break;
+      default:
+        throw new Error('Invalid vault method')
     }
     try {
       const result = await vaultCB(
@@ -107,22 +128,40 @@ export const InteractWithVault = () => {
     }
   }
 
-  const setAmount = (input: any) => {
+  const parseNumericInput = (input: any, decimals: number) => {
+    console.log(input)
+    const decimalRegex = new RegExp(`^(\\d+)?(\\.\\d{0,${decimals}})?$`);
+    if (!decimalRegex.test(input)) return;
+    if (input.startsWith('.')) {
+      return 0 + input
+    }
+    if (input.startsWith('0') && input.length > 1 && !input.includes('.')) {
+      return input.slice(1)
+    }
+    else return input
+  }
+
+  const handleWithdrawTolerance = (input: any) => {
     if (input < 0 || !selectedVault) return;
+    const amount = parseNumericInput(input, 2)
+    if (amount === undefined) return;
     if (vaultMethod === VaultMethod.WITHDRAW) {
       if (input > selectedVault.userBalance!) return;
     }
-    const decimalRegex = /^(\d+)?(\.\d{0,7})?$/;
-    if (!decimalRegex.test(input)) return;
-    if (input.startsWith('.')) {
-      set_amount(0 + input)
-      return
+    console.log(amount)
+    if (amount > 100 || amount < 0) return;
+    setWithdrawTolerance({ ...withdrawTolerance, amount: amount });
+  }
+
+  const setAmount = (input: any) => {
+    if (input < 0 || !selectedVault) return;
+    const amount = parseNumericInput(input, 7)
+    if (amount === undefined) return;
+    if (vaultMethod === VaultMethod.WITHDRAW) {
+      if (input > selectedVault.userBalance!) return;
     }
-    if (input.startsWith('0') && input.length > 1 && !input.includes('.')) {
-      set_amount(input.slice(1))
-      return
-    }
-    set_amount(input)
+    console.log(amount)
+    set_amount(amount);
   }
   if (!selectedVault) return null
 
@@ -153,16 +192,50 @@ export const InteractWithVault = () => {
             </GridItem>
             {vaultMethod != VaultMethod.RESCUE &&
               <GridItem colSpan={12} pt={6}>
-                <HStack justify={'end'}>
-                  <Text fontSize='sm'>Amount to {vaultMethod}:</Text>
-                  <Stack alignContent={'center'} alignItems={'end'}>
-                  <InputGroup
+                <Stack alignContent={'center'} alignItems={'end'}>
+                  <HStack alignContent={'center'} alignItems={'center'}>
+                    <Text fontSize='sm'>Amount to {vaultMethod}:</Text>
+                    <InputGroup
                       endElement={selectedVault?.assets[0]?.symbol}
-                  >
+                    >
                       <Input my={4} type="text" onChange={(e) => setAmount(e.target.value)} placeholder='Amount' value={amount} />
-                  </InputGroup>
-                  </Stack>
-                </HStack>
+                    </InputGroup>
+                  </HStack>
+                  {vaultMethod === VaultMethod.WITHDRAW &&
+                    <Fieldset.Root>
+                      <Stack alignContent={'center'} alignItems={'end'}>
+                        <Checkbox.Root
+                          checked={withdrawTolerance.allowed}
+                          onCheckedChange={(checked) => {
+                            setWithdrawTolerance({ ...withdrawTolerance, allowed: !!checked.checked })
+                          }}
+                        >
+                          <Checkbox.HiddenInput />
+                          <Checkbox.Label>Tolerance</Checkbox.Label>
+                          <Checkbox.Control>
+                            <Checkbox.Indicator />
+                          </Checkbox.Control>
+                        </Checkbox.Root>
+                        {withdrawTolerance.allowed &&
+                          <InputGroup
+                            endElement={'%'}
+                          >
+                            <Input
+                              my={4}
+                              w={'24'}
+                              type="number"
+                              onChange={(e) => handleWithdrawTolerance(e.target.value)}
+                              placeholder='0.1'
+                              value={withdrawTolerance.amount}
+                              max={100}
+                              min={0}
+                            />
+                          </InputGroup>
+                        }
+                      </Stack>
+                    </Fieldset.Root>
+                  }
+                </Stack>
 
               </GridItem>
             }
