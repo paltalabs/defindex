@@ -158,7 +158,7 @@ export const AllVaults = ({
               <Text >Address: {shortenAddress(vault.address)}</Text>
               <Text>TVL: ${vault.TVL}</Text>
               {address && <Text>User balance: ${vault.userBalance ? `${vault.userBalance}` : 0}</Text>}
-              <Text>Asset: {vault.name?.includes('Blend USDC') ? '11.31' : '23.36'}%</Text>
+              <Text>Asset: {vault.assets[0]?.symbol}</Text>
             </Box>
           ))}
         </VStack>
