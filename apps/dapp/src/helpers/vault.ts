@@ -1,3 +1,4 @@
+import { ActionType, RebalanceInstruction } from "@/hooks/types";
 import { Asset } from "@/store/lib/types";
 import { Address, nativeToScVal, xdr } from "@stellar/stellar-sdk";
 
@@ -124,4 +125,56 @@ export function getCreateDeFindexVaultDepositParams(
   const callerAddress = new Address(caller);
   const amounts = getAssetAmountsSCVal(assets);
   return [callerAddress.toScVal(), ...defindexVaultParams, xdr.ScVal.scvVec(amounts)];
+}
+
+export function mapInstructionsToParams(
+  instructions: RebalanceInstruction[]
+): xdr.ScVal {
+  return xdr.ScVal.scvVec(
+    instructions.map((instruction) => {
+      let SCALING_FACTOR = 10 ** 7;
+      let parsedAmount = Math.ceil(instruction.amount * SCALING_FACTOR);
+      switch (instruction.action) {
+        case ActionType.Invest:
+          return xdr.ScVal.scvVec([
+            // Invest action
+            xdr.ScVal.scvSymbol("Invest"), 
+            new Address(instruction.strategy).toScVal(),
+            nativeToScVal(parsedAmount, { type: "i128" }), // amount
+          ]);
+        case ActionType.Unwind:
+          return xdr.ScVal.scvVec([
+            // Unwind action
+            xdr.ScVal.scvSymbol("Unwind"), 
+            new Address(instruction.strategy).toScVal(),
+            nativeToScVal(parsedAmount, { type: "i128" }), // amount
+          ]);
+
+        case ActionType.SwapExactIn:
+          // Handle SwapExactIn action
+          return xdr.ScVal.scvVec([
+            xdr.ScVal.scvSymbol("SwapExactIn"),
+            new Address(instruction.swapDetailsExactIn.token_in).toScVal(),
+            new Address(instruction.swapDetailsExactIn.token_out).toScVal(),
+            nativeToScVal(Math.ceil(instruction.swapDetailsExactIn.amount_in * SCALING_FACTOR), { type: "i128" }),
+            nativeToScVal(Math.ceil(instruction.swapDetailsExactIn.amount_out_min * SCALING_FACTOR), { type: "i128" }),
+            nativeToScVal(instruction.swapDetailsExactIn.deadline, { type: "u64" }),
+          ]);
+
+        case ActionType.SwapExactOut:
+          // Handle SwapExactOut action
+          return xdr.ScVal.scvVec([
+            xdr.ScVal.scvSymbol("SwapExactOut"),
+            new Address(instruction.swapDetailsExactOut.token_in).toScVal(),
+            new Address(instruction.swapDetailsExactOut.token_out).toScVal(),
+            nativeToScVal(Math.ceil(instruction.swapDetailsExactOut.amount_out * SCALING_FACTOR), { type: "i128" }),
+            nativeToScVal(Math.ceil(instruction.swapDetailsExactOut.amount_in_max * SCALING_FACTOR), { type: "i128" }),
+            nativeToScVal(instruction.swapDetailsExactOut.deadline, { type: "u64" }),
+          ]);
+
+        default:
+          throw new Error(`Unsupported action type: ${instruction.action}`);
+      }
+    })
+  );
 }
