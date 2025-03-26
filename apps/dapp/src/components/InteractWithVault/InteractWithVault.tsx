@@ -129,7 +129,6 @@ export const InteractWithVault = () => {
   }
 
   const parseNumericInput = (input: any, decimals: number) => {
-    console.log(input)
     const decimalRegex = new RegExp(`^(\\d+)?(\\.\\d{0,${decimals}})?$`);
     if (!decimalRegex.test(input)) return;
     if (input.startsWith('.')) {
@@ -160,7 +159,6 @@ export const InteractWithVault = () => {
     if (vaultMethod === VaultMethod.WITHDRAW) {
       if (input > selectedVault.userBalance!) return;
     }
-    console.log(amount)
     set_amount(amount);
   }
   if (!selectedVault) return null
