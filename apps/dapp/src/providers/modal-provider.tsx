@@ -53,20 +53,12 @@ export const ModalProvider = ({
     setIsTransactionStatusModalOpen(true)
   }
 
-  useEffect(() => {
-    if (isTransactionStatusModalOpen && transactionStatusModalStep === 2 && transactionStatusModalStatus === TransactionStatusModalStatus.SUCCESS) {
-      setTimeout(() => handleResetModal(), 5000)
-    }
-    if (isTransactionStatusModalOpen && transactionStatusModalStep === 2 && transactionStatusModalStatus === TransactionStatusModalStatus.ERROR) {
-      setTimeout(() => handleResetModal(), 8000)
-    }
-  }, [isTransactionStatusModalOpen, transactionStatusModalStep, transactionStatusModalStatus])
-
   const handleError = (error: string) => {
     clearTimeout(handleFirstStep)
     setTransactionStatusModalError(error)
     setTransactionStatusModalStatus(TransactionStatusModalStatus.ERROR)
     setTransactionStatusModalStep(2)
+    setTimeout(() => handleResetModal(), 8000)
   }
 
   const handleSuccess = (txHash: string) => {
@@ -76,6 +68,7 @@ export const ModalProvider = ({
     setTransactionStatusModalStep(2)
     dispatch(resetNewVault())
     dispatch(resetSelectedVault())
+    setTimeout(() => handleResetModal(), 5000)
   }
 
   const modalContextValue: ModalContextType = {
