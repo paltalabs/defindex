@@ -51,22 +51,32 @@ export function useVaultCallback() {
     const sorobanContext = useSorobanReact();
     return useCallback(
         async (method: VaultMethod, address: string, args?: StellarSdk.xdr.ScVal[], signAndSend?: boolean) => {
-            const result = (await contractInvoke({
-                contractAddress: address,
-                method: method,
-                args: args,
-                sorobanContext,
-                signAndSend: signAndSend,
-                reconnectAfterTx: false,
-            })) as TxResponse;
-
-            if (!signAndSend) return result;
-
-            if (
-                isObject(result) &&
-                result?.status !== StellarSdk.SorobanRpc.Api.GetTransactionStatus.SUCCESS
-            ) throw result;
-            return result
+            try {
+                const result = (await contractInvoke({
+                    contractAddress: address,
+                    method: method,
+                    args: args,
+                    sorobanContext,
+                    signAndSend: signAndSend,
+                    reconnectAfterTx: false,
+                })) as TxResponse;
+    
+                if (!signAndSend) return result;
+    
+                if (
+                    isObject(result) &&
+                    result?.status !== StellarSdk.SorobanRpc.Api.GetTransactionStatus.SUCCESS
+                ) throw result;
+                return result
+            } catch (e: any) {
+                console.log(e)
+                const error = e.toString()
+                if (error.includes('Sign')) throw new Error('Request denied by user. Please try to sign again.')
+                if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
+                if (error.includes('UnexpectedSize')) throw new Error('Invalid arguments length.')
+                if (error.includes('Error(Contract, #10)')) throw new Error('Insufficient funds.')
+                throw new Error('Failed to process the request.', error)
+            }
         }
         , [sorobanContext])
 }
