@@ -71,10 +71,12 @@ export function useVaultCallback() {
             } catch (e: any) {
                 console.log(e)
                 const error = e.toString()
-                if (error.includes('Sign')) throw new Error('Request denied by user. Please try to sign again.')
                 if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
                 if (error.includes('UnexpectedSize')) throw new Error('Invalid arguments length.')
                 if (error.includes('Error(Contract, #10)')) throw new Error('Insufficient funds.')
+                if (error.includes('Error(Contract, #128)')) throw new Error('Unwind more than available.')
+                if (error.includes('Error(Contract, #117)')) throw new Error('Insufficient amount.')
+                if (error.includes('Error(Contract, #144)')) throw new Error('Strategy paused.')
                 throw new Error('Failed to process the request.', error)
             }
         }

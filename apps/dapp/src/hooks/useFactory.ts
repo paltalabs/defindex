@@ -88,7 +88,6 @@ export function useFactoryCallback() {
         console.log(e)
         const error = e.toString()
         if (error.includes('ExistingValue')) throw new Error('Index already exists.')
-        if (error.includes('Sign')) throw new Error('Request denied by user. Please try to sign again.')
         if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
         if (error.includes('UnexpectedSize')) throw new Error('Invalid arguments length.')
         if (error.includes('Error(Contract, #10)')) throw new Error('Insufficient funds.')
