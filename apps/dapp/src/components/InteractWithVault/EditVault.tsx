@@ -1,32 +1,32 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { Address, xdr } from '@stellar/stellar-sdk'
 import { useSorobanReact } from '@soroban-react/core'
+import { Address, xdr } from '@stellar/stellar-sdk'
+import { useContext, useEffect, useState } from 'react'
 
-import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { setVaultFeeReceiver } from '@/store/lib/features/walletStore'
 import { setFeeReceiver } from '@/store/lib/features/vaultStore'
+import { setVaultFeeReceiver } from '@/store/lib/features/walletStore'
+import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 
 import { ModalContext } from '@/contexts'
-import { VaultMethod, useVaultCallback, useVault } from '@/hooks/useVault'
 import { isValidAddress } from '@/helpers/address'
+import { VaultMethod, useVault, useVaultCallback } from '@/hooks/useVault'
 
-import { DialogBody, DialogContent, DialogHeader } from '../ui/dialog'
-import { InputGroup } from '../ui/input-group'
 import {
-  Input,
-  Text,
-  Stack,
-  HStack,
   Fieldset,
-  Link,
+  HStack,
   IconButton,
+  Input,
+  Link,
+  Stack,
+  Text,
 } from '@chakra-ui/react'
-import { InfoTip } from '../ui/toggle-tip'
-import { Tooltip } from '../ui/tooltip'
 import { FaRegPaste } from 'react-icons/fa6'
-import { LuSettings2 } from "react-icons/lu";
+import { LuSettings2 } from "react-icons/lu"
 import { dropdownData } from '../DeployVault/VaultPreview'
 import { Button } from '../ui/button'
+import { DialogBody, DialogContent, DialogHeader } from '../ui/dialog'
+import { InputGroup } from '../ui/input-group'
+import { InfoTip } from '../ui/toggle-tip'
+import { Tooltip } from '../ui/tooltip'
 
 const CustomInputField = ({
   label,
@@ -171,7 +171,7 @@ export const EditVaultModal = () => {
         feeReceiver.toScVal(),
       ];
       try {
-        result = await vaultCB(VaultMethod.SETFEERECIEVER, selectedVault.address, createDefindexParams, true).then((res) => {
+        result = await vaultCB(VaultMethod.SET_FEE_RECEIVER, selectedVault.address, createDefindexParams, true).then((res) => {
           console.log(res)
           statusModal.handleSuccess(res.txHash)
           dispatch(setVaultFeeReceiver(formControl.feeReceiver.value))

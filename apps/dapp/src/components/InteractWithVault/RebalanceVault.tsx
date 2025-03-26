@@ -1,25 +1,25 @@
 import React, { useContext, useEffect, useState } from 'react';
+import { Address, xdr } from '@stellar/stellar-sdk';
+import { Box, Button, For, Grid, GridItem, HStack, IconButton, NativeSelectField, Separator, Stack, Text } from '@chakra-ui/react';
+import { DialogBody, DialogContent, DialogHeader } from '../ui/dialog';
+import { FaRegTrashCan } from "react-icons/fa6";
+import { IoMdAdd } from "react-icons/io";
+import { InputGroup } from '../ui/input-group';
+import { ModalContext } from '@/contexts';
+import { NativeSelectRoot } from '../ui/native-select';
+import { NumberInputField, NumberInputRoot } from '../ui/number-input';
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks';
 import { useSorobanReact } from '@soroban-react/core';
-import { DialogBody, DialogContent, DialogHeader } from '../ui/dialog';
-import { Box, Button, For, Grid, GridItem, HStack, IconButton, Input, List, NativeSelectField, Separator, Stack, Text } from '@chakra-ui/react';
-import { Strategy } from '@/store/lib/types';
-import { NativeSelectRoot } from '../ui/native-select';
-import { InputGroup } from '../ui/input-group';
-import { NumberInputField, NumberInputRoot } from '../ui/number-input';
 import { useVault, useVaultCallback, VaultMethod } from '@/hooks/useVault';
 import { ActionType, RebalanceInstruction } from '@/hooks/types';
+import { mapInstructionsToParams } from '@/helpers/vault';
 import { setStrategyTempAmount, updateVaultData } from '@/store/lib/features/walletStore';
-import { IoMdAdd } from "react-icons/io";
-import { Address, nativeToScVal, scValToNative, xdr } from '@stellar/stellar-sdk';
-import { FaRegTrashCan } from "react-icons/fa6";
-import { ModalContext } from '@/contexts';
 
 interface RebalanceInstructionState {
   action: ActionType | undefined;
   amount: number;
   strategy: string;
-  descritpion: string;
+  description: string;
 }
 
 const RebalanceVault: React.FC = (() => {
@@ -38,11 +38,11 @@ const RebalanceVault: React.FC = (() => {
     action: undefined,
     amount: 0,
     strategy: '',
-    descritpion: ''
+    description: ''
   })
   const validActions = [
     "Invest",
-    "Withdraw"
+    "Unwind"
   ]
 
   const generateDescription = (action: ActionType, amount: number, strategy: string) => {
@@ -57,39 +57,14 @@ const RebalanceVault: React.FC = (() => {
 
   const handleRebalanceVault = async (instructions: RebalanceInstructionState[]) => {
     txModal.initModal()
-    if (!selectedVault) return
-    const mappedArgs = xdr.ScVal.scvVec(
-      instructions.map((instruction) =>
-        xdr.ScVal.scvMap([
-          new xdr.ScMapEntry({
-            key: xdr.ScVal.scvSymbol("action"),
-            val: nativeToScVal(instruction.action, { type: "u32" }),
-          }),
-          new xdr.ScMapEntry({
-            key: xdr.ScVal.scvSymbol("amount"),
-            val: instruction.amount !== undefined
-              ? nativeToScVal((instruction.amount * 10 ** 7), { type: "i128" })
-              : xdr.ScVal.scvVoid(),
-          }),
-          new xdr.ScMapEntry({
-            key: xdr.ScVal.scvSymbol("strategy"),
-            val: instruction.strategy
-              ? new Address(instruction.strategy).toScVal()
-              : xdr.ScVal.scvVoid(),
-          }),
-          new xdr.ScMapEntry({
-            key: xdr.ScVal.scvSymbol("swap_details_exact_in"),
-            val: xdr.ScVal.scvVec([xdr.ScVal.scvSymbol("None")]),
-          }),
-          new xdr.ScMapEntry({
-            key: xdr.ScVal.scvSymbol("swap_details_exact_out"),
-            val: xdr.ScVal.scvVec([xdr.ScVal.scvSymbol("None")]),
-          }),
-        ])
-      )
-    );
+    if (!selectedVault || !address) return
+    const params = mapInstructionsToParams(instructions as RebalanceInstruction[])
+    const rebalanceParams: xdr.ScVal[] = [
+      new Address(address).toScVal(),
+      params
+    ]
     try {
-      const result = await vaultCB(VaultMethod.REBALANCE, selectedVault?.address!, [mappedArgs], true)
+      const result = await vaultCB(VaultMethod.REBALANCE, selectedVault?.address!, rebalanceParams, true)
       await txModal.handleSuccess(result.txHash)
       const newInvestedFunds = await getInvestedFunds(selectedVault.address)
       const newIdleFunds = await getIdleFunds(selectedVault.address)
@@ -103,8 +78,8 @@ const RebalanceVault: React.FC = (() => {
         inspectModal.setIsOpen(false)
       }, 4500)
     } catch (e: any) {
-      console.error(e)
-      await txModal.handleError(e)
+      const error = e.toString()
+      await txModal.handleError(error)
     }
   }
 
@@ -127,7 +102,7 @@ const RebalanceVault: React.FC = (() => {
   useEffect(() => {
     setTempInstruction({
       ...tempInstruction,
-      descritpion: generateDescription(tempInstruction.action!, tempInstruction.amount, tempInstruction.strategy)
+      description: generateDescription(tempInstruction.action!, tempInstruction.amount, tempInstruction.strategy)
     })
   }, [tempInstruction.action, tempInstruction.amount, tempInstruction.strategy])
 
@@ -248,7 +223,7 @@ const RebalanceVault: React.FC = (() => {
                   style={{ backgroundColor: 'rgba(250,250,255,0.05)', borderRadius: '8px', padding: '6px 12px' }}
                 >
                   <Text>
-                    {instruction.descritpion}
+                    {instruction.description}
                   </Text>
                   <IconButton
                     size={'xs'}
@@ -274,8 +249,6 @@ const RebalanceVault: React.FC = (() => {
           Rebalance
         </Button>
       </DialogBody>
-
-
     </DialogContent>
   );
 });

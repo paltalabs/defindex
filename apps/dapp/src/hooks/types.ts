@@ -30,7 +30,7 @@ export interface RebalanceInstruction {
   swapDetailsExactOut?: any//SwapDetails;
 }
 export enum ActionType {
-  Withdraw = 0,
+  Unwind = 0,
   Invest = 1,
   SwapExactIn = 2,
   SwapExactOut = 3,

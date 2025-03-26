@@ -1,16 +1,17 @@
-import { Box, Button, For, HStack, NumberInputRoot, Stack, Text } from "@chakra-ui/react"
-import { DialogBody, DialogContent, DialogHeader } from "../ui/dialog"
+import { Address, xdr } from "@stellar/stellar-sdk"
+import { Button, For, HStack, NumberInputRoot, Stack, Text } from "@chakra-ui/react"
+import { useSorobanReact } from "@soroban-react/core"
+import { useContext, useEffect, useState } from "react"
+import { ActionType, AssetInvestmentAllocation, RebalanceInstruction } from "@/hooks/types"
+import { mapInstructionsToParams } from "@/helpers/vault"
+import { ModalContext } from "@/contexts"
+import { setStrategyTempAmount, updateVaultData } from "@/store/lib/features/walletStore"
 import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
 import { useVault, useVaultCallback, VaultMethod } from "@/hooks/useVault"
-import { setStrategyTempAmount, updateVaultData } from "@/store/lib/features/walletStore"
-import { useContext, useEffect, useState } from "react"
+import { DialogBody, DialogContent, DialogHeader } from "../ui/dialog"
+import { Field } from "../ui/field"
 import { InputGroup } from "../ui/input-group"
 import { NumberInputField } from "../ui/number-input"
-import { AssetInvestmentAllocation } from "@/hooks/types"
-import { Address, Asset, nativeToScVal, xdr } from "@stellar/stellar-sdk"
-import { ModalContext } from "@/contexts"
-import { useSorobanReact } from "@soroban-react/core"
-import { Field } from "../ui/field"
 
 interface InvestState extends AssetInvestmentAllocation {
   total: number
@@ -41,35 +42,27 @@ export const InvestStrategies = () => {
     if (!selectedVault || !address) return
     txModal.initModal()
     investModal.setIsOpen(false)
-    const mappedParam = xdr.ScVal.scvVec(
-      investment.map((entry) =>
-        xdr.ScVal.scvMap([
-          new xdr.ScMapEntry({
-            key: xdr.ScVal.scvSymbol("asset"),
-            val: new Address(entry.asset).toScVal()// Convert asset address to ScVal
-          }),
-          new xdr.ScMapEntry({
-            key: xdr.ScVal.scvSymbol("strategy_allocations"),
-            val: xdr.ScVal.scvVec(
-              entry.strategy_investments.map((strategy_investment) => {
-                return xdr.ScVal.scvMap([
-                  new xdr.ScMapEntry({
-                    key: xdr.ScVal.scvSymbol("amount"),
-                    val: nativeToScVal(BigInt((strategy_investment.amount ?? 0) * 10 ** 7), { type: "i128" }), // Ensure i128 conversion
-                  }),
-                  new xdr.ScMapEntry({
-                    key: xdr.ScVal.scvSymbol("strategy_address"),
-                    val: new Address(strategy_investment.strategy).toScVal() // Convert strategy address
-                  }),
-                ])
-              })
-            ),
-          }),
-        ])
-      )
-    );
+    const instructions = investment.map((entry) => {
+      return entry.strategy_investments.map((strategy_investment) => {
+        return {
+          action: ActionType.Invest,
+          amount: strategy_investment.amount,
+          strategy: strategy_investment.strategy
+        } as RebalanceInstruction
+      })
+    })
+
+    const params = instructions.map((instruction) => {
+      return mapInstructionsToParams(instruction)
+    });
+
+    const rebalanceParams: xdr.ScVal[] = [
+      new Address(address).toScVal(),
+      ...params
+    ]
+
     try {
-      const response = await vaultCB(VaultMethod.INVEST, selectedVault.address, [mappedParam], true)
+      const response = await vaultCB(VaultMethod.REBALANCE, selectedVault.address, rebalanceParams, true)
       await txModal.handleSuccess(response.txHash)
       const newInvestedFunds = await getInvestedFunds(selectedVault.address)
       const newIdleFunds = await getIdleFunds(selectedVault.address)
