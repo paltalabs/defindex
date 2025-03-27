@@ -264,7 +264,7 @@ fn success() {
     println!("users[1] vault balance before report= {}", vault_contract.balance(&users[1]));
 
     std::println!("-- Harvesting --");
-    enviroment.strategy_contract.harvest(&enviroment.manager);
+    enviroment.strategy_contract.harvest(&enviroment.keeper);
 
     let report = vault_contract.report();
     println!("report = {:?}", report);
