@@ -602,15 +602,6 @@ fn asset_n_strategies_blend() {
     );
     check_limits(&setup.env, "Deposit");
 
-    let mut invest_instructions = svec![&setup.env];
-    for i in 0..num_strategies {
-        invest_instructions.push_back(Instruction::Invest(
-            strategies.get(i).unwrap().address.clone(),
-            starting_balance * 2 / num_strategies as i128,
-        ));
-    }
-
-
     setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&users[0]);
     let min_amounts_out = svec![&setup.env, 0i128];
@@ -626,11 +617,17 @@ fn asset_n_strategies_blend() {
     );
     check_limits(&setup.env, "Deposit (with invest)");
 
+    let mut invest_instructions = svec![&setup.env];
+    for i in 0..num_strategies {
+        invest_instructions.push_back(Instruction::Invest(
+            strategies.get(i).unwrap().address.clone(),
+            starting_balance / num_strategies as i128,
+        ));
+    }
 
     setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
     check_limits(&setup.env, "Invest");
-
     // user_2 deposit directly into pool
     let user_2_starting_balance = 200_0000000;
     usdc_client.mint(&users[2], &user_2_starting_balance);
@@ -643,7 +640,7 @@ fn asset_n_strategies_blend() {
             Request {
                 request_type: 0,
                 address: usdc.address.clone(),
-                amount: user_2_starting_balance,
+                amount: user_2_starting_balance-1,
             },
         ],
     );
