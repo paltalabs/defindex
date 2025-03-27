@@ -481,7 +481,7 @@ fn asset_n_strategies_blend() {
     let soroswap_router = create_soroswap_router(&setup.env, &soroswap_factory.address);
 
     let admin = Address::generate(&setup.env);
-
+    let keeper = Address::generate(&setup.env);
     let (blnd, blnd_client) = create_token(&setup.env, &admin);
     let (usdc, usdc_client) = create_token(&setup.env, &admin);
     let (_, xlm_client) = create_token(&setup.env, &admin);
@@ -536,7 +536,8 @@ fn asset_n_strategies_blend() {
             &pool,
             &blnd.address,
             &soroswap_router.address,
-            40_0000000i128
+            40_0000000i128,
+            &keeper,
         );
         let strategy_contract = BlendStrategyClient::new(&setup.env, &strategy);
 
@@ -734,6 +735,7 @@ fn asset_n_strategies_blend_panic() {
     let soroswap_router = create_soroswap_router(&setup.env, &soroswap_factory.address);
 
     let admin = Address::generate(&setup.env);
+    let keeper = Address::generate(&setup.env);
 
     let (blnd, blnd_client) = create_token(&setup.env, &admin);
     let (usdc, usdc_client) = create_token(&setup.env, &admin);
@@ -772,7 +774,8 @@ fn asset_n_strategies_blend_panic() {
             &pool,
             &blnd.address,
             &soroswap_router.address,
-            40_0000000i128
+            40_0000000i128,
+            &keeper,
         );
         let strategy_contract = BlendStrategyClient::new(&setup.env, &strategy);
 
