@@ -147,8 +147,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
     ///
     /// This function transfers the specified amount of the underlying asset from the `from` address
     /// to the strategy contract, supplies it to the Blend pool, and mints shares representing the
-    /// deposited amount. It also handles reinvestment of any rewards if the balance exceeds the
-    /// reward threshold.
+    /// deposited amount.
     ///
     /// # Arguments
     ///
