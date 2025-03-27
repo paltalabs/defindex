@@ -1,6 +1,6 @@
 use soroban_sdk::Env;
 
-// mod asset_n_strategies;
+mod asset_n_strategies;
 // mod rebalance;
 // mod n_asset_one_strategy;
 

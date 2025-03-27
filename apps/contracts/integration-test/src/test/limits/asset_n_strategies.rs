@@ -108,7 +108,8 @@ fn asset_n_strategies_hodl() {
     // Simulate a user withdrawal touching all strategies
     setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&user);
-    vault_contract.withdraw(&balance, &user);
+    let min_amounts_out = svec![&setup.env, 0i128];
+    vault_contract.withdraw(&balance, &min_amounts_out, &user);
     check_limits(&setup.env, "Withdraw");
 }
 
@@ -216,7 +217,8 @@ fn asset_n_strategies_hodl_panic() {
     // Simulate a user withdrawal touching all strategies
     setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&user);
-    vault_contract.withdraw(&balance, &user);
+    let min_amounts_out = svec![&setup.env, 0i128];
+    vault_contract.withdraw(&balance, &min_amounts_out, &user);
     check_limits(&setup.env, "Withdraw");
 }
 
@@ -338,7 +340,8 @@ fn asset_n_strategies_fixed() {
     // Simulate a user withdrawal touching all strategies
     setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&user);
-    vault_contract.withdraw(&balance, &user);
+    let min_amounts_out = svec![&setup.env, 0i128];
+    vault_contract.withdraw(&balance, &min_amounts_out, &user);
     check_limits(&setup.env, "Withdraw");
 }
 
@@ -460,7 +463,8 @@ fn asset_n_strategies_fixed_panic() {
     // Simulate a user withdrawal touching all strategies
     setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&user);
-    vault_contract.withdraw(&balance, &user);
+    let min_amounts_out = svec![&setup.env, 0i128];
+    vault_contract.withdraw(&balance, &min_amounts_out, &user);
     check_limits(&setup.env, "Withdraw");
 }
 
@@ -598,15 +602,6 @@ fn asset_n_strategies_blend() {
     );
     check_limits(&setup.env, "Deposit");
 
-    setup.env.cost_estimate().budget().reset_unlimited();
-    vault_contract.deposit(
-        &svec!(&setup.env, starting_balance.clone()),
-        &svec!(&setup.env, starting_balance.clone()),
-        &users[1], 
-        &false
-    );
-    check_limits(&setup.env, "Deposit");
-
     let mut invest_instructions = svec![&setup.env];
     for i in 0..num_strategies {
         invest_instructions.push_back(Instruction::Invest(
@@ -614,6 +609,23 @@ fn asset_n_strategies_blend() {
             starting_balance * 2 / num_strategies as i128,
         ));
     }
+
+
+    setup.env.cost_estimate().budget().reset_unlimited();
+    let balance = vault_contract.balance(&users[0]);
+    let min_amounts_out = svec![&setup.env, 0i128];
+    vault_contract.withdraw(&balance, &min_amounts_out, &users[0]);
+    check_limits(&setup.env, "Withdraw");
+
+    setup.env.cost_estimate().budget().reset_unlimited();
+    vault_contract.deposit(
+        &svec!(&setup.env, starting_balance.clone()),
+        &svec!(&setup.env, starting_balance.clone()),
+        &users[1], 
+        &true
+    );
+    check_limits(&setup.env, "Deposit (with invest)");
+
 
     setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.rebalance(&manager, &invest_instructions);
@@ -698,12 +710,14 @@ fn asset_n_strategies_blend() {
 
     setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&users[0]);
-    vault_contract.withdraw(&balance, &users[0]);
+    let min_amounts_out = svec![&setup.env, 0i128];
+    vault_contract.withdraw(&balance, &min_amounts_out, &users[0]);
     check_limits(&setup.env, "Withdraw");
 
     setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&users[1]);
-    vault_contract.withdraw(&balance, &users[1]);
+    let min_amounts_out = svec![&setup.env, 0i128];
+    vault_contract.withdraw(&balance, &min_amounts_out, &users[1]);
     check_limits(&setup.env, "Withdraw");
 }
 
@@ -924,11 +938,13 @@ fn asset_n_strategies_blend_panic() {
 
     setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&users[0]);
-    vault_contract.withdraw(&balance, &users[0]);
+    let min_amounts_out = svec![&setup.env, 0i128];
+    vault_contract.withdraw(&balance, &min_amounts_out, &users[0]);
     check_limits(&setup.env, "Withdraw");
 
     setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&users[1]);
-    vault_contract.withdraw(&balance, &users[1]);
+    let min_amounts_out = svec![&setup.env, 0i128];
+    vault_contract.withdraw(&balance, &min_amounts_out, &users[1]);
     check_limits(&setup.env, "Withdraw");
 }
