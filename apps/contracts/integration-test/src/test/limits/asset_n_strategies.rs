@@ -945,3 +945,272 @@ fn asset_n_strategies_blend_panic() {
     vault_contract.withdraw(&balance, &min_amounts_out, &users[1]);
     check_limits(&setup.env, "Withdraw");
 }
+
+#[test]
+fn blend_deposit_and_invest(){
+    let setup = IntegrationTest::setup();
+    setup.env.mock_all_auths();
+    
+    // Soroswap Setup
+    let soroswap_admin = Address::generate(&setup.env);
+
+    let soroswap_factory = create_soroswap_factory(&setup.env, &soroswap_admin);
+    let soroswap_router = create_soroswap_router(&setup.env, &soroswap_factory.address);
+
+    let admin = Address::generate(&setup.env);
+
+    let (blnd, blnd_client) = create_token(&setup.env, &admin);
+    let (usdc, usdc_client) = create_token(&setup.env, &admin);
+    let (_, xlm_client) = create_token(&setup.env, &admin);
+
+    // Setting up soroswap pool
+    let pool_admin = Address::generate(&setup.env);
+    let amount_a = 100000000_0_000_000;
+    let amount_b = 50000000_0_000_000;
+    blnd_client.mint(&pool_admin, &amount_a);
+    usdc_client.mint(&pool_admin, &amount_b);
+    create_soroswap_pool(
+        &setup.env,
+        &soroswap_router,
+        &pool_admin,
+        &blnd.address,
+        &usdc.address,
+        &amount_a,
+        &amount_b,
+    );
+    // End of setting up soroswap pool
+
+    let blend_fixture = BlendFixture::deploy(&setup.env, &admin, &blnd.address, &usdc.address);
+
+    let pool = create_blend_pool(&setup.env, &blend_fixture, &admin, &usdc_client, &xlm_client);
+
+    let mut strategies = svec![&setup.env];
+    let num_strategies = 2; // This number should be the max number of strategies that can be handled by the vault without panicking
+    for i in 0..num_strategies {
+        let strategy_name = format!("Blend_{}", i);
+        let strategy = create_blend_strategy_contract(
+            &setup.env,
+            &usdc.address,
+            &pool,
+            &blnd.address,
+            &soroswap_router.address,
+            40_0000000i128
+        );
+        let strategy_contract = BlendStrategyClient::new(&setup.env, &strategy);
+
+        strategies.push_back(Strategy {
+            address: strategy_contract.address.clone(),
+            name: String::from_str(&setup.env, &strategy_name),
+            paused: false,
+        });
+    }
+
+    let emergency_manager = Address::generate(&setup.env);
+    let rebalance_manager = Address::generate(&setup.env);
+    let fee_receiver = Address::generate(&setup.env);
+    let vault_fee = VAULT_FEE;
+    let vault_name = String::from_str(&setup.env, "BlendVault");
+    let vault_symbol = String::from_str(&setup.env, "BLNDVLT");
+    let manager = Address::generate(&setup.env);
+
+    let assets = svec![
+        &setup.env,
+        AssetStrategySet {
+            address: usdc.address.clone(),
+            strategies: strategies.clone(),
+        }
+    ];
+
+    let mut roles: Map<u32, Address> = Map::new(&setup.env);
+    roles.set(0u32, emergency_manager.clone()); // EmergencyManager enum = 0
+    roles.set(1u32, fee_receiver.clone()); // VaultFeeReceiver enum = 1
+    roles.set(2u32, manager.clone()); // Manager enum = 2
+    roles.set(3u32, rebalance_manager.clone()); // RebalanceManager enum = 3
+
+    let mut name_symbol: Map<String, String> = Map::new(&setup.env);
+    name_symbol.set(String::from_str(&setup.env, "name"), vault_name);
+    name_symbol.set(String::from_str(&setup.env, "symbol"), vault_symbol);
+
+    let vault_contract_address = setup.factory_contract.create_defindex_vault(
+        &roles,
+        &vault_fee,
+        &assets,
+        &soroswap_router.address,
+        &name_symbol,
+        &true
+    );
+    let vault_contract = VaultContractClient::new(&setup.env, &vault_contract_address);
+    /* ------------------------------------ Vault setup finished ------------------------------------ */    
+    
+    /* ----------------------------------- Define test environment ---------------------------------- */
+    /* ------------------------ Deposit, then invest all the deposited amount ----------------------- */
+    let users = IntegrationTest::generate_random_users(&setup.env, 1);
+    
+    let starting_balance = 200_0_000_000;
+    usdc_client.mint(&users[0], &starting_balance);
+
+    let deposit_amount = starting_balance/2; //We are splitting the starting balance in half so we can deposit twice
+    vault_contract.deposit(
+        &svec!(&setup.env, deposit_amount.clone()),
+        &svec!(&setup.env, deposit_amount.clone()),
+        &users[0], 
+        &false
+    );
+    let mut invest_instructions = svec![&setup.env];
+    for i in 0..num_strategies {
+        invest_instructions.push_back(Instruction::Invest(
+            strategies.get(i).unwrap().address.clone(),
+            deposit_amount / num_strategies as i128,
+        ));
+    }
+    vault_contract.rebalance(&manager, &invest_instructions);
+    
+    setup.env.cost_estimate().budget().reset_unlimited();
+    /* ---------------------------------- End of environment setup ---------------------------------- */
+
+    
+    /* ------------------------------------ The actual test case ------------------------------------ */
+    vault_contract.deposit(
+        &svec!(&setup.env, deposit_amount.clone()),
+        &svec!(&setup.env, deposit_amount.clone()),
+        &users[0], 
+        &true
+    );
+    check_limits(&setup.env, "Deposit (with invest)");
+    /* --------------------------------- End of the actual test case -------------------------------- */
+}
+
+#[test]
+#[should_panic(expected = "CPU instructions exceeded limit")]
+fn blend_deposit_and_invest_panic(){
+    let setup = IntegrationTest::setup();
+    setup.env.mock_all_auths();
+    // Soroswap Setup
+    let soroswap_admin = Address::generate(&setup.env);
+
+    let soroswap_factory = create_soroswap_factory(&setup.env, &soroswap_admin);
+    let soroswap_router = create_soroswap_router(&setup.env, &soroswap_factory.address);
+
+    let admin = Address::generate(&setup.env);
+
+    let (blnd, blnd_client) = create_token(&setup.env, &admin);
+    let (usdc, usdc_client) = create_token(&setup.env, &admin);
+    let (_, xlm_client) = create_token(&setup.env, &admin);
+
+    // Setting up soroswap pool
+    let pool_admin = Address::generate(&setup.env);
+    let amount_a = 100000000_0_000_000;
+    let amount_b = 50000000_0_000_000;
+    blnd_client.mint(&pool_admin, &amount_a);
+    usdc_client.mint(&pool_admin, &amount_b);
+    create_soroswap_pool(
+        &setup.env,
+        &soroswap_router,
+        &pool_admin,
+        &blnd.address,
+        &usdc.address,
+        &amount_a,
+        &amount_b,
+    );
+    // End of setting up soroswap pool
+
+    let blend_fixture = BlendFixture::deploy(&setup.env, &admin, &blnd.address, &usdc.address);
+
+    let pool = create_blend_pool(&setup.env, &blend_fixture, &admin, &usdc_client, &xlm_client);
+
+    let mut strategies = svec![&setup.env];
+    let num_strategies = 3; // This number should be the minimum number of strategies that will cause the panic
+
+    for i in 0..num_strategies {
+        let strategy_name = format!("Blend_{}", i);
+        let strategy = create_blend_strategy_contract(
+            &setup.env,
+            &usdc.address,
+            &pool,
+            &blnd.address,
+            &soroswap_router.address,
+            40_0000000i128
+        );
+        let strategy_contract = BlendStrategyClient::new(&setup.env, &strategy);
+
+        strategies.push_back(Strategy {
+            address: strategy_contract.address.clone(),
+            name: String::from_str(&setup.env, &strategy_name),
+            paused: false,
+        });
+    }
+
+    let emergency_manager = Address::generate(&setup.env);
+    let rebalance_manager = Address::generate(&setup.env);
+    let fee_receiver = Address::generate(&setup.env);
+    let vault_fee = VAULT_FEE;
+    let vault_name = String::from_str(&setup.env, "BlendVault");
+    let vault_symbol = String::from_str(&setup.env, "BLNDVLT");
+    let manager = Address::generate(&setup.env);
+
+    let assets = svec![
+        &setup.env,
+        AssetStrategySet {
+            address: usdc.address.clone(),
+            strategies: strategies.clone(),
+        }
+    ];
+
+    let mut roles: Map<u32, Address> = Map::new(&setup.env);
+    roles.set(0u32, emergency_manager.clone()); // EmergencyManager enum = 0
+    roles.set(1u32, fee_receiver.clone()); // VaultFeeReceiver enum = 1
+    roles.set(2u32, manager.clone()); // Manager enum = 2
+    roles.set(3u32, rebalance_manager.clone()); // RebalanceManager enum = 3
+
+    let mut name_symbol: Map<String, String> = Map::new(&setup.env);
+    name_symbol.set(String::from_str(&setup.env, "name"), vault_name);
+    name_symbol.set(String::from_str(&setup.env, "symbol"), vault_symbol);
+
+    let vault_contract_address = setup.factory_contract.create_defindex_vault(
+        &roles,
+        &vault_fee,
+        &assets,
+        &soroswap_router.address,
+        &name_symbol,
+        &true
+    );
+    let vault_contract = VaultContractClient::new(&setup.env, &vault_contract_address);
+    /* ------------------------------------ Vault setup finished ------------------------------------ */
+    
+    
+    /* ----------------------------------- Define test environment ---------------------------------- */
+    /* ------------------------ Deposit, then invest all the deposited amount ----------------------- */
+    let users = IntegrationTest::generate_random_users(&setup.env, 1);
+    
+    let starting_balance = 200_0_000_000;
+    usdc_client.mint(&users[0], &starting_balance);
+
+    let deposit_amount = starting_balance/2; //We are splitting the starting balance in half so we can deposit twice
+    vault_contract.deposit(
+        &svec!(&setup.env, deposit_amount.clone()),
+        &svec!(&setup.env, deposit_amount.clone()),
+        &users[0], 
+        &false
+    );
+    let mut invest_instructions = svec![&setup.env];
+    for i in 0..num_strategies {
+        invest_instructions.push_back(Instruction::Invest(
+            strategies.get(i).unwrap().address.clone(),
+            deposit_amount / num_strategies as i128,
+        ));
+    }
+    vault_contract.rebalance(&manager, &invest_instructions);
+    
+    setup.env.cost_estimate().budget().reset_unlimited();
+    /* ---------------------------------- End of environment setup ---------------------------------- */
+
+    /* ------------------------------------ The actual test case ------------------------------------ */
+    vault_contract.deposit(
+        &svec!(&setup.env, deposit_amount.clone()),
+        &svec!(&setup.env, deposit_amount.clone()),
+        &users[0], 
+        &true
+    );
+    check_limits(&setup.env, "Deposit (with invest)");
+    /* --------------------------------- End of the actual test case -------------------------------- */
+}
