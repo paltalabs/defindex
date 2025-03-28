@@ -5,7 +5,6 @@
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <IsPackable>true</IsPackable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>dotnet_sdk</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -14,7 +13,7 @@
     
     <!-- Package Information -->
     <PackageId>DeFindex.Sdk</PackageId>
-    <Version>0.1.2</Version>
+    <Version>0.1.4</Version>
     <Authors>paltalabs</Authors>
     <Company>paltalabs</Company>
     <Description>Defindex core SDK.</Description>
@@ -23,8 +22,8 @@
     <RepositoryUrl>https://github.com/paltalabs/defindex</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>Defindex;SDK;.Net;Paltalabs;Stellar</PackageTags>
-    <PackageProjectUrl>https://github.com/paltalabs/defindex</PackageProjectUrl>
-    <PackageReleaseNotes>Initial release</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/paltalabs/defindex/tree/main/packages/dotnet-sdk</PackageProjectUrl>
+    <PackageReleaseNotes>Add minAmountsOut to create withdraw transaction method</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
