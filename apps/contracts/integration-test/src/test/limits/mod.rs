@@ -26,30 +26,28 @@ pub fn check_limits_return_info(e: &Env, message: &str) -> (String, u64, u64) {
 }
 
 pub fn create_results_table(e: &Env, data: Vec<(String, u64, u64)>) {
-    let mut table = vec![
-        vec!["Message".to_string(), "CPU Instructions".to_string(), "Memory".to_string()],
-    ];
-    for (message, cpu_used, mem_used) in data {
-        assert!(cpu_used <= CPU_LIMIT, "🟥 {} CPU instructions exceeded limit", message);
-        assert!(mem_used <= MEM_LIMIT, "🟥 {} Memory usage exceeded limit", message);
-        table.push(vec![message, cpu_used.to_string(), mem_used.to_string()]);
+    let mut table: Vec<(String, u64, u64)> = vec![];
+    let header = vec!["Message".to_string(), "CPU Instructions".to_string(), "Memory".to_string()];
+    for (message, cpu_used, mem_used) in data.clone() {
+        table.push((message, cpu_used, mem_used));
     }
 
-    println!("===========================================");
-    println!("Results Table:");
+    println!("|{:-<27}+{:-<21}+{:-<13}|", "", "", "");
+    println!("| {:<26}| {:<20}| {:<12}|", header[0], header[1], header[2]);
+    println!("|{:-<27}+{:-<21}+{:-<13}|", "", "", "");
     for row in &table {
-        println!("✅{:?}", row);
+        let (message, cpu_used, mem_used) = (&row.0, &row.1, &row.2);
+        if (cpu_used >= &CPU_LIMIT) || (mem_used >= &MEM_LIMIT) {
+            println!("|🟥{:<25}| {:<20}| {:<12}|", row.0, row.1, row.2);
+        } else {
+            println!("|{:<27}| {:<20}| {:<12}|", row.0, row.1, row.2);
+        }
     }
-    println!("===========================================");
-    assert!(table.len() > 1, "No data to display in the table");
-    assert!(table[1].len() == 3, "Table format is incorrect");
-    assert!(table[1][0] != "", "Message column is empty");
-    assert!(table[1][1].parse::<u64>().is_ok(), "CPU Instructions column is not a number");
-    assert!(table[1][2].parse::<u64>().is_ok(), "Memory column is not a number");
-    assert!(table[1][1].parse::<u64>().unwrap() <= CPU_LIMIT, "🟥 {} CPU instructions exceeded limit", table[1][0]);
-    assert!(table[1][2].parse::<u64>().unwrap() <= MEM_LIMIT, "🟥 {} Memory usage exceeded limit", table[1][0]);
-    println!("===========================================");
-    println!("Results Table created successfully");
-    println!("===========================================");
+    println!("|{:-<27}-{:-<21}-{:-<13}|", "", "", "");
+
+    for (message, cpu_used, mem_used) in data.clone() {
+        assert!(cpu_used <= CPU_LIMIT, "🟥 {} CPU instructions exceeded limit", message);
+        assert!(mem_used <= MEM_LIMIT, "🟥 {} Memory usage exceeded limit", message);
+    }
 
 }

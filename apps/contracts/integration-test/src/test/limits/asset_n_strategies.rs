@@ -6,7 +6,7 @@ use crate::{blend_strategy::{create_blend_strategy_contract, BlendStrategyClient
 // With 26 strategies withdrawals are not possible due to the instruction limit
 // 13 strategies is the maximum including withdrawals
 #[test]
-fn asset_n_strategies_hodl() {
+fn hodl() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
     setup.env.cost_estimate().budget().reset_unlimited();
@@ -115,7 +115,7 @@ fn asset_n_strategies_hodl() {
 
 #[test]
 #[should_panic(expected = "Memory usage exceeded limit")]
-fn asset_n_strategies_hodl_panic() {
+fn hodl_panic() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
     setup.env.cost_estimate().budget().reset_unlimited();
@@ -224,7 +224,7 @@ fn asset_n_strategies_hodl_panic() {
 
 // FIXED Strategy limit is 10 including withdrawals in RUST
 #[test]
-fn asset_n_strategies_fixed() {
+fn fixed() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
     setup.env.cost_estimate().budget().reset_unlimited();
@@ -347,7 +347,7 @@ fn asset_n_strategies_fixed() {
 
 #[test]
 #[should_panic(expected = "Memory usage exceeded limit")]
-fn asset_n_strategies_fixed_panic() {
+fn fixed_panic() {
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
     setup.env.cost_estimate().budget().reset_unlimited();
@@ -470,11 +470,13 @@ fn asset_n_strategies_fixed_panic() {
 
 // 2 Strategies is the limit for 1 asset and 2 Blend strategies 
 #[test]
-fn asset_n_strategies_blend() {
+fn blend() {
+    /* --------------------------------------------------- Setting up test environment --------------------------------------------------- */
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
     
     // Soroswap Setup
+    /* ------------------------------------------------------ Setting up soroswap -------------------------------------------------------- */
     let soroswap_admin = Address::generate(&setup.env);
 
     let soroswap_factory = create_soroswap_factory(&setup.env, &soroswap_admin);
@@ -486,7 +488,6 @@ fn asset_n_strategies_blend() {
     let (usdc, usdc_client) = create_token(&setup.env, &admin);
     let (_, xlm_client) = create_token(&setup.env, &admin);
 
-    // Setting up soroswap pool
     let pool_admin = Address::generate(&setup.env);
     let amount_a = 100000000_0_000_000;
     let amount_b = 50000000_0_000_000;
@@ -501,8 +502,9 @@ fn asset_n_strategies_blend() {
         &amount_a,
         &amount_b,
     );
-    // End of setting up soroswap pool
+    /* ----------------------------------------------------- End of soroswap setup ------------------------------------------------------- */
 
+    /* ------------------------------------------------------ Setting up Blend env ------------------------------------------------------- */
     let blend_fixture = BlendFixture::deploy(&setup.env, &admin, &blnd.address, &usdc.address);
 
     let pool = create_blend_pool(&setup.env, &blend_fixture, &admin, &usdc_client, &xlm_client);
@@ -525,9 +527,12 @@ fn asset_n_strategies_blend() {
         .mock_all_auths()
         .submit(&admin, &admin, &admin, &requests);
 
+    /* ----------------------------------------------------- End of Blend env setup ------------------------------------------------------ */
+    /* ----------------------------------------------------------------------------------------------------------------------------------- */
+
+    /* -------------------------------------------------------- Setting up Vault --------------------------------------------------------- */
     let mut strategies = svec![&setup.env];
     let num_strategies = 2; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
-
     for i in 0..num_strategies {
         let strategy_name = format!("Blend_{}", i);
         let strategy = create_blend_strategy_contract(
@@ -587,14 +592,20 @@ fn asset_n_strategies_blend() {
     let create_vault_usage= check_limits_return_info(&setup.env, "Create Vault");
 
     let vault_contract = VaultContractClient::new(&setup.env, &vault_contract_address);
+    /* ------------------------------------------------------- End of Vault setup -------------------------------------------------------- */
 
+    
+    /* -------------------------------------------------------- Setting up users --------------------------------------------------------- */
     let users = IntegrationTest::generate_random_users(&setup.env, 3);
     
     let starting_balance = 300_0000000;
     usdc_client.mint(&users[0], &starting_balance);
     usdc_client.mint(&users[1], &starting_balance);
 
+    /* ------------------------------------------------------- End of users setup -------------------------------------------------------- */
     setup.env.cost_estimate().budget().reset_unlimited();
+    
+    /* --------------------------------------------------------- Initial deposit --------------------------------------------------------- */
     vault_contract.deposit(
         &svec!(&setup.env, starting_balance.clone()),
         &svec!(&setup.env, starting_balance.clone()),
@@ -603,6 +614,8 @@ fn asset_n_strategies_blend() {
     );
     let deposit_usage= check_limits_return_info(&setup.env, "Deposit");
 
+    
+    /* -------------------------------------------------------- Rebalance: Invest -------------------------------------------------------- */
     let mut invest_instructions = svec![&setup.env];
     for i in 0..num_strategies {
         invest_instructions.push_back(Instruction::Invest(
@@ -615,6 +628,7 @@ fn asset_n_strategies_blend() {
     vault_contract.rebalance(&manager, &invest_instructions);
     let invest_usage= check_limits_return_info(&setup.env, "Invest");
 
+    /* ----------------------------------------------------------- Deposit and invest ---------------------------------------------------- */
     setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.deposit(
         &svec!(&setup.env, starting_balance.clone()),
@@ -624,7 +638,33 @@ fn asset_n_strategies_blend() {
     );
     let deposit_and_invest_usage= check_limits_return_info(&setup.env, "Deposit (with invest)");
 
-    // user_2 deposit directly into pool
+
+    /* ---------------------------------------------------------- Rebalance: Unwind ------------------------------------------------------ */
+    let mut invest_instructions = svec![&setup.env];
+    for i in 0..num_strategies {
+        invest_instructions.push_back(Instruction::Unwind(
+            strategies.get(i).unwrap().address.clone(),
+            starting_balance / num_strategies as i128,
+        ));
+    }
+    setup.env.cost_estimate().budget().reset_unlimited();
+    vault_contract.rebalance(&manager, &invest_instructions);
+    let unwind_usage = check_limits_return_info(&setup.env, "Unwind");
+
+
+    /* ------------------------- This is to restore investment amounts after unwind, it is not for limits testing ------------------------ */
+    let mut invest_instructions = svec![&setup.env];
+    for i in 0..num_strategies {
+        invest_instructions.push_back(Instruction::Invest(
+            strategies.get(i).unwrap().address.clone(),
+            starting_balance / num_strategies as i128,
+        ));
+    }
+    vault_contract.rebalance(&manager, &invest_instructions);
+    setup.env.cost_estimate().budget().reset_unlimited();
+
+
+    /* -------------------------------------------------- User 2 Deposit Directly into Pool --------------------------------------------- */
     let user_2_starting_balance = 200_0000000;
     usdc_client.mint(&users[2], &user_2_starting_balance);
     pool_client.submit(
@@ -636,14 +676,17 @@ fn asset_n_strategies_blend() {
             Request {
                 request_type: 0,
                 address: usdc.address.clone(),
-                amount: user_2_starting_balance-1,
+                amount: user_2_starting_balance,
             },
         ],
     );
 
-    setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&users[0]);
     let min_amounts_out = svec![&setup.env, 0i128];
+
+    setup.env.cost_estimate().budget().reset_unlimited();
+
+    /* ------------------------------------------------------------ Withdraw ------------------------------------------------------------- */
     vault_contract.withdraw(&balance, &min_amounts_out, &users[0]);
     let withdraw_usage= check_limits_return_info(&setup.env, "Withdraw");
 
@@ -683,16 +726,16 @@ fn asset_n_strategies_blend() {
             },
         ],
     );
-
+    
+    /* ----------------------------------------------------------- Harvesting ------------------------------------------------------------ */
     std::println!("-- Harvesting --");
-    // harvest on all strategies
     let mut harvest_usage: Vec<(std::string::String, u64, u64)> = Vec::new(&setup.env);
     for i in 0..num_strategies {
         setup.env.cost_estimate().budget().reset_unlimited();
         let temp_strategy_address = strategies.get(i).unwrap().address.clone();
         let temp_client = BlendStrategyClient::new(&setup.env, &temp_strategy_address);
         
-        temp_client.harvest(&manager);
+        temp_client.harvest(&keeper);
         let usage = check_limits_return_info(&setup.env, "Harvest");
         harvest_usage.push_back(usage);
     }
@@ -703,10 +746,13 @@ fn asset_n_strategies_blend() {
     let lock_fees = vault_contract.lock_fees(&None);
     println!("locked_fees = {:?}", lock_fees);
 
+    /* ---------------------------------------------------------- Distribute Fees ------------------------------------------------------- */
     println!("-- Distributing Fees --");
     setup.env.cost_estimate().budget().reset_unlimited();    
     vault_contract.distribute_fees(&manager);
     let distribute_fees_usage= check_limits_return_info(&setup.env, "Distribute Fees");
+
+    /* -------------------------------------------------------- Withdraw from user 1 ----------------------------------------------------- */
 
     setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&users[1]);
@@ -714,11 +760,13 @@ fn asset_n_strategies_blend() {
     vault_contract.withdraw(&balance, &min_amounts_out, &users[1]);
     let withdraw_1_usage= check_limits_return_info(&setup.env, "Withdraw");
 
+    /* -------------------------------------------------------- Results table --------------------------------------------------------- */
     let usage_results = vec![
         create_vault_usage,
         deposit_usage,
         invest_usage,
         deposit_and_invest_usage,
+        unwind_usage,
         withdraw_usage,
         distribute_fees_usage,
         withdraw_1_usage,
@@ -729,11 +777,13 @@ fn asset_n_strategies_blend() {
 
 #[test]
 #[should_panic(expected = "CPU instructions exceeded limit")]
-fn asset_n_strategies_blend_panic() {
+fn blend_panic() {
+    /* --------------------------------------------------- Setting up test environment --------------------------------------------------- */
     let setup = IntegrationTest::setup();
     setup.env.mock_all_auths();
     
     // Soroswap Setup
+    /* ------------------------------------------------------ Setting up soroswap -------------------------------------------------------- */
     let soroswap_admin = Address::generate(&setup.env);
 
     let soroswap_factory = create_soroswap_factory(&setup.env, &soroswap_admin);
@@ -741,12 +791,10 @@ fn asset_n_strategies_blend_panic() {
 
     let admin = Address::generate(&setup.env);
     let keeper = Address::generate(&setup.env);
-
     let (blnd, blnd_client) = create_token(&setup.env, &admin);
     let (usdc, usdc_client) = create_token(&setup.env, &admin);
     let (_, xlm_client) = create_token(&setup.env, &admin);
 
-    // Setting up soroswap pool
     let pool_admin = Address::generate(&setup.env);
     let amount_a = 100000000_0_000_000;
     let amount_b = 50000000_0_000_000;
@@ -761,8 +809,9 @@ fn asset_n_strategies_blend_panic() {
         &amount_a,
         &amount_b,
     );
-    // End of setting up soroswap pool
+    /* ----------------------------------------------------- End of soroswap setup ------------------------------------------------------- */
 
+    /* ------------------------------------------------------ Setting up Blend env ------------------------------------------------------- */
     let blend_fixture = BlendFixture::deploy(&setup.env, &admin, &blnd.address, &usdc.address);
 
     let pool = create_blend_pool(&setup.env, &blend_fixture, &admin, &usdc_client, &xlm_client);
@@ -785,9 +834,12 @@ fn asset_n_strategies_blend_panic() {
         .mock_all_auths()
         .submit(&admin, &admin, &admin, &requests);
 
-    let mut strategies = svec![&setup.env];
-    let num_strategies = 2; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
+    /* ----------------------------------------------------- End of Blend env setup ------------------------------------------------------ */
+    /* ----------------------------------------------------------------------------------------------------------------------------------- */
 
+    /* -------------------------------------------------------- Setting up Vault --------------------------------------------------------- */
+    let mut strategies = svec![&setup.env];
+    let num_strategies = 3; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
     for i in 0..num_strategies {
         let strategy_name = format!("Blend_{}", i);
         let strategy = create_blend_strategy_contract(
@@ -847,14 +899,20 @@ fn asset_n_strategies_blend_panic() {
     let create_vault_usage= check_limits_return_info(&setup.env, "Create Vault");
 
     let vault_contract = VaultContractClient::new(&setup.env, &vault_contract_address);
+    /* ------------------------------------------------------- End of Vault setup -------------------------------------------------------- */
 
+    
+    /* -------------------------------------------------------- Setting up users --------------------------------------------------------- */
     let users = IntegrationTest::generate_random_users(&setup.env, 3);
     
     let starting_balance = 300_0000000;
     usdc_client.mint(&users[0], &starting_balance);
     usdc_client.mint(&users[1], &starting_balance);
 
+    /* ------------------------------------------------------- End of users setup -------------------------------------------------------- */
     setup.env.cost_estimate().budget().reset_unlimited();
+    
+    /* --------------------------------------------------------- Initial deposit --------------------------------------------------------- */
     vault_contract.deposit(
         &svec!(&setup.env, starting_balance.clone()),
         &svec!(&setup.env, starting_balance.clone()),
@@ -863,6 +921,8 @@ fn asset_n_strategies_blend_panic() {
     );
     let deposit_usage= check_limits_return_info(&setup.env, "Deposit");
 
+    
+    /* -------------------------------------------------------- Rebalance: Invest -------------------------------------------------------- */
     let mut invest_instructions = svec![&setup.env];
     for i in 0..num_strategies {
         invest_instructions.push_back(Instruction::Invest(
@@ -875,6 +935,7 @@ fn asset_n_strategies_blend_panic() {
     vault_contract.rebalance(&manager, &invest_instructions);
     let invest_usage= check_limits_return_info(&setup.env, "Invest");
 
+    /* ----------------------------------------------------------- Deposit and invest ---------------------------------------------------- */
     setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.deposit(
         &svec!(&setup.env, starting_balance.clone()),
@@ -884,7 +945,33 @@ fn asset_n_strategies_blend_panic() {
     );
     let deposit_and_invest_usage= check_limits_return_info(&setup.env, "Deposit (with invest)");
 
-    // user_2 deposit directly into pool
+
+    /* ---------------------------------------------------------- Rebalance: Unwind ------------------------------------------------------ */
+    let mut invest_instructions = svec![&setup.env];
+    for i in 0..num_strategies {
+        invest_instructions.push_back(Instruction::Unwind(
+            strategies.get(i).unwrap().address.clone(),
+            starting_balance / num_strategies as i128,
+        ));
+    }
+    setup.env.cost_estimate().budget().reset_unlimited();
+    vault_contract.rebalance(&manager, &invest_instructions);
+    let unwind_usage = check_limits_return_info(&setup.env, "Unwind");
+
+
+    /* ------------------------- This is to restore investment amounts after unwind, it is not for limits testing ------------------------ */
+    let mut invest_instructions = svec![&setup.env];
+    for i in 0..num_strategies {
+        invest_instructions.push_back(Instruction::Invest(
+            strategies.get(i).unwrap().address.clone(),
+            starting_balance / num_strategies as i128,
+        ));
+    }
+    vault_contract.rebalance(&manager, &invest_instructions);
+    setup.env.cost_estimate().budget().reset_unlimited();
+
+
+    /* -------------------------------------------------- User 2 Deposit Directly into Pool --------------------------------------------- */
     let user_2_starting_balance = 200_0000000;
     usdc_client.mint(&users[2], &user_2_starting_balance);
     pool_client.submit(
@@ -896,14 +983,17 @@ fn asset_n_strategies_blend_panic() {
             Request {
                 request_type: 0,
                 address: usdc.address.clone(),
-                amount: user_2_starting_balance-1,
+                amount: user_2_starting_balance,
             },
         ],
     );
 
-    setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&users[0]);
     let min_amounts_out = svec![&setup.env, 0i128];
+
+    setup.env.cost_estimate().budget().reset_unlimited();
+
+    /* ------------------------------------------------------------ Withdraw ------------------------------------------------------------- */
     vault_contract.withdraw(&balance, &min_amounts_out, &users[0]);
     let withdraw_usage= check_limits_return_info(&setup.env, "Withdraw");
 
@@ -943,16 +1033,16 @@ fn asset_n_strategies_blend_panic() {
             },
         ],
     );
-
+    
+    /* ----------------------------------------------------------- Harvesting ------------------------------------------------------------ */
     std::println!("-- Harvesting --");
-    // harvest on all strategies
     let mut harvest_usage: Vec<(std::string::String, u64, u64)> = Vec::new(&setup.env);
     for i in 0..num_strategies {
         setup.env.cost_estimate().budget().reset_unlimited();
         let temp_strategy_address = strategies.get(i).unwrap().address.clone();
         let temp_client = BlendStrategyClient::new(&setup.env, &temp_strategy_address);
         
-        temp_client.harvest(&manager);
+        temp_client.harvest(&keeper);
         let usage = check_limits_return_info(&setup.env, "Harvest");
         harvest_usage.push_back(usage);
     }
@@ -963,10 +1053,13 @@ fn asset_n_strategies_blend_panic() {
     let lock_fees = vault_contract.lock_fees(&None);
     println!("locked_fees = {:?}", lock_fees);
 
+    /* ---------------------------------------------------------- Distribute Fees ------------------------------------------------------- */
     println!("-- Distributing Fees --");
     setup.env.cost_estimate().budget().reset_unlimited();    
     vault_contract.distribute_fees(&manager);
     let distribute_fees_usage= check_limits_return_info(&setup.env, "Distribute Fees");
+
+    /* -------------------------------------------------------- Withdraw from user 1 ----------------------------------------------------- */
 
     setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&users[1]);
@@ -974,11 +1067,13 @@ fn asset_n_strategies_blend_panic() {
     vault_contract.withdraw(&balance, &min_amounts_out, &users[1]);
     let withdraw_1_usage= check_limits_return_info(&setup.env, "Withdraw");
 
+    /* -------------------------------------------------------- Results table --------------------------------------------------------- */
     let usage_results = vec![
         create_vault_usage,
         deposit_usage,
         invest_usage,
         deposit_and_invest_usage,
+        unwind_usage,
         withdraw_usage,
         distribute_fees_usage,
         withdraw_1_usage,
