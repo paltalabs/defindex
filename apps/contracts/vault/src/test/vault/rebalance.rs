@@ -1660,7 +1660,7 @@ fn unwind_wrong_address(){
     // Check if invested funds are 0
     let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
     assert_eq!(invested_funds, amount_to_invest);
-    assert_eq!(unwind_result, Err(Ok(ContractError::UnwindMoreThanAvailable)));
+    assert_eq!(unwind_result, Err(Ok(ContractError::StrategyNotFound)));
 }
 
 #[test]
