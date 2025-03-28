@@ -688,7 +688,7 @@ fn asset_n_strategies_blend() {
     for i in 0..num_strategies {
         setup.env.cost_estimate().budget().reset_unlimited();
         let temp_strategy_address = strategies.get(i).unwrap().address.clone();
-        let temp_client = FixedStrategyClient::new(&setup.env, &temp_strategy_address);
+        let temp_client = BlendStrategyClient::new(&setup.env, &temp_strategy_address);
         
         temp_client.harvest(&manager);
         check_limits(&setup.env, "Harvest");
@@ -916,7 +916,7 @@ fn asset_n_strategies_blend_panic() {
     for i in 0..num_strategies {
         setup.env.cost_estimate().budget().reset_unlimited();
         let temp_strategy_address = strategies.get(i).unwrap().address.clone();
-        let temp_client = FixedStrategyClient::new(&setup.env, &temp_strategy_address);
+        let temp_client = BlendStrategyClient::new(&setup.env, &temp_strategy_address);
         
         temp_client.harvest(&manager);
         check_limits(&setup.env, "Harvest");
