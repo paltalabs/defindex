@@ -1049,6 +1049,8 @@ fn blend_deposit_and_invest(){
     let starting_balance = 200_0_000_000;
     usdc_client.mint(&users[0], &starting_balance);
 
+    setup.env.cost_estimate().budget().reset_unlimited();
+
     let deposit_amount = starting_balance/2; //We are splitting the starting balance in half so we can deposit twice
     vault_contract.deposit(
         &svec!(&setup.env, deposit_amount.clone()),
@@ -1056,6 +1058,9 @@ fn blend_deposit_and_invest(){
         &users[0], 
         &false
     );
+    check_limits(&setup.env, "Deposit");
+    setup.env.cost_estimate().budget().reset_unlimited();
+
     let mut invest_instructions = svec![&setup.env];
     for i in 0..num_strategies {
         invest_instructions.push_back(Instruction::Invest(
@@ -1064,8 +1069,9 @@ fn blend_deposit_and_invest(){
         ));
     }
     vault_contract.rebalance(&manager, &invest_instructions);
-    
+    check_limits(&setup.env, "Rebalance");
     setup.env.cost_estimate().budget().reset_unlimited();
+    
     /* ---------------------------------- End of environment setup ---------------------------------- */
 
     
@@ -1192,6 +1198,8 @@ fn blend_deposit_and_invest_panic(){
         &users[0], 
         &false
     );
+    check_limits(&setup.env, "Deposit");
+    setup.env.cost_estimate().budget().reset_unlimited();
     let mut invest_instructions = svec![&setup.env];
     for i in 0..num_strategies {
         invest_instructions.push_back(Instruction::Invest(
@@ -1200,7 +1208,7 @@ fn blend_deposit_and_invest_panic(){
         ));
     }
     vault_contract.rebalance(&manager, &invest_instructions);
-    
+    check_limits(&setup.env, "Rebalance");
     setup.env.cost_estimate().budget().reset_unlimited();
     /* ---------------------------------- End of environment setup ---------------------------------- */
 
