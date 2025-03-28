@@ -1,8 +1,5 @@
 use soroban_sdk::{
-    contracttype, 
-    panic_with_error, 
-    Address, 
-    Env
+    contracttype, panic_with_error, token::TokenClient, Address, Env
 };
 use crate::{
     access::AccessControl,
@@ -189,7 +186,7 @@ pub fn update_report_and_lock_fees(
     Ok(report)
 }
 
-pub fn distribute_strategy_fees(e: &Env, strategy_address: &Address, access_control: &AccessControl) -> Result<i128, ContractError> {
+pub fn distribute_strategy_fees(e: &Env, strategy_address: &Address, access_control: &AccessControl, asset: &Address) -> Result<i128, ContractError> {
     let report = get_report(e, strategy_address);
     
     let defindex_fee = get_defindex_protocol_fee_rate(&e);
@@ -205,23 +202,21 @@ pub fn distribute_strategy_fees(e: &Env, strategy_address: &Address, access_cont
 
         let vault_fee_amount = fees_to_distribute.checked_sub(defindex_fee_amount).ok_or(ContractError::Underflow)?;
 
-        // TODO: Some of the amounts might be zerop
-        // TODO: What about minting vault shares instead of transferring the tokens?
-        unwind_from_strategy(
-            &e,
-            &strategy_address,
-            &defindex_fee_amount,
-            &defindex_protocol_receiver,
-        )?;
         let mut report = unwind_from_strategy(
             &e,
             &strategy_address,
-            &vault_fee_amount,
-            &vault_fee_receiver,
+            &fees_to_distribute,
+            &e.current_contract_address(),
         )?;
-        
+
+        // Transfer fees to the respective receivers
+        let asset_client = TokenClient::new(&e, &asset);
+        asset_client.transfer( &e.current_contract_address(), &vault_fee_receiver, &vault_fee_amount);
+        asset_client.transfer( &e.current_contract_address(), &defindex_protocol_receiver, &defindex_fee_amount);
+
         report.locked_fee = 0;
         set_report(&e, &strategy_address, &report);
+
     }
 
     Ok(fees_to_distribute)
