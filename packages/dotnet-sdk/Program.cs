@@ -1,10 +1,9 @@
-using StellarDotnetSdk.Accounts;
-using StellarDotnetSdk;
-using StellarDotnetSdk.Soroban;
-using StellarDotnetSdk.Operations;
-using StellarDotnetSdk.Transactions;
 using DeFindex.Sdk.Services;
 using Newtonsoft.Json;
+using StellarDotnetSdk;
+using StellarDotnetSdk.Accounts;
+using StellarDotnetSdk.Responses.SorobanRpc;
+using StellarDotnetSdk.Soroban;
 
 class Program
 {
@@ -64,37 +63,9 @@ class Program
 
 
         var soroban_server = new SorobanServer("https://soroban-testnet.stellar.org/");
-        var sourceAccount = new Account(account.AccountId, account.SequenceNumber);
 
-        var vault_string = "CDOQGZLNTWDQSYPSLYQ3R7LDUETUDZFYWJBLYNEGQLJLQKXTTC573LVW";
-        var vaultInstance = new DefindexSdk(vault_string, soroban_server);
-        var user_with_shares =  "GBI3XNPOBMTX5KUYOY742JVCSW4AWPR462IOBJZF3BM7IDAVTN5HHLM3";
-        var simulatedTransactionResult = await vaultInstance.CreateBalanceTransaction(sourceAccount, user_with_shares);
-
-        if (simulatedTransactionResult.Results != null)
-        {
-            foreach (var result in simulatedTransactionResult.Results)
-            {
-                Console.WriteLine($"🟢Result: {result.Xdr}");
-            }
-        }
-        var xdrString = simulatedTransactionResult.Results?[0].Xdr;
-        if (xdrString == null){
-
-            Console.WriteLine("XDR string is null.");
-            return;
-        }
-
-        var result_xdr = new StellarDotnetSdk.Xdr.XdrDataInputStream(Convert.FromBase64String(xdrString));
-        var xdr = StellarDotnetSdk.Xdr.SCVal.Decode(result_xdr);
-        Console.WriteLine($"Balance result: {xdr.I128.Lo.InnerValue}");
-        
-        var totalManagedFunds = await vaultInstance.FetchTotalManagedFunds();
-        
-        Console.WriteLine($"Total Managed Funds: {JsonConvert.SerializeObject(totalManagedFunds, Formatting.Indented)}");
-
-        var userShares = await vaultInstance.GetUserShares(user_with_shares);
-        Console.WriteLine($"User Shares: {userShares}");
+        var vault_string = "CBHREBXNXH2ES2SFIIR576BJJET5NBXSH3DIEJXTT356SFOYCTPBKABA";
+        var vaultInstance = new DefindexSdk(vault_string, soroban_server); 
 
         var vaultTotalShares = await vaultInstance.GetVaultTotalShares();
         Console.WriteLine($"Vault Total Shares: {vaultTotalShares}");
@@ -102,40 +73,132 @@ class Program
         var amountsDesired = new List<ulong> { 10000000 };
         var amountsMin = new List<ulong> { 10000000 };
         var from = keypair.AccountId;
-        Console.WriteLine($"Creating deposit transaction for {from}");
-        var depositTransaction = await vaultInstance.CreateDepositTransaction(amountsDesired, amountsMin, from, true);
-        Console.WriteLine($"Simulating transaction...");
+        ConsoleInfo($"Creating deposit transaction for {from}.");
+        
+        var depositTransaction = await vaultInstance.CreateDepositTransaction(amountsDesired, amountsMin, from, false);
+
+        ConsoleInfo("Simulating deposit transaction.");
         var simulatedDepositTransaction = await soroban_server.SimulateTransaction(depositTransaction);
-        Console.WriteLine($"XDR value: {simulatedDepositTransaction.Results?[0].Xdr}");
         if(simulatedDepositTransaction.SorobanTransactionData == null || simulatedDepositTransaction.SorobanAuthorization == null || simulatedDepositTransaction.MinResourceFee == null){
             Console.WriteLine("Simulated transaction data is null.");
             return;
         }
+
         depositTransaction.SetSorobanTransactionData(simulatedDepositTransaction.SorobanTransactionData);
         depositTransaction.SetSorobanAuthorization(simulatedDepositTransaction.SorobanAuthorization);
         depositTransaction.AddResourceFee(simulatedDepositTransaction.MinResourceFee.Value + 100000);
         depositTransaction.Sign(keypair);
-        var depositResult = await vaultInstance.SubmitTransaction(depositTransaction);
+        
+        ConsoleInfo("Submitting deposit transaction.");
+        var submittedTx = await soroban_server.SendTransaction(depositTransaction);
+        PrintTxResult("Deposit tx result", submittedTx);
 
-        Console.WriteLine($"{JsonConvert.SerializeObject(depositResult, Formatting.Indented)}");
-
+        var depositTxResult = await CheckTransactionStatus(soroban_server, submittedTx.Hash);
+        var parsedDepositTx = vaultInstance.ParseTransactionResponse(depositTxResult);
+        DisplayParsedTransactionResponse(parsedDepositTx.Result);
+        
+        ConsoleInfo("Creating withdraw transaction.");
         ulong withdrawShares = 10000000;
-        Console.WriteLine($"Creating withdraw transaction for {from}");
-        var withdrawTransaction = await vaultInstance.CreateWithdrawTransaction(withdrawShares, from);
+        var amountsMinOut = new List<ulong> { 10000000 };
+        var withdrawFrom = keypair.AccountId;
+        var withdrawTransaction = await vaultInstance.CreateWithdrawTransaction(withdrawShares, amountsMinOut, withdrawFrom);
 
-        Console.WriteLine($"Simulating withdraw transaction...");
-        var simulatedWithdrawTransaction = await soroban_server.SimulateTransaction(withdrawTransaction);
-        Console.WriteLine($"XDR value: {simulatedWithdrawTransaction.Results?[0].Xdr}");
-        if(simulatedWithdrawTransaction.SorobanTransactionData == null || simulatedWithdrawTransaction.SorobanAuthorization == null || simulatedWithdrawTransaction.MinResourceFee == null){
+        ConsoleInfo("Simulating withdraw transaction.");
+        var simulatedWithdrawTx = await soroban_server.SimulateTransaction(withdrawTransaction);
+        if(simulatedWithdrawTx.SorobanTransactionData == null || simulatedWithdrawTx.SorobanAuthorization == null || simulatedWithdrawTx.MinResourceFee == null){
             Console.WriteLine("Simulated transaction data is null.");
             return;
         }
-        withdrawTransaction.SetSorobanTransactionData(simulatedWithdrawTransaction.SorobanTransactionData);
-        withdrawTransaction.SetSorobanAuthorization(simulatedWithdrawTransaction.SorobanAuthorization);
-        withdrawTransaction.AddResourceFee(simulatedWithdrawTransaction.MinResourceFee.Value + 100000);
+        withdrawTransaction.SetSorobanTransactionData(simulatedWithdrawTx.SorobanTransactionData);
+        withdrawTransaction.SetSorobanAuthorization(simulatedWithdrawTx.SorobanAuthorization);
+        withdrawTransaction.AddResourceFee(simulatedWithdrawTx.MinResourceFee.Value + 100000);
         withdrawTransaction.Sign(keypair);
-        var withdrawResult = await vaultInstance.SubmitTransaction(withdrawTransaction);
 
+        ConsoleInfo("Submitting withdraw transaction.");
+        var submittedWithdrawTx = await soroban_server.SendTransaction(withdrawTransaction);
+        PrintTxResult("Withdraw tx result", submittedWithdrawTx);
+
+        var withdrawCheckedTx = await CheckTransactionStatus(soroban_server, submittedWithdrawTx.Hash);
+        var parsedWithdrawTx = vaultInstance.ParseTransactionResponse(withdrawCheckedTx);
+        DisplayParsedTransactionResponse(parsedWithdrawTx.Result);
         return;
+    }
+
+    private static void ConsoleInfo(string message)
+    {
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.WriteLine($"\n{message}");
+        Console.ResetColor();
+    }
+
+    private static void PrintTxResult(string label, SendTransactionResponse obj)
+    {
+        if(obj.ErrorResultXdr != null){
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Write($"\n{label}: ");
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write($"{obj.ErrorResultXdr}");
+            Console.ResetColor();
+            return;
+        }
+        Console.ForegroundColor = ConsoleColor.Gray;
+        Console.Write($"\n{label}: ");
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.Write($"{JsonConvert.SerializeObject(obj, Formatting.Indented)}");
+        Console.ResetColor();
+    }
+    private static void DisplayParsedTransactionResponse(object parsedResponse)
+    {
+        Console.ForegroundColor = ConsoleColor.Gray;
+        Console.Write("\nParsed Transaction Response: ");
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.Write($"{JsonConvert.SerializeObject(parsedResponse, Formatting.Indented)}");
+        Console.ResetColor();
+    }
+
+    private static async Task<GetTransactionResponse> CheckTransactionStatus(SorobanServer sorobanServer, string transactionHash)
+    {
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.Write("\nChecking transaction status...");
+        Console.ResetColor();
+        GetTransactionResponse checkedTx;
+        while (true)
+        {
+            var transactionResponse = await sorobanServer.GetTransaction(transactionHash);
+            if (transactionResponse.Status.ToString() == "FAILED" || transactionResponse.Status.ToString() == "ERROR")
+            {
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.Write($"\nTransaction status: ");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write($"{transactionResponse.Status}");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.Write($"\nTransaction hash: ");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Write($"{transactionHash}");
+                Console.ResetColor();
+                throw new Exception("Transaction failed.");
+            }
+            else if (transactionResponse.Status.ToString() == "SUCCESS")
+            {
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.Write($"\nTransaction Status: ");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write($"{transactionResponse.Status}");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.Write($"\nTransaction hash: ");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write($"{transactionHash}");
+                Console.ResetColor();
+                if (transactionResponse.ResultValue == null) throw new Exception("Transaction result value is null.");
+                checkedTx = transactionResponse;
+                return checkedTx;
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write(".");
+                await Task.Delay(50);
+            }
+        }
     }
 }

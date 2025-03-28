@@ -14,6 +14,41 @@ This document outlines the required methods and data structures for the DeFindex
 
 The `Defindex` class requires a contract address and a `SorobanServer` instance from the dotnet-sdk. Clients must instantiate the `SorobanServer` with their RPC URL and bearer tokens before passing it to `Defindex` for initialization.
 
+## **SDK Usage**
+### 1. Create vault instance:
+```` C#
+ var sorobanServer = new SorobanServer("https://soroban-testnet.stellar.org/")
+ var vaultAddress = "CXX...XXX" //(Smart contract address)
+ var vaultInstance = new DefindexSdk(vaultAddress, sorobanServer);
+````
+### 2. Use vault instance to create a transaction:
+```` C#
+var account = await horizonServer.Accounts.Account(keypair.AccountId);
+var adminAccount = new Account(account.AccountId, account.SequenceNumber);
+var userWithShares =  "GXX...XX"; //Soroban G account
+var transaction = await vaultInstance.CreateBalanceTransaction(adminAccount, userWithShares);
+````
+### 3. Setup the transaction data & submit:
+```` C#
+var simulatedDepositTransaction = await sorobanServer.SimulateTransaction(transaction);
+transaction.SetSorobanTransactionData(simulatedDepositTransaction.SorobanTransactionData);
+transaction.SetSorobanAuthorization(simulatedDepositTransaction.SorobanAuthorization);
+transaction.AddResourceFee(simulatedDepositTransaction.MinResourceFee.Value + 100000);
+transaction.Sign(keypair);
+var submittedTx = await sorobanServer.SendTransaction(transaction);
+
+// Now you should await for the blockchain confirmation...
+````
+### 4. Parse transaction result:
+````C#
+Task.Delay(5000).Wait(); //We will use a timeout for demonstration
+// After the blockchain confirmation we can get the transaction by the hash using sorobanServer.GetTransaction(txhash)
+var checkedTx = await sorobanServer.GetTransaction(submittedTx.Hash);
+
+var parsedtx = vaultInstance.ParseTransactionResponse(checkedTx);
+// Now you can print the results using:
+Console.WriteLine($"Parsed transaction: {JsonConvert.SerializeObject(parsedtx, Formatting.Indented)}");
+````
 ## **SDK Methods**
 
 ### **1. GetUserShares**
@@ -22,9 +57,8 @@ Retrieves the number of vault shares a user owns.
 
 **Method Signature:**
 
-```csharp
+```C#
 public async Task<VaultShares> GetUserShares(string accountId)
-
 ```
 
 **Returns:**
@@ -41,9 +75,8 @@ Retrieves vault's total funds, idle funds, and invested funds per strategy for e
 
 **Method Signature:**
 
-```csharp
+```C#
 public async Task<List<ManagedFundsResult>> FetchTotalManagedFunds()
-
 ```
 
 **Returns:**
@@ -58,7 +91,7 @@ public async Task<List<ManagedFundsResult>> FetchTotalManagedFunds()
 
 Example of a returned structure:
 
-```csharp
+```json
 [
   {
     "Asset": "CARDT45FED2I3FKESPMHDFV3ZMR6VH5ZHCFIOPH6TPSU35GPB6QBBCSU",
@@ -87,7 +120,6 @@ Example of a returned structure:
     ]
   }
 ]
-
 ```
 
 ---
@@ -98,9 +130,8 @@ Retrieves the total number of vault shares issued.
 
 **Method Signature:**
 
-```csharp
+```C#
 public async Task<ulong> GetVaultTotalShares()
-
 ```
 
 **Returns:**
@@ -115,13 +146,12 @@ Creates an unsigned transaction to deposit into a vault.
 
 **Method Signature:**
 
-```csharp
+```C#
 public async Task<Transaction> CreateDepositTransaction(
     List<ulong> amountsDesired,
     List<ulong> amountsMin,
     Address from,
     bool invest)
-
 ```
 
 **Inputs:**
@@ -143,16 +173,17 @@ Creates an unsigned transaction to withdraw from a vault.
 
 **Method Signature:**
 
-```csharp
+```C#
 public async Task<Transaction> CreateWithdrawTransaction(
     long withdrawShares,
+    List<ulong> amountsMin,
     Address from)
-
 ```
 
 **Inputs:**
 
 - `withdrawShares`: Amount of vault shares to withdraw.
+- `amountsMin`: List of minimum acceptable withdrawal amounts per asset.
 - `from`: Address of the withdrawer.
 
 **Returns:**
@@ -166,9 +197,8 @@ Parses the transaction response from the network.
 
 **Method Signature:**
 
-```csharp
+```C#
 public async Task<List<TransactionResult>> ParseTransactionResponse(GetTransactionResponse response)
-
 ```
 
 **Inputs:**
@@ -183,46 +213,21 @@ public async Task<List<TransactionResult>> ParseTransactionResponse(GetTransacti
     - `Amounts`: An array of amounts deposited or withdrawn.
     - `SharesChanged`: The amount of shares minted or burned.
 
-### **7. SubmitTransaction**
-
-Submits a signed transaction to the network.
-
-**Method Signature:**
-
-```csharp
-public async Task<TransactionResult> SubmitTransaction(Transaction transaction)
-
-```
-
-**Inputs:**
-
-- `transaction`: The signed transaction to be submitted.
-
-**Returns:**
-
-- `TransactionResult`: A sealed record containing:
-    - `IsSuccess`: Boolean indicating if the transaction succeeded.
-    - `TransactionHash`: The hash of the submitted transaction (if successful).
-    - `Amounts`: An array of amounts deposited or withdrawn.
-    - `SharesChanged`: The amount of shares minted or burned.
-
----
 
 ## **Data Models**
 
 ### **VaultShares** (Represents user’s vault shares)
 
-```csharp
+```C#
 public sealed record VaultShares(
 		string AccountId, 
 		decimal Shares
 );
-
 ```
 
 ### ManagedFundsResponse (Represents vault's total managed funds per asset)
 
-```csharp
+```C#
 public sealed record VaultFunds(
 		string Asset,
 		ulong IdleFunds,
@@ -234,7 +239,7 @@ public sealed record VaultFunds(
 
 ### StrategyAllocations (Represents Strategy info)
 
-```csharp
+```C#
 public sealed record StrategyAllocation
 {
     ulong Amount,
@@ -245,13 +250,12 @@ public sealed record StrategyAllocation
 
 ### **TransactionResult** (Represents the result of submitting a transaction)
 
-```csharp
+```C#
 public sealed record TransactionResult(
     bool IsSuccess,
     string? TransactionHash,
     List<ulong> Amounts,
     ulong SharesChanged);
-
 ```
 
 ---
@@ -265,7 +269,7 @@ public sealed record TransactionResult(
 | `GetVaultTotalShares()` | Fetches total vault shares issued |
 | `CreateDepositTransaction(...)` | Creates an unsigned transaction to deposit into a vault |
 | `CreateWithdrawTransaction(...)` | Creates an unsigned transaction to withdraw from a vault |
-| `SubmitTransaction(Transaction transaction)` | Submits a signed transaction and returns detailed success/failure information |
+| `ParseTransactionResponse(GetTransactionResponse response)` | Parses a transaction response from the network |
 
-This SDK structure ensures clarity in handling **shares vs. funds**, maintains modularity, and provides a future-proof way to interact with DeFindex vaults.
+Made with ❤️ by [PaltaLabs🥑](https://github.com/paltalabs)
 
