@@ -14,6 +14,7 @@ pub(crate) fn create_blend_strategy_contract(
     blend_token: &Address,
     soroswap_router: &Address,
     reward_threshold: i128,
+    keeper: &Address,
 ) -> Address {
     let init_args: Vec<Val> = vec![
         e,
@@ -21,6 +22,7 @@ pub(crate) fn create_blend_strategy_contract(
         blend_token.into_val(e),
         soroswap_router.into_val(e),
         reward_threshold.into_val(e),
+        keeper.into_val(e),
     ];
 
     let args = (asset, init_args);
