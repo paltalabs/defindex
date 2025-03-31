@@ -19,6 +19,7 @@ pub enum DataKey {
     Config,
     Reserves,
     VaultPos(Address), // Vaults Positions
+    Keeper,
 }
 
 pub const ONE_DAY_LEDGERS: u32 = 17280; 
@@ -93,4 +94,15 @@ pub fn get_strategy_reserves(e: &Env) -> StrategyReserves {
             total_b_tokens: 0,
             b_rate: 0,
         })
+}
+
+pub fn set_keeper(e: &Env, keeper: &Address) {
+    e.storage().instance().set(&DataKey::Keeper, &keeper);
+}
+
+pub fn get_keeper(e: &Env) -> Result<Address, StrategyError> {
+    e.storage()
+        .instance()
+        .get(&DataKey::Keeper)
+        .ok_or(StrategyError::NotInitialized)
 }

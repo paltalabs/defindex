@@ -20,6 +20,7 @@ fn inflation_attack() {
     let admin = Address::generate(&e);
     let attacker = Address::generate(&e);
     let victim = Address::generate(&e);
+    let keeper = Address::generate(&e);
 
     let blnd = e.register_stellar_asset_contract_v2(admin.clone());
     let usdc = e.register_stellar_asset_contract_v2(admin.clone());
@@ -90,6 +91,7 @@ fn inflation_attack() {
         &pool,
         &blnd.address(),
         &soroswap_router.address,
+        &keeper,
     );
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
 
@@ -165,7 +167,7 @@ fn inflation_attack() {
     // we choose 5000 because is equal to (victim_usdc_balance / 2)
     assert_eq!((victim_usdc_balance / 2), 5000* scalar_7);
 
-    strategy_client.harvest(&attacker);
+    strategy_client.harvest(&keeper);
 
     e.as_contract(&strategy, || {
         let reserve = storage::get_strategy_reserves(&e);

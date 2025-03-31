@@ -88,7 +88,10 @@ impl DeFindexStrategyTrait for BlendStrategy {
             .get(3)
             .expect("Invalid argument: reward_threshold")
             .into_val(&e);
-
+        let keeper: Address = init_args
+            .get(4)
+            .expect("Invalid argument: keeper")
+            .into_val(&e);
         // reserve_id (u32): A unique identifier for a specific reserve within the Blend pool.
         let blend_pool_client = blend_pool::BlendPoolClient::new(&e, &blend_pool_address);
         let reserve_id = blend_pool_client.get_reserve(&asset).config.index;
@@ -122,6 +125,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
         };
 
         storage::set_config(&e, config);
+        storage::set_keeper(&e, &keeper);
     }
 
     /// Retrieves the asset address from the contract's stored configuration.
@@ -143,8 +147,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
     ///
     /// This function transfers the specified amount of the underlying asset from the `from` address
     /// to the strategy contract, supplies it to the Blend pool, and mints shares representing the
-    /// deposited amount. It also handles reinvestment of any rewards if the balance exceeds the
-    /// reward threshold.
+    /// deposited amount.
     ///
     /// # Arguments
     ///
@@ -161,10 +164,6 @@ impl DeFindexStrategyTrait for BlendStrategy {
         from.require_auth();
 
         let config = storage::get_config(&e)?;
-        blend_pool::claim(&e, &e.current_contract_address(), &config);
-
-        // will reinvest only if blnd_balance > REWARD_THRESHOLD
-        blend_pool::perform_reinvest(&e, &config)?;
 
         // transfer tokens from the vault to this (strategy) contract
         TokenClient::new(&e, &config.asset).transfer(&from, &e.current_contract_address(), &amount);
@@ -190,6 +189,8 @@ impl DeFindexStrategyTrait for BlendStrategy {
     ///
     /// This function claims the rewards from the Blend pool, reinvests them if the balance exceeds
     /// the reward threshold, and emits a harvest event.
+    // In order to comply with the Strategy Crate, this function asks for `from` argument, in this case is not really needed, but we indeed ask that the keeper
+    // provides its own address
     ///
     /// # Arguments
     ///
@@ -201,7 +202,14 @@ impl DeFindexStrategyTrait for BlendStrategy {
     /// * `Result<(), StrategyError>` - An empty result or an error.
     fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
         extend_instance_ttl(&e);
-        from.require_auth();
+        
+        let keeper = storage::get_keeper(&e)?;
+        keeper.require_auth();
+
+        if from != keeper {
+            return Err(StrategyError::NotAuthorized);
+        }
+
         let config = storage::get_config(&e)?;
         let harvested_blend = blend_pool::claim(&e, &e.current_contract_address(), &config);
 
@@ -211,7 +219,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
             &e,
             String::from_str(&e, STRATEGY_NAME),
             harvested_blend,
-            from,
+            keeper,
         );
         Ok(())
     }
@@ -237,9 +245,6 @@ impl DeFindexStrategyTrait for BlendStrategy {
         from.require_auth();
 
         let config = storage::get_config(&e)?;
-
-        blend_pool::claim(&e, &e.current_contract_address(), &config);
-        blend_pool::perform_reinvest(&e, &config)?;
 
         let b_tokens_burnt = blend_pool::withdraw(&e, &to, &amount, &config)?;
 
@@ -284,8 +289,46 @@ impl DeFindexStrategyTrait for BlendStrategy {
         } else {
             Ok(0)
         }
+    }
+}
 
+#[contractimpl]
+impl BlendStrategy {
+    /// Sets a new keeper address for the strategy.
+    ///
+    /// This function updates the keeper address stored in the contract's storage.
+    /// Only the current keeper can authorize this change.
+    ///
+    /// # Arguments
+    ///
+    /// * `e: Env` - The execution environment.
+    /// * `new_keeper: Address` - The new keeper address to set.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<(), StrategyError>` - An empty result or an error.
+    pub fn set_keeper(e: Env, new_keeper: Address) -> Result<(), StrategyError> {
+        extend_instance_ttl(&e);
         
+        let old_keeper = storage::get_keeper(&e)?;
+        old_keeper.require_auth();
+            
+        storage::set_keeper(&e, &new_keeper);
+        Ok(())
+    }
+    
+    /// Returns the current keeper address.
+    ///
+    /// # Arguments
+    ///
+    /// * `e: Env` - The execution environment.
+    ///
+    /// # Returns
+    ///
+    /// * `Result<Address, StrategyError>` - The current keeper address or an error.
+    pub fn get_keeper(e: Env) -> Result<Address, StrategyError> {
+        extend_instance_ttl(&e);
+        storage::get_keeper(&e)
     }
 }
 
