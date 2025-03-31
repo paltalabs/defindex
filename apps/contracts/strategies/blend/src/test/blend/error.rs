@@ -718,7 +718,7 @@ fn set_keeper_unauthorized() {
                 sub_invokes: &[],
             },
         }],
-    ).try_set_keeper(&keeper, &new_keeper);
+    ).try_set_keeper(&new_keeper);
     
     // Should fail with NotAuthorized error
     assert_eq!(result, Err(Err(soroban_sdk::InvokeError::Abort)));

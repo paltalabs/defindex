@@ -331,6 +331,42 @@ fn success() {
 
     // we harvest first
     strategy_client.harvest(&keeper);
+    assert_eq!(
+        e.auths()[0],
+        (
+            keeper.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    strategy.clone(),
+                    Symbol::new(&e, "harvest"),
+                    vec![
+                        &e,
+                        keeper.to_val()
+                    ]
+                )),
+                sub_invocations: std::vec![]
+            }
+        )
+    );
+
+    // check keeper auth
+    assert_eq!(
+        e.auths()[0],
+        (
+            keeper.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    strategy.clone(),
+                    Symbol::new(&e, "harvest"),
+                    vec![
+                        &e,
+                        keeper.to_val()
+                    ]
+                )),
+                sub_invocations: std::vec![]
+            }
+        )
+    );
 
     // -> verify over withdraw fails
     let result =
@@ -521,6 +557,23 @@ fn success() {
 
     
     strategy_client.harvest(&keeper);
+    assert_eq!(
+        e.auths()[0],
+        (
+            keeper.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    strategy.clone(),
+                    Symbol::new(&e, "harvest"),
+                    vec![
+                        &e,
+                        keeper.to_val()
+                    ]
+                )),
+                sub_invocations: std::vec![]
+            }
+        )
+    );
 
     /*
         TODO:
@@ -577,7 +630,26 @@ fn success() {
     assert_eq!(old_keeper, keeper);
     // set keeper to a new address
     let new_keeper = Address::generate(&e);
-    strategy_client.set_keeper(&keeper, &new_keeper);
+    strategy_client.set_keeper(&new_keeper);
+    // check set keeper auths
+    assert_eq!(
+        e.auths()[0],
+        (
+            keeper.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    strategy.clone(),
+                    Symbol::new(&e, "set_keeper"),
+                    vec![
+                        &e,
+                        new_keeper.to_val()
+                    ]
+                )),
+                sub_invocations: std::vec![]
+            }
+        )
+    );
+
     assert_eq!(strategy_client.get_keeper(), new_keeper);
 
     // try to harvest with the new keeper
