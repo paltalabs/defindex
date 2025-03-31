@@ -578,11 +578,39 @@ fn success() {
     // set keeper to a new address
     let new_keeper = Address::generate(&e);
     strategy_client.set_keeper(&keeper, &new_keeper);
+    assert_eq!(
+        e.auths()[0],
+        (
+            keeper.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    strategy.clone(),
+                    Symbol::new(&e, "set_keeper"),
+                    vec![&e, keeper.to_val(), new_keeper.to_val()],
+                )),
+                sub_invocations: std::vec![]
+            }
+        )
+    );
+    
     assert_eq!(strategy_client.get_keeper(), new_keeper);
-
     // try to harvest with the new keeper
     let harvest_result = strategy_client.try_harvest(&new_keeper);
     assert_eq!(harvest_result, Ok(Ok(())));
+    assert_eq!(
+        e.auths()[0],
+        (
+            new_keeper.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    strategy.clone(),
+                    Symbol::new(&e, "harvest"),
+                    vec![&e, new_keeper.to_val()],
+                )),
+                sub_invocations: std::vec![]
+            }
+        )
+    );
 
     // try to harvest with the old keeper
     let harvest_result = strategy_client.try_harvest(&keeper);
