@@ -720,7 +720,7 @@ fn set_keeper_unauthorized() {
         }],
     ).try_set_keeper(&new_keeper);
     
-    // Should fail with NotAuthorized error
+    // Should abort as failed in require_auth
     assert_eq!(result, Err(Err(soroban_sdk::InvokeError::Abort)));
     
     // Verify the keeper hasn't changed
