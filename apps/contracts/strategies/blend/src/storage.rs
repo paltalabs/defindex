@@ -54,6 +54,9 @@ pub fn get_config(e: &Env) -> Result<Config, StrategyError> {
 pub fn set_vault_shares(e: &Env, address: &Address, shares: i128) {
     let key = DataKey::VaultPos(address.clone());
     e.storage().persistent().set::<DataKey, i128>(&key, &shares);
+    e.storage()
+        .persistent()
+        .extend_ttl(&key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT);
 }
 
 /// Get the number of strategy shares a user owns. Shares are stored with 7 decimal places of precision.
@@ -64,6 +67,11 @@ pub fn get_vault_shares(e: &Env, address: &Address) -> i128 {
         .get::<DataKey, i128>(&DataKey::VaultPos(address.clone()));
     match result {
         Some(shares) => {
+            e.storage().persistent().extend_ttl(
+                &DataKey::VaultPos(address.clone()),
+                PERSISTENT_LIFETIME_THRESHOLD,
+                PERSISTENT_BUMP_AMOUNT,
+            );
             shares
         }
         None => 0,
