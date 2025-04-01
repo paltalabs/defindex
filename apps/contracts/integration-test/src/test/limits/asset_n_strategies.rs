@@ -1,6 +1,6 @@
 use soroban_sdk::{testutils::{Address as _, Ledger, MockAuth, MockAuthInvoke}, vec as svec, xdr::ContractCostType, Address, BytesN, IntoVal, Map, String, Vec};
 
-use crate::{blend_strategy::{create_blend_strategy_contract, BlendStrategyClient}, factory::{AssetStrategySet, Strategy}, fixed_strategy::{create_fixed_strategy_contract, FixedStrategyClient}, hodl_strategy::create_hodl_strategy_contract, setup::{blend_setup::{create_blend_pool, BlendFixture, BlendPoolClient, Request}, create_soroswap_factory, create_soroswap_pool, create_soroswap_router, create_vault_one_asset_hodl_strategy, mock_mint, VAULT_FEE}, test::{limits::{check_limits, check_limits_return_info, create_results_table}, EnvTestUtils, IntegrationTest, DAY_IN_LEDGERS, ONE_YEAR_IN_SECONDS}, token::create_token, vault::{defindex_vault_contract::{Instruction, VaultContractClient}, MINIMUM_LIQUIDITY}};
+use crate::{blend_strategy::{create_blend_strategy_contract, BlendStrategyClient}, factory::{AssetStrategySet, Strategy}, fixed_strategy::{create_fixed_strategy_contract, FixedStrategyClient}, hodl_strategy::create_hodl_strategy_contract, setup::{blend_setup::{create_blend_pool, BlendFixture, BlendPoolClient, Request}, create_soroswap_factory, create_soroswap_pool, create_soroswap_router, create_vault_one_asset_hodl_strategy, mock_mint, VAULT_FEE}, test::{limits::{check_limits, check_limits_return_info, create_results_table, print_resources}, EnvTestUtils, IntegrationTest, DAY_IN_LEDGERS, ONE_YEAR_IN_SECONDS}, token::create_token, vault::{defindex_vault_contract::{Instruction, VaultContractClient}, MINIMUM_LIQUIDITY}};
 
 // 26 strategies is the maximum number of strategies that can be added to a vault before exceeding the instructions limit IN RUST TESTS
 // With 26 strategies withdrawals are not possible due to the instruction limit
@@ -613,7 +613,7 @@ fn blend() {
         &false
     );
     let deposit_usage= check_limits_return_info(&setup.env, "Deposit");
-
+    print_resources(&setup.env, "Deposit");
     
     /* -------------------------------------------------------- Rebalance: Invest -------------------------------------------------------- */
     let mut invest_instructions = svec![&setup.env];
@@ -729,7 +729,7 @@ fn blend() {
     
     /* ----------------------------------------------------------- Harvesting ------------------------------------------------------------ */
     std::println!("-- Harvesting --");
-    let mut harvest_usage: Vec<(std::string::String, u64, u64)> = Vec::new(&setup.env);
+    let mut harvest_usage: Vec<(std::string::String, u64, u64, u32, u32, u32, u32)> = Vec::new(&setup.env);
     for i in 0..num_strategies {
         setup.env.cost_estimate().budget().reset_unlimited();
         let temp_strategy_address = strategies.get(i).unwrap().address.clone();
@@ -1036,7 +1036,7 @@ fn blend_panic() {
     
     /* ----------------------------------------------------------- Harvesting ------------------------------------------------------------ */
     std::println!("-- Harvesting --");
-    let mut harvest_usage: Vec<(std::string::String, u64, u64)> = Vec::new(&setup.env);
+    let mut harvest_usage: Vec<(std::string::String, u64, u64, u32, u32, u32, u32)> = Vec::new(&setup.env);
     for i in 0..num_strategies {
         setup.env.cost_estimate().budget().reset_unlimited();
         let temp_strategy_address = strategies.get(i).unwrap().address.clone();
