@@ -64,6 +64,11 @@ pub fn get_vault_shares(e: &Env, address: &Address) -> i128 {
         .get::<DataKey, i128>(&DataKey::VaultPos(address.clone()));
     match result {
         Some(shares) => {
+            e.storage().persistent().extend_ttl(
+                &DataKey::VaultPos(address.clone()),
+                PERSISTENT_LIFETIME_THRESHOLD,
+                PERSISTENT_BUMP_AMOUNT,
+            );
             shares
         }
         None => 0,
