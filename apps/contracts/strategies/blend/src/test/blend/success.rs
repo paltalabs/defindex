@@ -9,7 +9,7 @@ use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTes
 use crate::BlendStrategyClient;
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
-use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
+use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke};
 use soroban_sdk::{vec, Address, Env, IntoVal, Symbol};
 use crate::test::std::println;
 
@@ -329,8 +329,56 @@ fn success() {
 
     println!("Expected withdraw amount for users {}", expected_withdraw_amount);
 
-    // we harvest first
-    strategy_client.harvest(&keeper);
+    // Harvest with the specific Mock
+
+    strategy_client
+    .mock_auths(&[MockAuth {
+        address: &keeper.clone(),
+        invoke: &MockAuthInvoke {
+            contract: &strategy_client.address.clone(),
+            fn_name: "harvest",
+            args: (keeper.clone(),).into_val(&e),
+            sub_invokes: &[],
+        },
+    }])
+    .harvest(&keeper.clone());
+
+    assert_eq!(
+        e.auths()[0],
+        (
+            keeper.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    strategy.clone(),
+                    Symbol::new(&e, "harvest"),
+                    vec![
+                        &e,
+                        keeper.to_val()
+                    ]
+                )),
+                sub_invocations: std::vec![]
+            }
+        )
+    );
+
+    // check keeper auth
+    assert_eq!(
+        e.auths()[0],
+        (
+            keeper.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    strategy.clone(),
+                    Symbol::new(&e, "harvest"),
+                    vec![
+                        &e,
+                        keeper.to_val()
+                    ]
+                )),
+                sub_invocations: std::vec![]
+            }
+        )
+    );
 
     // -> verify over withdraw fails
     let result =
@@ -521,6 +569,23 @@ fn success() {
 
     
     strategy_client.harvest(&keeper);
+    assert_eq!(
+        e.auths()[0],
+        (
+            keeper.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    strategy.clone(),
+                    Symbol::new(&e, "harvest"),
+                    vec![
+                        &e,
+                        keeper.to_val()
+                    ]
+                )),
+                sub_invocations: std::vec![]
+            }
+        )
+    );
 
     /*
         TODO:
@@ -577,16 +642,79 @@ fn success() {
     assert_eq!(old_keeper, keeper);
     // set keeper to a new address
     let new_keeper = Address::generate(&e);
-    strategy_client.set_keeper(&keeper, &new_keeper);
+    strategy_client.set_keeper(&new_keeper);
+    // check set keeper auths
+    assert_eq!(
+        e.auths()[0],
+        (
+            keeper.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    strategy.clone(),
+                    Symbol::new(&e, "set_keeper"),
+                    vec![
+                        &e,
+                        new_keeper.to_val()
+                    ]
+                )),
+                sub_invocations: std::vec![]
+            }
+        )
+    );
     assert_eq!(strategy_client.get_keeper(), new_keeper);
 
-    // try to harvest with the new keeper
-    let harvest_result = strategy_client.try_harvest(&new_keeper);
-    assert_eq!(harvest_result, Ok(Ok(())));
+    // Harvest with the specific Mock with the new keeper
 
-    // try to harvest with the old keeper
+    strategy_client
+    .mock_auths(&[MockAuth {
+        address: &new_keeper.clone(),
+        invoke: &MockAuthInvoke {
+            contract: &strategy_client.address.clone(),
+            fn_name: "harvest",
+            args: (new_keeper.clone(),).into_val(&e),
+            sub_invokes: &[],
+        },
+    }])
+    .harvest(&new_keeper.clone());
+
+    assert_eq!(
+        e.auths()[0],
+        (
+            new_keeper.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    strategy.clone(),
+                    Symbol::new(&e, "harvest"),
+                    vec![
+                        &e,
+                        new_keeper.to_val()
+                    ]
+                )),
+                sub_invocations: std::vec![]
+            }
+        )
+    );
+
+
+    // try to harvest with the old keeper.. here the error will be not authorized as we are mocking the auth... 
     let harvest_result = strategy_client.try_harvest(&keeper);
     assert_eq!(harvest_result, Err(Ok(StrategyError::NotAuthorized)));
+    
+    // but if we mock the specific auth we will get auth error
+
+    let harvest_result = strategy_client
+    .mock_auths(&[MockAuth {
+        address: &keeper.clone(),
+        invoke: &MockAuthInvoke {
+            contract: &strategy_client.address.clone(),
+            fn_name: "harvest",
+            args: (keeper.clone(),).into_val(&e),
+            sub_invokes: &[],
+        },
+    }])
+    .try_harvest(&keeper.clone());
+    assert_eq!(harvest_result, Err(Err(soroban_sdk::InvokeError::Abort)));
+
 
     // get keeper
     let keeper = strategy_client.get_keeper();

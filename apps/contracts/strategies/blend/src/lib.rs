@@ -189,6 +189,8 @@ impl DeFindexStrategyTrait for BlendStrategy {
     ///
     /// This function claims the rewards from the Blend pool, reinvests them if the balance exceeds
     /// the reward threshold, and emits a harvest event.
+    // In order to comply with the Strategy Crate, this function asks for `from` argument, in this case is not really needed, but we indeed ask that the keeper
+    // provides its own address
     ///
     /// # Arguments
     ///
@@ -200,11 +202,14 @@ impl DeFindexStrategyTrait for BlendStrategy {
     /// * `Result<(), StrategyError>` - An empty result or an error.
     fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
         extend_instance_ttl(&e);
-        from.require_auth();
+        
         let keeper = storage::get_keeper(&e)?;
+        keeper.require_auth();
+
         if from != keeper {
             return Err(StrategyError::NotAuthorized);
         }
+
         let config = storage::get_config(&e)?;
         let harvested_blend = blend_pool::claim(&e, &e.current_contract_address(), &config);
 
@@ -214,7 +219,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
             &e,
             String::from_str(&e, STRATEGY_NAME),
             harvested_blend,
-            from,
+            keeper,
         );
         Ok(())
     }
@@ -297,21 +302,17 @@ impl BlendStrategy {
     /// # Arguments
     ///
     /// * `e: Env` - The execution environment.
-    /// * `from: Address` - The address initiating the keeper change (must be current keeper).
     /// * `new_keeper: Address` - The new keeper address to set.
     ///
     /// # Returns
     ///
     /// * `Result<(), StrategyError>` - An empty result or an error.
-    pub fn set_keeper(e: Env, from: Address, new_keeper: Address) -> Result<(), StrategyError> {
+    pub fn set_keeper(e: Env, new_keeper: Address) -> Result<(), StrategyError> {
         extend_instance_ttl(&e);
-        from.require_auth();
         
-        let current_keeper = storage::get_keeper(&e)?;
-        if from != current_keeper {
-            return Err(StrategyError::NotAuthorized);
-        }
-        
+        let old_keeper = storage::get_keeper(&e)?;
+        old_keeper.require_auth();
+            
         storage::set_keeper(&e, &new_keeper);
         Ok(())
     }
