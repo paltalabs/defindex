@@ -430,7 +430,7 @@ impl VaultTrait for DeFindexVault {
         let strategy = get_strategy_struct(&strategy_address, &asset)?;
         let strategy_invested_funds = fetch_strategy_invested_funds(&e, &strategy_address, false)?;
         report::update_report_and_lock_fees(&e, &strategy_address, strategy_invested_funds)?;
-        let distribution_result = report::distribute_strategy_fees(&e, &strategy.address, &access_control)?;
+        let distribution_result = report::distribute_strategy_fees(&e, &strategy.address, &access_control, &asset.address)?;
         if distribution_result > 0 {
             let mut distributed_fees: Vec<(Address, i128)> = Vec::new(&e);
             distributed_fees.push_back((asset.address.clone(), distribution_result));
@@ -832,10 +832,10 @@ impl VaultManagementTrait for DeFindexVault {
         if instructions.is_empty() {
             panic_with_error!(&e, ContractError::NoInstructions);
         }
-
         for instruction in instructions.iter() {
             match instruction {
                 Instruction::Unwind(strategy_address, amount) => {
+                    let asset_address = get_strategy_asset(&e, &strategy_address)?;
                     let report = unwind_from_strategy(
                         &e,
                         &strategy_address,
@@ -845,7 +845,7 @@ impl VaultManagementTrait for DeFindexVault {
                     let call_params = vec![&e, (strategy_address.clone(), amount, e.current_contract_address())];
                     let strategy_invested_funds = fetch_strategy_invested_funds(&e, &strategy_address, false)?;
                     report::update_report_and_lock_fees(&e, &strategy_address, strategy_invested_funds)?;
-                    report::distribute_strategy_fees(&e, &strategy_address, &access_control)?;
+                    report::distribute_strategy_fees(&e, &strategy_address, &access_control, &asset_address.address)?;
                     events::emit_rebalance_unwind_event(&e, call_params, report);
                 }
                 Instruction::Invest(strategy_address, amount) => {
@@ -866,7 +866,7 @@ impl VaultManagementTrait for DeFindexVault {
                             paused: strategy.paused
                         })],
                     };
-                    report::distribute_strategy_fees(&e, &strategy_address, &access_control)?;
+                    report::distribute_strategy_fees(&e, &strategy_address, &access_control, &asset_address.address)?;
                     events::emit_rebalance_invest_event(&e, vec![&e, call_params], report);
                 }
                 Instruction::SwapExactIn(
@@ -1023,7 +1023,7 @@ impl VaultManagementTrait for DeFindexVault {
             for strategy in asset.strategies.iter() {
                 total_fees_distributed =
                 total_fees_distributed.checked_add(
-                    report::distribute_strategy_fees(&e, &strategy.address, &access_control)?)
+                    report::distribute_strategy_fees(&e, &strategy.address, &access_control, &asset.address)?)
                     .unwrap();
             }
 
