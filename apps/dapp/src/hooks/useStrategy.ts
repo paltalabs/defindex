@@ -1,7 +1,7 @@
-import { SorobanContextType, useSorobanReact } from "@soroban-react/core";
-import { useCallback, useEffect, useState } from "react";
-import * as StellarSdk from '@stellar/stellar-sdk';
 import { TxResponse, contractInvoke } from '@soroban-react/contracts';
+import { useSorobanReact } from "@soroban-react/core";
+import * as StellarSdk from '@stellar/stellar-sdk';
+import { useCallback } from "react";
 
 export enum StrategyMethod {
     INITIALIZE = "initialize",
@@ -50,6 +50,7 @@ export function useStrategyCallback() {
                     return result;
                 }
             } catch (e: any) {
+                console.log("Strategy Address:", address);
                 console.log(e);
                 const error = e.toString();
                 if (error.includes('ExistingValue')) throw new Error('Strategy already initialized.');
