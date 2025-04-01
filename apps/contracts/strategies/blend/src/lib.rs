@@ -46,6 +46,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
     /// 2. `blend_token: Address` - The address of the reward token (e.g., BLND) issued by the Blend pool.
     /// 3. `soroswap_router: Address` - The address of the Soroswap AMM router for asset swaps.
     /// 4. `reward_threshold: i128` - The minimum reward amount that triggers reinvestment.
+    /// 5. `keeper: Address` - The address of the account that will be allowed to do harvest.
     ///
     /// # Behavior
     ///
@@ -92,6 +93,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
             .get(4)
             .expect("Invalid argument: keeper")
             .into_val(&e);
+        
         // reserve_id (u32): A unique identifier for a specific reserve within the Blend pool.
         let blend_pool_client = blend_pool::BlendPoolClient::new(&e, &blend_pool_address);
         let reserve_id = blend_pool_client.get_reserve(&asset).config.index;
@@ -157,10 +159,11 @@ impl DeFindexStrategyTrait for BlendStrategy {
     ///
     /// # Returns
     ///
-    /// * `Result<i128, StrategyError>` - The underlying balance after the deposit or an error.
+    /// * `Result<i128, StrategyError>` - The underlying balance of the vault (caller) after the deposit or an error.
     fn deposit(e: Env, amount: i128, from: Address) -> Result<i128, StrategyError> {
-        check_positive_amount(amount)?;
         extend_instance_ttl(&e);
+
+        check_positive_amount(amount)?;
         from.require_auth();
 
         let config = storage::get_config(&e)?;
@@ -168,9 +171,10 @@ impl DeFindexStrategyTrait for BlendStrategy {
         // transfer tokens from the vault to this (strategy) contract
         TokenClient::new(&e, &config.asset).transfer(&from, &e.current_contract_address(), &amount);
 
+        // supplies the asset to the Blend pool and mints bTokens
         let b_tokens_minted = blend_pool::supply(&e, &from, &amount, &config)?;
 
-        // Keeping track of the total deposited amount and the total bTokens owned by the strategy depositors
+        // Keeping track of the total deposited amount and the total bTokens owned by the caller (vault)
         let (vault_shares, reserves) =
             reserves::deposit(
                 &e, 
@@ -178,28 +182,31 @@ impl DeFindexStrategyTrait for BlendStrategy {
                 b_tokens_minted,
                 &config
             )?;
-
+        
+        // Calculates the new amount of underlying assets invested in the Blend Vault, owned by the caller (vault)
         let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
 
         event::emit_deposit(&e, String::from_str(&e, STRATEGY_NAME), amount, from);
         Ok(underlying_balance)
     }
 
-    /// Harvests the rewards from the Blend pool and reinvests them into the strategy.
+    /// Harvests rewards from the Blend pool and reinvests them into the strategy.
     ///
-    /// This function claims the rewards from the Blend pool, reinvests them if the balance exceeds
-    /// the reward threshold, and emits a harvest event.
-    // In order to comply with the Strategy Crate, this function asks for `from` argument, in this case is not really needed, but we indeed ask that the keeper
-    // provides its own address
+    /// This function claims rewards from the Blend pool and reinvests them if the balance  
+    /// exceeds the reward threshold. It also emits a harvest event upon completion.  
+    ///
+    /// To comply with the Strategy Crate, this function requires a `from` argument,  
+    /// which is not strictly necessary in this context. However, the function enforces  
+    /// that the caller (keeper) provides their own address for authorization.  
     ///
     /// # Arguments
     ///
     /// * `e: Env` - The execution environment.
-    /// * `from: Address` - The address initiating the harvest.
+    /// * `from: Address` - The address initiating the harvest (must be the keeper).
     ///
     /// # Returns
     ///
-    /// * `Result<(), StrategyError>` - An empty result or an error.
+    /// * `Result<(), StrategyError>` - Returns `Ok(())` on success or a `StrategyError` on failure.
     fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
         extend_instance_ttl(&e);
         
@@ -211,8 +218,8 @@ impl DeFindexStrategyTrait for BlendStrategy {
         }
 
         let config = storage::get_config(&e)?;
-        let harvested_blend = blend_pool::claim(&e, &e.current_contract_address(), &config);
 
+        let harvested_blend = blend_pool::claim(&e, &e.current_contract_address(), &config);
         blend_pool::perform_reinvest(&e, &config)?;
 
         event::emit_harvest(
@@ -238,16 +245,16 @@ impl DeFindexStrategyTrait for BlendStrategy {
     ///
     /// # Returns
     ///
-    /// * `Result<i128, StrategyError>` - The remaining balance of the vault after the withdrawal or an error.
+    /// * `Result<i128, StrategyError>` - The remaining balance of the vault (caller) after the withdrawal or an error.
     fn withdraw(e: Env, amount: i128, from: Address, to: Address) -> Result<i128, StrategyError> {
-        check_positive_amount(amount)?; 
         extend_instance_ttl(&e);
+
+        check_positive_amount(amount)?; 
         from.require_auth();
 
         let config = storage::get_config(&e)?;
 
         let b_tokens_burnt = blend_pool::withdraw(&e, &to, &amount, &config)?;
-
         let (vault_shares, reserves) = reserves::withdraw(
             &e,
             &from,
@@ -257,7 +264,6 @@ impl DeFindexStrategyTrait for BlendStrategy {
         let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
 
         event::emit_withdraw(&e, String::from_str(&e, STRATEGY_NAME), amount, from);
-
         Ok(underlying_balance)
     }
 
