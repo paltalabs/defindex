@@ -2,7 +2,7 @@ use soroban_sdk::Env;
 
 mod asset_n_strategies;
 // mod rebalance;
-// mod n_asset_one_strategy;
+mod n_asset_one_strategy;
 
 // limits got from https://developers.stellar.org/docs/networks/resource-limits-fees
 pub const CPU_LIMIT: u64 = 100000000;

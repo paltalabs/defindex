@@ -170,7 +170,8 @@ fn n_assets_one_strategy_hodl() {
     // Simulate a user withdrawal touching all strategies
     setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&user);
-    vault_contract.withdraw(&balance, &user);
+    let min_amounts_out = svec![&setup.env, 0i128];
+    vault_contract.withdraw(&balance, &min_amounts_out, &user);
     check_limits(&setup.env, "Withdraw");
 
     for i in 0..num_tokens {
@@ -336,7 +337,8 @@ fn n_assets_one_strategy_fixed() {
     // Simulate a user withdrawal touching all strategies
     setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&user);
-    vault_contract.withdraw(&balance, &user);
+    let min_amounts_out = svec![&setup.env, 0i128];
+    vault_contract.withdraw(&balance, &min_amounts_out, &user);
     check_limits(&setup.env, "Withdraw");
 }
 
@@ -529,6 +531,7 @@ fn n_assets_one_strategy_blend() {
     // Simulate a user withdrawal touching all strategies
     setup.env.cost_estimate().budget().reset_unlimited();
     let balance = vault_contract.balance(&user);
-    let _ = vault_contract.try_withdraw(&(balance/2), &user);
+    let min_amounts_out = svec![&setup.env, 0i128];
+    vault_contract.withdraw(&balance, &min_amounts_out, &user);
     check_limits(&setup.env, "Withdraw");
 }
