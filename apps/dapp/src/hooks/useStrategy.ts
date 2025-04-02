@@ -53,7 +53,7 @@ export function useStrategyCallback() {
                 console.log("Strategy Address:", address);
                 console.log(e);
                 const error = e.toString();
-                if (error.includes('ExistingValue')) throw new Error('Strategy already initialized.');
+                if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
                 if (error.includes('Sign')) throw new Error('Request denied by user. Please try to sign again.');
                 throw new Error('Failed to interact with strategy. If the problem persists, please contact support.');
             }
