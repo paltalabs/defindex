@@ -91,7 +91,9 @@ export function useFactoryCallback() {
         if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
         if (error.includes('UnexpectedSize')) throw new Error('Invalid arguments length.')
         if (error.includes('Error(Contract, #10)')) throw new Error('Insufficient funds.')
-        throw new Error('Failed to create vault.', e)
+        if (error.includes('invoke non-existent contract function')) throw new Error('Contract function does not exist.')
+        if (error.includes('MissingValue')) throw new Error('Contract not found.')
+        throw new Error('Failed to fetch factory data.', e)
       }
     }, [sorobanContext, factoryAddress])
 }
