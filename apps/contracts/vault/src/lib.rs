@@ -299,7 +299,6 @@ impl VaultTrait for DeFindexVault {
     /// - `ContractError::WrongAmountsLength`: If there is a mismatch in asset allocation data.
     fn withdraw(e: Env, withdraw_shares: i128, min_amounts_out: Vec<i128>, from: Address) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
-        validate_amount(withdraw_shares)?;
         from.require_auth();
 
         check_min_amount(withdraw_shares, MIN_WITHDRAW_AMOUNT)?;
@@ -361,9 +360,7 @@ impl VaultTrait for DeFindexVault {
                 let mut cumulative_amount_for_asset = idle_funds;
                 let remaining_amount_to_unwind =
                     requested_withdrawal_amount.checked_sub(idle_funds).unwrap();
-
-                let total_invested_amount = asset.invested_amount;
-
+                    
                 for (i, strategy_allocation) in
                     asset.strategy_allocations.iter().enumerate()
                 {
@@ -375,7 +372,7 @@ impl VaultTrait for DeFindexVault {
                         } else {
                             remaining_amount_to_unwind
                                 .checked_mul(strategy_allocation.amount)
-                                .and_then(|result| result.checked_div(total_invested_amount))
+                                .and_then(|result| result.checked_div(asset.invested_amount))
                                 .unwrap_or(0)
                         };
 

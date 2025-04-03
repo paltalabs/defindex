@@ -691,6 +691,11 @@ fn n_assets_one_strategy_blend() {
     xlm_strategy_contract.harvest(&keeper);
     let harvest_usage = check_limits_return_info(&setup.env, "Harvest");
 
+    // Add a report
+    setup.env.cost_estimate().budget().reset_unlimited();
+    vault_contract.report();
+    let report_usage = check_limits_return_info(&setup.env, "Report");
+
     // Distribute fees
     setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.distribute_fees(&manager);
@@ -705,8 +710,9 @@ fn n_assets_one_strategy_blend() {
         unwind_usage,
         swap_usage,
         withdraw_usage,
-        distribute_fees_usage,
         harvest_usage,
+        report_usage,
+        distribute_fees_usage,
     ];
     create_results_table(&setup.env, usage_results);
 }
