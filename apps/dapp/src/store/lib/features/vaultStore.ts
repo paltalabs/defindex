@@ -3,7 +3,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from '../store';
 import { Asset, NewVaultState, Strategy, VaultData } from '../types';
 // Define the initial state using that type
-const initialState: NewVaultState = {
+/* const initialState: NewVaultState = {
   address: "",
   emergencyManager: "",
   rebalanceManager: "",
@@ -15,8 +15,31 @@ const initialState: NewVaultState = {
   assets: [],
   TVL: 0,
   upgradable: true,
-}
-
+} */
+  const initialState: NewVaultState = {
+    address: "",
+    emergencyManager: "",
+    rebalanceManager: "",
+    feeReceiver: "",
+    manager: "",
+    name: "aa",
+    symbol: "aa",
+    vaultShare: 0,
+    assets: [{
+      address: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
+      strategies: [
+        {
+          address: 'CD5EAKJPA5DIJV55BOQIWDBHDHG57PRUGTJD7MYYZIZV453CPACAY624',
+          name: 'Hodl XLM',
+          paused: false,
+          tempAmount: 0
+        }
+      ],
+      symbol: 'XLM'
+    }],
+    TVL: 0,
+    upgradable: true,
+  }
 //Filtrar Strategies por network y retornar array de Strategies
 export const getDefaultStrategies = async (network: string) => {
   try {
@@ -46,7 +69,7 @@ export const getDefaultStrategies = async (network: string) => {
 
 
 export const newVaultSlice = createSlice({
-  name: 'Strategies',
+  name: 'vault',
   initialState,
   reducers: {
     setName: ((state, action: PayloadAction<string>) => {
@@ -68,6 +91,7 @@ export const newVaultSlice = createSlice({
       state.feeReceiver = action.payload;
     }),
     setVaultShare: ((state, action: PayloadAction<number>) => {
+      console.log('🟡setVaultShare', action.payload)
       state.vaultShare = action.payload;
     }),
     pushAsset: ((state, action: PayloadAction<Asset>) => {
@@ -132,7 +156,7 @@ export const newVaultSlice = createSlice({
 export const {
   setName,
   setSymbol,
-  setManager,
+  setManager:setVaultManager,
   setEmergencyManager,
   setRebalanceManager,
   setFeeReceiver,

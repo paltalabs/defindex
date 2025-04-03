@@ -1,16 +1,19 @@
-import { Networks } from "@stellar/stellar-sdk"
+import { WalletNetwork } from "stellar-react"
 
-export const getNetworkName = (networkPassphrase: string): string => {
+export const getNetworkName = (networkPassphrase?: WalletNetwork): string => {
+  if(!networkPassphrase) {
+    return 'testnet'
+  }
   switch (networkPassphrase) {
-    case Networks.TESTNET:
+    case WalletNetwork.TESTNET:
       return 'testnet'
-    case Networks.PUBLIC:
+    case WalletNetwork.PUBLIC:
       return 'mainnet'
-    case Networks.FUTURENET:
+    case WalletNetwork.FUTURENET:
       return 'futurenet'
-    case Networks.SANDBOX:
+    case WalletNetwork.SANDBOX:
       return 'sandbox'
-    case Networks.STANDALONE:
+    case WalletNetwork.STANDALONE:
       return 'standalone'
     default:
       return ''

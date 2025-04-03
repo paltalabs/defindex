@@ -1,5 +1,5 @@
 import { isValidAddress, shortenAddress } from '@/helpers/address'
-import { setEmergencyManager, setFeeReceiver, setManager, setRebalanceManager, setUpgradable, setVaultShare } from '@/store/lib/features/vaultStore'
+import { setEmergencyManager, setFeeReceiver, setVaultManager, setRebalanceManager, setUpgradable, setVaultShare } from '@/store/lib/features/vaultStore'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
 import { Asset } from '@/store/lib/types'
 import {
@@ -19,7 +19,7 @@ import {
   Table,
   Text,
 } from '@chakra-ui/react'
-import { useSorobanReact } from '@soroban-react/core'
+import { useSorobanReact } from 'stellar-react'
 import React from 'react'
 import { FaRegPaste } from "react-icons/fa6"
 import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io'
@@ -27,6 +27,7 @@ import { InputGroup } from '../ui/input-group'
 import { NumberInputField, NumberInputRoot } from '../ui/number-input'
 import { InfoTip } from '../ui/toggle-tip'
 import { Tooltip } from '../ui/tooltip'
+import { parseCamelCase, parsePascalCase } from '@/helpers/utils'
 
 
 export enum AccordionItems {
@@ -97,7 +98,7 @@ const CustomInputField = ({
   href,
 }: {
   label: string,
-  value: string,
+    value: string | undefined,
   onChange: (e: any) => void,
   handleClick: (address: string) => void,
   placeholder: string,
@@ -199,106 +200,8 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
 
   const dispatch = useAppDispatch()
   const newVault = useAppSelector(state => state.newVault)
-  const handleManagerChange = (input: string) => {
-    const isValid = isValidAddress(input)
-    while (!isValid) {
-      setFormControl({
-        ...formControl,
-        manager: {
-          value: input,
-          isValid: false,
-        }
-      })
-      dispatch(setManager(''))
-      return
-    }
-    if (isValid) {
-      setFormControl({
-        ...formControl,
-        manager: {
-          value: input,
-          isValid: true
-        }
-      })
-      dispatch(setManager(input))
-    }
-    return;
-  };
 
-  const handleEmergencyManagerChange = (input: string) => {
-    const isValid = isValidAddress(input)
-    while (!isValid) {
-      setFormControl({
-        ...formControl,
-        emergencyManager: {
-          value: input,
-          isValid: false,
-        }
-      })
-      dispatch(setEmergencyManager(''))
-      return
-    }
-    if (isValid) {
-      setFormControl({
-        ...formControl,
-        emergencyManager: {
-          value: input,
-          isValid: true,
-        }
-      })
-      dispatch(setEmergencyManager(input))
-    }
-    return;
-  };
-
-  const handleRebalanceManagerChange = (input: string) => {
-    const isValid = isValidAddress(input)
-    while (!isValid) {
-      setFormControl({
-        ...formControl,
-        rebalanceManager: {
-          value: input,
-          isValid: false,
-        }
-      })
-      dispatch(setRebalanceManager(''))
-      return
-    }
-    if (isValid) {
-      setFormControl({
-        ...formControl,
-        rebalanceManager: {
-          value: input,
-          isValid: true,
-        }
-      })
-      dispatch(setRebalanceManager(input))
-    }
-    return;
-  };
-
-  const handleFeeReceiverChange = (input: string) => {
-    const isValid = isValidAddress(input)
-    while (!isValid) {
-      setFormControl({
-        ...formControl,
-        feeReceiver: {
-          value: input,
-          isValid: false,
-        }
-      })
-      dispatch(setFeeReceiver(''))
-      return
-    }
-    setFormControl({
-      ...formControl,
-      feeReceiver: {
-        value: input,
-        isValid: true,
-      }
-    })
-    dispatch(setFeeReceiver(input))
-  };
+  const managerData = [dropdownData.manager, dropdownData.emergencyManager, dropdownData.rebalanceManager]
 
   const handleVaultShareChange = (input: any) => {
     if (input < 0 || input > 100) return
@@ -319,7 +222,47 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
     dispatch(setUpgradable(input))
   }
 
+  const getFormValue = (title: string): string | undefined => {
+    switch (title) {
+      case 'Manager':
+        return formControl.manager.value
+      case 'Emergency manager':
+        return formControl.emergencyManager.value
+      case 'Rebalance manager':
+        return formControl.rebalanceManager.value
+      default:
+        return ''
+    }
+  }
 
+  const handleAddressInput = (input: string, title: string) => {
+    const isValid = isValidAddress(input)
+
+    const stateId = parseCamelCase(title)
+    console.log('stateId', stateId)
+    const storeId = parsePascalCase(title)
+    console.log('storeId', storeId)
+    while (!isValid) {
+      setFormControl({
+        ...formControl,
+        [stateId]: {
+          value: input,
+          isValid: false,
+        }
+      })
+      return
+    }
+    if (isValid) {
+      setFormControl({
+        ...formControl,
+        [stateId]: {
+          value: input,
+          isValid: true
+        }
+      })
+      dispatch({ type: `vault/set${storeId}`, payload: input })
+    }
+  }
   return (
     <>
       <AccordionRoot value={accordionValue} onValueChange={(e: any) => setAccordionValue(e.value)}>
@@ -370,36 +313,18 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
             accordionValue={accordionValue}
           />
           <AccordionItemContent>
-            <CustomInputField
-              label={dropdownData.manager.title}
-              value={formControl.manager.value || ''}
-              onChange={(e) => handleManagerChange(e.target.value)}
-              handleClick={(address: string) => handleManagerChange(address)}
-              placeholder='GAFS3TLVM...'
-              invalid={formControl.manager.isValid === false}
-              description={dropdownData.manager.description}
-              href={dropdownData.manager.href}
-            />
-            <CustomInputField
-              label={dropdownData.emergencyManager.title}
-              value={formControl.emergencyManager.value || ''}
-              onChange={(e) => handleEmergencyManagerChange(e.target.value)}
-              handleClick={(address: string) => handleEmergencyManagerChange(address)}
-              placeholder='GAFS3TLVM...'
-              invalid={formControl.emergencyManager.isValid === false}
-              description={dropdownData.emergencyManager.description}
-              href={dropdownData.emergencyManager.href}
-            />
-            <CustomInputField
-              label={dropdownData.rebalanceManager.title}
-              value={formControl.rebalanceManager.value || ''}
-              onChange={(e) => handleRebalanceManagerChange(e.target.value)}
-              handleClick={(address: string) => handleRebalanceManagerChange(address)}
-              placeholder='GAFS3TLVM...'
-              invalid={formControl.rebalanceManager.isValid === false}
-              description={dropdownData.rebalanceManager.description}
-              href={dropdownData.rebalanceManager.href}
-            />
+            {managerData.map((item, index) =>
+              <CustomInputField
+                key={index}
+                label={item.title}
+                value={getFormValue(item.title) ?? ''}
+                onChange={(e) => handleAddressInput(e.target.value, item.title)}
+                handleClick={(address: string) => handleAddressInput(address, item.title)}
+                placeholder='GAFS3TLVM...'
+                invalid={formControl.manager.isValid === false}
+                description={item.description}
+              />
+            )}
           </AccordionItemContent>
         </AccordionItem>
         <AccordionItem value={AccordionItems.FEES_CONFIGS}>
@@ -412,8 +337,8 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
             <CustomInputField
               label='Fee receiver'
               value={formControl.feeReceiver.value || ''}
-              onChange={(e) => handleFeeReceiverChange(e.target.value)}
-              handleClick={(address: string) => handleFeeReceiverChange(address)}
+              onChange={(e) => handleAddressInput(e.target.value, dropdownData.feeReceiver.title)}
+              handleClick={(address: string) => handleAddressInput(address, dropdownData.feeReceiver.title)}
               placeholder='GAFS3TLVM...'
               invalid={formControl.feeReceiver.isValid === false}
               description={dropdownData.feeReceiver.description}

@@ -9,7 +9,7 @@ import { ModalContext } from '@/contexts';
 import { NativeSelectRoot } from '../ui/native-select';
 import { NumberInputField, NumberInputRoot } from '../ui/number-input';
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks';
-import { useSorobanReact } from '@soroban-react/core';
+import { useSorobanReact } from 'stellar-react';
 import { useVault, useVaultCallback, VaultMethod } from '@/hooks/useVault';
 import { ActionType, RebalanceInstruction } from '@/hooks/types';
 import { mapInstructionsToParams } from '@/helpers/vault';

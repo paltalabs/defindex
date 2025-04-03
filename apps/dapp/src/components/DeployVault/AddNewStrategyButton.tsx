@@ -22,14 +22,15 @@ import {
   Stack,
   Text,
 } from '@chakra-ui/react'
-import { useSorobanReact } from '@soroban-react/core'
+import { useSorobanReact, WalletNetwork } from 'stellar-react'
 import { scValToNative, xdr } from '@stellar/stellar-sdk'
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { MdAdd } from 'react-icons/md'
 import { Checkbox } from '../ui/checkbox'
 import { CheckboxCard } from '../ui/checkbox-card'
 import { InputGroup } from '../ui/input-group'
 import { NumberInputField, NumberInputRoot } from '../ui/number-input'
+import { getNetworkName } from '@/helpers/networkName'
 
 interface AmountInputProps {
   amount: number
@@ -40,7 +41,7 @@ interface AmountInputProps {
 function AddNewStrategyButton() {
   const dispatch = useAppDispatch();
   const sorobanContext = useSorobanReact()
-  const { activeChain } = useSorobanReact()
+  const { kit, activeNetwork } = sorobanContext
   const strategyCallback = useStrategyCallback();
   const [open, setOpen] = useState<boolean>(false)
   const newVault = useAppSelector((state) => state.newVault)
@@ -48,6 +49,12 @@ function AddNewStrategyButton() {
   const [selectedAsset, setSelectedAsset] = useState<Asset>({ address: '', strategies: [], symbol: '', amount: 0 })
   const [assets, setAssets] = useState<Asset[]>([])
   const [amountInput, setAmountInput] = useState<AmountInputProps>({ amount: 0, enabled: false, target: '' })
+  const [networkName, setNetworkName] = useState<string>('')
+
+  useEffect(() => {
+    let network = getNetworkName(activeNetwork)
+    setNetworkName(network)
+  }, [activeNetwork])
 
   const resetForm = () => {
     setSelectedAsset({ address: '', strategies: [], symbol: '' })
@@ -63,16 +70,16 @@ function AddNewStrategyButton() {
 
   useEffect(() => {
     const fetchStrategies = async () => {
-      const tempStrategies = await getDefaultStrategies(activeChain?.name?.toLowerCase() || 'testnet')
+      const tempStrategies = await getDefaultStrategies(networkName)
       setDefaultStrategies(tempStrategies)
     }
     fetchStrategies();
-  }, [activeChain?.networkPassphrase])
+  }, [activeNetwork])
 
   useEffect(() => {
     const fetchStrategies = async () => {
-      const rawDefaultStrategies = await getDefaultStrategies(activeChain?.name?.toLowerCase() || 'testnet')
-      const defaultStrategiesWithAssets = await Promise.all(rawDefaultStrategies.map(async (strategy) => {
+      const rawDefaultStrategies = await getDefaultStrategies(networkName)
+      await Promise.allSettled(rawDefaultStrategies.map(async (strategy) => {
         const assetAddress = await strategyCallback(
           strategy.address,
           StrategyMethod.ASSET,
@@ -87,11 +94,12 @@ function AddNewStrategyButton() {
         const asset = { address: assetAddress, strategies: [strategy], symbol: assetSymbol! }
         return asset
       }
-      ))
-      setAssets(defaultStrategiesWithAssets)
+      )).then((results) => {
+        setAssets(results.map(result => result.status === 'fulfilled' ? result.value : null).filter(asset => asset !== null))
+      })
     }
     fetchStrategies();
-  }, [activeChain?.networkPassphrase])
+  }, [activeNetwork])
 
 
   const handleSelectStrategy = (value: boolean, strategy: Strategy) => {

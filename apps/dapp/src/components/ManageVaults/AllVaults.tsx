@@ -1,4 +1,4 @@
-import { useSorobanReact } from '@soroban-react/core'
+import { useSorobanReact } from 'stellar-react'
 import { useEffect } from 'react'
 
 import { shortenAddress } from '@/helpers/address'
@@ -49,7 +49,7 @@ export const AllVaults = ({
 }: {
     handleOpenInspect: (value: boolean, args?: any) => any
   }) => {
-  const { activeChain, address } = useSorobanReact()
+  const { activeNetwork, address } = useSorobanReact()
   const dispatch = useAppDispatch();
   const vaults = useAppSelector(state => state.wallet.vaults)
   const isLoading = vaults.isLoading
@@ -88,7 +88,7 @@ export const AllVaults = ({
 
   useEffect(() => {
     getDefindexVaults()
-  }, [activeChain?.networkPassphrase])
+  }, [activeNetwork])
 
   useEffect(() => {
     createdVaults.forEach(async (v: VaultData) => {

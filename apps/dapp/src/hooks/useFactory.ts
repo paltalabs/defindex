@@ -1,10 +1,10 @@
-import { TxResponse, contractInvoke } from '@soroban-react/contracts';
-import { SorobanContextType, useSorobanReact } from "@soroban-react/core";
+import { contractInvoke, SorobanContextType, useSorobanReact } from 'stellar-react';
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { useCallback, useEffect, useState } from "react";
 
 import { getNetworkName } from "@/helpers/networkName";
 import { fetchFactoryAddress } from "@/utils/factory";
+import { TxResponse } from 'stellar-react/dist/contracts/types';
 
 export enum FactoryMethod {
   CREATE_DEFINDEX_VAULT = "create_defindex_vault",
@@ -17,13 +17,16 @@ export enum FactoryMethod {
 const isObject = (val: unknown) => typeof val === 'object' && val !== null && !Array.isArray(val);
 export const useFactory = () => {
   const sorobanContext: SorobanContextType = useSorobanReact();
-  const { activeChain } = sorobanContext;
+  const { activeNetwork } = sorobanContext;
+  if (!activeNetwork) {
+    throw new Error('No active network found');
+  }
   const [address, setAddress] = useState<string>();
-  const networkName = getNetworkName(activeChain?.networkPassphrase as string);
+  const networkName = getNetworkName(activeNetwork);
   useEffect(() => {
     if (!sorobanContext) return;
     if (networkName !== 'mainnet' && networkName !== 'testnet') {
-      throw new Error(`Invalid network when fetching factory address: ${activeChain?.id}. It should be mainnet or testnet`);
+      throw new Error(`Invalid network when fetching factory address: ${networkName}. It should be mainnet or testnet`);
     }
 
     fetchFactoryAddress(networkName).then(
@@ -34,16 +37,19 @@ export const useFactory = () => {
       throw new Error(`Failed to fetch factory address: ${error}`);
     });
 
-  }, [activeChain?.id]);
+  }, [activeNetwork]);
 
   return { address };
 }
 
 export function useFactoryCallback() {
   const sorobanContext = useSorobanReact();
-  const {activeChain} = sorobanContext;
+  const {activeNetwork} = sorobanContext;
   const { address: factoryAddress } = useFactory();
-  const networkName = getNetworkName(activeChain?.networkPassphrase as string);
+  if (!activeNetwork) {
+    throw new Error('No active network found');
+  }
+  const networkName = getNetworkName(activeNetwork);
 
   return useCallback(
     async (method: FactoryMethod, args?: StellarSdk.xdr.ScVal[], signAndSend?: boolean) => {
@@ -81,7 +87,7 @@ export function useFactoryCallback() {
         if (!signAndSend) return result;
         if (
           isObject(result) &&
-          result?.status !== StellarSdk.SorobanRpc.Api.GetTransactionStatus.SUCCESS
+          result?.status !== StellarSdk.rpc.Api.GetTransactionStatus.SUCCESS
         ) throw result;
         return result
       } catch (e: any) {

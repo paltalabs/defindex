@@ -1,5 +1,4 @@
-import { contractInvoke } from "@soroban-react/contracts";
-import { SorobanContextType } from "@soroban-react/core";
+import { contractInvoke, SorobanContextType } from "stellar-react";
 import { Address, scValToBigInt, xdr } from "@stellar/stellar-sdk";
 
 

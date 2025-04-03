@@ -1,15 +1,12 @@
-import { useSorobanReact } from "@soroban-react/core";
-
+import { useSorobanReact, contractInvoke } from "stellar-react";
 import { HStack, Text } from "@chakra-ui/react";
-import { contractInvoke } from "@soroban-react/contracts";
 import { Address, Keypair, nativeToScVal, scValToNative, xdr } from "@stellar/stellar-sdk";
 import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 
 export const TestTokens = () => {
   const sorobanContext = useSorobanReact();
-  const { address, activeChain, server } = sorobanContext;
-  const networkPassphrase = activeChain?.networkPassphrase ?? '';
+  const { address, activeNetwork: networkPassphrase, sorobanServer: server } = sorobanContext;
   const [isSubmitting, setSubmitting] = useState(false);
   const [balance, setBalance] = useState<string>("0");
 

@@ -7,15 +7,15 @@ import { ModalProvider } from './modal-provider'
 export const Providers = ({ children }: { children: ReactNode }) => {
 
   return (
-    <StoreProvider>
       <MySorobanReactProvider>
+      <StoreProvider>
         <Provider>
           <ModalProvider>
             {children}
           </ModalProvider>
         </Provider>
-      </MySorobanReactProvider>
-    </StoreProvider>
+      </StoreProvider>
+    </MySorobanReactProvider>
   )
 }
 

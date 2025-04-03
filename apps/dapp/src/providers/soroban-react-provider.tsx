@@ -1,24 +1,30 @@
-"use client";
-import React from 'react'
-import { SorobanReactProvider } from '@soroban-react/core';
-import { futurenet, sandbox, standalone, testnet } from '@soroban-react/chains';
-import { freighter } from '@soroban-react/freighter';
-import type { ChainMetadata, Connector } from "@soroban-react/types";
-import { xbull } from '@soroban-react/xbull';
-import { lobstr } from '@soroban-react/lobstr'
+import useMounted from '@/hooks/useMounted';
+import { NetworkDetails, SorobanReactProvider, WalletNetwork } from 'stellar-react';
 
-const chains: ChainMetadata[] = [sandbox, standalone, futurenet, testnet];
-export const connectors: Connector[] = [freighter(), xbull(), lobstr()]
+const mainnetNetworkDetails: NetworkDetails = {
+  network: WalletNetwork.PUBLIC,
+  sorobanRpcUrl: 'https://soroban-rpc.creit.tech/',
+  horizonRpcUrl: 'https://horizon.stellar.org'
+}
 
+const testnetNetworkDetails: NetworkDetails = {
+  network: WalletNetwork.TESTNET,
+  sorobanRpcUrl: 'https://soroban-testnet.stellar.org/',
+  horizonRpcUrl: 'https://horizon-testnet.stellar.org'
+}
 
 export default function MySorobanReactProvider({ children }: { children: React.ReactNode }) {
 
+  const mounted = useMounted();
+  if (!mounted) {
+    return null;
+  }
   return (
     <SorobanReactProvider
-      chains={chains}
       appName={"Example Stellar App"}
-      activeChain={testnet}
-      connectors={connectors}>
+      allowedNetworkDetails={[mainnetNetworkDetails, testnetNetworkDetails]}
+      activeNetwork={WalletNetwork.TESTNET}
+    >
       {children}
     </SorobanReactProvider>
   )

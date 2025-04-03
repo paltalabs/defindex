@@ -1,4 +1,4 @@
-import { useSorobanReact } from "@soroban-react/core"
+import { useSorobanReact } from "stellar-react"
 import { useContext } from "react"
 
 import { ModalContext } from "@/contexts"
@@ -13,6 +13,7 @@ import {
   Button,
   Grid,
   GridItem,
+  HStack,
   IconButton,
   Input,
   Stack,
@@ -31,7 +32,7 @@ import AllVaults from "./AllVaults"
 import { InspectVault } from "./InspectVault"
 
 export const ManageVaults = () => {
-  const { address, activeChain } = useSorobanReact()
+  const { address } = useSorobanReact()
   const {
     inspectVaultModal: inspectModal,
     deployVaultModal: deployModal,
@@ -123,23 +124,26 @@ export const ManageVaults = () => {
           justifyItems={'start'}
           display={'flex'}
         >
-          <ConnectButton />
+          <HStack>
 
-          {!!address && <DialogRoot
-            open={deployModal.isOpen}
-            onOpenChange={(e) => { handleOpenDeployVault('create_vault', e.open) }}
-            size={'lg'}
-            placement={'center'}>
-            <DialogBackdrop backdropFilter='blur(1px)' />
-            <DialogTrigger asChild>
-              <Button
-                rounded={18}
-              >
-                Add Vault
-              </Button>
-            </DialogTrigger>
-            <DeployVault />
-          </DialogRoot>}
+            <ConnectButton />
+
+            {!!address && <DialogRoot
+              open={deployModal.isOpen}
+              onOpenChange={(e) => { handleOpenDeployVault('create_vault', e.open) }}
+              size={'lg'}
+              placement={'center'}>
+              <DialogBackdrop backdropFilter='blur(1px)' />
+              <DialogTrigger asChild>
+                <Button
+                  rounded={18}
+                >
+                  Add Vault
+                </Button>
+              </DialogTrigger>
+              <DeployVault />
+            </DialogRoot>}
+          </HStack>
         </GridItem>
 
         {/* Interact with vault */}

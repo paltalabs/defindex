@@ -1,4 +1,4 @@
-import { useSorobanReact } from '@soroban-react/core'
+import { useSorobanReact } from 'stellar-react'
 import { Address, xdr } from '@stellar/stellar-sdk'
 import { useContext, useEffect, useState } from 'react'
 

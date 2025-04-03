@@ -1,5 +1,5 @@
 'use client'
-import { useSorobanReact } from "@soroban-react/core"
+import { useSorobanReact } from "stellar-react"
 import { useContext } from "react"
 
 import { ModalContext } from "@/contexts"
