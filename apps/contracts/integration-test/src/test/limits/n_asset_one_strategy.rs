@@ -402,6 +402,18 @@ fn n_assets_one_strategy_blend() {
         &amount_a,
         &amount_b,
     );
+    // Create XLM-BLND pool
+    xlm_client.mint(&pool_admin, &amount_a);
+    blnd_client.mint(&pool_admin, &amount_b);
+    create_soroswap_pool(
+        &setup.env,
+        &soroswap_router,
+        &pool_admin,
+        &xlm.address,
+        &blnd.address,
+        &amount_a,
+        &amount_b,
+    );
     xlm_client.mint(&pool_admin, &amount_a);
     usdc_client.mint(&pool_admin, &amount_b);
     create_soroswap_pool(
@@ -673,6 +685,17 @@ fn n_assets_one_strategy_blend() {
     vault_contract.withdraw(&balance, &min_amounts_out, &user);
     let withdraw_usage = check_limits_return_info(&setup.env, "Withdraw");
 
+    // Harvest
+    setup.env.cost_estimate().budget().reset_unlimited();
+    usdc_strategy_contract.harvest(&keeper);
+    xlm_strategy_contract.harvest(&keeper);
+    let harvest_usage = check_limits_return_info(&setup.env, "Harvest");
+
+    // Distribute fees
+    setup.env.cost_estimate().budget().reset_unlimited();
+    vault_contract.distribute_fees(&manager);
+    let distribute_fees_usage = check_limits_return_info(&setup.env, "Distribute Fees");
+
     // Create results table
     let usage_results = vec![
         create_vault_usage,
@@ -682,6 +705,8 @@ fn n_assets_one_strategy_blend() {
         unwind_usage,
         swap_usage,
         withdraw_usage,
+        distribute_fees_usage,
+        harvest_usage,
     ];
     create_results_table(&setup.env, usage_results);
 }

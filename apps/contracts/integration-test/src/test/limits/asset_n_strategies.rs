@@ -684,11 +684,10 @@ fn blend() {
     let balance = vault_contract.balance(&users[0]);
     let min_amounts_out = svec![&setup.env, 0i128];
 
-    setup.env.cost_estimate().budget().reset_unlimited();
-
     /* ------------------------------------------------------------ Withdraw ------------------------------------------------------------- */
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.withdraw(&balance, &min_amounts_out, &users[0]);
-    let withdraw_usage= check_limits_return_info(&setup.env, "Withdraw");
+    let withdraw_usage= check_limits_return_info(&setup.env, "Withdraw  from User0");
 
     // admin borrow back to 50% util rate
     let borrow_amount = (user_2_starting_balance + starting_balance * 2) / 2;
@@ -758,7 +757,7 @@ fn blend() {
     let balance = vault_contract.balance(&users[1]);
     let min_amounts_out = svec![&setup.env, 0i128];
     vault_contract.withdraw(&balance, &min_amounts_out, &users[1]);
-    let withdraw_1_usage= check_limits_return_info(&setup.env, "Withdraw");
+    let withdraw_1_usage= check_limits_return_info(&setup.env, "Withdraw  from User1");
 
     /* -------------------------------------------------------- Results table --------------------------------------------------------- */
     let usage_results = vec![
