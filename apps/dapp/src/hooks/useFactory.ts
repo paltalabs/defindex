@@ -17,9 +17,7 @@ export enum FactoryMethod {
 const isObject = (val: unknown) => typeof val === 'object' && val !== null && !Array.isArray(val);
 export const useFactory = () => {
   const sorobanContext: SorobanContextType = useSorobanReact();
-  // const { activeChain } = sorobanContext;
-  const activeChain = { id: "testnet", name: "testnet", networkPassphrase: "Test SDF Network ; September 2015" } // REMOVE_THIS
-
+  const { activeChain } = sorobanContext;
   const [address, setAddress] = useState<string>();
   const networkName = getNetworkName(activeChain?.networkPassphrase as string);
   useEffect(() => {

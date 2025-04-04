@@ -5,7 +5,7 @@ import { contractTransaction } from "./contractTransaction"
 import { signAndSendTransaction } from "./transaction"
 import { SorobanContextType } from "./types"
 import { TxResponse } from "./types/transaction"
-
+  
 /**
  * Arguments for invoking a smart contract method call.
  */
@@ -25,12 +25,12 @@ export type InvokeArgs = {
 const defaultAddress =
   'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF'
 
-/**
-* Invokes a smart contract method.
-* @param {InvokeArgs} args - Arguments for invoking the smart contract.
-* @returns {Promise<TxResponse | StellarSdk.xdr.ScVal>} - A promise resolving to the transaction response or the result of the simulation.
-* @throws {Error} - If there are errors during the contract invocation process.
-*/
+  /**
+ * Invokes a smart contract method.
+ * @param {InvokeArgs} args - Arguments for invoking the smart contract.
+ * @returns {Promise<TxResponse | StellarSdk.xdr.ScVal>} - A promise resolving to the transaction response or the result of the simulation.
+ * @throws {Error} - If there are errors during the contract invocation process.
+ */
 export async function contractInvoke({
   contractAddress,
   method,
@@ -42,9 +42,7 @@ export async function contractInvoke({
   sorobanContext,
   reconnectAfterTx = true,
 }: InvokeArgs): Promise<TxResponse | StellarSdk.xdr.ScVal> {
-  // const { server, address, activeChain } = sorobanContext
-  const { server, address } = sorobanContext
-  const activeChain = { id: "testnet", name: "testnet", networkPassphrase: "Test SDF Network ; September 2015" } // REMOVE_THIS
+  const { server, address, activeChain } = sorobanContext
 
   if (!activeChain) {
     throw new Error('No active Chain')

@@ -1,3 +1,4 @@
+import React, { useContext, useEffect, useState } from "react";
 import { useSorobanReact } from "@soroban-react/core";
 import {
   Address,
@@ -5,17 +6,15 @@ import {
   xdr,
 } from "@stellar/stellar-sdk";
 
-import { useContext, useEffect, useState } from "react";
-
 import { useAppDispatch, useAppSelector } from "@/store/lib/storeHooks"
 import { pushVault } from '@/store/lib/features/walletStore'
 import { NewVaultState, VaultData } from "@/store/lib/types";
 
+import { useFactoryCallback, FactoryMethod } from '@/hooks/useFactory'
 import { ModalContext, TransactionStatusModalStatus } from "@/contexts";
-import { FactoryMethod, useFactoryCallback } from '@/hooks/useFactory';
 
-import { DialogBody, DialogCloseTrigger, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { AccordionItems, FormControlInterface, VaultPreview } from "./VaultPreview";
+import { DialogBody, DialogCloseTrigger, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { Button } from "@chakra-ui/react"
 import { resetNewVault } from "@/store/lib/features/vaultStore";
 import { useVault } from "@/hooks/useVault";

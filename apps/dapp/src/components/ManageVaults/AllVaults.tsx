@@ -50,9 +50,6 @@ export const AllVaults = ({
     handleOpenInspect: (value: boolean, args?: any) => any
   }) => {
   const { activeChain, address } = useSorobanReact()
-  // const { address } = useSorobanReact()
-  // const activeChain = { id: "testnet", name: "testnet", networkPassphrase: "Test SDF Network ; September 2015" } // REMOVE_THIS
-
   const dispatch = useAppDispatch();
   const vaults = useAppSelector(state => state.wallet.vaults)
   const isLoading = vaults.isLoading
