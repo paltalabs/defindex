@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
-import * as StellarSdk from '@stellar/stellar-sdk';
-import { SorobanContextType, useSorobanReact } from "@soroban-react/core";
 import { TxResponse, contractInvoke } from '@soroban-react/contracts';
+import { SorobanContextType, useSorobanReact } from "@soroban-react/core";
+import * as StellarSdk from '@stellar/stellar-sdk';
+import { useCallback, useEffect, useState } from "react";
 
 import { getNetworkName } from "@/helpers/networkName";
 import { fetchFactoryAddress } from "@/utils/factory";
@@ -9,7 +9,9 @@ import { fetchFactoryAddress } from "@/utils/factory";
 export enum FactoryMethod {
   CREATE_DEFINDEX_VAULT = "create_defindex_vault",
   CREATE_DEFINDEX_VAULT_DEPOSIT = "create_defindex_vault_deposit",
-  DEPLOYED_DEFINDEXES = "deployed_defindexes",
+  TOTAL_VAULTS = "total_vaults",
+  GET_VAULT_BY_INDEX = "get_vault_by_index",
+  DEFINDEX_FEE = "defindex_fee",
 }
 
 const isObject = (val: unknown) => typeof val === 'object' && val !== null && !Array.isArray(val);
@@ -86,9 +88,10 @@ export function useFactoryCallback() {
         console.log(e)
         const error = e.toString()
         if (error.includes('ExistingValue')) throw new Error('Index already exists.')
-        if (error.includes('Sign')) throw new Error('Request denied by user. Please try to sign again.')
         if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
-        throw new Error('Failed to create index.', e)
+        if (error.includes('UnexpectedSize')) throw new Error('Invalid arguments length.')
+        if (error.includes('Error(Contract, #10)')) throw new Error('Insufficient funds.')
+        throw new Error('Failed to create vault.', e)
       }
     }, [sorobanContext, factoryAddress])
 }
