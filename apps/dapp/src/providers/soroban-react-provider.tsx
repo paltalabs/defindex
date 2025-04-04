@@ -14,11 +14,8 @@ const testnetNetworkDetails: NetworkDetails = {
 }
 
 export default function MySorobanReactProvider({ children }: { children: React.ReactNode }) {
-
   const mounted = useMounted();
-  if (!mounted) {
-    return null;
-  }
+  if (!mounted) return null;
   return (
     <SorobanReactProvider
       appName={"Example Stellar App"}
