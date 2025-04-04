@@ -49,7 +49,7 @@ fn negative_amount() {
     let min_amounts_out = sorobanvec![&test.env, withdraw_amount, withdraw_amount];
 
     let result = defindex_contract.try_withdraw(&-100i128, &min_amounts_out, &users[0]);
-    assert_eq!(result, Err(Ok(ContractError::AmountNotAllowed)));
+    assert_eq!(result, Err(Ok(ContractError::InsufficientAmount)));
 }
 
 // check that withdraw with amount below min returns error
@@ -1181,10 +1181,12 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     );
 
     // check vault balance
+    // it should be 2222222 - 222222 = 2000000
     assert_eq!(
         test.token_0.balance(&defindex_contract.address),
         2222222 - 222222
     );
+    // it should be 4222222 - 422221 = 3800001
     assert_eq!(
         test.token_1.balance(&defindex_contract.address),
         4222222 - 422221
