@@ -14,7 +14,6 @@ interface NetworkConfig {
   horizon_rpc_url: string;
   soroban_rpc_url: string;
   soroban_network_passphrase: string;
-  blend_keeper: string;
 }
 
 interface Config {
@@ -29,22 +28,19 @@ class EnvConfig {
   passphrase: string;
   friendbot: string | undefined;
   admin: Keypair;
-  blendKeeper: string;
 
   constructor(
     rpc: rpc.Server,
     horizonRpc: Horizon.Server,
     passphrase: string,
     friendbot: string | undefined,
-    admin: Keypair,
-    blendKeeper: string
+    admin: Keypair
   ) {
     this.rpc = rpc;
     this.horizonRpc = horizonRpc;
     this.passphrase = passphrase;
     this.friendbot = friendbot;
     this.admin = admin;
-    this.blendKeeper = blendKeeper;
   }
 
   /**
@@ -58,7 +54,7 @@ class EnvConfig {
     );
     const configs: Config = JSON.parse(fileContents);
 
-    let rpc_url, horizon_rpc_url, friendbot_url, passphrase, blendKeeper;
+    let rpc_url, horizon_rpc_url, friendbot_url, passphrase;
 
     const networkConfig = configs.networkConfig.find(
       (config) => config.network === network
@@ -72,15 +68,11 @@ class EnvConfig {
       rpc_url = process.env.MAINNET_RPC_URL;
       horizon_rpc_url = networkConfig.horizon_rpc_url;
       friendbot_url = undefined;
-      blendKeeper = networkConfig.blend_keeper;
     } else {
       rpc_url = networkConfig.soroban_rpc_url;
       horizon_rpc_url = networkConfig.horizon_rpc_url;
       friendbot_url = networkConfig.friendbot_url;
       passphrase = networkConfig.soroban_network_passphrase;
-      blendKeeper = process.env.BLEND_KEEPER_SECRET_KEY
-        ? Keypair.fromSecret(process.env.BLEND_KEEPER_SECRET_KEY).publicKey()
-        : undefined;
     }
 
     const admin = process.env.ADMIN_SECRET_KEY;
@@ -90,12 +82,10 @@ class EnvConfig {
       (network != "mainnet" && friendbot_url === undefined) ||
       passphrase === undefined ||
       admin === undefined ||
-      admin === "" ||
-      blendKeeper === undefined ||
-      blendKeeper === ""
+      admin === ""
     ) {
       throw new Error(
-        "Error: Configuration is missing required fields. Please check your .env or configs.jsonfile."
+        "Error: Configuration is missing required fields. Please check your .env file."
       );
     }
 
@@ -106,8 +96,7 @@ class EnvConfig {
       new Horizon.Server(horizon_rpc_url, { allowHttp }),
       passphrase,
       friendbot_url,
-      Keypair.fromSecret(admin),
-      blendKeeper
+      Keypair.fromSecret(admin)
     );
   }
 

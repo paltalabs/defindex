@@ -1,9 +1,7 @@
 "use client"
-
 import type { IconButtonProps } from "@chakra-ui/react"
 import { ClientOnly, IconButton, Skeleton } from "@chakra-ui/react"
-import { ThemeProvider, useTheme } from "next-themes"
-import type { ThemeProviderProps } from "next-themes/dist/types"
+import { ThemeProvider, ThemeProviderProps, useTheme } from "next-themes"
 import { forwardRef } from "react"
 import { LuMoon, LuSun } from "react-icons/lu"
 

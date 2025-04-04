@@ -1,11 +1,11 @@
-import { TxResponse, contractInvoke } from '@soroban-react/contracts';
-import { useSorobanReact } from "@soroban-react/core";
+import { contractInvoke, useSorobanReact } from 'stellar-react';
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { scValToNative } from "@stellar/stellar-sdk";
 import { useCallback } from "react";
 
 import { getTokenSymbol } from "@/helpers/getTokenInfo";
 import { AssetAmmount, VaultData } from "@/store/lib/types";
+import { TxResponse } from 'stellar-react/dist/contracts/types';
 
 
 export enum VaultMethod {
@@ -65,7 +65,7 @@ export function useVaultCallback() {
     
                 if (
                     isObject(result) &&
-                    result?.status !== StellarSdk.SorobanRpc.Api.GetTransactionStatus.SUCCESS
+                    result?.status !== StellarSdk.rpc.Api.GetTransactionStatus.SUCCESS
                 ) throw result;
                 return result
             } catch (e: any) {

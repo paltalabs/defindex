@@ -1,5 +1,5 @@
-import { TxResponse, contractInvoke } from '@soroban-react/contracts';
-import { useSorobanReact } from "@soroban-react/core";
+import { contractInvoke, useSorobanReact } from 'stellar-react';
+import { TxResponse } from 'stellar-react/dist/contracts/types';
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { useCallback } from "react";
 
@@ -45,14 +45,14 @@ export function useStrategyCallback() {
                 if (isTxResponse(result)) {
                     if (
                         isObject(result) &&
-                        result?.status !== StellarSdk.SorobanRpc.Api.GetTransactionStatus.SUCCESS
+                        result?.status !== StellarSdk.rpc.Api.GetTransactionStatus.SUCCESS
                     ) throw result;
                     return result;
                 }
             } catch (e: any) {
                 console.log("Strategy Address:", address);
-                console.log(e);
                 const error = e.toString();
+                console.log(error);
                 if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
                 if (error.includes('Sign')) throw new Error('Request denied by user. Please try to sign again.');
                 throw new Error('Failed to interact with strategy. If the problem persists, please contact support.');
