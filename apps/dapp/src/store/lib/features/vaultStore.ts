@@ -22,8 +22,8 @@ import { Asset, NewVaultState, Strategy, VaultData } from '../types';
     rebalanceManager: "",
     feeReceiver: "",
     manager: "",
-    name: "aa",
-    symbol: "aa",
+    name: "",
+    symbol: "",
     vaultShare: 0,
     assets: [{
       address: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
