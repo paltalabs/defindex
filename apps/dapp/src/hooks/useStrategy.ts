@@ -50,11 +50,11 @@ export function useStrategyCallback() {
                     return result;
                 }
             } catch (e: any) {
-                console.log("Strategy Address:", address);
                 const error = e.toString();
                 console.log(error);
                 if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
                 if (error.includes('Sign')) throw new Error('Request denied by user. Please try to sign again.');
+                if (error.includes('non-existing value for contract instance')) throw new Error('Strategy not found.');
                 throw new Error('Failed to interact with strategy. If the problem persists, please contact support.');
             }
         }, [sorobanContext]
