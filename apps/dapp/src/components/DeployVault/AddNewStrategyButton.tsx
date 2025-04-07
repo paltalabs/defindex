@@ -17,7 +17,6 @@ import {
   For,
   Grid,
   GridItem,
-  HStack,
   IconButton,
   Stack,
   Text,
@@ -51,10 +50,6 @@ function AddNewStrategyButton() {
   const [amountInput, setAmountInput] = useState<AmountInputProps>({ amount: 0, enabled: false, target: '' })
   const [networkName, setNetworkName] = useState<string>('')
 
-  useEffect(() => {
-    let network = getNetworkName(activeNetwork)
-    setNetworkName(network)
-  }, [activeNetwork])
 
   const resetForm = () => {
     setSelectedAsset({ address: '', strategies: [], symbol: '' })
@@ -67,40 +62,6 @@ function AddNewStrategyButton() {
     if (!symbol) return '';
     return symbol === 'native' ? 'XLM' : symbol
   }
-
-  useEffect(() => {
-    const fetchStrategies = async () => {
-      const tempStrategies = await getDefaultStrategies(networkName)
-      setDefaultStrategies(tempStrategies)
-    }
-    fetchStrategies();
-  }, [activeNetwork])
-
-  useEffect(() => {
-    const fetchStrategies = async () => {
-      const rawDefaultStrategies = await getDefaultStrategies(networkName)
-      await Promise.allSettled(rawDefaultStrategies.map(async (strategy) => {
-        const assetAddress = await strategyCallback(
-          strategy.address,
-          StrategyMethod.ASSET,
-          undefined,
-          false
-        ).then((result) => {
-          const resultScval = result as xdr.ScVal;
-          const asset = scValToNative(resultScval);
-          return asset;
-        })
-        const assetSymbol = await getSymbol(assetAddress)
-        const asset = { address: assetAddress, strategies: [strategy], symbol: assetSymbol! }
-        return asset
-      }
-      )).then((results) => {
-        setAssets(results.map(result => result.status === 'fulfilled' ? result.value : null).filter(asset => asset !== null))
-      })
-    }
-    fetchStrategies();
-  }, [activeNetwork])
-
 
   const handleSelectStrategy = (value: boolean, strategy: Strategy) => {
     const selectedAsset = assets.find((asset) => asset.strategies.some((str) => str.address === strategy.address))
@@ -149,6 +110,42 @@ function AddNewStrategyButton() {
     }
     resetForm()
   }
+
+  const fetchStrategies = async () => {
+    const rawDefaultStrategies = await getDefaultStrategies(networkName)
+    setDefaultStrategies(rawDefaultStrategies)
+    await Promise.allSettled(rawDefaultStrategies.map(async (strategy) => {
+      const assetAddress = await strategyCallback(
+        strategy.address,
+        StrategyMethod.ASSET,
+        undefined,
+        false
+      ).then((result) => {
+        const scVal = result as xdr.ScVal;
+        const asset = scValToNative(scVal);
+        return asset;
+      });
+      if (!assetAddress) throw new Error('Asset address not found')
+      const assetSymbol = await getSymbol(assetAddress)
+      const asset = { address: assetAddress, strategies: [strategy], symbol: assetSymbol! }
+      return asset
+    })).then((results) => {
+      const fullfilledResults = results.filter(result => result.status === 'fulfilled')
+      const rejectedResults = results.filter(result => result.status === 'rejected')
+      console.warn('Rejected strategies:', rejectedResults)
+      setAssets(fullfilledResults.map(result => result.value))
+    }).catch((error) => {
+      console.error('Error fetching strategies:', error);
+    }
+    )
+  }
+
+  useEffect(() => {
+    let network = getNetworkName(activeNetwork)
+    setNetworkName(network)
+    fetchStrategies();
+  }, [activeNetwork])
+
 
   return (
     <DialogRoot open={open} onOpenChange={(e) => { setOpen(e.open) }} placement={'center'}>
