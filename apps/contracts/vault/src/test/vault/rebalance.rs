@@ -1091,7 +1091,7 @@ fn swap_wrong_asset_out(){
     assert_eq!(result, Err(Ok(ContractError::UnsupportedAsset)));
 }
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #410)")]
+#[should_panic(expected = "HostError: Error(Contract, #110)")]
 fn invest_negative_amount(){
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
@@ -1871,7 +1871,7 @@ fn unwind_negative_amount(){
     // Check if invested funds are 0
     let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
     assert_eq!(invested_funds, amount_to_invest);
-    assert_eq!(unwind_result, Err(Ok(ContractError::StrategyWithdrawError)));
+    assert_eq!(unwind_result, Err(Ok(ContractError::AmountNotAllowed)));
 }
 #[test]
 #[should_panic(expected = "HostError: Error(Contract, #110)")]
