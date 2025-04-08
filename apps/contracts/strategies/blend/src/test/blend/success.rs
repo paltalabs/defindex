@@ -9,9 +9,10 @@ use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTes
 use crate::BlendStrategyClient;
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
-use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke};
-use soroban_sdk::{vec, Address, Env, IntoVal, Symbol};
+use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke, Events};
+use soroban_sdk::{vec, Address, Env, IntoVal, Symbol, Vec, Val, symbol_short, String, FromVal};
 use crate::test::std::println;
+use crate::STRATEGY_NAME;
 
 #[test]
 fn success() {
@@ -642,7 +643,11 @@ fn success() {
     assert_eq!(old_keeper, keeper);
     // set keeper to a new address
     let new_keeper = Address::generate(&e);
+
     strategy_client.set_keeper(&new_keeper);
+
+    let events = e.events().all();
+    println!("Events {:?}", events);
     // check set keeper auths
     assert_eq!(
         e.auths()[0],
@@ -663,8 +668,20 @@ fn success() {
     );
     assert_eq!(strategy_client.get_keeper(), new_keeper);
 
-    // Harvest with the specific Mock with the new keeper
+    let keeper_changed_events: std::vec::Vec<(Address, Vec<Val>, Val)> = 
+        events.iter().filter(
+            |event| event.1 == 
+                vec![&e, String::from_str(&e, STRATEGY_NAME).into_val(&e), 
+                symbol_short!("setkeeper").into_val(&e)]
+        ).collect();
+    println!("Keeper changed events {:?}", keeper_changed_events);
+    assert_eq!(keeper_changed_events.len(), 1, "Expected exactly one setkeeper event");
 
+    let keeper_event_data: (Address, Address) = FromVal::from_val(&e, &keeper_changed_events[0].2);
+    assert_eq!(keeper_event_data.0, keeper);
+    assert_eq!(keeper_event_data.1, new_keeper);
+
+    // Harvest with the specific Mock with the new keeper
     strategy_client
     .mock_auths(&[MockAuth {
         address: &new_keeper.clone(),

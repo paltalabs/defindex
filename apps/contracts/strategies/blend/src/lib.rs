@@ -2,7 +2,7 @@
 use reserves::StrategyReserves;
 use soroban_sdk::{
     token::TokenClient,
-    contract, contractimpl, Address, Env, IntoVal, String, Val, Vec, vec,
+    contract, contractimpl, Address, Env, IntoVal, String, Val, Vec, vec, symbol_short,
 };
 
 mod blend_pool;
@@ -320,6 +320,10 @@ impl BlendStrategy {
         old_keeper.require_auth();
             
         storage::set_keeper(&e, &new_keeper);
+        e.events().publish(
+            (String::from_str(&e, STRATEGY_NAME), symbol_short!("setkeeper")),
+            (old_keeper, new_keeper),
+        );
         Ok(())
     }
     
