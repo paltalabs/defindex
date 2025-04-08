@@ -40,7 +40,7 @@ pub fn fetch_idle_funds_for_asset(e: &Env, asset: &Address) -> i128 {
 ///
 /// # Returns
 /// * `Result<i128, ContractError>` - Returns the total invested funds in the strategy (excluding locked fees) as 
-///   an `i128`. Returns a `ContractError` if an error occurs (e.g., overflow, underflow, or report update failure).
+///   an `i128`. Returns a `ContractError` if an error occurs (e.g., overflow, underflow, report update failure or if for any case the locked fees are greater than the strategy invested funds).
 ///
 pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address, report_and_lock_fees: bool) -> Result<i128, ContractError> {
     let strategy_client = get_strategy_client(e, strategy_address.clone());
