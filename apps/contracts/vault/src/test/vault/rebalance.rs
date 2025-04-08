@@ -1091,8 +1091,7 @@ fn swap_wrong_asset_out(){
     assert_eq!(result, Err(Ok(ContractError::UnsupportedAsset)));
 }
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #410)")]
-fn invest_negative_amount(){
+fn invest_negative_or_zero_amount(){
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let users = DeFindexVaultTest::generate_random_users(&test.env, 3);
@@ -1149,9 +1148,21 @@ fn invest_negative_amount(){
         &false,
     );
 
+    // Try rebalance with zero amount
+    let amount_in = 0i128;
+    let instructions = sorobanvec![
+        &test.env,
+        Instruction::Invest(
+            test.strategy_client_token_0.address.clone(),
+            amount_in,
+        ),
+    ];
+    let result = defindex_contract.try_rebalance(&test.rebalance_manager, &instructions);
+    assert_eq!(result, Err(Ok(ContractError::AmountNotAllowed)));
+
     let amount_in = -(1_000_000i128);
 
-    // Rebalance from here on
+    // Try rebalance with negative amount
     let instructions = sorobanvec![
         &test.env,
         Instruction::Invest(
@@ -1160,7 +1171,8 @@ fn invest_negative_amount(){
         ),
     ];
 
-    defindex_contract.rebalance(&test.rebalance_manager, &instructions);
+    let result = defindex_contract.try_rebalance(&test.rebalance_manager, &instructions);
+    assert_eq!(result, Err(Ok(ContractError::AmountNotAllowed)));
 }
 #[test]
 fn invest_wrong_address(){
@@ -1696,7 +1708,7 @@ fn unwind_wrong_address(){
 }
 
 #[test]
-fn unwind_negative_amount(){
+fn unwind_negative_or_zero_amount(){
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let users = DeFindexVaultTest::generate_random_users(&test.env, 3);
@@ -1784,7 +1796,7 @@ fn unwind_negative_amount(){
     ];
     assert_eq!(assets, expected_assets);
 
-    // Rebalance from here on
+    // Rebalance with negative amount
     let amount_to_unwind = 1_000_000i128;
     let instructions = sorobanvec![
         &test.env,
@@ -1794,12 +1806,25 @@ fn unwind_negative_amount(){
         ),
     ];
     let unwind_result = defindex_contract.try_rebalance(&test.rebalance_manager, &instructions);
+    assert_eq!(unwind_result, Err(Ok(ContractError::AmountNotAllowed)));
+   
+    // Rebalance with zero amount
+    let amount_to_unwind = 0i128;
+    let instructions = sorobanvec![
+        &test.env,
+        Instruction::Unwind(
+            test.strategy_client_token_0.address.clone(),
+            amount_to_unwind,
+        ),
+    ];
+    let unwind_result = defindex_contract.try_rebalance(&test.rebalance_manager, &instructions);
     
     // Check if invested funds are 0
     let invested_funds = defindex_contract.fetch_total_managed_funds().get(0).unwrap().invested_amount;
     assert_eq!(invested_funds, amount_to_invest);
-    assert_eq!(unwind_result, Err(Ok(ContractError::StrategyWithdrawError)));
+    assert_eq!(unwind_result, Err(Ok(ContractError::AmountNotAllowed)));
 }
+
 
 #[test]
 #[should_panic(expected = "HostError: Error(Auth, InvalidAction)")]
