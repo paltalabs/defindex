@@ -684,10 +684,11 @@ fn blend() {
     let balance = vault_contract.balance(&users[0]);
     let min_amounts_out = svec![&setup.env, 0i128];
 
-    /* ------------------------------------------------------------ Withdraw ------------------------------------------------------------- */
     setup.env.cost_estimate().budget().reset_unlimited();
+
+    /* ------------------------------------------------------------ Withdraw ------------------------------------------------------------- */
     vault_contract.withdraw(&balance, &min_amounts_out, &users[0]);
-    let withdraw_usage= check_limits_return_info(&setup.env, "Withdraw  from User0");
+    let withdraw_usage= check_limits_return_info(&setup.env, "Withdraw");
 
     // admin borrow back to 50% util rate
     let borrow_amount = (user_2_starting_balance + starting_balance * 2) / 2;
@@ -739,10 +740,14 @@ fn blend() {
         harvest_usage.push_back(usage);
     }
 
+    setup.env.cost_estimate().budget().reset_unlimited();
     let report = vault_contract.report();
+    let report_usage= check_limits_return_info(&setup.env, "Report");
     println!("report = {:?}", report);
 
+    setup.env.cost_estimate().budget().reset_unlimited();    
     let lock_fees = vault_contract.lock_fees(&None);
+    let lock_fees_usage= check_limits_return_info(&setup.env, "Lock Fees");
     println!("locked_fees = {:?}", lock_fees);
 
     /* ---------------------------------------------------------- Distribute Fees ------------------------------------------------------- */
@@ -757,7 +762,7 @@ fn blend() {
     let balance = vault_contract.balance(&users[1]);
     let min_amounts_out = svec![&setup.env, 0i128];
     vault_contract.withdraw(&balance, &min_amounts_out, &users[1]);
-    let withdraw_1_usage= check_limits_return_info(&setup.env, "Withdraw  from User1");
+    let withdraw_1_usage= check_limits_return_info(&setup.env, "Withdraw");
 
     /* -------------------------------------------------------- Results table --------------------------------------------------------- */
     let usage_results = vec![
@@ -767,6 +772,8 @@ fn blend() {
         deposit_and_invest_usage,
         unwind_usage,
         withdraw_usage,
+        lock_fees_usage,
+        report_usage,
         distribute_fees_usage,
         withdraw_1_usage,
     ];
