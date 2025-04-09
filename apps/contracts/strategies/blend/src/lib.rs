@@ -115,6 +115,8 @@ impl DeFindexStrategyTrait for BlendStrategy {
         let claim_id = reserve_id * 2 + 1;
         let claim_ids: Vec<u32> = vec![&e, claim_id];
 
+        //Validate that the reward treshold is positive
+        check_positive_amount(reward_threshold).expect("Reward threshold must be positive");
 
         let config = Config {
             asset: asset.clone(),
