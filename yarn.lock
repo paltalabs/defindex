@@ -1163,7 +1163,7 @@
   resolved "https://registry.yarnpkg.com/@colors/colors/-/colors-1.5.0.tgz#bb504579c1cae923e6576a4f5da43d25f97bdbd9"
   integrity sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==
 
-"@creit.tech/stellar-wallets-kit@^1.6.0":
+"@creit.tech/stellar-wallets-kit@^1.7.3":
   version "1.7.3"
   resolved "https://registry.yarnpkg.com/@creit.tech/stellar-wallets-kit/-/stellar-wallets-kit-1.7.3.tgz#f8c8a004e58ba7cac7d01c307c0df3889fc2aa06"
   integrity sha512-pQaN+KSyyV9E13MUTCElvVPpsJccnPamfVBwuvASaWv/WTelEFdnbDCRxHnQoQvtZnTM0FJDTzHyfuLQ3sehTg==
@@ -17306,14 +17306,14 @@ stealthy-require@^1.1.1:
   resolved "https://registry.yarnpkg.com/stealthy-require/-/stealthy-require-1.1.1.tgz#35b09875b4ff49f26a777e509b3090a3226bf24b"
   integrity sha512-ZnWpYnYugiOVEY5GkcuJK1io5V8QmNYChG62gSit9pQVGErXtrKuPC55ITaVSukmMta5qpMU7vqLt2Lnni4f/g==
 
-stellar-react@^0.0.3:
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/stellar-react/-/stellar-react-0.0.3.tgz#b81cbd2568fcb9acb9d3b3161b7a842de14f0e97"
-  integrity sha512-j0cm/gGaeydhgQiPEKgRnBmDjN0nimiM7arkr++MUtaPhli7irb33u3hNj906DCAnhDaXkLUwppg8ITjXBF2NQ==
+stellar-react@^0.0.4:
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/stellar-react/-/stellar-react-0.0.4.tgz#6caa7da970ac5b842ea338162aaf5ed83a3942b0"
+  integrity sha512-OP3dScKzqepfP1QyRMdgJz4urW9wC47QYdegBixnbWr4cdmzR9sPovl9ZiIC1vbxCq5Bmh/ULARCcbeneR3mrQ==
   dependencies:
-    "@creit.tech/stellar-wallets-kit" "^1.6.0"
+    "@creit.tech/stellar-wallets-kit" "^1.7.3"
     "@stellar/freighter-api" "^3.1.0"
-    "@stellar/stellar-sdk" "13.1.0"
+    "@stellar/stellar-sdk" "13.2.0"
     "@types/react" "^19.0.10"
     react "^19.0.0"
     react-dom "^19.0.0"
