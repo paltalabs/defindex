@@ -111,8 +111,9 @@ function AddNewStrategyButton() {
     resetForm()
   }
 
-  const fetchStrategies = async () => {
-    const rawDefaultStrategies = await getDefaultStrategies(networkName)
+  const fetchStrategies = async (network: string) => {
+    if (!network) return
+    const rawDefaultStrategies = await getDefaultStrategies(network)
     setDefaultStrategies(rawDefaultStrategies)
     await Promise.allSettled(rawDefaultStrategies.map(async (strategy) => {
       const assetAddress = await strategyCallback(
@@ -143,7 +144,7 @@ function AddNewStrategyButton() {
   useEffect(() => {
     let network = getNetworkName(activeNetwork)
     setNetworkName(network)
-    fetchStrategies();
+    fetchStrategies(network ?? 'testnet');
   }, [activeNetwork])
 
 

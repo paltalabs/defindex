@@ -16,6 +16,6 @@ export const getNetworkName = (networkPassphrase?: WalletNetwork): string => {
     case WalletNetwork.STANDALONE:
       return 'standalone'
     default:
-      return ''
+      return 'testnet'
   }
 }
