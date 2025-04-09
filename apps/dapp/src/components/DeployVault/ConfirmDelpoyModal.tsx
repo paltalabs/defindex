@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
-import { useSorobanReact } from "@soroban-react/core";
+import { useSorobanReact } from "stellar-react";
 import {
   Address,
   scValToNative,
@@ -20,6 +20,7 @@ import { resetNewVault } from "@/store/lib/features/vaultStore";
 import { useVault } from "@/hooks/useVault";
 import { getAssetParamsSCVal, getCreateDeFindexVaultDepositParams, getCreateDeFindexVaultParams } from "@/helpers/vault";
 import { soroswapRouter } from "@/constants/constants";
+import { getNetworkName } from "@/helpers/networkName";
 
 interface Status {
   isSuccess: boolean,
@@ -39,7 +40,7 @@ export interface ChartData {
 
 export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
   const sorobanContext = useSorobanReact();
-  const { activeChain, address } = sorobanContext;
+  const { activeNetwork, address } = sorobanContext;
   const factory = useFactoryCallback();
   const { getInvestedFunds } = useVault();
   const newVault: NewVaultState = useAppSelector(state => state.newVault);
@@ -84,6 +85,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   }, [txModal.status])
   const [buttonText, setButtonText] = useState<string>('')
   const [accordionValue, setAccordionValue] = useState<AccordionItems[]>([AccordionItems.STRATEGY_DETAILS])
+  const [networkName, setNetworkName] = useState<string>('testnet')
   const [formControl, setFormControl] = useState<FormControlInterface>({
     emergencyManager: {
       isValid: undefined,
@@ -106,6 +108,11 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   })
 
   useEffect(() => {
+    let network = getNetworkName(activeNetwork)
+    setNetworkName(network)
+  }, [activeNetwork])
+
+  useEffect(() => {
     if (managerString === '' || emergencyManagerString === '' || rebalanceManagerString === '') {
       setButtonText('Fill manager info')
       return
@@ -119,7 +126,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
   }, [managerString, emergencyManagerString, rebalanceManagerString, feeReceiverString, indexShare])
 
   useEffect(() => {
-    switch (activeChain?.id.toLowerCase()) {
+    switch (networkName) {
       case 'testnet':
         setRouterAddress(soroswapRouter.testnet)
         break;
@@ -130,7 +137,7 @@ export const ConfirmDelpoyModal = ({ isOpen, onClose }: { isOpen: boolean, onClo
         setRouterAddress(soroswapRouter.testnet)
         break;
     }
-  }, [activeChain?.id])
+  }, [activeNetwork])
 
   const deployDefindex = async () => {
     let result: any;
