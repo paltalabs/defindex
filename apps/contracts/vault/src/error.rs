@@ -20,7 +20,7 @@ pub enum ContractError {
     AmountNotAllowed = 110,
     InsufficientBalance = 111,
     WrongAmountsLength = 112,
-    NotEnoughIdleFunds = 113,
+    WrongLockedFees = 113,
     InsufficientManagedFunds = 114,
     MissingInstructionData = 115,
     UnsupportedAsset = 116,
