@@ -2051,10 +2051,15 @@ fn should_report(){
     let report_after_investment = test.env.as_contract(&defindex_contract.address, || storage::get_report(&test.env, &test.strategy_client_token_0.address.clone()));
     std::println!("Report after investment: {:?}", report_after_investment);
     // Compare reports
-    assert_ne!(initial_report, report_after_investment);
+    let expected_report = crate::report::Report {
+        prev_balance: amount0,
+        gains_or_losses: 0,
+        locked_fee: 0,
+    };
+    assert_eq!(report_after_investment, expected_report);
 
     // Unwind
-    let withdraw_amount = amount0;
+    let withdraw_amount = amount0/2;
 
     let instructions = sorobanvec![
         &test.env,
@@ -2063,10 +2068,18 @@ fn should_report(){
             withdraw_amount,
         ),
     ];
+    let total_managed_funds = defindex_contract.fetch_total_managed_funds();
+    std::println!("Total managed funds: {:?}", total_managed_funds);
     defindex_contract.rebalance(&test.rebalance_manager, &instructions);
+    let total_managed_funds_after_unwind = defindex_contract.fetch_total_managed_funds();
+    std::println!("Total managed funds after unwind: {:?}", total_managed_funds_after_unwind);
     // Get report after unwind
     let report_after_unwind = test.env.as_contract(&defindex_contract.address, || storage::get_report(&test.env, &test.strategy_client_token_0.address.clone()));
-
-    assert_ne!(report_after_investment, report_after_unwind);
+    let expected_report = crate::report::Report {
+        prev_balance: withdraw_amount,
+        gains_or_losses: 0,
+        locked_fee: 0,
+    };
+    assert_eq!(report_after_unwind, expected_report);
     std::println!("Report after unwind: {:?}", report_after_unwind);
 }

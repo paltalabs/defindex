@@ -47,6 +47,8 @@ use utils::{
 use common::{models::AssetStrategySet, utils::StringExtensions};
 use defindex_strategy_core::DeFindexStrategyClient;
 
+use crate::token::VaultToken;
+
 static MINIMUM_LIQUIDITY: i128 = 1000;
 
 pub use error::ContractError;
@@ -297,7 +299,6 @@ impl VaultTrait for DeFindexVault {
     /// - `ContractError::WrongAmountsLength`: If there is a mismatch in asset allocation data.
     fn withdraw(e: Env, withdraw_shares: i128, min_amounts_out: Vec<i128>, from: Address) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
-        validate_amount(withdraw_shares)?;
         from.require_auth();
 
         check_min_amount(withdraw_shares, MIN_WITHDRAW_AMOUNT)?;
@@ -317,9 +318,12 @@ impl VaultTrait for DeFindexVault {
             }
         }
         
-        // Calculate the withdrawal amounts for each asset based on the share amounts
-        let asset_withdrawal_amounts =
-            calculate_asset_amounts_per_vault_shares(&e, withdraw_shares, &total_managed_funds)?;
+        let total_shares_supply = VaultToken::total_supply(e.clone());
+
+        // Check if the requested shares amount exceeds the total supply
+        if withdraw_shares > total_shares_supply {
+            return Err(ContractError::AmountOverTotalSupply);
+        }
 
         // Burn the shares after calculating the withdrawal amounts
         // This will panic with error if the user does not have enough balance
@@ -332,63 +336,62 @@ impl VaultTrait for DeFindexVault {
             // Use assets instead of asset_withdrawal_amounts
             let asset_address = &asset.asset;
 
-            if let Some(requested_withdrawal_amount) =
-                asset_withdrawal_amounts.get(i as u32)
-            {
-                if requested_withdrawal_amount < min_amounts_out.get(i as u32).unwrap() {
-                    panic_with_error!(&e, ContractError::InsufficientOutputAmount);
-                }
-                let idle_funds = asset.idle_amount;
+            // Calculate the requested withdrawal amount
+            let requested_withdrawal_amount = asset
+                .total_amount
+                .checked_mul(withdraw_shares)
+                .ok_or(ContractError::ArithmeticError)?
+                .checked_div(total_shares_supply)
+                .ok_or(ContractError::ArithmeticError)?;
 
-                if idle_funds >= requested_withdrawal_amount {
-                    TokenClient::new(&e, asset_address).transfer(
-                        &e.current_contract_address(),
-                        &from,
-                        &requested_withdrawal_amount,
-                    );
-                    withdrawn_amounts.push_back(requested_withdrawal_amount);
-                } else {
-                    let mut cumulative_amount_for_asset = idle_funds;
-                    let remaining_amount_to_unwind =
-                        requested_withdrawal_amount.checked_sub(idle_funds).unwrap();
+            if requested_withdrawal_amount < min_amounts_out.get(i as u32).unwrap() {
+                panic_with_error!(&e, ContractError::InsufficientOutputAmount);
+            }
+            let idle_funds = asset.idle_amount;
 
-                    let total_invested_amount = asset.invested_amount;
-
-                    for (i, strategy_allocation) in
-                        asset.strategy_allocations.iter().enumerate()
-                    {
-                        let strategy_amount_to_unwind: i128 =
-                            if i == asset.strategy_allocations.len().checked_sub(1).unwrap_or(0) as usize {
-                                requested_withdrawal_amount
-                                    .checked_sub(cumulative_amount_for_asset)
-                                    .unwrap()
-                            } else {
-                                remaining_amount_to_unwind
-                                    .checked_mul(strategy_allocation.amount)
-                                    .and_then(|result| result.checked_div(total_invested_amount))
-                                    .unwrap_or(0)
-                            };
-
-                        if strategy_amount_to_unwind > 0 {
-                            unwind_from_strategy(
-                                &e,
-                                &strategy_allocation.strategy_address,
-                                &strategy_amount_to_unwind,
-                                &e.current_contract_address(),
-                            )?;
-                            cumulative_amount_for_asset = cumulative_amount_for_asset.checked_add(strategy_amount_to_unwind).ok_or(ContractError::Overflow)?;
-                        }
-                    }
-
-                    TokenClient::new(&e, asset_address).transfer(
-                        &e.current_contract_address(),
-                        &from,
-                        &cumulative_amount_for_asset,
-                    );
-                    withdrawn_amounts.push_back(cumulative_amount_for_asset);
-                }
+            if idle_funds >= requested_withdrawal_amount {
+                TokenClient::new(&e, asset_address).transfer(
+                    &e.current_contract_address(),
+                    &from,
+                    &requested_withdrawal_amount,
+                );
+                withdrawn_amounts.push_back(requested_withdrawal_amount);
             } else {
-                withdrawn_amounts.push_back(0); // No withdrawal for this asset
+                TokenClient::new(&e, asset_address).transfer(
+                    &e.current_contract_address(),
+                    &from,
+                    &idle_funds,
+                );
+                let mut cumulative_amount_for_asset = idle_funds;
+                let remaining_amount_to_unwind =
+                    requested_withdrawal_amount.checked_sub(idle_funds).unwrap();
+                    
+                for (i, strategy_allocation) in
+                    asset.strategy_allocations.iter().enumerate()
+                {
+                    let strategy_amount_to_unwind: i128 =
+                        if i == asset.strategy_allocations.len().checked_sub(1).unwrap_or(0) as usize {
+                            requested_withdrawal_amount
+                                .checked_sub(cumulative_amount_for_asset)
+                                .unwrap()
+                        } else {
+                            remaining_amount_to_unwind
+                                .checked_mul(strategy_allocation.amount)
+                                .and_then(|result| result.checked_div(asset.invested_amount))
+                                .unwrap_or(0)
+                        };
+
+                    if strategy_amount_to_unwind > 0 {
+                        unwind_from_strategy(
+                            &e,
+                            &strategy_allocation.strategy_address,
+                            &strategy_amount_to_unwind,
+                            &from,
+                        )?;
+                        cumulative_amount_for_asset = cumulative_amount_for_asset.checked_add(strategy_amount_to_unwind).ok_or(ContractError::Overflow)?;
+                    }
+                }
+                withdrawn_amounts.push_back(cumulative_amount_for_asset);
             }
         }
 
@@ -442,13 +445,19 @@ impl VaultTrait for DeFindexVault {
         let strategy_balance = strategy_client.balance(&e.current_contract_address());
 
         if strategy_balance > 0 {
-            let mut report = unwind_from_strategy(
+            unwind_from_strategy(
                 &e,
                 &strategy_address,
                 &strategy_balance,
                 &e.current_contract_address(),
             )?;
-            report.reset();
+            
+            // Create a new zeroed report directly instead of getting the existing one
+            let report = Report {
+                prev_balance: 0,
+                gains_or_losses: 0,
+                locked_fee: 0,
+            };
             set_report(&e, &strategy_address, &report);
         }
 
@@ -836,17 +845,24 @@ impl VaultManagementTrait for DeFindexVault {
             match instruction {
                 Instruction::Unwind(strategy_address, amount) => {
                     let asset_address = get_strategy_asset(&e, &strategy_address)?;
-                    let report = unwind_from_strategy(
-                        &e,
-                        &strategy_address,
-                        &amount,
-                        &e.current_contract_address(),
-                    )?;
-                    let call_params = vec![&e, (strategy_address.clone(), amount, e.current_contract_address())];
-                    let strategy_invested_funds = fetch_strategy_invested_funds(&e, &strategy_address, false)?;
-                    report::update_report_and_lock_fees(&e, &strategy_address, strategy_invested_funds)?;
-                    report::distribute_strategy_fees(&e, &strategy_address, &access_control, &asset_address.address)?;
-                    events::emit_rebalance_unwind_event(&e, call_params, report);
+                    let strategy_invested_funds = fetch_strategy_invested_funds(&e, &strategy_address, true)?;
+                                        
+                    if amount > strategy_invested_funds {
+                        return Err(ContractError::UnwindMoreThanAvailable);
+                    } else {
+                        report::distribute_strategy_fees(&e, &strategy_address, &access_control, &asset_address.address)?;
+                        unwind_from_strategy(
+                            &e,
+                            &strategy_address,
+                            &amount,
+                            &e.current_contract_address(),
+                        )?;
+                        let mut report = get_report(&e, &strategy_address);
+                        report.prev_balance = strategy_invested_funds - amount;
+                        set_report(&e, &strategy_address, &report);
+                        let call_params = vec![&e, (strategy_address.clone(), amount, e.current_contract_address())];
+                        events::emit_rebalance_unwind_event(&e, call_params, report);
+                    }
                 }
                 Instruction::Invest(strategy_address, amount) => {
                     let asset_address = get_strategy_asset(&e, &strategy_address)?;
