@@ -445,13 +445,19 @@ impl VaultTrait for DeFindexVault {
         let strategy_balance = strategy_client.balance(&e.current_contract_address());
 
         if strategy_balance > 0 {
-            let mut report = unwind_from_strategy(
+            unwind_from_strategy(
                 &e,
                 &strategy_address,
                 &strategy_balance,
                 &e.current_contract_address(),
             )?;
-            report.reset();
+            
+            // Create a new zeroed report directly instead of getting the existing one
+            let report = Report {
+                prev_balance: 0,
+                gains_or_losses: 0,
+                locked_fee: 0,
+            };
             set_report(&e, &strategy_address, &report);
         }
 
@@ -839,17 +845,24 @@ impl VaultManagementTrait for DeFindexVault {
             match instruction {
                 Instruction::Unwind(strategy_address, amount) => {
                     let asset_address = get_strategy_asset(&e, &strategy_address)?;
-                    let report = unwind_from_strategy(
-                        &e,
-                        &strategy_address,
-                        &amount,
-                        &e.current_contract_address(),
-                    )?;
-                    let call_params = vec![&e, (strategy_address.clone(), amount, e.current_contract_address())];
-                    let strategy_invested_funds = fetch_strategy_invested_funds(&e, &strategy_address, false)?;
-                    report::update_report_and_lock_fees(&e, &strategy_address, strategy_invested_funds)?;
-                    report::distribute_strategy_fees(&e, &strategy_address, &access_control, &asset_address.address)?;
-                    events::emit_rebalance_unwind_event(&e, call_params, report);
+                    let strategy_invested_funds = fetch_strategy_invested_funds(&e, &strategy_address, true)?;
+                                        
+                    if amount > strategy_invested_funds {
+                        return Err(ContractError::UnwindMoreThanAvailable);
+                    } else {
+                        report::distribute_strategy_fees(&e, &strategy_address, &access_control, &asset_address.address)?;
+                        unwind_from_strategy(
+                            &e,
+                            &strategy_address,
+                            &amount,
+                            &e.current_contract_address(),
+                        )?;
+                        let mut report = get_report(&e, &strategy_address);
+                        report.prev_balance = strategy_invested_funds - amount;
+                        set_report(&e, &strategy_address, &report);
+                        let call_params = vec![&e, (strategy_address.clone(), amount, e.current_contract_address())];
+                        events::emit_rebalance_unwind_event(&e, call_params, report);
+                    }
                 }
                 Instruction::Invest(strategy_address, amount) => {
                     let asset_address = get_strategy_asset(&e, &strategy_address)?;
