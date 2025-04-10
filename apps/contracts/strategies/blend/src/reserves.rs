@@ -1,7 +1,5 @@
 use crate::{
-    constants::SCALAR_12,
-    storage, storage::Config,
-    blend_pool,
+    blend_pool, check_positive_amount, constants::SCALAR_12, storage::{self, Config}
 };
 
 use defindex_strategy_core::StrategyError;
@@ -87,6 +85,25 @@ pub fn get_strategy_reserve_updated(
     reserve
 }
 
+/// Updates the vault shares for a user with a positive value or panic.
+///
+/// ### Arguments
+/// * `e` - The execution environment.
+/// * `from` - The address of the user.
+/// * `vault_shares` - The amount of vault shares to set.
+/// 
+/// ### Returns
+/// * `Result<i128, StrategyError>` - The updated vault shares.
+/// 
+pub fn set_validated_vault_shares(
+    e: &Env,
+    from: &Address,
+    vault_shares: i128
+) -> Result<i128, StrategyError> {
+    check_positive_amount(vault_shares)?;
+    storage::set_vault_shares(&e, &from, vault_shares);
+    Ok(vault_shares)
+}
 
 /// Accounts for a deposit into the Blend pool.
 ///
@@ -161,7 +178,7 @@ pub fn deposit(
         .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     storage::set_strategy_reserves(&e, reserves.clone());
-    storage::set_vault_shares(&e, &from, new_vault_shares);
+    set_validated_vault_shares(e, from, new_vault_shares)?;
     Ok((new_vault_shares, reserves))
 }
 
@@ -227,8 +244,7 @@ pub fn withdraw(
         .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     storage::set_strategy_reserves(&e, reserves.clone());
-    storage::set_vault_shares(&e, &from, vault_shares);
-
+    set_validated_vault_shares(e, from, vault_shares)?;
     Ok((vault_shares, reserves))
 }
 
