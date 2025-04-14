@@ -35,29 +35,6 @@ impl RequestType {
     }
 }
 
-/// Retrieves the supply amount for a specific reserve ID from the positions.
-/// 
-/// This function checks the supply amount for the given reserve ID in the provided
-/// positions. If the reserve ID is not found, it panics with a `SupplyNotFound` error.
-///
-/// # Arguments
-/// * `e` - The execution environment.
-/// * `positions` - The positions object containing supply information.
-/// * `reserve_id` - The ID of the reserve to check.
-/// 
-/// # Returns
-/// * `Result<i128, StrategyError>` - The supply amount for the specified reserve ID.
-/// * `Ok(i128)` - The supply amount.
-/// * `Err(StrategyError)` - If the reserve ID is not found in the positions.
-pub fn positions_to_supply(e: &Env, positions: Positions, reserve_id: u32) -> Result<i128, StrategyError> {
-    let supply_amount = match positions
-        .supply
-        .try_get(reserve_id) {
-        Ok(amount) => amount.unwrap_or_else(|| panic_with_error!(&e, StrategyError::SupplyNotFound)),
-        Err(_) => return Err(StrategyError::SupplyNotFound),
-    };
-    Ok(supply_amount)
-}
 
 /// Supplies the underlying asset to the Blend pool as defined in the contract's configuration.
 ///
@@ -90,8 +67,12 @@ pub fn supply(
     let pool_client = BlendPoolClient::new(e, &config.pool);
 
     // Get deposit amount pre-supply
-    let pre_supply_positions = pool_client.get_positions(&e.current_contract_address());
-    let pre_supply_amount = positions_to_supply(&e, pre_supply_positions, config.reserve_id)?;
+    let pre_supply_amount = pool_client
+    .get_positions(&e.current_contract_address())
+    .supply
+    .try_get(config.reserve_id)
+    .unwrap_or(Some(0))
+    .unwrap_or(0);
 
     let requests: Vec<Request> = vec![
         &e,
@@ -126,7 +107,11 @@ pub fn supply(
         &requests,
     );
 
-    let new_supply_amount = positions_to_supply(&e, new_positions, config.reserve_id)?;
+    let new_supply_amount = new_positions
+        .supply
+        .try_get(config.reserve_id)
+        .unwrap_or(Some(0))
+        .unwrap_or(0);
 
     // Calculate the amount of bTokens received
     let b_tokens_amount = new_supply_amount
@@ -169,8 +154,12 @@ pub fn withdraw(
 ) -> Result<i128, StrategyError> {
     let pool_client = BlendPoolClient::new(e, &config.pool);
 
-    let pre_supply_positions = pool_client.get_positions(&e.current_contract_address());
-    let pre_supply_amount = positions_to_supply(&e, pre_supply_positions, config.reserve_id)?;
+    let pre_supply_amount = pool_client
+        .get_positions(&e.current_contract_address())
+        .supply
+        .try_get(config.reserve_id)
+        .map_err(|_| StrategyError::InsufficientBalance)? // Convert Result to Error
+        .ok_or_else(|| StrategyError::InsufficientBalance)?; // Convert Option to Error if None
     let requests: Vec<Request> = vec![
         &e,
         Request {
@@ -188,7 +177,11 @@ pub fn withdraw(
         &requests,
     );
 
-    let new_supply_amount = positions_to_supply(&e, new_positions, config.reserve_id)?;
+    let new_supply_amount = new_positions
+    .supply
+    .try_get(config.reserve_id)
+    .unwrap_or(Some(0))
+    .unwrap_or(0);
 
     // Calculate the amount of bTokens burnt
     // position entry is deleted if the position is cleared
