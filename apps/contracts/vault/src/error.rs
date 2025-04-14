@@ -61,6 +61,7 @@ pub enum ContractError {
     // Input errors
     InsufficientOutputAmount = 160,
     ExcessiveInputAmount = 161,
+    InvalidFeeBps = 162,
 
     // Add mappings for SoroswapLibraryError
     LibrarySortIdenticalTokens = 190,
