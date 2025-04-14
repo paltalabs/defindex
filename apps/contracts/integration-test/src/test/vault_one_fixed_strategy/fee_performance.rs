@@ -3,10 +3,12 @@ use crate::{
     test::{EnvTestUtils, IntegrationTest, ONE_YEAR_IN_SECONDS},
     vault::{
         defindex_vault_contract::Instruction,
-        },
+    },
 };
 use soroban_sdk::{
-    testutils::{MockAuth, MockAuthInvoke},
+    testutils::{
+        MockAuth, 
+        MockAuthInvoke},
     vec as svec, IntoVal, Vec,
 };
 
@@ -111,7 +113,7 @@ fn fee_performance() {
 
     // Report
     let _report = enviroment.vault_contract.mock_all_auths().report();
-
+    println!("_report: {:?}", _report);
     let expected_balance = deposit_amount * 11 / 10; // 10% fixed APR
     assert_eq!(vault_balance_in_strategy, expected_balance);
 
@@ -166,6 +168,8 @@ fn fee_performance() {
             &release_fees_amount,
         );
 
+    println!("_release_fees_result: {:?}", _release_fees_result);
+
     let total_funds_after_release = enviroment
         .vault_contract
         .fetch_total_managed_funds()
@@ -176,6 +180,8 @@ fn fee_performance() {
         total_funds_after_release,
         (total_funds_after_lock + release_fees_amount)
     );
+
+    println!("total_funds_after_release: {:?}", total_funds_after_release);
 
     // Lock fees
     let lock_fees_bps = 2000u32;
@@ -200,6 +206,8 @@ fn fee_performance() {
         .get(0)
         .unwrap()
         .total_amount;
+        
+    println!("total_funds_after_lock 2: {:?}", total_funds_after_lock);
 
     // Distribute fees
     let _distribute_fees_result = enviroment
@@ -215,6 +223,10 @@ fn fee_performance() {
         }])
         .distribute_fees(&enviroment.manager);
 
+    println!("_distribute_fees_result: {:?}", _distribute_fees_result);
+    // Get report from storage before rebalance
+    // let report_after_distribute = enviroment.vault_contract.mock_all_auths().report();
+    // println!("report_after_distribute: {:?}", report_after_distribute);
     let lock_fees_result_after = enviroment.vault_contract.mock_all_auths().lock_fees(&None);
     println!("lock_fees_result_after: {:?}", lock_fees_result_after);
 
@@ -224,5 +236,6 @@ fn fee_performance() {
         .get(0)
         .unwrap()
         .total_amount;
+    println!("total_funds_after_distribute: {:?}", total_funds_after_distribute);
     assert_eq!(total_funds_after_distribute, lock_fees_result_after.get(0).unwrap().prev_balance);
 }
