@@ -10,6 +10,7 @@ export interface Asset {
 export interface NewVaultState {
   address: string;
   emergencyManager: string;
+  rebalanceManager: string;
   feeReceiver: string;
   manager: string;
   vaultShare: number;
@@ -17,6 +18,7 @@ export interface NewVaultState {
   symbol: string;
   assets: Asset[];
   TVL?: number;
+  upgradable: boolean;
 }
 
 export interface Strategy {

@@ -1,5 +1,6 @@
 use soroban_sdk::token::TokenClient;
 use soroban_sdk::{Address, Env, Vec};
+use soroban_sdk::panic_with_error;
 
 use crate::models::{CurrentAssetInvestmentAllocation, StrategyAllocation};
 use crate::storage::{get_assets, get_report};
@@ -23,35 +24,41 @@ pub fn fetch_idle_funds_for_asset(e: &Env, asset: &Address) -> i128 {
     TokenClient::new(e, &asset).balance(&e.current_contract_address())
 }
 
-/// Retrieves the total funds invested in a specified strategy, excluding current locked fees, with an option to lock new fees.
+/// Retrieves the total funds invested in a specified strategy, excluding current locked fees, 
+/// with an option to update he strategy report and lock new fees.
 ///
 /// This function performs a cross-contract call to the strategy contract to fetch the current investment balance.
 /// It always returns the balance minus the current locked fees, representing the actively invested funds available 
-/// to the user. If `lock_fees` is `true`, it updates the report and locks new fees before calculating the result; 
+/// to the user. If `report_and_lock_fees` is `true`, it updates the report and locks new fees before calculating the result; 
 /// if `false`, it uses the existing locked fees without updating the report.
 ///
 /// # Arguments
 /// * `e` - The current environment instance, providing access to the contract's storage and functions.
 /// * `strategy_address` - The address of the strategy whose investment balance is to be retrieved.
-/// * `lock_fees` - A boolean flag indicating whether to update the report and lock new fees before calculating 
+/// * `report_and_lock_fees` - A boolean flag indicating whether to update the report and lock new fees before calculating 
 ///   the balance. If `true`, new fees are locked; if `false`, only existing locked fees are subtracted.
 ///
 /// # Returns
 /// * `Result<i128, ContractError>` - Returns the total invested funds in the strategy (excluding locked fees) as 
-///   an `i128`. Returns a `ContractError` if an error occurs (e.g., overflow, underflow, or report update failure).
+///   an `i128`. Returns a `ContractError` if an error occurs (e.g., overflow, underflow, report update failure or if for any case the locked fees are greater than the strategy invested funds).
 ///
-pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address, lock_fees: bool) -> Result<i128, ContractError> {
+pub fn fetch_strategy_invested_funds(e: &Env, strategy_address: &Address, report_and_lock_fees: bool) -> Result<i128, ContractError> {
     let strategy_client = get_strategy_client(e, strategy_address.clone());
     let strategy_invested_funds = strategy_client.balance(&e.current_contract_address());
     
-    if !lock_fees {
+    if !report_and_lock_fees {
+        let locked_fee = get_report(e, strategy_address).locked_fee;
+        if locked_fee > strategy_invested_funds {
+            return Err(ContractError::WrongLockedFees);
+        }
         return Ok(strategy_invested_funds
-            .checked_sub(
-                get_report(e, strategy_address).locked_fee
-            ).unwrap_or(0))
+            .checked_sub(locked_fee).unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError)))
     } else {
-        let report = report::update_report_and_lock_fees(e, strategy_address, strategy_invested_funds)?;
-        Ok(strategy_invested_funds.checked_sub(report.locked_fee).unwrap_or(0))
+        let locked_fee = report::update_report_and_lock_fees(e, strategy_address, strategy_invested_funds)?.locked_fee;
+        if locked_fee > strategy_invested_funds {
+            return Err(ContractError::WrongLockedFees);
+        }
+        Ok(strategy_invested_funds.checked_sub(locked_fee).unwrap_or_else(|| panic_with_error!(&e, ContractError::ArithmeticError)))
     }
 }
 

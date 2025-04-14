@@ -34,6 +34,7 @@ import { NumberInputField, NumberInputRoot } from '../ui/number-input'
 interface AmountInputProps {
   amount: number
   enabled: boolean
+  target: string
 }
 
 function AddNewStrategyButton() {
@@ -46,11 +47,11 @@ function AddNewStrategyButton() {
   const [defaultStrategies, setDefaultStrategies] = useState<any[]>([])
   const [selectedAsset, setSelectedAsset] = useState<Asset>({ address: '', strategies: [], symbol: '', amount: 0 })
   const [assets, setAssets] = useState<Asset[]>([])
-  const [amountInput, setAmountInput] = useState<AmountInputProps>({ amount: 0, enabled: false })
+  const [amountInput, setAmountInput] = useState<AmountInputProps>({ amount: 0, enabled: false, target: '' })
 
   const resetForm = () => {
     setSelectedAsset({ address: '', strategies: [], symbol: '' })
-    setAmountInput({ amount: 0, enabled: false })
+    setAmountInput({ amount: 0, enabled: false, target: '' })
     setOpen(false)
   }
 
@@ -105,10 +106,17 @@ function AddNewStrategyButton() {
       console.log('input is empty')
       setSelectedAsset({ ...selectedAsset, amount: 0 })
     }
-    const decimalRegex = /^(\d+)?(\.\d{0,7})?$/
+    const decimalRegex = /^(\d+(\.\d{0,7})?|\.\d{1,7})$/
     if (!decimalRegex.test(e)) return
-    setAmountInput({ amount: e, enabled: true });
+    setAmountInput({ amount: e, enabled: true, target: amountInput.target });
+    let tempStrategy = selectedAsset.strategies.find((str) => str.address === amountInput.target)
+    if (tempStrategy) {
+      let updatedStrategy = { ...tempStrategy, tempAmount: e }
+      const filteredStrategies = selectedAsset.strategies.filter((str) => str.address !== amountInput.target)
+      setSelectedAsset({ ...selectedAsset, strategies: [...filteredStrategies, updatedStrategy] })
+    }
   }
+
   const strategyExists = (strategy: Strategy) => {
     const exists = newVault.assets.some((asset) => asset.strategies.some((str) => str.address === strategy.address))
     return exists
@@ -125,7 +133,11 @@ function AddNewStrategyButton() {
     }
     await dispatch(pushAsset(newAsset))
     if (!exists && amountInput.enabled && amountInput.amount! > 0) {
-      await dispatch(setAssetAmount({ address: newAsset.address, amount: amountInput.amount! }))
+      let acc = 0
+      selectedAsset.strategies.forEach(strategy => {
+        acc += strategy.tempAmount
+      })
+      await dispatch(setAssetAmount({ address: newAsset.address, amount: acc }))
     }
     resetForm()
   }
@@ -162,7 +174,7 @@ function AddNewStrategyButton() {
                       <Checkbox
                         size={'sm'}
                         checked={amountInput.enabled}
-                        onCheckedChange={(e) => setAmountInput({ ...amountInput, enabled: !!e.checked })}
+                        onCheckedChange={(e) => setAmountInput({ ...amountInput, enabled: !!e.checked, target: strategy.address })}
                       />
                     </GridItem>
 

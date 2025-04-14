@@ -846,7 +846,9 @@ impl VaultManagementTrait for DeFindexVault {
                 Instruction::Unwind(strategy_address, amount) => {
                     let asset_address = get_strategy_asset(&e, &strategy_address)?;
                     let strategy_invested_funds = fetch_strategy_invested_funds(&e, &strategy_address, true)?;
-                                        
+                    if amount <= 0 {
+                        panic_with_error!(&e, ContractError::AmountNotAllowed);
+                    }
                     if amount > strategy_invested_funds {
                         return Err(ContractError::UnwindMoreThanAvailable);
                     } else {
@@ -872,7 +874,9 @@ impl VaultManagementTrait for DeFindexVault {
                     if strategy.paused {
                         panic_with_error!(&e, ContractError::StrategyPaused);
                     }
-                    
+                    if amount <= 0 {
+                        panic_with_error!(&e, ContractError::AmountNotAllowed);
+                    }
                     let report = invest_in_strategy(&e, &asset_address.address, &strategy_address, &amount)?;
                     let call_params = AssetInvestmentAllocation {
                         asset: asset_address.address.clone(),

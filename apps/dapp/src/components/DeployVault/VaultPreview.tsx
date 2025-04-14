@@ -1,39 +1,39 @@
-import React, { useState } from 'react'
-import {
-  Table,
-  Text,
-  Grid,
-  GridItem,
-  Input,
-  IconButton,
-  Fieldset,
-  Stack,
-  Icon,
-  Link,
-} from '@chakra-ui/react'
-import { shortenAddress, isValidAddress } from '@/helpers/address'
-import { setEmergencyManager, setFeeReceiver, setManager, setVaultShare } from '@/store/lib/features/vaultStore'
+import { isValidAddress, shortenAddress } from '@/helpers/address'
+import { setEmergencyManager, setFeeReceiver, setManager, setRebalanceManager, setUpgradable, setVaultShare } from '@/store/lib/features/vaultStore'
 import { useAppDispatch, useAppSelector } from '@/store/lib/storeHooks'
-import { FaRegPaste } from "react-icons/fa6";
-import { useSorobanReact } from '@soroban-react/core'
-import { InputGroup } from '../ui/input-group'
-import { Tooltip } from '../ui/tooltip'
+import { Asset } from '@/store/lib/types'
 import {
   AccordionItem,
   AccordionItemContent,
   AccordionItemTrigger,
   AccordionRoot,
-} from "@chakra-ui/react"
+  Checkbox,
+  Fieldset,
+  Grid,
+  GridItem,
+  Icon,
+  IconButton,
+  Input,
+  Link,
+  Stack,
+  Table,
+  Text,
+} from '@chakra-ui/react'
+import { useSorobanReact } from '@soroban-react/core'
+import React from 'react'
+import { FaRegPaste } from "react-icons/fa6"
 import { IoIosArrowDown, IoIosArrowUp } from 'react-icons/io'
-import { Asset } from '@/store/lib/types'
-import { InfoTip } from '../ui/toggle-tip'
+import { InputGroup } from '../ui/input-group'
 import { NumberInputField, NumberInputRoot } from '../ui/number-input'
+import { InfoTip } from '../ui/toggle-tip'
+import { Tooltip } from '../ui/tooltip'
 
 
 export enum AccordionItems {
   STRATEGY_DETAILS = 'strategy-details',
   MANAGER_CONFIGS = 'manager-configs',
   FEES_CONFIGS = 'fees-configs',
+  UPGRADABLE_CONTRACT = 'upgradable-contract'
 }
 export interface FormControlInterface {
   manager: {
@@ -44,11 +44,16 @@ export interface FormControlInterface {
     isValid: boolean | undefined;
     value: string | undefined;
   },
+  rebalanceManager: {
+    isValid: boolean | undefined;
+    value: string | undefined;
+  },
   feeReceiver: {
     isValid: boolean | undefined;
     value: string | undefined;
   },
-  vaultShare: number
+  vaultShare: number,
+  upgradable: boolean
 }
 const CustomAccordionTrigger = ({ title, type, accordionValue, setAccordionValue }: { title: string, type: AccordionItems, accordionValue: AccordionItems[], setAccordionValue: React.Dispatch<React.SetStateAction<AccordionItems[]>> }) => {
   return (
@@ -96,9 +101,9 @@ const CustomInputField = ({
   onChange: (e: any) => void,
   handleClick: (address: string) => void,
   placeholder: string,
-    invalid: boolean,
-    description?: string,
-    href?: string,
+  invalid: boolean,
+  description?: string,
+  href?: string,
 }) => {
   const { address } = useSorobanReact()
   return (
@@ -130,7 +135,7 @@ const CustomInputField = ({
               <FaRegPaste />
             </IconButton>
           </Tooltip>
-          }
+        }
         >
           <Input
             value={value}
@@ -174,10 +179,20 @@ export const dropdownData = {
     description: 'The Emergency Manager has the authority to withdraw assets from the DeFindex in case of an emergency.',
     href: 'https://docs.defindex.io/whitepaper/10-whitepaper/03-the-defindex-approach/02-contracts/01-vault-contract#emergency-management'
   },
+  rebalanceManager: {
+    title: 'Rebalance manager',
+    description: 'The Rebalance Manager can rebalance the Vault',
+    href: 'https://docs.defindex.io/whitepaper/10-whitepaper/03-the-defindex-approach/02-contracts/01-vault-contract#rebalance-management'
+  },
   feeReceiver: {
     title: 'Fee receiver',
-    description: ' Fee Receiver could be the manager using the same address, or it could be a different entity such as a streaming contract, a DAO, or another party.',
+    description: 'Fee Receiver could be the manager using the same address, or it could be a different entity such as a streaming contract, a DAO, or another party.',
     href: 'https://docs.defindex.io/whitepaper/10-whitepaper/03-the-defindex-approach/02-contracts/01-vault-contract#fee-collection'
+  },
+  upgradableContract: {
+    title: 'Upgradable',
+    description: 'The contract can be upgraded by the manager.',
+    href: 'https://docs.defindex.io/whitepaper/10-whitepaper/03-the-defindex-approach/02-contracts/01-vault-contract#upgradability'
   }
 }
 export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue, setAccordionValue, formControl, setFormControl }) => {
@@ -235,6 +250,33 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
     }
     return;
   };
+
+  const handleRebalanceManagerChange = (input: string) => {
+    const isValid = isValidAddress(input)
+    while (!isValid) {
+      setFormControl({
+        ...formControl,
+        rebalanceManager: {
+          value: input,
+          isValid: false,
+        }
+      })
+      dispatch(setRebalanceManager(''))
+      return
+    }
+    if (isValid) {
+      setFormControl({
+        ...formControl,
+        rebalanceManager: {
+          value: input,
+          isValid: true,
+        }
+      })
+      dispatch(setRebalanceManager(input))
+    }
+    return;
+  };
+
   const handleFeeReceiverChange = (input: string) => {
     const isValid = isValidAddress(input)
     while (!isValid) {
@@ -257,6 +299,7 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
     })
     dispatch(setFeeReceiver(input))
   };
+
   const handleVaultShareChange = (input: any) => {
     if (input < 0 || input > 100) return
     const decimalRegex = /^(\d+)?(\.\d{0,2})?$/
@@ -266,6 +309,14 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
       vaultShare: input
     })
     dispatch(setVaultShare(input * 100))
+  }
+
+  const handleUpgradableChange = (input: boolean) => {
+    setFormControl({
+      ...formControl,
+      upgradable: input
+    })
+    dispatch(setUpgradable(input))
   }
 
 
@@ -293,16 +344,19 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
               </Table.Header>
               <Table.Body>
                 {data.map((asset: Asset, index: number) => (
-                  <Table.Row key={index}>
-                    <Table.Cell>{asset.strategies[0]?.name}</Table.Cell>
-                    <Table.Cell textAlign={'center'}>
-                      {asset.strategies[0]?.address ? shortenAddress(asset.strategies[0]?.address) : '-'}
-                    </Table.Cell>
-                    <Table.Cell textAlign={'center'}>{asset.symbol}</Table.Cell>
-                    {(asset.amount && asset.amount > 0) && (
-                      <Table.Cell textAlign={'center'}>${asset.amount} {asset.symbol}</Table.Cell>
-                    )}
-                  </Table.Row>
+                  asset.strategies.map((strategy, j) => (
+                    <Table.Row key={strategy.address}>
+                      <Table.Cell>{strategy.name}</Table.Cell>
+                      <Table.Cell textAlign={'center'}>
+                        {strategy.address ? shortenAddress(strategy.address) : '-'}
+                      </Table.Cell>
+                      <Table.Cell textAlign={'center'}>{asset.symbol}</Table.Cell>
+                      {asset.amount &&
+                        <Table.Cell textAlign={'center'}>${strategy.tempAmount} {asset.symbol}</Table.Cell>
+                      }
+                    </Table.Row>
+
+                  ))
                 ))}
               </Table.Body>
             </Table.Root>
@@ -336,6 +390,16 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
               description={dropdownData.emergencyManager.description}
               href={dropdownData.emergencyManager.href}
             />
+            <CustomInputField
+              label={dropdownData.rebalanceManager.title}
+              value={formControl.rebalanceManager.value || ''}
+              onChange={(e) => handleRebalanceManagerChange(e.target.value)}
+              handleClick={(address: string) => handleRebalanceManagerChange(address)}
+              placeholder='GAFS3TLVM...'
+              invalid={formControl.rebalanceManager.isValid === false}
+              description={dropdownData.rebalanceManager.description}
+              href={dropdownData.rebalanceManager.href}
+            />
           </AccordionItemContent>
         </AccordionItem>
         <AccordionItem value={AccordionItems.FEES_CONFIGS}>
@@ -363,7 +427,7 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
                     href={dropdownData.feeReceiver.href}
                     colorPalette={'blue'}
                     target='_blank'
-            >
+                  >
                     Learn more.
                   </Link>
 
@@ -380,6 +444,46 @@ export const VaultPreview: React.FC<VaultPreviewProps> = ({ data, accordionValue
                 </InputGroup>
               </Stack>
               <Fieldset.ErrorText>This field is required.</Fieldset.ErrorText>
+            </Fieldset.Root>
+          </AccordionItemContent>
+        </AccordionItem>
+        <AccordionItem value={AccordionItems.UPGRADABLE_CONTRACT}>
+          <CustomAccordionTrigger
+            setAccordionValue={setAccordionValue}
+            title='Upgrade'
+            type={AccordionItems.UPGRADABLE_CONTRACT}
+            accordionValue={accordionValue} />
+          <AccordionItemContent
+            px={4}
+            mb={4}
+          >
+            <Fieldset.Root>
+              <Checkbox.Root
+                alignItems="center"
+                checked={formControl.upgradable}
+                gap="4"
+                onCheckedChange={(e) => handleUpgradableChange(!!e.checked)}
+              >
+                <Checkbox.HiddenInput />
+                <Checkbox.Label>
+                  Upgradable <InfoTip content={
+                    <>
+                      <Text fontSize={'xs'} maxW={'25vw'}>{dropdownData.upgradableContract.description}</Text>
+                      <Link
+                        href={dropdownData.upgradableContract.href}
+                        colorPalette={'blue'}
+                        target='_blank'
+                      >
+                        Learn more.
+                      </Link>
+                    </>
+                  } />
+                </Checkbox.Label>
+                <Checkbox.Control>
+                  <Checkbox.Indicator />
+                </Checkbox.Control>
+
+              </Checkbox.Root>
             </Fieldset.Root>
           </AccordionItemContent>
         </AccordionItem>
