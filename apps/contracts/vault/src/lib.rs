@@ -1,5 +1,4 @@
 #![no_std]
-use constants::MIN_WITHDRAW_AMOUNT;
 use report::Report;
 use soroban_sdk::{contract, contractimpl, panic_with_error, token::TokenClient, vec, Address, BytesN, Env, IntoVal, Map, String, Val, Vec
 };
@@ -41,7 +40,7 @@ use strategies::{
 };
 use token::{internal_burn, write_metadata};
 use utils::{
-    calculate_asset_amounts_per_vault_shares, check_min_amount, validate_amount, validate_assets
+    calculate_asset_amounts_per_vault_shares, validate_amount, validate_assets
 };
 
 use common::{models::AssetStrategySet, utils::StringExtensions};
@@ -300,9 +299,10 @@ impl VaultTrait for DeFindexVault {
     fn withdraw(e: Env, withdraw_shares: i128, min_amounts_out: Vec<i128>, from: Address) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
         from.require_auth();
-
-        check_min_amount(withdraw_shares, MIN_WITHDRAW_AMOUNT)?;
-
+        
+        if withdraw_shares <= 0 {
+            return Err(ContractError::AmountNotAllowed);
+        }
         // Fetches the total managed funds for all assets, including idle and invested funds (net of locked fees).
         // Setting the flag to `true` ensures that strategy reports are updated and new fees are locked during the process.
         let total_managed_funds = fetch_total_managed_funds(&e, true)?;
@@ -349,6 +349,7 @@ impl VaultTrait for DeFindexVault {
             }
             let idle_funds = asset.idle_amount;
 
+            // If didle funds are enough, we dont unwind from any strategy
             if idle_funds >= requested_withdrawal_amount {
                 TokenClient::new(&e, asset_address).transfer(
                     &e.current_contract_address(),
@@ -382,6 +383,7 @@ impl VaultTrait for DeFindexVault {
                         };
 
                     if strategy_amount_to_unwind > 0 {
+                        // When doing unwind, the token in being transfered directly to the user
                         unwind_from_strategy(
                             &e,
                             &strategy_allocation.strategy_address,
