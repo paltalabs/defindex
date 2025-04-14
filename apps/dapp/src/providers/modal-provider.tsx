@@ -5,6 +5,7 @@ import { ModalContext, ModalContextType, TransactionStatusModalOperation, Transa
 import { useDispatch } from 'react-redux'
 import { resetNewVault } from '@/store/lib/features/vaultStore'
 import { resetSelectedVault } from '@/store/lib/features/walletStore'
+import useMounted from "@/hooks/useMounted"
 
 
 export const ModalProvider = ({
@@ -115,6 +116,9 @@ export const ModalProvider = ({
       setIsOpen: setIsInvestStrategiesModalOpen,
     },
   }
+
+  const isMounted = useMounted();
+  if (!isMounted) return null;
 
   return (
     <ModalContext.Provider value={modalContextValue}>

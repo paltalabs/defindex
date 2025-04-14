@@ -1,5 +1,5 @@
-import { useContext } from "react"
-import { useSorobanReact } from "@soroban-react/core"
+import { use, useContext, useEffect, useState } from "react"
+import { useSorobanReact } from "stellar-react"
 import { Grid, GridItem, Icon, Link as ChakraLink, Text, HStack } from "@chakra-ui/react"
 import { DialogBody, DialogContent } from "../ui/dialog"
 import { StepsContent, StepsItem, StepsList, StepsRoot } from "../ui/steps"
@@ -8,10 +8,17 @@ import { FaRegCheckCircle } from "react-icons/fa";
 import { LuExternalLink } from "react-icons/lu";
 import { FaRegCircleXmark } from "react-icons/fa6";
 import { ModalContext, TransactionStatusModalStatus } from "@/contexts"
+import { getNetworkName } from "@/helpers/networkName"
 
 
 export const TransactionStatusModal = () => {
-  const { activeChain } = useSorobanReact()
+  const { activeNetwork } = useSorobanReact()
+  const [networkName, setNetworkName] = useState<string>('testnet')
+  useEffect(() => {
+    let network = getNetworkName(activeNetwork)
+    setNetworkName(network)
+  }, [activeNetwork])
+
   const { transactionStatusModal: status } = useContext(ModalContext)
   return (
     <DialogContent>
@@ -60,7 +67,7 @@ export const TransactionStatusModal = () => {
                     </Icon>
                   </GridItem>
                   <GridItem colSpan={12} textAlign={'center'}>
-                    <ChakraLink target="_blank" href={`https://stellar.expert/explorer/${activeChain?.name?.toLowerCase()}/tx/${status.txHash}`} >
+                  <ChakraLink target="_blank" href={`https://stellar.expert/explorer/${networkName}/tx/${status.txHash}`} >
                       View on explorer <LuExternalLink />
                     </ChakraLink>
                   </GridItem>

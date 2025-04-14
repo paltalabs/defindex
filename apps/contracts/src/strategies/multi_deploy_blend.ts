@@ -1,12 +1,12 @@
 import { Address, Asset, nativeToScVal, Networks, xdr } from "@stellar/stellar-sdk";
 import { exit } from "process";
-import { green, red, yellow } from "../tests/common.js";
-import { AddressBook } from "../utils/address_book.js";
+import { red, yellow } from "../tests/common.js";
 import {
   airdropAccount,
   deployContract,
   installContract
 } from "../utils/contract.js";
+import { AddressBook } from "../utils/address_book.js";
 import { config } from "../utils/env_config.js";
 
 export async function multiDeployBlendStrategies(quantity: number, asset_key: string) {
@@ -80,11 +80,11 @@ export async function multiDeployBlendStrategies(quantity: number, asset_key: st
   for (let i = 0; i < quantity; i++) {
 
     const initArgs = xdr.ScVal.scvVec([
-      new Address(blendFixedXlmUsdcPool).toScVal(), // blend_pool_address: The address of the Blend pool where assets are deposited
-      new Address(blndToken).toScVal(), // blend_token: The address of the reward token (e.g., BLND) issued by the Blend pool
-      new Address(soroswapRouter).toScVal(), // soroswap_router: The address of the Soroswap AMM router for asset swaps
-      nativeToScVal(40, { type: "i128" }), // reward_threshold: The minimum reward amount that triggers reinvestment
-      new Address(loadedConfig.blendKeeper).toScVal() // keeper: The address of the keeper that can call the harvest function
+      new Address(blendFixedXlmUsdcPool).toScVal(), //Blend pool on testnet!
+      nativeToScVal(0, { type: "u32" }), // ReserveId 0 is XLM
+      new Address(blndToken).toScVal(), // BLND Token
+      new Address(soroswapRouter).toScVal(), // Soroswap router
+      init_args.claim_id,
     ]);
   
     const args: xdr.ScVal[] = [
@@ -92,17 +92,6 @@ export async function multiDeployBlendStrategies(quantity: number, asset_key: st
       initArgs
     ];
   
-    console.log(green, `Deploying ${asset_symbol}_blend_strategy_${i} with the following arguments:`);
-    console.log(green, `Contract Key: ${asset_symbol}_blend_strategy_${i}`);
-    console.log(green, `WASM Key: blend_strategy`);
-    console.log(green, `Args:`, JSON.stringify({
-      asset_address: init_args.address,
-      blend_pool: blendFixedXlmUsdcPool,
-      reserve_id: 0,
-      blnd_token: blndToken,
-      soroswap_router: soroswapRouter,
-      blend_keeper: loadedConfig.blendKeeper
-    }, null, 2));
     await deployContract(
       `${asset_symbol}_blend_strategy_${i}`,
       "blend_strategy",
@@ -110,7 +99,6 @@ export async function multiDeployBlendStrategies(quantity: number, asset_key: st
       args,
       loadedConfig.admin
     );
-    console.log(green, `Deployed ${asset_symbol}_blend_strategy_${i} with the following arguments:`);
   }
   return;
 }
