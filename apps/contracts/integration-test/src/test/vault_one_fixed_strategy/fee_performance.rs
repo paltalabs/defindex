@@ -3,12 +3,10 @@ use crate::{
     test::{EnvTestUtils, IntegrationTest, ONE_YEAR_IN_SECONDS},
     vault::{
         defindex_vault_contract::Instruction,
-    },
+        },
 };
 use soroban_sdk::{
-    testutils::{
-        MockAuth, 
-        MockAuthInvoke},
+    testutils::{MockAuth, MockAuthInvoke},
     vec as svec, IntoVal, Vec,
 };
 
