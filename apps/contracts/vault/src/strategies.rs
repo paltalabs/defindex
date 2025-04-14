@@ -130,21 +130,11 @@ pub fn unwind_from_strategy(
     strategy_address: &Address,
     amount: &i128,
     to: &Address,
-) -> Result<Report, ContractError> {
+) -> Result<i128, ContractError> {
     let strategy_client = get_strategy_client(e, strategy_address.clone());
-    let current_strategy_balance = strategy_client.balance(&e.current_contract_address());
-    if current_strategy_balance < *amount {
-        return Err(ContractError::UnwindMoreThanAvailable);
-    } 
-    let mut report = get_report(e, strategy_address);
-    report.prev_balance = report.prev_balance.checked_sub(*amount).ok_or(ContractError::Underflow)?;
-   
+       
     match strategy_client.try_withdraw(amount, &e.current_contract_address(), to) {
-        Ok(Ok(result)) => {
-            report.report(result)?;
-            set_report(e, strategy_address, &report);
-            Ok(report)
-        }
+        Ok(Ok(result)) => Ok(result),
         Ok(Err(_)) | Err(_) => Err(ContractError::StrategyWithdrawError),
     }
 }
