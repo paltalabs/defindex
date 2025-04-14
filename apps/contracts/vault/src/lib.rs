@@ -349,8 +349,7 @@ impl VaultTrait for DeFindexVault {
             }
             let idle_funds = asset.idle_amount;
 
-            // If didle funds are enough, we dont unwind from any strategy
-            if idle_funds >= requested_withdrawal_amount {
+            if idle_funds > 0 && idle_funds >= requested_withdrawal_amount {
                 TokenClient::new(&e, asset_address).transfer(
                     &e.current_contract_address(),
                     &from,
@@ -358,11 +357,13 @@ impl VaultTrait for DeFindexVault {
                 );
                 withdrawn_amounts.push_back(requested_withdrawal_amount);
             } else {
-                TokenClient::new(&e, asset_address).transfer(
-                    &e.current_contract_address(),
-                    &from,
-                    &idle_funds,
-                );
+                if idle_funds != 0 {
+                    TokenClient::new(&e, asset_address).transfer(
+                        &e.current_contract_address(),
+                        &from,
+                        &idle_funds,
+                    );
+                }
                 let mut cumulative_amount_for_asset = idle_funds;
                 let remaining_amount_to_unwind =
                     requested_withdrawal_amount.checked_sub(idle_funds).unwrap();
