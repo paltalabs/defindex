@@ -1,6 +1,6 @@
 use defindex_strategy_core::StrategyError;
 use soroban_sdk::{
-    auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation}, panic_with_error, token::TokenClient, vec, Address, Env, IntoVal, Symbol, Vec
+    auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation}, token::TokenClient, vec, Address, Env, IntoVal, Symbol, Vec
 };
 
 use crate::{

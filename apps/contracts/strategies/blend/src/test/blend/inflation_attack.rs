@@ -7,7 +7,7 @@ use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTes
 use crate::BlendStrategyClient;
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
-use soroban_sdk::testutils::{Address as _};
+use soroban_sdk::testutils::Address as _;
 use soroban_sdk::{vec, Address, Env};
 
 #[test]
