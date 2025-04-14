@@ -17,14 +17,6 @@ pub fn validate_amount(amount: i128) -> Result<(), ContractError> {
     }
 }
 
-pub fn check_min_amount(amount: i128, min_amount: i128) -> Result<(), ContractError> {
-    if amount < min_amount {
-        Err(ContractError::InsufficientAmount)
-    } else {
-        Ok(())
-    }
-}
-
 fn divide_rounding_up(a: i128, b: i128) -> Result<i128, ContractError> {
     let result = a.checked_div(b).ok_or(ContractError::ArithmeticError)?;
     if a % b != 0 {
@@ -103,7 +95,7 @@ pub fn validate_strategies(e: &Env, strategies: &Vec<Strategy>){
 /// * Returns `ContractError::ArithmeticError` if there are any issues with multiplication or division,
 ///   such as overflow or division by zero.
 /// * Returns `ContractError::AmountOverTotalSupply` if the `shares_amount` exceeds the total supply of vault shares.
-pub fn calculate_asset_amounts_per_vault_shares(
+pub fn calculate_asset_amounts_per_vault_shares( 
     env: &Env,
     shares_amount: i128,
     total_managed_funds: &Vec<CurrentAssetInvestmentAllocation>,

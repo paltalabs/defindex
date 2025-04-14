@@ -52,9 +52,9 @@ fn negative_amount() {
     assert_eq!(result, Err(Ok(ContractError::AmountNotAllowed)));
 }
 
-// check that withdraw with amount below min returns error
+// check that withdraw with amounts 0 return error
 #[test]
-fn below_min() {
+fn with_zero() {
     let test = DeFindexVaultTest::setup();
     test.env.mock_all_auths();
     let strategy_params_token_0 = create_strategy_params_token_0(&test);
@@ -98,8 +98,8 @@ fn below_min() {
 
     let withdraw_amount = 100i128;
     let min_amounts_out = sorobanvec![&test.env, withdraw_amount];
-    let result = defindex_contract.try_withdraw(&99i128, &min_amounts_out, &users[0]);
-    assert_eq!(result, Err(Ok(ContractError::InsufficientAmount)));
+    let result = defindex_contract.try_withdraw(&0i128, &min_amounts_out, &users[0]);
+    assert_eq!(result, Err(Ok(ContractError::AmountNotAllowed)));
     
     let result = defindex_contract.withdraw(&withdraw_amount, &min_amounts_out, &users[0]);
     assert_eq!(result, sorobanvec![&test.env, withdraw_amount]);
@@ -1181,10 +1181,12 @@ fn from_strategies_two_asset_each_one_strategy_success() {
     );
 
     // check vault balance
+    // it should be 2222222 - 222222 = 2000000
     assert_eq!(
         test.token_0.balance(&defindex_contract.address),
         2222222 - 222222
     );
+    // it should be 4222222 - 422221 = 3800001
     assert_eq!(
         test.token_1.balance(&defindex_contract.address),
         4222222 - 422221

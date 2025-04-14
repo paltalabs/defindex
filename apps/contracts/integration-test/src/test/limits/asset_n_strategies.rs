@@ -1,6 +1,26 @@
 use soroban_sdk::{testutils::{Address as _, Ledger, MockAuth, MockAuthInvoke}, vec as svec, xdr::ContractCostType, Address, BytesN, IntoVal, Map, String, Vec};
 
-use crate::{blend_strategy::{create_blend_strategy_contract, BlendStrategyClient}, factory::{AssetStrategySet, Strategy}, fixed_strategy::{create_fixed_strategy_contract, FixedStrategyClient}, hodl_strategy::create_hodl_strategy_contract, setup::{blend_setup::{create_blend_pool, BlendFixture, BlendPoolClient, Request}, create_soroswap_factory, create_soroswap_pool, create_soroswap_router, create_vault_one_asset_hodl_strategy, mock_mint, VAULT_FEE}, test::{limits::{check_limits, check_limits_return_info, create_results_table, print_resources}, EnvTestUtils, IntegrationTest, DAY_IN_LEDGERS, ONE_YEAR_IN_SECONDS}, token::create_token, vault::{defindex_vault_contract::{Instruction, VaultContractClient}, MINIMUM_LIQUIDITY}};
+use crate::{blend_strategy::{create_blend_strategy_contract, BlendStrategyClient}, factory::{AssetStrategySet, Strategy}, fixed_strategy::{create_fixed_strategy_contract, FixedStrategyClient}, hodl_strategy::create_hodl_strategy_contract, setup::{blend_setup::{create_blend_pool, BlendFixture, BlendPoolClient, Request}, create_soroswap_factory, create_soroswap_pool, create_soroswap_router, create_vault_one_asset_hodl_strategy, mock_mint, VAULT_FEE}, test::{limits::{check_limits, check_limits_return_info, create_results_table, print_resources}, EnvTestUtils, IntegrationTest, DAY_IN_LEDGERS, ONE_YEAR_IN_SECONDS}, token::create_token, vault::{defindex_vault_contract::{Instruction, VaultContractClient, CurrentAssetInvestmentAllocation}, MINIMUM_LIQUIDITY}};
+
+/// Formats and prints the total managed funds in a readable way
+fn print_total_managed_funds(total_managed_funds: &Vec<CurrentAssetInvestmentAllocation>) {
+    println!("=== Total Managed Funds ===");
+    for (i, allocation) in total_managed_funds.iter().enumerate() {
+        println!("Asset #{}: {:?}", i + 1, allocation.asset);
+        println!("  Idle Amount: {}", allocation.idle_amount);
+        println!("  Invested Amount: {}", allocation.invested_amount);
+        println!("  Total Amount: {}", allocation.total_amount);
+        println!("  Strategy Allocations:");
+        
+        for (j, strategy) in allocation.strategy_allocations.iter().enumerate() {
+            println!("    Strategy #{}", j + 1);
+            println!("      Address: {:?}", strategy.strategy_address);
+            println!("      Amount: {}", strategy.amount);
+            println!("      Paused: {}", strategy.paused);
+        }
+    }
+    println!("==========================");
+}
 
 // 26 strategies is the maximum number of strategies that can be added to a vault before exceeding the instructions limit IN RUST TESTS
 // With 26 strategies withdrawals are not possible due to the instruction limit
@@ -640,15 +660,15 @@ fn blend() {
 
 
     /* ---------------------------------------------------------- Rebalance: Unwind ------------------------------------------------------ */
-    let mut invest_instructions = svec![&setup.env];
+    let mut unwind_instructions = svec![&setup.env];
     for i in 0..num_strategies {
-        invest_instructions.push_back(Instruction::Unwind(
+        unwind_instructions.push_back(Instruction::Unwind(
             strategies.get(i).unwrap().address.clone(),
             starting_balance / num_strategies as i128,
         ));
     }
     setup.env.cost_estimate().budget().reset_unlimited();
-    vault_contract.rebalance(&manager, &invest_instructions);
+    vault_contract.rebalance(&manager, &unwind_instructions);
     let unwind_usage = check_limits_return_info(&setup.env, "Unwind");
 
 
@@ -684,11 +704,13 @@ fn blend() {
     let balance = vault_contract.balance(&users[0]);
     let min_amounts_out = svec![&setup.env, 0i128];
 
+    // We see the total managed funds first before withdrawing
+    let total_managed_funds = vault_contract.fetch_total_managed_funds();
+    print_total_managed_funds(&total_managed_funds);
+    
     setup.env.cost_estimate().budget().reset_unlimited();
-
-    /* ------------------------------------------------------------ Withdraw ------------------------------------------------------------- */
-    vault_contract.withdraw(&balance, &min_amounts_out, &users[0]);
-    let withdraw_usage= check_limits_return_info(&setup.env, "Withdraw");
+    vault_contract.withdraw(&(balance/2), &min_amounts_out, &users[0]);
+    let withdraw_usage= check_limits_return_info(&setup.env, "Withdraw user0, no idle");
 
     // admin borrow back to 50% util rate
     let borrow_amount = (user_2_starting_balance + starting_balance * 2) / 2;
@@ -740,10 +762,14 @@ fn blend() {
         harvest_usage.push_back(usage);
     }
 
+    setup.env.cost_estimate().budget().reset_unlimited();
     let report = vault_contract.report();
+    let report_usage= check_limits_return_info(&setup.env, "Report");
     println!("report = {:?}", report);
 
+    setup.env.cost_estimate().budget().reset_unlimited();    
     let lock_fees = vault_contract.lock_fees(&None);
+    let lock_fees_usage= check_limits_return_info(&setup.env, "Lock Fees");
     println!("locked_fees = {:?}", lock_fees);
 
     /* ---------------------------------------------------------- Distribute Fees ------------------------------------------------------- */
@@ -753,12 +779,38 @@ fn blend() {
     let distribute_fees_usage= check_limits_return_info(&setup.env, "Distribute Fees");
 
     /* -------------------------------------------------------- Withdraw from user 1 ----------------------------------------------------- */
+    // Before withdrawing, we see the total managed funds
+    let total_managed_funds = vault_contract.fetch_total_managed_funds();
+    print_total_managed_funds(&total_managed_funds);
+    // Let's unwind to store some of the funds in the vault
+    let mut unwind_instructions = svec![&setup.env];
+    for i in 0..num_strategies {
+        unwind_instructions.push_back(Instruction::Unwind(
+            strategies.get(i).unwrap().address.clone(),
+            starting_balance / num_strategies as i128,
+        ));
+    }
+    vault_contract.rebalance(&manager, &unwind_instructions);
 
+    let total_managed_funds = vault_contract.fetch_total_managed_funds();
+    print_total_managed_funds(&total_managed_funds);
+    // Withdraw funds only from idle
+    let balance = vault_contract.balance(&users[1]);
+    let assets_per_share = vault_contract.get_asset_amounts_per_shares(&balance);
+    println!("assets_per_share = {:?}", assets_per_share);
+    let min_amounts_out = svec![&setup.env, 0i128];
     setup.env.cost_estimate().budget().reset_unlimited();
+    vault_contract.withdraw(&(balance/2), &min_amounts_out, &users[1]);
+    let withdraw_only_idle= check_limits_return_info(&setup.env, "Withdraw only idle");
+    
+    // Withdraw all funds for user 1
+    let total_managed_funds = vault_contract.fetch_total_managed_funds();
+    print_total_managed_funds(&total_managed_funds);
     let balance = vault_contract.balance(&users[1]);
     let min_amounts_out = svec![&setup.env, 0i128];
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.withdraw(&balance, &min_amounts_out, &users[1]);
-    let withdraw_1_usage= check_limits_return_info(&setup.env, "Withdraw");
+    let withdraw_1_usage= check_limits_return_info(&setup.env, "Withdraw idle and invested");
 
     /* -------------------------------------------------------- Results table --------------------------------------------------------- */
     let usage_results = vec![
@@ -767,8 +819,11 @@ fn blend() {
         invest_usage,
         deposit_and_invest_usage,
         unwind_usage,
-        withdraw_usage,
+        lock_fees_usage,
+        report_usage,
         distribute_fees_usage,
+        withdraw_usage,
+        withdraw_only_idle,
         withdraw_1_usage,
     ];
     create_results_table(&setup.env, usage_results);
@@ -994,6 +1049,11 @@ fn blend_panic() {
     setup.env.cost_estimate().budget().reset_unlimited();
 
     /* ------------------------------------------------------------ Withdraw ------------------------------------------------------------- */
+    // We see the total managed funds first before withdrawing
+    let total_managed_funds = vault_contract.fetch_total_managed_funds();
+    print_total_managed_funds(&total_managed_funds);
+    
+    setup.env.cost_estimate().budget().reset_unlimited();
     vault_contract.withdraw(&balance, &min_amounts_out, &users[0]);
     let withdraw_usage= check_limits_return_info(&setup.env, "Withdraw");
 
