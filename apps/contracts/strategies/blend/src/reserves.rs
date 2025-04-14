@@ -1,5 +1,5 @@
 use crate::{
-    blend_pool, check_positive_amount, constants::SCALAR_12, storage::{self, Config}
+    blend_pool, constants::SCALAR_12, storage::{self, Config}
 };
 
 use defindex_strategy_core::StrategyError;
@@ -100,9 +100,12 @@ pub fn set_validated_vault_shares(
     from: &Address,
     vault_shares: i128
 ) -> Result<i128, StrategyError> {
-    check_positive_amount(vault_shares)?;
-    storage::set_vault_shares(&e, &from, vault_shares);
-    Ok(vault_shares)
+    if vault_shares >= 0 {
+        storage::set_vault_shares(&e, &from, vault_shares);
+        Ok(vault_shares)
+    } else {
+        Err(StrategyError::OnlyPositiveAmountAllowed)
+    }
 }
 
 /// Accounts for a deposit into the Blend pool.
