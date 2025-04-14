@@ -368,16 +368,18 @@ impl VaultTrait for DeFindexVault {
                     let mut cumulative_amount_for_asset = idle_funds;
                     let remaining_amount_to_unwind =
                         requested_withdrawal_amount.checked_sub(idle_funds).unwrap();
-                        
+                    // Iterate through the strategies to unwind the remaining amount
                     for (i, strategy_allocation) in
                         asset.strategy_allocations.iter().enumerate()
                     {
+                        // If the current strategy is the last one, unwind the remaining amount
                         let strategy_amount_to_unwind: i128 =
                             if i == asset.strategy_allocations.len().checked_sub(1).unwrap_or(0) as usize {
                                 requested_withdrawal_amount
                                     .checked_sub(cumulative_amount_for_asset)
                                     .unwrap()
                             } else {
+                                // Calculate the proportional amount to unwind from this strategy
                                 remaining_amount_to_unwind
                                     .checked_mul(strategy_allocation.amount)
                                     .and_then(|result| result.checked_div(asset.invested_amount))
