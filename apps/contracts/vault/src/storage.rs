@@ -106,13 +106,10 @@ pub fn get_soroswap_router(e: &Env) -> Address {
 }
 
 
-// Vault Share
+// Vault Share. Vault Share can be 0 or positive, but less than 9000
 pub fn set_vault_fee(e: &Env, vault_fee: &u32) {
     if vault_fee > &9000u32 {
         panic_with_error!(&e, ContractError::MaximumFeeExceeded);
-    }
-    if vault_fee == &0u32 {
-        panic_with_error!(&e, ContractError::InvalidFeeBps);
     }
     e.storage().instance().set(&DataKey::VaultFee, vault_fee);
 }
