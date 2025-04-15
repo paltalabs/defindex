@@ -42,11 +42,11 @@ pub fn internal_swap_exact_tokens_for_tokens(
 
     let soroswap_router = get_soroswap_router(e);
 
-    let pair_address: Address = e.invoke_contract(
+    let pair_address: Address = e.try_invoke_contract::<Address, InvokeError>(
         &soroswap_router,
         &Symbol::new(&e, "router_pair_for"),
         vec![e, token_in.to_val(), token_out.to_val()],
-    );
+    ).unwrap_or_else(|_| panic_with_error!(e, ContractError::SoroswapRouterError)).unwrap();
 
     e.authorize_as_current_contract(vec![
         &e,
@@ -88,11 +88,13 @@ pub fn internal_swap_tokens_for_exact_tokens(
         return Err(ContractError::UnsupportedAsset);
     }
     let soroswap_router = get_soroswap_router(e);
-    let pair_address: Address = e.invoke_contract(
+
+    let pair_address: Address = e.try_invoke_contract::<Address, InvokeError>(
         &soroswap_router,
         &Symbol::new(&e, "router_pair_for"),
         vec![e, token_in.to_val(), token_out.to_val()],
-    );
+    ).unwrap_or_else(|_| panic_with_error!(e, ContractError::SoroswapRouterError)).unwrap();
+
     let (reserve_in, reserve_out) = get_reserves_with_pair(
         e.clone(),
         pair_address.clone(),
