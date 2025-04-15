@@ -1,11 +1,17 @@
 use soroban_sdk::{
-    auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation},
-    vec, Address, Env, IntoVal, Symbol, Val, Vec,
+    panic_with_error, vec, Address, Env, IntoVal, InvokeError, Symbol, Val, Vec,
+    auth::{
+        ContractContext, 
+        InvokerContractAuthEntry, 
+        SubContractInvocation}, 
 };
-use soroswap_library::{get_amount_in, get_reserves_with_pair};
-
+use soroswap_library::{
+    get_amount_in, 
+    get_reserves_with_pair
+};
 use crate::{
-    storage::{get_assets, get_soroswap_router}, ContractError
+    ContractError,
+    storage::{get_assets, get_soroswap_router}
 };
 
 fn is_supported_asset(e: &Env, token: &Address) -> Result<bool, ContractError> {
@@ -59,11 +65,13 @@ pub fn internal_swap_exact_tokens_for_tokens(
         }),
     ]);
 
-    let _result: Vec<i128> = e.invoke_contract(
+    let _result = e.try_invoke_contract::<Vec<i128>, InvokeError>(
         &get_soroswap_router(e),
         &Symbol::new(&e, "swap_exact_tokens_for_tokens"),
         swap_args.clone(),
-    );
+    ).unwrap_or_else(|_| {
+        panic_with_error!(e, ContractError::SwapExactInError);
+    });
     Ok(())
 }
 
@@ -130,10 +138,12 @@ pub fn internal_swap_tokens_for_exact_tokens(
         }),
     ]);
 
-    let _result: Vec<i128> = e.invoke_contract(
+    let _result = e.try_invoke_contract::<Vec<i128>, InvokeError>(
         &get_soroswap_router(e),
         &Symbol::new(&e, "swap_tokens_for_exact_tokens"),
         swap_args.clone(),
-    );
+    ).unwrap_or_else(|_| {
+        panic_with_error!(e, ContractError::SwapExactOutError);
+    }).unwrap();
     Ok(())
 }
