@@ -126,12 +126,26 @@ pub fn deposit(
     }
 
     let old_vault_shares = storage::get_vault_shares(&e, &from);
+    
     let new_minted_shares: i128 = reserves.b_tokens_to_shares_down(b_tokens_amount)?;
 
     if new_minted_shares <= 0 {
         panic_with_error!(e, StrategyError::InvalidSharesMinted);
     }
+    
+    // for the first depositor, the protocol will take out 1000 stroop units from the user shares in order to
+    // avoid inflation attacks
+    let new_vault_minted_shares = if reserves.total_shares == 0 {
+        
+        if new_minted_shares <= 1000 {
+            panic_with_error!(e, StrategyError::InvalidSharesMinted);
+        }
 
+        new_minted_shares.checked_sub(1000).ok_or_else(|| StrategyError::UnderflowOverflow)?
+    } else {
+        new_minted_shares
+    };
+    
     reserves.total_shares = reserves
         .total_shares
         .checked_add(new_minted_shares)
@@ -141,8 +155,9 @@ pub fn deposit(
         .checked_add(b_tokens_amount)
         .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
+    // The vault shares are updated with the new vault minted shares (For the first depositor will be 1000 less)
     let new_vault_shares = old_vault_shares
-        .checked_add(new_minted_shares)
+        .checked_add(new_vault_minted_shares)
         .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     storage::set_strategy_reserves(&e, reserves.clone());

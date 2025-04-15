@@ -691,10 +691,8 @@ fn asset_one_strategy_blend_rebalance() {
         &setup.env,
         &usdc.address,
         &pool,
-        &0u32,
         &blnd.address,
         &soroswap_router.address,
-        svec![&setup.env, 0u32, 1u32, 2u32, 3u32],
         40_0000000i128,
     );
     let strategy_contract = BlendStrategyClient::new(&setup.env, &strategy);
@@ -837,10 +835,8 @@ fn asset_one_strategy_blend_rebalance_panic_invest() {
         &setup.env,
         &usdc.address,
         &pool,
-        &0u32,
         &blnd.address,
         &soroswap_router.address,
-        svec![&setup.env, 0u32, 1u32, 2u32, 3u32],
         40_0000000i128
     );
     let strategy_contract = BlendStrategyClient::new(&setup.env, &strategy);
@@ -968,10 +964,8 @@ fn asset_one_strategy_blend_rebalance_panic_unwind() {
         &setup.env,
         &usdc.address,
         &pool,
-        &0u32,
         &blnd.address,
         &soroswap_router.address,
-        svec![&setup.env, 0u32, 1u32, 2u32, 3u32],
         40_0000000i128
     );
 

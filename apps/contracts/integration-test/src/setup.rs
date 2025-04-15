@@ -257,6 +257,7 @@ pub struct VaultOneBlendStrategy<'a> {
     pub vault_fee: u32,
     pub blend_pool_client: BlendPoolClient<'a>,
     pub admin: Address,
+    pub keeper: Address,
 }
 
 pub fn create_vault_one_blend_strategy<'a>() -> VaultOneBlendStrategy<'a> {
@@ -270,6 +271,7 @@ pub fn create_vault_one_blend_strategy<'a>() -> VaultOneBlendStrategy<'a> {
     let soroswap_router = create_soroswap_router(&setup.env, &soroswap_factory.address);
 
     let admin = Address::generate(&setup.env);
+    let keeper = Address::generate(&setup.env);
 
     let (blnd, blnd_client) = create_token(&setup.env, &admin);
     let (usdc, usdc_client) = create_token(&setup.env, &admin);
@@ -300,11 +302,10 @@ pub fn create_vault_one_blend_strategy<'a>() -> VaultOneBlendStrategy<'a> {
         &setup.env,
         &usdc.address,
         &pool,
-        &0u32,
         &blnd.address,
         &soroswap_router.address,
-        sorobanvec![&setup.env, 0u32, 1u32, 2u32, 3u32],
-        40_0000000
+        40_0000000,
+        &keeper,
     );
     let strategy_contract = BlendStrategyClient::new(&setup.env, &strategy);
 
@@ -367,7 +368,8 @@ pub fn create_vault_one_blend_strategy<'a>() -> VaultOneBlendStrategy<'a> {
         fee_receiver,
         vault_fee,
         blend_pool_client: pool_client,
-        admin
+        admin,
+        keeper
     }
 }
 

@@ -23,7 +23,6 @@ enum DataKey {
     TotalAssets,           // Total number of tokens
     AssetStrategySet(u32), // AssetStrategySet Addresse by index
     DeFindexProtocolFeeReceiver,
-    DeFindexFactory,
     Upgradable,
     VaultFee,
     SoroswapRouter,
@@ -92,13 +91,6 @@ pub fn get_defindex_protocol_fee_rate(e: &Env) -> u32 {
         .unwrap()
 }
 
-// DeFindex Factory
-pub fn set_factory(e: &Env, address: &Address) {
-    e.storage()
-        .instance()
-        .set(&DataKey::DeFindexFactory, address);
-}
-
 // Soroswap Router
 pub fn set_soroswap_router(e: &Env, address: &Address) {
     e.storage()
@@ -114,7 +106,7 @@ pub fn get_soroswap_router(e: &Env) -> Address {
 }
 
 
-// Vault Share
+// Vault Share. Vault Share can be 0 or positive, but less than 9000
 pub fn set_vault_fee(e: &Env, vault_fee: &u32) {
     if vault_fee > &9000u32 {
         panic_with_error!(&e, ContractError::MaximumFeeExceeded);

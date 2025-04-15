@@ -1,6 +1,6 @@
 'use client'
-import { useContext } from "react"
 import { useSorobanReact } from "@soroban-react/core"
+import { useContext } from "react"
 
 import { ModalContext } from "@/contexts"
 import { shortenAddress } from "@/helpers/address"
@@ -10,10 +10,10 @@ import { useAppSelector } from "@/store/lib/storeHooks"
 import { Asset, AssetAmmount, Strategy, VaultData } from "@/store/lib/types"
 
 import { Button, For, Grid, GridItem, HStack, Icon, Stack, Text } from "@chakra-ui/react"
-import { DialogBody, DialogContent, DialogFooter, DialogHeader } from "../ui/dialog"
 import { FaRegEdit } from "react-icons/fa"
 import { IoClose } from "react-icons/io5"
 import { ClipboardIconButton, ClipboardRoot } from "../ui/clipboard"
+import { DialogBody, DialogContent, DialogFooter, DialogHeader } from "../ui/dialog"
 
 
 export const InspectVault = ({
@@ -137,7 +137,7 @@ export const InspectVault = ({
           }
           {(address === selectedVault.manager) && <Button onClick={() => { rebalanceModal.setIsOpen(true) }}>Rebalance</Button>}
           {(address === selectedVault.emergencyManager || address === selectedVault.manager) &&
-            <Button onClick={() => { handleOpenInteract(VaultMethod.EMERGENCY_WITHDRAW, selectedVault) }}>Emergency Withdraw</Button>
+            <Button onClick={() => { handleOpenInteract(VaultMethod.RESCUE, selectedVault) }}>Emergency Withdraw</Button>
           }
           {address && <Button onClick={() => { handleOpenInteract(VaultMethod.WITHDRAW, selectedVault) }}>Withdraw</Button>}
         </HStack>

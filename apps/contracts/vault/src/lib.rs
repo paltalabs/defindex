@@ -1,5 +1,4 @@
 #![no_std]
-use constants::MIN_WITHDRAW_AMOUNT;
 use report::Report;
 use soroban_sdk::{contract, contractimpl, panic_with_error, token::TokenClient, vec, Address, BytesN, Env, IntoVal, Map, String, Val, Vec
 };
@@ -25,14 +24,14 @@ mod utils;
 use access::{AccessControl, AccessControlTrait, RolesDataKey};
 use router::{internal_swap_exact_tokens_for_tokens, internal_swap_tokens_for_exact_tokens};
 use deposit::process_deposit;
-use funds::fetch_total_managed_funds;
+use funds::{fetch_strategy_invested_funds, fetch_total_managed_funds};
 use interface::{AdminInterfaceTrait, VaultManagementTrait, VaultTrait};
 use investment::generate_investment_allocations;
 use models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation, Instruction, StrategyAllocation};
 use storage::{
     extend_instance_ttl, get_assets, get_defindex_protocol_fee_rate,
     get_report, get_vault_fee, set_asset,
-    set_defindex_protocol_fee_rate, set_defindex_protocol_fee_receiver, set_factory, set_report,
+    set_defindex_protocol_fee_rate, set_defindex_protocol_fee_receiver, set_report,
     set_soroswap_router, set_total_assets, set_vault_fee, set_is_upgradable
 };
 use strategies::{
@@ -41,11 +40,13 @@ use strategies::{
 };
 use token::{internal_burn, write_metadata};
 use utils::{
-    calculate_asset_amounts_per_vault_shares, check_min_amount, validate_amount, validate_assets
+    calculate_asset_amounts_per_vault_shares, validate_amount, validate_assets
 };
 
 use common::{models::AssetStrategySet, utils::StringExtensions};
 use defindex_strategy_core::DeFindexStrategyClient;
+
+use crate::token::VaultToken;
 
 static MINIMUM_LIQUIDITY: i128 = 1000;
 
@@ -67,10 +68,9 @@ impl VaultTrait for DeFindexVault {
     ///   - Vault Fee Receiver: For receiving vault fees
     ///   - Manager: For primary vault control
     ///   - Rebalance Manager: For rebalancing operations
-    /// * `vault_fee` - Vault-specific fee in basis points (0-2000 for 0-20%)
+    /// * `vault_fee` - Vault-specific fee in basis points (0_2000 for 0.20%)
     /// * `defindex_protocol_receiver` - Address receiving protocol fees
     /// * `defindex_protocol_rate` - Protocol fee rate in basis points (0-9000 for 0-90%)
-    /// * `factory` - Factory contract address
     /// * `soroswap_router` - Soroswap router address
     /// * `name_symbol` - Map containing:
     ///   - "name": Vault token name
@@ -119,7 +119,6 @@ impl VaultTrait for DeFindexVault {
         vault_fee: u32,
         defindex_protocol_receiver: Address,
         defindex_protocol_rate: u32,
-        factory: Address,
         soroswap_router: Address,
         name_symbol: Map<String, String>,
         upgradable: bool,
@@ -145,7 +144,6 @@ impl VaultTrait for DeFindexVault {
         }
         set_defindex_protocol_fee_rate(&e, &defindex_protocol_rate);
 
-        set_factory(&e, &factory);
         set_is_upgradable(&e, &upgradable);
 
         set_soroswap_router(&e, &soroswap_router);
@@ -240,7 +238,9 @@ impl VaultTrait for DeFindexVault {
         extend_instance_ttl(&e);
         from.require_auth();
 
-        let total_managed_funds = fetch_total_managed_funds(&e, false)?;
+        // Fetches the total managed funds for all assets, including idle and invested funds (net of locked fees).
+        // Setting the flag to `true` ensures that strategy reports are updated and new fees are locked during the process.
+        let total_managed_funds = fetch_total_managed_funds(&e, true)?;
 
         let (amounts, shares_to_mint) = process_deposit(
             &e,
@@ -284,6 +284,7 @@ impl VaultTrait for DeFindexVault {
     /// ## Parameters:
     /// - `e`: The contract environment (`Env`).
     /// - `withdraw_shares`: The number of vault shares to withdraw.
+    /// - `min_amounts_out`: A vector of minimum amounts required for each asset to be withdrawn.
     /// - `from`: The address initiating the withdrawal.
     ///
     /// ## Returns
@@ -295,17 +296,34 @@ impl VaultTrait for DeFindexVault {
     /// - `ContractError::AmountOverTotalSupply`: If the specified shares exceed the total supply.
     /// - `ContractError::ArithmeticError`: If any arithmetic operation fails during calculations.
     /// - `ContractError::WrongAmountsLength`: If there is a mismatch in asset allocation data.
-    fn withdraw(e: Env, withdraw_shares: i128, from: Address) -> Result<Vec<i128>, ContractError> {
+    fn withdraw(e: Env, withdraw_shares: i128, min_amounts_out: Vec<i128>, from: Address) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
-        validate_amount(withdraw_shares)?;
         from.require_auth();
-
-        check_min_amount(withdraw_shares, MIN_WITHDRAW_AMOUNT)?;
-        // Calculate the withdrawal amounts for each asset based on the share amounts
+        
+        if withdraw_shares <= 0 {
+            return Err(ContractError::AmountNotAllowed);
+        }
+        // Fetches the total managed funds for all assets, including idle and invested funds (net of locked fees).
+        // Setting the flag to `true` ensures that strategy reports are updated and new fees are locked during the process.
         let total_managed_funds = fetch_total_managed_funds(&e, true)?;
+        
+        //Validate min_amounts_out length
+        if min_amounts_out.len() != total_managed_funds.len() {
+            panic_with_error!(&e, ContractError::WrongAmountsLength);
+        }
+        //Validate min_amounts_out values
+        for amount in min_amounts_out.iter() {
+            if amount < 0 {
+                panic_with_error!(&e, ContractError::AmountNotAllowed);
+            }
+        }
+        
+        let total_shares_supply = VaultToken::total_supply(e.clone());
 
-        let asset_withdrawal_amounts =
-            calculate_asset_amounts_per_vault_shares(&e, withdraw_shares, &total_managed_funds)?;
+        // Check if the requested shares amount exceeds the total supply
+        if withdraw_shares > total_shares_supply {
+            return Err(ContractError::AmountOverTotalSupply);
+        }
 
         // Burn the shares after calculating the withdrawal amounts
         // This will panic with error if the user does not have enough balance
@@ -318,11 +336,20 @@ impl VaultTrait for DeFindexVault {
             // Use assets instead of asset_withdrawal_amounts
             let asset_address = &asset.asset;
 
-            if let Some(requested_withdrawal_amount) =
-                asset_withdrawal_amounts.get(i as u32)
-            {
-                let idle_funds = asset.idle_amount;
+            // Calculate the requested withdrawal amount for this asset
+            let requested_withdrawal_amount = asset
+                .total_amount
+                .checked_mul(withdraw_shares)
+                .ok_or(ContractError::ArithmeticError)?
+                .checked_div(total_shares_supply)
+                .ok_or(ContractError::ArithmeticError)?;
 
+            if requested_withdrawal_amount < min_amounts_out.get(i as u32).unwrap() {
+                panic_with_error!(&e, ContractError::InsufficientOutputAmount);
+            }
+            if requested_withdrawal_amount > 0 {
+                // Process the withdrawal if the requested amount is greater than zero
+                let idle_funds = asset.idle_amount;
                 if idle_funds >= requested_withdrawal_amount {
                     TokenClient::new(&e, asset_address).transfer(
                         &e.current_contract_address(),
@@ -331,48 +358,51 @@ impl VaultTrait for DeFindexVault {
                     );
                     withdrawn_amounts.push_back(requested_withdrawal_amount);
                 } else {
+                    if idle_funds != 0 {
+                        TokenClient::new(&e, asset_address).transfer(
+                            &e.current_contract_address(),
+                            &from,
+                            &idle_funds,
+                        );
+                    }
                     let mut cumulative_amount_for_asset = idle_funds;
                     let remaining_amount_to_unwind =
                         requested_withdrawal_amount.checked_sub(idle_funds).unwrap();
-
-                    let total_invested_amount = asset.invested_amount;
-
+                    // Iterate through the strategies to unwind the remaining amount
                     for (i, strategy_allocation) in
                         asset.strategy_allocations.iter().enumerate()
                     {
+                        // If the current strategy is the last one, unwind the remaining amount
                         let strategy_amount_to_unwind: i128 =
                             if i == asset.strategy_allocations.len().checked_sub(1).unwrap_or(0) as usize {
                                 requested_withdrawal_amount
                                     .checked_sub(cumulative_amount_for_asset)
                                     .unwrap()
                             } else {
+                                // Calculate the proportional amount to unwind from this strategy
                                 remaining_amount_to_unwind
                                     .checked_mul(strategy_allocation.amount)
-                                    .and_then(|result| result.checked_div(total_invested_amount))
+                                    .and_then(|result| result.checked_div(asset.invested_amount))
                                     .unwrap_or(0)
                             };
-
+    
                         if strategy_amount_to_unwind > 0 {
                             unwind_from_strategy(
                                 &e,
                                 &strategy_allocation.strategy_address,
                                 &strategy_amount_to_unwind,
-                                &e.current_contract_address(),
+                                &from,
                             )?;
                             cumulative_amount_for_asset = cumulative_amount_for_asset.checked_add(strategy_amount_to_unwind).ok_or(ContractError::Overflow)?;
                         }
                     }
-
-                    TokenClient::new(&e, asset_address).transfer(
-                        &e.current_contract_address(),
-                        &from,
-                        &cumulative_amount_for_asset,
-                    );
                     withdrawn_amounts.push_back(cumulative_amount_for_asset);
                 }
             } else {
-                withdrawn_amounts.push_back(0); // No withdrawal for this asset
+                // Push zero to 'withdrawn_amounts' to indicate no withdrawal for this asset
+                withdrawn_amounts.push_back(0);
             }
+            
         }
 
         events::emit_withdraw_event(&e, from, withdraw_shares, withdrawn_amounts.clone());
@@ -411,8 +441,9 @@ impl VaultTrait for DeFindexVault {
         let asset = get_strategy_asset(&e, &strategy_address)?;
         // This ensures that the vault has this strategy in its list of assets
         let strategy = get_strategy_struct(&strategy_address, &asset)?;
-        report::update_and_lock_fees(&e, &strategy.address)?;
-        let distribution_result = report::distribute_strategy_fees(&e, &strategy.address, &access_control)?;
+        let strategy_invested_funds = fetch_strategy_invested_funds(&e, &strategy_address, false)?;
+        report::update_report_and_lock_fees(&e, &strategy_address, strategy_invested_funds)?;
+        let distribution_result = report::distribute_strategy_fees(&e, &strategy.address, &access_control, &asset.address)?;
         if distribution_result > 0 {
             let mut distributed_fees: Vec<(Address, i128)> = Vec::new(&e);
             distributed_fees.push_back((asset.address.clone(), distribution_result));
@@ -424,13 +455,19 @@ impl VaultTrait for DeFindexVault {
         let strategy_balance = strategy_client.balance(&e.current_contract_address());
 
         if strategy_balance > 0 {
-            let mut report = unwind_from_strategy(
+            unwind_from_strategy(
                 &e,
                 &strategy_address,
                 &strategy_balance,
                 &e.current_contract_address(),
             )?;
-            report.reset();
+            
+            // Create a new zeroed report directly instead of getting the existing one
+            let report = Report {
+                prev_balance: 0,
+                gains_or_losses: 0,
+                locked_fee: 0,
+            };
             set_report(&e, &strategy_address, &report);
         }
 
@@ -548,6 +585,8 @@ impl VaultTrait for DeFindexVault {
     ) -> Result<Vec<i128>, ContractError> {
         extend_instance_ttl(&e);
 
+        // Fetches the total managed funds for all assets, including idle and invested funds (net of locked fees).
+        // Setting the flag to `true` ensures that strategy reports are updated and new fees are locked during the process.
         let total_managed_funds = fetch_total_managed_funds(&e, true)?;
         Ok(calculate_asset_amounts_per_vault_shares(
             &e,
@@ -812,20 +851,30 @@ impl VaultManagementTrait for DeFindexVault {
         if instructions.is_empty() {
             panic_with_error!(&e, ContractError::NoInstructions);
         }
-
         for instruction in instructions.iter() {
             match instruction {
                 Instruction::Unwind(strategy_address, amount) => {
-                    let report = unwind_from_strategy(
-                        &e,
-                        &strategy_address,
-                        &amount,
-                        &e.current_contract_address(),
-                    )?;
-                    let call_params = vec![&e, (strategy_address.clone(), amount, e.current_contract_address())];
-                    report::update_and_lock_fees(&e, &strategy_address)?;
-                    report::distribute_strategy_fees(&e, &strategy_address, &access_control)?;
-                    events::emit_rebalance_unwind_event(&e, call_params, report);
+                    let asset_address = get_strategy_asset(&e, &strategy_address)?;
+                    let strategy_invested_funds = fetch_strategy_invested_funds(&e, &strategy_address, true)?;
+                    if amount <= 0 {
+                        panic_with_error!(&e, ContractError::AmountNotAllowed);
+                    }
+                    if amount > strategy_invested_funds {
+                        return Err(ContractError::UnwindMoreThanAvailable);
+                    } else {
+                        report::distribute_strategy_fees(&e, &strategy_address, &access_control, &asset_address.address)?;
+                        unwind_from_strategy(
+                            &e,
+                            &strategy_address,
+                            &amount,
+                            &e.current_contract_address(),
+                        )?;
+                        let mut report = get_report(&e, &strategy_address);
+                        report.prev_balance = strategy_invested_funds - amount;
+                        set_report(&e, &strategy_address, &report);
+                        let call_params = vec![&e, (strategy_address.clone(), amount, e.current_contract_address())];
+                        events::emit_rebalance_unwind_event(&e, call_params, report);
+                    }
                 }
                 Instruction::Invest(strategy_address, amount) => {
                     let asset_address = get_strategy_asset(&e, &strategy_address)?;
@@ -835,7 +884,9 @@ impl VaultManagementTrait for DeFindexVault {
                     if strategy.paused {
                         panic_with_error!(&e, ContractError::StrategyPaused);
                     }
-                    
+                    if amount <= 0 {
+                        panic_with_error!(&e, ContractError::AmountNotAllowed);
+                    }
                     let report = invest_in_strategy(&e, &asset_address.address, &strategy_address, &amount)?;
                     let call_params = AssetInvestmentAllocation {
                         asset: asset_address.address.clone(),
@@ -845,7 +896,7 @@ impl VaultManagementTrait for DeFindexVault {
                             paused: strategy.paused
                         })],
                     };
-                    report::distribute_strategy_fees(&e, &strategy_address, &access_control)?;
+                    report::distribute_strategy_fees(&e, &strategy_address, &access_control, &asset_address.address)?;
                     events::emit_rebalance_invest_event(&e, vec![&e, call_params], report);
                 }
                 Instruction::SwapExactIn(
@@ -1002,7 +1053,7 @@ impl VaultManagementTrait for DeFindexVault {
             for strategy in asset.strategies.iter() {
                 total_fees_distributed =
                 total_fees_distributed.checked_add(
-                    report::distribute_strategy_fees(&e, &strategy.address, &access_control)?)
+                    report::distribute_strategy_fees(&e, &strategy.address, &access_control, &asset.address)?)
                     .unwrap();
             }
 

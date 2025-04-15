@@ -1,6 +1,6 @@
 #![cfg(test)]
 use crate::blend_pool::{BlendPoolClient, Request};
-use crate::constants::{MIN_DUST, SCALAR_12};
+use crate::constants::{SCALAR_12};
 use crate::storage::ONE_DAY_LEDGERS;
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
 use crate::test::std;
@@ -9,12 +9,15 @@ use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTes
 use crate::BlendStrategyClient;
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
-use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation};
-use soroban_sdk::{vec, Address, Env, IntoVal, Symbol};
+use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke, Events};
+use soroban_sdk::{vec, Address, Env, IntoVal, Symbol, Vec, Val, symbol_short, String, FromVal};
 use crate::test::std::println;
+use crate::STRATEGY_NAME;
 
 #[test]
 fn success() {
+    let min_dust: i128 = 0_0010000;
+
     let e = Env::default();
     e.cost_estimate().budget().reset_unlimited();
     e.mock_all_auths();
@@ -24,6 +27,8 @@ fn success() {
     let user_2 = Address::generate(&e);
     let user_3 = Address::generate(&e);
     let user_4 = Address::generate(&e);
+    let initial_depositor = Address::generate(&e);
+    let keeper = Address::generate(&e);
 
     let blnd = e.register_stellar_asset_contract_v2(admin.clone());
     let usdc = e.register_stellar_asset_contract_v2(admin.clone());
@@ -88,11 +93,13 @@ fn success() {
         &e, 
         &usdc.address(),
         &pool,
-        &0u32,
         &blnd.address(),
         &soroswap_router.address,
+        &keeper,
     );
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
+    assert_eq!(pool_client.get_reserve(&usdc.address().clone()).config.index, 0);
+
 
     // get asset returns correct asset
     assert_eq!(strategy_client.asset(), usdc.address().clone());
@@ -109,8 +116,14 @@ fn success() {
     let starting_balance = 100_0000000;
     usdc_client.mint(&user_2, &starting_balance);
     usdc_client.mint(&user_3, &starting_balance);
+    usdc_client.mint(&initial_depositor, &starting_balance);
 
     assert_eq!(usdc_client.balance(&user_3), starting_balance);
+
+    let deposit_result_initial_depositor = strategy_client.deposit(&starting_balance, &initial_depositor);
+    assert_eq!(deposit_result_initial_depositor, starting_balance - 1000);
+
+
 
     let deposit_result_0 = strategy_client.deposit(&starting_balance, &user_2);
     assert_eq!(deposit_result_0, starting_balance);
@@ -161,10 +174,10 @@ fn success() {
     assert_eq!(strategy_client.balance(&user_3), starting_balance);
     assert_eq!(
         usdc_client.balance(&pool),
-        pool_usdc_balace_start + starting_balance * 2
+        pool_usdc_balace_start + starting_balance * 3
     );
     let strategy_positions = pool_client.get_positions(&strategy);
-    assert_eq!(strategy_positions.supply.get(0).unwrap(), starting_balance * 2);
+    assert_eq!(strategy_positions.supply.get(0).unwrap(), starting_balance * 3);
     // (pool b_rate still 1 as no time has passed)
     assert_eq!(pool_client.get_reserve(&usdc.address().clone()).data.b_rate, 1000000000000);
     
@@ -187,7 +200,7 @@ fn success() {
 
     assert_eq!(
         usdc_client.balance(&pool),
-        pool_usdc_balace_start + starting_balance * 4
+        pool_usdc_balace_start + starting_balance * 5
     );
 
     // admin borrow from pool to return USDC to 50% util rate
@@ -208,14 +221,14 @@ fn success() {
 
     assert_eq!(
         usdc_client.balance(&pool),
-        pool_usdc_balace_start + starting_balance * 2
+        pool_usdc_balace_start + starting_balance * 3
     );
 
     // Get Strategy btokens & brate to get the USDC balance of the strategy in the pool
     let strategy_b_tokens = pool_client.get_positions(&strategy).supply.get(0).unwrap();
     let b_rate = pool_client.get_reserve(&usdc.address().clone()).data.b_rate;
     // Check Helthy Strategy USDC Balance in the pool
-    assert_eq!((strategy_b_tokens * b_rate) / SCALAR_12, starting_balance * 2);
+    assert_eq!((strategy_b_tokens * b_rate) / SCALAR_12, starting_balance * 3);
     
 
     /*
@@ -261,7 +274,7 @@ fn success() {
     */
 
     let expected_users_profit = user_4_profit / 2;
-    let expected_strategy_profit = user_4_profit;
+    let expected_strategy_profit = (user_4_profit * 3) / 2;
     println!("Expected strategy profit {}", expected_strategy_profit);
     println!("Expected users profit {}", expected_users_profit);
 
@@ -269,7 +282,12 @@ fn success() {
     let strategy_b_tokens = pool_client.get_positions(&strategy).supply.get(0).unwrap();
     let b_rate = pool_client.get_reserve(&usdc.address().clone()).data.b_rate;
     // Check Helthy Strategy USDC Balance in the pool
-    assert_eq!((strategy_b_tokens * b_rate) / SCALAR_12, starting_balance * 2 + expected_strategy_profit);
+
+    assert_approx_eq_rel(
+        (strategy_b_tokens * b_rate) / SCALAR_12,
+        starting_balance * 3 + expected_strategy_profit,
+        0_00001000,
+    );  
 
     // Now User 4 will claim so we can calculate the emissions:
     // Claim emissions for user_4 (that deposited directly on the pool). We do this to guess the emissions for the strategy
@@ -279,6 +297,8 @@ fn success() {
     let merry_emissions = blnd_client.balance(&user_4);
     println!("Merry emissions {}", merry_emissions);
     assert_eq!(amounts_claimed, merry_emissions);
+    // if user 4 got merry_emissions, then the strategy should get 
+    let strategy_emissions = (merry_emissions * 3) / 2;
 
     // This emissions are for Merry (user 4), who deposited directly into the pool a double amount than
     // user 2 and user 3.
@@ -286,25 +306,87 @@ fn success() {
     // strategy
     let expected_usdc=soroswap_router
         .router_get_amounts_out(
-            &merry_emissions, 
+            &strategy_emissions, 
             &vec![&e, blnd.address().clone(), usdc.address().clone()])
         .get(1).unwrap();
+
+    // Get Strategy btokens & brate to get the USDC balance of the strategy in the pool
+    let strategy_b_tokens = pool_client.get_positions(&strategy).supply.get(0).unwrap();
+    let b_rate = pool_client.get_reserve(&usdc.address().clone()).data.b_rate;
+    // Check Helthy Strategy USDC Balance in the pool
+    assert_approx_eq_rel(
+        (strategy_b_tokens * b_rate) / SCALAR_12,
+        starting_balance * 3 + expected_strategy_profit,
+        0_00001000,
+    );   
 
     // withdraw from blend strategy for user_2
     // each of the users are expected to receive half of the profit of user_4 + the profit for the sold emissions:
 
     // print expected usdc earned by sold emissions
     println!("Expected USDC earned by the strategy by sold emissions {}", expected_usdc);
-    println!("Expected USDC earned by each user  by sold emissions {}", expected_usdc/2);
-    let expected_withdraw_amount = starting_balance + expected_users_profit + expected_usdc/2;
+    println!("Expected USDC earned by each user  by sold emissions {}", expected_usdc/3);
+    let expected_withdraw_amount = starting_balance + expected_users_profit + expected_usdc / 3 + 1; // one stroop in rounding calculations 
+
     println!("Expected withdraw amount for users {}", expected_withdraw_amount);
+
+    // Harvest with the specific Mock
+
+    strategy_client
+    .mock_auths(&[MockAuth {
+        address: &keeper.clone(),
+        invoke: &MockAuthInvoke {
+            contract: &strategy_client.address.clone(),
+            fn_name: "harvest",
+            args: (keeper.clone(),).into_val(&e),
+            sub_invokes: &[],
+        },
+    }])
+    .harvest(&keeper.clone());
+
+    assert_eq!(
+        e.auths()[0],
+        (
+            keeper.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    strategy.clone(),
+                    Symbol::new(&e, "harvest"),
+                    vec![
+                        &e,
+                        keeper.to_val()
+                    ]
+                )),
+                sub_invocations: std::vec![]
+            }
+        )
+    );
+
+    // check keeper auth
+    assert_eq!(
+        e.auths()[0],
+        (
+            keeper.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    strategy.clone(),
+                    Symbol::new(&e, "harvest"),
+                    vec![
+                        &e,
+                        keeper.to_val()
+                    ]
+                )),
+                sub_invocations: std::vec![]
+            }
+        )
+    );
 
     // -> verify over withdraw fails
     let result =
         strategy_client.try_withdraw(&(expected_withdraw_amount + 1), &user_2, &user_2);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
     let result =
-        strategy_client.try_withdraw(&(expected_withdraw_amount + 1), &user_3, &user_3);
+        strategy_client.try_withdraw(&(expected_withdraw_amount + 1 ), &user_3, &user_3); 
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
     println!("Expected withdraw amount for users {}", expected_withdraw_amount);
 
@@ -335,7 +417,7 @@ fn success() {
     assert_eq!(usdc_client.balance(&user_2), expected_withdraw_amount);
     assert_eq!(usdc_client.balance(&user_3), 0);
     assert_eq!(strategy_client.balance(&user_2), 0);
-    assert_eq!(remain_underlying, 0);
+    assert_eq!(remain_underlying, 0);   
     assert_eq!(strategy_client.balance(&user_3), expected_withdraw_amount);
 
     // Get Strategy btokens & brate to get the USDC balance of the strategy in the pool
@@ -344,12 +426,12 @@ fn success() {
     // Check Helthy Strategy USDC Balance in the pool
     assert_approx_eq_rel(
         (strategy_b_tokens * b_rate) / SCALAR_12,
-        starting_balance * 2 + expected_strategy_profit + expected_usdc - expected_withdraw_amount,
-        0_0100000,
+        starting_balance * 3 + expected_strategy_profit + expected_usdc - expected_withdraw_amount,
+        0_0000010,
     );    
     
     // -> verify withdraw from empty vault fails
-    let result = strategy_client.try_withdraw(&MIN_DUST, &user_2, &user_2);
+    let result = strategy_client.try_withdraw(&min_dust, &user_2, &user_2);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
 
     /*
@@ -394,14 +476,14 @@ fn success() {
     assert_approx_eq_rel(
         user_4_b_tokens,
         strategy_b_tokens,
-        0_0100000,
+        0_0000010,
     );
 
     let b_rate = pool_client.get_reserve(&usdc.address().clone()).data.b_rate;
     // Check Helthy Strategy USDC Balance in the pool
     assert_approx_eq_rel(
         (strategy_b_tokens * b_rate) / SCALAR_12,
-        starting_balance * 2 + expected_strategy_profit + expected_usdc - expected_withdraw_amount,
+        starting_balance * 3 + expected_strategy_profit + expected_usdc - expected_withdraw_amount,
         0_0100000,
     );
 
@@ -432,6 +514,7 @@ fn success() {
     println!("User 4 Balance after withdrawal {}", usdc_client.balance(&user_4));
     let new_user_4_profit = user_4_final_balance - user_4_before - user_4_new_investment ;
     println!("User 4 Balance new profit {}", new_user_4_profit);
+    
 
 
      // We verify that the strategy now holds the new_expected_usdc
@@ -442,8 +525,8 @@ fn success() {
     // Check Helthy Strategy USDC Balance in the pool
     assert_approx_eq_rel(
         (strategy_b_tokens * b_rate) / SCALAR_12,
-        starting_balance * 2 + expected_strategy_profit  + expected_usdc - expected_withdraw_amount + new_user_4_profit,
-        0_0100000,
+        starting_balance * 3 + expected_strategy_profit  + expected_usdc - expected_withdraw_amount + new_user_4_profit,
+        0_0000010,
     );
 
 
@@ -464,9 +547,11 @@ fn success() {
     // user 2 and user 3.
     // this means that is expected that the emissions for Merry to be equal to the emissions for the
     // strategy
+    let strategy_emissions = merry_emissions;
+
     let new_expected_usdc=soroswap_router
         .router_get_amounts_out(
-            &merry_emissions, 
+            &strategy_emissions, 
             &vec![&e, blnd.address().clone(), usdc.address().clone()])
         .get(1).unwrap();
 
@@ -484,7 +569,24 @@ fn success() {
     println!("=======       HARVEST  =======");
 
     
-    strategy_client.harvest(&user_3);
+    strategy_client.harvest(&keeper);
+    assert_eq!(
+        e.auths()[0],
+        (
+            keeper.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    strategy.clone(),
+                    Symbol::new(&e, "harvest"),
+                    vec![
+                        &e,
+                        keeper.to_val()
+                    ]
+                )),
+                sub_invocations: std::vec![]
+            }
+        )
+    );
 
     /*
         TODO:
@@ -510,7 +612,7 @@ fn success() {
     // Check Helthy Strategy USDC Balance in the pool
     assert_approx_eq_rel(
         (strategy_b_tokens * b_rate) / SCALAR_12,
-        starting_balance * 2 + expected_strategy_profit  + expected_usdc - expected_withdraw_amount + new_user_4_profit + new_expected_usdc,
+        starting_balance * 3 + expected_strategy_profit  + expected_usdc - expected_withdraw_amount + new_user_4_profit + new_expected_usdc,
         0_0100000,
     );
     /*
@@ -521,8 +623,8 @@ fn success() {
     println!("Strategy USER 3 after harvest {}", user_3_after_balance);
     assert_approx_eq_rel(
         user_3_after_balance,
-        user_3_starting_balance + new_expected_usdc,
-        0_0100000,
+        user_3_starting_balance + new_expected_usdc/2, //this new expected usdc is shared with the initial depositor
+        0_0000100,
     );
 
     println!("Strategy USER 3 Increased in {}", user_3_after_balance - user_3_starting_balance);
@@ -535,4 +637,103 @@ fn success() {
 
     assert_eq!(usdc_pool_increased_in_harvest, new_expected_usdc);
 
+
+    // get keeper
+    let old_keeper = strategy_client.get_keeper();
+    assert_eq!(old_keeper, keeper);
+    // set keeper to a new address
+    let new_keeper = Address::generate(&e);
+
+    strategy_client.set_keeper(&new_keeper);
+
+    let events = e.events().all();
+    println!("Events {:?}", events);
+    // check set keeper auths
+    assert_eq!(
+        e.auths()[0],
+        (
+            keeper.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    strategy.clone(),
+                    Symbol::new(&e, "set_keeper"),
+                    vec![
+                        &e,
+                        new_keeper.to_val()
+                    ]
+                )),
+                sub_invocations: std::vec![]
+            }
+        )
+    );
+    assert_eq!(strategy_client.get_keeper(), new_keeper);
+
+    let keeper_changed_events: std::vec::Vec<(Address, Vec<Val>, Val)> = 
+        events.iter().filter(
+            |event| event.1 == 
+                vec![&e, String::from_str(&e, STRATEGY_NAME).into_val(&e), 
+                symbol_short!("setkeeper").into_val(&e)]
+        ).collect();
+    println!("Keeper changed events {:?}", keeper_changed_events);
+    assert_eq!(keeper_changed_events.len(), 1, "Expected exactly one setkeeper event");
+
+    let keeper_event_data: (Address, Address) = FromVal::from_val(&e, &keeper_changed_events[0].2);
+    assert_eq!(keeper_event_data.0, keeper);
+    assert_eq!(keeper_event_data.1, new_keeper);
+
+    // Harvest with the specific Mock with the new keeper
+    strategy_client
+    .mock_auths(&[MockAuth {
+        address: &new_keeper.clone(),
+        invoke: &MockAuthInvoke {
+            contract: &strategy_client.address.clone(),
+            fn_name: "harvest",
+            args: (new_keeper.clone(),).into_val(&e),
+            sub_invokes: &[],
+        },
+    }])
+    .harvest(&new_keeper.clone());
+
+    assert_eq!(
+        e.auths()[0],
+        (
+            new_keeper.clone(),
+            AuthorizedInvocation {
+                function: AuthorizedFunction::Contract((
+                    strategy.clone(),
+                    Symbol::new(&e, "harvest"),
+                    vec![
+                        &e,
+                        new_keeper.to_val()
+                    ]
+                )),
+                sub_invocations: std::vec![]
+            }
+        )
+    );
+
+
+    // try to harvest with the old keeper.. here the error will be not authorized as we are mocking the auth... 
+    let harvest_result = strategy_client.try_harvest(&keeper);
+    assert_eq!(harvest_result, Err(Ok(StrategyError::NotAuthorized)));
+    
+    // but if we mock the specific auth we will get auth error
+
+    let harvest_result = strategy_client
+    .mock_auths(&[MockAuth {
+        address: &keeper.clone(),
+        invoke: &MockAuthInvoke {
+            contract: &strategy_client.address.clone(),
+            fn_name: "harvest",
+            args: (keeper.clone(),).into_val(&e),
+            sub_invokes: &[],
+        },
+    }])
+    .try_harvest(&keeper.clone());
+    assert_eq!(harvest_result, Err(Err(soroban_sdk::InvokeError::Abort)));
+
+
+    // get keeper
+    let keeper = strategy_client.get_keeper();
+    assert_eq!(keeper, new_keeper);
 }

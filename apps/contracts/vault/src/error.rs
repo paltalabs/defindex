@@ -20,7 +20,7 @@ pub enum ContractError {
     AmountNotAllowed = 110,
     InsufficientBalance = 111,
     WrongAmountsLength = 112,
-    NotEnoughIdleFunds = 113,
+    WrongLockedFees = 113,
     InsufficientManagedFunds = 114,
     MissingInstructionData = 115,
     UnsupportedAsset = 116,
@@ -33,6 +33,7 @@ pub enum ContractError {
     NoInstructions = 125,
     NotUpgradable = 126,
     UnwindMoreThanAvailable = 128,
+    InsufficientFeesToRelease = 129,
 
     // Arithmetic Errors (12x)
     ArithmeticError = 120,
@@ -56,6 +57,11 @@ pub enum ContractError {
     // Asset Errors (15x)
     AssetNotFound = 150,
     NoAssetsProvided = 151,
+
+    // Input errors
+    InsufficientOutputAmount = 160,
+    ExcessiveInputAmount = 161,
+    InvalidFeeBps = 162,
 
     // Add mappings for SoroswapLibraryError
     LibrarySortIdenticalTokens = 190,

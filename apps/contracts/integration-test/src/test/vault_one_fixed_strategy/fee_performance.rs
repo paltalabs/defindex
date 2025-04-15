@@ -94,7 +94,7 @@ fn fee_performance() {
         .strategy_contract
         .balance(&enviroment.vault_contract.address);
 
-    std::println!("Shares: {:?}", vault_balance_in_strategy);
+    std::println!("Vault balance in strategy: {:?}", vault_balance_in_strategy);
 
     // Jump one year
     setup.env.jump_time(ONE_YEAR_IN_SECONDS);
@@ -107,11 +107,11 @@ fn fee_performance() {
     let vault_balance_in_strategy = enviroment
         .strategy_contract
         .balance(&enviroment.vault_contract.address);
-    std::println!("Shares after one year: {:?}", vault_balance_in_strategy);
+    std::println!("Vault balance in strategy after one year: {:?}", vault_balance_in_strategy);
 
     // Report
     let _report = enviroment.vault_contract.mock_all_auths().report();
-
+    println!("_report: {:?}", _report);
     let expected_balance = deposit_amount * 11 / 10; // 10% fixed APR
     assert_eq!(vault_balance_in_strategy, expected_balance);
 
@@ -130,8 +130,10 @@ fn fee_performance() {
         }])
         .lock_fees(&Some(lock_fees_bps));
 
+    // lock fees should be 20% of the (vault balance before harvest - vault balance in strategy)
+    // 20% of (100_000_000 - 100_000_000 * 11 / 10) = 2_0_000_000
     println!("lock_fees_result: {:?}", lock_fees_result);
-
+    
     let locked_fee = lock_fees_result.get(0).unwrap().locked_fee;
 
     let total_funds_after_lock = enviroment
@@ -164,6 +166,8 @@ fn fee_performance() {
             &release_fees_amount,
         );
 
+    println!("_release_fees_result: {:?}", _release_fees_result);
+
     let total_funds_after_release = enviroment
         .vault_contract
         .fetch_total_managed_funds()
@@ -174,6 +178,8 @@ fn fee_performance() {
         total_funds_after_release,
         (total_funds_after_lock + release_fees_amount)
     );
+
+    println!("total_funds_after_release: {:?}", total_funds_after_release);
 
     // Lock fees
     let lock_fees_bps = 2000u32;
@@ -198,6 +204,8 @@ fn fee_performance() {
         .get(0)
         .unwrap()
         .total_amount;
+        
+    println!("total_funds_after_lock 2: {:?}", total_funds_after_lock);
 
     // Distribute fees
     let _distribute_fees_result = enviroment
@@ -213,6 +221,10 @@ fn fee_performance() {
         }])
         .distribute_fees(&enviroment.manager);
 
+    println!("_distribute_fees_result: {:?}", _distribute_fees_result);
+    // Get report from storage before rebalance
+    // let report_after_distribute = enviroment.vault_contract.mock_all_auths().report();
+    // println!("report_after_distribute: {:?}", report_after_distribute);
     let lock_fees_result_after = enviroment.vault_contract.mock_all_auths().lock_fees(&None);
     println!("lock_fees_result_after: {:?}", lock_fees_result_after);
 
@@ -222,5 +234,6 @@ fn fee_performance() {
         .get(0)
         .unwrap()
         .total_amount;
+    println!("total_funds_after_distribute: {:?}", total_funds_after_distribute);
     assert_eq!(total_funds_after_distribute, lock_fees_result_after.get(0).unwrap().prev_balance);
 }

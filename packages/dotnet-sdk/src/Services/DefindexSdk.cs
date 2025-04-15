@@ -166,11 +166,13 @@ public class DefindexSdk : IDefindexSdk
 
     public async Task<Transaction> CreateWithdrawTransaction(
         ulong withdrawShares,
+        List<ulong> amountsMinOut,
         string from)
     {
         var account = await this._server.GetAccount(from);
         var args = new SCVal[] {
             new SCInt128(withdrawShares.ToString()),
+            new SCVec(amountsMinOut.Select(a => new SCInt128(a.ToString())).ToArray()),
             new SCAccountId(from),
         };
         var symbol = new SCSymbol("withdraw");
@@ -197,45 +199,4 @@ public class DefindexSdk : IDefindexSdk
         return Task.FromResult(parsedResponse);
     }
 
-    public async Task<List<TransactionResult>> SubmitTransaction(Transaction transaction)
-    {
-        //
-        Console.WriteLine("Submitting transaction...");
-        var submittedTx = await this._server.SendTransaction(transaction);
-
-        if (submittedTx.ErrorResultXdr != null || submittedTx.Status.ToString() == "3")
-        {
-            Console.WriteLine($"Error submitting transaction: {submittedTx.ErrorResultXdr}");
-            return new List<TransactionResult> { new TransactionResult(false, null, new List<ulong>(), 0) };
-        } 
-        else 
-        while (true)
-        {
-            var checkedTx = await this._server.GetTransaction(submittedTx.Hash);
-            if (checkedTx.Status.ToString() == "FAILED" || checkedTx.Status.ToString() == "ERROR")
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Transaction status: {checkedTx.Status}");
-                Console.WriteLine($"Transaction hash: {submittedTx.Hash}");
-                throw new Exception("Transaction failed.");
-            }
-            else if (checkedTx.Status.ToString() == "SUCCESS")
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"Transaction Status: {checkedTx.Status}");
-                Console.WriteLine($"Transaction hash: {submittedTx.Hash}");
-                Console.ResetColor();
-                if (checkedTx.ResultValue == null) throw new Exception("Transaction result value is null.");
-                var response = this.ParseTransactionResponse(checkedTx).Result;
-                return response;
-            }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                var timeout = 50;
-                Console.Write($"...");
-                await Task.Delay(timeout);
-            }
-        }
-    }
 } 

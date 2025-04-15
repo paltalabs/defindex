@@ -12,70 +12,6 @@ use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::testutils::{Address as _, MockAuth, MockAuthInvoke};
 use soroban_sdk::{Address, Env, IntoVal};
 
-
-#[test]
-fn deposit_below_min_dust() {
-    // Setting up the environment
-    let e = Env::default();
-    e.cost_estimate().budget().reset_unlimited();
-    e.mock_all_auths();
-    e.set_default_info();
-
-    // Setting up the users
-    let admin = Address::generate(&e);
-    let user_2 = Address::generate(&e);
-
-    // Setting up the assets
-    let blnd = e.register_stellar_asset_contract_v2(admin.clone());
-    let usdc = e.register_stellar_asset_contract_v2(admin.clone());
-    let xlm = e.register_stellar_asset_contract_v2(admin.clone());
-
-    // Setting up the token clients
-    let blnd_client = MockTokenClient::new(&e, &blnd.address());
-    let usdc_client = MockTokenClient::new(&e, &usdc.address());
-    let xlm_client = MockTokenClient::new(&e, &xlm.address());
-
-    // Setting up soroswap pool
-    let pool_admin = Address::generate(&e);
-    let amount_a = 100000000_0_000_000;
-    let amount_b = 50000000_0_000_000;
-    blnd_client.mint(&pool_admin, &amount_a);
-    usdc_client.mint(&pool_admin, &amount_b);
-    let soroswap_router = create_soroswap_pool(
-        &e,
-        &pool_admin,
-        &blnd.address(),
-        &usdc.address(),
-        &amount_a,
-        &amount_b,
-    );
-    // End of setting up soroswap pool
-
-    let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
-
-    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
-    let strategy = create_blend_strategy(
-        &e,
-        &usdc.address(),
-        &pool,
-        &0u32,
-        &blnd.address(),
-        &soroswap_router.address,
-    );
-    let strategy_client = BlendStrategyClient::new(&e, &strategy);
-
-    let starting_balance = 100_0000000;
-    usdc_client.mint(&user_2, &starting_balance);
-
-    //Trying to deposit below the min dust
-    let deposit_below_min_dust = strategy_client.try_deposit(&9999i128, &user_2);
-
-    assert_eq!(
-        deposit_below_min_dust,
-        Err(Ok(StrategyError::AmountBelowMinDust))
-    );
-}
-
 #[test]
 fn deposit_zero_and_negative_amount() {
     // Setting up the environment
@@ -87,6 +23,7 @@ fn deposit_zero_and_negative_amount() {
     // Setting up the users
     let admin = Address::generate(&e);
     let user_2 = Address::generate(&e);
+    let keeper = Address::generate(&e);
 
     // Setting up the assets
     let blnd = e.register_stellar_asset_contract_v2(admin.clone());
@@ -121,9 +58,9 @@ fn deposit_zero_and_negative_amount() {
         &e,
         &usdc.address(),
         &pool,
-        &0u32,
         &blnd.address(),
         &soroswap_router.address,
+        &keeper,
     );
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
 
@@ -133,11 +70,114 @@ fn deposit_zero_and_negative_amount() {
     //Trying to deposit below the min dust
     let deposit_negative = strategy_client.try_deposit(&-100_000i128, &user_2);
 
-    assert_eq!(deposit_negative, Err(Ok(StrategyError::NegativeNotAllowed)));
+    assert_eq!(deposit_negative, Err(Ok(StrategyError::OnlyPositiveAmountAllowed)));
 
     let deposit_zero = strategy_client.try_deposit(&0i128, &user_2);
 
-    assert_eq!(deposit_zero, Err(Ok(StrategyError::AmountBelowMinDust)));
+    assert_eq!(deposit_zero, Err(Ok(StrategyError::OnlyPositiveAmountAllowed)));
+}
+
+#[test]
+fn deposit_first_depositor_less_than_1000() {
+    // Setting up the environment
+    let e = Env::default();
+    e.cost_estimate().budget().reset_unlimited();
+    e.mock_all_auths();
+    e.set_default_info();
+
+    // Setting up the users
+    let admin = Address::generate(&e);
+    let user_2 = Address::generate(&e);
+    let user_3 = Address::generate(&e);
+    let keeper = Address::generate(&e);
+    // Setting up the assets
+    let blnd = e.register_stellar_asset_contract_v2(admin.clone());
+    let usdc = e.register_stellar_asset_contract_v2(admin.clone());
+    let xlm = e.register_stellar_asset_contract_v2(admin.clone());
+
+    // Setting up the token clients
+    let blnd_client = MockTokenClient::new(&e, &blnd.address());
+    let usdc_client = MockTokenClient::new(&e, &usdc.address());
+    let xlm_client = MockTokenClient::new(&e, &xlm.address());
+
+    // Setting up soroswap pool
+    let pool_admin = Address::generate(&e);
+    let amount_a = 100000000_0_000_000;
+    let amount_b = 50000000_0_000_000;
+    blnd_client.mint(&pool_admin, &amount_a);
+    usdc_client.mint(&pool_admin, &amount_b);
+    let soroswap_router = create_soroswap_pool(
+        &e,
+        &pool_admin,
+        &blnd.address(),
+        &usdc.address(),
+        &amount_a,
+        &amount_b,
+    );
+    // End of setting up soroswap pool
+
+    let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
+
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
+    let strategy = create_blend_strategy(
+        &e,
+        &usdc.address(),
+        &pool,
+        &blnd.address(),
+        &soroswap_router.address,
+        &keeper,
+    );
+    let strategy_client = BlendStrategyClient::new(&e, &strategy);
+
+    let starting_balance = 100_0000000;
+    usdc_client.mint(&user_2, &starting_balance);
+    usdc_client.mint(&user_3, &starting_balance);
+
+    //Trying to deposit below the min dust
+    let deposit_1000 = strategy_client.try_deposit(&1000i128, &user_2);
+    assert_eq!(deposit_1000, Err(Ok(StrategyError::InvalidSharesMinted)));
+
+    // with 1001 is possible
+    strategy_client.deposit(&1001i128, &user_2);
+    // check balance of user 2
+    let balance = strategy_client.balance(&user_2);
+    assert_eq!(balance, 1001 - 1000);
+
+    // as contract get reserves
+    e.as_contract(&strategy, || {
+
+        let config = storage::get_config(&e).unwrap();
+        let reserves=reserves::get_strategy_reserve_updated(&e, &config);
+        assert_eq!(reserves.total_shares, 1001);
+    }
+    );
+
+
+    // use 3 is the second depositor and he can even deposit 1 unit
+
+    let deposit_1 = strategy_client.try_deposit(&99i128, &user_3);
+    assert!(deposit_1.is_ok(), "Expected successful deposit for user 3, got {:?}", deposit_1);
+
+    e.as_contract(&strategy, || {
+
+        let config = storage::get_config(&e).unwrap();
+        let reserves=reserves::get_strategy_reserve_updated(&e, &config);
+        assert_eq!(reserves.total_shares, 1100);
+        assert_eq!(reserves.total_b_tokens, 1100);
+        let user_3_shares = storage::get_vault_shares(&e, &user_3);
+
+        // new shares minted are
+        // amount * total shares / total b tokens
+        // (99*1101)/1101 = 99
+        assert_eq!(user_3_shares, 99);
+    }
+    );
+    
+
+    // check balance of user 3
+    let balance = strategy_client.balance(&user_3);
+    assert_eq!(balance, 99);
+
 }
 
 #[test]
@@ -151,6 +191,7 @@ fn harvest_from_random_address() {
     e.set_default_info();
     let admin = Address::generate(&e);
     let user = Address::generate(&e);
+    let keeper = Address::generate(&e);
 
     // Setting up the assets
     let blnd = e.register_stellar_asset_contract_v2(admin.clone());
@@ -185,10 +226,10 @@ fn harvest_from_random_address() {
         &e,
         &usdc.address(),
         &pool,
-        &0u32,
         &blnd.address(),
         &soroswap_router.address,
-    );
+        &keeper,
+    );  
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
 
     let starting_balance = 100_0_000_000i128;
@@ -208,7 +249,7 @@ fn harvest_from_random_address() {
     let balance_after_harvest = strategy_client.balance(&user);
 
     assert_eq!(balance_before_harvest, balance_after_harvest);
-    assert_eq!(harvest_from_random_address, Ok(Ok(())));
+    assert_eq!(harvest_from_random_address,  Err(Ok(StrategyError::NotAuthorized)));
 }
 
 #[test]
@@ -222,7 +263,7 @@ fn unauthorized_harvest() {
     e.set_default_info();
     let admin = Address::generate(&e);
     let user = Address::generate(&e);
-
+    let keeper = Address::generate(&e);
     // Setting up the assets
     let blnd = e.register_stellar_asset_contract_v2(admin.clone());
     let usdc = e.register_stellar_asset_contract_v2(admin.clone());
@@ -256,9 +297,9 @@ fn unauthorized_harvest() {
         &e,
         &usdc.address(),
         &pool,
-        &0u32,
         &blnd.address(),
         &soroswap_router.address,
+        &keeper,
     );
 
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
@@ -285,13 +326,16 @@ fn unauthorized_harvest() {
             invoke: &MockAuthInvoke {
                 contract: &strategy_client.address.clone(),
                 fn_name: "harvest",
-                args: (user_2.clone(),).into_val(&e),
+                args: (keeper.clone(),).into_val(&e),
                 sub_invokes: &[],
             },
         }],
-    ).try_harvest(&user_2);
+    ).try_harvest(&keeper);
 
     assert_eq!(try_harvest_result, Err(Err(soroban_sdk::InvokeError::Abort)));
+
+    let harvest_result = strategy_client.try_harvest(&keeper);
+    assert_eq!(harvest_result, Ok(Ok(())));
 
     //Panic with Unauthorized
     let _result = strategy_client.mock_auths(
@@ -319,7 +363,7 @@ fn withdraw_insufficient_balance() {
 
     let admin = Address::generate(&e);
     let user_2 = Address::generate(&e);
-
+    let keeper = Address::generate(&e);
     // Setting up the assets
     let blnd = e.register_stellar_asset_contract_v2(admin.clone());
     let usdc = e.register_stellar_asset_contract_v2(admin.clone());
@@ -353,9 +397,9 @@ fn withdraw_insufficient_balance() {
         &e,
         &usdc.address(),
         &pool,
-        &0u32,
         &blnd.address(),
         &soroswap_router.address,
+        &keeper,
     );
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
 
@@ -368,7 +412,7 @@ fn withdraw_insufficient_balance() {
 
     let balance = strategy_client.balance(&user_2);
     let user_balance = usdc_client.balance(&user_2);
-    assert_eq!(balance, starting_balance);
+    assert_eq!(balance, starting_balance - 1000);
     assert_eq!(user_balance, 0);
 
     let result = strategy_client.try_withdraw(&200_0_000_000, &Address::generate(&e), &user_2);
@@ -392,7 +436,7 @@ fn withdraw_zero_and_negative() {
 
     let admin = Address::generate(&e);
     let user_2 = Address::generate(&e);
-
+    let keeper = Address::generate(&e);
     // Setting up the assets
     let blnd = e.register_stellar_asset_contract_v2(admin.clone());
     let usdc = e.register_stellar_asset_contract_v2(admin.clone());
@@ -426,9 +470,9 @@ fn withdraw_zero_and_negative() {
         &e,
         &usdc.address(),
         &pool,
-        &0u32,
         &blnd.address(),
         &soroswap_router.address,
+        &keeper,
     );
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
 
@@ -438,18 +482,20 @@ fn withdraw_zero_and_negative() {
 
     let balance = strategy_client.balance(&user_2);
     let user_balance = usdc_client.balance(&user_2);
-    assert_eq!(balance, starting_balance);
+    assert_eq!(balance, starting_balance -1000);
     assert_eq!(user_balance, 0);
 
+    // Check negative
     let result = strategy_client.try_withdraw(&-200_0_000_000, &user_2, &user_2);
-    assert_eq!(result, Err(Ok(StrategyError::NegativeNotAllowed)));
+    assert_eq!(result, Err(Ok(StrategyError::OnlyPositiveAmountAllowed)));
 
+    // Check zero
     let result = strategy_client.try_withdraw(&0, &user_2, &user_2);
-    assert_eq!(result, Err(Ok(StrategyError::AmountBelowMinDust)));
+    assert_eq!(result, Err(Ok(StrategyError::OnlyPositiveAmountAllowed)));
 
+    // Small is possible, No errors
     let result = strategy_client.try_withdraw(&9_000, &user_2, &user_2);
-    assert_eq!(result, Err(Ok(StrategyError::AmountBelowMinDust)));
-}
+    assert!(result.is_ok(), "Expected successful withdrawal for small amount, got {:?}", result);}
 
 #[test]
 fn unauthorized_withdraw() {
@@ -461,7 +507,7 @@ fn unauthorized_withdraw() {
     let admin = Address::generate(&e);
     let user_2 = Address::generate(&e);
     let user_3 = Address::generate(&e);
-
+    let keeper = Address::generate(&e);
     // Setting up the assets
     let blnd = e.register_stellar_asset_contract_v2(admin.clone());
     let usdc = e.register_stellar_asset_contract_v2(admin.clone());
@@ -496,9 +542,9 @@ fn unauthorized_withdraw() {
         &e,
         &usdc.address(),
         &pool,
-        &0u32,
         &blnd.address(),
         &soroswap_router.address,
+        &keeper,
     );
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
 
@@ -529,7 +575,7 @@ fn unauthorized_withdraw() {
 
     let balance = strategy_client.balance(&user_2);
     let user_balance = usdc_client.balance(&user_2);
-    assert_eq!(balance, starting_balance);
+    assert_eq!(balance, starting_balance - 1000);
     assert_eq!(user_balance, 0);
 
     let withdraw_amount = 8_0_000_000i128;
@@ -564,6 +610,7 @@ fn arithmetic_error_deposit() {
     let e = Env::default();
     e.set_default_info();
     let admin = Address::generate(&e);
+    let keeper = Address::generate(&e);
 
     let blnd = e.register_stellar_asset_contract_v2(admin.clone());
     let usdc = e.register_stellar_asset_contract_v2(admin.clone());
@@ -594,9 +641,9 @@ fn arithmetic_error_deposit() {
         &e,
         &usdc.address(),
         &pool,
-        &0u32,
         &blnd.address(),
         &soroswap_router.address,
+        &keeper,
     );
 
     
@@ -607,4 +654,75 @@ fn arithmetic_error_deposit() {
     let result = e.as_contract(&strategy, || reserves::deposit(&e, &from, b_tokens_amount, &config));
 
     assert_eq!(result, Err(StrategyError::BTokensAmountBelowMin));
+}
+
+#[test]
+fn set_keeper_unauthorized() {
+    // Setting up the environment
+    let e = Env::default();
+    e.set_default_info();
+    let admin = Address::generate(&e);
+    let keeper = Address::generate(&e);
+    let attacker = Address::generate(&e);
+    let new_keeper = Address::generate(&e);
+
+    let blnd = e.register_stellar_asset_contract_v2(admin.clone());
+    let usdc = e.register_stellar_asset_contract_v2(admin.clone());
+    let xlm = e.register_stellar_asset_contract_v2(admin.clone());
+
+    let blnd_client = MockTokenClient::new(&e, &blnd.address());
+    let usdc_client = MockTokenClient::new(&e, &usdc.address());
+    let xlm_client = MockTokenClient::new(&e, &xlm.address());
+
+    let pool_admin = Address::generate(&e);
+    let amount_a = 100000000_0_000_000;
+    let amount_b = 50000000_0_000_000;
+    blnd_client.mock_all_auths().mint(&pool_admin, &amount_a);
+    usdc_client.mock_all_auths().mint(&pool_admin, &amount_b);
+
+    let soroswap_router = create_soroswap_pool(
+        &e,
+        &pool_admin,
+        &blnd.address(),
+        &usdc.address(),
+        &amount_a,
+        &amount_b,
+    );
+    let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
+
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
+    let strategy = create_blend_strategy(
+        &e,
+        &usdc.address(),
+        &pool,
+        &blnd.address(),
+        &soroswap_router.address,
+        &keeper,
+    );
+    
+    let strategy_client = BlendStrategyClient::new(&e, &strategy);
+    
+    // Verify the current keeper
+    let current_keeper = strategy_client.get_keeper();
+    assert_eq!(current_keeper, keeper);
+    
+    // Attacker tries to set a new keeper without proper authorization
+    // We don't use mock_all_auths() here to test the authorization check
+    let result = strategy_client.mock_auths(
+        &[MockAuth {
+            address: &attacker,
+            invoke: &MockAuthInvoke {
+                contract: &strategy_client.address.clone(),
+                fn_name: "set_keeper",
+                args: (keeper.clone(), new_keeper.clone()).into_val(&e),
+                sub_invokes: &[],
+            },
+        }],
+    ).try_set_keeper(&new_keeper);
+    
+    // Should abort as failed in require_auth
+    assert_eq!(result, Err(Err(soroban_sdk::InvokeError::Abort)));
+    
+    // Verify the keeper hasn't changed
+    assert_eq!(strategy_client.get_keeper(), keeper);
 }
