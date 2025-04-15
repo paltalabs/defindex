@@ -441,6 +441,7 @@ export async function getDfTokenBalance(
  */
 export async function withdrawFromVault(
   deployedVault: string,
+  min_amounts_out: number[],
   withdrawAmount: number,
   user: Keypair
 ) {
@@ -469,10 +470,13 @@ export async function withdrawFromVault(
   //     xdr.ScVal.scvVec(amountsToWithdraw.map((amount) => nativeToScVal(amount, { type: "i128" }))),
   //     (new Address(user.publicKey())).toScVal()
   // ];
-
+  const minAmountsOut: xdr.ScVal[] = min_amounts_out.map((amount) =>
+    nativeToScVal(BigInt(amount), { type: "i128" })
+  );
   const withdrawParams: xdr.ScVal[] = [
     nativeToScVal(BigInt(withdrawAmount), { type: "i128" }),
-    new Address(user.publicKey()).toScVal(),
+    xdr.ScVal.scvVec(minAmountsOut),
+    new Address(user.publicKey()).toScVal()
   ];
 
   try {
