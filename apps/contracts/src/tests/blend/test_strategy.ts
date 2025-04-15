@@ -2,10 +2,13 @@ import { Address, Keypair, nativeToScVal, scValToNative, xdr } from "@stellar/st
 import { AddressBook } from "../../utils/address_book.js";
 import { airdropAccount, invokeContract } from "../../utils/contract.js";
 import { getTransactionBudget } from "../../utils/tx.js";
+import { config } from "../../utils/env_config.js";
 
 
 const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
+const loadedConfig = config(network);
+const blend_keeper = Keypair.fromPublicKey(loadedConfig.blendKeeper);
 
 const purple = '\x1b[35m%s\x1b[0m';
 const green = '\x1b[32m%s\x1b[0m';
@@ -182,17 +185,16 @@ export async function testBlendStrategy(user?: Keypair) {
     try {
       console.log(purple, '---------------------------------------------------------------------------')
       console.log(purple, '----------------------- Harvesting from the Strategy -----------------------')
-      console.log(purple, '---------------------------------------------------------------------------')
-
+      console.log(purple, '---------------------------------------------------------------------------')      
       const harvestParams: xdr.ScVal[] = [
-        new Address(newUser.publicKey()).toScVal(),
+        new Address(blend_keeper.publicKey()).toScVal(),
       ]
       const harvestResult = await invokeContract(
         'blend_strategy',
         addressBook,
         'harvest',
         harvestParams,
-        newUser,
+        blend_keeper,
         false
       );
       const {
