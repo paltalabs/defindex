@@ -423,7 +423,7 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
           console.log(purple, "Try withdraw more than total funds");
           console.log(purple, "-----------------------------------------------------");
 
-          await withdrawFromVault(vault_address, 100_0_000_000, user);
+          await withdrawFromVault(vault_address, [0], 100_0_000_000, user);
 
         } catch (error:any) {
           if (error.toString().includes("HostError: Error(Contract, #124)") || error.toString().includes("HostError: Error(Contract, #10)")) {
@@ -443,7 +443,7 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
           instructions,
           readBytes,
           writeBytes,
-        } = await withdrawFromVault(vault_address, Number(withdrawAmountDfTokens), user);
+        } = await withdrawFromVault(vault_address, [0], Number(withdrawAmountDfTokens), user);
 
         const expected_idle_funds = [0];
         const expected_invested_funds_s0 = Number(total_managed_funds_before_withdraw[0].strategy_allocations[0].amount);

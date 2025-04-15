@@ -794,7 +794,7 @@ export async function testVaultTwoAssetsOneStrategy(addressBook: AddressBook, pa
           const random_user = Keypair.random();
           await airdropAccount(random_user);
 
-          await withdrawFromVault(vault_address, withdraw_amount, random_user);
+          await withdrawFromVault(vault_address, [0,0], withdraw_amount, random_user);
           
         } catch (error:any) {
           if (error.toString().includes("HostError: Error(Contract, #111)") || error.toString().includes("HostError: Error(Contract, #10)")) {
@@ -812,7 +812,7 @@ export async function testVaultTwoAssetsOneStrategy(addressBook: AddressBook, pa
           console.log(purple, "Try withdraw more than total funds");
           console.log(purple, "-----------------------------------------------------");
 
-          await withdrawFromVault(vault_address, 100_0_000_000, user);
+          await withdrawFromVault(vault_address, [0,0], 100_0_000_000, user);
 
         } catch (error:any) {
           if (error.toString().includes("HostError: Error(Contract, #124)") || error.toString().includes("HostError: Error(Contract, #10)")) {
@@ -830,7 +830,7 @@ export async function testVaultTwoAssetsOneStrategy(addressBook: AddressBook, pa
           instructions,
           readBytes,
           writeBytes,
-        } = await withdrawFromVault(vault_address, withdraw_amount, user);
+        } = await withdrawFromVault(vault_address, [0,0], withdraw_amount, user);
         
         const { 
           idle_funds, 

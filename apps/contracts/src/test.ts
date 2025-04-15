@@ -196,7 +196,7 @@ console.log(" -- ")
 
 // Step 3: Withdraw from the vault
 const { balanceBefore: withdrawBalanceBefore, result: withdrawResult, balanceAfter: withdrawBalanceAfter } 
-  = await withdrawFromVault(deployedVault, 4321, user);
+  = await withdrawFromVault(deployedVault,[0], 4321, user);
 
 // Step 4: Check strategy balance after withdrawal
 const strategyBalanceAfterWithdraw = await checkUserBalance(addressBook.getContractId("hodl_strategy"), user.publicKey(), user);
