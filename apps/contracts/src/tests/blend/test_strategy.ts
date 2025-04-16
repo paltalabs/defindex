@@ -8,7 +8,7 @@ import { config } from "../../utils/env_config.js";
 const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
 const loadedConfig = config(network);
-const blend_keeper = Keypair.fromPublicKey(loadedConfig.blendKeeper);
+const blend_keeper = loadedConfig.blendKeeper;
 
 const purple = '\x1b[35m%s\x1b[0m';
 const green = '\x1b[32m%s\x1b[0m';

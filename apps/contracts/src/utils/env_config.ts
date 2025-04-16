@@ -14,7 +14,7 @@ interface NetworkConfig {
   horizon_rpc_url: string;
   soroban_rpc_url: string;
   soroban_network_passphrase: string;
-  blend_keeper: string;
+  blend_keeper: Keypair;
 }
 
 interface Config {
@@ -29,7 +29,7 @@ class EnvConfig {
   passphrase: string;
   friendbot: string | undefined;
   admin: Keypair;
-  blendKeeper: string;
+  blendKeeper: Keypair;
 
   constructor(
     rpc: rpc.Server,
@@ -37,7 +37,7 @@ class EnvConfig {
     passphrase: string,
     friendbot: string | undefined,
     admin: Keypair,
-    blendKeeper: string
+    blendKeeper: Keypair
   ) {
     this.rpc = rpc;
     this.horizonRpc = horizonRpc;
@@ -79,7 +79,7 @@ class EnvConfig {
       friendbot_url = networkConfig.friendbot_url;
       passphrase = networkConfig.soroban_network_passphrase;
       blendKeeper = process.env.BLEND_KEEPER_SECRET_KEY
-        ? Keypair.fromSecret(process.env.BLEND_KEEPER_SECRET_KEY).publicKey()
+        ? Keypair.fromSecret(process.env.BLEND_KEEPER_SECRET_KEY)
         : undefined;
     }
 
@@ -92,7 +92,7 @@ class EnvConfig {
       admin === undefined ||
       admin === "" ||
       blendKeeper === undefined ||
-      blendKeeper === ""
+      blendKeeper === null
     ) {
       throw new Error(
         "Error: Configuration is missing required fields. Please check your .env or configs.jsonfile."

@@ -83,8 +83,8 @@ export async function multiDeployBlendStrategies(quantity: number, asset_key: st
       new Address(blendFixedXlmUsdcPool).toScVal(), // blend_pool_address: The address of the Blend pool where assets are deposited
       new Address(blndToken).toScVal(), // blend_token: The address of the reward token (e.g., BLND) issued by the Blend pool
       new Address(soroswapRouter).toScVal(), // soroswap_router: The address of the Soroswap AMM router for asset swaps
-      nativeToScVal(40, { type: "i128" }), // reward_threshold: The minimum reward amount that triggers reinvestment
-      new Address(loadedConfig.blendKeeper).toScVal() // keeper: The address of the keeper that can call the harvest function
+      nativeToScVal(100, { type: "i128" }), // reward_threshold: The minimum reward amount that triggers reinvestment
+      new Address(loadedConfig.blendKeeper.publicKey()).toScVal() // keeper: The address of the keeper that can call the harvest function
     ]);
   
     const args: xdr.ScVal[] = [
