@@ -1,8 +1,9 @@
 #![no_std]
 use reserves::StrategyReserves;
 use soroban_sdk::{
+    TryFromVal,
     token::TokenClient,
-    contract, contractimpl, Address, Env, IntoVal, String, Val, Vec, vec, symbol_short,
+    contract, contractimpl, Address, Bytes, Env, IntoVal, String, Val, Vec, vec, symbol_short,
 };
 
 mod blend_pool;
@@ -207,7 +208,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
     /// # Returns
     ///
     /// * `Result<(), StrategyError>` - Returns `Ok(())` on success or a `StrategyError` on failure.
-    fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
+    fn harvest(e: Env, from: Address, data: Option<Bytes>) -> Result<(), StrategyError> {
         extend_instance_ttl(&e);
         
         let keeper = storage::get_keeper(&e)?;
@@ -220,7 +221,18 @@ impl DeFindexStrategyTrait for BlendStrategy {
         let config = storage::get_config(&e)?;
 
         let harvested_blend = blend_pool::claim(&e, &e.current_contract_address(), &config);
-        blend_pool::perform_reinvest(&e, &config)?;
+        
+        // Convert Bytes to i128
+        let amount_out_min: i128 = match &data {
+            Some(bytes) if !bytes.is_empty() => {
+                // First convert to Val, then try to convert to i128
+                let val: Val = bytes.into_val(&e);
+                i128::try_from_val(&e, &val).unwrap_or(0)
+            },
+            _ => 0, // Default to 0 if no data is provided or empty bytes
+        };
+        
+        blend_pool::perform_reinvest(&e, &config, amount_out_min)?;
 
         event::emit_harvest(
             &e,

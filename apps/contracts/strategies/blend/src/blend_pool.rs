@@ -232,7 +232,7 @@ pub fn claim(e: &Env, from: &Address, config: &Config) -> i128 {
 /// # Returns
 /// * `Result<bool, StrategyError>` - Returns `true` if reinvestment was successful,
 ///   `false` if skipped due to low BLND balance, or an error if any step fails.
-pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError> {
+pub fn perform_reinvest(e: &Env, config: &Config, amount_out_min: i128) -> Result<bool, StrategyError> {
     // Check the current BLND balance
     let blnd_balance =
         TokenClient::new(e, &config.blend_token).balance(&e.current_contract_address());
@@ -254,7 +254,7 @@ pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError>
     let swapped_amounts = internal_swap_exact_tokens_for_tokens(
         e,
         &blnd_balance,
-        &0i128,
+        &amount_out_min,
         swap_path,
         &e.current_contract_address(),
         &deadline,
