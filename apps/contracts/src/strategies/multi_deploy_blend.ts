@@ -53,7 +53,7 @@ export async function multiDeployBlendStrategies(quantity: number, asset_key: st
       switch (asset_key) {
         case "usdc":
           return {
-            address: othersAddressBook.getContractId("soroswap_usdc"),
+            address: othersAddressBook.getContractId("blend_usdc"),
             claim_id: xdr.ScVal.scvVec([
               nativeToScVal(3, { type: "u32" }),
             ])
@@ -101,7 +101,7 @@ export async function multiDeployBlendStrategies(quantity: number, asset_key: st
       reserve_id: 0,
       blnd_token: blndToken,
       soroswap_router: soroswapRouter,
-      blend_keeper: loadedConfig.blendKeeper
+      blend_keeper: loadedConfig.blendKeeper.publicKey()
     }, null, 2));
     await deployContract(
       `${asset_symbol}_blend_strategy_${i}`,

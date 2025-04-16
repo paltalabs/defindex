@@ -266,7 +266,7 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
             manager
           );
         } catch (error:any) {
-          if (error.toString().includes("HostError: Error(Contract, #10)") || error.toString().includes("HostError: Error(Contract, #142)")) {
+          if (error.toString().includes("HostError: Error(Contract, #128)") || error.toString().includes("HostError: Error(Contract, #142)")) {
             console.log(green, "---------------------------------------------------------");
             console.log(green, "| Unwinding more than invested funds failed as expected |");
             console.log(green, "---------------------------------------------------------");

@@ -18,7 +18,7 @@ import { testVaultOneAssetOneStrategy } from "./vault/one_asset_one_strategy.js"
 import { testVaultTwoAssetsOneStrategy } from "./vault/two_assets_one_strategy.js";
 import { testVaultTwoAssetsTwoStrategies } from "./vault/two_assets_two_strategies.js";
 import { CreateVaultParams } from "./types.js";
-import { USDC_ADDRESS } from "../constants.js";
+import { BLEND_USDC_ADDRESS } from "../constants.js";
 
 const args = process.argv.slice(2);
 const network = args[0];
@@ -77,7 +77,7 @@ const twoAssetOneStrategyParams: CreateVaultParams[] = [
     ],
   },
   {
-    address: USDC_ADDRESS,
+    address: BLEND_USDC_ADDRESS,
     strategies: [
       {
         name: "Blend usdc Strategy",
@@ -105,7 +105,7 @@ const twoAssetTwoStrategiesParams: CreateVaultParams[] = [
     ],
   },
   {
-    address: USDC_ADDRESS,
+    address: BLEND_USDC_ADDRESS,
     strategies: [
       {
         name: "blend usdc Strategy 0",
