@@ -1,7 +1,6 @@
 use defindex_strategy_core::StrategyError;
 use soroban_sdk::{
-    auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation},
-    vec, Address, Env, IntoVal, Symbol, Vec,
+    auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation}, panic_with_error, vec, Address, Env, IntoVal, InvokeError, Symbol, Vec
 };
 
 use crate::storage::Config;
@@ -44,11 +43,13 @@ pub fn internal_swap_exact_tokens_for_tokens(
     ];
 
     // Maybe instead of using the router directly, we should use the pair for swaps
-    let pair_address: Address = e.invoke_contract(
+    let pair_address = e.try_invoke_contract::<Address, InvokeError>(
         &config.router,
         &Symbol::new(&e, "router_pair_for"),
         path.into_val(e),
-    );
+    ).unwrap_or_else(|_| {
+        panic_with_error!(e, StrategyError::SoroswapPairError);
+    }).unwrap();
 
     e.authorize_as_current_contract(vec![
         &e,
@@ -72,9 +73,12 @@ pub fn internal_swap_exact_tokens_for_tokens(
         }),
     ]);
 
-    e.invoke_contract(
+    let result = e.try_invoke_contract::<Vec<i128>, InvokeError>(
         &config.router,
         &Symbol::new(&e, "swap_exact_tokens_for_tokens"),
         swap_args.into_val(e),
-    )
+    ).unwrap_or_else(|_| {
+        panic_with_error!(e, StrategyError::InternalSwapError);
+    }).unwrap();
+    Ok(result)
 }

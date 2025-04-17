@@ -1,6 +1,6 @@
 #![cfg(test)]
 use crate::blend_pool::{BlendPoolClient, Request};
-use crate::constants::{SCALAR_12};
+use crate::constants::SCALAR_12;
 use crate::storage::ONE_DAY_LEDGERS;
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
 use crate::test::std;
