@@ -1,12 +1,14 @@
 use defindex_strategy_core::StrategyError;
 use soroban_sdk::{
-    auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation}, token::TokenClient, vec, Address, Env, IntoVal, Symbol, Vec
+    auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation},
+    token::TokenClient,
+    vec, Address, Env, IntoVal, Symbol, Vec,
 };
 
 use crate::{
     reserves,
     soroswap::internal_swap_exact_tokens_for_tokens,
-    storage::Config,
+    storage::{Config},
 };
 
 soroban_sdk::contractimport!(file = "../external_wasms/blend/pool.wasm");
@@ -35,7 +37,6 @@ impl RequestType {
     }
 }
 
-
 /// Supplies the underlying asset to the Blend pool as defined in the contract's configuration.
 ///
 /// This function transfers the specified `amount` of the underlying asset from the strategy contract
@@ -58,6 +59,7 @@ impl RequestType {
 /// # Returns
 /// * `Ok(i128)` - The number of `bTokens` minted to the strategy.
 /// * `Err(StrategyError)` - If an underflow or overflow occurs.
+
 pub fn supply(
     e: &Env,
     from: &Address,
@@ -68,11 +70,11 @@ pub fn supply(
 
     // Get deposit amount pre-supply
     let pre_supply_amount = pool_client
-    .get_positions(&e.current_contract_address())
-    .supply
-    .try_get(config.reserve_id)
-    .unwrap_or(Some(0))
-    .unwrap_or(0);
+        .get_positions(&e.current_contract_address())
+        .supply
+        .try_get(config.reserve_id)
+        .unwrap_or(Some(0))
+        .unwrap_or(0);
 
     let requests: Vec<Request> = vec![
         &e,
@@ -160,6 +162,7 @@ pub fn withdraw(
         .try_get(config.reserve_id)
         .map_err(|_| StrategyError::InsufficientBalance)? // Convert Result to Error
         .ok_or_else(|| StrategyError::InsufficientBalance)?; // Convert Option to Error if None
+
     let requests: Vec<Request> = vec![
         &e,
         Request {
@@ -178,10 +181,10 @@ pub fn withdraw(
     );
 
     let new_supply_amount = new_positions
-    .supply
-    .try_get(config.reserve_id)
-    .unwrap_or(Some(0))
-    .unwrap_or(0);
+        .supply
+        .try_get(config.reserve_id)
+        .unwrap_or(Some(0))
+        .unwrap_or(0);
 
     // Calculate the amount of bTokens burnt
     // position entry is deleted if the position is cleared
