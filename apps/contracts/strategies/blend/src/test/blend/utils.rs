@@ -20,6 +20,8 @@ pub struct GenericBlendData<'a> {
   pub soroswap_router: Address,
   pub pool: Address,
   pub address: Address,
+  pub reserve_blnd: i128,
+  pub reserve_usdc: i128,
 }
 
 pub fn create_generic_strategy() -> GenericBlendData<'static> {
@@ -76,5 +78,7 @@ pub fn create_generic_strategy() -> GenericBlendData<'static> {
         soroswap_router: soroswap_router.address,
         pool,
         address: strategy_address,
+        reserve_blnd: amount_a,
+        reserve_usdc: amount_b,
     }
 }
