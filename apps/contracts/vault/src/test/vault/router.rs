@@ -10,8 +10,8 @@ use crate::test::{
 };
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #201)")]
-fn swap_exact_in(){
+#[should_panic(expected = "HostError: Error(Contract, #201)")] // SwapExactInError
+fn swap_exact_in_error(){
   let test = DeFindexVaultTest::setup();
   test.env.mock_all_auths();
   let strategy_params_token_0 = create_strategy_params_token_0(&test);
@@ -79,8 +79,8 @@ fn swap_exact_in(){
 }
 
 #[test]
-#[should_panic(expected = "HostError: Error(Contract, #202)")]
-fn swap_exact_out(){
+#[should_panic(expected = "HostError: Error(Contract, #202)")] // SwapExactOutError
+fn swap_exact_out_error(){
   let test = DeFindexVaultTest::setup();
   test.env.mock_all_auths();
   let strategy_params_token_0 = create_strategy_params_token_0(&test);
