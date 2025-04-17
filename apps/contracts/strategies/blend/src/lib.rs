@@ -1,7 +1,6 @@
 #![no_std]
 use reserves::StrategyReserves;
 use soroban_sdk::{
-    TryFromVal,
     token::TokenClient,
     contract, contractimpl, Address, Bytes, Env, IntoVal, String, Val, Vec, vec, symbol_short,
 };
@@ -225,9 +224,9 @@ impl DeFindexStrategyTrait for BlendStrategy {
         // Convert Bytes to i128
         let amount_out_min: i128 = match &data {
             Some(bytes) if !bytes.is_empty() => {
-                // First convert to Val, then try to convert to i128
-                let val: Val = bytes.into_val(&e);
-                i128::try_from_val(&e, &val).unwrap_or(0)
+                let mut slice = [0u8; 16];
+                bytes.copy_into_slice(&mut slice);
+                i128::from_be_bytes(slice)
             },
             _ => 0, // Default to 0 if no data is provided or empty bytes
         };

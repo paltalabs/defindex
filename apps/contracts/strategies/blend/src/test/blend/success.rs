@@ -330,8 +330,11 @@ fn success() {
 
     println!("Expected withdraw amount for users {}", expected_withdraw_amount);
 
-    // Harvest with the specific Mock
+    // get strategy emissions
+    let strategy_emissions = pool_client.get_user_emissions(&strategy, &1u32);
+    println!("Strategy emissions: {:?}", strategy_emissions);
 
+    // Harvest with the specific Mock
     strategy_client
     .mock_auths(&[MockAuth {
         address: &keeper.clone(),
