@@ -65,6 +65,11 @@ pub enum ContractError {
 
     // Add mappings for SoroswapLibraryError
     LibrarySortIdenticalTokens = 190,
+
+    // Swap errors
+    SoroswapRouterError = 200,
+    SwapExactInError = 201,
+    SwapExactOutError = 202,
 }
 
 impl From<SoroswapLibraryError> for ContractError {
