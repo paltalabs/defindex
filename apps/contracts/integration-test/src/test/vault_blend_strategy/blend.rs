@@ -27,6 +27,7 @@ use soroban_sdk::{
     IntoVal,
     Symbol,
     Vec,
+    Bytes,
 };
 #[test]
 fn success() {
@@ -264,7 +265,7 @@ fn success() {
     println!("users[1] vault balance before report= {}", vault_contract.balance(&users[1]));
 
     std::println!("-- Harvesting --");
-    enviroment.strategy_contract.harvest(&enviroment.keeper);
+    enviroment.strategy_contract.harvest(&enviroment.keeper, &None::<Bytes>);
 
     let report = vault_contract.report();
     println!("report = {:?}", report);

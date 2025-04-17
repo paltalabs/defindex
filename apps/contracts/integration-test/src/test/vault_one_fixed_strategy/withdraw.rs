@@ -11,7 +11,7 @@ use crate::{
 };
 use soroban_sdk::{
     testutils::{Ledger, MockAuth, MockAuthInvoke},
-    vec as svec, IntoVal, Vec,
+    vec as svec, IntoVal, Vec, Bytes,
 };
 extern crate std;
 
@@ -202,7 +202,7 @@ fn fixed_apr_invest_withdraw_success() {
     enviroment
         .strategy_contract
         .mock_all_auths()
-        .harvest(&enviroment.vault_contract.address);
+        .harvest(&enviroment.vault_contract.address, &None::<Bytes>);
 
     let df_balance_before_withdraw = enviroment.vault_contract.balance(&user);
     assert_eq!(

@@ -1,4 +1,4 @@
-use soroban_sdk::{testutils::{Address as _, Ledger, MockAuth, MockAuthInvoke}, vec as svec, xdr::ContractCostType, Address, BytesN, IntoVal, Map, String, Vec};
+use soroban_sdk::{testutils::{Address as _, Ledger, MockAuth, MockAuthInvoke}, vec as svec, xdr::ContractCostType, Address, BytesN, IntoVal, Map, String, Vec, Bytes};
 
 use crate::{blend_strategy::{create_blend_strategy_contract, BlendStrategyClient}, factory::{AssetStrategySet, Strategy}, fixed_strategy::{create_fixed_strategy_contract, FixedStrategyClient}, hodl_strategy::create_hodl_strategy_contract, setup::{blend_setup::{create_blend_pool, BlendFixture, BlendPoolClient, Request}, create_soroswap_factory, create_soroswap_pool, create_soroswap_router, create_vault_one_asset_hodl_strategy, mock_mint, VAULT_FEE}, test::{limits::{check_limits, check_limits_return_info, create_results_table, print_resources}, EnvTestUtils, IntegrationTest, DAY_IN_LEDGERS, ONE_YEAR_IN_SECONDS}, token::create_token, vault::{defindex_vault_contract::{Instruction, VaultContractClient, CurrentAssetInvestmentAllocation}, MINIMUM_LIQUIDITY}};
 
@@ -349,7 +349,7 @@ fn fixed() {
         let temp_strategy_address = strategies.get(i).unwrap().address.clone();
         let temp_client = FixedStrategyClient::new(&setup.env, &temp_strategy_address);
         
-        temp_client.harvest(&manager);
+        temp_client.harvest(&manager, &None::<Bytes>);
         check_limits(&setup.env, "Harvest");
     }
 
@@ -472,7 +472,7 @@ fn fixed_panic() {
         let temp_strategy_address = strategies.get(i).unwrap().address.clone();
         let temp_client = FixedStrategyClient::new(&setup.env, &temp_strategy_address);
         
-        temp_client.harvest(&manager);
+        temp_client.harvest(&manager, &None::<Bytes>);
         check_limits(&setup.env, "Harvest");
     }
 
@@ -757,7 +757,7 @@ fn blend() {
         let temp_strategy_address = strategies.get(i).unwrap().address.clone();
         let temp_client = BlendStrategyClient::new(&setup.env, &temp_strategy_address);
         
-        temp_client.harvest(&keeper);
+        temp_client.harvest(&keeper, &None::<Bytes>);
         let usage = check_limits_return_info(&setup.env, "Harvest");
         harvest_usage.push_back(usage);
     }
@@ -1102,7 +1102,7 @@ fn blend_panic() {
         let temp_strategy_address = strategies.get(i).unwrap().address.clone();
         let temp_client = BlendStrategyClient::new(&setup.env, &temp_strategy_address);
         
-        temp_client.harvest(&keeper);
+        temp_client.harvest(&keeper, &None::<Bytes>);
         let usage = check_limits_return_info(&setup.env, "Harvest");
         harvest_usage.push_back(usage);
     }
