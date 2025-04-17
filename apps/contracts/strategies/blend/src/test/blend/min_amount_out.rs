@@ -1,23 +1,16 @@
 #![cfg(test)]
 use crate::blend_pool::{BlendPoolClient, Request};
-use crate::constants::{SCALAR_12};
 use crate::storage::ONE_DAY_LEDGERS;
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
-use crate::test::std;
-use crate::test::assert_approx_eq_rel;
 use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils};
 use crate::BlendStrategyClient;
-use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
-use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke, Events};
-use soroban_sdk::{vec, Address, Bytes, Env, IntoVal, Symbol, Vec, Val, symbol_short, String, FromVal};
+use soroban_sdk::testutils::Address as _;
+use soroban_sdk::{vec, Address, Bytes, Env};
 use crate::test::std::println;
-use crate::STRATEGY_NAME;
 
 #[test]
 fn min_amount_out() {
-    let min_dust: i128 = 0_0010000;
-
     let e = Env::default();
     e.cost_estimate().budget().reset_unlimited();
     e.mock_all_auths();
@@ -25,9 +18,6 @@ fn min_amount_out() {
 
     let admin = Address::generate(&e);
     let user_2 = Address::generate(&e);
-    let user_3 = Address::generate(&e);
-    let user_4 = Address::generate(&e);
-    let initial_depositor = Address::generate(&e);
     let keeper = Address::generate(&e);
 
     let blnd = e.register_stellar_asset_contract_v2(admin.clone());

@@ -10,7 +10,7 @@ use crate::storage;
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::testutils::{Address as _, MockAuth, MockAuthInvoke};
-use soroban_sdk::{Address, Env, IntoVal};
+use soroban_sdk::{Address, Env, IntoVal, Bytes};
 
 #[test]
 fn deposit_zero_and_negative_amount() {
@@ -245,7 +245,7 @@ fn harvest_from_random_address() {
 
     //Trying to harvest from random address
     let balance_before_harvest = strategy_client.balance(&user);
-    let harvest_from_random_address = strategy_client.try_harvest(&strategy_client.address);
+    let harvest_from_random_address = strategy_client.try_harvest(&strategy_client.address, &None::<Bytes>);
     let balance_after_harvest = strategy_client.balance(&user);
 
     assert_eq!(balance_before_harvest, balance_after_harvest);
@@ -326,15 +326,15 @@ fn unauthorized_harvest() {
             invoke: &MockAuthInvoke {
                 contract: &strategy_client.address.clone(),
                 fn_name: "harvest",
-                args: (keeper.clone(),).into_val(&e),
+                args: (keeper.clone(), &None::<Bytes>).into_val(&e),
                 sub_invokes: &[],
             },
         }],
-    ).try_harvest(&keeper);
+    ).try_harvest(&keeper, &None::<Bytes>);
 
     assert_eq!(try_harvest_result, Err(Err(soroban_sdk::InvokeError::Abort)));
 
-    let harvest_result = strategy_client.try_harvest(&keeper);
+    let harvest_result = strategy_client.try_harvest(&keeper, &None::<Bytes>);
     assert_eq!(harvest_result, Ok(Ok(())));
 
     //Panic with Unauthorized
@@ -344,11 +344,11 @@ fn unauthorized_harvest() {
             invoke: &MockAuthInvoke {
                 contract: &strategy_client.address.clone(),
                 fn_name: "harvest",
-                args: (user_2.clone(),).into_val(&e),
+                args: (user_2.clone(), &None::<Bytes>).into_val(&e),
                 sub_invokes: &[],
             },
         }],
-    ).harvest(&user_2);
+    ).harvest(&user_2, &None::<Bytes>);
 }
 
 #[test]
