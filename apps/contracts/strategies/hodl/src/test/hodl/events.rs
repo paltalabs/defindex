@@ -1,6 +1,6 @@
 use crate::event::{DepositEvent, HarvestEvent, WithdrawEvent};
 use crate::test::{create_hodl_strategy, HodlStrategyTest};
-use soroban_sdk::{symbol_short, testutils::Events, vec, IntoVal};
+use soroban_sdk::{symbol_short, testutils::Events, vec, IntoVal, Bytes};
 
 #[test]
 fn deposit() {
@@ -64,7 +64,7 @@ fn harvest() {
 
     let amount = 123456;
     strategy.deposit(&amount, &test.user);
-    strategy.harvest(&test.user);
+    strategy.harvest(&test.user, &None::<Bytes>);
 
     let harvest_event = test.env.events().all().last().unwrap();
     let expected_harvest_event = HarvestEvent {

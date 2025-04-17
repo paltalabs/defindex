@@ -1,4 +1,4 @@
-use soroban_sdk::{testutils::Ledger, token::StellarAssetClient};
+use soroban_sdk::{testutils::Ledger, token::StellarAssetClient, Bytes};
 
 use crate::{
     calculate_yield,
@@ -49,10 +49,10 @@ fn test_harvest_yields_multiple_users() {
         .set_timestamp(test.env.ledger().timestamp() + one_year_in_seconds);
 
     // Harvest for each user
-    strategy.harvest(&users[0]);
-    strategy.harvest(&users[1]);
-    strategy.harvest(&users[2]);
-    strategy.harvest(&users[3]);
+    strategy.harvest(&users[0], &None::<Bytes>);
+    strategy.harvest(&users[1], &None::<Bytes>);
+    strategy.harvest(&users[2], &None::<Bytes>);
+    strategy.harvest(&users[3], &None::<Bytes>);
 
     // Check the harvested rewards for each user are correct
     let user1_expected_reward = calculate_yield(user1_amount, apr, one_year_in_seconds);

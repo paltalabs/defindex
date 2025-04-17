@@ -1,5 +1,5 @@
 #![no_std]
-use soroban_sdk::{contractclient, contractspecfn, Address, Env, Val, Vec};
+use soroban_sdk::{contractclient, contractspecfn, Address, Bytes, Env, Val, Vec};
 pub struct Spec;
 
 mod error;
@@ -69,7 +69,7 @@ pub trait DeFindexStrategyTrait {
     /// # Returns
     /// - `Ok(())` if the harvest is successful.
     /// - `Err(StrategyError)` if the harvest fails.
-    fn harvest(env: Env, from: Address) -> Result<(), StrategyError>;
+    fn harvest(env: Env, from: Address, data: Option<Bytes> ) -> Result<(), StrategyError>;
 
     /// Returns the current balance of the underlying asset in the strategy.
     ///

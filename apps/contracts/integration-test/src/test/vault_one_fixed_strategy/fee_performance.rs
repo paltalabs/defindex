@@ -7,7 +7,7 @@ use crate::{
 };
 use soroban_sdk::{
     testutils::{MockAuth, MockAuthInvoke},
-    vec as svec, IntoVal, Vec,
+    vec as svec, IntoVal, Vec, Bytes,
 };
 
 #[test]
@@ -102,7 +102,7 @@ fn fee_performance() {
     // Harvest
     enviroment
         .strategy_contract
-        .harvest(&enviroment.vault_contract.address);
+        .harvest(&enviroment.vault_contract.address, &None::<Bytes>);
 
     let vault_balance_in_strategy = enviroment
         .strategy_contract

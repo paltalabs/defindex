@@ -10,7 +10,7 @@ use crate::BlendStrategyClient;
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke, Events};
-use soroban_sdk::{vec, Address, Env, IntoVal, Symbol, Vec, Val, symbol_short, String, FromVal};
+use soroban_sdk::{vec, Address, Bytes, Env, IntoVal, Symbol, Vec, Val, symbol_short, String, FromVal};
 use crate::test::std::println;
 use crate::STRATEGY_NAME;
 
@@ -330,19 +330,22 @@ fn success() {
 
     println!("Expected withdraw amount for users {}", expected_withdraw_amount);
 
-    // Harvest with the specific Mock
+    // get strategy emissions
+    let strategy_emissions = pool_client.get_user_emissions(&strategy, &1u32);
+    println!("Strategy emissions: {:?}", strategy_emissions);
 
+    // Harvest with the specific Mock
     strategy_client
     .mock_auths(&[MockAuth {
         address: &keeper.clone(),
         invoke: &MockAuthInvoke {
             contract: &strategy_client.address.clone(),
             fn_name: "harvest",
-            args: (keeper.clone(),).into_val(&e),
+            args: (keeper.clone(), &None::<Bytes>).into_val(&e),
             sub_invokes: &[],
         },
     }])
-    .harvest(&keeper.clone());
+    .harvest(&keeper.clone(), &None::<Bytes>);
 
     assert_eq!(
         e.auths()[0],
@@ -354,7 +357,8 @@ fn success() {
                     Symbol::new(&e, "harvest"),
                     vec![
                         &e,
-                        keeper.to_val()
+                        keeper.to_val(),
+                        None::<Bytes>.into_val(&e)
                     ]
                 )),
                 sub_invocations: std::vec![]
@@ -373,7 +377,8 @@ fn success() {
                     Symbol::new(&e, "harvest"),
                     vec![
                         &e,
-                        keeper.to_val()
+                        keeper.to_val(),
+                        None::<Bytes>.into_val(&e)
                     ]
                 )),
                 sub_invocations: std::vec![]
@@ -569,7 +574,7 @@ fn success() {
     println!("=======       HARVEST  =======");
 
     
-    strategy_client.harvest(&keeper);
+    strategy_client.harvest(&keeper, &None::<Bytes>);
     assert_eq!(
         e.auths()[0],
         (
@@ -580,7 +585,8 @@ fn success() {
                     Symbol::new(&e, "harvest"),
                     vec![
                         &e,
-                        keeper.to_val()
+                        keeper.to_val(),
+                        None::<Bytes>.into_val(&e)
                     ]
                 )),
                 sub_invocations: std::vec![]
@@ -688,11 +694,11 @@ fn success() {
         invoke: &MockAuthInvoke {
             contract: &strategy_client.address.clone(),
             fn_name: "harvest",
-            args: (new_keeper.clone(),).into_val(&e),
+            args: (new_keeper.clone(), &None::<Bytes>).into_val(&e),
             sub_invokes: &[],
         },
     }])
-    .harvest(&new_keeper.clone());
+    .harvest(&new_keeper.clone(), &None::<Bytes>);
 
     assert_eq!(
         e.auths()[0],
@@ -704,7 +710,8 @@ fn success() {
                     Symbol::new(&e, "harvest"),
                     vec![
                         &e,
-                        new_keeper.to_val()
+                        new_keeper.to_val(),
+                        None::<Bytes>.into_val(&e)
                     ]
                 )),
                 sub_invocations: std::vec![]
@@ -714,7 +721,7 @@ fn success() {
 
 
     // try to harvest with the old keeper.. here the error will be not authorized as we are mocking the auth... 
-    let harvest_result = strategy_client.try_harvest(&keeper);
+    let harvest_result = strategy_client.try_harvest(&keeper, &None::<Bytes>);
     assert_eq!(harvest_result, Err(Ok(StrategyError::NotAuthorized)));
     
     // but if we mock the specific auth we will get auth error
@@ -725,11 +732,11 @@ fn success() {
         invoke: &MockAuthInvoke {
             contract: &strategy_client.address.clone(),
             fn_name: "harvest",
-            args: (keeper.clone(),).into_val(&e),
+            args: (keeper.clone(), &None::<Bytes>).into_val(&e),
             sub_invokes: &[],
         },
     }])
-    .try_harvest(&keeper.clone());
+    .try_harvest(&keeper.clone(), &None::<Bytes>);
     assert_eq!(harvest_result, Err(Err(soroban_sdk::InvokeError::Abort)));
 
 

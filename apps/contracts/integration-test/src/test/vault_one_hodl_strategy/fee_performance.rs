@@ -5,7 +5,7 @@ use crate::{
 };
 use soroban_sdk::{
     testutils::{MockAuth, MockAuthInvoke},
-    vec as svec, IntoVal, Vec,
+    vec as svec, IntoVal, Vec, Bytes,
 };
 
 extern crate std;
@@ -163,7 +163,7 @@ fn fee_performance() {
     setup.env.jump_time(ONE_YEAR_IN_SECONDS);
     enviroment
         .strategy_contract
-        .harvest(&enviroment.vault_contract.address);
+        .harvest(&enviroment.vault_contract.address, &None::<Bytes>);
 
     enviroment.vault_contract.mock_auths(&[MockAuth {
         address: &enviroment.manager.clone(),

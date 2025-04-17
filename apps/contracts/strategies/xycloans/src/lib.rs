@@ -5,7 +5,7 @@ mod storage;
 mod xycloans_pool;
 
 use defindex_strategy_core::{DeFindexStrategyTrait, StrategyError};
-use soroban_sdk::{contract, contractimpl, Address, Env, IntoVal, Val, Vec};
+use soroban_sdk::{contract, contractimpl, Address, Bytes, Env, IntoVal, Val, Vec};
 use soroswap_router::{get_amount_out, get_reserves, swap};
 use storage::{
     extend_instance_ttl, get_pool_token, get_soroswap_factory_address, get_token_in,
@@ -87,7 +87,7 @@ impl DeFindexStrategyTrait for XycloansAdapter {
         Ok(0)
     }
 
-    fn harvest(e: Env, _from: Address) -> Result<(), StrategyError> {
+    fn harvest(e: Env, _from: Address, _data: Option<Bytes>) -> Result<(), StrategyError> {
         extend_instance_ttl(&e);
 
         Ok(())

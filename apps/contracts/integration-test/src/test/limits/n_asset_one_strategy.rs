@@ -1,4 +1,4 @@
-use soroban_sdk::{testutils::Address as _, vec as svec, Address, BytesN, Map, String};
+use soroban_sdk::{testutils::Address as _, vec as svec, Address, Map, String, Bytes};
 use crate::{blend_strategy::{create_blend_strategy_contract, BlendStrategyClient}, factory::{AssetStrategySet, Strategy}, fixed_strategy::{create_fixed_strategy_contract, FixedStrategyClient}, hodl_strategy::create_hodl_strategy_contract, setup::{blend_setup::{create_blend_pool, BlendFixture, BlendPoolClient}, create_soroswap_factory, create_soroswap_pool, create_soroswap_router, VAULT_FEE}, test::{limits::{check_limits_return_info, create_results_table}, EnvTestUtils, IntegrationTest, DAY_IN_LEDGERS}, token::create_token, vault::defindex_vault_contract::{Instruction, VaultContractClient}};
 
 #[test]
@@ -687,8 +687,8 @@ fn n_assets_one_strategy_blend() {
 
     // Harvest
     setup.env.cost_estimate().budget().reset_unlimited();
-    usdc_strategy_contract.harvest(&keeper);
-    xlm_strategy_contract.harvest(&keeper);
+    usdc_strategy_contract.harvest(&keeper, &None::<Bytes>);
+    xlm_strategy_contract.harvest(&keeper, &None::<Bytes>);
     let harvest_usage = check_limits_return_info(&setup.env, "Harvest");
 
     // Add a report
