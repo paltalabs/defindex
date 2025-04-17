@@ -40,7 +40,6 @@ export async function deployBlendStrategy(addressBook: AddressBook) {
     default:
       console.log("Invalid network:", network, "It should be either testnet or mainnet");
       return;
-      break;
   }
   const xlmAddress = new Address(xlmContractId);
   const xlmScVal = xlmAddress.toScVal();
@@ -52,18 +51,12 @@ export async function deployBlendStrategy(addressBook: AddressBook) {
     nativeToScVal(1, { type: "u32" }),
   ]);
 
-  let blendFixedXlmUsdcPool: string = othersAddressBook.getContractId("blend_fixed_xlm_usdc_pool");
-  let blndToken: string = othersAddressBook.getContractId("blnd_token");
-  let soroswapRouter: string  = othersAddressBook.getContractId("soroswap_router");
-
-
   const initArgs = xdr.ScVal.scvVec([
-    new Address(BLEND_POOL).toScVal(), //Blend pool on testnet!
-    nativeToScVal(0, { type: "u32" }), // ReserveId 0 is XLM
-    new Address(BLEND_TOKEN).toScVal(), // BLND Token
-    new Address(SOROSWAP_ROUTER).toScVal(), // Soroswap router
-    claim_ids,
-    nativeToScVal(400000000, { type: "i128" }), // RewardThreshold is 40 lumens
+    new Address(BLEND_POOL).toScVal(), // blend_pool_address: The address of the Blend pool where assets are deposited
+    new Address(BLEND_TOKEN).toScVal(), // blend_token: The address of the reward token (e.g., BLND) issued by the Blend pool
+    new Address(SOROSWAP_ROUTER).toScVal(), // soroswap_router: The address of the Soroswap AMM router for asset swaps
+    nativeToScVal(40, { type: "i128" }), // reward_threshold: The minimum reward amount that triggers reinvestment
+    new Address(loadedConfig.blendKeeper.publicKey()).toScVal() // keeper: The address of the keeper that can call the harvest function
   ]);
 
   const args: xdr.ScVal[] = [
