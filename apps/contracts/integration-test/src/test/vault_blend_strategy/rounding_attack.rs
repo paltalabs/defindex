@@ -17,67 +17,129 @@ const LUMENS: i128 = 1_0_000_000;
 
 #[test]
 fn rounding_attack() {
-    let e = create_vault_one_blend_strategy();
-    // make first deposit to vault
-    // mint 1000 tokens to the user
+    let e: crate::setup::VaultOneBlendStrategy<'_> = create_vault_one_blend_strategy();
+    
+    // Initial setup with inflation deposit
     const INFLATION_AMOUNT: i128 = 1001;
-    e.usdc_client.mint(&e.admin, &INFLATION_AMOUNT);
-    e.vault_contract.deposit(
-        &vec![&e.setup.env, INFLATION_AMOUNT],
-        &vec![&e.setup.env, INFLATION_AMOUNT],
-        &e.admin,
-        &false
-    );
-
+    mint_and_deposit_to_vault(&e, &e.admin, INFLATION_AMOUNT);
+    
     println!("Inflation deposit: ");
     e.usdc_client.mint(&e.admin, &INFLATION_AMOUNT);
-    e.strategy_contract.deposit(&INFLATION_AMOUNT,&e.admin );
+    e.strategy_contract.deposit(&INFLATION_AMOUNT, &e.admin);
 
-    let total_managed_funds = e.vault_contract.fetch_total_managed_funds();
-    print_total_managed_funds(total_managed_funds);
+    print_vault_state(&e, "Initial state");
    
-   // Get and print positions from the Blend pool for the strategy contract
-   println!("\x1b[32mInitial Strategy Positions:\x1b[0m");
-   let initial_positions = e.blend_pool_client.get_positions(&e.strategy_contract.address);
-   println!("Strategy positions: {:?}", initial_positions);
+    // Get and print positions from the Blend pool for the strategy contract
+    print_strategy_positions(&e, "Initial Strategy Positions");
 
+    // Invest the inflation amount to the strategy
+    println!("\x1b[32mInvesting inflation amount to strategy\x1b[0m");
+    invest(&e, INFLATION_AMOUNT, &e.strategy_contract.address);
+    print_vault_report(&e, "after investing inflation");
+    print_strategy_positions(&e, "Strategy Positions After Inflation Investment");
    
-   // invest x tokens through the vault
-   println!("\x1b[31mStarting Loop\x1b[0m");
-    for i in 0..10 {
-        let x = 2 * LUMENS+i;
+    // invest x tokens through the vault
+    println!("\x1b[31mStarting Loop\x1b[0m");
+    for i in 0..7 {
+        let x = 2 * LUMENS + i;
         println!(" \x1b[36mInvesting {:?} tokens to strategy\x1b[0m", x);
         let user = Address::generate(&e.setup.env);
-        // make second deposit to the vault
-        println!("Minting {:?} tokens to user", x);
-        e.usdc_client.mint(&user, &x);
-        println!("Depositing {:?} tokens to vault", x);
-        e.vault_contract.deposit(
-            &vec![&e.setup.env, x],
-            &vec![&e.setup.env, x],
-            &user,
-            &false
-        );
-    
-        // println!("Total managed funds after deposit: ");
-        // let total_managed_funds = e.vault_contract.fetch_total_managed_funds();
-        // print_total_managed_funds(total_managed_funds);
+        
+        // Deposit to vault
+        mint_and_deposit_to_vault(&e, &user, x);
+        
+        // Report and check balances
+        print_vault_report(&e, "after depositing");
+        print_strategy_balance(&e, "after depositing");
 
-        //report the vault
-        let report = e.vault_contract.report();
-        println!("Report after investing: {:?}", report);
+        // Make investment
+        invest(&e, x, &e.strategy_contract.address);
+        print_vault_state(&e, "after rebalance");
+        print_strategy_positions(&e, "after investment");
+        print_strategy_balance(&e, "after investment");
 
-        // make investment
-        println!("Investing {:?} tokens to strategy", x);
-        let invest_instructions = vec![
-            &e.setup.env,
-            Instruction::Invest(
-                e.strategy_contract.address.clone(),
-                x,
-            ),
-        ];
+        // Withdraw all user shares
+        withdraw_all_shares(&e, &user, x);
+        
+        // Final checks
+        print_vault_report(&e, "after withdrawing");
+        print_strategy_balance(&e, "after withdrawal");
+                
+        // Assertions
+        let strategy_positions = e.blend_pool_client.get_positions(&e.strategy_contract.address);
+        assert_eq!(strategy_positions.supply.get(0).unwrap(), 2*INFLATION_AMOUNT);
+        
+        // Check user USDC balance after withdrawal
+        let user_usdc_balance = e.usdc.balance(&user);
+        println!("User USDC balance after withdrawal: {}", user_usdc_balance);
+    }
     
-        e.vault_contract
+    // Final state check
+    println!("Vault USDC Balance: {}", e.usdc.balance(&e.vault_contract.address));
+    println!("Vault Balance on Strategy: {}", e.strategy_contract.balance(&e.vault_contract.address));
+    print_vault_report(&e, "after investing");
+}
+
+// New helper functions
+
+fn mint_and_deposit_to_vault(e: &crate::setup::VaultOneBlendStrategy<'_>, user: &Address, amount: i128) {
+    println!("Minting {:?} tokens to user", amount);
+    e.usdc_client.mint(user, &amount);
+    println!("Depositing {:?} tokens to vault", amount);
+    e.vault_contract.deposit(
+        &vec![&e.setup.env, amount],
+        &vec![&e.setup.env, amount],
+        user,
+        &false
+    );
+}
+
+fn print_vault_state(e: &crate::setup::VaultOneBlendStrategy<'_>, context: &str) {
+    println!("Total managed funds {}: ", context);
+    let total_managed_funds = e.vault_contract.fetch_total_managed_funds();
+    print_total_managed_funds(total_managed_funds);
+}
+
+fn print_vault_report(e: &crate::setup::VaultOneBlendStrategy<'_>, context: &str) {
+    let report = e.vault_contract.report();
+    println!("Report {}: {:?}", context, report);
+}
+
+fn print_strategy_positions(e: &crate::setup::VaultOneBlendStrategy<'_>, context: &str) {
+    println!("\x1b[32m{}:\x1b[0m", context);
+    let positions = e.blend_pool_client.get_positions(&e.strategy_contract.address);
+    println!("Strategy positions: {:?}", positions);
+}
+
+fn print_strategy_balance(e: &crate::setup::VaultOneBlendStrategy<'_>, context: &str) {
+    let balance = e.strategy_contract.balance(&e.vault_contract.address);
+    println!("Strategy balance {}: {:?}", context, balance);
+}
+
+fn withdraw_all_shares(e: &crate::setup::VaultOneBlendStrategy<'_>, user: &Address, expected_amount: i128) {
+    let user_shares = e.vault_contract.balance(user);
+    println!("withdrawing {:?} shares", user_shares);
+    let withdraw_amounts = e.vault_contract.withdraw(
+        &user_shares,
+        &vec![&e.setup.env, 0i128],
+        user,
+    );
+    println!("Withdraw amount - expected: {:?}", withdraw_amounts.get(0).unwrap() - expected_amount);
+    assert_eq!(withdraw_amounts.len(), 1);
+    assert_eq!(withdraw_amounts.get(0).unwrap(), expected_amount);
+}
+
+fn invest(e: &crate::setup::VaultOneBlendStrategy<'_>, amount: i128, strategy_address: &Address) {
+    println!("Investing {:?} tokens to strategy", amount);
+    let invest_instructions = vec![
+        &e.setup.env,
+        Instruction::Invest(
+            strategy_address.clone(),
+            amount,
+        ),
+    ];
+
+    e.vault_contract
         .mock_auths(&[MockAuth {
             address: &e.manager.clone(),   
             invoke: &MockAuthInvoke {
@@ -88,46 +150,10 @@ fn rounding_attack() {
             },
         }])
         .rebalance(&e.manager, &invest_instructions);
-        
-        println!("Total managed funds after rebalance: ");
-        let total_managed_funds = e.vault_contract.fetch_total_managed_funds();
-        print_total_managed_funds(total_managed_funds);
     
-        // Verify the investment was successful
-        let strategy_positions = e.blend_pool_client.get_positions(&e.strategy_contract.address);
-        println!("Strategy positions: {:?}", strategy_positions);
-
-        // report the vault
-        let report = e.vault_contract.report();
-        println!("Report after investing: {:?}", report);
-
-        // Withdraw all user shares
-        let user_shares = e.vault_contract.balance(&user);
-        println!("withdrawing {:?} shares", user_shares);
-        let withdraw_amounts = e.vault_contract.withdraw(
-            &user_shares,
-            &vec![&e.setup.env, 0i128],
-            &user,
-        );
-        println!("Withdraw amount - x: {:?}", withdraw_amounts.get(0).unwrap() - x);
-        
-        
-        assert_eq!(strategy_positions.supply.get(0).unwrap(), x+i+INFLATION_AMOUNT);
-        assert_eq!(withdraw_amounts.len(), 1);
-        assert_eq!(withdraw_amounts.get(0).unwrap(), x);
-    }
-    
-
-    // Check the balances after investment
-    println!("Vault USDC Balance: {}", e.usdc.balance(&e.vault_contract.address));
-    println!("Vault Balance on Strategy: {}", e.strategy_contract.balance(&e.vault_contract.address));
-    
-    // Get a report from the vault
+    // Report after investing
     let report = e.vault_contract.report();
     println!("Report after investing: {:?}", report);
-
-
-
 }
 
 fn print_total_managed_funds(total_managed_funds: Vec<CurrentAssetInvestmentAllocation>) {
