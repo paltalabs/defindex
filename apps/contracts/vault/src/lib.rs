@@ -32,7 +32,7 @@ use storage::{
     extend_instance_ttl, get_assets, get_defindex_protocol_fee_rate,
     get_report, get_vault_fee, set_asset,
     set_defindex_protocol_fee_rate, set_defindex_protocol_fee_receiver, set_report,
-    set_soroswap_router, set_total_assets, set_vault_fee, set_is_upgradable
+    set_soroswap_router, set_total_assets, set_vault_fee, set_is_upgradable, update_report_prev_balance
 };
 use strategies::{
     get_strategy_asset, get_strategy_client, get_strategy_struct, invest_in_strategy,
@@ -393,6 +393,11 @@ impl VaultTrait for DeFindexVault {
                                 &strategy_amount_to_unwind,
                                 &from,
                             )?;
+                            update_report_prev_balance(
+                                &e, 
+                                &strategy_allocation.strategy_address, 
+                                -strategy_amount_to_unwind
+                            );
                             cumulative_amount_for_asset = cumulative_amount_for_asset.checked_add(strategy_amount_to_unwind).ok_or(ContractError::Overflow)?;
                         }
                     }
