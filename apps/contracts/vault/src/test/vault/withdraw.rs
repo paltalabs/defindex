@@ -1,11 +1,11 @@
-use soroban_sdk::{testutils::{MockAuth, MockAuthInvoke}, vec as sorobanvec, Address, IntoVal, Map, String, Vec};
+use soroban_sdk::{testutils::{Address as _, MockAuth, MockAuthInvoke}, token::StellarAssetClient, vec as sorobanvec, Address, IntoVal, Map, String, Vec};
 
 // use super::hodl_strategy::StrategyError;
 use crate::{constants::SCALAR_BPS, test::{
     create_defindex_vault, create_fixed_strategy, create_strategy_params_token_0, create_strategy_params_token_1, defindex_vault::{
-        AssetStrategySet, ContractError, CurrentAssetInvestmentAllocation, Instruction, RolesDataKey, Strategy, StrategyAllocation,
+        self, AssetStrategySet, ContractError, CurrentAssetInvestmentAllocation, Instruction, RolesDataKey, Strategy, StrategyAllocation
     }, DeFindexVaultTest
-}};
+}, DeFindexVaultClient};
 
 extern crate std;
 // check that withdraw with negative amount after initialized returns error
@@ -2074,4 +2074,96 @@ fn min_amounts_success(){
     let user_balance_token_1 = test.token_1.balance(&users[0]);
     std::println!("user_balance_token_1: {:?}", user_balance_token_1);
     assert_eq!(result.get(1), Some(user_balance_token_1));
+}
+
+
+#[test]
+fn report_is_ok() {
+    let test = DeFindexVaultTest::setup();
+    test.env.mock_all_auths();
+
+    let strategy_params_token_0 = create_strategy_params_token_0(&test);
+
+    let assets: Vec<AssetStrategySet> = sorobanvec![
+        &test.env,
+        AssetStrategySet {
+            address: test.token_0.address.clone(),
+            strategies: strategy_params_token_0.clone()
+        },
+    ];
+
+    let mut roles: Map<u32, Address> = Map::new(&test.env);
+    roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+    roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+    roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+    roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+    let mut name_symbol: Map<String, String> = Map::new(&test.env);
+    name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+    name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+    let defindex_contract = create_defindex_vault(
+        &test.env,
+        assets,
+        roles,
+        2000u32,
+        test.defindex_protocol_receiver.clone(),
+        2500u32,
+        test.soroswap_router.address.clone(),
+        name_symbol,
+        true
+    );
+
+    let user = Address::generate(&test.env);
+    // mint and deposit
+    let deposit_amount = 10_0_000_000i128;
+    mint_and_deposit(&test, &defindex_contract, &user, deposit_amount, &test.token_0_admin_client, false);
+
+    // Invest the funds using rebalance instead of direct invest
+    invest(&test, &defindex_contract, deposit_amount);
+    
+    // Test with a new user using invest=true flag
+    let new_user = Address::generate(&test.env);
+    
+    // Mint tokens to the new user
+    let new_deposit_amount = 5_0_000_000i128;
+    mint_and_deposit(&test, &defindex_contract, &new_user, new_deposit_amount, &test.token_0_admin_client, true);
+
+    withdraw_all_balance(&test, &defindex_contract, &new_user);
+
+    let reports = defindex_contract.report();
+    std::println!("reports: {:?}", reports);
+
+    assert_eq!(reports.len(), 1);
+    assert_eq!(reports.get(0).unwrap().gains_or_losses, 0i128);
+    assert_eq!(reports.get(0).unwrap().locked_fee, 0i128);
+    assert_eq!(reports.get(0).unwrap().prev_balance, deposit_amount);
+
+    }
+
+fn mint_and_deposit(test: &DeFindexVaultTest, defindex_contract: &defindex_vault::Client, user: &Address, deposit_amount: i128, token_client: &StellarAssetClient, invest: bool) {
+    token_client.mint(&user, &deposit_amount);
+    defindex_contract.deposit(
+        &sorobanvec![&test.env, deposit_amount],
+        &sorobanvec![&test.env, deposit_amount],
+        &user,
+        &invest,
+    );
+}
+
+fn withdraw_all_balance(test: &DeFindexVaultTest, defindex_contract: &defindex_vault::Client, user: &Address) {
+    std::println!("withdraw_all_balance");
+    let balance = defindex_contract.balance(&user);
+    defindex_contract.withdraw(&balance, &sorobanvec![&test.env, 0], &user);
+}
+
+fn invest(test: &DeFindexVaultTest, defindex_contract: &defindex_vault::Client, investment_amount: i128) {
+    let instructions = sorobanvec![
+        &test.env,
+        Instruction::Invest(
+            test.strategy_client_token_0.address.clone(),
+            investment_amount
+        ),
+    ];
+    defindex_contract.rebalance(&test.rebalance_manager, &instructions);
 }
