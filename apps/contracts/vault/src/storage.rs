@@ -147,6 +147,28 @@ pub fn get_report(e: &Env, strategy_address: &Address) -> Report {
     }
 }
 
+/// Updates the previous balance of a strategy's report.
+///
+/// This function adds the specified value to the existing previous balance
+/// in the strategy's report.
+///
+/// # Arguments
+/// * `e` - The environment reference.
+/// * `strategy_address` - The address of the strategy for which to update the report.
+/// * `value` - The value to add to the previous balance.
+///
+/// # Returns
+/// * `Report` - The updated report.
+pub fn update_report_prev_balance(e: &Env, strategy_address: &Address, value: i128) -> Report {
+    let mut report = get_report(e, strategy_address);
+    
+    report.prev_balance = report.prev_balance.checked_add(value)
+        .unwrap_or_else(|| panic_with_error!(e, ContractError::Overflow));
+    
+    set_report(e, strategy_address, &report);
+    report
+}
+
 // Upgradable
 pub fn set_is_upgradable(e: &Env, value: &bool) {
     e.storage().instance().set(&DataKey::Upgradable, value);

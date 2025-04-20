@@ -27,6 +27,7 @@ pub enum ContractError {
     InsufficientAmount = 117,
     NoOptimalAmounts = 118, //this should not happen
     WrongInvestmentLength = 119,
+    
     WrongAssetAddress = 122,
     WrongStrategiesLength = 123,
     AmountOverTotalSupply = 124,
@@ -62,6 +63,9 @@ pub enum ContractError {
     InsufficientOutputAmount = 160,
     ExcessiveInputAmount = 161,
     InvalidFeeBps = 162,
+
+    // Report errors
+    InvalidParameter = 170,
 
     // Add mappings for SoroswapLibraryError
     LibrarySortIdenticalTokens = 190,
