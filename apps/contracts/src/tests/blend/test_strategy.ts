@@ -187,14 +187,14 @@ export async function testBlendStrategy(user?: Keypair) {
       console.log(purple, '----------------------- Harvesting from the Strategy -----------------------')
       console.log(purple, '---------------------------------------------------------------------------')      
       const harvestParams: xdr.ScVal[] = [
-        new Address(blend_keeper.publicKey()).toScVal(),
+        new Address(blend_keeper).toScVal(),
       ]
       const harvestResult = await invokeContract(
         'blend_strategy',
         addressBook,
         'harvest',
         harvestParams,
-        blend_keeper,
+        Keypair.fromPublicKey(blend_keeper),
         false
       );
       const {

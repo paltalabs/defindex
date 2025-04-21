@@ -2,6 +2,7 @@ import { Address, nativeToScVal, xdr } from "@stellar/stellar-sdk";
 import { AddressBook } from "./utils/address_book.js";
 import {
   airdropAccount,
+  airdropAddress,
   deployContract,
   installContract
 } from "./utils/contract.js";
@@ -22,12 +23,12 @@ export async function deployContracts(addressBook: AddressBook) {
   await installContract("defindex_vault", addressBook, loadedConfig.admin);
   await installContract("defindex_factory", addressBook, loadedConfig.admin);
 
-  const defindexReceiver = loadedConfig.getUser("DEFINDEX_RECEIVER_SECRET_KEY");
-  if (network != "mainnet") await airdropAccount(defindexReceiver);
+  const defindexReceiver = loadedConfig.defindexFeeReceiver;
+  if (network != "mainnet") await airdropAddress(defindexReceiver);
 
   const factoryInitParams: xdr.ScVal[] = [
     new Address(loadedConfig.admin.publicKey()).toScVal(),
-    new Address(defindexReceiver.publicKey()).toScVal(),
+    new Address(defindexReceiver).toScVal(),
     nativeToScVal(50, {type: "u32"}),
     nativeToScVal(Buffer.from(addressBook.getWasmHash("defindex_vault"), "hex")),
   ];

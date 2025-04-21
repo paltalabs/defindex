@@ -1,18 +1,13 @@
-import { Address, Asset, Keypair, nativeToScVal, scValToNative, xdr } from "@stellar/stellar-sdk";
+import { Address, Asset, nativeToScVal, scValToNative, xdr } from "@stellar/stellar-sdk";
 import { exit } from "process";
 import { AddressBook } from "./utils/address_book.js";
 import { config } from "./utils/env_config.js";
-import { green, purple, red, yellow } from "./tests/common.js";
+import { green, red, yellow } from "./tests/common.js";
 import {
-  emergencyManager,
-  feeReceiver,
   getCreateDeFindexParams,
   manager,
-  mintToken
 } from "./tests/vault.js";
 import { CreateVaultParams } from "./tests/types.js";
-import { deployDefindexVault } from "./tests/vault/utils.js";
-import { depositToStrategy } from "./tests/strategy.js";
 import { airdropAccount, invokeContract } from "./utils/contract.js";
 import { getTransactionBudget } from "./utils/tx.js";
 

@@ -255,6 +255,19 @@ export async function airdropAccount(user: Keypair) {
   }
 }
 
+export async function airdropAddress(user: string) {
+  try {
+    console.log("Start funding");
+    await loadedConfig.rpc.requestAirdrop(
+      user,
+      loadedConfig.friendbot
+    );
+    console.log("Funded: ", user);
+  } catch (e) {
+    console.log(user, " already funded");
+  }
+}
+
 export async function deploySorobanToken(
   wasmKey: string,
   addressBook: AddressBook,

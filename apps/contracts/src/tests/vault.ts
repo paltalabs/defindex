@@ -22,17 +22,11 @@ import { AssetInvestmentAllocation, CreateVaultParams, TotalManagedFunds } from 
 const network = process.argv[2];
 const loadedConfig = config(network);
 export const admin = loadedConfig.admin;
-export const emergencyManager = loadedConfig.getUser(
-  "DEFINDEX_EMERGENCY_MANAGER_SECRET_KEY"
-);
-export const rebalanceManager = loadedConfig.getUser(
-  "DEFINDEX_REBALANCE_MANAGER_SECRET_KEY"
-);
-export const feeReceiver = loadedConfig.getUser(
-  "DEFINDEX_FEE_RECEIVER_SECRET_KEY"
-);
+export const emergencyManager = loadedConfig.admin;
+export const rebalanceManager = loadedConfig.admin;
+export const manager = loadedConfig.admin;
 
-export const manager = loadedConfig.getUser("DEFINDEX_MANAGER_SECRET_KEY");
+export const feeReceiver = Keypair.fromPublicKey(loadedConfig.defindexFeeReceiver);
 
 
 export type Option<T> = T | undefined;
@@ -60,10 +54,6 @@ export type Instruction =
       amount_in_max: i128;
       deadline: u64;
     };
-
-
-
-
 
 export function mapInstructionsToParams(
   instructions: Instruction[]
