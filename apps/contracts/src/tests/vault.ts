@@ -6,7 +6,7 @@ import {
   xdr,
 } from "@stellar/stellar-sdk";
 import { i128, u64 } from "@stellar/stellar-sdk/contract";
-import { SOROSWAP_ROUTER, USDC_ADDRESS } from "../constants.js";
+import { BLEND_USDC_ADDRESS, SOROSWAP_ROUTER, USDC_ADDRESS } from "../constants.js";
 import { AddressBook } from "../utils/address_book.js";
 import {
   airdropAccount,
@@ -16,7 +16,7 @@ import {
 } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
 import { getTransactionBudget } from "../utils/tx.js";
-import { green } from "./common.js";
+import { green, red, yellow } from "./common.js";
 import { AssetInvestmentAllocation, CreateVaultParams, TotalManagedFunds } from "./types.js";
 
 const network = process.argv[2];
@@ -126,6 +126,26 @@ export async function mintToken(user: Keypair, amount: number, tokenAddress?: Ad
       nativeToScVal(amount, { type: "i128" }),
     ],
     loadedConfig.getUser("SOROSWAP_MINT_SECRET_KEY")
+  );
+}
+/**
+ * Mints a specified amount of tokens for a given user.
+ *
+ * @param user - The Keypair of the user for whom the tokens will be minted.
+ * @param amount - The amount of tokens to mint.
+ * @returns A promise that resolves when the minting operation is complete.
+ */
+export async function mintBlendUSDC(user: Keypair, amount: number,) {
+  console.log('--------------------------------------')
+  await invokeCustomContract(
+
+    BLEND_USDC_ADDRESS.toString(),
+    "mint",
+    [
+      new Address(user.publicKey()).toScVal(),
+      nativeToScVal(amount, { type: "i128" }),
+    ],
+    loadedConfig.getUser("BLEND_DEPLOYER_SECRET_KEY")
   );
 }
 
@@ -600,9 +620,14 @@ export async function rebalanceVault(deployedVault: string, instructions: Instru
       [new Address(manager.publicKey()).toScVal(), params],
       manager
     );
-    console.log(green, 'Rebalance result:', scValToNative(rebalanceResult.returnValue));
-    const budget = getTransactionBudget(rebalanceResult);
-    return { result: rebalanceResult, status: true, ...budget };
+    if(rebalanceResult.status != 'ERROR') {
+      const budget = getTransactionBudget(rebalanceResult);
+      return { result: rebalanceResult, status: true, ...budget };
+    }
+    else {
+      console.log(red, 'Rebalance failed:', rebalanceResult.errorResult.result());
+      throw rebalanceResult.errorResult;
+    }
   } catch (error) {
     console.error("Rebalance failed:", error);
     throw error;
@@ -1007,7 +1032,7 @@ export async function fetchTotalManagedFunds(deployedVault:Address, user:Keypair
     user,
     true
   );
-  const funds = scValToNative(res.result.retval);
+  const funds = scValToNative(res.result.retval) as TotalManagedFunds[];
   return funds;
 }
 

@@ -1,7 +1,7 @@
 import { Address, Asset, Keypair } from "@stellar/stellar-sdk";
 import { exit } from "process";
 import { AddressBook } from "../utils/address_book.js";
-import { airdropAccount } from "../utils/contract.js";
+import { airdropAccount, setBlendTrustline } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
 import { testBlendStrategy } from "./blend/test_strategy.js";
 import { testBlendVault } from "./blend/test_vault.js";
@@ -11,6 +11,7 @@ import {
   emergencyManager,
   feeReceiver,
   manager,
+  mintBlendUSDC,
   mintToken
 } from "./vault.js";
 import { testVaultOneAssetTwoStrategies } from "./vault/one_aset_two_strategies.js";
@@ -70,7 +71,7 @@ const twoAssetOneStrategyParams: CreateVaultParams[] = [
     address: xlmAddress,
     strategies: [
       {
-        name: "Blend xlm Strategy",
+        name: "xlm_blend_strategy_0",
         address: addressBook.getContractId("xlm_blend_strategy_0"),
         paused: false,
       },
@@ -80,7 +81,7 @@ const twoAssetOneStrategyParams: CreateVaultParams[] = [
     address: BLEND_USDC_ADDRESS,
     strategies: [
       {
-        name: "Blend usdc Strategy",
+        name: "usdc_blend_strategy_0",
         address: addressBook.getContractId("usdc_blend_strategy_0"),
         paused: false,
       },
@@ -93,12 +94,12 @@ const twoAssetTwoStrategiesParams: CreateVaultParams[] = [
     address: xlmAddress,
     strategies: [
       {
-        name: "blend xlm Strategy 0",
+        name: "xlm_blend_strategy_0",
         address: addressBook.getContractId("xlm_blend_strategy_0"),
         paused: false,
       },
       {
-        name: "blend xlm Strategy 1",
+        name: "xlm_blend_strategy_1",
         address: addressBook.getContractId("xlm_blend_strategy_1"),
         paused: false,
       },
@@ -108,12 +109,12 @@ const twoAssetTwoStrategiesParams: CreateVaultParams[] = [
     address: BLEND_USDC_ADDRESS,
     strategies: [
       {
-        name: "blend usdc Strategy 0",
+        name: "usdc_blend_strategy_0",
         address: addressBook.getContractId("usdc_blend_strategy_0"),
         paused: false,
       },
       {
-        name: "blend usdc Strategy 1",
+        name: "usdc_blend_strategy_1",
         address: addressBook.getContractId("usdc_blend_strategy_1"),
         paused: false,
       },
@@ -126,12 +127,14 @@ const twoAssetTwoStrategiesParams: CreateVaultParams[] = [
 async function prepareEnvironment() {
   if (network !== "mainnet") {
     await airdropAccount(testUser);
+    await setBlendTrustline({ source: testUser, tokenSymbol: 'USDC' });
     await airdropAccount(admin);
     await airdropAccount(emergencyManager);
     await airdropAccount(feeReceiver);
     await airdropAccount(manager);
     await airdropAccount(testUser);
-    await mintToken(testUser, 987654321)
+    //await mintToken(testUser, 99_0_000_000);
+    await mintBlendUSDC(testUser, 99_0_000_000);
   }
 }
 
