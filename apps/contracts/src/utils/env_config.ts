@@ -14,7 +14,8 @@ interface NetworkConfig {
   horizon_rpc_url: string;
   soroban_rpc_url: string;
   soroban_network_passphrase: string;
-  blend_keeper: Keypair;
+  blend_keeper: string;
+  defindex_fee_receiver: string;
 }
 
 interface Config {
@@ -29,7 +30,8 @@ class EnvConfig {
   passphrase: string;
   friendbot: string | undefined;
   admin: Keypair;
-  blendKeeper: Keypair;
+  blendKeeper: string;
+  defindexFeeReceiver: string;
 
   constructor(
     rpc: rpc.Server,
@@ -37,7 +39,8 @@ class EnvConfig {
     passphrase: string,
     friendbot: string | undefined,
     admin: Keypair,
-    blendKeeper: Keypair
+    blendKeeper: string,
+    defindexFeeReceiver: string
   ) {
     this.rpc = rpc;
     this.horizonRpc = horizonRpc;
@@ -45,6 +48,7 @@ class EnvConfig {
     this.friendbot = friendbot;
     this.admin = admin;
     this.blendKeeper = blendKeeper;
+    this.defindexFeeReceiver = defindexFeeReceiver;
   }
 
   /**
@@ -58,14 +62,23 @@ class EnvConfig {
     );
     const configs: Config = JSON.parse(fileContents);
 
-    let rpc_url, horizon_rpc_url, friendbot_url, passphrase, blendKeeper;
+    let rpc_url, horizon_rpc_url, friendbot_url, passphrase, blendKeeper, defindexFeeReceiver;
 
     const networkConfig = configs.networkConfig.find(
       (config) => config.network === network
     );
     if (!networkConfig) {
+      console.error("You must provide a valid network name");
       throw new Error(`Network configuration for '${network}' not found`);
     }
+    const config_fields: string[] = [
+      "network",
+      "horizon_rpc_url",
+      "soroban_rpc_url",
+      "soroban_network_passphrase",
+      "blend_keeper",
+      "defindex_fee_receiver",
+    ];
 
     if (network === "mainnet") {
       passphrase = networkConfig.soroban_network_passphrase;
@@ -73,41 +86,48 @@ class EnvConfig {
       horizon_rpc_url = networkConfig.horizon_rpc_url;
       friendbot_url = undefined;
       blendKeeper = networkConfig.blend_keeper;
+      defindexFeeReceiver = networkConfig.defindex_fee_receiver;
     } else {
       rpc_url = networkConfig.soroban_rpc_url;
       horizon_rpc_url = networkConfig.horizon_rpc_url;
       friendbot_url = networkConfig.friendbot_url;
       passphrase = networkConfig.soroban_network_passphrase;
-      blendKeeper = process.env.BLEND_KEEPER_SECRET_KEY
-        ? Keypair.fromSecret(process.env.BLEND_KEEPER_SECRET_KEY)
-        : undefined;
+      blendKeeper = networkConfig.blend_keeper;
+      defindexFeeReceiver = networkConfig.defindex_fee_receiver;
+      config_fields.push("friendbot_url");
     }
 
     const admin = process.env.ADMIN_SECRET_KEY;
-    if (
-      rpc_url === undefined ||
-      horizon_rpc_url === undefined ||
-      (network != "mainnet" && friendbot_url === undefined) ||
-      passphrase === undefined ||
-      admin === undefined ||
-      admin === "" ||
-      blendKeeper === undefined ||
-      blendKeeper === null
-    ) {
-      throw new Error(
-        "Error: Configuration is missing required fields. Please check your .env or configs.jsonfile."
-      );
+
+    for (const field of config_fields) {
+      if (!(field in networkConfig)) {
+        console.error(
+          `Missing field '${field}' in network configuration for '${network}'`
+        );
+        throw new Error(
+          `Missing field '${field}' in network configuration for '${network}'`
+        );
+      }
+      if (networkConfig[field as keyof NetworkConfig].length < 1) {
+        console.error(
+          `Field '${field}' in network configuration for '${network}' must have an acceptable value`
+        );
+        throw new Error(
+          `Field '${field}' in network configuration for '${network}' must have an acceptable value`
+        );
+      }
     }
 
     const allowHttp = network === "standalone";
 
     return new EnvConfig(
-      new rpc.Server(rpc_url, { allowHttp }),
+      new rpc.Server(rpc_url!, { allowHttp }),
       new Horizon.Server(horizon_rpc_url, { allowHttp }),
       passphrase,
       friendbot_url,
-      Keypair.fromSecret(admin),
-      blendKeeper
+      Keypair.fromSecret(admin!),
+      blendKeeper,
+      defindexFeeReceiver,
     );
   }
 
