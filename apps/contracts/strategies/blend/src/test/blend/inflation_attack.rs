@@ -8,7 +8,7 @@ use crate::BlendStrategyClient;
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{vec, Address, Env};
+use soroban_sdk::{vec, Address, Env, Bytes};
 
 #[test]
 fn inflation_attack() {
@@ -167,7 +167,7 @@ fn inflation_attack() {
     // we choose 5000 because is equal to (victim_usdc_balance / 2)
     assert_eq!((victim_usdc_balance / 2), 5000* scalar_7);
 
-    strategy_client.harvest(&keeper);
+    strategy_client.harvest(&keeper, &None::<Bytes>);
 
     e.as_contract(&strategy, || {
         let reserve = storage::get_strategy_reserves(&e);

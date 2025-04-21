@@ -1,6 +1,6 @@
 #![no_std]
 use soroban_sdk::{
-    contract, contractimpl, token::Client as TokenClient, Address, Env, String, Val, Vec,
+    contract, contractimpl, token::Client as TokenClient, Address, Bytes, Env, String, Val, Vec,
 };
 
 mod balance;
@@ -58,7 +58,7 @@ impl DeFindexStrategyTrait for HodlStrategy {
         Ok(read_balance(&e, from))
     }
 
-    fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
+    fn harvest(e: Env, from: Address, _data: Option<Bytes>) -> Result<(), StrategyError> {
         extend_instance_ttl(&e);
 
         event::emit_harvest(&e, String::from_str(&e, STARETEGY_NAME), 0i128, from);

@@ -2,7 +2,7 @@ extern crate std;
 use std::println;
 
 use soroban_sdk::{ vec as sorobanvec, Address, Map, String, Vec, IntoVal,
-testutils::{MockAuth, MockAuthInvoke, Address as _}};
+testutils::{MockAuth, MockAuthInvoke, Address as _}, Bytes};
 
 use crate::test::{create_defindex_vault, create_fixed_strategy_params_token_0, create_strategy_params_token_0, defindex_vault::{ AssetStrategySet, ContractError, Instruction, Report, RolesDataKey}, DeFindexVaultTest, EnvTestUtils};
 use crate::storage;
@@ -88,7 +88,7 @@ fn rebalance_invest(){
 
   test.env.jump_time(ONE_DAY_IN_SECONDS*365);
 
-  test.fixed_strategy_client_token_0.harvest(&defindex_contract.address);
+  test.fixed_strategy_client_token_0.harvest(&defindex_contract.address, &None::<Bytes>);
 
   let instruction_amount_1 = 500_0_000_000i128;
 
@@ -193,7 +193,7 @@ fn rebalance_unwind(){
   println!("strategy balance before harvest: {}", test.fixed_strategy_client_token_0.balance(&defindex_contract.address));
   // Simulate earning on the strategy
   // It should be 10% of the instruction amount
-  test.fixed_strategy_client_token_0.harvest(&defindex_contract.address);
+  test.fixed_strategy_client_token_0.harvest(&defindex_contract.address, &None::<Bytes>);
 
   println!("strategy balance after harvest:  {}", test.fixed_strategy_client_token_0.balance(&defindex_contract.address));
 
