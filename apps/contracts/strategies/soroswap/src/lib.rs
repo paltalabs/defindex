@@ -1,7 +1,7 @@
 #![no_std]
 use soroban_sdk::{
     auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation},
-    contract, contractimpl, vec, Address, Env, IntoVal, String, Symbol, Val, Vec,
+    contract, contractimpl, vec, Address, Bytes, Env, IntoVal, String, Symbol, Val, Vec,
 };
 
 mod soroswap_pair;
@@ -120,7 +120,7 @@ impl DeFindexStrategyTrait for SoroswapAdapter {
         Ok(0)
     }
 
-    fn harvest(e: Env, _from: Address) -> Result<(), StrategyError> {
+    fn harvest(e: Env, _from: Address, _data: Option<Bytes>) -> Result<(), StrategyError> {
         extend_instance_ttl(&e);
 
         Ok(())

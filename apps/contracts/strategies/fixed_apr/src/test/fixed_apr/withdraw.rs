@@ -3,7 +3,7 @@ use crate::{calculate_yield, test::FixAprStrategyTest};
 use defindex_strategy_core::StrategyError;
 use soroban_sdk::testutils::Ledger;
 use soroban_sdk::token::StellarAssetClient;
-
+use soroban_sdk::Bytes;
 #[test]
 fn withdraw() {
     let test = FixAprStrategyTest::setup();
@@ -47,7 +47,7 @@ fn withdraw_with_harvest() {
         .ledger()
         .set_timestamp(test.env.ledger().timestamp() + one_year_in_seconds);
 
-    strategy.harvest(&users[0]);
+    strategy.harvest(&users[0], &None::<Bytes>);
 
     let expected_reward = calculate_yield(amount, 1000u32, one_year_in_seconds);
     let user_balance_after_harvest = strategy.balance(&users[0]);
