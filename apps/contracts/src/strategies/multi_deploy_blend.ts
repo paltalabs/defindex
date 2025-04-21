@@ -8,6 +8,7 @@ import {
   installContract
 } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
+import { BLEND_USDC_ADDRESS } from "../constants.js";
 
 export async function multiDeployBlendStrategies(quantity: number, asset_key: string) {
   if (network == "standalone") {
@@ -22,8 +23,6 @@ export async function multiDeployBlendStrategies(quantity: number, asset_key: st
   console.log("publicKey", loadedConfig.admin.publicKey());
   let balance = account.balances.filter((item) => item.asset_type == "native");
   console.log("Current Admin account balance:", balance[0].balance);
-
-
   
   console.log("-------------------------------------------------------");
   console.log("Installing Blend Strategy");
@@ -35,25 +34,25 @@ export async function multiDeployBlendStrategies(quantity: number, asset_key: st
   const soroswapRouter: string  = othersAddressBook.getContractId("soroswap_router");
   
   const network_passphrase = (
-    ()=> {
+    () => {
       switch (network) {
         case "testnet":
           return Networks.TESTNET;
-          case "mainnet":
-            return Networks.PUBLIC;
-            default:
-              console.error("Invalid network:", network, "It should be either testnet or mainnet");
-              exit(1);
-            }
-          }
-        )();
+        case "mainnet":
+          return Networks.PUBLIC;
+        default:
+          console.error("Invalid network:", network, "It should be either testnet or mainnet");
+          exit(1);
+      }
+    }
+  )();
         
   const init_args = (
     ()=> {
       switch (asset_key) {
         case "usdc":
           return {
-            address: othersAddressBook.getContractId("blend_usdc"),
+            address: BLEND_USDC_ADDRESS,
             claim_id: xdr.ScVal.scvVec([
               nativeToScVal(3, { type: "u32" }),
             ])
@@ -88,7 +87,7 @@ export async function multiDeployBlendStrategies(quantity: number, asset_key: st
     ]);
   
     const args: xdr.ScVal[] = [
-      new Address(init_args.address).toScVal(),
+      new Address(init_args.address.toString()).toScVal(),
       initArgs
     ];
   
@@ -96,12 +95,12 @@ export async function multiDeployBlendStrategies(quantity: number, asset_key: st
     console.log(green, `Contract Key: ${asset_symbol}_blend_strategy_${i}`);
     console.log(green, `WASM Key: blend_strategy`);
     console.log(green, `Args:`, JSON.stringify({
-      asset_address: init_args.address,
+      asset_address: init_args.address.toString(),
       blend_pool: blendFixedXlmUsdcPool,
-      reserve_id: 0,
       blnd_token: blndToken,
       soroswap_router: soroswapRouter,
-      blend_keeper: loadedConfig.blendKeeper
+      reward_threshold: 100,
+      blend_keeper: loadedConfig.blendKeeper,
     }, null, 2));
     await deployContract(
       `${asset_symbol}_blend_strategy_${i}`,
