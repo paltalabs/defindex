@@ -229,7 +229,7 @@ pub(crate) fn create_blend_pool(
         r_two: 0,
         r_three: 0,
         util: 0,
-        collateral_cap: 170_141_183_460_469_231_731_687_303_715_884_105_727,
+        supply_cap: 170_141_183_460_469_231_731_687_303_715_884_105_727,
         enabled: true,
     };
     pool_client.queue_set_reserve(&usdc.address, &reserve_config);
@@ -398,7 +398,7 @@ pub mod mockpool {
         pub r_two: u32,  // the R2 value in the interest rate formula scaled expressed in 7 decimals
         pub r_three: u32, // the R3 value in the interest rate formula scaled expressed in 7 decimals
         pub reactivity: u32, // the reactivity constant for the reserve scaled expressed in 7 decimals
-        pub collateral_cap: i128, // the total amount of underlying tokens that can be used as collateral
+        pub supply_cap: i128, // the total amount of underlying tokens that can be used as collateral
         pub enabled: bool,        // the flag of the reserve
     }
 
