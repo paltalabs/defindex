@@ -1,5 +1,4 @@
 import { Address, Asset, nativeToScVal, Networks, xdr } from "@stellar/stellar-sdk";
-// import { BLEND_POOL_TESTNET, BLEND_TOKEN_TESTNET, SOROSWAP_ROUTER } from "../constants.js";
 import { BLEND_POOL, BLEND_TOKEN, SOROSWAP_ROUTER } from "../constants.js";
 import { AddressBook } from "../utils/address_book.js";
 import {
@@ -16,9 +15,21 @@ export async function deployBlendStrategy(addressBook: AddressBook) {
     return;
   };
   if (network != "mainnet") await airdropAccount(loadedConfig.admin);
+
   let account = await loadedConfig.horizonRpc.loadAccount(
     loadedConfig.admin.publicKey()
-  );
+  ).catch((e: any) => {
+    if (e.response && e.response.status === 404) {
+      console.error("Account not found. Please check that the public key has enough funds.");
+      throw new Error("Account not found");
+    } else {
+      console.error("An unexpected error occurred:", e);
+      throw e;
+    }
+  }).then((account) => {
+    return account;
+  });
+
   console.log("publicKey", loadedConfig.admin.publicKey());
   let balance = account.balances.filter((item) => item.asset_type == "native");
   console.log("Current Admin account balance:", balance[0].balance);
@@ -43,13 +54,6 @@ export async function deployBlendStrategy(addressBook: AddressBook) {
   }
   const xlmAddress = new Address(xlmContractId);
   const xlmScVal = xlmAddress.toScVal();
-
-  // CLAIM IDs
-  // For XLM we have 
-  // * `reserve_token_ids` - The ids of the reserves to claiming emissions for
-  const claim_ids = xdr.ScVal.scvVec([
-    nativeToScVal(1, { type: "u32" }),
-  ]);
 
   const initArgs = xdr.ScVal.scvVec([
     new Address(BLEND_POOL).toScVal(), // blend_pool_address: The address of the Blend pool where assets are deposited
@@ -76,9 +80,6 @@ export async function deployBlendStrategy(addressBook: AddressBook) {
 const network = process.argv[2];
 const loadedConfig = config(network);
 const addressBook = AddressBook.loadFromFile(network);
-console.log("🚀 ~ addressBook:", addressBook)
-const othersAddressBook = AddressBook.loadFromFile(network, "../../public");
-console.log("🚀 ~ othersAddressBook:", othersAddressBook)
 
 try {
   await deployBlendStrategy(addressBook);

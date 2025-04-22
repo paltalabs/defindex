@@ -57,7 +57,17 @@ export async function installContract(
     auth: [],
   });
   addressBook.writeToFile();
-  await invoke(op, source, false);
+  try { 
+    const result = await invoke(op, source, false);
+    if (result.status == 'ERROR'){
+      console.log("Error installing contract:", result.errorResult.result());
+      throw new Error("Error installing contract");
+    }
+
+  } catch (error:any) {
+    throw new Error(error);
+  }
+  
 }
 
 export async function deployContract(
