@@ -74,7 +74,6 @@ class EnvConfig {
     const config_fields: string[] = [
       "network",
       "horizon_rpc_url",
-      "soroban_rpc_url",
       "soroban_network_passphrase",
       "blend_keeper",
       "defindex_fee_receiver",
@@ -95,6 +94,7 @@ class EnvConfig {
       blendKeeper = networkConfig.blend_keeper;
       defindexFeeReceiver = networkConfig.defindex_fee_receiver;
       config_fields.push("friendbot_url");
+      config_fields.push("soroban_rpc_url");
     }
 
     const admin = process.env.ADMIN_SECRET_KEY;
