@@ -227,19 +227,20 @@ fn rounding_attack() {
 
     // Withdraw
     let strategy_balance = print_strategy_balance(&setup, &setup.victim, "Before withdraw");
-    let usdc_balance = print_usdc_balance(&setup, &setup.victim, "Before withdraw");
+    let user_usdc_balance_before = print_usdc_balance(&setup, &setup.victim, "Before withdraw");
     
     let withdraw_amount = 100;
     withdraw_from_strategy(&setup, &setup.victim, withdraw_amount);
     print_strategy_reserves(&setup);
     get_underlying_value(&setup, &setup.victim, "After withdraw");
     let strategy_balance_after = print_strategy_balance(&setup, &setup.victim, "After withdraw");
-    let usdc_balance_after = print_usdc_balance(&setup, &setup.victim, "After withdraw");
+    let user_usdc_balance_after = print_usdc_balance(&setup, &setup.victim, "After withdraw");
     println!("Strategy balance difference: {:?}", strategy_balance_after - strategy_balance);
-    println!("USDC balance difference: {:?}", usdc_balance_after - usdc_balance);
+    println!("USDC balance difference: {:?}", user_usdc_balance_after - user_usdc_balance_before);
 
     // Strategy balance difference should be equal to the withdraw amount
-    assert_eq!(strategy_balance -strategy_balance_after, withdraw_amount);
+    assert_eq!(user_usdc_balance_after - user_usdc_balance_before, withdraw_amount);
+    assert_eq!( strategy_balance - strategy_balance_after, withdraw_amount); // its failing with 152
 }
 
 fn print_strategy_balance(e: &BlendStrategyTestSetup, user: &Address, label: &str) -> i128 {
