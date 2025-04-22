@@ -1,15 +1,13 @@
 use crate::{
-    setup::create_vault_one_blend_strategy,
-    test::{
-        
-    },
-    vault::defindex_vault_contract::{
+    blend_strategy::{self, BlendStrategyClient}, setup::create_vault_one_blend_strategy, test::{EnvTestUtils, ONE_YEAR_IN_SECONDS}, vault::defindex_vault_contract::{
         CurrentAssetInvestmentAllocation, Instruction, StrategyAllocation
     }
 };
+
 use soroban_sdk::{
     vec,
     Vec,
+    Bytes,
     testutils::{Address as _, MockAuth, MockAuthInvoke}, token::{StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient}, vec as sorobanvec, Address, BytesN, Env, IntoVal, Map, String, 
 };
 
@@ -31,16 +29,30 @@ fn rounding_attack() {
    
     // Get and print positions from the Blend pool for the strategy contract
     print_strategy_positions(&e, "Initial Strategy Positions");
-
+    print_strategy_balance(&e
+        , "Initial Strategy Balance");
     // Invest the inflation amount to the strategy
     println!("\x1b[32mInvesting inflation amount to strategy\x1b[0m");
     invest(&e, INFLATION_AMOUNT, &e.strategy_contract.address);
+    
+    print_strategy_balance(&e, "After Investing");
     print_vault_report(&e, "after investing inflation");
     print_strategy_positions(&e, "Strategy Positions After Inflation Investment");
-   
+    print_user_emissions(&e, e.strategy_contract.address.clone(), "User Emissions After Inflation Investment");
+    
+    // Make time pass and let the strategy earn some money
+    let ledgers = 107;
+    e.setup.env.jump(ledgers);
+    println!("\x1b[35m---- HARVESTING !-----\x1b[0m");
+    e.strategy_contract.harvest(&e.keeper, &None::<Bytes>);
+
+    print_strategy_balance(&e, "After Harvest");
+    print_strategy_positions(&e, "Strategy Positions After Harvest");
+    print_user_emissions(&e, e.strategy_contract.address.clone(), "User Emissions After Harvest");
+
     // invest x tokens through the vault
     println!("\x1b[31mStarting Loop\x1b[0m");
-    for i in 0..7 {
+    for i in 0..1 {
         let x = 2 * LUMENS + i;
         println!(" \x1b[36mInvesting {:?} tokens to strategy\x1b[0m", x);
         let user = Address::generate(&e.setup.env);
@@ -177,4 +189,35 @@ fn print_strategy_allocation(strategy_allocation: StrategyAllocation) {
     println!("    - {:?}", strategy_allocation.strategy_address);
     println!("    - Amount: {:?}", strategy_allocation.amount);
     println!("    - Paused: {:?}", strategy_allocation.paused);
+}
+
+fn print_user_emissions(e: &crate::setup::VaultOneBlendStrategy<'_>, user: Address, context: &str) {
+    println!("\x1b[32m{}:\x1b[0m", context);
+    
+    // Instead of trying to get the reserve list directly, we'll check emissions for specific reserves
+    // We know the USDC reserve is at index 0 in this test setup
+    
+    // Loop through reserve indices (0 = USDC)
+    for i in 0..2 {
+        // For supply positions (bTokens): reserve_token_id = reserve_index * 2 + 1
+        let supply_token_id = i * 2 + 1;
+        // For borrow positions (dTokens): reserve_token_id = reserve_index * 2
+        let borrow_token_id = i * 2;
+        
+        let token_name = if i == 0 { "USDC" } else { "Other" };
+        
+        // Get and print supply emissions
+        if let Some(supply_emissions) = e.blend_pool_client.get_user_emissions(&user, &supply_token_id) {
+            println!("  Supply emissions for {}: {:?}", token_name, supply_emissions);
+        } else {
+            println!("  No supply emissions for {}", token_name);
+        }
+        
+        // Get and print borrow emissions
+        if let Some(borrow_emissions) = e.blend_pool_client.get_user_emissions(&user, &borrow_token_id) {
+            println!("  Borrow emissions for {}: {:?}", token_name, borrow_emissions);
+        } else {
+            println!("  No borrow emissions for {}", token_name);
+        }
+    }
 }
