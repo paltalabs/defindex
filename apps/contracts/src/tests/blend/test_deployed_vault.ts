@@ -97,7 +97,7 @@ export async function testBlendVault() {
 
 
   const initialAmount = 1_0_000_000;
-  let blendVaultAddress: string = addressBook.getContractId("blend_vault");
+  let blendVaultAddress: string = addressBook.getContractId("xlm_blend_vault");
   
   let deposit_status: boolean;
   let deposit_instructions: number = 0;

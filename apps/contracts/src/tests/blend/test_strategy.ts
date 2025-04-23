@@ -15,8 +15,7 @@ const green = '\x1b[32m%s\x1b[0m';
 
 export async function testBlendStrategy(user?: Keypair) {
   // Create and fund a new user account if not provided
-  const testUserPrivate = process.env.TEST_USER;
-  const newUser = Keypair.fromSecret(testUserPrivate!);
+  const newUser = loadedConfig.getUser('TEST_USER') ? loadedConfig.getUser('TEST_USER') : Keypair.random();
   console.log(green, '----------------------- New account created -------------------------')
   console.log(green, 'Public key: ',newUser.publicKey())
   console.log(green, '---------------------------------------------------------------------')
@@ -58,7 +57,7 @@ export async function testBlendStrategy(user?: Keypair) {
         new Address(newUser.publicKey()).toScVal(),
       ]
       const depositResult = await invokeContract(
-        'blend_strategy',
+        'xlm_blend_strategy',
         addressBook,
         'deposit',
         depositParams,
@@ -101,7 +100,7 @@ export async function testBlendStrategy(user?: Keypair) {
         new Address(newUser.publicKey()).toScVal(),
       ]
       const balanceResult = await invokeContract(
-        'blend_strategy',
+        'xlm_blend_strategy',
         addressBook,
         'balance',
         balanceParams,
@@ -136,7 +135,7 @@ export async function testBlendStrategy(user?: Keypair) {
       console.log(purple, '---------------------------------------------------------------------------')
       
       const balanceScVal = await invokeContract(
-        'blend_strategy',
+        'xlm_blend_strategy',
         addressBook,
         'balance',
         [new Address(newUser.publicKey()).toScVal()],
@@ -154,7 +153,7 @@ export async function testBlendStrategy(user?: Keypair) {
         new Address(newUser.publicKey()).toScVal(),
       ]
       const withdrawResult = await invokeContract(
-        'blend_strategy',
+        'xlm_blend_strategy',
         addressBook,
         'withdraw',
         withdrawParams,
@@ -188,13 +187,14 @@ export async function testBlendStrategy(user?: Keypair) {
       console.log(purple, '---------------------------------------------------------------------------')      
       const harvestParams: xdr.ScVal[] = [
         new Address(blend_keeper).toScVal(),
+        nativeToScVal(null),
       ]
       const harvestResult = await invokeContract(
-        'blend_strategy',
+        'xlm_blend_strategy',
         addressBook,
         'harvest',
         harvestParams,
-        Keypair.fromPublicKey(blend_keeper),
+        loadedConfig.getUser('BLEND_KEEPER_SECRET_KEY'),
         false
       );
       const {

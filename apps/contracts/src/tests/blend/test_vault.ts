@@ -30,16 +30,16 @@ export async function testBlendVault(user?: Keypair) {
   }
 
   console.log("Setting Emergengy Manager, Fee Receiver and Manager accounts");
-  const emergencyManager = loadedConfig.getUser("DEFINDEX_EMERGENCY_MANAGER_SECRET_KEY");
+  const emergencyManager = loadedConfig.getUser("ADMIN_SECRET_KEY");
   if (network !== "mainnet") await airdropAccount(emergencyManager);
 
-  const feeReceiver = loadedConfig.getUser("DEFINDEX_FEE_RECEIVER_SECRET_KEY");
+  const feeReceiver = loadedConfig.getUser("ADMIN_SECRET_KEY");
   if (network !== "mainnet") await airdropAccount(feeReceiver);
 
-  const manager = loadedConfig.getUser("DEFINDEX_MANAGER_SECRET_KEY");
+  const manager = loadedConfig.getUser("ADMIN_SECRET_KEY");
   if (network !== "mainnet") await airdropAccount(manager);
 
-  const blendStrategyAddress = addressBook.getContractId("blend_strategy");
+  const blendStrategyAddress = addressBook.getContractId("xlm_blend_strategy");
 
   const xlm = Asset.native();
   let xlmContractId: string;
