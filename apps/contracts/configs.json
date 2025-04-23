@@ -4,8 +4,8 @@
       "network": "mainnet",
       "horizon_rpc_url": "https://horizon.stellar.org",
       "soroban_network_passphrase": "Public Global Stellar Network ; September 2015",
-      "defindex_fee_receiver": "GA3FFCILTZFZED674WACS5U37EDTPCQ6ABQYKRDWA55BURA5S2RCZWMJ",
-      "blend_keeper": "GA3FFCILTZFZED674WACS5U37EDTPCQ6ABQYKRDWA55BURA5S2RCZWMJ"
+      "defindex_fee_receiver": "",
+      "blend_keeper": ""
     },
     {
       "network": "standalone",
@@ -27,8 +27,8 @@
       "horizon_rpc_url": "https://horizon-testnet.stellar.org",
       "soroban_rpc_url": "https://soroban-testnet.stellar.org/",
       "soroban_network_passphrase": "Test SDF Network ; September 2015",
-      "defindex_fee_receiver": "GA3FFCILTZFZED674WACS5U37EDTPCQ6ABQYKRDWA55BURA5S2RCZWMJ",
-      "blend_keeper": "GA3FFCILTZFZED674WACS5U37EDTPCQ6ABQYKRDWA55BURA5S2RCZWMJ"
+      "defindex_fee_receiver": "GDOFDSMFRPOYTOLWODK4O6BZTGDJ4GRHLHX5THXN4TIFE2SXASQYFLPJ",
+      "blend_keeper": "GDOFDSMFRPOYTOLWODK4O6BZTGDJ4GRHLHX5THXN4TIFE2SXASQYFLPJ"
     }
   ]
 }
