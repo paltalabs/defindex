@@ -1,4 +1,5 @@
 #![no_std]
+use constants::SCALAR_9;
 use reserves::StrategyReserves;
 use soroban_sdk::{
     token::TokenClient,
@@ -10,6 +11,7 @@ mod constants;
 mod reserves;
 mod soroswap;
 mod storage;
+use soroban_fixed_point_math::{i128, FixedPoint};
 
 use storage::{extend_instance_ttl, Config};
 
@@ -266,8 +268,15 @@ impl DeFindexStrategyTrait for BlendStrategy {
         from.require_auth();
 
         let config = storage::get_config(&e)?;
+        let reserve = reserves::get_strategy_reserve_updated(&e, &config);
 
-        let b_tokens_burnt = blend_pool::withdraw(&e, &to, &amount, &config)?;
+        // Lets compute the amount to withdraw based on the current b_rate
+        let b_tokens_to_be_burnt = amount.fixed_div_ceil(reserve.b_rate, SCALAR_9)
+            .ok_or(StrategyError::ArithmeticError)?;
+        let adjusted_amount = b_tokens_to_be_burnt.fixed_mul_ceil(reserve.b_rate, SCALAR_9)
+            .ok_or(StrategyError::ArithmeticError)?;
+        
+        let b_tokens_burnt = blend_pool::withdraw(&e, &to, &adjusted_amount, &config)?;
         let (vault_shares, reserves) = reserves::withdraw(
             &e,
             &from,
