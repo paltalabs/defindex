@@ -11,18 +11,36 @@ import { CreateVaultParams } from "./tests/types.js";
 import { airdropAccount, invokeContract } from "./utils/contract.js";
 import { getTransactionBudget } from "./utils/tx.js";
 
-const args = process.argv.slice(2);
-const network = args[0];
-
+const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
 const othersAddressBook = AddressBook.loadFromFile(network, "../../public");
 
+const asset = process.argv[3];
+const allowedAssets = ["XLM", "USDC"];
+
+if (!asset || !allowedAssets.includes(asset.toUpperCase())) {
+  console.log("Please provide a valid asset symbol");
+  console.log("Allowed assets are: \n - XLM \n - USDC");
+  exit(1);
+}
 
 const loadedConfig = config(network);
 const xlmAddress = new Address(
   Asset.native().contractId(loadedConfig.passphrase)
 );
-const blend_strategy = addressBook.getContractId("blend_strategy");
+let assetAddress: Address;
+switch (asset.toUpperCase()) {
+  case "XLM":
+    assetAddress = xlmAddress;
+    break;
+  case "USDC":
+    assetAddress = new Address(othersAddressBook.getContractId("blend_pool_usdc"));
+    break;
+  default:
+    console.log("Invalid asset symbol");
+    exit(1);
+}
+const blend_strategy = addressBook.getContractId(`${asset.toLowerCase()}_blend_strategy`);
 const soroswap_router = othersAddressBook.getContractId("soroswap_router");
 
 if (!blend_strategy || !soroswap_router) {
@@ -33,7 +51,7 @@ if (!blend_strategy || !soroswap_router) {
 };
 const params: CreateVaultParams[] = [
   {
-    address: xlmAddress,
+    address: assetAddress,
     strategies: [
       {
         name: "Blend Strategy",
@@ -111,7 +129,7 @@ export async function deployVault(
     );
     const address = scValToNative(result.returnValue);
     const budget = getTransactionBudget(result);
-    addressBook.setContractId('blend_vault', address);
+    addressBook.setContractId(`${asset.toLowerCase()}_blend_vault`, address);
     return { address: address, ...budget };
   } catch (error) {
     console.error("Error deploying vault:", error);

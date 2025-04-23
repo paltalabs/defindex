@@ -7,8 +7,21 @@ import {
   installContract
 } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
+const network = process.argv[2];
+const asset = process.argv[3];
+const loadedConfig = config(network);
+const addressBook = AddressBook.loadFromFile(network);
+const othersAddressBook = AddressBook.loadFromFile(network, "../../public");
 
-export async function deployBlendStrategy(addressBook: AddressBook) {
+
+const allowedAssets = ["XLM", "USDC"];
+
+export async function deployBlendStrategy(addressBook: AddressBook, asset_symbol?: string) {
+  if (!asset_symbol || !allowedAssets.includes(asset_symbol.toUpperCase())) {
+    console.log("Please provide a valid asset symbol");
+    console.log("Allowed assets are: \n - XLM \n - USDC");
+    return;
+  }
   if (network == "standalone") {
     console.log("Blend Strategy can only be tested in testnet or mainnet");
     console.log("Since it requires Blend protocol to be deployed");
@@ -53,7 +66,9 @@ export async function deployBlendStrategy(addressBook: AddressBook) {
       return;
   }
   const xlmAddress = new Address(xlmContractId);
+  const usdcAddress = new Address(othersAddressBook.getContractId("blend_pool_usdc"));
   const xlmScVal = xlmAddress.toScVal();
+  const usdcScVal = usdcAddress.toScVal();
 
   const initArgs = xdr.ScVal.scvVec([
     new Address(BLEND_POOL).toScVal(), // blend_pool_address: The address of the Blend pool where assets are deposited
@@ -64,12 +79,12 @@ export async function deployBlendStrategy(addressBook: AddressBook) {
   ]);
 
   const args: xdr.ScVal[] = [
-    xlmScVal,
+    asset_symbol.toUpperCase() == "USDC" ? usdcScVal : xlmScVal, // asset: The asset to be managed by the strategy (XLM or USDC)
     initArgs
   ];
 
   await deployContract(
-    "blend_strategy",
+    `${asset_symbol.toLowerCase()}_blend_strategy`,
     "blend_strategy",
     addressBook,
     args,
@@ -77,12 +92,8 @@ export async function deployBlendStrategy(addressBook: AddressBook) {
   );
 }
 
-const network = process.argv[2];
-const loadedConfig = config(network);
-const addressBook = AddressBook.loadFromFile(network);
-
 try {
-  await deployBlendStrategy(addressBook);
+  await deployBlendStrategy(addressBook, asset);
 } catch (e) {
   console.error(e);
 }
