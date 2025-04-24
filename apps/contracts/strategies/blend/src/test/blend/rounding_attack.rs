@@ -1,5 +1,7 @@
 #![cfg(test)]
 use crate::blend_pool::{BlendPoolClient, Request};
+use crate::constants::SCALAR_9;
+use crate::reserves::StrategyReserves;
 use crate::storage::{self};
 use crate::utils;
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
@@ -7,7 +9,7 @@ use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTes
 use crate::{reserves, shares_to_underlying, BlendStrategyClient};
 use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{vec, Address, Env, Bytes};
+use soroban_sdk::{vec, Address, Bytes, Env, Vec};
 use crate::test::std::println;
 
 const SCALAR_7: i128 = 10000000;
@@ -265,26 +267,125 @@ fn rounding_attack() {
     assert_eq!( strategy_balance - strategy_balance_after, withdraw_amount); // its failing with 152
 }
 
+
+
+fn check_withdraw(optimal_w_amount:i128, expected_w_amount:i128) -> bool {
+    let res = optimal_w_amount >= expected_w_amount;
+    res
+}
+fn check_deposit(optimal_d_amount:i128, expected_d_amount:i128) -> bool {    let res = optimal_d_amount <= expected_d_amount;
+    res
+}
+fn test_optimal_deposit_amounts(setup: &BlendStrategyTestSetup, reserves_list: &Vec<StrategyReserves>, test_amount: i128){
+    for reserves in reserves_list {
+         // Calculate expected values
+         let b_tokens_minted = test_amount * SCALAR_9 / reserves.b_rate;
+         let shares_minted = reserves.b_tokens_to_shares_down(b_tokens_minted).unwrap();
+         let optimal_b_tokens = (shares_minted * reserves.total_b_tokens - 1) / reserves.total_shares + 1;
+         let expected_optimal_deposit = (optimal_b_tokens * reserves.b_rate - 1) / SCALAR_9 + 1;
+         
+         // Get actual optimal deposit
+         let optimal_deposit = utils::calculate_optimal_deposit_amount(test_amount, &reserves).unwrap();
+         
+         println!("Deposit amount: {}", test_amount);
+         println!("B tokens that would be minted: {}", b_tokens_minted);
+         println!("Shares that would be minted: {}", shares_minted);
+         println!("Optimal b tokens: {}", optimal_b_tokens);
+         println!("Expected optimal deposit: {}", expected_optimal_deposit);
+         println!("Actual optimal deposit: {}", optimal_deposit);
+         println!("Difference: {}", optimal_deposit - test_amount);
+         println!("---");
+       
+         // The optimal deposit should match our manual calculation
+         assert_eq!(optimal_deposit, expected_optimal_deposit);          
+
+        let optimal_deposit_amount = setup.env.as_contract(&setup.strategy, || {
+            utils::calculate_optimal_deposit_amount(test_amount, &reserves)
+        }).expect("failed to calculate amount");
+        println!("Test amount: {:?}", test_amount);
+        println!("Optimal deposit amount: {:?}", optimal_deposit_amount);
+        assert!(check_deposit(optimal_deposit_amount, test_amount));
+    }
+
+}
+fn test_optimal_withdraw_amounts(setup: &BlendStrategyTestSetup, reserves_list: &Vec<StrategyReserves>, test_amount: i128) {
+    for reserves in reserves_list {
+        // Calculate expected values
+        let b_tokens_burnt = ((test_amount * SCALAR_9 - 1) / reserves.b_rate) + 1;
+        let shares_burnt = reserves.b_tokens_to_shares_down(b_tokens_burnt).unwrap();
+        let optimal_b_tokens = (shares_burnt * reserves.total_b_tokens - 1) / reserves.total_shares + 1;
+        let expected_optimal_withdraw = (optimal_b_tokens * reserves.b_rate - 1) / SCALAR_9 + 1;
+
+        // Get actual optimal Witdraw
+        let optimal_withdraw = utils::calculate_optimal_withdraw_amount(test_amount, &reserves).unwrap();
+
+        println!("Witdraw amount: {}", test_amount);
+        println!("B tokens that would be burnt: {}", b_tokens_burnt);
+        println!("Shares that would be burnt: {}", shares_burnt);
+        println!("Optimal b tokens: {}", optimal_b_tokens);
+        println!("Expected optimal Witdraw: {}", expected_optimal_withdraw);
+        println!("Actual optimal Witdraw: {}", optimal_withdraw);
+        println!("Difference: {}", optimal_withdraw - test_amount);
+        println!("---");
+
+        // The optimal Witdraw should match our manual calculation
+        assert_eq!(optimal_withdraw, expected_optimal_withdraw);     
+
+        let optimal_withdraw_amount = setup.env.as_contract(&setup.strategy, || {
+            utils::calculate_optimal_withdraw_amount(test_amount, &reserves)
+        }).expect("failed to calculate amount");
+        println!("Test amount: {:?}", test_amount);
+        println!("Optimal withdraw amount: {:?}", optimal_withdraw_amount);
+        assert!(check_withdraw(optimal_withdraw_amount, test_amount));
+    }
+}
 #[test]
 fn calculate_optimal_deposit_amount() {
     let setup = setup_blend_strategy();
 
-    let config = setup.env.as_contract(&setup.strategy, || storage::get_config(&setup.env).expect("Failed to get config"));
-    let deposit_amount = 100 * SCALAR_7;
-    let optimal_deposit_amount = setup.env.as_contract(&setup.strategy, || utils::calculate_optimal_deposit_amount(&setup.env, deposit_amount, &config));
-    println!("Expected deposit amount: {:?}", deposit_amount);
-    println!("Optimal deposit amount: {:?}", optimal_deposit_amount);
+    let reserves_list = vec![
+        &setup.env,
+        StrategyReserves { total_shares: 2000, total_b_tokens: 2000, b_rate: 1000000000000 },
+        StrategyReserves { total_shares: 1000002000, total_b_tokens: 1000002000, b_rate: 1000000000000 },
+        StrategyReserves { total_shares: 1000002000, total_b_tokens: 1002977244, b_rate: 75962518665704 },
+        StrategyReserves { total_shares: 1013126950, total_b_tokens: 1016141244, b_rate: 75962518665704 },
+        StrategyReserves { total_shares: 1013113987, total_b_tokens: 1016128243, b_rate: 75962518665704 },
+        StrategyReserves { total_shares: 1013113988, total_b_tokens: 1016128244, b_rate: 75962518665704 },
+    ];
+    let test_amounts = vec![
+        &setup.env,
+        1*SCALAR_7,              // 1 token
+        10 * SCALAR_7,         // 10 tokens
+        100 * SCALAR_7,        // 100 tokens
+        1000 * SCALAR_7,       // 1000 tokens
+        10000 * SCALAR_7,      // 10000 tokens
+    ];
+    for amount in test_amounts {
+        test_optimal_deposit_amounts(&setup, &reserves_list, amount);
+    }
 }
-
 #[test]
 fn calculate_optimal_withdraw_amount(){
     let setup = setup_blend_strategy();
-    let config = setup.env.as_contract(&setup.strategy, || storage::get_config(&setup.env).expect("Failed to get config"));
-    let reserves = setup.env.as_contract(&setup.strategy, || reserves::get_strategy_reserve_updated(&setup.env, &config));
-    let withdraw_amount = 100 * SCALAR_7;
-    let optimal_withdraw_amount = setup.env.as_contract(&setup.strategy, || utils::calculate_optimal_withdraw_amount(withdraw_amount, &reserves));
-    println!("Expected withdraw amount: {:?}", withdraw_amount);
-    println!("Optimal withdraw amount: {:?}", optimal_withdraw_amount);
+    let reserves_list = vec![
+        &setup.env,
+        StrategyReserves { total_shares: 2000, total_b_tokens: 2000, b_rate: 1000000000000 },
+        StrategyReserves { total_shares: 1000002000, total_b_tokens: 1000002000, b_rate: 1000000000000 },
+        StrategyReserves { total_shares: 1000002000, total_b_tokens: 1002977244, b_rate: 75962518665704 },
+        StrategyReserves { total_shares: 1013126950, total_b_tokens: 1016141244, b_rate: 75962518665704 },
+        StrategyReserves { total_shares: 1013113987, total_b_tokens: 1016128243, b_rate: 75962518665704 },
+    ];
+    let test_amounts = vec![
+            &setup.env,
+            1*SCALAR_7,              // 1 token
+            10 * SCALAR_7,         // 10 tokens
+            100 * SCALAR_7,        // 100 tokens
+            1000 * SCALAR_7,       // 1000 tokens
+            10000 * SCALAR_7,      // 10000 tokens
+    ];
+    for amount in test_amounts {
+        test_optimal_withdraw_amounts(&setup, &reserves_list, amount);
+    }
 }
 
 fn print_b_rate(e: &BlendStrategyTestSetup) -> i128 {
