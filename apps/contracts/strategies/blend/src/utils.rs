@@ -34,7 +34,6 @@ pub fn shares_to_underlying(shares: i128, reserves: StrategyReserves) -> Result<
 }
 
 pub fn calculate_optimal_deposit_amount(
-  e: &Env,
   deposit_amount: i128,
   reserves: &StrategyReserves,
 ) -> Result<i128, StrategyError> {

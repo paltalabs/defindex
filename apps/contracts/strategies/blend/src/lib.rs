@@ -170,7 +170,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         let config = storage::get_config(&e)?;
         let reserves = reserves::get_strategy_reserve_updated(&e, &config);
-        let optimal_deposit_amount = calculate_optimal_deposit_amount(&e, amount, &reserves)?;
+        let optimal_deposit_amount = calculate_optimal_deposit_amount(amount, &reserves)?;
 
         // transfer tokens from the vault to this (strategy) contract
         TokenClient::new(&e, &config.asset).transfer(&from, &e.current_contract_address(), &optimal_deposit_amount);
