@@ -204,14 +204,19 @@ fn rounding_attack() {
 
     // Initial setup with inflation deposit
     const INFLATION_AMOUNT: i128 = 1001;
-    mint_and_deposit_to_strategy(&setup, &setup.admin, INFLATION_AMOUNT);
+    mint_and_deposit_to_strategy(&setup, &setup.admin, 2*INFLATION_AMOUNT);
     
     print_strategy_reserves(&setup);
     get_underlying_value(&setup, &setup.admin, "Initial state");
 
     // Victim deposits 100 USDC
+    print_usdc_balance(&setup, &setup.victim, "Before victim deposit");
     mint_and_deposit_to_strategy(&setup, &setup.victim, 100 * SCALAR_7);
+    print_usdc_balance(&setup, &setup.victim, "After victim deposit");
+    
     print_strategy_reserves(&setup);
+    print_b_rate(&setup);
+
     get_underlying_value(&setup, &setup.victim, "After victim deposit");
     
     borrow_from_blend_pool(&setup, &setup.admin, &setup.usdc_token, 50_000* SCALAR_7);
@@ -220,16 +225,31 @@ fn rounding_attack() {
     print_strategy_reserves(&setup);
     get_underlying_value(&setup, &setup.victim, "After inflation");
     
+    print_b_rate(&setup);
+
+
     // Harvest
+    println!("\x1b[32mHarvesting...\x1b[0m");
     setup.strategy_client.harvest(&setup.keeper, &None::<Bytes>);
     print_strategy_reserves(&setup);
     get_underlying_value(&setup, &setup.victim, "After harvest");
-
+    // Victim deposits 100 USDC
+    print_usdc_balance(&setup, &setup.victim, "Before victim deposit");
+    let deposit_amount = 100 * SCALAR_7;
+    mint_and_deposit_to_strategy(&setup, &setup.victim, deposit_amount);
+    print_usdc_balance(&setup, &setup.victim, "After victim deposit");
+    print_strategy_reserves(&setup);
+    let b_rate = print_b_rate(&setup);
+    let expected_b_tokens_minted = deposit_amount * b_rate / SCALAR_7;
+    println!("Expected b tokens minted: {:?}", expected_b_tokens_minted);
+    let expected_shares_minted = expected_b_tokens_minted * SCALAR_7 / b_rate;
+    println!("Expected shares minted: {:?}", expected_shares_minted);
+    
     // Withdraw
     let strategy_balance = print_strategy_balance(&setup, &setup.victim, "Before withdraw");
     let user_usdc_balance_before = print_usdc_balance(&setup, &setup.victim, "Before withdraw");
     
-    let withdraw_amount = 100;
+    let withdraw_amount = 1000000;
     withdraw_from_strategy(&setup, &setup.victim, withdraw_amount);
     print_strategy_reserves(&setup);
     get_underlying_value(&setup, &setup.victim, "After withdraw");
@@ -241,6 +261,12 @@ fn rounding_attack() {
     // Strategy balance difference should be equal to the withdraw amount
     assert_eq!(user_usdc_balance_after - user_usdc_balance_before, withdraw_amount);
     assert_eq!( strategy_balance - strategy_balance_after, withdraw_amount); // its failing with 152
+}
+
+fn print_b_rate(e: &BlendStrategyTestSetup) -> i128 {
+    let b_rate = e.blend_pool_client.get_reserve(&e.usdc_token).data.b_rate;
+    println!("B rate: {:?}", b_rate);
+    return b_rate;
 }
 
 fn print_strategy_balance(e: &BlendStrategyTestSetup, user: &Address, label: &str) -> i128 {

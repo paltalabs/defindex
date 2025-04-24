@@ -1,5 +1,5 @@
 #![no_std]
-use constants::SCALAR_9;
+use constants::{SCALAR_12, SCALAR_9};
 use reserves::StrategyReserves;
 use soroban_sdk::{
     token::TokenClient,
@@ -172,11 +172,13 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         let config = storage::get_config(&e)?;
 
+        let optimal_deposit_amount = calculate_optimal_deposit_amount(&e, amount, &config)?;
+
         // transfer tokens from the vault to this (strategy) contract
-        TokenClient::new(&e, &config.asset).transfer(&from, &e.current_contract_address(), &amount);
+        TokenClient::new(&e, &config.asset).transfer(&from, &e.current_contract_address(), &optimal_deposit_amount);
 
         // supplies the asset to the Blend pool and mints bTokens
-        let b_tokens_minted = blend_pool::supply(&e, &from, &amount, &config)?;
+        let b_tokens_minted = blend_pool::supply(&e, &from, &optimal_deposit_amount, &config)?;
 
         // Keeping track of the total deposited amount and the total bTokens owned by the caller (vault)
         let (vault_shares, reserves) =
@@ -268,15 +270,10 @@ impl DeFindexStrategyTrait for BlendStrategy {
         from.require_auth();
 
         let config = storage::get_config(&e)?;
-        let reserve = reserves::get_strategy_reserve_updated(&e, &config);
+        let optimal_withdraw_amount = calculate_optimal_withdraw_amount(&e, amount, &config)?;
 
-        // Lets compute the amount to withdraw based on the current b_rate
-        let b_tokens_to_be_burnt = amount.fixed_div_ceil(reserve.b_rate, SCALAR_9)
-            .ok_or(StrategyError::ArithmeticError)?;
-        let adjusted_amount = b_tokens_to_be_burnt.fixed_mul_ceil(reserve.b_rate, SCALAR_9)
-            .ok_or(StrategyError::ArithmeticError)?;
-        
-        let b_tokens_burnt = blend_pool::withdraw(&e, &to, &adjusted_amount, &config)?;
+        let b_tokens_burnt = blend_pool::withdraw(&e, &to, &optimal_withdraw_amount, &config)?;
+
         let (vault_shares, reserves) = reserves::withdraw(
             &e,
             &from,
@@ -391,5 +388,52 @@ fn shares_to_underlying(shares: i128, reserves: StrategyReserves) -> Result<i128
     let vault_b_tokens = reserves.shares_to_b_tokens_down(shares)?;
     // Use the b_rate to convert bTokens to underlying assets
     reserves.b_tokens_to_underlying_down(vault_b_tokens)
+}
+
+pub fn calculate_optimal_deposit_amount(
+    e: &Env,
+    deposit_amount: i128,
+    config: &Config,
+) -> Result<i128, StrategyError> {
+    let reserves = reserves::get_strategy_reserve_updated(e, &config);
+
+    // Step 1: Calculate the amount of bTokens that would be minted based on the deposit_amount
+    let b_tokens_minted = deposit_amount * SCALAR_9 / reserves.b_rate;
+
+    // If the reserves are empty, the optimal_b_token amount is equal to the b_tokens_minted
+    let optimal_b_token_amount = if reserves.total_shares == 0 {
+        b_tokens_minted
+    } else {
+        // Step 2: Calculate the amount of shares that would be minted based on the bTokens minted
+        let shares_minted = reserves.b_tokens_to_shares_down(b_tokens_minted)?;
+        if shares_minted == 0 {
+            return Err(StrategyError::InvalidSharesMinted);
+        }
+        // Step 3: Based on the shares to-be minted, calculate the optimal bToken amount
+        // Note: This should round up, as the shares calculation round down
+        (shares_minted * reserves.total_b_tokens - 1) / reserves.total_shares + 1
+    };
+
+    if optimal_b_token_amount <= 0 {
+        return Err(StrategyError::BTokensAmountBelowMin);
+    }
+
+    // Step 4: Now calculate the optimal deposit amount to deposit to Blend. This should also round up
+    let optimal_deposit_amt = (optimal_b_token_amount * reserves.b_rate - 1) / SCALAR_9 + 1;
+
+    Ok(optimal_deposit_amt)
+}
+
+
+pub fn calculate_optimal_withdraw_amount(
+    e: &Env,
+    withdraw_amount: i128,
+    config: &Config,
+) -> Result<i128, StrategyError> {
+    let reserves = reserves::get_strategy_reserve_updated(e, &config);
+    let b_tokens_burnt = withdraw_amount * SCALAR_9 / reserves.b_rate;
+    let shares_burnt = reserves.b_tokens_to_shares_up(b_tokens_burnt)?;
+    let optimal_withdraw_amount = (shares_burnt * reserves.b_rate - 1) / SCALAR_9 + 1;
+    Ok(optimal_withdraw_amount)
 }
 mod test;
