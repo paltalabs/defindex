@@ -263,6 +263,24 @@ fn rounding_attack() {
     assert_eq!( strategy_balance - strategy_balance_after, withdraw_amount); // its failing with 152
 }
 
+#[test]
+fn calculate_optimal_deposit_amount() {
+    let setup = setup_blend_strategy();
+    let config = storage::get_config(&setup.env).expect("Failed to get config");
+    let reserves = reserves::get_strategy_reserve_updated(&setup.env, &config);
+    let deposit_amount = 100 * SCALAR_7;
+
+    let reserves = reserves::StrategyReserves{
+        total_shares: 0,
+        total_b_tokens: 0,
+        b_rate: 0,
+    };
+    setup.env.as_contract(&setup.strategy, || {
+        let optimal_deposit_amount = setup.strategy.calculate_optimal_deposit_amount(deposit_amount, &reserves);
+        println!("Optimal deposit amount: {:?}", optimal_deposit_amount);
+    });
+}
+
 fn print_b_rate(e: &BlendStrategyTestSetup) -> i128 {
     let b_rate = e.blend_pool_client.get_reserve(&e.usdc_token).data.b_rate;
     println!("B rate: {:?}", b_rate);
