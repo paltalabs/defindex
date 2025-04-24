@@ -14,6 +14,7 @@ const SCALAR_7: i128 = 10000000;
 
 /// Sets up a basic environment for testing rounding attacks against the Blend strategy
 /// Returns a tuple with all the necessary components for testing
+#[allow(dead_code)]
 struct BlendStrategyTestSetup<'a> {
     env: Env,
     admin: Address,
@@ -269,16 +270,21 @@ fn calculate_optimal_deposit_amount() {
     let setup = setup_blend_strategy();
 
     let config = setup.env.as_contract(&setup.strategy, || storage::get_config(&setup.env).expect("Failed to get config"));
-    //let reserves = reserves::get_strategy_reserve_updated(&setup.env, &config);
     let deposit_amount = 100 * SCALAR_7;
-
-    /* let reserves = reserves::StrategyReserves{
-        total_shares: 0,
-        total_b_tokens: 0,
-        b_rate: 0,
-    }; */
     let optimal_deposit_amount = setup.env.as_contract(&setup.strategy, || utils::calculate_optimal_deposit_amount(&setup.env, deposit_amount, &config));
+    println!("Expected deposit amount: {:?}", deposit_amount);
     println!("Optimal deposit amount: {:?}", optimal_deposit_amount);
+}
+
+#[test]
+fn calculate_optimal_withdraw_amount(){
+    let setup = setup_blend_strategy();
+    let config = setup.env.as_contract(&setup.strategy, || storage::get_config(&setup.env).expect("Failed to get config"));
+    let reserves = setup.env.as_contract(&setup.strategy, || reserves::get_strategy_reserve_updated(&setup.env, &config));
+    let withdraw_amount = 100 * SCALAR_7;
+    let optimal_withdraw_amount = setup.env.as_contract(&setup.strategy, || utils::calculate_optimal_withdraw_amount(withdraw_amount, &reserves));
+    println!("Expected withdraw amount: {:?}", withdraw_amount);
+    println!("Optimal withdraw amount: {:?}", optimal_withdraw_amount);
 }
 
 fn print_b_rate(e: &BlendStrategyTestSetup) -> i128 {
