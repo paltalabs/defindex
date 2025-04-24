@@ -137,40 +137,6 @@ fn setup_blend_strategy<'a>() -> BlendStrategyTestSetup<'a> {
     }
 }
 
-fn print_strategy_reserves(e: &BlendStrategyTestSetup) {
-    e.env.as_contract(&e.strategy, || {
-        let reserves = storage::get_strategy_reserves(&e.env);
-        println!("Reserves: {:?}", reserves);
-    });
-}
-
-fn get_underlying_value(e: &BlendStrategyTestSetup, user: &Address, label: &str) {
-    e.env.as_contract(&e.strategy, || {
-        let config = storage::get_config(&e.env).expect("Failed to get config");
-        let reserves = reserves::get_strategy_reserve_updated(&e.env, &config);
-        let user_shares = storage::get_vault_shares(&e.env, user);
-        
-        if reserves.total_shares > 0 {
-            let one_share_value = shares_to_underlying(1, reserves.clone())
-                .expect("Failed to convert one share to underlying");
-            
-            if user_shares > 0 {
-                let underlying = shares_to_underlying(user_shares, reserves.clone())
-                    .expect("Failed to convert shares to underlying");
-                println!("{} - One share value: {}, User shares: {}, Underlying value: {}", 
-                         label, one_share_value, user_shares, underlying);
-            } else {
-                println!("{} - One share value: {}, User has no shares", 
-                         label, one_share_value);
-            }
-        } else if user_shares > 0 {
-            println!("{} - User shares: {} (no share value available)", 
-                     label, user_shares);
-        } else {
-            println!("{} - User has no shares", label);
-        }
-    });
-}
 
 /// Borrows tokens from the Blend pool
 ///
@@ -212,7 +178,7 @@ fn rounding_attack() {
     
     print_strategy_reserves(&setup);
     get_underlying_value(&setup, &setup.admin, "Initial state");
-
+    
     // Victim deposits 100 USDC
     print_usdc_balance(&setup, &setup.victim, "Before victim deposit");
     mint_and_deposit_to_strategy(&setup, &setup.victim, 100 * SCALAR_7);
@@ -220,7 +186,7 @@ fn rounding_attack() {
     
     print_strategy_reserves(&setup);
     print_b_rate(&setup);
-
+    
     get_underlying_value(&setup, &setup.victim, "After victim deposit");
     
     borrow_from_blend_pool(&setup, &setup.admin, &setup.usdc_token, 50_000* SCALAR_7);
@@ -231,7 +197,7 @@ fn rounding_attack() {
     
     print_b_rate(&setup);
 
-
+    
     // Harvest
     println!("\x1b[32mHarvesting...\x1b[0m");
     setup.strategy_client.harvest(&setup.keeper, &None::<Bytes>);
@@ -261,7 +227,7 @@ fn rounding_attack() {
     let user_usdc_balance_after = print_usdc_balance(&setup, &setup.victim, "After withdraw");
     println!("Strategy balance difference: {:?}", strategy_balance_after - strategy_balance);
     println!("USDC balance difference: {:?}", user_usdc_balance_after - user_usdc_balance_before);
-
+    
     // Strategy balance difference should be equal to the withdraw amount
     assert_eq!(user_usdc_balance_after - user_usdc_balance_before, withdraw_amount);
     assert_eq!( strategy_balance - strategy_balance_after, withdraw_amount); // its failing with 152
@@ -295,10 +261,10 @@ fn test_optimal_deposit_amounts(setup: &BlendStrategyTestSetup, reserves_list: &
          println!("Actual optimal deposit: {}", optimal_deposit);
          println!("Difference: {}", optimal_deposit - test_amount);
          println!("---");
-       
+         
          // The optimal deposit should match our manual calculation
          assert_eq!(optimal_deposit, expected_optimal_deposit);          
-
+         
         let optimal_deposit_amount = setup.env.as_contract(&setup.strategy, || {
             utils::calculate_optimal_deposit_amount(test_amount, &reserves)
         }).expect("failed to calculate amount");
@@ -306,16 +272,17 @@ fn test_optimal_deposit_amounts(setup: &BlendStrategyTestSetup, reserves_list: &
         println!("Optimal deposit amount: {:?}", optimal_deposit_amount);
         assert!(check_deposit(optimal_deposit_amount, test_amount));
     }
-
+    
 }
 fn test_optimal_withdraw_amounts(setup: &BlendStrategyTestSetup, reserves_list: &Vec<StrategyReserves>, test_amount: i128) {
     for reserves in reserves_list {
+        print_reserves(&reserves);
         // Calculate expected values
         let b_tokens_burnt = ((test_amount * SCALAR_9 - 1) / reserves.b_rate) + 1;
-        let shares_burnt = reserves.b_tokens_to_shares_down(b_tokens_burnt).unwrap();
-        let optimal_b_tokens = (shares_burnt * reserves.total_b_tokens - 1) / reserves.total_shares + 1;
-        let expected_optimal_withdraw = (optimal_b_tokens * reserves.b_rate - 1) / SCALAR_9 + 1;
-
+        let shares_burnt = reserves.b_tokens_to_shares_up(b_tokens_burnt).unwrap();
+        let optimal_b_tokens = (shares_burnt * reserves.total_b_tokens) / reserves.total_shares;
+        let expected_optimal_withdraw = (optimal_b_tokens * reserves.b_rate) / SCALAR_9;
+        
         // Get actual optimal Witdraw
         let optimal_withdraw = utils::calculate_optimal_withdraw_amount(test_amount, &reserves).unwrap();
 
@@ -327,7 +294,7 @@ fn test_optimal_withdraw_amounts(setup: &BlendStrategyTestSetup, reserves_list: 
         println!("Actual optimal Witdraw: {}", optimal_withdraw);
         println!("Difference: {}", optimal_withdraw - test_amount);
         println!("---");
-
+        
         // The optimal Witdraw should match our manual calculation
         assert_eq!(optimal_withdraw, expected_optimal_withdraw);     
 
@@ -336,6 +303,7 @@ fn test_optimal_withdraw_amounts(setup: &BlendStrategyTestSetup, reserves_list: 
         }).expect("failed to calculate amount");
         println!("Test amount: {:?}", test_amount);
         println!("Optimal withdraw amount: {:?}", optimal_withdraw_amount);
+
         assert!(check_withdraw(optimal_withdraw_amount, test_amount));
     }
 }
@@ -359,7 +327,7 @@ fn calculate_optimal_deposit_amount() {
         100 * SCALAR_7,        // 100 tokens
         1000 * SCALAR_7,       // 1000 tokens
         10000 * SCALAR_7,      // 10000 tokens
-    ];
+        ];
     for amount in test_amounts {
         test_optimal_deposit_amounts(&setup, &reserves_list, amount);
     }
@@ -376,7 +344,7 @@ fn calculate_optimal_withdraw_amount(){
         StrategyReserves { total_shares: 1013113987, total_b_tokens: 1016128243, b_rate: 75962518665704 },
     ];
     let test_amounts = vec![
-            &setup.env,
+        &setup.env,
             1*SCALAR_7,              // 1 token
             10 * SCALAR_7,         // 10 tokens
             100 * SCALAR_7,        // 100 tokens
@@ -386,6 +354,46 @@ fn calculate_optimal_withdraw_amount(){
     for amount in test_amounts {
         test_optimal_withdraw_amounts(&setup, &reserves_list, amount);
     }
+}
+
+// Helper functions
+fn print_reserves(reserves: &StrategyReserves) {
+    println!("Reserves: {:?}", reserves);
+}
+
+fn print_strategy_reserves(e: &BlendStrategyTestSetup) {
+    e.env.as_contract(&e.strategy, || {
+        let reserves = storage::get_strategy_reserves(&e.env);
+        print_reserves(&reserves);
+    });
+}
+
+fn get_underlying_value(e: &BlendStrategyTestSetup, user: &Address, label: &str) {
+    e.env.as_contract(&e.strategy, || {
+        let config = storage::get_config(&e.env).expect("Failed to get config");
+        let reserves = reserves::get_strategy_reserve_updated(&e.env, &config);
+        let user_shares = storage::get_vault_shares(&e.env, user);
+        
+        if reserves.total_shares > 0 {
+            let one_share_value = shares_to_underlying(1, reserves.clone())
+                .expect("Failed to convert one share to underlying");
+            
+            if user_shares > 0 {
+                let underlying = shares_to_underlying(user_shares, reserves.clone())
+                    .expect("Failed to convert shares to underlying");
+                println!("{} - One share value: {}, User shares: {}, Underlying value: {}", 
+                         label, one_share_value, user_shares, underlying);
+            } else {
+                println!("{} - One share value: {}, User has no shares", 
+                         label, one_share_value);
+            }
+        } else if user_shares > 0 {
+            println!("{} - User shares: {} (no share value available)", 
+                     label, user_shares);
+        } else {
+            println!("{} - User has no shares", label);
+        }
+    });
 }
 
 fn print_b_rate(e: &BlendStrategyTestSetup) -> i128 {
