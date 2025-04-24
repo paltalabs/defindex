@@ -136,11 +136,9 @@ pub fn deposit(
     e: &Env,
     from: &Address,
     b_tokens_amount: i128,
-    config: &Config,
+    reserves: &StrategyReserves,
 ) -> Result<(i128, StrategyReserves), StrategyError> {
-    
-    let mut reserves = get_strategy_reserve_updated(e, &config);
-
+    let mut reserves = reserves.clone();
     if b_tokens_amount <= 0 {
         return Err(StrategyError::BTokensAmountBelowMin);
     }

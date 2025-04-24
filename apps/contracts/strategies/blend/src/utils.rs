@@ -36,10 +36,8 @@ pub fn shares_to_underlying(shares: i128, reserves: StrategyReserves) -> Result<
 pub fn calculate_optimal_deposit_amount(
   e: &Env,
   deposit_amount: i128,
-  config: &Config,
+  reserves: &StrategyReserves,
 ) -> Result<i128, StrategyError> {
-  let reserves = reserves::get_strategy_reserve_updated(e, &config);
-
   // Step 1: Calculate the amount of bTokens that would be minted based on the deposit_amount
   let b_tokens_minted = deposit_amount * SCALAR_9 / reserves.b_rate;
 

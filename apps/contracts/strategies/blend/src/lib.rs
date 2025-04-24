@@ -169,7 +169,8 @@ impl DeFindexStrategyTrait for BlendStrategy {
         from.require_auth();
 
         let config = storage::get_config(&e)?;
-        let optimal_deposit_amount = calculate_optimal_deposit_amount(&e,amount, &config)?;
+        let reserves = reserves::get_strategy_reserve_updated(&e, &config);
+        let optimal_deposit_amount = calculate_optimal_deposit_amount(&e, amount, &reserves)?;
 
         // transfer tokens from the vault to this (strategy) contract
         TokenClient::new(&e, &config.asset).transfer(&from, &e.current_contract_address(), &optimal_deposit_amount);
@@ -183,7 +184,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
                 &e, 
                 &from, 
                 b_tokens_minted,
-                &config
+                &reserves
             )?;
         
         // Calculates the new amount of underlying assets invested in the Blend Vault, owned by the caller (vault)
