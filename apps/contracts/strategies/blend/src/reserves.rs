@@ -224,7 +224,7 @@ pub fn withdraw(
     let share_amount = reserves.b_tokens_to_shares_up(b_tokens_amount)?;
 
     if reserves.total_shares < share_amount || reserves.total_b_tokens < b_tokens_amount {
-        return Err(StrategyError::InsufficientBalance);
+        return Err(StrategyError::DebugError3);
     }
 
     reserves.total_shares = reserves
@@ -237,7 +237,7 @@ pub fn withdraw(
         .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     if share_amount > vault_shares {
-        return Err(StrategyError::InsufficientBalance);
+        return Err(StrategyError::DebugError4);
     }
 
     vault_shares = vault_shares

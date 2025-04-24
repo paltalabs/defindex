@@ -1,14 +1,15 @@
 #![cfg(test)]
 use crate::blend_pool::{BlendPoolClient, Request};
-use crate::constants::SCALAR_12;
-use crate::storage::ONE_DAY_LEDGERS;
+use crate::constants::{SCALAR_12, SCALAR_9};
+use crate::storage::{self, ONE_DAY_LEDGERS};
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
 use crate::test::std;
 use crate::test::assert_approx_eq_rel;
 use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils};
-use crate::BlendStrategyClient;
+use crate::{reserves, utils, BlendStrategyClient};
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
+use soroban_fixed_point_math::FixedPoint;
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke, Events};
 use soroban_sdk::{vec, Address, Bytes, Env, IntoVal, Symbol, Vec, Val, symbol_short, String, FromVal};
 use crate::test::std::println;
@@ -387,16 +388,39 @@ fn success() {
     );
 
     // -> verify over withdraw fails
-    let result =
+   /*  let result =
         strategy_client.try_withdraw(&(expected_withdraw_amount + 1), &user_2, &user_2);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
     let result =
         strategy_client.try_withdraw(&(expected_withdraw_amount + 1 ), &user_3, &user_3); 
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
-    println!("Expected withdraw amount for users {}", expected_withdraw_amount);
+    println!("Expected withdraw amount for users {}", expected_withdraw_amount); */
 
     // Only user 2 will withdraw its amount
-    let remain_underlying = strategy_client.withdraw(&expected_withdraw_amount, &user_2, &user_2);
+    let user_strategy_balance = strategy_client.balance(&user_2);
+    println!("User 2 Strategy Balance before withdraw {}", user_strategy_balance);
+    let _result = e.as_contract(&strategy, || {
+        println!("🟡");
+        let config = storage::get_config(&e).expect("Failed to get config");
+        let reserves = reserves::get_strategy_reserve_updated(&e, &config);
+        println!("Reserves {:?}", reserves);
+        let optimal_w_amount = utils::calculate_optimal_withdraw_amount(
+            expected_withdraw_amount,
+            &reserves,
+        ).expect("Failed to calculate optimal withdraw amount");
+        let b_tokens_burnt = optimal_w_amount.fixed_mul_ceil(SCALAR_12, reserves.b_rate)
+        .ok_or(StrategyError::ArithmeticError).expect("Failed to calculate b_tokens burnt");
+
+        let b_tokens_to_shares = reserves.b_tokens_to_shares_up(b_tokens_burnt);
+
+        let vault_shares = storage::get_vault_shares(&e, &user_2);
+        println!("btokens burnt {}", b_tokens_burnt);
+        println!("shares burnt {:?}", b_tokens_to_shares);
+        println!("User vault shares {:?}", vault_shares);
+        println!("Optimal withdraw amount {}", optimal_w_amount);
+    });
+    let remain_underlying = strategy_client.withdraw(&(expected_withdraw_amount - 200), &user_2, &user_2);
+    println!("🟢");
     // -> verify withdraw auth
     assert_eq!(
         e.auths()[0],

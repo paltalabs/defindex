@@ -160,8 +160,8 @@ pub fn withdraw(
         .get_positions(&e.current_contract_address())
         .supply
         .try_get(config.reserve_id)
-        .map_err(|_| StrategyError::InsufficientBalance)? // Convert Result to Error
-        .ok_or_else(|| StrategyError::InsufficientBalance)?; // Convert Option to Error if None
+        .map_err(|_| StrategyError::DebugError1)? // Convert Result to Error
+        .ok_or_else(|| StrategyError::DebugError2)?; // Convert Option to Error if None
 
     let requests: Vec<Request> = vec![
         &e,
