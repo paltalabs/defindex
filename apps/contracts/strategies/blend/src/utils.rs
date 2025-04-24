@@ -1,7 +1,7 @@
 use defindex_strategy_core::StrategyError;
 use soroban_fixed_point_math::FixedPoint;
 
-use crate::{constants::SCALAR_9, reserves::StrategyReserves};
+use crate::{constants::{SCALAR_12, SCALAR_9}, reserves::StrategyReserves};
 
 
 /// Converts a given amount of shares to the corresponding amount of underlying assets.
@@ -69,12 +69,12 @@ pub fn calculate_optimal_withdraw_amount(
   withdraw_amount: i128,
   reserves: &StrategyReserves
 ) -> Result<i128, StrategyError> {
-  let b_tokens_burnt = withdraw_amount.fixed_mul_ceil(SCALAR_9, reserves.b_rate)
+  let b_tokens_burnt = withdraw_amount.fixed_mul_ceil(SCALAR_12, reserves.b_rate)
     .ok_or(StrategyError::ArithmeticError)?;
   let shares_burnt = reserves.b_tokens_to_shares_up(b_tokens_burnt)?;
   let optimal_b_tokens = shares_burnt.fixed_mul_floor(reserves.total_b_tokens, reserves.total_shares) // Changed to floor
     .ok_or(StrategyError::ArithmeticError)?;
-  let optimal_withdraw_amount = optimal_b_tokens.fixed_mul_floor(reserves.b_rate, SCALAR_9) // Changed to floor
+  let optimal_withdraw_amount = optimal_b_tokens.fixed_mul_floor(reserves.b_rate, SCALAR_12) // Changed to floor
     .ok_or(StrategyError::ArithmeticError)?;
   Ok(optimal_withdraw_amount)
 }
