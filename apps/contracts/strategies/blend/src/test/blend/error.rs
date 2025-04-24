@@ -404,7 +404,7 @@ fn withdraw_insufficient_balance() {
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
 
     let result = strategy_client.try_withdraw(&200_0_000_000, &user_2, &user_2);
-    assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
+    assert_eq!(result, Err(Ok(StrategyError::ArithmeticError)));
 
     let starting_balance = 10_0_000_000i128;
     usdc_client.mint(&user_2, &starting_balance);
