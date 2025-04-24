@@ -69,11 +69,9 @@ pub fn calculate_optimal_deposit_amount(
 
 
 pub fn calculate_optimal_withdraw_amount(
-  e: &Env,
   withdraw_amount: i128,
-  config: &Config,
+  reserves: &StrategyReserves
 ) -> Result<i128, StrategyError> {
-  let reserves = reserves::get_strategy_reserve_updated(e, &config);
   let b_tokens_burnt = withdraw_amount * SCALAR_9 / reserves.b_rate;
   let shares_burnt = reserves.b_tokens_to_shares_up(b_tokens_burnt)?;
   let optimal_withdraw_amount = (shares_burnt * reserves.b_rate - 1) / SCALAR_9 + 1;

@@ -1,21 +1,18 @@
 #![no_std]
-use constants::{SCALAR_12, SCALAR_9};
-use reserves::StrategyReserves;
-use soroban_sdk::{
-    token::TokenClient,
-    contract, contractimpl, Address, Bytes, Env, IntoVal, String, Val, Vec, vec, symbol_short,
-};
-mod utils;
 mod blend_pool;
 mod constants;
 mod reserves;
 mod soroswap;
 mod storage;
-use soroban_fixed_point_math::{i128, FixedPoint};
-
-use storage::{extend_instance_ttl, Config};
+mod utils;
 
 pub use defindex_strategy_core::{event, DeFindexStrategyTrait, StrategyError};
+use soroban_fixed_point_math::i128;
+use soroban_sdk::{
+    token::TokenClient,
+    Address, Bytes, contract, contractimpl, Env, IntoVal, String, symbol_short, Val, Vec, vec
+};
+use storage::{extend_instance_ttl, Config};
 use utils::{calculate_optimal_deposit_amount, calculate_optimal_withdraw_amount, shares_to_underlying};
 
 pub fn check_positive_amount(amount: i128) -> Result<(), StrategyError> {
@@ -172,8 +169,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
         from.require_auth();
 
         let config = storage::get_config(&e)?;
-        let reserves = reserves::get_strategy_reserve_updated(&e, &config);
-        let optimal_deposit_amount = calculate_optimal_deposit_amount(amount, &reserves)?;
+        let optimal_deposit_amount = calculate_optimal_deposit_amount(&e,amount, &config)?;
 
         // transfer tokens from the vault to this (strategy) contract
         TokenClient::new(&e, &config.asset).transfer(&from, &e.current_contract_address(), &optimal_deposit_amount);
@@ -271,7 +267,8 @@ impl DeFindexStrategyTrait for BlendStrategy {
         from.require_auth();
 
         let config = storage::get_config(&e)?;
-        let optimal_withdraw_amount = calculate_optimal_withdraw_amount(&e, amount, &config)?;
+        let reserves = reserves::get_strategy_reserve_updated(&e, &config);
+        let optimal_withdraw_amount = calculate_optimal_withdraw_amount(amount, &reserves)?;
 
         let b_tokens_burnt = blend_pool::withdraw(&e, &to, &optimal_withdraw_amount, &config)?;
 
@@ -279,11 +276,11 @@ impl DeFindexStrategyTrait for BlendStrategy {
             &e,
             &from,
             b_tokens_burnt,
-            &config
+            &reserves
         )?;
         let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
 
-        event::emit_withdraw(&e, String::from_str(&e, STRATEGY_NAME), amount, from);
+        event::emit_withdraw(&e, String::from_str(&e, STRATEGY_NAME), optimal_withdraw_amount, from);
         Ok(underlying_balance)
     }
 
