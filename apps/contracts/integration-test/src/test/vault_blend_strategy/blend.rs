@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use crate::{
     setup::{
         blend_setup::Request,
@@ -14,6 +15,7 @@ use crate::{
         StrategyAllocation,
     },
 };
+#[allow(unused_imports)]
 use soroban_sdk::{
     testutils::{
         Address as _,
