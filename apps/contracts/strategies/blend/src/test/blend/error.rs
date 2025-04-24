@@ -651,7 +651,8 @@ fn arithmetic_error_deposit() {
     let b_tokens_amount = 0;
 
     let config = e.as_contract(&strategy, || storage::get_config(&e)).unwrap();
-    let result = e.as_contract(&strategy, || reserves::deposit(&e, &from, b_tokens_amount, &config));
+    let reserves = e.as_contract(&strategy, || reserves::get_strategy_reserve_updated(&e, &config));
+    let result = e.as_contract(&strategy, || reserves::deposit(&e, &from, b_tokens_amount, &reserves));
 
     assert_eq!(result, Err(StrategyError::BTokensAmountBelowMin));
 }
