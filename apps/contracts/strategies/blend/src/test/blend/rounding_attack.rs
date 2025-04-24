@@ -1,6 +1,6 @@
 #![cfg(test)]
 use crate::blend_pool::{BlendPoolClient, Request};
-use crate::constants::SCALAR_9;
+use crate::constants::SCALAR_12;
 use crate::reserves::StrategyReserves;
 use crate::storage::{self};
 use crate::utils;
@@ -245,10 +245,10 @@ fn check_deposit(optimal_d_amount:i128, expected_d_amount:i128) -> bool {    let
 fn test_optimal_deposit_amounts(setup: &BlendStrategyTestSetup, reserves_list: &Vec<StrategyReserves>, test_amount: i128){
     for reserves in reserves_list {
          // Calculate expected values
-         let b_tokens_minted = test_amount * SCALAR_9 / reserves.b_rate;
+         let b_tokens_minted = test_amount * SCALAR_12 / reserves.b_rate;
          let shares_minted = reserves.b_tokens_to_shares_down(b_tokens_minted).unwrap();
          let optimal_b_tokens = (shares_minted * reserves.total_b_tokens - 1) / reserves.total_shares + 1;
-         let expected_optimal_deposit = (optimal_b_tokens * reserves.b_rate - 1) / SCALAR_9 + 1;
+         let expected_optimal_deposit = (optimal_b_tokens * reserves.b_rate - 1) / SCALAR_12 + 1;
          
          // Get actual optimal deposit
          let optimal_deposit = utils::calculate_optimal_deposit_amount(test_amount, &reserves).unwrap();
@@ -278,10 +278,10 @@ fn test_optimal_withdraw_amounts(setup: &BlendStrategyTestSetup, reserves_list: 
     for reserves in reserves_list {
         print_reserves(&reserves);
         // Calculate expected values
-        let b_tokens_burnt = ((test_amount * SCALAR_9 - 1) / reserves.b_rate) + 1;
+        let b_tokens_burnt = ((test_amount * SCALAR_12 - 1) / reserves.b_rate) + 1;
         let shares_burnt = reserves.b_tokens_to_shares_up(b_tokens_burnt).unwrap();
         let optimal_b_tokens = (shares_burnt * reserves.total_b_tokens) / reserves.total_shares;
-        let expected_optimal_withdraw = (optimal_b_tokens * reserves.b_rate) / SCALAR_9;
+        let expected_optimal_withdraw = (optimal_b_tokens * reserves.b_rate) / SCALAR_12;
         
         // Get actual optimal Witdraw
         let optimal_withdraw = utils::calculate_optimal_withdraw_amount(test_amount, &reserves).unwrap();
