@@ -34,6 +34,7 @@ fn rounding_attack() {
         , "Initial Strategy Balance");
     // Invest the inflation amount to the strategy
     println!("\x1b[32mInvesting inflation amount to strategy\x1b[0m");
+    print_report(&e, "before investing inflation");
     invest(&e, INFLATION_AMOUNT + 2*LUMENS, &e.strategy_contract.address);
     
     print_strategy_balance(&e, "After Investing");
@@ -80,6 +81,8 @@ fn rounding_attack() {
 
         // Make investment
         print_vault_state(&e, "before investment");
+        print_report(&e, "before investing");
+
         invest(&e, x, &e.strategy_contract.address);
         print_vault_state(&e, "after investment");
         print_strategy_positions(&e, "after investment");
@@ -109,6 +112,11 @@ fn rounding_attack() {
 }
 
 // New helper functions
+
+fn print_report(e: &crate::setup::VaultOneBlendStrategy<'_>, context: &str) {
+    let report = e.vault_contract.report();
+    println!("Report {}: {:?}", context, report);
+}
 
 fn mint_and_deposit_to_vault(e: &crate::setup::VaultOneBlendStrategy<'_>, user: &Address, amount: i128) {
     println!("Minting {:?} tokens to user", amount);
