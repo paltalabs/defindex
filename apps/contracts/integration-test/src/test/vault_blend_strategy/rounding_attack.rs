@@ -20,6 +20,7 @@ fn rounding_attack() {
     // Initial setup with inflation deposit
     const INFLATION_AMOUNT: i128 = 1001;
     mint_and_deposit_to_vault(&e, &e.admin, INFLATION_AMOUNT);
+    mint_and_deposit_to_vault(&e, &e.admin, 2*LUMENS);
     
     println!("Inflation deposit: ");
     e.usdc_client.mint(&e.admin, &INFLATION_AMOUNT);
@@ -33,18 +34,20 @@ fn rounding_attack() {
         , "Initial Strategy Balance");
     // Invest the inflation amount to the strategy
     println!("\x1b[32mInvesting inflation amount to strategy\x1b[0m");
-    invest(&e, INFLATION_AMOUNT, &e.strategy_contract.address);
+    invest(&e, INFLATION_AMOUNT + 2*LUMENS, &e.strategy_contract.address);
     
     print_strategy_balance(&e, "After Investing");
     print_vault_report(&e, "after investing inflation");
     print_strategy_positions(&e, "Strategy Positions After Inflation Investment");
     print_user_emissions(&e, e.strategy_contract.address.clone(), "User Emissions After Inflation Investment");
+    print_shares_value(&e, "after inflation investment");
     
     // Make time pass and let the strategy earn some money
     let ledgers = 107;
-    e.setup.env.jump_time(3600 * 24);
+    e.setup.env.jump(ledgers);
     println!("\x1b[35m---- HARVESTING !-----\x1b[0m");
     e.strategy_contract.harvest(&e.keeper, &None::<Bytes>);
+    print_shares_value(&e, "after harvest");
 
     print_strategy_balance(&e, "After Harvest");
     print_strategy_positions(&e, "Strategy Positions After Harvest");
@@ -60,7 +63,7 @@ fn rounding_attack() {
         print_shares_value(&e, "before deposit");
 
         e.vault_contract.lock_fees(&None::<u32>);
-        print_shares_value(&e, "after locl_fees");
+        print_shares_value(&e, "after lock_fees");
 
         // Deposit to vault
         mint_and_deposit_to_vault(&e, &user, x);
