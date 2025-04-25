@@ -42,7 +42,7 @@ fn rounding_attack() {
     
     // Make time pass and let the strategy earn some money
     let ledgers = 107;
-    e.setup.env.jump(ledgers);
+    e.setup.env.jump_time(3600 * 24);
     println!("\x1b[35m---- HARVESTING !-----\x1b[0m");
     e.strategy_contract.harvest(&e.keeper, &None::<Bytes>);
 
@@ -56,20 +56,33 @@ fn rounding_attack() {
         let x = 2 * LUMENS + i;
         println!(" \x1b[36mInvesting {:?} tokens to strategy\x1b[0m", x);
         let user = Address::generate(&e.setup.env);
-        
+
+        print_shares_value(&e, "before deposit");
+
+        e.vault_contract.lock_fees(&None::<u32>);
+        print_shares_value(&e, "after locl_fees");
+
         // Deposit to vault
         mint_and_deposit_to_vault(&e, &user, x);
-        
+        let user_usd_balance = e.usdc.balance(&user);
+        println!("\x1b[33mUser USDC balance after deposit: {}\x1b[0m", user_usd_balance);
+
+        print_shares_value(&e, "after deposit");
+
+
         // Report and check balances
         print_vault_report(&e, "after depositing");
         print_strategy_balance(&e, "after depositing");
+        print_user_balance(&e, &user, "User balance after depositing");
 
         // Make investment
+        print_vault_state(&e, "before investment");
         invest(&e, x, &e.strategy_contract.address);
-        print_vault_state(&e, "after rebalance");
+        print_vault_state(&e, "after investment");
         print_strategy_positions(&e, "after investment");
         print_strategy_balance(&e, "after investment");
 
+        print_user_balance(&e, &user, "User balance before withdraw");
         // Withdraw all user shares
         withdraw_all_shares(&e, &user, x);
         
@@ -98,14 +111,26 @@ fn mint_and_deposit_to_vault(e: &crate::setup::VaultOneBlendStrategy<'_>, user: 
     println!("Minting {:?} tokens to user", amount);
     e.usdc_client.mint(user, &amount);
     println!("Depositing {:?} tokens to vault", amount);
-    e.vault_contract.deposit(
+    let res = e.vault_contract.deposit(
         &vec![&e.setup.env, amount],
         &vec![&e.setup.env, amount],
         user,
         &false
     );
+    print!("-----------------------------------\n");
+    print!("Deposit result: {:?}", res);
 }
 
+fn print_shares_value(e: &crate::setup::VaultOneBlendStrategy<'_>, context: &str) {
+    let shares = e.vault_contract.get_asset_amounts_per_shares(&1i128);
+    println!("Value of shares: {:?} {}", shares, context);
+}
+
+fn print_user_balance(e: &crate::setup::VaultOneBlendStrategy<'_>, user: &Address, context: &str) { 
+    let user_balance = e.vault_contract.balance(user);
+    let user_balance_underlying = e.vault_contract.get_asset_amounts_per_shares(&user_balance);
+    println!("\x1b[32mUser balance in shares | in underlying => {:?} | {:?}. {}\x1b[0m", user_balance, user_balance_underlying.get(0).unwrap(), context);
+}
 fn print_vault_state(e: &crate::setup::VaultOneBlendStrategy<'_>, context: &str) {
     println!("Total managed funds {}: ", context);
     let total_managed_funds = e.vault_contract.fetch_total_managed_funds();
