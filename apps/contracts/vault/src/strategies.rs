@@ -147,8 +147,6 @@ pub fn invest_in_strategy(
 ) -> Result<Report, ContractError> {
     let strategy_client = get_strategy_client(&e, strategy_address.clone());
     let mut report = get_report(e, strategy_address);
-    report.prev_balance = report.prev_balance.checked_add(*amount).ok_or(ContractError::Overflow)?;
-    // Now we will handle funds on behalf of the contract, not the caller (manager or user)
 
     e.authorize_as_current_contract(vec![
         &e,
@@ -171,7 +169,7 @@ pub fn invest_in_strategy(
 
     // Reports
     // Store Strategy invested funds for reports
-    report.report(strategy_funds)?;
+    report.prev_balance = strategy_funds;
     set_report(e, strategy_address, &report);
 
 
