@@ -2,7 +2,7 @@
 use crate::blend_pool::{BlendPoolClient, Request};
 use crate::storage::{self};
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
-// use crate::test::std::println;
+use crate::test::std::println;
 use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils};
 use crate::BlendStrategyClient;
 use defindex_strategy_core::StrategyError;
@@ -190,6 +190,12 @@ fn inflation_attack() {
         assert_eq!(reserve.shares_to_b_tokens_down(1), Ok(49950050));
     });
 
+    // Capture reserve state *before* victim deposit
+    let (b_tokens_before, shares_before) = e.as_contract(&strategy, || {
+        let reserve = storage::get_strategy_reserves(&e);
+        (reserve.total_b_tokens, reserve.total_shares)
+    });
+
 
     // Step 3: Victim deposits
     strategy_client.deposit(&victim_usdc_balance, &victim);
@@ -204,16 +210,26 @@ fn inflation_attack() {
 
     e.as_contract(&strategy, || {
         let reserve = storage::get_strategy_reserves(&e);
-        
-        assert_eq!(reserve.total_shares, 1001 + 2001); // = 1001 + 2001 = 3002
-        assert_eq!(reserve.total_b_tokens, (victim_usdc_balance / 2) + 1 + 1000 + victim_usdc_balance); // 150000001001
-        assert_eq!(reserve.total_b_tokens, 150000001001);
+        let victim_shares = storage::get_vault_shares(&e, &victim); // Get victim shares after deposit
 
+        // Assert total shares after deposit
+        assert_eq!(reserve.total_shares, shares_before + victim_shares);
 
-        // 150000001001/3002 = 49966689.207528314
-        assert_eq!(reserve.shares_to_b_tokens_down(1), Ok(49966689));
+        // Calculate the expected optimal bTokens added based on shares minted and prior state
+        let optimal_b_tokens_added = (victim_shares * b_tokens_before - 1) / shares_before + 1;
 
-        let victim_shares = storage::get_vault_shares(&e, &victim);
+        // Calculate the expected total bTokens after victim's deposit
+        let expected_total_b_tokens_after = b_tokens_before + optimal_b_tokens_added;
+
+        // Assert total_b_tokens against the correctly calculated expected value
+        assert_eq!(reserve.total_b_tokens, expected_total_b_tokens_after);
+
+        // Calculate the optimal bTokens add
+        // 149950052953 / 3002 = 49950050.9497
+        // Check share value after deposit
+        assert_eq!(reserve.shares_to_b_tokens_down(1), Ok(49950050));
+
+        // Confirm victim shares are correct (already calculated above)
         assert_eq!(victim_shares, 2001);
 
     });
@@ -231,12 +247,19 @@ fn inflation_attack() {
     // We know that now the victim won't have 100% of its value due to rounding errors 
     // But will accept anything lower than 0.02% loss
     let victim_final_balance = strategy_client.balance(&victim);
+
+    let final_victim_usdc_balance = usdc_client.balance(&victim);
+
+    println!("Victim final balance: {:?}", victim_final_balance);
+    println!("Victim USDC balance: {:?}", victim_usdc_balance);
+    println!(" new Victim USDC balance: {:?}", final_victim_usdc_balance);
     // Calculate the minimum acceptable balance (99.98% of initial balance)
     let min_acceptable_balance = victim_usdc_balance * 9998 / 10000; // 99.98%
+
     assert!(
-        victim_final_balance >= min_acceptable_balance,
+        victim_final_balance + final_victim_usdc_balance >= min_acceptable_balance, //Strategy didn't take finall victim USDC balance so isn't really lost
         "Victim final balance ({}) is too low; expected at least {} (0.02% loss tolerance)",
-        victim_final_balance,
+        victim_final_balance + final_victim_usdc_balance,
         min_acceptable_balance
     );
 }
