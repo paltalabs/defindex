@@ -508,48 +508,47 @@ export async function testVaultOneAssetTwoStrategies(addressBook: AddressBook, p
   };
   const budgetData = {
     deploy: {
-      status: !!deploy_instructions && !!deploy_read_bytes && !!deploy_write_bytes ? true : false,
+      status: deploy_instructions && deploy_read_bytes && deploy_write_bytes ? 'success' : 'failed',
       instructions: deploy_instructions,
       readBytes: deploy_read_bytes,
       writeBytes: deploy_write_bytes,
     },
     deposit: {
-      status: deposit_result ? deposit_result : deposit_error,
+      status: deposit_instructions && deposit_read_bytes && deposit_write_bytes ? 'success' : 'failed',
       instructions: deposit_instructions,
       readBytes: deposit_read_bytes,
       writeBytes: deposit_write_bytes,
     },
     invest: {
-      status: invest_result ? invest_result : invest_error,
+      status: invest_instructions && invest_read_bytes && invest_write_bytes ? 'success' : 'failed',
       instructions: invest_instructions,
       readBytes: invest_read_bytes,
       writeBytes: invest_write_bytes,
     },
     deposit_and_invest: {
-      status: deposit_and_invest_result ? deposit_and_invest_result : deposit_and_invest_error,
+      status: deposit_and_invest_instructions && deposit_and_invest_read_bytes && deposit_and_invest_write_bytes ? 'success' : 'failed',
       instructions: deposit_and_invest_instructions,
       readBytes: deposit_and_invest_read_bytes,
       writeBytes: deposit_and_invest_write_bytes,
     },
     unwind: {
-      status: unwind_result ? unwind_result : unwind_error,
+      status: unwind_instructions && unwind_read_bytes && unwind_write_bytes ? 'success' : 'failed',
       instructions: unwind_instructions,
       readBytes: unwind_read_bytes,
       writeBytes: unwind_write_bytes,
     },
     unwind_and_invest: {
-      status: unwind_and_invest_result ? unwind_and_invest_result : unwind_and_invest_error,
+      status: unwind_and_invest_instructions && unwind_and_invest_read_bytes && unwind_and_invest_write_bytes ? 'success' : 'failed',
       instructions: unwind_and_invest_instructions,
       readBytes: unwind_and_invest_read_bytes,
       writeBytes: unwind_and_invest_write_bytes,
     },
     withdraw: {
-      status: withdraw_result ? withdraw_result : withdraw_error,
+      status: withdraw_instructions && withdraw_read_bytes && withdraw_write_bytes ? 'success' : 'failed',
       instructions: withdraw_instructions,
       readBytes: withdraw_read_bytes,
       writeBytes: withdraw_write_bytes,
     },
-    
   }
   console.table(tableData);
   console.table(budgetData);
