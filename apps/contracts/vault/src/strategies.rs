@@ -169,6 +169,7 @@ pub fn invest_in_strategy(
 
     // Reports
     // Store Strategy invested funds for reports
+    report.gains_or_losses = strategy_funds - report.prev_balance- amount;
     report.prev_balance = strategy_funds;
     set_report(e, strategy_address, &report);
 

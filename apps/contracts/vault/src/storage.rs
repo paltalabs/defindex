@@ -162,8 +162,7 @@ pub fn get_report(e: &Env, strategy_address: &Address) -> Report {
 pub fn update_report_prev_balance(e: &Env, strategy_address: &Address, value: i128) -> Report {
     let mut report = get_report(e, strategy_address);
     
-    report.prev_balance = report.prev_balance.checked_add(value)
-        .unwrap_or_else(|| panic_with_error!(e, ContractError::Overflow));
+    report.prev_balance = value;
     
     set_report(e, strategy_address, &report);
     report

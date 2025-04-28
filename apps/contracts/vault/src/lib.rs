@@ -387,7 +387,7 @@ impl VaultTrait for DeFindexVault {
                             };
     
                         if strategy_amount_to_unwind > 0 {
-                            unwind_from_strategy(
+                            let remaining_balance = unwind_from_strategy(
                                 &e,
                                 &strategy_allocation.strategy_address,
                                 &strategy_amount_to_unwind,
@@ -396,7 +396,7 @@ impl VaultTrait for DeFindexVault {
                             update_report_prev_balance(
                                 &e, 
                                 &strategy_allocation.strategy_address, 
-                                -strategy_amount_to_unwind
+                                remaining_balance
                             );
                             cumulative_amount_for_asset = cumulative_amount_for_asset.checked_add(strategy_amount_to_unwind).ok_or(ContractError::Overflow)?;
                         }
