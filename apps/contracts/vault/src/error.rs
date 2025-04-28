@@ -27,6 +27,7 @@ pub enum ContractError {
     InsufficientAmount = 117,
     NoOptimalAmounts = 118, //this should not happen
     WrongInvestmentLength = 119,
+    
     WrongAssetAddress = 122,
     WrongStrategiesLength = 123,
     AmountOverTotalSupply = 124,

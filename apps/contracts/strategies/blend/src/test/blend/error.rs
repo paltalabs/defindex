@@ -404,7 +404,7 @@ fn withdraw_insufficient_balance() {
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
 
     let result = strategy_client.try_withdraw(&200_0_000_000, &user_2, &user_2);
-    assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
+    assert_eq!(result, Err(Ok(StrategyError::ArithmeticError)));
 
     let starting_balance = 10_0_000_000i128;
     usdc_client.mint(&user_2, &starting_balance);
@@ -651,7 +651,8 @@ fn arithmetic_error_deposit() {
     let b_tokens_amount = 0;
 
     let config = e.as_contract(&strategy, || storage::get_config(&e)).unwrap();
-    let result = e.as_contract(&strategy, || reserves::deposit(&e, &from, b_tokens_amount, &config));
+    let reserves = e.as_contract(&strategy, || reserves::get_strategy_reserve_updated(&e, &config));
+    let result = e.as_contract(&strategy, || reserves::deposit(&e, &from, b_tokens_amount, &reserves));
 
     assert_eq!(result, Err(StrategyError::BTokensAmountBelowMin));
 }

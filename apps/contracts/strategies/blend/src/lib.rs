@@ -1,19 +1,19 @@
 #![no_std]
-use reserves::StrategyReserves;
-use soroban_sdk::{
-    token::TokenClient,
-    contract, contractimpl, Address, Bytes, Env, IntoVal, String, Val, Vec, vec, symbol_short,
-};
-
 mod blend_pool;
 mod constants;
 mod reserves;
 mod soroswap;
 mod storage;
-
-use storage::{extend_instance_ttl, Config};
+mod utils;
 
 pub use defindex_strategy_core::{event, DeFindexStrategyTrait, StrategyError};
+use soroban_fixed_point_math::i128;
+use soroban_sdk::{
+    token::TokenClient,
+    Address, Bytes, contract, contractimpl, Env, IntoVal, String, symbol_short, Val, Vec, vec
+};
+use storage::{extend_instance_ttl, Config};
+use utils::{calculate_optimal_deposit_amount, calculate_optimal_withdraw_amount, shares_to_underlying};
 
 pub fn check_positive_amount(amount: i128) -> Result<(), StrategyError> {
     if amount <= 0 {
@@ -169,12 +169,16 @@ impl DeFindexStrategyTrait for BlendStrategy {
         from.require_auth();
 
         let config = storage::get_config(&e)?;
+        let reserves = reserves::get_strategy_reserve_updated(&e, &config);
+        let optimal_deposit_amount = calculate_optimal_deposit_amount(amount, &reserves)?;
 
         // transfer tokens from the vault to this (strategy) contract
-        TokenClient::new(&e, &config.asset).transfer(&from, &e.current_contract_address(), &amount);
-
+        let token_client = TokenClient::new(&e, &config.asset);
+        token_client.transfer(&from, &e.current_contract_address(), &amount);
+        token_client.transfer(&e.current_contract_address(), &from, &(amount - optimal_deposit_amount));
+        
         // supplies the asset to the Blend pool and mints bTokens
-        let b_tokens_minted = blend_pool::supply(&e, &from, &amount, &config)?;
+        let b_tokens_minted = blend_pool::supply(&e, &from, &optimal_deposit_amount, &config)?;
 
         // Keeping track of the total deposited amount and the total bTokens owned by the caller (vault)
         let (vault_shares, reserves) =
@@ -182,7 +186,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
                 &e, 
                 &from, 
                 b_tokens_minted,
-                &config
+                &reserves
             )?;
         
         // Calculates the new amount of underlying assets invested in the Blend Vault, owned by the caller (vault)
@@ -266,17 +270,20 @@ impl DeFindexStrategyTrait for BlendStrategy {
         from.require_auth();
 
         let config = storage::get_config(&e)?;
+        let reserves = reserves::get_strategy_reserve_updated(&e, &config);
+        let optimal_withdraw_amount = calculate_optimal_withdraw_amount(amount, &reserves)?;
 
-        let b_tokens_burnt = blend_pool::withdraw(&e, &to, &amount, &config)?;
+        let b_tokens_burnt = blend_pool::withdraw(&e, &to, &optimal_withdraw_amount, &config)?;
+
         let (vault_shares, reserves) = reserves::withdraw(
             &e,
             &from,
             b_tokens_burnt,
-            &config
+            &reserves
         )?;
         let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
 
-        event::emit_withdraw(&e, String::from_str(&e, STRATEGY_NAME), amount, from);
+        event::emit_withdraw(&e, String::from_str(&e, STRATEGY_NAME), optimal_withdraw_amount, from);
         Ok(underlying_balance)
     }
 
@@ -355,32 +362,4 @@ impl BlendStrategy {
     }
 }
 
-/// Converts a given amount of shares to the corresponding amount of underlying assets.
-///
-/// This function first converts the shares to bTokens using the `shares_to_b_tokens_down` method
-/// from the `reserves`. It then uses the `b_rate` to convert the bTokens to the underlying assets.
-///
-/// # Arguments
-///
-/// * `shares` - The amount of shares to be converted.
-/// * `reserves` - The strategy reserves containing the total shares, total bTokens, and b_rate.
-///
-/// # Returns
-///
-/// * `Result<i128, StrategyError>` - The amount of underlying assets corresponding to the given shares,
-///   or an error if the conversion fails.
-///
-fn shares_to_underlying(shares: i128, reserves: StrategyReserves) -> Result<i128, StrategyError> {
-    let total_shares = reserves.total_shares;
-    let total_b_tokens = reserves.total_b_tokens;
-
-    if total_shares == 0 || total_b_tokens == 0 {
-        // No shares or bTokens in the strategy
-        return Ok(0i128);
-    }
-    // Calculate the bTokens corresponding to the vault's shares
-    let vault_b_tokens = reserves.shares_to_b_tokens_down(shares)?;
-    // Use the b_rate to convert bTokens to underlying assets
-    reserves.b_tokens_to_underlying_down(vault_b_tokens)
-}
 mod test;
