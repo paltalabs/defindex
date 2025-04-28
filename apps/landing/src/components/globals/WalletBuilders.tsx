@@ -37,7 +37,7 @@ function WalletBuilders() {
                                     color="red"
                                     label="Solutions for Wallet builders"
                                     title="Tailored Solutions **for Wallet builders**"
-                                    learn_more="/"
+                                    learn_more="https://docs.defindex.io/"
                                     thumb="/images/CTA.png"
                                     strategies={[
                                         {
