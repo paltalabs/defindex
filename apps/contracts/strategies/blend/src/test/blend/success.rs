@@ -396,7 +396,10 @@ fn success() {
     println!("Expected withdraw amount for users {}", expected_withdraw_amount);
 
     // Only user 2 will withdraw its amount
+    let user_strategy_balance = strategy_client.balance(&user_2);
+    println!("User 2 Strategy Balance before withdraw {}", user_strategy_balance);
     let remain_underlying = strategy_client.withdraw(&expected_withdraw_amount, &user_2, &user_2);
+
     // -> verify withdraw auth
     assert_eq!(
         e.auths()[0],
