@@ -8,10 +8,10 @@ import { testBlendVault } from "./blend/test_vault.js";
 import { green, red, yellow } from "./common.js";
 import {
   admin,
+  checkBlendUSDCBalance,
   emergencyManager,
   feeReceiver,
   manager,
-  mintBlendUSDC,
   mintToken
 } from "./vault.js";
 import { testVaultOneAssetTwoStrategies } from "./vault/one_aset_two_strategies.js";
@@ -32,7 +32,7 @@ const xlmAddress = new Address(
   Asset.native().contractId(loadedConfig.passphrase)
 );
 
-const testUser = Keypair.random();
+const testUser = loadedConfig.getUser('TEST_USER') || Keypair.random();
 
 
 const oneAssetOneStrategyParams: CreateVaultParams[] = [
@@ -127,14 +127,12 @@ const twoAssetTwoStrategiesParams: CreateVaultParams[] = [
 async function prepareEnvironment() {
   if (network !== "mainnet") {
     await airdropAccount(testUser);
-    await setBlendTrustline({ source: testUser, tokenSymbol: 'USDC' });
     await airdropAccount(admin);
     await airdropAccount(emergencyManager);
     await airdropAccount(feeReceiver);
     await airdropAccount(manager);
     await airdropAccount(testUser);
-    //await mintToken(testUser, 99_0_000_000);
-    await mintBlendUSDC(testUser, 99_0_000_000);
+    await checkBlendUSDCBalance(testUser);
   }
 }
 

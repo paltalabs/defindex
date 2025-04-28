@@ -125,18 +125,24 @@ export async function mintToken(user: Keypair, amount: number, tokenAddress?: Ad
  * @param amount - The amount of tokens to mint.
  * @returns A promise that resolves when the minting operation is complete.
  */
-export async function mintBlendUSDC(user: Keypair, amount: number,) {
-  console.log('--------------------------------------')
-  await invokeCustomContract(
-
-    BLEND_USDC_ADDRESS.toString(),
-    "mint",
-    [
-      new Address(user.publicKey()).toScVal(),
-      nativeToScVal(amount, { type: "i128" }),
-    ],
-    loadedConfig.getUser("BLEND_DEPLOYER_SECRET_KEY")
-  );
+export async function checkBlendUSDCBalance(user: Keypair) {
+  try {
+    let balance = await invokeCustomContract(
+      BLEND_USDC_ADDRESS.toString(),
+      "balance",
+      [
+        new Address(user.publicKey()).toScVal(),
+      ],
+      loadedConfig.getUser("BLEND_DEPLOYER_SECRET_KEY")
+    );
+    console.log(balance);
+  } catch (error:any) {
+    console.error("Error fetching balance:", error);
+    if (error.toString().includes("#13")){
+      console.error("No trusline found for USDC, please go to https://testnet.blend.capital and manually add tokens");
+    }
+    throw "Balance for USDC not found";
+  }
 }
 
 /**
