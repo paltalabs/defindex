@@ -202,7 +202,7 @@ pub fn distribute_strategy_fees(e: &Env, strategy_address: &Address, access_cont
 
         let vault_fee_amount = fees_to_distribute.checked_sub(defindex_fee_amount).ok_or(ContractError::Underflow)?;
 
-        unwind_from_strategy(
+        let remaining_balance = unwind_from_strategy(
             &e,
             &strategy_address,
             &fees_to_distribute,
@@ -214,7 +214,7 @@ pub fn distribute_strategy_fees(e: &Env, strategy_address: &Address, access_cont
         asset_client.transfer( &e.current_contract_address(), &vault_fee_receiver, &vault_fee_amount);
         asset_client.transfer( &e.current_contract_address(), &defindex_protocol_receiver, &defindex_fee_amount);
 
-        report.prev_balance = report.prev_balance.checked_sub(fees_to_distribute).ok_or(ContractError::Underflow)?;
+        report.prev_balance = remaining_balance;
         report.locked_fee = 0;
         set_report(&e, &strategy_address, &report);
 
