@@ -1,6 +1,6 @@
 use defindex_strategy_core::DeFindexStrategyClient;
 use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
-use soroban_sdk::{vec, Address, Env, IntoVal, Symbol};
+use soroban_sdk::{vec, Address, Env, IntoVal, Symbol, panic_with_error};
 
 use crate::report::Report;
 use crate::storage::{get_report, set_report};
@@ -169,10 +169,13 @@ pub fn invest_in_strategy(
 
     // Reports
     // Store Strategy invested funds for reports
-    report.gains_or_losses = strategy_funds - report.prev_balance- amount;
+    report.gains_or_losses = strategy_funds
+        .checked_sub(report.prev_balance)
+        .unwrap_or_else(|| panic_with_error!(e, ContractError::ArithmeticError))
+        .checked_sub(*amount)
+        .unwrap_or_else(|| panic_with_error!(e, ContractError::ArithmeticError));
     report.prev_balance = strategy_funds;
     set_report(e, strategy_address, &report);
-
 
     Ok(report)
 }
