@@ -25,12 +25,12 @@ function WalletExperience() {
                     <div className="flex sm:flex-row flex-col justify-center gap-2 sm:gap-4">
                         <Link
                             className="rounded-3xl bg-lime-200 px-6 contained-button py-4 lg:py-5 lg:min-h-[60px] leading-none flex gap-2.5 items-center justify-center font-extrabold font-manrope text-[14px] md:leading-none md:text-xs text-cyan-950"
-                            href=""
+                            href="mailto:dev@paltalabs.io"
                         >
                             Schedule a Demo
                         </Link>
                         <Link
-                            href=""
+                            href="mailto:dev@paltalabs.io"
                             className="rounded-3xl border border-white outlined-button px-6 leading-none py-4 lg:py-5 lg:min-h-[60px] flex gap-2.5 items-center justify-center font-extrabold font-manrope text-[14px] md:leading-none md:text-xs text-white"
                         >
                             Join the Waitlist
