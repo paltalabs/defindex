@@ -1,6 +1,3 @@
-use crate::test::create_hodl_strategy;
-use crate::test::HodlStrategyTest;
-use crate::test::StrategyError;
 // test deposit with negative amount
 #[test]
 fn deposit_with_negative_amount() {
