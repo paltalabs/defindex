@@ -1,7 +1,7 @@
 pub mod blend_setup;
 use blend_setup::{create_blend_pool, BlendFixture, BlendPoolClient};
 use soroban_sdk::{
-    testutils::{Address as _, MockAuth, MockAuthInvoke}, token::{StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient}, vec as sorobanvec, Address, BytesN, Env, IntoVal, Map, String
+    testutils::{Address as _, MockAuth, MockAuthInvoke}, token::{StellarAssetClient as SorobanTokenAdminClient, TokenClient as SorobanTokenClient}, vec as sorobanvec, Address, Env, IntoVal, Map, String
 };
 
 mod soroswap_setup;

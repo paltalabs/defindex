@@ -5,7 +5,7 @@ use crate::{constants::SCALAR_BPS, test::{
     create_defindex_vault, create_fixed_strategy, create_strategy_params_token_0, create_strategy_params_token_1, defindex_vault::{
         self, AssetStrategySet, ContractError, CurrentAssetInvestmentAllocation, Instruction, RolesDataKey, Strategy, StrategyAllocation
     }, DeFindexVaultTest
-}, DeFindexVaultClient};
+}};
 
 extern crate std;
 // check that withdraw with negative amount after initialized returns error

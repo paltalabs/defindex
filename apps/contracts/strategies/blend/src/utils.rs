@@ -1,7 +1,7 @@
 use defindex_strategy_core::StrategyError;
 use soroban_fixed_point_math::FixedPoint;
 
-use crate::{constants::{SCALAR_12, SCALAR_9}, reserves::StrategyReserves};
+use crate::{constants::SCALAR_12, reserves::StrategyReserves};
 
 
 /// Converts a given amount of shares to the corresponding amount of underlying assets.

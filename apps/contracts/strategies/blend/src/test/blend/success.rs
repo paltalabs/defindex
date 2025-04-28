@@ -1,15 +1,14 @@
 #![cfg(test)]
 use crate::blend_pool::{BlendPoolClient, Request};
-use crate::constants::{SCALAR_12, SCALAR_9};
-use crate::storage::{self, ONE_DAY_LEDGERS};
+use crate::constants::SCALAR_12;
+use crate::storage::ONE_DAY_LEDGERS;
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
 use crate::test::std;
 use crate::test::assert_approx_eq_rel;
 use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils};
-use crate::{reserves, utils, BlendStrategyClient};
+use crate::BlendStrategyClient;
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
-use soroban_fixed_point_math::FixedPoint;
 use soroban_sdk::testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, MockAuth, MockAuthInvoke, Events};
 use soroban_sdk::{vec, Address, Bytes, Env, IntoVal, Symbol, Vec, Val, symbol_short, String, FromVal};
 use crate::test::std::println;
