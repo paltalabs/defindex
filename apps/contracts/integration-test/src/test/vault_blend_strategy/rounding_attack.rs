@@ -56,7 +56,8 @@ fn rounding_attack() {
 
     // invest x tokens through the vault
     println!("\x1b[31mStarting Loop\x1b[0m");
-    for i in 0..1 {
+    for i in 0..5 {
+        println!("\x1b[36mIteration: {:?}\x1b[0m", i);
         let x = 2 * LUMENS + i;
         println!(" \x1b[36mInvesting {:?} tokens to strategy\x1b[0m", x);
         let user = Address::generate(&e.setup.env);
@@ -68,9 +69,8 @@ fn rounding_attack() {
 
         // Deposit to vault
         mint_and_deposit_to_vault(&e, &user, x);
-        let user_usd_balance = e.usdc.balance(&user);
-        println!("\x1b[33mUser USDC balance after deposit: {}\x1b[0m", user_usd_balance);
-
+        print_usdc_user_balance(&e, &user, "User balance after deposit");
+        print_user_balance(&e, &user, "User balance after deposit");
         print_shares_value(&e, "after deposit");
 
 
@@ -97,16 +97,27 @@ fn rounding_attack() {
         // Final checks
         print_vault_report(&e, "after withdrawing");
         print_strategy_balance(&e, "after withdrawal");
-                
+        print_vault_state(&e, "after withdrawing");
+        let usdc_balance = print_usdc_user_balance(&e, &user, "User balance after withdrawing");
+
+        // We may have differences due to rounding, so we check if the balance is close to the expected amount
+        assert!((usdc_balance- x).abs() <= 10, "User balance after withdrawing is too far from the expected amount");
     }
     
     // Final state check
     println!("Vault USDC Balance: {}", e.usdc.balance(&e.vault_contract.address));
     println!("Vault Balance on Strategy: {}", e.strategy_contract.balance(&e.vault_contract.address));
-    print_vault_report(&e, "after investing");
+    print_vault_report(&e, "Final state");
 }
 
 // New helper functions
+
+fn print_usdc_user_balance(e: &crate::setup::VaultOneBlendStrategy<'_>, user: &Address, context: &str) -> i128 {
+    let balance = e.usdc.balance(user);
+    println!("\x1b[32mUSDC User balance: {}\x1b[0m", balance);
+    balance
+}
+
 
 fn print_report(e: &crate::setup::VaultOneBlendStrategy<'_>, context: &str) {
     let report = e.vault_contract.report();
@@ -154,9 +165,10 @@ fn print_strategy_positions(e: &crate::setup::VaultOneBlendStrategy<'_>, context
     println!("Strategy positions: {:?}", positions);
 }
 
-fn print_strategy_balance(e: &crate::setup::VaultOneBlendStrategy<'_>, context: &str) {
+fn print_strategy_balance(e: &crate::setup::VaultOneBlendStrategy<'_>, context: &str) -> i128 {
     let balance = e.strategy_contract.balance(&e.vault_contract.address);
     println!("Strategy balance {}: {:?}", context, balance);
+    balance
 }
 
 fn withdraw_all_shares(e: &crate::setup::VaultOneBlendStrategy<'_>, user: &Address, expected_amount: i128) {
