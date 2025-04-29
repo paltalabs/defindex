@@ -1,4 +1,4 @@
-import { Address, Asset, nativeToScVal, scValToNative, xdr } from "@stellar/stellar-sdk";
+import { Address, Asset, Keypair, nativeToScVal, scValToNative, xdr } from "@stellar/stellar-sdk";
 import { exit } from "process";
 import { AddressBook } from "./utils/address_book.js";
 import { config } from "./utils/env_config.js";
@@ -14,9 +14,15 @@ import { getTransactionBudget } from "./utils/tx.js";
 const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
 const othersAddressBook = AddressBook.loadFromFile(network, "../../public");
+const publicAddressBook = AddressBook.loadFromFile(network, "../../../../public");
 
 const asset = process.argv[3];
 const allowedAssets = ["XLM", "USDC"];
+const allowedStrategies = [
+  "blend",
+ /*  "hodl",
+  "fixed_apr" */
+]
 
 if (!asset || !allowedAssets.includes(asset.toUpperCase())) {
   console.log("Please provide a valid asset symbol");
@@ -49,16 +55,17 @@ if (!blend_strategy || !soroswap_router) {
   );
   exit(1);
 };
+
 const params: CreateVaultParams[] = [
   {
     address: assetAddress,
-    strategies: [
-      {
-        name: "Blend Strategy",
-        address: blend_strategy,
+    strategies: allowedStrategies.map((strategy) => {
+      return {
+        name: `${asset} ${strategy.charAt(0).toUpperCase() + strategy.slice(1)} Strategy`,
+        address: publicAddressBook.getContractId(`${asset.toLowerCase()}_${strategy}_strategy`),
         paused: false,
-      },
-    ],
+      };
+    })
   },
 ];
 
@@ -104,11 +111,11 @@ export async function deployVault(
   const assetAllocations = getAssetAllocations(assets);
 
   const createDeFindexParams: xdr.ScVal[] = getCreateDeFindexParams(
-    loadedConfig.admin,
-    loadedConfig.admin,
-    loadedConfig.admin,
-    manager,
-    vaultName,
+    Keypair.fromPublicKey(loadedConfig.vaultEmergencyManager), //Emergency manager
+    Keypair.fromPublicKey(loadedConfig.vaultRebalanceManager), //Rebalance manager
+    Keypair.fromPublicKey(loadedConfig.defindexFeeReceiver), //Fee receiver
+    manager, //Manager
+    vaultName, 
     vaultSymbol,
     assetAllocations,
     new Address(soroswap_router),
