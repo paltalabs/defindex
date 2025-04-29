@@ -38,7 +38,8 @@ pub fn calculate_optimal_deposit_amount(
   reserves: &StrategyReserves,
 ) -> Result<i128, StrategyError> {
   // Step 1: Calculate the amount of bTokens that would be minted based on the deposit_amount
-  let b_tokens_minted = deposit_amount * SCALAR_12 / reserves.b_rate;
+  let b_tokens_minted = deposit_amount.fixed_mul_floor(SCALAR_12, reserves.b_rate)
+    .ok_or(StrategyError::ArithmeticError)?;
 
   // If the reserves are empty, the optimal_b_token amount is equal to the b_tokens_minted
   let optimal_b_token_amount = if reserves.total_shares == 0 {
@@ -51,7 +52,8 @@ pub fn calculate_optimal_deposit_amount(
       }
       // Step 3: Based on the shares to-be minted, calculate the optimal bToken amount
       // Note: This should round up, as the shares calculation round down
-      (shares_minted * reserves.total_b_tokens - 1) / reserves.total_shares + 1
+      shares_minted.fixed_mul_ceil(reserves.total_b_tokens, reserves.total_shares)
+        .ok_or(StrategyError::ArithmeticError)?
   };
 
   if optimal_b_token_amount <= 0 {
@@ -59,7 +61,8 @@ pub fn calculate_optimal_deposit_amount(
   }
 
   // Step 4: Now calculate the optimal deposit amount to deposit to Blend. This should also round up
-  let optimal_deposit_amt = (optimal_b_token_amount * reserves.b_rate - 1) / SCALAR_12 + 1;
+  let optimal_deposit_amt = optimal_b_token_amount.fixed_mul_ceil(reserves.b_rate, SCALAR_12)
+    .ok_or(StrategyError::ArithmeticError)?;
 
   Ok(optimal_deposit_amt)
 }
