@@ -36,7 +36,7 @@ pub fn shares_to_underlying(shares: i128, reserves: StrategyReserves) -> Result<
 pub fn calculate_optimal_deposit_amount(
   deposit_amount: i128,
   reserves: &StrategyReserves,
-) -> Result<i128, StrategyError> {
+) -> Result<(i128, i128), StrategyError> {
   // Step 1: Calculate the amount of bTokens that would be minted based on the deposit_amount
   let b_tokens_minted = deposit_amount.fixed_mul_floor(SCALAR_12, reserves.b_rate)
     .ok_or(StrategyError::ArithmeticError)?;
@@ -64,14 +64,14 @@ pub fn calculate_optimal_deposit_amount(
   let optimal_deposit_amt = optimal_b_token_amount.fixed_mul_ceil(reserves.b_rate, SCALAR_12)
     .ok_or(StrategyError::ArithmeticError)?;
 
-  Ok(optimal_deposit_amt)
+  Ok((optimal_deposit_amt, optimal_b_token_amount))
 }
 
 
 pub fn calculate_optimal_withdraw_amount(
   withdraw_amount: i128,
   reserves: &StrategyReserves
-) -> Result<i128, StrategyError> {
+) -> Result<(i128, i128), StrategyError> {
   let b_tokens_burnt = withdraw_amount.fixed_mul_ceil(SCALAR_12, reserves.b_rate)
     .ok_or(StrategyError::ArithmeticError)?;
   let shares_burnt = reserves.b_tokens_to_shares_up(b_tokens_burnt)?;
@@ -79,5 +79,5 @@ pub fn calculate_optimal_withdraw_amount(
     .ok_or(StrategyError::ArithmeticError)?;
   let optimal_withdraw_amount = optimal_b_tokens.fixed_mul_floor(reserves.b_rate, SCALAR_12) // Changed to floor
     .ok_or(StrategyError::ArithmeticError)?;
-  Ok(optimal_withdraw_amount)
+  Ok((optimal_withdraw_amount, optimal_b_tokens))
 }
