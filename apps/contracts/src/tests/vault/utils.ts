@@ -117,7 +117,7 @@ export function generateExpectedStrategyAllocation(
   };
 }
 
-export function generateExpectedTotalAmounts(params: CreateVaultParams[], idle_amounts: [number[]], invested_amounts: [number[]]): TotalManagedFunds[] {
+export function generateExpectedTotalAmounts(params: CreateVaultParams[], idle_amounts: number[][], invested_amounts: number[][]): TotalManagedFunds[] {
   let i = 0;
   let expected_total_amounts = [];
   for (const param of params) {

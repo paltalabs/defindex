@@ -43,7 +43,7 @@ yarn deploy-fixed-usdc <network>
 yarn deploy-fixed-xtar <network>
 ```
 ```bash 
-yarn deploy-blend <network>
+yarn deploy-blend <network> <asset symbol "usdc" / "xlm">
 ```
 
 If you want to deploy all the contracts you can do so by running:
@@ -53,10 +53,10 @@ yarn deploy-hodl testnet &&
 yarn deploy-fixed testnet && 
 yarn deploy-fixed-usdc testnet && 
 yarn deploy-fixed-xtar testnet && 
-yarn deploy-blend testnet 
+yarn deploy-blend testnet xlm
 ```
 
-Multi deploy blend
+#### Multi deploy blend
 ```
 # yarn multi-deploy-blend <network> <number of strategies >= 2> <asset key "usdc" / "xlm">
 yarn multi-deploy-blend testnet 2 usdc
@@ -77,12 +77,13 @@ it will show the next message where you can see all the available tests and the 
   ```bash
 
 ### Deplying on Mainnet
-1. Make sure you have `MAINNET_RPC_URL`,   `ADMIN_SECRET_KEY` and `TEST_USER` in .env
-2. Set up the contract addresses from other projects (i.e. Blend) on `public/mainnet.contracts.json`
-3. `yarn deploy-blend mainnet`
-4. Test the Blend strategy with `yarn exec tsc && node dist/tests/blend/test_strategy.js mainnet`
-5. Deploy Vault using the blend strategy `yarn deploy-blend-vault mainnet`
-6. Test the Vault-Blend with ``
+1. Make sure you have `ADMIN_SECRET_KEY`, `MAINNET_RPC_URL`, and `TEST_USER` in .env file
+2. Make sure you have the correct setting for mainnet in configs.json
+3. Set up the contract addresses from other projects (i.e. Blend) on `public/mainnet.contracts.json`
+4. `yarn deploy-blend mainnet xlm`
+5. Test the Blend strategy with `yarn exec tsc && node dist/tests/blend/test_strategy.js mainnet xlm`
+6. Deploy Vault using the blend strategy `yarn deploy-blend-vault mainnet xlm`
+7. Test the Vault-Blend with `yarn test-blend-strategy mainnet xlm`
 
 ### Generate Docs
 ```bash 

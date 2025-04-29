@@ -5,6 +5,8 @@ import {
   Keypair,
   Operation,
   StrKey,
+  TimeoutInfinite,
+  TransactionBuilder,
   hash,
   scValToNative,
   xdr,
@@ -55,7 +57,17 @@ export async function installContract(
     auth: [],
   });
   addressBook.writeToFile();
-  await invoke(op, source, false);
+  try { 
+    const result = await invoke(op, source, false);
+    if (result.status == 'ERROR'){
+      console.log("Error installing contract:", result.errorResult.result());
+      throw new Error("Error installing contract");
+    }
+
+  } catch (error:any) {
+    throw new Error(error);
+  }
+  
 }
 
 export async function deployContract(
@@ -253,6 +265,19 @@ export async function airdropAccount(user: Keypair) {
   }
 }
 
+export async function airdropAddress(user: string) {
+  try {
+    console.log("Start funding");
+    await loadedConfig.rpc.requestAirdrop(
+      user,
+      loadedConfig.friendbot
+    );
+    console.log("Funded: ", user);
+  } catch (e) {
+    console.log(user, " already funded");
+  }
+}
+
 export async function deploySorobanToken(
   wasmKey: string,
   addressBook: AddressBook,
@@ -318,4 +343,49 @@ export async function getTokenBalance(
   }
   const resultNumber = parseInt(parsedResult.slice(0, -1));
   return resultNumber;
+}
+
+/**
+ * Sets a trustline for a token on the Stellar network.
+ * @param {Object} options - The options object.
+ * @param {string} options.tokenSymbol - The symbol of the token.
+ * @param {Keypair} options.source - The source keypair for the transaction.
+ * @returns {Promise<StellarSdk.TransactionResponse>} A promise that resolves with the transaction response.
+ * @throws {Error} Throws an error if there is no active chain, no sorobanServer connected, or if network passphrase is missing.
+ */
+export async function setBlendTrustline({
+  source,
+  tokenSymbol,
+}: {
+  source: Keypair
+  tokenSymbol: string
+}) {
+  let tokenAdmin = loadedConfig.getUser("BLEND_DEPLOYER_SECRET_KEY");
+  let account = await loadedConfig.rpc.getAccount(source.publicKey());
+  const operation = Operation.changeTrust({
+    source: source.publicKey(),
+    asset: new Asset(tokenSymbol, tokenAdmin.publicKey()),
+  })
+
+  const txn = new TransactionBuilder(account, {
+    fee: '100',
+    timebounds: { minTime: 0, maxTime: 0 },
+    networkPassphrase: loadedConfig.passphrase,
+  })
+    .addOperation(operation)
+    .setTimeout(TimeoutInfinite)
+    .build()
+
+  txn.sign(source);
+  
+  try {
+    const submitted_transaction = await loadedConfig.horizonRpc.submitTransaction(txn);
+    if(submitted_transaction.successful){
+      console.log("Trustline set successfully");
+    } else {
+      throw submitted_transaction;
+    }
+  } catch (error) {
+    console.log("Error setting trustline:", error);
+  }
 }
