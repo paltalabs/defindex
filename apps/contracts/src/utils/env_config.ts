@@ -10,12 +10,16 @@ dotenv.config({ path: path.join(__dirname, "../../.env") });
 
 interface NetworkConfig {
   network: string;
-  friendbot_url: string;
+  friendbot_url?: string;
   horizon_rpc_url: string;
-  soroban_rpc_url: string;
+  soroban_rpc_url?: string;
   soroban_network_passphrase: string;
   blend_keeper: string;
   defindex_fee_receiver: string;
+  vault_emergency_manager: string;
+  vault_rebalance_manager: string;
+  vault_name: string;
+  vault_symbol: string;
 }
 
 interface Config {
@@ -32,6 +36,10 @@ class EnvConfig {
   admin: Keypair;
   blendKeeper: string;
   defindexFeeReceiver: string;
+  vaultEmergencyManager: string;
+  vaultRebalanceManager: string;
+  vaultName: string;
+  vaultSymbol: string;
 
   constructor(
     rpc: rpc.Server,
@@ -40,7 +48,11 @@ class EnvConfig {
     friendbot: string | undefined,
     admin: Keypair,
     blendKeeper: string,
-    defindexFeeReceiver: string
+    defindexFeeReceiver: string,
+    vaultEmergencyManager: string,
+    vaultRebalanceManager: string,
+    vaultName: string,
+    vaultSymbol: string
   ) {
     this.rpc = rpc;
     this.horizonRpc = horizonRpc;
@@ -49,6 +61,10 @@ class EnvConfig {
     this.admin = admin;
     this.blendKeeper = blendKeeper;
     this.defindexFeeReceiver = defindexFeeReceiver;
+    this.vaultEmergencyManager = vaultEmergencyManager;
+    this.vaultRebalanceManager = vaultRebalanceManager;
+    this.vaultName = vaultName;
+    this.vaultSymbol = vaultSymbol;
   }
 
   /**
@@ -63,6 +79,7 @@ class EnvConfig {
     const configs: Config = JSON.parse(fileContents);
 
     let rpc_url, horizon_rpc_url, friendbot_url, passphrase, blendKeeper, defindexFeeReceiver;
+    let vaultEmergencyManager, vaultRebalanceManager, vaultName, vaultSymbol;
 
     const networkConfig = configs.networkConfig.find(
       (config) => config.network === network
@@ -77,6 +94,10 @@ class EnvConfig {
       "soroban_network_passphrase",
       "blend_keeper",
       "defindex_fee_receiver",
+      "vault_emergency_manager",
+      "vault_rebalance_manager",
+      "vault_name",
+      "vault_symbol",
     ];
 
     if (network === "mainnet") {
@@ -86,6 +107,10 @@ class EnvConfig {
       friendbot_url = undefined;
       blendKeeper = networkConfig.blend_keeper;
       defindexFeeReceiver = networkConfig.defindex_fee_receiver;
+      vaultEmergencyManager = networkConfig.vault_emergency_manager;
+      vaultRebalanceManager = networkConfig.vault_rebalance_manager;
+      vaultName = networkConfig.vault_name;
+      vaultSymbol = networkConfig.vault_symbol;
     } else {
       rpc_url = networkConfig.soroban_rpc_url;
       horizon_rpc_url = networkConfig.horizon_rpc_url;
@@ -93,11 +118,15 @@ class EnvConfig {
       passphrase = networkConfig.soroban_network_passphrase;
       blendKeeper = networkConfig.blend_keeper;
       defindexFeeReceiver = networkConfig.defindex_fee_receiver;
+      vaultEmergencyManager = networkConfig.vault_emergency_manager;
+      vaultRebalanceManager = networkConfig.vault_rebalance_manager;
+      vaultName = networkConfig.vault_name;
+      vaultSymbol = networkConfig.vault_symbol;
       config_fields.push("friendbot_url");
       config_fields.push("soroban_rpc_url");
     }
 
-    const admin = process.env.ADMIN_SECRET_KEY;
+    const admin = process.env.DEPLOYER_SECRET_KEY;
 
     for (const field of config_fields) {
       if (!(field in networkConfig)) {
@@ -108,12 +137,12 @@ class EnvConfig {
           `Missing field '${field}' in network configuration for '${network}'`
         );
       }
-      if (networkConfig[field as keyof NetworkConfig].length < 1) {
+      if ((networkConfig[field as keyof NetworkConfig] ?? "").length < 1) {
         console.error(
-          `Field '${field}' in network configuration for '${network}' must have an acceptable value`
+          `Field '${field}' in network configuration for '${network}' must be defined`
         );
         throw new Error(
-          `Field '${field}' in network configuration for '${network}' must have an acceptable value`
+          `Field '${field}' in network configuration for '${network}' must be defined`
         );
       }
     }
@@ -128,6 +157,10 @@ class EnvConfig {
       Keypair.fromSecret(admin!),
       blendKeeper,
       defindexFeeReceiver,
+      vaultEmergencyManager,
+      vaultRebalanceManager,
+      vaultName,
+      vaultSymbol
     );
   }
 
