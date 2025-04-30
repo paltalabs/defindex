@@ -399,8 +399,6 @@ fn success() {
     // Print strategy balance for users
     println!("after harvest User 2 strategy balance: {}", strategy_client.balance(&user_2));
     println!("User 3 strategy balance: {}", strategy_client.balance(&user_3));
-    let user_2_strategy_balance = strategy_client.balance(&user_2);
-    let user_3_strategy_balance = strategy_client.balance(&user_3);
     // -> verify over withdraw fails
     let result =
         strategy_client.try_withdraw(&(expected_withdraw_amount + 1), &user_2, &user_2);
