@@ -41,6 +41,7 @@ impl RequestType {
 ///
 /// This function transfers the specified `amount` of the underlying asset from the strategy contract
 /// to the Blend pool and determines the exact number of `bTokens` minted in return.
+/// If reinvest is true, the minted amount is calculated by comparing the `bToken` balance before and after the deposit.
 ///
 /// # Arguments
 /// * `e` - The execution environment.
@@ -138,7 +139,7 @@ pub fn supply(
 /// * `config` - The contract configuration containing pool and asset details.
 ///
 /// # Returns
-/// * `Ok(i128)` - The amount of `bTokens` burned in the process.
+/// * `Ok(i128)` - The requested amount to withdraw.
 /// * `Err(StrategyError)` - If an error occurs.
 pub fn withdraw(
     e: &Env,
