@@ -30,4 +30,7 @@ pub enum StrategyError {
     BTokensAmountBelowMin = 453,
     InternalSwapError = 454,
     SupplyNotFound = 455,
+
+    // DebugErrors
+    DebugError5 = 5005,
 }
