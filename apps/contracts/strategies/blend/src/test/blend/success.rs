@@ -403,10 +403,10 @@ fn success() {
     let user_3_strategy_balance = strategy_client.balance(&user_3);
     // -> verify over withdraw fails
     let result =
-    strategy_client.try_withdraw(&(expected_withdraw_amount + 1), &user_2, &user_2);
+        strategy_client.try_withdraw(&(expected_withdraw_amount + 1), &user_2, &user_2);
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
     let result =
-    strategy_client.try_withdraw(&(expected_withdraw_amount + 1 ), &user_3, &user_3); 
+        strategy_client.try_withdraw(&(expected_withdraw_amount + 1 ), &user_3, &user_3); 
     assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
     println!("Expected withdraw amount for users {}", expected_withdraw_amount);
 
