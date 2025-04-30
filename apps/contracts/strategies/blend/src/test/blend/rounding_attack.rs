@@ -239,9 +239,12 @@ fn check_withdraw(optimal_w_amount:i128, expected_w_amount:i128) -> bool {
     let res = optimal_w_amount >= expected_w_amount;
     res
 }
-fn check_deposit(optimal_d_amount:i128, expected_d_amount:i128) -> bool {    let res = optimal_d_amount <= expected_d_amount;
+
+fn check_deposit(optimal_d_amount:i128, expected_d_amount:i128) -> bool {    
+    let res = optimal_d_amount <= expected_d_amount;
     res
 }
+
 fn test_optimal_deposit_amounts(setup: &BlendStrategyTestSetup, reserves_list: &Vec<StrategyReserves>, test_amount: i128){
     for reserves in reserves_list {
          // Calculate expected values
@@ -251,21 +254,23 @@ fn test_optimal_deposit_amounts(setup: &BlendStrategyTestSetup, reserves_list: &
          let expected_optimal_deposit = (optimal_b_tokens * reserves.b_rate - 1) / SCALAR_12 + 1;
          
          // Get actual optimal deposit
-         let optimal_deposit = utils::calculate_optimal_deposit_amount(test_amount, &reserves).unwrap();
+         let (optimal_deposit, optimal_b_tokens_actual) = utils::calculate_optimal_deposit_amount(test_amount, &reserves).unwrap();
          
          println!("Deposit amount: {}", test_amount);
          println!("B tokens that would be minted: {}", b_tokens_minted);
          println!("Shares that would be minted: {}", shares_minted);
-         println!("Optimal b tokens: {}", optimal_b_tokens);
+         println!("Optimal b tokens expected: {}", optimal_b_tokens);
+         println!("Optimal b tokens actual: {}", optimal_b_tokens_actual);
          println!("Expected optimal deposit: {}", expected_optimal_deposit);
          println!("Actual optimal deposit: {}", optimal_deposit);
          println!("Difference: {}", optimal_deposit - test_amount);
          println!("---");
          
          // The optimal deposit should match our manual calculation
-         assert_eq!(optimal_deposit, expected_optimal_deposit);          
+         assert_eq!(optimal_deposit, expected_optimal_deposit);
+         assert_eq!(optimal_b_tokens_actual, optimal_b_tokens);
          
-        let optimal_deposit_amount = setup.env.as_contract(&setup.strategy, || {
+        let (optimal_deposit_amount, _) = setup.env.as_contract(&setup.strategy, || {
             utils::calculate_optimal_deposit_amount(test_amount, &reserves)
         }).expect("failed to calculate amount");
         println!("Test amount: {:?}", test_amount);
@@ -274,6 +279,7 @@ fn test_optimal_deposit_amounts(setup: &BlendStrategyTestSetup, reserves_list: &
     }
     
 }
+
 fn test_optimal_withdraw_amounts(setup: &BlendStrategyTestSetup, reserves_list: &Vec<StrategyReserves>, test_amount: i128) {
     for reserves in reserves_list {
         print_reserves(&reserves);
@@ -283,22 +289,24 @@ fn test_optimal_withdraw_amounts(setup: &BlendStrategyTestSetup, reserves_list: 
         let optimal_b_tokens = (shares_burnt * reserves.total_b_tokens) / reserves.total_shares;
         let expected_optimal_withdraw = (optimal_b_tokens * reserves.b_rate) / SCALAR_12;
         
-        // Get actual optimal Witdraw
-        let optimal_withdraw = utils::calculate_optimal_withdraw_amount(test_amount, &reserves).unwrap();
+        // Get actual optimal Withdraw
+        let (optimal_withdraw, optimal_b_tokens_actual) = utils::calculate_optimal_withdraw_amount(test_amount, &reserves).unwrap();
 
-        println!("Witdraw amount: {}", test_amount);
+        println!("Withdraw amount: {}", test_amount);
         println!("B tokens that would be burnt: {}", b_tokens_burnt);
         println!("Shares that would be burnt: {}", shares_burnt);
-        println!("Optimal b tokens: {}", optimal_b_tokens);
-        println!("Expected optimal Witdraw: {}", expected_optimal_withdraw);
-        println!("Actual optimal Witdraw: {}", optimal_withdraw);
+        println!("Optimal b tokens expected: {}", optimal_b_tokens);
+        println!("Optimal b tokens actual: {}", optimal_b_tokens_actual);
+        println!("Expected optimal withdraw: {}", expected_optimal_withdraw);
+        println!("Actual optimal withdraw: {}", optimal_withdraw);
         println!("Difference: {}", optimal_withdraw - test_amount);
         println!("---");
         
-        // The optimal Witdraw should match our manual calculation
-        assert_eq!(optimal_withdraw, expected_optimal_withdraw);     
+        // The optimal withdraw should match our manual calculation
+        assert_eq!(optimal_withdraw, expected_optimal_withdraw);
+        assert_eq!(optimal_b_tokens_actual, optimal_b_tokens);
 
-        let optimal_withdraw_amount = setup.env.as_contract(&setup.strategy, || {
+        let (optimal_withdraw_amount, _) = setup.env.as_contract(&setup.strategy, || {
             utils::calculate_optimal_withdraw_amount(test_amount, &reserves)
         }).expect("failed to calculate amount");
         println!("Test amount: {:?}", test_amount);
