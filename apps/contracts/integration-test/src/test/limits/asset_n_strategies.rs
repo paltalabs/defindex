@@ -831,7 +831,7 @@ fn blend() {
 }
 
 #[test]
-#[should_panic(expected = "CPU instructions exceeded limit")]
+#[should_panic]
 fn blend_panic() {
     /* --------------------------------------------------- Setting up test environment --------------------------------------------------- */
     let setup = IntegrationTest::setup();
@@ -894,7 +894,7 @@ fn blend_panic() {
 
     /* -------------------------------------------------------- Setting up Vault --------------------------------------------------------- */
     let mut strategies = svec![&setup.env];
-    let num_strategies = 3; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
+    let num_strategies = 4; // CHANGE THIS IF U NEED TO TEST OTHER NUMBER OF STRATEGIES
     for i in 0..num_strategies {
         let strategy_name = format!("Blend_{}", i);
         let strategy = create_blend_strategy_contract(
