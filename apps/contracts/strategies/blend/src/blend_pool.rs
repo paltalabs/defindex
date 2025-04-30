@@ -49,15 +49,28 @@ impl RequestType {
 /// * `config` - The contract configuration containing pool and asset details.
 ///
 /// # Returns
-/// * `Ok(i128)` - The number of `bTokens` minted to the strategy.
+/// * `Ok(i128)` - The number of `bTokens` minted to the strategy if reinvest is true, otherwise the supplied amount is returned.
 /// * `Err(StrategyError)` - If an underflow or overflow occurs.
 pub fn supply(
     e: &Env,
     from: &Address,
     amount: &i128,
     config: &Config,
+    is_reinvest: bool,
 ) -> Result<i128, StrategyError> {
     let pool_client = BlendPoolClient::new(e, &config.pool);
+    
+    // Get deposit amount pre-supply only if we need it for reinvest
+    let pre_supply_amount = if is_reinvest {
+        pool_client
+            .get_positions(&e.current_contract_address())
+            .supply
+            .try_get(config.reserve_id)
+            .unwrap_or(Some(0))
+            .unwrap_or(0)
+    } else {
+        0
+    };
 
     let requests: Vec<Request> = vec![
         &e,
@@ -85,16 +98,35 @@ pub fn supply(
         }),
     ]);
 
-    pool_client.submit(
-        &e.current_contract_address(),
-        &e.current_contract_address(),
-        &from,
-        &requests,
-    );
-
-    // Use the b_tokens_amount from calculate_optimal_deposit_amount instead of calculating here
-    // This is now handled by the caller
-    Ok(*amount)
+    if is_reinvest {
+        let new_positions = pool_client.submit(
+            &e.current_contract_address(),
+            &e.current_contract_address(),
+            &from,
+            &requests,
+        );
+        // Calculate the amount of bTokens received
+        let new_supply_amount = new_positions
+            .supply
+            .try_get(config.reserve_id)
+            .unwrap_or(Some(0))
+            .unwrap_or(0);
+    
+        // Calculate the amount of bTokens received
+        let b_tokens_amount = new_supply_amount
+            .checked_sub(pre_supply_amount)
+            .ok_or_else(|| StrategyError::UnderflowOverflow)?;
+        
+        Ok(b_tokens_amount)
+    } else {
+        pool_client.submit(
+            &e.current_contract_address(),
+            &e.current_contract_address(),
+            &from,
+            &requests,
+        );
+        Ok(*amount)
+    }
 }
 
 /// Executes a user withdrawal of the underlying asset from the Blend pool on behalf of the strategy.
@@ -209,7 +241,7 @@ pub fn perform_reinvest(e: &Env, config: &Config, amount_out_min: i128) -> Resul
         .into_val(e);
 
     // Supplying underlying asset into blend pool
-    let b_tokens_minted = supply(&e, &e.current_contract_address(), &amount_out, &config)?;
+    let b_tokens_minted = supply(&e, &e.current_contract_address(), &amount_out, &config, true)?;
 
     reserves::harvest(&e, b_tokens_minted, &config)?;
 
