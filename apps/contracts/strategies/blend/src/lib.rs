@@ -178,7 +178,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
         token_client.transfer(&e.current_contract_address(), &from, &(amount - optimal_deposit_amount));
         
         // supplies the asset to the Blend pool and mints bTokens
-        blend_pool::supply(&e, &from, &optimal_deposit_amount, &config)?;
+        blend_pool::supply(&e, &from, &optimal_deposit_amount, &config, false)?;
 
         // Keeping track of the total deposited amount and the total bTokens owned by the caller (vault)
         let (vault_shares, reserves) =
