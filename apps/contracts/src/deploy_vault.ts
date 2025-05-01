@@ -10,51 +10,33 @@ import {
 import { CreateVaultParams } from "./tests/types.js";
 import { airdropAccount, invokeContract } from "./utils/contract.js";
 import { getTransactionBudget } from "./utils/tx.js";
+import { AssetFromString, Strategies } from "./utils/deploy_tools.js";
 
 const network = process.argv[2];
+const asset = process.argv[3];
+
 const addressBook = AddressBook.loadFromFile(network);
-const othersAddressBook = AddressBook.loadFromFile(network, "../../public");
+const externalAddressBook = AddressBook.loadFromFile(network, "../../public");
 const publicAddressBook = AddressBook.loadFromFile(network, "../../../../public");
 
-const asset = process.argv[3];
-const allowedAssets = ["XLM", "USDC"];
 const allowedStrategies = [
-  "blend",
- /*  "hodl",
-  "fixed_apr" */
+  Strategies.BLEND,
+  Strategies.HODL,
+  /* Strategies.FIXED_APR */
 ]
 
-if (!asset || !allowedAssets.includes(asset.toUpperCase())) {
-  console.log("Please provide a valid asset symbol");
-  console.log("Allowed assets are: \n - XLM \n - USDC");
-  exit(1);
-}
-
 const loadedConfig = config(network);
-const xlmAddress = new Address(
-  Asset.native().contractId(loadedConfig.passphrase)
-);
-let assetAddress: Address;
-switch (asset.toUpperCase()) {
-  case "XLM":
-    assetAddress = xlmAddress;
-    break;
-  case "USDC":
-    assetAddress = new Address(othersAddressBook.getContractId("blend_pool_usdc"));
-    break;
-  default:
-    console.log("Invalid asset symbol");
-    exit(1);
-}
-const blend_strategy = addressBook.getContractId(`${asset.toLowerCase()}_blend_strategy`);
-const soroswap_router = othersAddressBook.getContractId("soroswap_router");
 
-if (!blend_strategy || !soroswap_router) {
+const soroswap_router = externalAddressBook.getContractId("soroswap_router");
+
+if (!soroswap_router) {
   console.error(
     `Please, make sure that ${network}.contracts.json are up to date at the ./soroban and ./public folders.`
   );
   exit(1);
 };
+
+const assetAddress = AssetFromString(asset, loadedConfig, externalAddressBook);
 
 const params: CreateVaultParams[] = [
   {
@@ -107,8 +89,7 @@ export async function deployVault(
   vaultName: string,
   vaultSymbol: string
 ): Promise<any> {
-  const assets: CreateVaultParams[] = createVaultParams;
-  const assetAllocations = getAssetAllocations(assets);
+  const assetAllocations = getAssetAllocations(createVaultParams);
 
   const createDeFindexParams: xdr.ScVal[] = getCreateDeFindexParams(
     Keypair.fromPublicKey(loadedConfig.vaultEmergencyManager), //Emergency manager
@@ -144,7 +125,7 @@ export async function deployVault(
   }
 }
 
-async function deployBlendVault() {
+async function deployDefindexVault() {
     if(network != "mainnet") await airdropAccount(loadedConfig.admin);
     console.log(yellow, "--------------------------------------");
     console.log(yellow, "Deploying XLM Blend strategy vault");
@@ -175,5 +156,5 @@ async function deployBlendVault() {
     }
 };
 
-await deployBlendVault();
+await deployDefindexVault();
 addressBook.writeToFile();
