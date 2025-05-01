@@ -28,7 +28,7 @@ interface Config {
   networkConfig: NetworkConfig[];
 }
 
-class EnvConfig {
+export class EnvConfig {
   rpc: rpc.Server;
   horizonRpc: Horizon.Server;
   passphrase: string;
