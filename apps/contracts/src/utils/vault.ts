@@ -208,6 +208,7 @@ export function getCreateDeFindexParams(
         assets: Vec<AssetStrategySet>,
         soroswap_router: Address,
         name_symbol: Map<String, String>,
+        upgradable: bool,
     ) -> Result<Address, FactoryError>;
   */
   return [
