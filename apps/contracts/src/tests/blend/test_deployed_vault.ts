@@ -2,7 +2,7 @@ import { Asset, Keypair, scValToNative, Networks } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
 import { airdropAccount, invokeCustomContract } from "../../utils/contract.js";
 import { config } from "../../utils/env_config.js";
-import { depositToVault, Instruction, rebalanceVault, withdrawFromVault } from "../vault.js";
+import { depositToVault, Instruction, rebalanceVault, withdrawFromVault } from "../../utils/vault.js";
 import { getTransactionBudget } from "../../utils/tx.js";
 
 const network = process.argv[2];

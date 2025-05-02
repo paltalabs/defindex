@@ -11,7 +11,7 @@ import {
   withdrawFromVault,
   fetchTotalManagedFunds,
   fetchTotalSupply
-} from "../vault.js";
+} from "../../utils/vault.js";
 import { green, purple, red, yellow } from "../common.js";
 import { airdropAccount } from "../../utils/contract.js";
 import { 

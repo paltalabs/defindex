@@ -9,7 +9,7 @@ import {
 } from "@stellar/stellar-sdk";
 import { SOROSWAP_ROUTER } from "./constants.js";
 import { checkUserBalance, depositToStrategy, withdrawFromStrategy } from "./tests/strategy.js";
-import { depositToVault, getCreateDeFindexParams, rebalanceManager, withdrawFromVault } from "./tests/vault.js";
+import { depositToVault, getCreateDeFindexParams, rebalanceManager, withdrawFromVault } from "./utils/vault.js";
 import { AddressBook } from "./utils/address_book.js";
 import { airdropAccount, invokeContract } from "./utils/contract.js";
 import { config } from "./utils/env_config.js";
@@ -44,7 +44,7 @@ export async function test_factory(addressBook: AddressBook) {
       strategies: [
         {
           name: "Strategy 1",
-          address: addressBook.getContractId("hodl_strategy"),
+          address: strategyAddress,
           paused: false
         }
       ]
@@ -109,6 +109,7 @@ const network = process.argv[2];
 const addressBook = AddressBook.loadFromFile(network);
 const xlm: Asset = Asset.native()
 const passphrase = network === "mainnet" ? Networks.PUBLIC : network === "testnet" ? Networks.TESTNET : Networks.STANDALONE;
+const strategyAddress = addressBook.getContractId("xlm_hodl_strategy");
 
 const loadedConfig = config(network);
 
@@ -122,7 +123,7 @@ const{
   balanceBefore: balanceBeforeStrategyDeposit, 
   result: strategyDepositResult,
   balanceAfter: balanceAfterStrategyDeposit} 
-  = await depositToStrategy(addressBook.getContractId("hodl_strategy"), myUser, 1234567890);
+  = await depositToStrategy(strategyAddress, myUser, 1234567890);
 
 
 console.log(" -- ")
@@ -138,7 +139,7 @@ const {
   balanceBefore: balanceBeforeStrategyWithdraw,
   result: strategyWithdrawResult,
   balanceAfter: balanceAfterStrategyWithdraw
-} = await withdrawFromStrategy(addressBook.getContractId("hodl_strategy"), myUser, 567890);
+} = await withdrawFromStrategy(strategyAddress, myUser, 567890);
 
 console.log(" -- ")
 console.log(" -- ")
@@ -166,7 +167,7 @@ console.log(" -- ")
 console.log(" -- ")
 
 // Step 2: Check strategy balance after deposit
-const strategyBalanceAfterDeposit = await checkUserBalance(addressBook.getContractId("hodl_strategy"), user.publicKey(), user);
+const strategyBalanceAfterDeposit = await checkUserBalance(strategyAddress, user.publicKey(), user);
 console.log(" -- ")
 console.log(" -- ")
 console.log("Step 2: Strategy balance after deposit:", strategyBalanceAfterDeposit);
@@ -199,7 +200,7 @@ const { balanceBefore: withdrawBalanceBefore, result: withdrawResult, balanceAft
   = await withdrawFromVault(deployedVault,[0], 4321, user);
 
 // Step 4: Check strategy balance after withdrawal
-const strategyBalanceAfterWithdraw = await checkUserBalance(addressBook.getContractId("hodl_strategy"), user.publicKey(), user);
+const strategyBalanceAfterWithdraw = await checkUserBalance(strategyAddress, user.publicKey(), user);
 
 // Log a table with all balances
 console.table([

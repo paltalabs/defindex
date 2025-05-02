@@ -8,7 +8,7 @@ import {
   rebalanceVault,
   rescueFromStrategy,
   withdrawFromVault
-} from "../vault.js";
+} from "../../utils/vault.js";
 import { green, purple, red, yellow } from "../common.js";
 import { airdropAccount } from "../../utils/contract.js";
 import { compareTotalManagedFunds, deployDefindexVault, fetchBalances, fetchStrategiesBalances, generateExpectedTotalAmounts, generateTotalAmountsError } from "./utils.js";
