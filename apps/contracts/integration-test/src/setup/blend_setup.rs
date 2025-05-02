@@ -5,7 +5,7 @@ pub const SCALAR_7: i128 = 1_0000000;
 use soroban_sdk::{
     testutils::{BytesN as _, Ledger as _, LedgerInfo, Address as _},
     token::StellarAssetClient,
-    vec, Address, BytesN, Env, String, Symbol, Vec, IntoVal, Val,
+    vec, Address, BytesN, Env, String, Symbol, Vec
 };
 
 use soroban_fixed_point_math::FixedPoint;
@@ -17,7 +17,7 @@ pub mod comet {
 pub mod backstop {
     soroban_sdk::contractimport!(file = "../strategies/external_wasms/blend/backstop.wasm");
 }
-use backstop::{Client as BackstopClient};
+use backstop::Client as BackstopClient;
 
 // ONE_DAY_LEDGERS
 const ONE_DAY_LEDGERS: u32 = 86400 / 5;
