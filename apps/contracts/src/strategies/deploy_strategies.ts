@@ -5,19 +5,21 @@ import {
   deployContract,
   installContract
 } from "../utils/contract.js";
-import { config } from "../utils/env_config.js";
 import { InitStrategyDeploy, Strategies, StrategyData } from "../utils/deploy_tools.js";
+import { config } from "../utils/env_config.js";
 
 const network = process.argv[2];
 const asset = process.argv[3];
+const number_of_strategies = process.argv[4] || "1";
+const forceInstall = process.argv[5] || false;
 
 const addressBook = AddressBook.loadFromFile(network);
-const externalAddressBook = AddressBook.loadFromFile(network, "workspace/apps/contracts/public");
+const externalAddressBook = AddressBook.loadFromFile(network, "../../public");
 
 const strategiesToDeploy = [
   Strategies.BLEND,
-  Strategies.HODL,
-  Strategies.FIXED_APR 
+  // Strategies.HODL,
+  // Strategies.FIXED_APR 
 ]
 
 const loadedConfig = config(network);
@@ -44,7 +46,9 @@ export async function deployContracts(addressBook: AddressBook, assetAddress: Ad
     console.log("-------------------------------------------------------");
     console.log(`Deploying ${strategy.name}...`);
     console.log("-------------------------------------------------------");
-    await installContract(strategy.wasm_key, addressBook, loadedConfig.admin);
+    if (forceInstall) {
+      await installContract(strategy.wasm_key, addressBook, loadedConfig.admin);
+    }
 
     const assetAddressScval = assetAddress.toScVal();
     for (let i = 0; i < quantity; i++) {
@@ -61,7 +65,7 @@ export async function deployContracts(addressBook: AddressBook, assetAddress: Ad
 }
 
 try {
-  await deployContracts(addressBook, assetAddress, strategyData);
+  await deployContracts(addressBook, assetAddress, strategyData, parseInt(number_of_strategies));
 } catch (e) {
   console.error(e);
 }
