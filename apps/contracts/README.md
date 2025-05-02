@@ -29,12 +29,22 @@ Deploying a **Defindex** vault requires careful configuration. Follow these step
         
 2.  **Configuration:** Verify that the `configs.json` file has the correct settings for mainnet deployment.
     
-3.  **Contract Addresses:** Make sure that the `public/mainnet.contracts.json` file is up to date.
+3.  **Select Strategies:** You can comment the strategies you dont want to deploy in the array in `src/deploy_vault.ts` to deploy different strategies. 
         
 4.  **Deploy Blend Vault:**
     ```
-    yarn deploy-blend-vault <network> <asset>
+    yarn deploy-vault <network> <asset>
     ```
+
+## Deploying strategies
+You can deploy the strategies by running:
+```
+yarn deploy-strategies <network> <asset_symbol> <number_of_strategies> <force_install> # number of strategies deployed, to run tests use with value 2
+```
+You can comment the strategies you dont want to deploy in the array in `src/strategies/deploy_strategies.ts` to deploy different strategies.
+if number of strategies is not specified, it will deploy one strategy.
+
+leave force_install empty if the wasm for the strategy is already installed(hasnt changed).
 
 ## Tests on typescript
 Make sure that you have configured the `.env` file and set your configs at `configs.json` file
@@ -43,7 +53,7 @@ Before running the tests, you need to deploy the contracts, you can do this by r
 cd  apps/contracts
 make  build
 yarn deploy-factory <network>
-yarn deploy-strategies <network> <asset_symbol> 2 # number of strategies deployed, to run tests use with value 2
+yarn deploy-strategies <network> <asset_symbol> 2 true # number of strategies deployed, to run tests use with value 2
 yarn publish-addresses <network>
 yarn deploy-vault <network> <asset_symbol>
 ```
