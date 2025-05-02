@@ -175,7 +175,10 @@ impl DeFindexStrategyTrait for BlendStrategy {
         // transfer tokens from the vault to this (strategy) contract
         let token_client = TokenClient::new(&e, &config.asset);
         token_client.transfer(&from, &e.current_contract_address(), &amount);
-        token_client.transfer(&e.current_contract_address(), &from, &(amount - optimal_deposit_amount));
+        if amount != optimal_deposit_amount {
+            // transfer the remaining amount back to the vault
+            token_client.transfer(&e.current_contract_address(), &from, &(amount - optimal_deposit_amount));
+        }
         
         // supplies the asset to the Blend pool and mints bTokens
         blend_pool::supply(&e, &from, &optimal_deposit_amount, &config, false)?;
