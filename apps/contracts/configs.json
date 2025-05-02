@@ -4,12 +4,12 @@
       "network": "mainnet",
       "horizon_rpc_url": "https://horizon.stellar.org",
       "soroban_network_passphrase": "Public Global Stellar Network ; September 2015",
-      "defindex_fee_receiver": "",
-      "blend_keeper": "",
-      "vault_emergency_manager": "",
-      "vault_rebalance_manager": "",
-      "vault_name": "",
-      "vault_symbol": ""
+      "defindex_fee_receiver": "GDOFDSMFRPOYTOLWODK4O6BZTGDJ4GRHLHX5THXN4TIFE2SXASQYFLPJ",
+      "blend_keeper": "GDOFDSMFRPOYTOLWODK4O6BZTGDJ4GRHLHX5THXN4TIFE2SXASQYFLPJ",
+      "vault_emergency_manager": "GDOFDSMFRPOYTOLWODK4O6BZTGDJ4GRHLHX5THXN4TIFE2SXASQYFLPJ",
+      "vault_rebalance_manager": "GDOFDSMFRPOYTOLWODK4O6BZTGDJ4GRHLHX5THXN4TIFE2SXASQYFLPJ",
+      "vault_name": "GDOFDSMFRPOYTOLWODK4O6BZTGDJ4GRHLHX5THXN4TIFE2SXASQYFLPJ",
+      "vault_symbol": "GDOFDSMFRPOYTOLWODK4O6BZTGDJ4GRHLHX5THXN4TIFE2SXASQYFLPJ"
     },
     {
       "network": "standalone",
