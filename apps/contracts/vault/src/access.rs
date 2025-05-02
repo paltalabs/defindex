@@ -42,9 +42,6 @@ impl AccessControlTrait for AccessControl {
     }
 
     fn check_role(&self, key: &RolesDataKey) -> Result<Address, ContractError> {
-        if !self.has_role(key) {
-            panic_with_error!(&self.0, ContractError::RoleNotFound);
-        }
         self.get_role(key).ok_or(ContractError::RoleNotFound)
     }
 
