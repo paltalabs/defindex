@@ -195,7 +195,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
         // Calculates the new amount of underlying assets invested in the Blend Vault, owned by the caller (vault)
         let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
 
-        event::emit_deposit(&e, String::from_str(&e, STRATEGY_NAME), amount, from);
+        event::emit_deposit(&e, String::from_str(&e, STRATEGY_NAME), optimal_deposit_amount, from);
         Ok(underlying_balance)
     }
 
