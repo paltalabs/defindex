@@ -236,31 +236,6 @@ pub fn calculate_deposit_amounts_and_shares_to_mint(
         if !should_skip {
             return Ok((optimal_amounts, shares_to_mint));
         }
-
-        // Only return NoOptimalAmounts if this was the last valid reference asset
-        if i == total_managed_funds.len().checked_sub(1).ok_or(ContractError::Underflow)? {
-            // If we got here and all attempts failed, check if any failure was due to insufficient amounts
-            let (final_amounts, _) = calculate_optimal_amounts_and_shares_with_enforced_asset(
-                e,
-                total_managed_funds,
-                amounts_desired,
-                i,
-            );
-            
-            for j in 0..total_managed_funds.len() {
-                if j == i || total_managed_funds.get(j).unwrap().total_amount == 0 {
-                    continue;
-                }
-                let min_amount = amounts_min.get(j)
-                    .ok_or(ContractError::WrongAmountsLength)?;
-                let optimal_amount = final_amounts.get(j)
-                    .ok_or(ContractError::WrongAmountsLength)?;
-                if optimal_amount < min_amount {
-                    return Err(ContractError::NoOptimalAmounts);
-                }
-            }
-            return Err(ContractError::NoOptimalAmounts);
-        }
     }
 
     Err(ContractError::NoOptimalAmounts)
