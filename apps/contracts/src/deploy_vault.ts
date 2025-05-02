@@ -1,15 +1,15 @@
 import { Address, Keypair, nativeToScVal, scValToNative, xdr } from "@stellar/stellar-sdk";
 import { exit } from "process";
-import { AddressBook } from "./utils/address_book.js";
-import { config } from "./utils/env_config.js";
 import { green, red, yellow } from "./tests/common.js";
+import { CreateVaultParams } from "./tests/types.js";
+import { AddressBook } from "./utils/address_book.js";
+import { airdropAccount, invokeContract } from "./utils/contract.js";
+import { AssetFromString, Strategies } from "./utils/deploy_tools.js";
+import { config } from "./utils/env_config.js";
+import { getTransactionBudget } from "./utils/tx.js";
 import {
   getCreateDeFindexParams,
 } from "./utils/vault.js";
-import { CreateVaultParams } from "./tests/types.js";
-import { airdropAccount, invokeContract } from "./utils/contract.js";
-import { getTransactionBudget } from "./utils/tx.js";
-import { AssetFromString, Strategies } from "./utils/deploy_tools.js";
 
 const network = process.argv[2];
 const asset = process.argv[3];
@@ -136,7 +136,7 @@ async function deployDefindexVault() {
         readBytes:deploy_read_bytes, 
         writeBytes:deploy_write_bytes
       } = await deployVault(
-        addressBook,
+        publicAddressBook,
         params,
         loadedConfig.vaultName,
         loadedConfig.vaultSymbol
