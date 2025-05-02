@@ -20,7 +20,6 @@ impl AccessControl {
 }
 
 pub trait AccessControlTrait {
-    fn has_role(&self, key: &RolesDataKey) -> bool;
     fn get_role(&self, key: &RolesDataKey) -> Option<Address>;
     fn set_role(&self, key: &RolesDataKey, role: &Address);
     fn check_role(&self, key: &RolesDataKey) -> Result<Address, ContractError>;
@@ -29,10 +28,6 @@ pub trait AccessControlTrait {
 }
 
 impl AccessControlTrait for AccessControl {
-    fn has_role(&self, key: &RolesDataKey) -> bool {
-        self.0.storage().instance().has(key)
-    }
-
     fn get_role(&self, key: &RolesDataKey) -> Option<Address> {
         self.0.storage().instance().get(key)
     }
@@ -42,9 +37,6 @@ impl AccessControlTrait for AccessControl {
     }
 
     fn check_role(&self, key: &RolesDataKey) -> Result<Address, ContractError> {
-        if !self.has_role(key) {
-            panic_with_error!(&self.0, ContractError::RoleNotFound);
-        }
         self.get_role(key).ok_or(ContractError::RoleNotFound)
     }
 
