@@ -43,8 +43,7 @@ Before running the tests, you need to deploy the contracts, you can do this by r
 cd  apps/contracts
 make  build
 yarn deploy-factory <network>
-yarn deploy-strategies <network> <asset_symbol> <quantity> # number of strategies deployed, to run tests use with value 2
-yarn deploy-vault <network> <asset_symbol>
+yarn deploy-strategies <network> <asset_symbol> 2 # number of strategies deployed, to run tests use with value 2
 yarn publish-addresses <network>
 yarn deploy-vault <network> <asset_symbol>
 ```
