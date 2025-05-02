@@ -1,18 +1,18 @@
-import { Address, scValToNative, xdr, nativeToScVal } from "@stellar/stellar-sdk";
-import { AddressBook } from "./utils/address_book.js";
-import { config } from "./utils/env_config.js";
-import { airdropAccount, invokeContract, invokeCustomContract } from "./utils/contract.js";
-import { Instruction, mapInstructionsToParams } from "./utils/vault.js";
+import { Address, nativeToScVal, scValToNative, xdr } from "@stellar/stellar-sdk";
 import { green } from "./tests/common.js";
+import { AddressBook } from "./utils/address_book.js";
+import { airdropAccount, invokeContract, invokeCustomContract } from "./utils/contract.js";
+import { config } from "./utils/env_config.js";
+import { Instruction, mapInstructionsToParams } from "./utils/vault.js";
 
 const network = process.argv[2];
-const addressBook = AddressBook.loadFromFile(network);
+const addressBook = AddressBook.loadFromFile(network, "../../../../public");
 
 const deposit = async () => {
-  const amount = [10_0_000_000];
+  const amount = [1_0_000_000];
   const invest = false;
   try {
-    const vault_address = addressBook.getContractId("xlm_blend_vault");
+    const vault_address = addressBook.getContractId("usdc_blend_vault");
     
     const user = config(network).getUser('TEST_USER');
     if (network !== "mainnet") await airdropAccount(user);
@@ -48,7 +48,7 @@ const withdraw = async (
   const withdrawAmount = 2_0_000_000;
   const min_amounts_out = [0];
   try {
-    const vault_address = addressBook.getContractId("xlm_blend_vault");
+    const vault_address = addressBook.getContractId("usdc_blend_vault");
     
     const user = config(network).getUser('TEST_USER');
     if (network !== "mainnet") await airdropAccount(user);
@@ -77,17 +77,17 @@ const withdraw = async (
 };
 
 const invest = async () => {
-  const amount = 9_0_000_000;
+  const amount = 1_0_000_000;
   try {
-    const vault_address = addressBook.getContractId("xlm_blend_vault");
-    const admin = config(network).getUser('ADMIN_SECRET_KEY');
+    const vault_address = addressBook.getContractId("usdc_blend_vault");
+    const admin = config(network).getUser('DEPLOYER_SECRET_KEY');
     if (network !== "mainnet") await airdropAccount(admin);
 
     const invest_amount = BigInt(Math.ceil(amount));
     const instructions: Instruction[] = [
       {
         type: "Invest",
-        strategy: addressBook.getContractId("xlm_blend_strategy"),
+        strategy: addressBook.getContractId("usdc_blend_strategy"),
         amount: invest_amount,
       }
     ];
@@ -115,15 +115,15 @@ const invest = async () => {
 const unwind = async () => {
   const amount = 4_0_000_000;
   try {
-    const vault_address = addressBook.getContractId("xlm_blend_vault");
-    const admin = config(network).getUser('ADMIN_SECRET_KEY');
+    const vault_address = addressBook.getContractId("usdc_blend_vault");
+    const admin = config(network).getUser('DEPLOYER_SECRET_KEY');
     if (network !== "mainnet") await airdropAccount(admin);
 
     const invest_amount = BigInt(Math.ceil(amount));
     const instructions: Instruction[] = [
       {
         type: "Unwind",
-        strategy: addressBook.getContractId("xlm_blend_strategy"),
+        strategy: addressBook.getContractId("usdc_blend_strategy"),
         amount: invest_amount,
       }
     ];
@@ -172,7 +172,7 @@ const harvest = async () => {
     console.error("Error in harvest:", error);
   }
 }
-//await deposit();
-//await invest();
+// await deposit();
+// await invest();
 //await withdraw();
 //await unwind();

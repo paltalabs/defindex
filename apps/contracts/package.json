@@ -15,7 +15,8 @@
     "test-blend-strategy": "tsc && node dist/tests/blend/test_strategy.js",
     "test-blend-vault": "tsc && node dist/tests/blend/test_vault.js",
     "test-deployed-blend-vault": "tsc && node dist/tests/blend/test_deployed_vault.js",
-    "count-lines": "tsc && node dist/count-lines.js"
+    "count-lines": "tsc && node dist/count-lines.js",
+    "vault-example": "tsc && node dist/vault_usage_example.js"
   },
   "type": "module",
   "devDependencies": {
