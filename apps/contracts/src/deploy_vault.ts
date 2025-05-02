@@ -15,8 +15,8 @@ const network = process.argv[2];
 const asset = process.argv[3];
 
 const addressBook = AddressBook.loadFromFile(network);
-const externalAddressBook = AddressBook.loadFromFile(network, "workspace/apps/contracts/public");
-const publicAddressBook = AddressBook.loadFromFile(network, "workspace/public");
+const externalAddressBook = AddressBook.loadFromFile(network, "../../public");
+const publicAddressBook = AddressBook.loadFromFile(network, "../../../../public");
 
 const allowedStrategies = [
   Strategies.BLEND,
