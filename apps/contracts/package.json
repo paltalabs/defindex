@@ -7,7 +7,7 @@
     "deploy-factory": "tsc && node dist/deploy_factory.js",
     "deploy-blend": "tsc && node dist/strategies/deploy_blend.js",
     "deploy-strategies": "tsc && node dist/strategies/deploy_strategies.js",
-    "deploy-vault": "tsc && node dist/strategies/deploy_vault.js",
+    "deploy-vault": "tsc && node dist/deploy_vault.js",
     "multi-deploy-blend": "tsc && node dist/strategies/multi_deploy_blend.js",
     "publish-addresses": "tsc && node dist/publish_addresses.js",
     "test": "tsc && node dist/tests/mainTest.js",
