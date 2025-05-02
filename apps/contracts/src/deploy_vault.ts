@@ -1,4 +1,4 @@
-import { Address, Asset, Keypair, nativeToScVal, scValToNative, xdr } from "@stellar/stellar-sdk";
+import { Address, Keypair, nativeToScVal, scValToNative, xdr } from "@stellar/stellar-sdk";
 import { exit } from "process";
 import { AddressBook } from "./utils/address_book.js";
 import { config } from "./utils/env_config.js";
@@ -16,12 +16,12 @@ const network = process.argv[2];
 const asset = process.argv[3];
 
 const addressBook = AddressBook.loadFromFile(network);
-const externalAddressBook = AddressBook.loadFromFile(network, "../../public");
-const publicAddressBook = AddressBook.loadFromFile(network, "../../../../public");
+const externalAddressBook = AddressBook.loadFromFile(network, "workspace/apps/contracts/public");
+const publicAddressBook = AddressBook.loadFromFile(network, "workspace/public");
 
 const allowedStrategies = [
   Strategies.BLEND,
-  Strategies.HODL,
+  /* Strategies.HODL, */
   /* Strategies.FIXED_APR */
 ]
 
@@ -128,7 +128,7 @@ export async function deployVault(
 async function deployDefindexVault() {
     if(network != "mainnet") await airdropAccount(loadedConfig.admin);
     console.log(yellow, "--------------------------------------");
-    console.log(yellow, "Deploying XLM Blend strategy vault");
+    console.log(yellow, `Deploying ${asset} Blend Vault...`);
     console.log(yellow, "--------------------------------------");
     try {
       const { 
@@ -139,8 +139,8 @@ async function deployDefindexVault() {
       } = await deployVault(
         addressBook,
         params,
-        "Blend Strategy Vault",
-        "BSVLT"
+        loadedConfig.vaultName,
+        loadedConfig.vaultSymbol
       );
       console.log(green, vault_address);
       return {address: vault_address, deploy_instructions, deploy_read_bytes, deploy_write_bytes};
