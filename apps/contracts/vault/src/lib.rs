@@ -455,14 +455,11 @@ impl VaultTrait for DeFindexVault {
         }
 
         // Withdraw all assets from the strategy
-        let strategy_client = get_strategy_client(&e, strategy.address.clone());
-        let strategy_balance = strategy_client.balance(&e.current_contract_address());
-
-        if strategy_balance > 0 {
+        if strategy_invested_funds > 0 {
             unwind_from_strategy(
                 &e,
                 &strategy_address,
-                &strategy_balance,
+                &strategy_invested_funds,
                 &e.current_contract_address(),
             )?;
             
@@ -478,7 +475,7 @@ impl VaultTrait for DeFindexVault {
         // Pause the strategy
         pause_strategy(&e, strategy_address.clone())?;
 
-        events::emit_rescue_event(&e, caller, strategy_address, strategy_balance);
+        events::emit_rescue_event(&e, caller, strategy_address, strategy_invested_funds);
         Ok(())
     }
 
