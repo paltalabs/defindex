@@ -30,7 +30,8 @@ const {assetAddress, strategyData} = InitStrategyDeploy(
 );
 
 
-export async function deployContracts(addressBook: AddressBook, assetAddress: Address, strategies: StrategyData[]) {
+export async function deployContracts(addressBook: AddressBook, assetAddress: Address, strategies: StrategyData[], quantity = 1) {
+
   if (network != "mainnet") await airdropAccount(loadedConfig.admin);
   let account = await loadedConfig.horizonRpc.loadAccount(
     loadedConfig.admin.publicKey()
@@ -46,13 +47,16 @@ export async function deployContracts(addressBook: AddressBook, assetAddress: Ad
     await installContract(strategy.wasm_key, addressBook, loadedConfig.admin);
 
     const assetAddressScval = assetAddress.toScVal();
-    await deployContract(
-      strategy.name,
-      strategy.wasm_key,
-      addressBook,
-      [assetAddressScval, strategy.args],
-      loadedConfig.admin
-    );
+    for (let i = 0; i < quantity; i++) {
+      const strategyName = quantity > 1 ? `${strategy.name}_${i}` : strategy.name;
+      await deployContract(
+        strategyName,
+        strategy.wasm_key,
+        addressBook,
+        [assetAddressScval, strategy.args],
+        loadedConfig.admin
+      );
+    }
   }
 }
 
