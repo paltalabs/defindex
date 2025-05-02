@@ -2,7 +2,7 @@ import { Address, scValToNative, xdr, nativeToScVal } from "@stellar/stellar-sdk
 import { AddressBook } from "./utils/address_book.js";
 import { config } from "./utils/env_config.js";
 import { airdropAccount, invokeContract, invokeCustomContract } from "./utils/contract.js";
-import { Instruction, mapInstructionsToParams } from "./tests/vault.js";
+import { Instruction, mapInstructionsToParams } from "./utils/vault.js";
 import { green } from "./tests/common.js";
 
 const network = process.argv[2];

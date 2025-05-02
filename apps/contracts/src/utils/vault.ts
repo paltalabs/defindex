@@ -7,17 +7,17 @@ import {
 } from "@stellar/stellar-sdk";
 import { i128, u64 } from "@stellar/stellar-sdk/contract";
 import { BLEND_USDC_ADDRESS, SOROSWAP_ROUTER, USDC_ADDRESS } from "../constants.js";
-import { AddressBook } from "../utils/address_book.js";
+import { AddressBook } from "./address_book.js";
 import {
   airdropAccount,
   getTokenBalance,
   invokeContract,
   invokeCustomContract,
-} from "../utils/contract.js";
-import { config } from "../utils/env_config.js";
-import { getTransactionBudget } from "../utils/tx.js";
-import { green, red, yellow } from "./common.js";
-import { AssetInvestmentAllocation, CreateVaultParams, TotalManagedFunds } from "./types.js";
+} from "./contract.js";
+import { config } from "./env_config.js";
+import { getTransactionBudget } from "./tx.js";
+import { green, red, yellow } from "../tests/common.js";
+import { AssetInvestmentAllocation, CreateVaultParams, TotalManagedFunds } from "../tests/types.js";
 
 const network = process.argv[2];
 const loadedConfig = config(network);

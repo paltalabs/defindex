@@ -5,8 +5,7 @@ import { config } from "./utils/env_config.js";
 import { green, red, yellow } from "./tests/common.js";
 import {
   getCreateDeFindexParams,
-  manager,
-} from "./tests/vault.js";
+} from "./utils/vault.js";
 import { CreateVaultParams } from "./tests/types.js";
 import { airdropAccount, invokeContract } from "./utils/contract.js";
 import { getTransactionBudget } from "./utils/tx.js";
@@ -95,7 +94,7 @@ export async function deployVault(
     Keypair.fromPublicKey(loadedConfig.vaultEmergencyManager), //Emergency manager
     Keypair.fromPublicKey(loadedConfig.vaultRebalanceManager), //Rebalance manager
     Keypair.fromPublicKey(loadedConfig.defindexFeeReceiver), //Fee receiver
-    manager, //Manager
+    loadedConfig.admin, //Manager
     vaultName, 
     vaultSymbol,
     assetAllocations,

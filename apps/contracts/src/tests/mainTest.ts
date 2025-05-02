@@ -13,7 +13,7 @@ import {
   feeReceiver,
   manager,
   mintToken
-} from "./vault.js";
+} from "../utils/vault.js";
 import { testVaultOneAssetTwoStrategies } from "./vault/one_aset_two_strategies.js";
 import { testVaultOneAssetOneStrategy } from "./vault/one_asset_one_strategy.js";
 import { testVaultTwoAssetsOneStrategy } from "./vault/two_assets_one_strategy.js";

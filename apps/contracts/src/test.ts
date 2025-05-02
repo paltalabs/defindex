@@ -9,7 +9,7 @@ import {
 } from "@stellar/stellar-sdk";
 import { SOROSWAP_ROUTER } from "./constants.js";
 import { checkUserBalance, depositToStrategy, withdrawFromStrategy } from "./tests/strategy.js";
-import { depositToVault, getCreateDeFindexParams, rebalanceManager, withdrawFromVault } from "./tests/vault.js";
+import { depositToVault, getCreateDeFindexParams, rebalanceManager, withdrawFromVault } from "./utils/vault.js";
 import { AddressBook } from "./utils/address_book.js";
 import { airdropAccount, invokeContract } from "./utils/contract.js";
 import { config } from "./utils/env_config.js";

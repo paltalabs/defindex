@@ -9,7 +9,7 @@ import {
   manager,
   rebalanceVault,
   withdrawFromVault
-} from "../vault.js";
+} from "../../utils/vault.js";
 import { compareTotalManagedFunds, deployDefindexVault, generateExpectedTotalAmounts, generateTotalAmountsError, underlyingToDfTokens } from "./utils.js";
 import { CreateVaultParams } from "../types.js";
 /* 
