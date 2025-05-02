@@ -13,7 +13,6 @@ const asset = process.argv[3];
 
 const addressBook = AddressBook.loadFromFile(network);
 const externalAddressBook = AddressBook.loadFromFile(network, "workspace/apps/contracts/public");
-const publicAddressBook = AddressBook.loadFromFile(network, "workspace/public");
 
 const strategiesToDeploy = [
   Strategies.BLEND,
@@ -26,7 +25,6 @@ const loadedConfig = config(network);
 const {assetAddress, strategyData} = InitStrategyDeploy(
   asset,
   strategiesToDeploy as Strategies[],
-  publicAddressBook,
   externalAddressBook,
   loadedConfig
 );

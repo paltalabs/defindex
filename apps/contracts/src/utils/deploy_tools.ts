@@ -57,7 +57,7 @@ function isValidStrategy(strategies: Strategies[]): boolean {
   return strategies && strategies.length > 0 && Object.values(Strategies).some(strategy => strategies.includes(strategy));
 }
 
-export function InitStrategyDeploy(asset: string, strategies:Strategies[], publicAddressBook: AddressBook, externalAddressBook:AddressBook, config: EnvConfig) {
+export function InitStrategyDeploy(asset: string, strategies:Strategies[], externalAddressBook:AddressBook, config: EnvConfig) {
 
   const assetAddress = AssetFromString(asset, config, externalAddressBook);
 
