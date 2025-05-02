@@ -118,7 +118,13 @@ impl<'a> IntegrationTest<'a> {
 }
 
 // #[cfg(test)]
+#[allow(unused)]
 mod vault_one_fixed_strategy;
+
+#[allow(unused)]
 mod vault_one_hodl_strategy;
+#[allow(unused)]
 mod vault_blend_strategy;
+
+#[allow(unused)]
 mod limits;

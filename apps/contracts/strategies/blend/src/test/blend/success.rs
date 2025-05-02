@@ -299,6 +299,7 @@ fn success() {
     assert_eq!(amounts_claimed, merry_emissions);
     // if user 4 got merry_emissions, then the strategy should get 
     let strategy_emissions = (merry_emissions * 3) / 2;
+    println!("Strategy emissions {}", strategy_emissions);
 
     // This emissions are for Merry (user 4), who deposited directly into the pool a double amount than
     // user 2 and user 3.
@@ -309,6 +310,7 @@ fn success() {
             &strategy_emissions, 
             &vec![&e, blnd.address().clone(), usdc.address().clone()])
         .get(1).unwrap();
+    println!("Expected USDC {}", expected_usdc);
 
     // Get Strategy btokens & brate to get the USDC balance of the strategy in the pool
     let strategy_b_tokens = pool_client.get_positions(&strategy).supply.get(0).unwrap();
@@ -330,6 +332,10 @@ fn success() {
 
     println!("Expected withdraw amount for users {}", expected_withdraw_amount);
 
+        // Print strategy balance for users
+    println!("b4 harvest User 2 strategy balance: {}", strategy_client.balance(&user_2));
+    println!("b4 harvest User 3 strategy balance: {}", strategy_client.balance(&user_3));
+    
     // get strategy emissions
     let strategy_emissions = pool_client.get_user_emissions(&strategy, &1u32);
     println!("Strategy emissions: {:?}", strategy_emissions);
@@ -386,6 +392,13 @@ fn success() {
         )
     );
 
+    // Check user balance
+    println!("after harvest User 2 balance {}", usdc_client.balance(&user_2));
+    println!("after harvest User 3 balance {}", usdc_client.balance(&user_3));
+    println!("after harvest Strategy balance {}", usdc_client.balance(&strategy));
+    // Print strategy balance for users
+    println!("after harvest User 2 strategy balance: {}", strategy_client.balance(&user_2));
+    println!("User 3 strategy balance: {}", strategy_client.balance(&user_3));
     // -> verify over withdraw fails
     let result =
         strategy_client.try_withdraw(&(expected_withdraw_amount + 1), &user_2, &user_2);

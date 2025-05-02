@@ -101,17 +101,11 @@ pub fn internal_swap_tokens_for_exact_tokens(
         token_in.clone(),
         token_out.clone(),
     )?;
-    let amount_in = get_amount_in(amount_out.clone(), reserve_in, reserve_out);
+    let amount_in = get_amount_in(amount_out.clone(), reserve_in, reserve_out)
+        .map_err(|_| ContractError::SwapExactOutError)?;
 
-    match amount_in {
-        Ok(amount) => {
-            if amount > *amount_in_max {
-                return Err(ContractError::ExcessiveInputAmount);
-            }
-        },
-        Err(e) => {
-            return Err(ContractError::from(e));
-        }
+    if amount_in > *amount_in_max {
+        return Err(ContractError::ExcessiveInputAmount);
     }
 
     let swap_args: Vec<Val> = vec![

@@ -7,9 +7,10 @@ use crate::utils;
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
 use crate::test::{create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils, ONE_DAY_IN_SECONDS};
 use crate::{reserves, shares_to_underlying, BlendStrategyClient};
+use defindex_strategy_core::event::DepositEvent;
 use sep_41_token::testutils::MockTokenClient;
-use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{vec, Address, Bytes, Env, Vec};
+use soroban_sdk::testutils::{Address as _, Events};
+use soroban_sdk::{vec, Address, Bytes, Env, IntoVal, Vec};
 use crate::test::std::println;
 
 const SCALAR_7: i128 = 10000000;
@@ -176,12 +177,18 @@ fn rounding_attack() {
     const INFLATION_AMOUNT: i128 = 1001;
     mint_and_deposit_to_strategy(&setup, &setup.admin, 2*INFLATION_AMOUNT);
     
-    print_strategy_reserves(&setup);
+    let reserves_before_first_deposit = print_strategy_reserves(&setup);
     get_underlying_value(&setup, &setup.admin, "Initial state");
     
     // Victim deposits 100 USDC
     print_usdc_balance(&setup, &setup.victim, "Before victim deposit");
-    mint_and_deposit_to_strategy(&setup, &setup.victim, 100 * SCALAR_7);
+
+    let first_deposit_amount = 100 * SCALAR_7;
+    let expected_deposit_amount = utils::calculate_optimal_deposit_amount(first_deposit_amount, &reserves_before_first_deposit).unwrap().0;
+    let first_deposit_event = mint_and_deposit_to_strategy(&setup, &setup.victim, first_deposit_amount);
+
+    assert_eq!(first_deposit_event.amount, expected_deposit_amount);
+
     print_usdc_balance(&setup, &setup.victim, "After victim deposit");
     
     print_strategy_reserves(&setup);
@@ -201,12 +208,18 @@ fn rounding_attack() {
     // Harvest
     println!("\x1b[32mHarvesting...\x1b[0m");
     setup.strategy_client.harvest(&setup.keeper, &None::<Bytes>);
-    print_strategy_reserves(&setup);
+    let reserves_after_harvest = print_strategy_reserves(&setup);
     get_underlying_value(&setup, &setup.victim, "After harvest");
+    
     // Victim deposits 100 USDC
     print_usdc_balance(&setup, &setup.victim, "Before victim deposit");
+
     let deposit_amount = 100 * SCALAR_7;
-    mint_and_deposit_to_strategy(&setup, &setup.victim, deposit_amount);
+    let expected_deposit_amount = utils::calculate_optimal_deposit_amount(deposit_amount, &reserves_after_harvest).unwrap().0;
+
+    let deposit_event = mint_and_deposit_to_strategy(&setup, &setup.victim, deposit_amount);
+    assert_eq!(deposit_event.amount, expected_deposit_amount);
+    
     print_usdc_balance(&setup, &setup.victim, "After victim deposit");
     print_strategy_reserves(&setup);
     let b_rate = print_b_rate(&setup);
@@ -234,14 +247,16 @@ fn rounding_attack() {
 }
 
 
-
 fn check_withdraw(optimal_w_amount:i128, expected_w_amount:i128) -> bool {
     let res = optimal_w_amount >= expected_w_amount;
     res
 }
-fn check_deposit(optimal_d_amount:i128, expected_d_amount:i128) -> bool {    let res = optimal_d_amount <= expected_d_amount;
+
+fn check_deposit(optimal_d_amount:i128, expected_d_amount:i128) -> bool {    
+    let res = optimal_d_amount <= expected_d_amount;
     res
 }
+
 fn test_optimal_deposit_amounts(setup: &BlendStrategyTestSetup, reserves_list: &Vec<StrategyReserves>, test_amount: i128){
     for reserves in reserves_list {
          // Calculate expected values
@@ -251,21 +266,23 @@ fn test_optimal_deposit_amounts(setup: &BlendStrategyTestSetup, reserves_list: &
          let expected_optimal_deposit = (optimal_b_tokens * reserves.b_rate - 1) / SCALAR_12 + 1;
          
          // Get actual optimal deposit
-         let optimal_deposit = utils::calculate_optimal_deposit_amount(test_amount, &reserves).unwrap();
+         let (optimal_deposit, optimal_b_tokens_actual) = utils::calculate_optimal_deposit_amount(test_amount, &reserves).unwrap();
          
          println!("Deposit amount: {}", test_amount);
          println!("B tokens that would be minted: {}", b_tokens_minted);
          println!("Shares that would be minted: {}", shares_minted);
-         println!("Optimal b tokens: {}", optimal_b_tokens);
+         println!("Optimal b tokens expected: {}", optimal_b_tokens);
+         println!("Optimal b tokens actual: {}", optimal_b_tokens_actual);
          println!("Expected optimal deposit: {}", expected_optimal_deposit);
          println!("Actual optimal deposit: {}", optimal_deposit);
          println!("Difference: {}", optimal_deposit - test_amount);
          println!("---");
          
          // The optimal deposit should match our manual calculation
-         assert_eq!(optimal_deposit, expected_optimal_deposit);          
+         assert_eq!(optimal_deposit, expected_optimal_deposit);
+         assert_eq!(optimal_b_tokens_actual, optimal_b_tokens);
          
-        let optimal_deposit_amount = setup.env.as_contract(&setup.strategy, || {
+        let (optimal_deposit_amount, _) = setup.env.as_contract(&setup.strategy, || {
             utils::calculate_optimal_deposit_amount(test_amount, &reserves)
         }).expect("failed to calculate amount");
         println!("Test amount: {:?}", test_amount);
@@ -274,6 +291,7 @@ fn test_optimal_deposit_amounts(setup: &BlendStrategyTestSetup, reserves_list: &
     }
     
 }
+
 fn test_optimal_withdraw_amounts(setup: &BlendStrategyTestSetup, reserves_list: &Vec<StrategyReserves>, test_amount: i128) {
     for reserves in reserves_list {
         print_reserves(&reserves);
@@ -283,22 +301,24 @@ fn test_optimal_withdraw_amounts(setup: &BlendStrategyTestSetup, reserves_list: 
         let optimal_b_tokens = (shares_burnt * reserves.total_b_tokens) / reserves.total_shares;
         let expected_optimal_withdraw = (optimal_b_tokens * reserves.b_rate) / SCALAR_12;
         
-        // Get actual optimal Witdraw
-        let optimal_withdraw = utils::calculate_optimal_withdraw_amount(test_amount, &reserves).unwrap();
+        // Get actual optimal Withdraw
+        let (optimal_withdraw, optimal_b_tokens_actual) = utils::calculate_optimal_withdraw_amount(test_amount, &reserves).unwrap();
 
-        println!("Witdraw amount: {}", test_amount);
+        println!("Withdraw amount: {}", test_amount);
         println!("B tokens that would be burnt: {}", b_tokens_burnt);
         println!("Shares that would be burnt: {}", shares_burnt);
-        println!("Optimal b tokens: {}", optimal_b_tokens);
-        println!("Expected optimal Witdraw: {}", expected_optimal_withdraw);
-        println!("Actual optimal Witdraw: {}", optimal_withdraw);
+        println!("Optimal b tokens expected: {}", optimal_b_tokens);
+        println!("Optimal b tokens actual: {}", optimal_b_tokens_actual);
+        println!("Expected optimal withdraw: {}", expected_optimal_withdraw);
+        println!("Actual optimal withdraw: {}", optimal_withdraw);
         println!("Difference: {}", optimal_withdraw - test_amount);
         println!("---");
         
-        // The optimal Witdraw should match our manual calculation
-        assert_eq!(optimal_withdraw, expected_optimal_withdraw);     
+        // The optimal withdraw should match our manual calculation
+        assert_eq!(optimal_withdraw, expected_optimal_withdraw);
+        assert_eq!(optimal_b_tokens_actual, optimal_b_tokens);
 
-        let optimal_withdraw_amount = setup.env.as_contract(&setup.strategy, || {
+        let (optimal_withdraw_amount, _) = setup.env.as_contract(&setup.strategy, || {
             utils::calculate_optimal_withdraw_amount(test_amount, &reserves)
         }).expect("failed to calculate amount");
         println!("Test amount: {:?}", test_amount);
@@ -361,11 +381,12 @@ fn print_reserves(reserves: &StrategyReserves) {
     println!("Reserves: {:?}", reserves);
 }
 
-fn print_strategy_reserves(e: &BlendStrategyTestSetup) {
-    e.env.as_contract(&e.strategy, || {
-        let reserves = storage::get_strategy_reserves(&e.env);
-        print_reserves(&reserves);
-    });
+fn print_strategy_reserves(e: &BlendStrategyTestSetup) -> StrategyReserves {
+    let reserves = e.env.as_contract(&e.strategy, 
+        || storage::get_strategy_reserves(&e.env)
+    );
+    print_reserves(&reserves);
+    reserves
 }
 
 fn get_underlying_value(e: &BlendStrategyTestSetup, user: &Address, label: &str) {
@@ -414,11 +435,13 @@ fn print_usdc_balance(e: &BlendStrategyTestSetup, user: &Address, label: &str) -
     return balance;
 }
 
-fn mint_and_deposit_to_strategy(e: &BlendStrategyTestSetup, user: &Address, amount: i128) {
+fn mint_and_deposit_to_strategy(e: &BlendStrategyTestSetup, user: &Address, amount: i128) -> DepositEvent {
     println!("Minting {:?} tokens to user", amount);
     e.usdc_client.mint(user, &amount);
     println!("Depositing {:?} tokens to vault", amount);
     e.strategy_client.deposit(&amount, user);
+    let event: DepositEvent = e.env.events().all().last().expect("No events found").2.into_val(&e.env);
+    event
 }
 
 fn withdraw_from_strategy(e: &BlendStrategyTestSetup, user: &Address, amount: i128) {

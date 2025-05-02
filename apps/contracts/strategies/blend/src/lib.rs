@@ -170,15 +170,18 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         let config = storage::get_config(&e)?;
         let reserves = reserves::get_strategy_reserve_updated(&e, &config);
-        let optimal_deposit_amount = calculate_optimal_deposit_amount(amount, &reserves)?;
+        let (optimal_deposit_amount, b_tokens_minted) = calculate_optimal_deposit_amount(amount, &reserves)?;
 
         // transfer tokens from the vault to this (strategy) contract
         let token_client = TokenClient::new(&e, &config.asset);
         token_client.transfer(&from, &e.current_contract_address(), &amount);
-        token_client.transfer(&e.current_contract_address(), &from, &(amount - optimal_deposit_amount));
+        if amount != optimal_deposit_amount {
+            // transfer the remaining amount back to the vault
+            token_client.transfer(&e.current_contract_address(), &from, &(amount - optimal_deposit_amount));
+        }
         
         // supplies the asset to the Blend pool and mints bTokens
-        let b_tokens_minted = blend_pool::supply(&e, &from, &optimal_deposit_amount, &config)?;
+        blend_pool::supply(&e, &from, &optimal_deposit_amount, &config, false)?;
 
         // Keeping track of the total deposited amount and the total bTokens owned by the caller (vault)
         let (vault_shares, reserves) =
@@ -192,7 +195,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
         // Calculates the new amount of underlying assets invested in the Blend Vault, owned by the caller (vault)
         let underlying_balance = shares_to_underlying(vault_shares, reserves)?;
 
-        event::emit_deposit(&e, String::from_str(&e, STRATEGY_NAME), amount, from);
+        event::emit_deposit(&e, String::from_str(&e, STRATEGY_NAME), optimal_deposit_amount, from);
         Ok(underlying_balance)
     }
 
@@ -271,9 +274,9 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
         let config = storage::get_config(&e)?;
         let reserves = reserves::get_strategy_reserve_updated(&e, &config);
-        let optimal_withdraw_amount = calculate_optimal_withdraw_amount(amount, &reserves)?;
+        let (optimal_withdraw_amount, b_tokens_burnt) = calculate_optimal_withdraw_amount(amount, &reserves)?;
 
-        let b_tokens_burnt = blend_pool::withdraw(&e, &to, &optimal_withdraw_amount, &config)?;
+        blend_pool::withdraw(&e, &to, &optimal_withdraw_amount, &config)?;
 
         let (vault_shares, reserves) = reserves::withdraw(
             &e,
