@@ -1,12 +1,12 @@
 import { Address, Asset, nativeToScVal, Networks, xdr } from "@stellar/stellar-sdk";
 import { exit } from "process";
-import { red, yellow } from "../tests/common.js";
+import { green, red, yellow } from "../tests/common.js";
+import { AddressBook } from "../utils/address_book.js";
 import {
   airdropAccount,
   deployContract,
   installContract
 } from "../utils/contract.js";
-import { AddressBook } from "../utils/address_book.js";
 import { config } from "../utils/env_config.js";
 import { BLEND_USDC_ADDRESS } from "../constants.js";
 
@@ -109,6 +109,7 @@ export async function multiDeployBlendStrategies(quantity: number, asset_key: st
       args,
       loadedConfig.admin
     );
+    console.log(green, `Deployed ${asset_symbol}_blend_strategy_${i} with the following arguments:`);
   }
   return;
 }
