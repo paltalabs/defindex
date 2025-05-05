@@ -1,7 +1,5 @@
 use crate::{
-    constants::SCALAR_12,
-    storage, storage::Config,
-    blend_pool,
+    blend_pool, constants::SCALAR_12, storage::{self, Config}
 };
 
 use defindex_strategy_core::StrategyError;
@@ -87,6 +85,28 @@ pub fn get_strategy_reserve_updated(
     reserve
 }
 
+/// Updates the vault shares for a user with a positive value or panic.
+///
+/// ### Arguments
+/// * `e` - The execution environment.
+/// * `from` - The address of the user.
+/// * `vault_shares` - The amount of vault shares to set.
+/// 
+/// ### Returns
+/// * `Result<i128, StrategyError>` - The updated vault shares.
+/// 
+pub fn set_validated_vault_shares(
+    e: &Env,
+    from: &Address,
+    vault_shares: i128
+) -> Result<i128, StrategyError> {
+    if vault_shares >= 0 {
+        storage::set_vault_shares(&e, &from, vault_shares);
+        Ok(vault_shares)
+    } else {
+        Err(StrategyError::OnlyPositiveAmountAllowed)
+    }
+}
 
 /// Accounts for a deposit into the Blend pool.
 ///
@@ -116,11 +136,9 @@ pub fn deposit(
     e: &Env,
     from: &Address,
     b_tokens_amount: i128,
-    config: &Config,
+    reserves: &StrategyReserves,
 ) -> Result<(i128, StrategyReserves), StrategyError> {
-    
-    let mut reserves = get_strategy_reserve_updated(e, &config);
-
+    let mut reserves = reserves.clone();
     if b_tokens_amount <= 0 {
         return Err(StrategyError::BTokensAmountBelowMin);
     }
@@ -161,7 +179,7 @@ pub fn deposit(
         .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     storage::set_strategy_reserves(&e, reserves.clone());
-    storage::set_vault_shares(&e, &from, new_vault_shares);
+    set_validated_vault_shares(e, from, new_vault_shares)?;
     Ok((new_vault_shares, reserves))
 }
 
@@ -193,10 +211,10 @@ pub fn withdraw(
     e: &Env,
     from: &Address,
     b_tokens_amount: i128,
-    config: &Config,
+    reserves: &StrategyReserves
 ) -> Result<(i128, StrategyReserves), StrategyError> {
 
-    let mut reserves = get_strategy_reserve_updated(e, &config);
+    let mut reserves = reserves.clone();
 
     if b_tokens_amount <= 0 {
         return Err(StrategyError::BTokensAmountBelowMin);
@@ -227,8 +245,7 @@ pub fn withdraw(
         .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
     storage::set_strategy_reserves(&e, reserves.clone());
-    storage::set_vault_shares(&e, &from, vault_shares);
-
+    set_validated_vault_shares(e, from, vault_shares)?;
     Ok((vault_shares, reserves))
 }
 

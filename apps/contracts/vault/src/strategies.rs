@@ -1,6 +1,6 @@
 use defindex_strategy_core::DeFindexStrategyClient;
 use soroban_sdk::auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation};
-use soroban_sdk::{vec, Address, Env, IntoVal, Symbol};
+use soroban_sdk::{vec, Address, Env, IntoVal, Symbol, panic_with_error};
 
 use crate::report::Report;
 use crate::storage::{get_report, set_report};
@@ -147,8 +147,6 @@ pub fn invest_in_strategy(
 ) -> Result<Report, ContractError> {
     let strategy_client = get_strategy_client(&e, strategy_address.clone());
     let mut report = get_report(e, strategy_address);
-    report.prev_balance = report.prev_balance.checked_add(*amount).ok_or(ContractError::Overflow)?;
-    // Now we will handle funds on behalf of the contract, not the caller (manager or user)
 
     e.authorize_as_current_contract(vec![
         &e,
@@ -171,9 +169,13 @@ pub fn invest_in_strategy(
 
     // Reports
     // Store Strategy invested funds for reports
-    report.report(strategy_funds)?;
+    report.gains_or_losses = strategy_funds
+        .checked_sub(report.prev_balance)
+        .unwrap_or_else(|| panic_with_error!(e, ContractError::ArithmeticError))
+        .checked_sub(*amount)
+        .unwrap_or_else(|| panic_with_error!(e, ContractError::ArithmeticError));
+    report.prev_balance = strategy_funds;
     set_report(e, strategy_address, &report);
-
 
     Ok(report)
 }

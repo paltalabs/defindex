@@ -28,7 +28,7 @@ function Hero() {
                         </p>
                         <Link
                             className="font-extrabold contained-button font-manrope text-[14px] md:leading-none md:text-xs text-cyan-950 leading-none rounded-3xl bg-lime-200 px-6 py-3 lg:py-5 xl:min-h-[60px] flex items-center justify-center"
-                            href="https://test.defindex.io"
+                            href="https://docs.defindex.io/"
                         >
                             Explore DeFindex
                         </Link>

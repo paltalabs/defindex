@@ -27,6 +27,7 @@ pub enum ContractError {
     InsufficientAmount = 117,
     NoOptimalAmounts = 118, //this should not happen
     WrongInvestmentLength = 119,
+    
     WrongAssetAddress = 122,
     WrongStrategiesLength = 123,
     AmountOverTotalSupply = 124,
@@ -65,6 +66,11 @@ pub enum ContractError {
 
     // Add mappings for SoroswapLibraryError
     LibrarySortIdenticalTokens = 190,
+
+    // Swap errors
+    SoroswapRouterError = 200,
+    SwapExactInError = 201,
+    SwapExactOutError = 202,
 }
 
 impl From<SoroswapLibraryError> for ContractError {

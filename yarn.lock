@@ -3752,7 +3752,7 @@
   optionalDependencies:
     sodium-native "^4.1.1"
 
-"@stellar/stellar-base@^13.0.1", "@stellar/stellar-base@^13.1.0":
+"@stellar/stellar-base@^13.1.0":
   version "13.1.0"
   resolved "https://registry.yarnpkg.com/@stellar/stellar-base/-/stellar-base-13.1.0.tgz#06d9075cc72da05bc5dd6f1971e6682a0525cec9"
   integrity sha512-90EArG+eCCEzDGj3OJNoCtwpWDwxjv+rs/RNPhvg4bulpjN/CSRj+Ys/SalRcfM4/WRC5/qAfjzmJBAuquWhkA==
@@ -3779,13 +3779,13 @@
     toml "^3.0.0"
     urijs "^1.19.1"
 
-"@stellar/stellar-sdk@13.1.0":
-  version "13.1.0"
-  resolved "https://registry.yarnpkg.com/@stellar/stellar-sdk/-/stellar-sdk-13.1.0.tgz#5eefee4fd340163f4fca656a97ebc5434b6eb6c5"
-  integrity sha512-ARQkUdyGefXdTgwSF0eONkzv/geAqUfyfheJ9Nthz6GAr5b41fNwWW9UtE8JpXC4IpvE3t5elIUN5hKJzASN9w==
+"@stellar/stellar-sdk@^13.2.0":
+  version "13.2.0"
+  resolved "https://registry.yarnpkg.com/@stellar/stellar-sdk/-/stellar-sdk-13.2.0.tgz#0ca3d61a551d067e710c96e316392462573bda19"
+  integrity sha512-azxeh1+mS28h96Q+vl41ffytQvWdudRl1KtjYO0TRZb/9u0/lH57oYBeJ+gvcQr+T7s02wTayFdHbKru5V5/XA==
   dependencies:
-    "@stellar/stellar-base" "^13.0.1"
-    axios "^1.7.9"
+    "@stellar/stellar-base" "^13.1.0"
+    axios "^1.8.4"
     bignumber.js "^9.1.2"
     eventsource "^2.0.2"
     feaxios "^0.0.23"
@@ -7632,7 +7632,16 @@ axe-core@^4.10.0:
   resolved "https://registry.yarnpkg.com/axe-core/-/axe-core-4.10.3.tgz#04145965ac7894faddbac30861e5d8f11bfd14fc"
   integrity sha512-Xm7bpRXnDSX2YE2YFfBk2FnF0ep6tmG7xPh8iHee8MIcrgq762Nkce856dYtJYLkuIoYZvGfTs/PbZhideTcEg==
 
-axios@^1.7.2, axios@^1.7.7, axios@^1.7.9, axios@^1.8.4:
+axios@^1.7.2, axios@^1.7.7:
+  version "1.7.7"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.7.7.tgz#2f554296f9892a72ac8d8e4c5b79c14a91d0a47f"
+  integrity sha512-S4kL7XrjgBmvdGut0sN3yJxqYzrDOnivkBiN0OFs6hLiUam3UPvswUo0kqGyhqUZGEOytHyumEdXsAkgCOUf3Q==
+  dependencies:
+    follow-redirects "^1.15.6"
+    form-data "^4.0.0"
+    proxy-from-env "^1.1.0"
+
+axios@^1.8.4:
   version "1.8.4"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.8.4.tgz#78990bb4bc63d2cae072952d374835950a82f447"
   integrity sha512-eBSYY4Y68NNlHbHBMdeDmKNtDgXWhQsJcGqzO3iLUM0GraQFSS9cVgPX5I9b3lbdFKyYoAEGAZF1DwhTaljNAw==
@@ -7881,18 +7890,6 @@ bare-url@^2.1.0:
   integrity sha512-lNImB5KLN+ggw+SYDYvqf/yCizXIyq8U/nWBlx7m4pc4TKS24SB/1WWskzGacon5cVVAC6qUzCYzI/aMYCf4Ng==
   dependencies:
     bare-path "^3.0.0"
-
-base-x@^3.0.2, base-x@^3.0.9:
-  version "3.0.11"
-  resolved "https://registry.yarnpkg.com/base-x/-/base-x-3.0.11.tgz#40d80e2a1aeacba29792ccc6c5354806421287ff"
-  integrity sha512-xz7wQ8xDhdyP7tQxwdteLYeFfS68tSMNCZ/Y37WJ4bhGfKPpqEIlmIyueQHqOyoPhE6xNUqjzRr8ra0eF9VRvA==
-  dependencies:
-    safe-buffer "^5.0.1"
-
-base-x@^5.0.0:
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/base-x/-/base-x-5.0.1.tgz#16bf35254be1df8aca15e36b7c1dda74b2aa6b03"
-  integrity sha512-M7uio8Zt++eg3jPj+rHMfCC+IuygQHHCOU+IYsVtik6FWjuYpVt/+MRKcgsAMHh8mMFAwnB+Bs+mTrFiXjMzKg==
 
 base32.js@^0.1.0:
   version "0.1.0"
@@ -17140,12 +17137,12 @@ sodium-native@^4.1.1, sodium-native@^4.3.3:
   dependencies:
     require-addon "^1.1.0"
 
-sonic-boom@^2.2.1:
-  version "2.8.0"
-  resolved "https://registry.yarnpkg.com/sonic-boom/-/sonic-boom-2.8.0.tgz#c1def62a77425090e6ad7516aad8eb402e047611"
-  integrity sha512-kuonw1YOYYNOve5iHdSahXPOK49GqwA+LZhI6Wz/l0rP57iKyXXIHaRagOBHAPmGwJC6od2Z9zgvZ5loSgMlVg==
+sodium-native@^4.3.3:
+  version "4.3.3"
+  resolved "https://registry.yarnpkg.com/sodium-native/-/sodium-native-4.3.3.tgz#fae4866b52366f5e6cc1b7ae8c8a71673d50c7df"
+  integrity sha512-OnxSlN3uyY8D0EsLHpmm2HOFmKddQVvEMmsakCrXUzSd8kjjbzL413t4ZNF3n0UxSwNgwTyUvkmZHTfuCeiYSw==
   dependencies:
-    atomic-sleep "^1.0.0"
+    require-addon "^1.1.0"
 
 sort-object-keys@^1.1.3:
   version "1.1.3"

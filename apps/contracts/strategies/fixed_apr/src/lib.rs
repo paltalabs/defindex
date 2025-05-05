@@ -1,7 +1,7 @@
 #![no_std]
 use constants::{MAX_BPS, SECONDS_PER_YEAR};
 use soroban_sdk::{
-    contract, contractimpl, token::Client as TokenClient, Address, Env, IntoVal, String, Val, Vec,
+    contract, contractimpl, token::Client as TokenClient, Address, Bytes, Env, IntoVal, String, Val, Vec,  
 };
 
 mod balance;
@@ -74,7 +74,7 @@ impl DeFindexStrategyTrait for FixAprStrategy {
         Ok(read_balance(&e, from))
     }
 
-    fn harvest(e: Env, from: Address) -> Result<(), StrategyError> {
+    fn harvest(e: Env, from: Address, _data: Option<Bytes>) -> Result<(), StrategyError> {
         extend_instance_ttl(&e);
 
         let yield_balance = update_yield_balance(&e, &from);

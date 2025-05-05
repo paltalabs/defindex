@@ -1,7 +1,7 @@
 #![cfg(test)]
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
 use crate::test::{
-    create_blend_pool, create_blend_strategy, BlendFixture, EnvTestUtils, ONE_DAY_IN_SECONDS,
+    create_blend_pool, create_blend_strategy, register_blend_strategy, BlendFixture, EnvTestUtils, ONE_DAY_IN_SECONDS
 };
 use crate::reserves;
 
@@ -10,7 +10,7 @@ use crate::storage;
 use defindex_strategy_core::StrategyError;
 use sep_41_token::testutils::MockTokenClient;
 use soroban_sdk::testutils::{Address as _, MockAuth, MockAuthInvoke};
-use soroban_sdk::{Address, Env, IntoVal};
+use soroban_sdk::{Address, Env, IntoVal, Bytes};
 
 #[test]
 fn deposit_zero_and_negative_amount() {
@@ -245,7 +245,7 @@ fn harvest_from_random_address() {
 
     //Trying to harvest from random address
     let balance_before_harvest = strategy_client.balance(&user);
-    let harvest_from_random_address = strategy_client.try_harvest(&strategy_client.address);
+    let harvest_from_random_address = strategy_client.try_harvest(&strategy_client.address, &None::<Bytes>);
     let balance_after_harvest = strategy_client.balance(&user);
 
     assert_eq!(balance_before_harvest, balance_after_harvest);
@@ -326,15 +326,15 @@ fn unauthorized_harvest() {
             invoke: &MockAuthInvoke {
                 contract: &strategy_client.address.clone(),
                 fn_name: "harvest",
-                args: (keeper.clone(),).into_val(&e),
+                args: (keeper.clone(), &None::<Bytes>).into_val(&e),
                 sub_invokes: &[],
             },
         }],
-    ).try_harvest(&keeper);
+    ).try_harvest(&keeper, &None::<Bytes>);
 
     assert_eq!(try_harvest_result, Err(Err(soroban_sdk::InvokeError::Abort)));
 
-    let harvest_result = strategy_client.try_harvest(&keeper);
+    let harvest_result = strategy_client.try_harvest(&keeper, &None::<Bytes>);
     assert_eq!(harvest_result, Ok(Ok(())));
 
     //Panic with Unauthorized
@@ -344,11 +344,11 @@ fn unauthorized_harvest() {
             invoke: &MockAuthInvoke {
                 contract: &strategy_client.address.clone(),
                 fn_name: "harvest",
-                args: (user_2.clone(),).into_val(&e),
+                args: (user_2.clone(), &None::<Bytes>).into_val(&e),
                 sub_invokes: &[],
             },
         }],
-    ).harvest(&user_2);
+    ).harvest(&user_2, &None::<Bytes>);
 }
 
 #[test]
@@ -404,7 +404,7 @@ fn withdraw_insufficient_balance() {
     let strategy_client = BlendStrategyClient::new(&e, &strategy);
 
     let result = strategy_client.try_withdraw(&200_0_000_000, &user_2, &user_2);
-    assert_eq!(result, Err(Ok(StrategyError::InsufficientBalance)));
+    assert_eq!(result, Err(Ok(StrategyError::ArithmeticError)));
 
     let starting_balance = 10_0_000_000i128;
     usdc_client.mint(&user_2, &starting_balance);
@@ -651,7 +651,8 @@ fn arithmetic_error_deposit() {
     let b_tokens_amount = 0;
 
     let config = e.as_contract(&strategy, || storage::get_config(&e)).unwrap();
-    let result = e.as_contract(&strategy, || reserves::deposit(&e, &from, b_tokens_amount, &config));
+    let reserves = e.as_contract(&strategy, || reserves::get_strategy_reserve_updated(&e, &config));
+    let result = e.as_contract(&strategy, || reserves::deposit(&e, &from, b_tokens_amount, &reserves));
 
     assert_eq!(result, Err(StrategyError::BTokensAmountBelowMin));
 }
@@ -725,4 +726,50 @@ fn set_keeper_unauthorized() {
     
     // Verify the keeper hasn't changed
     assert_eq!(strategy_client.get_keeper(), keeper);
+}
+
+#[test]
+#[should_panic(expected = "Reward threshold must be positive")] // Unauthorized
+fn deploy_contract_invalid_reward_treshold() {
+    let e = Env::default();
+    e.set_default_info();
+    let admin = Address::generate(&e);
+    let keeper = Address::generate(&e);
+
+    let blnd = e.register_stellar_asset_contract_v2(admin.clone());
+    let usdc = e.register_stellar_asset_contract_v2(admin.clone());
+    let xlm = e.register_stellar_asset_contract_v2(admin.clone());
+
+    let blnd_client = MockTokenClient::new(&e, &blnd.address());
+    let usdc_client = MockTokenClient::new(&e, &usdc.address());
+    let xlm_client = MockTokenClient::new(&e, &xlm.address());
+
+    let pool_admin = Address::generate(&e);
+    let amount_a = 100000000_0_000_000;
+    let amount_b = 50000000_0_000_000;
+    blnd_client.mock_all_auths().mint(&pool_admin, &amount_a);
+    usdc_client.mock_all_auths().mint(&pool_admin, &amount_b);
+
+    let soroswap_router = create_soroswap_pool(
+        &e,
+        &pool_admin,
+        &blnd.address(),
+        &usdc.address(),
+        &amount_a,
+        &amount_b,
+    );
+    let blend_fixture = BlendFixture::deploy(&e, &admin, &blnd.address(), &usdc.address());
+
+    let pool = create_blend_pool(&e, &blend_fixture, &admin, &usdc_client, &xlm_client, &blnd_client);
+
+    let reward_threshold = -10i128;
+    let _ = register_blend_strategy(
+        &e,
+        &usdc.address(),
+        &pool,
+        &blnd.address(),
+        &soroswap_router.address,
+        reward_threshold,
+        &keeper,
+    );
 }

@@ -2,7 +2,7 @@ import { Keypair } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
 import { green, purple, red, yellow } from "../common.js";
 import { checkUserBalance } from "../strategy.js";
-import { deployVault, fetchCurrentIdleFunds, fetchCurrentInvestedFunds } from "../vault.js";
+import { deployVault, fetchCurrentIdleFunds, fetchCurrentInvestedFunds } from "../../utils/vault.js";
 import { CreateVaultParams, StrategyAllocations, TotalManagedFunds } from "../types.js";
 
 export function extractAddresses(params: CreateVaultParams[]): string[] {
@@ -117,7 +117,7 @@ export function generateExpectedStrategyAllocation(
   };
 }
 
-export function generateExpectedTotalAmounts(params: CreateVaultParams[], idle_amounts: [number[]], invested_amounts: [number[]]): TotalManagedFunds[] {
+export function generateExpectedTotalAmounts(params: CreateVaultParams[], idle_amounts: number[][], invested_amounts: number[][]): TotalManagedFunds[] {
   let i = 0;
   let expected_total_amounts = [];
   for (const param of params) {

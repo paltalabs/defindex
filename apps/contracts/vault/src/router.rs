@@ -1,11 +1,17 @@
 use soroban_sdk::{
-    auth::{ContractContext, InvokerContractAuthEntry, SubContractInvocation},
-    vec, Address, Env, IntoVal, Symbol, Val, Vec,
+    panic_with_error, vec, Address, Env, IntoVal, InvokeError, Symbol, Val, Vec,
+    auth::{
+        ContractContext, 
+        InvokerContractAuthEntry, 
+        SubContractInvocation}, 
 };
-use soroswap_library::{get_amount_in, get_reserves_with_pair};
-
+use soroswap_library::{
+    get_amount_in, 
+    get_reserves_with_pair
+};
 use crate::{
-    storage::{get_assets, get_soroswap_router}, ContractError
+    ContractError,
+    storage::{get_assets, get_soroswap_router}
 };
 
 fn is_supported_asset(e: &Env, token: &Address) -> Result<bool, ContractError> {
@@ -36,11 +42,11 @@ pub fn internal_swap_exact_tokens_for_tokens(
 
     let soroswap_router = get_soroswap_router(e);
 
-    let pair_address: Address = e.invoke_contract(
+    let pair_address: Address = e.try_invoke_contract::<Address, InvokeError>(
         &soroswap_router,
         &Symbol::new(&e, "router_pair_for"),
         vec![e, token_in.to_val(), token_out.to_val()],
-    );
+    ).unwrap_or_else(|_| panic_with_error!(e, ContractError::SoroswapRouterError)).unwrap();
 
     e.authorize_as_current_contract(vec![
         &e,
@@ -59,11 +65,13 @@ pub fn internal_swap_exact_tokens_for_tokens(
         }),
     ]);
 
-    let _result: Vec<i128> = e.invoke_contract(
+    let _result = e.try_invoke_contract::<Vec<i128>, InvokeError>(
         &get_soroswap_router(e),
         &Symbol::new(&e, "swap_exact_tokens_for_tokens"),
         swap_args.clone(),
-    );
+    ).unwrap_or_else(|_| {
+        panic_with_error!(e, ContractError::SwapExactInError);
+    });
     Ok(())
 }
 
@@ -80,28 +88,24 @@ pub fn internal_swap_tokens_for_exact_tokens(
         return Err(ContractError::UnsupportedAsset);
     }
     let soroswap_router = get_soroswap_router(e);
-    let pair_address: Address = e.invoke_contract(
+
+    let pair_address: Address = e.try_invoke_contract::<Address, InvokeError>(
         &soroswap_router,
         &Symbol::new(&e, "router_pair_for"),
         vec![e, token_in.to_val(), token_out.to_val()],
-    );
+    ).unwrap_or_else(|_| panic_with_error!(e, ContractError::SoroswapRouterError)).unwrap();
+
     let (reserve_in, reserve_out) = get_reserves_with_pair(
         e.clone(),
         pair_address.clone(),
         token_in.clone(),
         token_out.clone(),
     )?;
-    let amount_in = get_amount_in(amount_out.clone(), reserve_in, reserve_out);
+    let amount_in = get_amount_in(amount_out.clone(), reserve_in, reserve_out)
+        .map_err(|_| ContractError::SwapExactOutError)?;
 
-    match amount_in {
-        Ok(amount) => {
-            if amount > *amount_in_max {
-                return Err(ContractError::ExcessiveInputAmount);
-            }
-        },
-        Err(e) => {
-            return Err(ContractError::from(e));
-        }
+    if amount_in > *amount_in_max {
+        return Err(ContractError::ExcessiveInputAmount);
     }
 
     let swap_args: Vec<Val> = vec![
@@ -130,10 +134,12 @@ pub fn internal_swap_tokens_for_exact_tokens(
         }),
     ]);
 
-    let _result: Vec<i128> = e.invoke_contract(
+    let _result = e.try_invoke_contract::<Vec<i128>, InvokeError>(
         &get_soroswap_router(e),
         &Symbol::new(&e, "swap_tokens_for_exact_tokens"),
         swap_args.clone(),
-    );
+    ).unwrap_or_else(|_| {
+        panic_with_error!(e, ContractError::SwapExactOutError);
+    }).unwrap();
     Ok(())
 }

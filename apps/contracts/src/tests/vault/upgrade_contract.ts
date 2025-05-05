@@ -1,6 +1,6 @@
 import { Keypair } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
-import { admin, manager, upgradeVaultWasm } from "../vault.js";
+import { admin, manager, upgradeVaultWasm } from "../../utils/vault.js";
 import { green, purple, red, yellow } from "../common.js";
 import { airdropAccount, installContract } from "../../utils/contract.js";
 import { deployDefindexVault } from "./utils.js";
@@ -36,7 +36,7 @@ export async function testUpgradeContract(addressBook: AddressBook, params: Crea
     console.log(purple, "Try upgrade from unauthorized");
     console.log(purple, "---------------------------------------");
     const random_user = Keypair.random();
-    const wasm_hash = Buffer.from(addressBook.getWasmHash("defindex_vault"), "hex");
+    const wasm_hash = new Uint8Array(Buffer.from(addressBook.getWasmHash("defindex_vault"), "hex"));
     await airdropAccount(random_user);
     const {result} = await upgradeVaultWasm(vault_address, random_user, wasm_hash);
     if( result !== false){
@@ -60,7 +60,7 @@ export async function testUpgradeContract(addressBook: AddressBook, params: Crea
       console.log(purple, "---------------------------------------");
       console.log(purple, "Upgrade");
       console.log(purple, "---------------------------------------");
-      const wasm_hash = Buffer.from(addressBook.getWasmHash("defindex_vault"), "hex");
+      const wasm_hash = new Uint8Array(Buffer.from(addressBook.getWasmHash("defindex_vault"), "hex"));
       const {instructions, readBytes, writeBytes} = await upgradeVaultWasm(vault_address, manager, wasm_hash);
       console.log(green, "------------------------");
       console.log(green, "| Upgrade sucessfully  |");

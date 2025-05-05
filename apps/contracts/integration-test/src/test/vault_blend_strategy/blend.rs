@@ -1,3 +1,4 @@
+#[allow(unused_imports)]
 use crate::{
     setup::{
         blend_setup::Request,
@@ -14,6 +15,7 @@ use crate::{
         StrategyAllocation,
     },
 };
+#[allow(unused_imports)]
 use soroban_sdk::{
     testutils::{
         Address as _,
@@ -27,6 +29,7 @@ use soroban_sdk::{
     IntoVal,
     Symbol,
     Vec,
+    Bytes,
 };
 #[test]
 fn success() {
@@ -264,7 +267,7 @@ fn success() {
     println!("users[1] vault balance before report= {}", vault_contract.balance(&users[1]));
 
     std::println!("-- Harvesting --");
-    enviroment.strategy_contract.harvest(&enviroment.keeper);
+    enviroment.strategy_contract.harvest(&enviroment.keeper, &None::<Bytes>);
 
     let report = vault_contract.report();
     println!("report = {:?}", report);

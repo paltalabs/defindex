@@ -32,7 +32,7 @@ use storage::{
     extend_instance_ttl, get_assets, get_defindex_protocol_fee_rate,
     get_report, get_vault_fee, set_asset,
     set_defindex_protocol_fee_rate, set_defindex_protocol_fee_receiver, set_report,
-    set_soroswap_router, set_total_assets, set_vault_fee, set_is_upgradable
+    set_soroswap_router, set_total_assets, set_vault_fee, set_is_upgradable, update_report_prev_balance
 };
 use strategies::{
     get_strategy_asset, get_strategy_client, get_strategy_struct, invest_in_strategy,
@@ -387,12 +387,17 @@ impl VaultTrait for DeFindexVault {
                             };
     
                         if strategy_amount_to_unwind > 0 {
-                            unwind_from_strategy(
+                            let remaining_balance = unwind_from_strategy(
                                 &e,
                                 &strategy_allocation.strategy_address,
                                 &strategy_amount_to_unwind,
                                 &from,
                             )?;
+                            update_report_prev_balance(
+                                &e, 
+                                &strategy_allocation.strategy_address, 
+                                remaining_balance
+                            );
                             cumulative_amount_for_asset = cumulative_amount_for_asset.checked_add(strategy_amount_to_unwind).ok_or(ContractError::Overflow)?;
                         }
                     }
@@ -441,8 +446,7 @@ impl VaultTrait for DeFindexVault {
         let asset = get_strategy_asset(&e, &strategy_address)?;
         // This ensures that the vault has this strategy in its list of assets
         let strategy = get_strategy_struct(&strategy_address, &asset)?;
-        let strategy_invested_funds = fetch_strategy_invested_funds(&e, &strategy_address, false)?;
-        report::update_report_and_lock_fees(&e, &strategy_address, strategy_invested_funds)?;
+        let strategy_invested_funds = fetch_strategy_invested_funds(&e, &strategy_address, true)?;
         let distribution_result = report::distribute_strategy_fees(&e, &strategy.address, &access_control, &asset.address)?;
         if distribution_result > 0 {
             let mut distributed_fees: Vec<(Address, i128)> = Vec::new(&e);
@@ -451,14 +455,11 @@ impl VaultTrait for DeFindexVault {
         }
 
         // Withdraw all assets from the strategy
-        let strategy_client = get_strategy_client(&e, strategy.address.clone());
-        let strategy_balance = strategy_client.balance(&e.current_contract_address());
-
-        if strategy_balance > 0 {
+        if strategy_invested_funds > 0 {
             unwind_from_strategy(
                 &e,
                 &strategy_address,
-                &strategy_balance,
+                &strategy_invested_funds,
                 &e.current_contract_address(),
             )?;
             
@@ -474,7 +475,7 @@ impl VaultTrait for DeFindexVault {
         // Pause the strategy
         pause_strategy(&e, strategy_address.clone())?;
 
-        events::emit_rescue_event(&e, caller, strategy_address, strategy_balance);
+        events::emit_rescue_event(&e, caller, strategy_address, strategy_invested_funds);
         Ok(())
     }
 

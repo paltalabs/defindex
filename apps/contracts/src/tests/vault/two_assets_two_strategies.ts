@@ -2,17 +2,18 @@ import { Address, Keypair } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
 import {
   depositToVault,
+  fetchTotalManagedFunds,
   Instruction,
   manager,
   rebalanceVault,
   withdrawFromVault
-} from "../vault.js";
+} from "../../utils/vault.js";
 import { green, purple, red, yellow } from "../common.js";
 import { airdropAccount } from "../../utils/contract.js";
-import { deployDefindexVault, fetchBalances } from "./utils.js";
+import { compareTotalManagedFunds, deployDefindexVault, fetchBalances, generateExpectedTotalAmounts, generateTotalAmountsError } from "./utils.js";
 import { getCurrentTimePlusOneHour } from "../../utils/tx.js";
 import { CreateVaultParams } from "../types.js";
-import { USDC_ADDRESS } from "../../constants.js";
+import { BLEND_USDC_ADDRESS, USDC_ADDRESS } from "../../constants.js";
 /* 
 ### Two assets two strategies tests:
 - [x] deposit
@@ -24,6 +25,8 @@ import { USDC_ADDRESS } from "../../constants.js";
 - [x] withdraw more than idle
 */
 export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, params: CreateVaultParams[], user: Keypair, xlmAddress:Address,) {
+  const error_total_managed_funds = generateTotalAmountsError(params);
+  
   console.log(yellow, "-------------------------------------------");
   console.log(yellow, "Testing two assets two strategies vault    ");
   console.log(yellow, "-------------------------------------------");
@@ -49,7 +52,10 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
   const {
     instructions:deposit_instructions, 
     readBytes:deposit_read_bytes, 
-    writeBytes:deposit_write_bytes 
+    writeBytes:deposit_write_bytes,
+    result: deposit_result,
+    total_managed_funds: total_managed_funds_after_deposit,
+    error: deposit_error,   
   } = await (
     async () => {
       console.log(purple, "------------------------------------------------------------------");
@@ -61,22 +67,37 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
           readBytes,
           writeBytes,
         } = await depositToVault(vault_address, [deposit_amount_0, deposit_amount_1], user);
-        return { instructions, readBytes, writeBytes };
+        const total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
+        const expected_idle_funds = [[Number(deposit_amount_0), Number(0)], [Number(deposit_amount_1), Number(0)]];
+        const expected_invested_funds = [[Number(0), Number(0)], [Number(0), Number(0)]];
+        const expected_total_managed_funds = generateExpectedTotalAmounts(
+          params,
+          expected_idle_funds,
+          expected_invested_funds
+        )
+        const result = compareTotalManagedFunds(
+          expected_total_managed_funds,
+          total_managed_funds,
+        );
+        return { 
+          instructions, 
+          readBytes, 
+          writeBytes, 
+          result,
+          total_managed_funds 
+        };
       } catch (e) {
         console.error(red, e);
         return {
           deposit_instructions: 0,
           deposit_read_bytes: 0,
           deposit_write_bytes: 0,
+          total_managed_funds: error_total_managed_funds,
           error: e,
         };
       }
     }
   )();
-  const {
-    idle_funds:idle_funds_after_deposit,
-    invested_funds:invested_funds_after_deposit,
-} = await fetchBalances(addressBook, vault_address, params, user);
 
 
   //Invest
@@ -86,37 +107,38 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
     instructions: invest_instructions, 
     readBytes:invest_read_bytes, 
     writeBytes:invest_write_bytes,
-    idle_funds_after_invest,
-    invested_funds_after_invest,
+    total_managed_funds: total_managed_funds_after_invest,
+    result: invest_result,
+    error: invest_error,
   } = await (
     async () => {
       try {
         console.log(purple, "---------------------------------------");
         console.log(purple, "Try Invest idle_funds*2");
         console.log(purple, "---------------------------------------");
-        const invest_amount_0 = Number(idle_funds_after_deposit[0].amount) * 2;
-        const invest_amount_1 = Number(idle_funds_after_deposit[1].amount) * 2;
+        const invest_amount_0 = Number(total_managed_funds_after_deposit[0].idle_amount) * 2;
+        const invest_amount_1 = Number(total_managed_funds_after_deposit[1].idle_amount) * 2;
         console.log(yellow, "Invest amount 0:", invest_amount_0);
         console.log(yellow, "Invest amount 1:", invest_amount_1);
         const investArgs: Instruction[] = [
           {
             type: "Invest",
-            strategy: addressBook.getContractId("fixed_apr_strategy"),
+            strategy: params[0].strategies[1].address,
             amount: BigInt(invest_amount_0),
           },
           {
             type: "Invest",
-            strategy: addressBook.getContractId("blend_strategy"),
+            strategy: params[0].strategies[0].address,
             amount: BigInt(invest_amount_0),
           },
           {
             type: "Invest",
-            strategy: addressBook.getContractId("hodl_usdc_strategy"),
+            strategy: params[1].strategies[1].address,
             amount: BigInt(invest_amount_1),
           },
           {
             type: "Invest",
-            strategy: addressBook.getContractId("fixed_usdc_strategy"),
+            strategy: params[1].strategies[0].address,
             amount: BigInt(invest_amount_1),
           },
         ];
@@ -142,22 +164,22 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
       const investArgs: Instruction[] = [
         {
           type: "Invest",
-          strategy: addressBook.getContractId("blend_strategy"),
+          strategy: params[0].strategies[0].address,
           amount: BigInt(invest_amount_0),
         },
         {
           type: "Invest",
-          strategy: addressBook.getContractId("fixed_apr_strategy"),
+          strategy: params[0].strategies[1].address,
           amount: BigInt(invest_amount_0),
         },
         {
           type: "Invest",
-          strategy: addressBook.getContractId("fixed_usdc_strategy"),
+          strategy: params[1].strategies[0].address,
           amount: BigInt(invest_amount_1),
         },
         {
           type: "Invest",
-          strategy: addressBook.getContractId("hodl_usdc_strategy"),
+          strategy: params[1].strategies[1].address,
           amount: BigInt(invest_amount_1),
         },
       ];
@@ -168,49 +190,28 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
           investArgs,
           manager
         );
-        const { 
-          idle_funds:idle_funds_after_invest, 
-          invested_funds:invested_funds_after_invest, 
-        } = await fetchBalances(addressBook, vault_address, params, user);
-
-        const tolerance = BigInt(1_000);
-        const expected_idle_funds = [BigInt(0), BigInt(0)];
-        const expected_invested_funds = [BigInt(20_0_000_000), BigInt(10_0_000_000)];
-
-        if(BigInt(idle_funds_after_invest[0].amount) !== expected_idle_funds[0]) {
-          console.error(red, `idle funds: ${idle_funds_after_invest[0].amount} !== ${expected_idle_funds[0]}`);
-          throw Error("Idle 0 funds after invest failed");
-        }
-
-        if(idle_funds_after_invest[1].amount !== expected_idle_funds[1]) {
-          console.error(red, `idle funds: ${idle_funds_after_invest[1].amount} !== ${expected_idle_funds[1]}`);
-          throw Error("Idle 1 funds after invest failed");
-        }
-
-        if(
-          BigInt(invested_funds_after_invest[0].amount) > expected_invested_funds[0] + tolerance || 
-          BigInt(invested_funds_after_invest[0].amount) < expected_invested_funds[0] - tolerance
-        ) {
-          console.error(red, `invested funds: ${invested_funds_after_invest[0].amount} !== approx ${expected_invested_funds[0]}`);
-          throw Error("Invested 0 funds after invest failed");
-        }
-
-        if(
-          BigInt(invested_funds_after_invest[1].amount) > expected_invested_funds[1] + tolerance || 
-          BigInt(invested_funds_after_invest[1].amount) < expected_invested_funds[1] - tolerance
-        ) {
-          console.error(red, `invested funds: ${invested_funds_after_invest[1].amount} !== ${expected_invested_funds[1]}`);
-          throw Error("Invested 1 funds after invest failed");
-        }
+        const expected_idle_funds = [[Number(0), Number(0)],[Number(0), Number(0)]]; 
+        const expected_invested_funds =  [[Number(invest_amount_0), Number(invest_amount_0)],[Number(invest_amount_1), Number(invest_amount_1)]];
+        const expected_total_managed_funds = generateExpectedTotalAmounts(
+          params,
+          expected_idle_funds,
+          expected_invested_funds
+        )
+        const total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
+        const result = compareTotalManagedFunds(
+          expected_total_managed_funds,
+          total_managed_funds,
+          1
+        );
 
         return { 
           instructions, 
           readBytes, 
           writeBytes, 
-          idle_funds_after_invest, 
-          invested_funds_after_invest, 
+          total_managed_funds,
+          result,
         };
-        //To-do: return status
+
       } catch (e) {
         console.error(red, e);
         return {
@@ -218,21 +219,20 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
           instructions: 0,
           readBytes: 0,
           writeBytes: 0,
-          idle_funds_after_invest:[{ amount: BigInt(0) }, { amount: BigInt(0) }], 
-          invested_funds_after_invest:[{ amount: BigInt(0) }, { amount: BigInt(0) }], 
+          total_managed_funds: error_total_managed_funds,
           error: e,
         };
       }
     }
   )();
-
   // Deposit and invest
   const {
     instructions: deposit_and_invest_instructions,
     readBytes:deposit_and_invest_read_bytes,
     writeBytes:deposit_and_invest_write_bytes,
-    idle_funds_after_deposit_and_invest,
-    invested_funds_after_deposit_and_invest,
+    total_managed_funds: total_managed_funds_after_deposit_and_invest,
+    result: deposit_and_invest_result,
+    error: deposit_and_invest_error,
   } = await (
     async () => {
       console.log(purple, "---------------------------------------");
@@ -248,56 +248,34 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
           writeBytes,
         } = await depositToVault(vault_address, [deposit_and_invest_amount_0, deposit_and_invest_amount_1], user, true);
         
-        const {
-          idle_funds:idle_funds_after_deposit_and_invest, 
-          invested_funds:invested_funds_after_deposit_and_invest, 
-        } = await fetchBalances(addressBook, vault_address, params, user);
-        const tolerance = BigInt(1_000);
-        const expected_idle_funds = [BigInt(0), BigInt(0)];
-        const expected_invested_funds = [BigInt(invested_funds_after_invest[0].amount) + BigInt(deposit_and_invest_amount_1), BigInt(invested_funds_after_invest[1].amount) + BigInt(deposit_and_invest_amount_0)];
-
-        if(idle_funds_after_deposit_and_invest[0].amount !== expected_idle_funds[0]) {
-          console.error(red, `idle funds: ${idle_funds_after_deposit_and_invest[0].amount} !== ${expected_idle_funds[0]}`);
-          throw Error("Idle 0 funds after deposit and invest failed");
-        }
-
-        if(idle_funds_after_deposit_and_invest[1].amount !== expected_idle_funds[1]) {
-          console.error(red, `idle funds: ${idle_funds_after_deposit_and_invest[1].amount} !== ${expected_idle_funds[1]}`);
-          throw Error("Idle 1 funds after deposit and invest failed");
-        }
-
-        if (
-          BigInt(invested_funds_after_deposit_and_invest[0].amount) > expected_invested_funds[0] + tolerance ||
-          BigInt(invested_funds_after_deposit_and_invest[0].amount) < expected_invested_funds[0] - tolerance
-        ) {
-          console.error(red, `invested funds: ${invested_funds_after_deposit_and_invest[0].amount} !== approx ${expected_invested_funds[0]}`);
-          throw Error("Invested 0 funds after deposit and invest failed");
-        }
-
-        if (
-          BigInt(invested_funds_after_deposit_and_invest[1].amount) > expected_invested_funds[1] + tolerance ||
-          BigInt(invested_funds_after_deposit_and_invest[1].amount) < expected_invested_funds[1] - tolerance
-        ) {
-          console.error(red, `invested funds: ${invested_funds_after_deposit_and_invest[1].amount} !== approx ${expected_invested_funds[1]}`);
-          throw Error("Invested 1 funds after deposit and invest failed");
-        }
-
-
+        const expected_idle_funds = [[Number(0), Number(0)],[Number(0), Number(0)]];
+        const expected_invested_funds = [[Number(total_managed_funds_after_invest[0].invested_amount) + deposit_and_invest_amount_0, Number(total_managed_funds_after_invest[0].invested_amount)],[Number(total_managed_funds_after_invest[1].invested_amount)  + deposit_and_invest_amount_1, Number(total_managed_funds_after_invest[1].invested_amount)]];
+        const expected_total_managed_funds = generateExpectedTotalAmounts(
+          params,
+          expected_idle_funds,
+          expected_invested_funds
+        )
+        const total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
+        const result = compareTotalManagedFunds(
+          expected_total_managed_funds,
+          total_managed_funds,
+          1
+        );
         return { 
           instructions, 
           readBytes, 
           writeBytes,
-          idle_funds_after_deposit_and_invest,
-          invested_funds_after_deposit_and_invest,
+          total_managed_funds,
+          result,
         };
       } catch (e) {
         console.error(red, e);
+        console.error(red, "----------------------- Deposit and invest failed -----------------------");
         return {
           instructions: 0,
           readBytes: 0,
           writeBytes: 0,
-          idle_funds_after_deposit_and_invest: [{ amount: BigInt(0) }],
-          invested_funds_after_deposit_and_invest: [{ amount: BigInt(0) }],
+          total_managed_funds: error_total_managed_funds,
           error: e,
         };
       }
@@ -308,8 +286,9 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
     instructions: rebalance_swap_e_in_instructions, 
     readBytes:rebalance_swap_e_in_read_bytes, 
     writeBytes:rebalance_swap_e_in_write_bytes,
-    idle_funds: idle_funds_after_rebalance_swap_e_in,
-    invested_funds: invested_funds_after_rebalance_swap_e_in,
+    total_managed_funds: total_managed_funds_after_rebalance_swap_e_in,
+    result: rebalance_swap_e_in_result,
+    error: rebalance_swap_e_in_error,
   } = await (
     async () => {
       try {
@@ -321,27 +300,27 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
           const rebalanceArgs: Instruction[] = [
             {
               type: "Unwind",
-              strategy: addressBook.getContractId("fixed_usdc_strategy"),
-              amount: BigInt(5_000_000),
+              strategy: params[1].strategies[0].address,
+              amount: BigInt(1_000_000),
             }, 
             {
               type: "Invest",
-              strategy: addressBook.getContractId("hodl_usdc_strategy"),
-              amount: BigInt(2_500_000),
+              strategy: params[1].strategies[1].address,
+              amount: BigInt(1_000_000),
             },
             {
               type: "Unwind",
-              strategy: addressBook.getContractId("fixed_apr_strategy"),
-              amount: BigInt(5_0_000_000),
+              strategy: params[0].strategies[1].address,
+              amount: BigInt(1_000_000),
             }, 
             {
               type: "Invest",
-              strategy: addressBook.getContractId("blend_strategy"),
-              amount: BigInt(2_5_000_000),
+              strategy: params[0].strategies[0].address,
+              amount: BigInt(1_000_000),
             },
             {
               type: "SwapExactIn",
-              amount_in: BigInt(2_500_000),
+              amount_in: BigInt(500_000),
               amount_out_min: BigInt(0),
               token_in: USDC_ADDRESS.toString(),
               token_out: xlmAddress.toString(),
@@ -358,62 +337,67 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
           console.log(instructions, readBytes, writeBytes);
 
           
-        } catch (error) {
+        } catch (error: any) {
           console.error(red, error);
-          console.log(yellow, "-------------------------------------------------");
+          if( error.toString().includes('Error(Budget, ExceededLimit)')) {
+            console.log(green, "---------------------------------------------------------");
+            console.log(green, "| Rebalance exceed instructions limit failed as expected |");
+            console.log(green, "---------------------------------------------------------");
+          }
+          console.log(yellow, "-------------------------------------");
           console.log(yellow, "| we should handle this error better |");
-          console.log(yellow, "-------------------------------------------------");
+          console.log(yellow, "-------------------------------------");
         }
         console.log(purple, "---------------------------------------");
         console.log(purple, "Rebalance swap exact in"); 
         console.log(purple, "---------------------------------------");
 
         const rebalanceArgs: Instruction[] = [
-          {
+/*           {
             type: "Unwind",
-            strategy: addressBook.getContractId("fixed_usdc_strategy"),
+            strategy: params[1].strategies[0].address,
             amount: BigInt(5_000_000),
-          }, 
+          },  */
           {
             type: "SwapExactIn",
-            amount_in: BigInt(2_500_000),
+            amount_in: BigInt(1_000),
             amount_out_min: BigInt(0),
-            token_in: USDC_ADDRESS.toString(),
+            token_in: BLEND_USDC_ADDRESS.toString(),
             token_out: xlmAddress.toString(),
             deadline: BigInt(getCurrentTimePlusOneHour()),
           },       
-          {
-            type: "Invest",
-            strategy: addressBook.getContractId("hodl_usdc_strategy"),
-            amount: BigInt(2_500_000),
-          },
 /*           {
             type: "Invest",
-            strategy: addressBook.getContractId("blend_strategy"),
-            amount: BigInt(2_5_000_000),
+            strategy: params[1].strategies[1].address,
+            amount: BigInt(2_500_000),
           }, */
         ];       
      
-        const {instructions, readBytes, writeBytes, result} = await rebalanceVault(
+        const {instructions, readBytes, writeBytes} = await rebalanceVault(
           vault_address,
           rebalanceArgs,
           manager
         );
 
-        const {
-          idle_funds, 
-          invested_funds, 
-        } = await fetchBalances(addressBook, vault_address, params, user);
-
-        const tolerance = BigInt(1_000);
-  
+        const expected_idle_funds = [[Number(0), Number(0)],[Number(0), Number(0)]];
+        const expected_invested_funds = [[Number(0), Number(0)],[Number(0), Number(0)]];
+        const expected_total_managed_funds = generateExpectedTotalAmounts(
+          params,
+          expected_idle_funds,
+          expected_invested_funds
+        )
+        const total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
+        const result = compareTotalManagedFunds(
+          expected_total_managed_funds,
+          total_managed_funds
+        );
 
         return {
           instructions,
           readBytes,
           writeBytes,
-          idle_funds,
-          invested_funds,
+          total_managed_funds,
+          result,
         }
       } catch (e) {
         console.error(red, e);
@@ -421,11 +405,8 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
           instructions: 0,
           readBytes: 0,
           writeBytes: 0,
+          total_managed_funds: error_total_managed_funds,
           error: e,
-          idle_funds: [{ amount: BigInt(0) }, { amount: BigInt(0) }],
-          invested_funds: [{ amount: BigInt(0) }, { amount: BigInt(0) }],
-          fixed_xtar_strategy_balance: BigInt(0),
-          fixed_usdc_strategy_balance: BigInt(0),
         };
       }
     }
@@ -436,8 +417,6 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
     instructions: withdraw_instructions, 
     readBytes: withdraw_read_bytes, 
     writeBytes: withdraw_write_bytes,
-    idle_funds: idle_funds_after_withdraw,
-    invested_funds: invested_funds_after_withdraw,
   } = await (
     async () => {
       let withdraw_amount = 1_0_000_000;
@@ -454,7 +433,7 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
           const random_user = Keypair.random();
           await airdropAccount(random_user);
 
-          await withdrawFromVault(vault_address, withdraw_amount, random_user);
+          await withdrawFromVault(vault_address, [0,0], withdraw_amount, random_user);
           
         } catch (error:any) {
           if (error.toString().includes("HostError: Error(Contract, #111)") || error.toString().includes("HostError: Error(Contract, #10)")) {
@@ -472,7 +451,7 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
           console.log(purple, "Try withdraw more than total funds");
           console.log(purple, "-----------------------------------------------------");
 
-          await withdrawFromVault(vault_address, 100_0_000_000, user);
+          await withdrawFromVault(vault_address, [0,0], 100_0_000_000, user);
 
         } catch (error:any) {
           if (error.toString().includes("HostError: Error(Contract, #124)") || error.toString().includes("HostError: Error(Contract, #10)")) {
@@ -488,28 +467,34 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
           instructions,
           readBytes,
           writeBytes,
-        } = await withdrawFromVault(vault_address, withdraw_amount, user);
+        } = await withdrawFromVault(vault_address, [0,0], withdraw_amount, user);
         
-        const { 
-          idle_funds, 
-          invested_funds, 
-        } = await fetchBalances(addressBook, vault_address, params, user);
-        
+        const expected_idle_funds = [[Number(withdraw_amount), Number(0)],[Number(withdraw_amount), Number(0)]];
+        const expected_invested_funds = [[Number(0), Number(0)],[Number(0), Number(0)]];
+        const expected_total_managed_funds = generateExpectedTotalAmounts(
+          params,
+          expected_idle_funds,
+          expected_invested_funds
+        )
+        const total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
+        const result = compareTotalManagedFunds(
+          expected_total_managed_funds,
+          total_managed_funds
+        );
+      
         return { 
           instructions, 
           readBytes, 
           writeBytes, 
-          idle_funds, 
-          invested_funds,
+          total_managed_funds,
+          result,
         };
       } catch (e) {
         console.error(red, e);
         return {
           withdraw_instructions: 0,
           withdraw_read_bytes: 0,
-          withdraw_write_bytes: 0,
-          idle_funds: [{ amount: BigInt(0) }, { amount: BigInt(0) }],
-          invested_funds: [{ amount: BigInt(0) }, { amount: BigInt(0) }],
+          total_managed_funds: error_total_managed_funds,
           error: e,
         };
       }
@@ -519,7 +504,7 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
 
   //Show data
   const tableData = {
-    "Initial balance": {
+    /* "Initial balance": {
       "Idle funds a_0": idle_funds_before_deposit[0].amount,
       "Idle funds a_1": idle_funds_before_deposit[1].amount,
       "Invested funds a_0": invested_funds_before_deposit[0].amount,
@@ -553,7 +538,7 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
       "Idle funds a_1": idle_funds_after_withdraw[1].amount,
       "Invested funds a_0": invested_funds_after_withdraw[0].amount,
       "Invested funds a_1": invested_funds_after_withdraw[1].amount,
-    },
+    }, */
   };
   const budgetData = {
     deploy: {

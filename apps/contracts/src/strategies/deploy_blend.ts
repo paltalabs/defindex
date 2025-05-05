@@ -1,5 +1,4 @@
 import { Address, Asset, nativeToScVal, Networks, xdr } from "@stellar/stellar-sdk";
-// import { BLEND_POOL_TESTNET, BLEND_TOKEN_TESTNET, SOROSWAP_ROUTER } from "../constants.js";
 import { BLEND_POOL, BLEND_TOKEN, SOROSWAP_ROUTER } from "../constants.js";
 import { AddressBook } from "../utils/address_book.js";
 import {
@@ -8,17 +7,42 @@ import {
   installContract
 } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
+const network = process.argv[2];
+const asset = process.argv[3];
+const loadedConfig = config(network);
+const addressBook = AddressBook.loadFromFile(network);
+const othersAddressBook = AddressBook.loadFromFile(network, "../../public");
 
-export async function deployBlendStrategy(addressBook: AddressBook) {
+
+const allowedAssets = ["XLM", "USDC"];
+
+export async function deployBlendStrategy(addressBook: AddressBook, asset_symbol?: string) {
+  if (!asset_symbol || !allowedAssets.includes(asset_symbol.toUpperCase())) {
+    console.log("Please provide a valid asset symbol");
+    console.log("Allowed assets are: \n - XLM \n - USDC");
+    return;
+  }
   if (network == "standalone") {
     console.log("Blend Strategy can only be tested in testnet or mainnet");
     console.log("Since it requires Blend protocol to be deployed");
     return;
   };
   if (network != "mainnet") await airdropAccount(loadedConfig.admin);
+
   let account = await loadedConfig.horizonRpc.loadAccount(
     loadedConfig.admin.publicKey()
-  );
+  ).catch((e: any) => {
+    if (e.response && e.response.status === 404) {
+      console.error("Account not found. Please check that the public key has enough funds.");
+      throw new Error("Account not found");
+    } else {
+      console.error("An unexpected error occurred:", e);
+      throw e;
+    }
+  }).then((account) => {
+    return account;
+  });
+
   console.log("publicKey", loadedConfig.admin.publicKey());
   let balance = account.balances.filter((item) => item.asset_type == "native");
   console.log("Current Admin account balance:", balance[0].balance);
@@ -40,39 +64,27 @@ export async function deployBlendStrategy(addressBook: AddressBook) {
     default:
       console.log("Invalid network:", network, "It should be either testnet or mainnet");
       return;
-      break;
   }
   const xlmAddress = new Address(xlmContractId);
+  const usdcAddress = new Address(othersAddressBook.getContractId("blend_pool_usdc"));
   const xlmScVal = xlmAddress.toScVal();
-
-  // CLAIM IDs
-  // For XLM we have 
-  // * `reserve_token_ids` - The ids of the reserves to claiming emissions for
-  const claim_ids = xdr.ScVal.scvVec([
-    nativeToScVal(1, { type: "u32" }),
-  ]);
-
-  let blendFixedXlmUsdcPool: string = othersAddressBook.getContractId("blend_fixed_xlm_usdc_pool");
-  let blndToken: string = othersAddressBook.getContractId("blnd_token");
-  let soroswapRouter: string  = othersAddressBook.getContractId("soroswap_router");
-
+  const usdcScVal = usdcAddress.toScVal();
 
   const initArgs = xdr.ScVal.scvVec([
-    new Address(BLEND_POOL).toScVal(), //Blend pool on testnet!
-    nativeToScVal(0, { type: "u32" }), // ReserveId 0 is XLM
-    new Address(BLEND_TOKEN).toScVal(), // BLND Token
-    new Address(SOROSWAP_ROUTER).toScVal(), // Soroswap router
-    claim_ids,
-    nativeToScVal(400000000, { type: "i128" }), // RewardThreshold is 40 lumens
+    new Address(BLEND_POOL).toScVal(), // blend_pool_address: The address of the Blend pool where assets are deposited
+    new Address(BLEND_TOKEN).toScVal(), // blend_token: The address of the reward token (e.g., BLND) issued by the Blend pool
+    new Address(SOROSWAP_ROUTER).toScVal(), // soroswap_router: The address of the Soroswap AMM router for asset swaps
+    nativeToScVal(40, { type: "i128" }), // reward_threshold: The minimum reward amount that triggers reinvestment
+    new Address(loadedConfig.blendKeeper).toScVal() // keeper: The address of the keeper that can call the harvest function
   ]);
 
   const args: xdr.ScVal[] = [
-    xlmScVal,
+    asset_symbol.toUpperCase() == "USDC" ? usdcScVal : xlmScVal, // asset: The asset to be managed by the strategy (XLM or USDC)
     initArgs
   ];
 
   await deployContract(
-    "blend_strategy",
+    `${asset_symbol.toLowerCase()}_blend_strategy`,
     "blend_strategy",
     addressBook,
     args,
@@ -80,15 +92,8 @@ export async function deployBlendStrategy(addressBook: AddressBook) {
   );
 }
 
-const network = process.argv[2];
-const loadedConfig = config(network);
-const addressBook = AddressBook.loadFromFile(network);
-console.log("🚀 ~ addressBook:", addressBook)
-const othersAddressBook = AddressBook.loadFromFile(network, "../../public");
-console.log("🚀 ~ othersAddressBook:", othersAddressBook)
-
 try {
-  await deployBlendStrategy(addressBook);
+  await deployBlendStrategy(addressBook, asset);
 } catch (e) {
   console.error(e);
 }

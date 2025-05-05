@@ -2,7 +2,7 @@ import { Asset, Keypair, scValToNative, Networks } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
 import { airdropAccount, invokeCustomContract } from "../../utils/contract.js";
 import { config } from "../../utils/env_config.js";
-import { depositToVault, Instruction, rebalanceVault, withdrawFromVault } from "../vault.js";
+import { depositToVault, Instruction, rebalanceVault, withdrawFromVault } from "../../utils/vault.js";
 import { getTransactionBudget } from "../../utils/tx.js";
 
 const network = process.argv[2];
@@ -97,7 +97,7 @@ export async function testBlendVault() {
 
 
   const initialAmount = 1_0_000_000;
-  let blendVaultAddress: string = addressBook.getContractId("blend_vault");
+  let blendVaultAddress: string = addressBook.getContractId("xlm_blend_vault");
   
   let deposit_status: boolean;
   let deposit_instructions: number = 0;
@@ -270,7 +270,7 @@ export async function testBlendVault() {
       instructions,
       readBytes,
       writeBytes
-    } = await withdrawFromVault(blendVaultAddress, 1_0_000_000, userAccount);
+    } = await withdrawFromVault(blendVaultAddress, [0], 1_0_000_000, userAccount);
     console.log('🚀 « rebalanceResult:', rebalanceResult);
 
     withdraw_instructions = instructions;
@@ -348,4 +348,4 @@ export async function testBlendVault() {
   return {status_result, budget_result};
 }
 
-await testBlendVault();
+//await testBlendVault();

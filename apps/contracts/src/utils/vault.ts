@@ -6,33 +6,27 @@ import {
   xdr,
 } from "@stellar/stellar-sdk";
 import { i128, u64 } from "@stellar/stellar-sdk/contract";
-import { SOROSWAP_ROUTER, USDC_ADDRESS } from "../constants.js";
-import { AddressBook } from "../utils/address_book.js";
+import { BLEND_USDC_ADDRESS, SOROSWAP_ROUTER, USDC_ADDRESS } from "../constants.js";
+import { AddressBook } from "./address_book.js";
 import {
   airdropAccount,
   getTokenBalance,
   invokeContract,
   invokeCustomContract,
-} from "../utils/contract.js";
-import { config } from "../utils/env_config.js";
-import { getTransactionBudget } from "../utils/tx.js";
-import { green } from "./common.js";
-import { AssetInvestmentAllocation, CreateVaultParams, TotalManagedFunds } from "./types.js";
+} from "./contract.js";
+import { config } from "./env_config.js";
+import { getTransactionBudget } from "./tx.js";
+import { green, red, yellow } from "../tests/common.js";
+import { AssetInvestmentAllocation, CreateVaultParams, TotalManagedFunds } from "../tests/types.js";
 
 const network = process.argv[2];
 const loadedConfig = config(network);
 export const admin = loadedConfig.admin;
-export const emergencyManager = loadedConfig.getUser(
-  "DEFINDEX_EMERGENCY_MANAGER_SECRET_KEY"
-);
-export const rebalanceManager = loadedConfig.getUser(
-  "DEFINDEX_REBALANCE_MANAGER_SECRET_KEY"
-);
-export const feeReceiver = loadedConfig.getUser(
-  "DEFINDEX_FEE_RECEIVER_SECRET_KEY"
-);
+export const emergencyManager = loadedConfig.admin;
+export const rebalanceManager = loadedConfig.admin;
+export const manager = loadedConfig.admin;
 
-export const manager = loadedConfig.getUser("DEFINDEX_MANAGER_SECRET_KEY");
+export const feeReceiver = Keypair.fromPublicKey(loadedConfig.defindexFeeReceiver);
 
 
 export type Option<T> = T | undefined;
@@ -60,10 +54,6 @@ export type Instruction =
       amount_in_max: i128;
       deadline: u64;
     };
-
-
-
-
 
 export function mapInstructionsToParams(
   instructions: Instruction[]
@@ -127,6 +117,32 @@ export async function mintToken(user: Keypair, amount: number, tokenAddress?: Ad
     ],
     loadedConfig.getUser("SOROSWAP_MINT_SECRET_KEY")
   );
+}
+/**
+ * Mints a specified amount of tokens for a given user.
+ *
+ * @param user - The Keypair of the user for whom the tokens will be minted.
+ * @param amount - The amount of tokens to mint.
+ * @returns A promise that resolves when the minting operation is complete.
+ */
+export async function checkBlendUSDCBalance(user: Keypair) {
+  try {
+    let balance = await invokeCustomContract(
+      BLEND_USDC_ADDRESS.toString(),
+      "balance",
+      [
+        new Address(user.publicKey()).toScVal(),
+      ],
+      loadedConfig.getUser("BLEND_DEPLOYER_SECRET_KEY")
+    );
+    console.log(balance);
+  } catch (error:any) {
+    console.error("Error fetching balance:", error);
+    if (error.toString().includes("#13")){
+      console.error("No trusline found for USDC, please go to https://testnet.blend.capital and manually add tokens");
+    }
+    throw "Balance for USDC not found";
+  }
 }
 
 /**
@@ -192,6 +208,7 @@ export function getCreateDeFindexParams(
         assets: Vec<AssetStrategySet>,
         soroswap_router: Address,
         name_symbol: Map<String, String>,
+        upgradable: bool,
     ) -> Result<Address, FactoryError>;
   */
   return [
@@ -441,6 +458,7 @@ export async function getDfTokenBalance(
  */
 export async function withdrawFromVault(
   deployedVault: string,
+  min_amounts_out: number[],
   withdrawAmount: number,
   user: Keypair
 ) {
@@ -469,10 +487,13 @@ export async function withdrawFromVault(
   //     xdr.ScVal.scvVec(amountsToWithdraw.map((amount) => nativeToScVal(amount, { type: "i128" }))),
   //     (new Address(user.publicKey())).toScVal()
   // ];
-
+  const minAmountsOut: xdr.ScVal[] = min_amounts_out.map((amount) =>
+    nativeToScVal(BigInt(amount), { type: "i128" })
+  );
   const withdrawParams: xdr.ScVal[] = [
     nativeToScVal(BigInt(withdrawAmount), { type: "i128" }),
-    new Address(user.publicKey()).toScVal(),
+    xdr.ScVal.scvVec(minAmountsOut),
+    new Address(user.publicKey()).toScVal()
   ];
 
   try {
@@ -596,9 +617,14 @@ export async function rebalanceVault(deployedVault: string, instructions: Instru
       [new Address(manager.publicKey()).toScVal(), params],
       manager
     );
-    console.log(green, 'Rebalance result:', scValToNative(rebalanceResult.returnValue));
-    const budget = getTransactionBudget(rebalanceResult);
-    return { result: rebalanceResult, status: true, ...budget };
+    if(rebalanceResult.status != 'ERROR') {
+      const budget = getTransactionBudget(rebalanceResult);
+      return { result: rebalanceResult, status: true, ...budget };
+    }
+    else {
+      console.log(red, 'Rebalance failed:', rebalanceResult.errorResult.result());
+      throw rebalanceResult.errorResult;
+    }
   } catch (error) {
     console.error("Rebalance failed:", error);
     throw error;
@@ -1003,7 +1029,7 @@ export async function fetchTotalManagedFunds(deployedVault:Address, user:Keypair
     user,
     true
   );
-  const funds = scValToNative(res.result.retval);
+  const funds = scValToNative(res.result.retval) as TotalManagedFunds[];
   return funds;
 }
 

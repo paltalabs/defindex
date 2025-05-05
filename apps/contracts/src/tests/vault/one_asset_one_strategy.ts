@@ -8,11 +8,20 @@ import {
   rebalanceVault,
   rescueFromStrategy,
   unpauseStrategy,
-  withdrawFromVault
-} from "../vault.js";
+  withdrawFromVault,
+  fetchTotalManagedFunds,
+  fetchTotalSupply
+} from "../../utils/vault.js";
 import { green, purple, red, yellow } from "../common.js";
 import { airdropAccount } from "../../utils/contract.js";
-import { deployDefindexVault, fetchBalances } from "./utils.js";
+import { 
+  deployDefindexVault, 
+  fetchBalances, 
+  compareTotalManagedFunds, 
+  generateExpectedTotalAmounts, 
+  generateTotalAmountsError,
+  underlyingToDfTokens
+} from "./utils.js";
 import { testAccessControl } from "./access_control.js";
 import { testUpgradeContract } from "./upgrade_contract.js";
 import { CreateVaultParams } from "../types.js";
@@ -56,6 +65,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
   console.log(yellow, "Testing one strategy vault");
   console.log(yellow, "---------------------------------------");
 
+  const error_total_managed_funds = generateTotalAmountsError(params);
   //Deploy vault
   const { 
     address:vault_address, 
@@ -66,18 +76,17 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
   } = await deployDefindexVault(addressBook, params);
   if (!vault_address) throw new Error("Vault was not deployed");
 
-  const { 
-    idle_funds:idle_funds_before_deposit, 
-    invested_funds:invested_funds_before_deposit, 
-    hodl_balance:hodl_balance_before_deposit 
-  } = await fetchBalances(addressBook, vault_address, params, user);
+  const inital_total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
 
   // Deposit to vault
   const deposit_amount = 10_0_000_000;
   const {
     instructions:deposit_instructions, 
     readBytes:deposit_read_bytes, 
-    writeBytes:deposit_write_bytes 
+    writeBytes:deposit_write_bytes,
+    total_managed_funds: total_managed_funds_after_deposit,
+    result: deposit_result,
+    error: deposit_error
   } = await (
     async () => {
       console.log(purple, "-----------------------------------------");
@@ -89,23 +98,33 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           readBytes,
           writeBytes,
         } = await depositToVault(vault_address, [deposit_amount], user);
-        return { instructions, readBytes, writeBytes };
-      } catch (e) {
+
+        const expected_idle_funds = [deposit_amount];
+        const expected_invested_funds = [0];
+        const expected_total_managed_funds = generateExpectedTotalAmounts(params, [expected_idle_funds], [expected_invested_funds]);
+        const total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
+
+        const result = compareTotalManagedFunds(expected_total_managed_funds, total_managed_funds);
+        
+        return {
+          instructions,
+          readBytes,
+          writeBytes,
+          total_managed_funds,
+          result
+        };
+      } catch (e: any) {
         console.error(red, e);
         return {
-          deposit_instructions: 0,
-          deposit_read_bytes: 0,
-          deposit_write_bytes: 0,
-          error: e,
+          instructions: 0,
+          readBytes: 0,
+          writeBytes: 0,
+          total_managed_funds: error_total_managed_funds,
+          error: e.toString()
         };
       }
     }
   )();
-  const {
-    idle_funds:idle_funds_after_deposit,
-    invested_funds:invested_funds_after_deposit,
-    hodl_balance:hodl_balance_after_deposit
-  } = await fetchBalances(addressBook, vault_address, params, user);
 
   //Invest
   const invest_amount = 5_0_000_000;
@@ -113,21 +132,21 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
     instructions: invest_instructions, 
     readBytes:invest_read_bytes, 
     writeBytes:invest_write_bytes,
-    idle_funds_after_invest,
-    invested_funds_after_invest,
-    hodl_balance_after_invest
+    total_managed_funds: total_managed_funds_after_invest,
+    result: invest_result,
+    error: invest_error
   } = await (
     async () => {
       try {
         console.log(purple, "---------------------------------------");
         console.log(purple, "Try Invest idle_funds*2");
         console.log(purple, "---------------------------------------");
-        const investAmount = parseInt(idle_funds_after_deposit[0].amount.toString()) * 2;
+        const idleFundsX2 = Number(total_managed_funds_after_deposit![0].idle_amount) * 2;
         const investArgs: Instruction[] = [
           {
             type: "Invest",
-            strategy: addressBook.getContractId("hodl_strategy"),
-            amount: BigInt(investAmount),
+            strategy: params[0].strategies[0].address,
+            amount: BigInt(idleFundsX2),
           },
         ];
         await rebalanceVault(
@@ -140,7 +159,6 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           console.log(green, "-----------------------------------------------------");
           console.log(green, "| Investing more than idle funds failed as expected |");
           console.log(green, "-----------------------------------------------------");
-          //To-do: return status
         } else {
           throw Error(error);
         }
@@ -152,7 +170,7 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
       const investArgs: Instruction[] = [
         {
           type: "Invest",
-          strategy: addressBook.getContractId("hodl_strategy"),
+          strategy: params[0].strategies[0].address,
           amount: BigInt(invest_amount),
         },
       ];
@@ -162,50 +180,47 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           investArgs,
           manager
         );
-        const { 
-          idle_funds:idle_funds_after_invest, 
-          invested_funds:invested_funds_after_invest, 
-          hodl_balance:hodl_balance_after_invest 
-        } = await fetchBalances(addressBook, vault_address, params, user);
-        return { 
-          instructions, 
-          readBytes, 
-          writeBytes, 
-          idle_funds_after_invest, 
-          invested_funds_after_invest, 
-          hodl_balance_after_invest 
+
+        const expected_idle_funds = [Number(total_managed_funds_after_deposit![0].idle_amount) - invest_amount];
+        const expected_invested_funds = [invest_amount];
+        const expected_total_managed_funds = generateExpectedTotalAmounts(params, [expected_idle_funds], [expected_invested_funds]);
+
+        const total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
+        const result = compareTotalManagedFunds(expected_total_managed_funds, total_managed_funds);
+        return {
+          instructions,
+          readBytes,
+          writeBytes,
+          total_managed_funds,
+          result
         };
-        //To-do: return status
-      } catch (e) {
+      } catch (e: any) {
         console.error(red, e);
         return {
-          result: null,
           instructions: 0,
           readBytes: 0,
           writeBytes: 0,
-          idle_funds_after_invest:[{ amount: BigInt(0) }], 
-          invested_funds_after_invest:[{ amount: BigInt(0) }], 
-          hodl_balance_after_invest:0,
-          error: e,
+          total_managed_funds: error_total_managed_funds,
+          error: e.toString()
         };
       }
     }
   )();
 
   // Deposit and invest
+  const deposit_and_invest_amount: number = 10_0_000_000;
   const {
     instructions: deposit_and_invest_instructions,
     readBytes:deposit_and_invest_read_bytes,
     writeBytes:deposit_and_invest_write_bytes,
-    idle_funds_after_deposit_and_invest,
-    invested_funds_after_deposit_and_invest,
-    hodl_balance_after_deposit_and_invest
+    total_managed_funds: total_managed_funds_after_deposit_and_invest,
+    result: deposit_and_invest_result,
+    error: deposit_and_invest_error
   } = await (
     async () => {
       console.log(purple, "---------------------------------------");
       console.log(purple, "Deposit and invest in vault");
       console.log(purple, "---------------------------------------");
-      const deposit_and_invest_amount: number = 10_0_000_000;
       
       try {
         const {
@@ -213,61 +228,43 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           readBytes,
           writeBytes,
         } = await depositToVault(vault_address, [deposit_and_invest_amount], user, true);
-        const {
-          idle_funds:idle_funds_after_deposit_and_invest, 
-          invested_funds:invested_funds_after_deposit_and_invest, 
-          hodl_balance:hodl_balance_after_deposit_and_invest
-        } = await fetchBalances(addressBook, vault_address, params, user);
 
-        const expected_idle_funds = (BigInt(deposit_and_invest_amount) - invested_funds_after_invest[0].amount);
-        const expected_invested_funds = BigInt(deposit_and_invest_amount) + invested_funds_after_invest[0].amount;
-        const expected_hodl_balance: number = deposit_and_invest_amount + parseInt(hodl_balance_after_invest.toString());
+        const expected_idle_funds = [0];
+        const expected_invested_funds = [invest_amount + deposit_and_invest_amount];
+        const expected_total_managed_funds = generateExpectedTotalAmounts(params, [expected_idle_funds], [expected_invested_funds]);
 
-        if(idle_funds_after_deposit_and_invest[0].amount !== expected_idle_funds) {
-          console.error(red, `idle funds: ${idle_funds_after_deposit_and_invest[0].amount} !== ${expected_idle_funds}`);
-          throw Error("Idle funds after deposit and invest  failed");
-        }
+        const total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
 
-        if (invested_funds_after_deposit_and_invest[0].amount !== expected_invested_funds) {
-          console.error(red, `invested funds: ${invested_funds_after_deposit_and_invest[0].amount} !== ${expected_invested_funds}`);
-          throw Error("Invested funds after deposit and invest  failed");
-        }
-
-        if (parseInt(hodl_balance_after_deposit_and_invest.toString()) !== expected_hodl_balance) {
-          console.error(red, `hodl balance: ${hodl_balance_after_deposit_and_invest} !== ${expected_hodl_balance}`);
-          throw Error("Hodl balance after deposit and invest failed");
-        }
-        return { 
-          instructions, 
-          readBytes, 
+        const result = compareTotalManagedFunds(expected_total_managed_funds, total_managed_funds);
+        return {
+          instructions,
+          readBytes,
           writeBytes,
-          idle_funds_after_deposit_and_invest,
-          invested_funds_after_deposit_and_invest,
-          hodl_balance_after_deposit_and_invest
+          total_managed_funds,
+          result
         };
-      } catch (e) {
+      } catch (e: any) {
         console.error(red, e);
         return {
           instructions: 0,
           readBytes: 0,
           writeBytes: 0,
-          idle_funds_after_deposit_and_invest: [{ amount: BigInt(0) }],
-          invested_funds_after_deposit_and_invest: [{ amount: BigInt(0) }],
-          hodl_balance_after_deposit_and_invest: 0,
-          error: e,
+          total_managed_funds: error_total_managed_funds,
+          error: e.toString()
         };
       }
     }
   )();
-
+  
   // Unwind
+  const unwind_amount = 5_0_000_000;
   const {
     instructions: unwind_instructions,
     readBytes:unwind_read_bytes,
     writeBytes:unwind_write_bytes,
-    idle_funds_after_unwind,
-    invested_funds_after_unwind,
-    hodl_balance_after_unwind
+    total_managed_funds: total_managed_funds_after_unwind,
+    result: unwind_result,
+    error: unwind_error
   } = await (
     async () =>{
       try {
@@ -277,12 +274,12 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           console.log(purple, "---------------------------------------");
           console.log(purple, "Try Unwind more than invested");
           console.log(purple, "---------------------------------------");
-          const unwind_amount = 100_0_000_000;
+          const large_unwind_amount = 100_0_000_000;
           const unwind_args: Instruction[] = [
             {
               type: "Unwind",
-              strategy: addressBook.getContractId("hodl_strategy"),
-              amount: BigInt(unwind_amount),
+              strategy: params[0].strategies[0].address,
+              amount: BigInt(large_unwind_amount),
             },
           ];
           await rebalanceVault(
@@ -291,11 +288,10 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
             manager
           );
         } catch (error:any) {
-          if (error.toString().includes("HostError: Error(Contract, #10)") || error.toString().includes("HostError: Error(Contract, #142)")) {
+          if (error.toString().includes("HostError: Error(Contract, #128)") || error.toString().includes("HostError: Error(Contract, #142)")) {
             console.log(green, "---------------------------------------------------------");
             console.log(green, "| Unwinding more than invested funds failed as expected |");
             console.log(green, "---------------------------------------------------------");
-            //To-do: return status
           }else {
             throw Error(error);
           }
@@ -306,11 +302,10 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           console.log(purple, "---------------------------------------");
           console.log(purple, "Try Unwind from unauthorized");
           console.log(purple, "---------------------------------------");
-          const unwind_amount = 5_0_000_000;
           const unwind_args: Instruction[] = [
             {
               type: "Unwind",
-              strategy: addressBook.getContractId("hodl_strategy"),
+              strategy: params[0].strategies[0].address,
               amount: BigInt(unwind_amount),
             },
           ];
@@ -322,9 +317,8 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
         } catch (error:any) {
           if (error.toString().includes("HostError: Error(Contract, #130)")) {
             console.log(green, "---------------------------------------------------------");
-            console.log(green, "| Unwinding more than invested funds failed as expected |");
+            console.log(green, "| Unwinding from unauthorized failed as expected |");
             console.log(green, "---------------------------------------------------------");
-            //To-do: return status
           }else {
             throw Error(error);
           }
@@ -333,11 +327,10 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
         console.log(purple, "---------------------------------------");
         console.log(purple, "Unwind");
         console.log(purple, "---------------------------------------");
-        const unwind_amount = 5_0_000_000;
         const unwind_args: Instruction[] = [
           {
             type: "Unwind",
-            strategy: addressBook.getContractId("hodl_strategy"),
+            strategy: params[0].strategies[0].address,
             amount: BigInt(unwind_amount),
           },
         ];
@@ -350,61 +343,44 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           unwind_args,
           manager
         );
-        const { 
-          idle_funds:idle_funds_after_unwind, 
-          invested_funds:invested_funds_after_unwind, 
-          hodl_balance:hodl_balance_after_unwind
-        } = await fetchBalances(addressBook, vault_address, params, user);
 
-        let expected_idle_funds = BigInt(idle_funds_after_deposit_and_invest[0].amount) + BigInt(unwind_amount);
-        let expected_invested_funds = BigInt(invested_funds_after_deposit_and_invest[0].amount) - BigInt(unwind_amount);
-        let expected_hodl_balance = parseInt(hodl_balance_after_deposit_and_invest.toString()) - unwind_amount;
+        const expected_idle_funds = [unwind_amount];
+        const expected_invested_funds = [Number(total_managed_funds_after_deposit_and_invest![0].strategy_allocations[0].amount) - unwind_amount];
+        const expected_total_managed_funds = generateExpectedTotalAmounts(params, [expected_idle_funds], [expected_invested_funds]);
 
-        if(idle_funds_after_unwind[0].amount !== expected_idle_funds) {
-          console.error(red, `idle funds: ${idle_funds_after_unwind[0].amount} !== ${expected_idle_funds}`);
-          throw Error("Idle funds after unwind failed");
-        }
+        const total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
 
-        if(invested_funds_after_unwind[0].amount !== expected_invested_funds) {
-          console.error(red, `invested funds: ${invested_funds_after_unwind[0].amount} !== ${expected_invested_funds}`);
-          throw Error("Invested funds after unwind failed");
-        }
-
-        if(parseInt(hodl_balance_after_unwind.toString()) !== expected_hodl_balance) {
-          console.error(red, `hodl balance: ${hodl_balance_after_unwind} !== ${expected_hodl_balance}`);
-          throw Error("Hodl balance after unwind failed");
-        }
-
+        const result = compareTotalManagedFunds(expected_total_managed_funds, total_managed_funds);
         return {
           instructions,
           readBytes,
           writeBytes,
-          idle_funds_after_unwind,
-          invested_funds_after_unwind,
-          hodl_balance_after_unwind
-        }
-      } catch (error:any) {
+          total_managed_funds,
+          result
+        };
+      } catch (e:any) {
+        console.error(red, e);
         return {
           instructions: 0,
           readBytes: 0,
           writeBytes: 0,
-          idle_funds_after_unwind: [{ amount: BigInt(0) }],
-          invested_funds_after_unwind: [{ amount: BigInt(0) }],
-          hodl_balance_after_unwind: 0,
-          error: error
+          total_managed_funds: error_total_managed_funds,
+          error: e.toString()
         }
       };
     }
   )();
 
   // Rebalance vault
+  const invest_rebalance_amount = 7_0_000_000;
+  const unwind_rebalance_amount = 3_0_000_000;
   const { 
     instructions: rebalance_instructions, 
     readBytes:rebalance_read_bytes, 
     writeBytes:rebalance_write_bytes,
-    idle_funds: idle_funds_after_rebalance,
-    invested_funds: invested_funds_after_rebalance,
-    hodl_balance: hodl_balance_after_rebalance
+    total_managed_funds: total_managed_funds_after_rebalance,
+    result: rebalance_result,
+    error: rebalance_error
   } = await (
     async () => {
       try {
@@ -416,12 +392,12 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           const rebalanceArgs: Instruction[] = [
             {
               type: "Invest",
-              strategy: addressBook.getContractId("hodl_strategy"),
+              strategy: params[0].strategies[0].address,
               amount: BigInt(7_0_000),
             },
             {
               type: "Unwind",
-              strategy: addressBook.getContractId("hodl_strategy"),
+              strategy: params[0].strategies[0].address,
               amount: BigInt(6_0_00),
             },
           ];
@@ -435,7 +411,6 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
             console.log(green, "----------------------------------------------------");
             console.log(green, "| Rebalancing from unauthorized failed as expected |");
             console.log(green, "----------------------------------------------------");
-            //To-do: return status
           }else {
             throw Error(error);
           }
@@ -443,19 +418,17 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
         console.log(purple, "---------------------------------------");
         console.log(purple, "Rebalancing vault"); 
         console.log(purple, "---------------------------------------");
-        console.log(yellow, "idle funds:", idle_funds_after_unwind[0].amount);
-        const invest_amount = 7_0_000_000;
-        const unwind_amount = 3_0_000_000;
+        
         const rebalanceArgs: Instruction[] = [
           {
             type: "Invest",
-            strategy: addressBook.getContractId("hodl_strategy"),
-            amount: BigInt(invest_amount),
+            strategy: params[0].strategies[0].address,
+            amount: BigInt(invest_rebalance_amount),
           },
           {
             type: "Unwind",
-            strategy: addressBook.getContractId("hodl_strategy"),
-            amount: BigInt(unwind_amount),
+            strategy: params[0].strategies[0].address,
+            amount: BigInt(unwind_rebalance_amount),
           },
         ];
      
@@ -465,65 +438,44 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           manager
         );
 
-        const {
-          idle_funds, 
-          invested_funds, 
-          hodl_balance
-        } = await fetchBalances(addressBook, vault_address, params, user);
+        const expected_idle_funds = [Number(total_managed_funds_after_unwind![0].idle_amount) - invest_rebalance_amount + unwind_rebalance_amount];
+        const expected_invested_funds = [Number(total_managed_funds_after_unwind![0].strategy_allocations[0].amount) + invest_rebalance_amount - unwind_rebalance_amount];
+        const expected_total_managed_funds = generateExpectedTotalAmounts(params, [expected_idle_funds], [expected_invested_funds]);
 
-        const expected_idle_funds = idle_funds_after_unwind[0].amount - BigInt(invest_amount) + BigInt(unwind_amount);
-        const expected_invested_funds = invested_funds_after_unwind[0].amount + BigInt(invest_amount) - BigInt(unwind_amount);
-        const expected_hodl_balance = parseInt(hodl_balance_after_unwind.toString()) + invest_amount - unwind_amount;
+        const total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
 
-        if(idle_funds[0].amount !== expected_idle_funds) {
-          console.error(red, `idle funds: ${idle_funds[0].amount} !== ${expected_idle_funds}`);
-          throw Error("Idle funds after rebalance failed");
-        }
-
-        if (invested_funds[0].amount !== expected_invested_funds) {
-          console.error(red, `invested funds: ${invested_funds[0].amount} !== ${expected_invested_funds}`);
-          throw Error("Invested funds after rebalance failed");
-        }
-
-        if (parseInt(hodl_balance.toString()) !== expected_hodl_balance) {
-          console.error(red, `hodl balance: ${hodl_balance} !== ${expected_hodl_balance}`);
-          throw Error("Hodl balance after rebalance failed");
-        }
-
+        const result = compareTotalManagedFunds(expected_total_managed_funds, total_managed_funds);
         return {
           instructions,
           readBytes,
           writeBytes,
-          idle_funds,
-          invested_funds,
-          hodl_balance
-        }
-      } catch (e) {
+          total_managed_funds,
+          result
+        };
+      } catch (e: any) {
         console.error(red, e);
         return {
           instructions: 0,
           readBytes: 0,
           writeBytes: 0,
-          error: e,
-          idle_funds: [{ amount: BigInt(0) }],
-          invested_funds: [{ amount: BigInt(0) }],
-          hodl_balance: 0
+          total_managed_funds: error_total_managed_funds,
+          error: e.toString()
         };
       }
     }
   )();
 
   // withdraw from vault
+  const withdraw_amount = 2_0_000_000;
   const { 
     instructions: withdraw_instructions, 
     readBytes: withdraw_read_bytes, 
     writeBytes: withdraw_write_bytes,
-    idle_funds: idle_funds_after_withdraw,
-    invested_funds: invested_funds_after_withdraw,
-    hodl_balance: hodl_balance_after_withdraw
+    total_managed_funds: total_managed_funds_after_withdraw,
+    result: withdraw_result,
+    error: withdraw_error
   } = await (
     async () => {
-      let withdraw_amount = 2_0_000_000;
       console.log(purple, "---------------------------------------");
       console.log(purple,`Withdraw ${withdraw_amount} from one strategy`);
       console.log(purple, "---------------------------------------");
@@ -533,18 +485,17 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           console.log(purple, "---------------------------------------");
           console.log(purple, "Try withdraw from unauthorized");
           console.log(purple, "---------------------------------------");
-          const withdraw_amount = 65_0_000;
+          const unauthorized_withdraw_amount = 65_0_000;
           const random_user = Keypair.random();
           await airdropAccount(random_user);
 
-          await withdrawFromVault(vault_address, withdraw_amount, random_user);
+          await withdrawFromVault(vault_address, [0], unauthorized_withdraw_amount, random_user);
           
         } catch (error:any) {
           if (error.toString().includes("HostError: Error(Contract, #111)") || error.toString().includes("HostError: Error(Contract, #10)")) {
             console.log(green, "-------------------------------------------------");
             console.log(green, "| Withdraw from unauthorized failed as expected |");
             console.log(green, "-------------------------------------------------");
-            //To-do: return status
           }else {
             throw Error(error);
           }
@@ -555,59 +506,50 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           console.log(purple, "Try withdraw more than total funds");
           console.log(purple, "-----------------------------------------------------");
 
-          await withdrawFromVault(vault_address, 100_0_000_000, user);
+          await withdrawFromVault(vault_address, [0], 100_0_000_000, user);
 
         } catch (error:any) {
           if (error.toString().includes("HostError: Error(Contract, #124)") || error.toString().includes("HostError: Error(Contract, #10)")) {
             console.log(green, "-----------------------------------------------------");
             console.log(green, "| Withdraw more than total funds failed as expected |");
             console.log(green, "-----------------------------------------------------");
-            //To-do: return status
+          } else {
+            throw Error(error);
           }
         }
-        //Withdraw
+        
+        const total_supply = await fetchTotalSupply(vault_address, user);
+        const total_managed_funds_before_withdraw = await fetchTotalManagedFunds(vault_address, user);
+        const withdrawAmountDfTokens = underlyingToDfTokens(withdraw_amount, total_supply, total_managed_funds_before_withdraw[0].total_amount);
+        
         const {
           instructions,
           readBytes,
           writeBytes,
-        } = await withdrawFromVault(vault_address, withdraw_amount, user);
+        } = await withdrawFromVault(vault_address, [0], Number(withdrawAmountDfTokens), user);
 
-        const { 
-          idle_funds, 
-          invested_funds, 
-          hodl_balance 
-        } = await fetchBalances(addressBook, vault_address, params, user);
+        const expected_idle_funds = [Number(total_managed_funds_before_withdraw[0].idle_amount) - withdraw_amount];
+        const expected_invested_funds = [Number(total_managed_funds_before_withdraw[0].strategy_allocations[0].amount)];
+        const expected_total_managed_funds = generateExpectedTotalAmounts(params, [expected_idle_funds], [expected_invested_funds]);
 
-        const expected_idle_funds = idle_funds_after_rebalance[0].amount - BigInt(withdraw_amount);
-        const expected_invested_funds = invested_funds_after_rebalance[0].amount;
-        const expected_hodl_balance = parseInt(hodl_balance_after_rebalance.toString());
-
-        if(idle_funds[0].amount !== expected_idle_funds) {
-          console.error(red, `idle funds: ${idle_funds[0].amount} !== ${expected_idle_funds}`);
-          throw Error("Idle funds after withdraw failed");
-        }
-
-        if(invested_funds[0].amount !== expected_invested_funds) {
-          console.error(red, `invested funds: ${invested_funds[0].amount} !== ${expected_invested_funds}`);
-          throw Error("Invested funds after withdraw failed");
-        }
-
-        if(parseInt(hodl_balance.toString()) !== expected_hodl_balance) {
-          console.error(red, `hodl balance: ${hodl_balance} !== ${expected_hodl_balance}`);
-          throw Error("Hodl balance after withdraw failed");
-        }
-
-        return { instructions, readBytes, writeBytes, idle_funds, invested_funds, hodl_balance };
-      } catch (e) {
+        const total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
+        const result = compareTotalManagedFunds(expected_total_managed_funds, total_managed_funds);
+        
+        return { 
+          instructions, 
+          readBytes, 
+          writeBytes, 
+          total_managed_funds,
+          result
+        };
+      } catch (e: any) {
         console.error(red, e);
         return {
-          withdraw_instructions: 0,
-          withdraw_read_bytes: 0,
-          withdraw_write_bytes: 0,
-          idle_funds: [{ amount: BigInt(0) }],
-          invested_funds: [{ amount: BigInt(0) }],
-          hodl_balance: 0,
-          error: e,
+          instructions: 0,
+          readBytes: 0,
+          writeBytes: 0,
+          total_managed_funds: error_total_managed_funds,
+          error: e.toString()
         };
       }
     }
@@ -618,9 +560,9 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
     instructions: rescue_instructions,
     readBytes: rescue_read_bytes,
     writeBytes: rescue_write_bytes,
-    idle_funds: idle_funds_after_rescue,
-    invested_funds: invested_funds_after_rescue,
-    hodl_balance: hodl_balance_after_rescue
+    total_managed_funds: total_managed_funds_after_rescue,
+    result: rescue_result,
+    error: rescue_error
   } = await (
     async () => {
       try {
@@ -632,13 +574,12 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
           console.log(purple, "---------------------------------------");
           console.log(purple, "Try rescue from unauthorized");
           console.log(purple, "---------------------------------------");
-          await rescueFromStrategy(vault_address, addressBook.getContractId("hodl_strategy"), user);
+          await rescueFromStrategy(vault_address, params[0].strategies[0].address, user);
         } catch (error:any) {
           if (error.toString().includes("HostError: Error(Contract, #130)")) {
             console.log(green, "-----------------------------------------------");
             console.log(green, "| Rescue from unauthorized failed as expected |");
             console.log(green, "-----------------------------------------------");
-            //To-do: return status
           }else {
             throw Error(error);
           }
@@ -656,356 +597,270 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
             console.log(green, "-------------------------------------------------");
             console.log(green, "| Rescue from random address failed as expected |");
             console.log(green, "-------------------------------------------------");
-            //To-do: return status
           }else {
             throw Error(error);
           }
         }
         // Rescue
-        const { instructions, readBytes, writeBytes } = await rescueFromStrategy(vault_address, addressBook.getContractId("hodl_strategy"), manager);
-        const { idle_funds, invested_funds, hodl_balance } = await fetchBalances(addressBook, vault_address, params, user);
+        const { instructions, readBytes, writeBytes } = await rescueFromStrategy(vault_address, params[0].strategies[0].address, manager);
+        
+        const expected_idle_funds = [Number(total_managed_funds_after_withdraw![0].idle_amount) + Number(total_managed_funds_after_withdraw![0].strategy_allocations[0].amount)];
+        const expected_invested_funds = [0];
+        const expected_total_managed_funds = generateExpectedTotalAmounts(params, [expected_idle_funds], [expected_invested_funds]);
 
-        const expected_idle_funds = idle_funds_after_withdraw[0].amount + invested_funds_after_withdraw[0].amount;
-        const expected_invested_funds = BigInt(0);
-        const expected_hodl_balance = 0;
-
-        if(idle_funds[0].amount !== expected_idle_funds) {
-          console.error(red, `idle funds: ${idle_funds[0].amount} !== ${expected_idle_funds}`);
-          throw Error("Idle funds after rescue failed");
-        }
-
-        if(invested_funds[0].amount !== expected_invested_funds) {
-          console.error(red, `invested funds: ${invested_funds[0].amount} !== ${expected_invested_funds}`);
-          throw Error("Invested funds after rescue failed");
-        }
-
-        if(parseInt(hodl_balance.toString()) !== expected_hodl_balance) {
-          console.error(red, `hodl balance: ${hodl_balance} !== ${expected_hodl_balance}`);
-          throw Error("Hodl balance after rescue failed");
-        }
-
+        const total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
+        const result = compareTotalManagedFunds(expected_total_managed_funds, total_managed_funds);
+        
         return {
           instructions,
           readBytes,
           writeBytes,
-          idle_funds,
-          invested_funds,
-          hodl_balance,
+          total_managed_funds,
+          result
         }
       } catch (error:any) {
         return {
           instructions: 0,
           readBytes: 0,
           writeBytes: 0,
-          idle_funds: [{ amount: BigInt(0) }],
-          invested_funds: [{ amount: BigInt(0) }],
-          hodl_balance: 0,
-          error: error,
+          total_managed_funds: error_total_managed_funds,
+          error: error.toString()
+        }
       }
     }
-  }   
   )();
 
-  // Unpause strategy
+  // unpause strategy
   const {
-    instructions: unpause_strategy_instructions,
-    readBytes: unpause_strategy_read_bytes,
-    writeBytes: unpause_strategy_write_bytes,
-    idle_funds: idle_funds_after_unpause_strategy,
-    invested_funds: invested_funds_after_unpause_strategy,
-    hodl_balance: hodl_balance_after_unpause_strategy
+    instructions: unpause_instructions,
+    readBytes: unpause_read_bytes,
+    writeBytes: unpause_write_bytes,
+    total_managed_funds: total_managed_funds_after_unpause,
+    result: unpause_result,
+    error: unpause_error
   } = await (
     async () => {
       try {
-        //try unpause from unauthorized
-        try {
+        console.log(purple, "---------------------------------------");
+        console.log(purple, "Unpause strategy");
+        console.log(purple, "---------------------------------------");
+        // Try unpause from unauthorized
+        try { 
           console.log(purple, "---------------------------------------");
           console.log(purple, "Try unpause from unauthorized");
           console.log(purple, "---------------------------------------");
-          await unpauseStrategy(vault_address, addressBook.getContractId("hodl_strategy"), user);
+          await unpauseStrategy(vault_address, params[0].strategies[0].address, user);
         } catch (error:any) {
-          if(error.toString().includes("HostError: Error(Contract, #130)")) {
-            console.log(green, "--------------------------------------------------");
-            console.log(green, "| Unpausing from unauthorized failed as expected |");
-            console.log(green, "--------------------------------------------------");
-            //To-do: return status
-          } else {
+          if (error.toString().includes("HostError: Error(Contract, #130)")) {
+            console.log(green, "-----------------------------------------------");
+            console.log(green, "| Unpause from unauthorized failed as expected |");
+            console.log(green, "-----------------------------------------------");
+          }else {
             throw Error(error);
           }
         }
-        //unpause non existent strategy
-        try {
+        
+        // Try unpause non existent strategy
+        try { 
           console.log(purple, "---------------------------------------");
-          console.log(purple, "Unpause non existent strategy");
+          console.log(purple, "Try unpause non existent strategy");
           console.log(purple, "---------------------------------------");
           const random_address = Keypair.random();
           await airdropAccount(random_address);
           await unpauseStrategy(vault_address, random_address.publicKey(), manager);
         } catch (error:any) {
-          if(error.toString().includes("HostError: Error(Contract, #140)")) {
-            console.log(green, "------------------------------------------------------");
-            console.log(green, "| Unpausing non existent strategy failed as expected |");
-            console.log(green, "------------------------------------------------------");
-            //To-do: return status
-          } else {
+          if (error.toString().includes("HostError: Error(Contract, #140)")) {
+            console.log(green, "---------------------------------------------------------");
+            console.log(green, "| Unpause non existent strategy failed as expected |");
+            console.log(green, "---------------------------------------------------------");
+          }else {
             throw Error(error);
           }
         }
-        //unpause strategy
-        const { instructions, readBytes, writeBytes } = await unpauseStrategy(vault_address, addressBook.getContractId("hodl_strategy"), manager);
+        
+        // Actual unpause
+        const {instructions, readBytes, writeBytes} = await unpauseStrategy(vault_address, params[0].strategies[0].address, manager);
 
-        await depositToVault(vault_address, [10_0_000_000], user);
-        const {
-          idle_funds,
-          invested_funds,
-          hodl_balance
-        } = await fetchBalances(addressBook, vault_address, params, user);
-        const expected_idle_funds = idle_funds_after_rescue[0].amount + BigInt(10_0_000_000);
-        const expected_invested_funds = invested_funds_after_rescue[0].amount;
-        const expected_hodl_balance = parseInt(hodl_balance_after_rescue.toString());
+        const expected_idle_funds = [Number(total_managed_funds_after_rescue![0].idle_amount)];
+        const expected_invested_funds = [0];
+        const expected_total_managed_funds = generateExpectedTotalAmounts(params, [expected_idle_funds], [expected_invested_funds]);
 
-        if (idle_funds[0].amount !== expected_idle_funds) {
-          console.error(red, `idle funds: ${idle_funds[0].amount} !== ${expected_idle_funds}`);
-          throw Error("Idle funds after unpause failed");
-        }
-
-        if (invested_funds[0].amount !== expected_invested_funds) {
-          console.error(red, `invested funds: ${invested_funds[0].amount} !== ${expected_invested_funds}`);
-          throw Error("Invested funds after unpause failed");
-        }
-
-        if (parseInt(hodl_balance.toString()) !== expected_hodl_balance) {
-          console.error(red, `hodl balance: ${hodl_balance} !== ${expected_hodl_balance}`);
-          throw Error("Hodl balance after unpause failed");
-        }
+        const total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
+        const result = compareTotalManagedFunds(expected_total_managed_funds, total_managed_funds);
         
         return {
           instructions,
           readBytes,
           writeBytes,
-          idle_funds: idle_funds_after_rescue[0].amount,
-          invested_funds: invested_funds_after_rescue[0].amount,
-          hodl_balance: hodl_balance_after_rescue,
-        }
-      } catch (error) {
-        console.error(red, error);
-        return {
-          instructions: 0,
-          readBytes: 0,
-          writeBytes: 0,
-          idle_funds: [{ amount: BigInt(0) }],
-          invested_funds: [{ amount: BigInt(0) }],
-          hodl_balance: 0,
-          error: error,
-        }
-      }
-    }
-  )();
-
-  //Pause strategy
-  const {
-    instructions: pause_strategy_instructions,
-    readBytes: pause_strategy_read_bytes,
-    writeBytes: pause_strategy_write_bytes,
-    idle_funds: idle_funds_after_pause_strategy,
-    invested_funds: invested_funds_after_pause_strategy,
-    hodl_balance: hodl_balance_after_pause_strategy
-  } = await (
-    async () => {
-      try {
-        // try pause from unauthorized
-        try {
-          console.log(purple, "---------------------------------------");
-          console.log(purple, "Try pause from unauthorized");
-          console.log(purple, "---------------------------------------");
-          await pauseStrategy(vault_address, addressBook.getContractId("hodl_strategy"), user);
-        } catch (error:any) {
-          if(error.toString().includes("HostError: Error(Contract, #130)")) {
-            console.log(green, "--------------------------------------------------");
-            console.log(green, "| Pausing from unauthorized failed as expected |");
-            console.log(green, "--------------------------------------------------");
-            //To-do: return status
-          } else {
-            throw Error(error);
-          }
-        }
-        // try pause non existent strategy
-        try {
-          console.log(purple, "---------------------------------------");
-          console.log(purple, "Pause non existent strategy");
-          console.log(purple, "---------------------------------------");
-          const random_address = Keypair.random();
-          await airdropAccount(random_address);
-          await pauseStrategy(vault_address, random_address.publicKey(), manager);
-        } catch (error:any) {
-          if(error.toString().includes("HostError: Error(Contract, #140)")) {
-            console.log(green, "------------------------------------------------------");
-            console.log(green, "| Pausing non existent strategy failed as expected |");
-            console.log(green, "------------------------------------------------------");
-            //To-do: return status
-          } else {
-            throw Error(error);
-          }
-        }
-        // pause strategy
-        const { instructions, readBytes, writeBytes } = await pauseStrategy(vault_address, addressBook.getContractId("hodl_strategy"), manager);
-
-        try {
-          const invest_instructions: Instruction[] = [
-            {
-              type: "Invest",
-              strategy: addressBook.getContractId("hodl_strategy"),
-              amount: BigInt(1_000_000),
-            },
-          ];
-          await rebalanceVault(vault_address, invest_instructions, manager);
-        } catch (error:any) {
-          if(error.toString().includes("HostError: Error(Contract, #144)")) {
-            console.log(green, "----------------------------------------------");
-            console.log(green, "| Investing in paused strategy failed as expected |");
-            console.log(green, "----------------------------------------------");
-            //To-do: return status
-          } else {
-            throw Error(error);
-          }
-        }
-
-        const {
-          idle_funds, 
-          invested_funds, 
-          hodl_balance
-        } = await fetchBalances(addressBook, vault_address, params, user);
-        
-        return {
-          instructions,
-          readBytes,
-          writeBytes,
-          idle_funds,
-          invested_funds,
-          hodl_balance,
-        }
+          total_managed_funds,
+          result
+        };
       } catch (error:any) {
         return {
           instructions: 0,
           readBytes: 0,
           writeBytes: 0,
-          idle_funds: [{ amount: BigInt(0) }],
-          invested_funds: [{ amount: BigInt(0) }],
-          hodl_balance: 0,
-          error: error,
+          total_managed_funds: error_total_managed_funds,
+          error: error.toString()
         }
       }
     }
   )();
 
-  //Show data
+  // pause strategy
+  const {
+    instructions: pause_instructions,
+    readBytes: pause_read_bytes,
+    writeBytes: pause_write_bytes,
+    total_managed_funds: total_managed_funds_after_pause,
+    result: pause_result,
+    error: pause_error
+  } = await (
+    async () => {
+      try {
+        console.log(purple, "---------------------------------------");
+        console.log(purple, "Pause strategy");
+        console.log(purple, "---------------------------------------");
+        const { instructions, readBytes, writeBytes } = await pauseStrategy(vault_address, params[0].strategies[0].address, manager);
+
+        const expected_idle_funds = [Number(total_managed_funds_after_unpause![0].idle_amount)];
+        const expected_invested_funds = [0];
+        const expected_total_managed_funds = generateExpectedTotalAmounts(params, [expected_idle_funds], [expected_invested_funds]);
+
+        const total_managed_funds = await fetchTotalManagedFunds(vault_address, user);
+        const result = compareTotalManagedFunds(expected_total_managed_funds, total_managed_funds);
+        
+        return {
+          instructions,
+          readBytes,
+          writeBytes,
+          total_managed_funds,
+          result
+        };
+      } catch (error:any) {
+        return {
+          instructions: 0,
+          readBytes: 0,
+          writeBytes: 0,
+          total_managed_funds: error_total_managed_funds,
+          error: error.toString()
+        }
+      }
+    }
+  )();
+
+  // Mostrar resultados en formato de tabla
   const tableData = {
     "Initial balance": {
-      "Idle funds": idle_funds_before_deposit[0].amount,
-      "Invested funds": invested_funds_before_deposit[0].amount,
-      hodlStrategy: hodl_balance_before_deposit,
+      "Idle funds": inital_total_managed_funds[0].idle_amount,
+      "Invested funds": inital_total_managed_funds[0].invested_amount,
     },
     "After deposit": {
-      "Idle funds": idle_funds_after_deposit[0].amount,
-      "Invested funds": invested_funds_after_deposit[0].amount,
-      "Hodl strategy": hodl_balance_after_deposit,
+      "Idle funds": total_managed_funds_after_deposit[0].idle_amount,
+      "Invested funds": total_managed_funds_after_deposit[0].invested_amount,
     },
     "After invest": {
-      "Idle funds": idle_funds_after_invest[0].amount,
-      "Invested funds": invested_funds_after_invest[0].amount,
-      "Hodl strategy": hodl_balance_after_invest,
+      "Idle funds": total_managed_funds_after_invest[0].idle_amount,
+      "Invested funds": total_managed_funds_after_invest[0].invested_amount,
     },
     "After deposit and invest": {
-      "Idle funds": idle_funds_after_deposit_and_invest[0].amount,
-      "Invested funds": invested_funds_after_deposit_and_invest[0].amount,
-      "Hodl strategy": hodl_balance_after_deposit_and_invest,
+      "Idle funds": total_managed_funds_after_deposit_and_invest[0].idle_amount,
+      "Invested funds": total_managed_funds_after_deposit_and_invest[0].invested_amount,
     },
     "After unwind": {
-      "Idle funds": idle_funds_after_unwind[0].amount,
-      "Invested funds": invested_funds_after_unwind[0].amount,
-      "Hodl strategy": hodl_balance_after_unwind,
+      "Idle funds": total_managed_funds_after_unwind[0].idle_amount,
+      "Invested funds": total_managed_funds_after_unwind[0].invested_amount,
     },
     "After rebalance": {
-      "Idle funds": idle_funds_after_rebalance[0].amount,
-      "Invested funds": invested_funds_after_rebalance[0].amount,
-      "Hodl strategy": hodl_balance_after_rebalance,
+      "Idle funds": total_managed_funds_after_rebalance[0].idle_amount,
+      "Invested funds": total_managed_funds_after_rebalance[0].invested_amount,
     },
     "After withdraw": {
-      "Idle funds": idle_funds_after_withdraw[0].amount,
-      "Invested funds": invested_funds_after_withdraw[0].amount,
-      "Hodl strategy": hodl_balance_after_withdraw,
+      "Idle funds": total_managed_funds_after_withdraw[0].idle_amount,
+      "Invested funds": total_managed_funds_after_withdraw[0].invested_amount,
     },
     "After rescue": {
-      "Idle funds": idle_funds_after_rescue[0].amount,
-      "Invested funds": invested_funds_after_rescue[0].amount,
-      "Hodl strategy": hodl_balance_after_rescue,
+      "Idle funds": total_managed_funds_after_rescue[0].idle_amount,
+      "Invested funds": total_managed_funds_after_rescue[0].invested_amount,
+    },
+    "After unpause": {
+      "Idle funds": total_managed_funds_after_unpause[0].idle_amount,
+      "Invested funds": total_managed_funds_after_unpause[0].invested_amount,
+    },
+    "After pause": {
+      "Idle funds": total_managed_funds_after_pause[0].idle_amount,
+      "Invested funds": total_managed_funds_after_pause[0].invested_amount,
     }
   };
+
   const budgetData = {
     deploy: {
-      status: !!deploy_instructions && !!deploy_read_bytes && !!deploy_write_bytes ? "success" : "failed",
+      status: deploy_instructions && deploy_read_bytes && deploy_write_bytes ? 'success' : 'failed',
       instructions: deploy_instructions,
       readBytes: deploy_read_bytes,
       writeBytes: deploy_write_bytes,
     },
     deposit: {
-      status: !!deposit_instructions && !!deposit_read_bytes && !!deposit_write_bytes ? "success" : "failed",
+      status: deposit_instructions && deposit_read_bytes && deposit_write_bytes ? 'success' : 'failed',
       instructions: deposit_instructions,
       readBytes: deposit_read_bytes,
       writeBytes: deposit_write_bytes,
     },
     invest: {
-      status: !!invest_instructions && !!invest_read_bytes && !!invest_write_bytes ? "success" : "failed",
+      status: invest_instructions && invest_read_bytes && invest_write_bytes ? 'success' : 'failed',
       instructions: invest_instructions,
       readBytes: invest_read_bytes,
       writeBytes: invest_write_bytes,
     },
     deposit_and_invest: {
-      status: !!deposit_and_invest_instructions && !!deposit_and_invest_read_bytes && !!deposit_and_invest_write_bytes ? "success" : "failed",
+      status: deposit_and_invest_instructions && deposit_and_invest_read_bytes && deposit_and_invest_write_bytes ? 'success' : 'failed',
       instructions: deposit_and_invest_instructions,
       readBytes: deposit_and_invest_read_bytes,
       writeBytes: deposit_and_invest_write_bytes,
     },
     unwind: {
-      status: !!unwind_instructions && !!unwind_read_bytes && !!unwind_write_bytes ? "success" : "failed",
+      status: unwind_instructions && unwind_read_bytes && unwind_write_bytes ? 'success' : 'failed',
       instructions: unwind_instructions,
       readBytes: unwind_read_bytes,
       writeBytes: unwind_write_bytes,
     },
     rebalance: {
-      status: !!rebalance_instructions && !!rebalance_read_bytes && !!rebalance_write_bytes ? "success" : "failed",
+      status: rebalance_instructions && rebalance_read_bytes && rebalance_write_bytes ? 'success' : 'failed',
       instructions: rebalance_instructions,
       readBytes: rebalance_read_bytes,
       writeBytes: rebalance_write_bytes,
     },
     withdraw: {
-      status: !!withdraw_instructions && !!withdraw_read_bytes && !!withdraw_write_bytes ? "success" : "failed",
+      status: withdraw_instructions && withdraw_read_bytes && withdraw_write_bytes ? 'success' : 'failed',
       instructions: withdraw_instructions,
       readBytes: withdraw_read_bytes,
       writeBytes: withdraw_write_bytes,
     },
     rescue: {
-      status: !!rescue_instructions && !!rescue_read_bytes && !!rescue_write_bytes ? "success" : "failed",
+      status: rescue_instructions && rescue_read_bytes && rescue_write_bytes ? 'success' : 'failed',
       instructions: rescue_instructions,
       readBytes: rescue_read_bytes,
       writeBytes: rescue_write_bytes,
     },
-    unpause_strategy: {
-      status: !!unpause_strategy_instructions && !!unpause_strategy_read_bytes && !!unpause_strategy_write_bytes ? "success" : "failed",
-      instructions: unpause_strategy_instructions,
-      readBytes: unpause_strategy_read_bytes,
-      writeBytes: unpause_strategy_write_bytes,
+    unpause: {
+      status: unpause_instructions && unpause_read_bytes && unpause_write_bytes ? 'success' : 'failed',
+      instructions: unpause_instructions,
+      readBytes: unpause_read_bytes,
+      writeBytes: unpause_write_bytes,
     },
-    pause_strategy: {
-      status: !!pause_strategy_instructions && !!pause_strategy_read_bytes && !!pause_strategy_write_bytes ? "success" : "failed",
-      instructions: pause_strategy_instructions,
-      readBytes: pause_strategy_read_bytes,
-      writeBytes: pause_strategy_write_bytes,
-    },
-  }
-  return {tableData, budgetData};
-}
+    pause: {
+      status: pause_instructions && pause_read_bytes && pause_write_bytes ? 'success' : 'failed',
+      instructions: pause_instructions,
+      readBytes: pause_read_bytes,
+      writeBytes: pause_write_bytes,
+    }
+  };
 
+  console.table(tableData);
+  console.table(budgetData);
+
+  return { tableData, budgetData };
+}
 
 
 export async function testVaultOneAssetOneStrategy(addressBook: AddressBook, params: CreateVaultParams[], user: Keypair) {
