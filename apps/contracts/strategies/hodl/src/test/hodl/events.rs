@@ -70,6 +70,7 @@ fn harvest() {
     let expected_harvest_event = HarvestEvent {
         amount: 0i128,
         from: test.user,
+        price_per_share: 0i128,
     };
 
     assert_eq!(
