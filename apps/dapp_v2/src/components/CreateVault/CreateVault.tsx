@@ -1,7 +1,8 @@
 import React from 'react'
 import BackgroundCard from '../ui/BackgroundCard'
-import { Field, Fieldset, Select, HStack, Input, createListCollection, Portal, Stack, Box, Button, Flex } from '@chakra-ui/react'
-
+import { Fieldset, HStack, createListCollection, Stack, Button, Flex } from '@chakra-ui/react'
+import { CustomSelect, FormField } from '../ui/CustomInputFields'
+import { baseMargin } from '../ui/Common'
 
 const vaultAssets = createListCollection({
   items: [
@@ -16,65 +17,42 @@ const vaultStrategies = createListCollection({
     { label: 'Strategy 2', value: 'strategy2' },
   ]
 })
+interface ConfigSectionProps {
+  title: string;
+  children: React.ReactNode;
+}
 
-const basePadding = 2
-const baseMargin = 6
+function ConfigSection({ title, children }: ConfigSectionProps) {
+  return (
+    <BackgroundCard title={title} titleFontWeight='bold' titleFontSize='xl'>
+      <Fieldset.Root mt={baseMargin}>
+        <Fieldset.Content>
+          <HStack gap={4} w={'full'} alignContent={'center'} justifyContent={'center'}>
+            {children}
+          </HStack>
+        </Fieldset.Content>
+      </Fieldset.Root>
+    </BackgroundCard>
+  );
+}
 
 function SelectAssets() {
   return (
-    <Select.Root multiple collection={vaultAssets}>
-      <Select.HiddenSelect />
-      <Select.Label>Assets</Select.Label>
-      <Select.Control>
-        <Select.Trigger px={basePadding}>
-          <Select.ValueText placeholder='Select assets' />
-        </Select.Trigger>
-        <Select.IndicatorGroup p={basePadding}>
-          <Select.Indicator />
-        </Select.IndicatorGroup>
-      </Select.Control>
-      <Portal>
-        <Select.Positioner>
-          <Select.Content>
-            {vaultAssets.items.map((item) => (
-              <Select.Item key={item.value} item={item}>
-                {item.label}
-                <Select.ItemIndicator />
-              </Select.Item>
-            ))}
-          </Select.Content>
-        </Select.Positioner>
-      </Portal>
-    </Select.Root>
+    <CustomSelect
+      collection={vaultAssets}
+      label="Assets"
+      placeholder="Select assets"
+    />
   )
 }
 
 function SelectStrategies() {
   return (
-    <Select.Root multiple collection={vaultStrategies}>
-      <Select.HiddenSelect />
-      <Select.Label>Strategies</Select.Label>
-      <Select.Control>
-        <Select.Trigger px={basePadding}>
-          <Select.ValueText placeholder='Select strategies' />
-        </Select.Trigger>
-        <Select.IndicatorGroup p={basePadding}>
-          <Select.Indicator />
-        </Select.IndicatorGroup>
-      </Select.Control>
-      <Portal>
-        <Select.Positioner>
-          <Select.Content>
-            {vaultStrategies.items.map((item) => (
-              <Select.Item key={item.value} item={item}>
-                {item.label}
-                <Select.ItemIndicator />
-              </Select.Item>
-            ))}
-          </Select.Content>
-        </Select.Positioner>
-      </Portal>
-    </Select.Root>
+    <CustomSelect
+      collection={vaultStrategies}
+      label="Strategies"
+      placeholder="Select strategies"
+    />
   )
 }
 
@@ -84,10 +62,7 @@ function AddStrategies() {
       <HStack>
         {vaultAssets.items.map((item) => (
           <Stack key={item.value} w={'full'} alignContent={'center'} justifyContent={'center'} mt={baseMargin} gap={4}>
-            <Field.Root>
-              <Field.Label>{item.label}</Field.Label>
-              <Input placeholder='Initial deposit' px={basePadding} />
-            </Field.Root>
+            <FormField label={item.label} placeholder="Initial deposit" type="number" />
             <SelectStrategies />
           </Stack>
         ))}
@@ -98,70 +73,31 @@ function AddStrategies() {
 
 function VaultConfig() {
   return (
-    <BackgroundCard title='Creating a Vault' titleFontWeight='bold' titleFontSize='2xl'>
-      <Fieldset.Root mt={baseMargin}>
-        <Fieldset.Content>
-          <HStack gap={4} w={'full'} alignContent={'center'} justifyContent={'center'}>
-            <Field.Root>
-              <Field.Label>Vault Name</Field.Label>
-              <Input placeholder='Vault name' px={basePadding} />
-            </Field.Root>
-            <Field.Root>
-              <Field.Label>Tag for the vault</Field.Label>
-              <Input placeholder='Tag name' px={basePadding} />
-            </Field.Root>
-            <SelectAssets />
-          </HStack>
-        </Fieldset.Content>
-      </Fieldset.Root>
-    </BackgroundCard>
-  )
+    <ConfigSection title="Creating a Vault">
+      <FormField label="Vault Name" placeholder="Vault name" />
+      <FormField label="Tag for the vault" placeholder="Tag name" />
+      <SelectAssets />
+    </ConfigSection>
+  );
 }
 
 function ManagerConfig() {
   return (
-    <BackgroundCard title='Manager Config' titleFontWeight='bold' titleFontSize='xl'>
-      <Fieldset.Root mt={6}>
-        <Fieldset.Content>
-          <HStack gap={4} w={'full'} alignContent={'center'} justifyContent={'center'}>
-            <Field.Root>
-              <Field.Label>Manager</Field.Label>
-              <Input placeholder='Manager address...' px={basePadding} />
-            </Field.Root>
-            <Field.Root>
-              <Field.Label>Emergency Manager</Field.Label>
-              <Input placeholder='Emergency manager address...' px={basePadding} />
-            </Field.Root>
-            <Field.Root>
-              <Field.Label>Rebalance manager</Field.Label>
-              <Input placeholder='Rebalance manager address...' px={basePadding} />
-            </Field.Root>
-          </HStack>
-        </Fieldset.Content>
-      </Fieldset.Root>
-    </BackgroundCard>
-  )
+    <ConfigSection title="Manager Config">
+      <FormField label="Manager" placeholder="Manager address..." />
+      <FormField label="Emergency Manager" placeholder="Emergency manager address..." />
+      <FormField label="Rebalance manager" placeholder="Rebalance manager address..." />
+    </ConfigSection>
+  );
 }
 
 function FeeConfig() {
   return (
-    <BackgroundCard title='Fee Config' titleFontWeight='bold' titleFontSize='xl'>
-      <Fieldset.Root mt={6}>
-        <Fieldset.Content>
-          <HStack gap={4} w={'full'} alignContent={'center'} justifyContent={'center'}>
-            <Field.Root>
-              <Field.Label>Fee receiver</Field.Label>
-              <Input placeholder='Fee receiver address...' px={basePadding} />
-            </Field.Root>
-            <Field.Root>
-              <Field.Label>Fee percentage</Field.Label>
-              <Input placeholder='Percentage...' px={basePadding} />
-            </Field.Root>
-          </HStack>
-        </Fieldset.Content>
-      </Fieldset.Root>
-    </BackgroundCard>
-  )
+    <ConfigSection title="Fee Config">
+      <FormField label="Fee receiver" placeholder="Fee receiver address..." />
+      <FormField label="Fee percentage" placeholder="Percentage..." />
+    </ConfigSection>
+  );
 }
 
 function CreateVaultButton() {
