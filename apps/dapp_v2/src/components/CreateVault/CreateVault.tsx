@@ -17,12 +17,12 @@ const vaultStrategies = createListCollection({
     { label: 'Strategy 2', value: 'strategy2' },
   ]
 })
-interface ConfigSectionProps {
+interface VaultConfigSectionProps {
   title: string;
   children: React.ReactNode;
 }
 
-function ConfigSection({ title, children }: ConfigSectionProps) {
+function VaultConfigSection({ title, children }: VaultConfigSectionProps) {
   return (
     <BackgroundCard title={title} titleFontWeight='bold' titleFontSize='xl'>
       <Fieldset.Root mt={baseMargin}>
@@ -73,30 +73,30 @@ function AddStrategies() {
 
 function VaultConfig() {
   return (
-    <ConfigSection title="Creating a Vault">
+    <VaultConfigSection title="Creating a Vault">
       <FormField label="Vault Name" placeholder="Vault name" />
       <FormField label="Tag for the vault" placeholder="Tag name" />
       <SelectAssets />
-    </ConfigSection>
+    </VaultConfigSection>
   );
 }
 
 function ManagerConfig() {
   return (
-    <ConfigSection title="Manager Config">
+    <VaultConfigSection title="Manager Config">
       <FormField label="Manager" placeholder="Manager address..." />
       <FormField label="Emergency Manager" placeholder="Emergency manager address..." />
       <FormField label="Rebalance manager" placeholder="Rebalance manager address..." />
-    </ConfigSection>
+    </VaultConfigSection>
   );
 }
 
 function FeeConfig() {
   return (
-    <ConfigSection title="Fee Config">
+    <VaultConfigSection title="Fee Config">
       <FormField label="Fee receiver" placeholder="Fee receiver address..." />
       <FormField label="Fee percentage" placeholder="Percentage..." />
-    </ConfigSection>
+    </VaultConfigSection>
   );
 }
 
