@@ -62,7 +62,7 @@ function AddStrategies() {
       <HStack>
         {vaultAssets.items.map((item) => (
           <Stack key={item.value} w={'full'} alignContent={'center'} justifyContent={'center'} mt={baseMargin} gap={4}>
-            <FormField label={item.label} placeholder="Initial deposit" type="number" />
+            <FormField label={item.label} placeholder="Initial deposit" type="number" min={0} />
             <SelectStrategies />
           </Stack>
         ))}
@@ -95,7 +95,7 @@ function FeeConfig() {
   return (
     <VaultConfigSection title="Fee Config">
       <FormField label="Fee receiver" placeholder="Fee receiver address..." />
-      <FormField label="Fee percentage" placeholder="Percentage..." />
+      <FormField label="Fee percentage" placeholder="Percentage..." type='number' min={0} max={100} />
     </VaultConfigSection>
   );
 }
@@ -118,7 +118,6 @@ function CreateVaultButton() {
 
 function CreateVault() {
   return (
-
     <Stack h={'full'} w={'full'} alignContent={'center'} justifyContent={'center'} gap={6}>
       <VaultConfig />
       <AddStrategies />

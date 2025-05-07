@@ -36,11 +36,11 @@ export function CustomSelect({ collection, label, placeholder }: ReusableSelectP
   )
 }
 
-export function FormField({ label, placeholder, type }: { label: string; placeholder: string, type?: string }) {
+export function FormField({ label, placeholder, type = 'text', min = undefined, max = undefined }: { label: string; placeholder: string, type?: string, min?: number, max?: number }) {
   return (
     <Field.Root>
       <Field.Label>{label}</Field.Label>
-      <Input type={type} placeholder={placeholder} px={basePadding} />
+      <Input type={type} min={min} max={max} placeholder={placeholder} px={basePadding} />
     </Field.Root>
   );
 }

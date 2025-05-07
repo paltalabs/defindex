@@ -13,10 +13,6 @@
       "path": "apps/dapp",
     },
     {
-      "name": "Dapp v2",
-      "path": "apps/dapp_v2",
-    },
-    {
       "name": "Docs",
       "path": "apps/docs",
     },
