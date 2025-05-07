@@ -125,3 +125,6 @@ artifacts/
 *.pidb
 *.svclog
 *.scc
+
+#Legacy project
+*/dapp_legacy/
