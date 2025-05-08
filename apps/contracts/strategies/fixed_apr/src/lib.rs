@@ -87,7 +87,7 @@ impl DeFindexStrategyTrait for FixAprStrategy {
         spend_yield(&e, from.clone(), yield_balance)?;
         receive_balance(&e, from.clone(), yield_balance);
 
-        event::emit_harvest(&e, String::from_str(&e, STRATEGY_NAME), yield_balance, from);
+        event::emit_harvest(&e, String::from_str(&e, STRATEGY_NAME), yield_balance, from, 0i128);
 
         Ok(())
     }
