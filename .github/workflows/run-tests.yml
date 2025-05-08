@@ -33,7 +33,7 @@ jobs:
         run: yarn install
 
       - name: Build app
-        run: yarn build --filter dapp
+        run: cd apps/dapp && yarn build
 
   run-tests:
     runs-on: ubuntu-latest
