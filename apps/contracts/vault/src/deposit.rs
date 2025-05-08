@@ -14,7 +14,7 @@ pub fn process_deposit(
     amounts_desired: &Vec<i128>,
     amounts_min: &Vec<i128>,
     from: &Address,
-) -> Result<(Vec<i128>, i128), ContractError> {
+) -> Result<(Vec<i128>, i128, i128), ContractError> {
     let assets_length = total_managed_funds.len();
 
     // Validate inputs
@@ -57,7 +57,7 @@ pub fn process_deposit(
     // Mint shares
     mint_shares(e, &total_supply, shares_to_mint, from.clone())?;
 
-    Ok((amounts, shares_to_mint))
+    Ok((amounts, shares_to_mint, total_supply))
 }
 
 /// Calculate shares for single-asset deposits.

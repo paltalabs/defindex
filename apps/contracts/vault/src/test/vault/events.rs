@@ -18,7 +18,11 @@ use crate::test::defindex_vault::{
   Instruction, 
   Report, 
   RolesDataKey, 
-  UnwindEvent
+  UnwindEvent,
+  VaultDepositEvent,
+  VaultWithdrawEvent,
+  StrategyAllocation,
+  CurrentAssetInvestmentAllocation
 };
 use crate::test::{
   create_defindex_vault, 
@@ -318,4 +322,132 @@ fn set_new_manager_by_manager() {
     // Get the last manager change event
     let manager_changed_event: ManagerChangedEvent = FromVal::from_val(&test.env, &events.2);
      assert_eq!(manager_changed_event.new_manager, users[0]);
+}
+
+#[test]
+fn deposit_withdraw_event_emitted(){
+  let test = DeFindexVaultTest::setup();
+  test.env.mock_all_auths();
+  let strategy_params_token_0 = create_strategy_params_token_0(&test);
+  let assets: Vec<AssetStrategySet> = sorobanvec![
+    &test.env,
+    AssetStrategySet {
+      address: test.token_0.address.clone(),
+      strategies: strategy_params_token_0.clone()
+    }
+  ];
+
+  let mut roles: Map<u32, Address> = Map::new(&test.env);
+  roles.set(RolesDataKey::Manager as u32, test.manager.clone());
+  roles.set(RolesDataKey::EmergencyManager as u32, test.emergency_manager.clone());
+  roles.set(RolesDataKey::VaultFeeReceiver as u32, test.vault_fee_receiver.clone());
+  roles.set(RolesDataKey::RebalanceManager as u32, test.rebalance_manager.clone());
+
+  let mut name_symbol: Map<String, String> = Map::new(&test.env);
+  name_symbol.set(String::from_str(&test.env, "name"), String::from_str(&test.env, "dfToken"));
+  name_symbol.set(String::from_str(&test.env, "symbol"), String::from_str(&test.env, "DFT"));
+
+  let defindex_contract = create_defindex_vault(
+    &test.env,
+    assets,
+    roles,
+    2000u32,
+    test.defindex_protocol_receiver.clone(),
+    2500u32,
+    test.soroswap_router.address.clone(),
+    name_symbol,
+    true
+  );
+
+  let users = DeFindexVaultTest::generate_random_users(&test.env, 2);
+
+  let amount = 10_000_000i128;
+  test.token_0_admin_client.mint(&users[0], &amount);
+  
+  defindex_contract.deposit(
+    &sorobanvec![&test.env, amount],
+    &sorobanvec![&test.env, amount],
+    &users[0],
+    &true
+  );
+  
+  let events = test.env.events().all();
+  let deposit_event: VaultDepositEvent = FromVal::from_val(&test.env, &events.last().unwrap().2);
+  assert_eq!(deposit_event.depositor, users[0]);
+  assert_eq!(deposit_event.amounts, sorobanvec![&test.env, amount]);
+  assert_eq!(deposit_event.df_tokens_minted, amount);
+  assert_eq!(deposit_event.total_supply_before, 0);
+  assert_eq!(deposit_event.total_managed_funds_before, sorobanvec![&test.env, CurrentAssetInvestmentAllocation {
+    asset: test.token_0.address.clone(),
+    idle_amount: 0,
+    invested_amount: 0,
+    total_amount: 0,
+    strategy_allocations: sorobanvec![
+      &test.env,
+      StrategyAllocation {
+        strategy_address: test.strategy_client_token_0.address.clone(),
+        amount: 0,
+        paused: false,
+      },
+    ],
+  }]);
+
+  // second deposit
+  test.token_0_admin_client.mint(&users[0], &amount);
+  defindex_contract.deposit(
+    &sorobanvec![&test.env, amount],
+    &sorobanvec![&test.env, amount],
+    &users[0],
+    &true
+  );
+
+  let events = test.env.events().all();
+  let deposit_event: VaultDepositEvent = FromVal::from_val(&test.env, &events.last().unwrap().2);
+  assert_eq!(deposit_event.depositor, users[0]);
+  assert_eq!(deposit_event.amounts, sorobanvec![&test.env, amount]);
+  assert_eq!(deposit_event.df_tokens_minted, amount);
+  assert_eq!(deposit_event.total_supply_before, amount);
+  assert_eq!(deposit_event.total_managed_funds_before, sorobanvec![&test.env, CurrentAssetInvestmentAllocation {
+    asset: test.token_0.address.clone(),
+    idle_amount: amount,
+    invested_amount: 0,
+    total_amount: amount,
+    strategy_allocations: sorobanvec![
+      &test.env,
+      StrategyAllocation {
+        strategy_address: test.strategy_client_token_0.address.clone(),
+        amount: 0,
+        paused: false,
+      },
+    ],
+  }]);
+
+  // withdraw
+  defindex_contract.withdraw(
+    &amount,
+    &sorobanvec![&test.env, amount],
+    &users[0]
+  );
+
+  let events = test.env.events().all();
+  let withdraw_event: VaultWithdrawEvent = FromVal::from_val(&test.env, &events.last().unwrap().2);
+  assert_eq!(withdraw_event.withdrawer, users[0]);
+  assert_eq!(withdraw_event.amounts_withdrawn, sorobanvec![&test.env, amount]);
+  assert_eq!(withdraw_event.df_tokens_burned, amount);
+  // it has been deposited amount twice
+  assert_eq!(withdraw_event.total_supply_before, 2*amount);
+  assert_eq!(withdraw_event.total_managed_funds_before, sorobanvec![&test.env, CurrentAssetInvestmentAllocation {
+    asset: test.token_0.address.clone(),
+    idle_amount: 2*amount,
+    invested_amount: 0,
+    total_amount: 2*amount,
+    strategy_allocations: sorobanvec![
+      &test.env,
+      StrategyAllocation {
+        strategy_address: test.strategy_client_token_0.address.clone(),
+        amount: 0,
+        paused: false,
+      },
+    ],
+  }]);
 }
