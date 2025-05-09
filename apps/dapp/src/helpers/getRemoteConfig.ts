@@ -8,7 +8,7 @@ export const getRemoteConfig = async (network: string) => {
     const deployments = await configFile(network)
     return deployments
   }
-  /* else if(isLocal === 'true') {
+/*   else if(isLocal === 'true') {
     return localDeployment.ids
   } */
 }

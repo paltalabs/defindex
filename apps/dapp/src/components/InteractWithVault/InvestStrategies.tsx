@@ -1,6 +1,5 @@
-import { Address, xdr } from "@stellar/stellar-sdk"
+import { useSorobanReact } from "stellar-react"
 import { Button, For, HStack, NumberInputRoot, Stack, Text } from "@chakra-ui/react"
-import { useSorobanReact } from "@soroban-react/core"
 import { useContext, useEffect, useState } from "react"
 import { ActionType, AssetInvestmentAllocation, RebalanceInstruction } from "@/hooks/types"
 import { mapInstructionsToParams } from "@/helpers/vault"
@@ -12,6 +11,7 @@ import { DialogBody, DialogContent, DialogHeader } from "../ui/dialog"
 import { Field } from "../ui/field"
 import { InputGroup } from "../ui/input-group"
 import { NumberInputField } from "../ui/number-input"
+import { Address, xdr } from "@stellar/stellar-sdk"
 
 interface InvestState extends AssetInvestmentAllocation {
   total: number

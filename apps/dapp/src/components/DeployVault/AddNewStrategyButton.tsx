@@ -17,19 +17,19 @@ import {
   For,
   Grid,
   GridItem,
-  HStack,
   IconButton,
   Stack,
   Text,
 } from '@chakra-ui/react'
-import { useSorobanReact } from '@soroban-react/core'
+import { useSorobanReact, WalletNetwork } from 'stellar-react'
 import { scValToNative, xdr } from '@stellar/stellar-sdk'
-import { useEffect, useState } from 'react'
+import { use, useEffect, useState } from 'react'
 import { MdAdd } from 'react-icons/md'
 import { Checkbox } from '../ui/checkbox'
 import { CheckboxCard } from '../ui/checkbox-card'
 import { InputGroup } from '../ui/input-group'
 import { NumberInputField, NumberInputRoot } from '../ui/number-input'
+import { getNetworkName } from '@/helpers/networkName'
 
 interface AmountInputProps {
   amount: number
@@ -40,7 +40,7 @@ interface AmountInputProps {
 function AddNewStrategyButton() {
   const dispatch = useAppDispatch();
   const sorobanContext = useSorobanReact()
-  const { activeChain } = useSorobanReact()
+  const { kit, activeNetwork } = sorobanContext
   const strategyCallback = useStrategyCallback();
   const [open, setOpen] = useState<boolean>(false)
   const newVault = useAppSelector((state) => state.newVault)
@@ -48,6 +48,8 @@ function AddNewStrategyButton() {
   const [selectedAsset, setSelectedAsset] = useState<Asset>({ address: '', strategies: [], symbol: '', amount: 0 })
   const [assets, setAssets] = useState<Asset[]>([])
   const [amountInput, setAmountInput] = useState<AmountInputProps>({ amount: 0, enabled: false, target: '' })
+  const [networkName, setNetworkName] = useState<string>('')
+
 
   const resetForm = () => {
     setSelectedAsset({ address: '', strategies: [], symbol: '' })
@@ -60,39 +62,6 @@ function AddNewStrategyButton() {
     if (!symbol) return '';
     return symbol === 'native' ? 'XLM' : symbol
   }
-
-  useEffect(() => {
-    const fetchStrategies = async () => {
-      const tempStrategies = await getDefaultStrategies(activeChain?.name?.toLowerCase() || 'testnet')
-      setDefaultStrategies(tempStrategies)
-    }
-    fetchStrategies();
-  }, [activeChain?.networkPassphrase])
-
-  useEffect(() => {
-    const fetchStrategies = async () => {
-      const rawDefaultStrategies = await getDefaultStrategies(activeChain?.name?.toLowerCase() || 'testnet')
-      const defaultStrategiesWithAssets = await Promise.all(rawDefaultStrategies.map(async (strategy) => {
-        const assetAddress = await strategyCallback(
-          strategy.address,
-          StrategyMethod.ASSET,
-          undefined,
-          false
-        ).then((result) => {
-          const resultScval = result as xdr.ScVal;
-          const asset = scValToNative(resultScval);
-          return asset;
-        })
-        const assetSymbol = await getSymbol(assetAddress)
-        const asset = { address: assetAddress, strategies: [strategy], symbol: assetSymbol! }
-        return asset
-      }
-      ))
-      setAssets(defaultStrategiesWithAssets)
-    }
-    fetchStrategies();
-  }, [activeChain?.networkPassphrase])
-
 
   const handleSelectStrategy = (value: boolean, strategy: Strategy) => {
     const selectedAsset = assets.find((asset) => asset.strategies.some((str) => str.address === strategy.address))
@@ -141,6 +110,43 @@ function AddNewStrategyButton() {
     }
     resetForm()
   }
+
+  const fetchStrategies = async (network: string) => {
+    if (!network) return
+    const rawDefaultStrategies = await getDefaultStrategies(network)
+    setDefaultStrategies(rawDefaultStrategies)
+    await Promise.allSettled(rawDefaultStrategies.map(async (strategy) => {
+      const assetAddress = await strategyCallback(
+        strategy.address,
+        StrategyMethod.ASSET,
+        undefined,
+        false
+      ).then((result) => {
+        const scVal = result as xdr.ScVal;
+        const asset = scValToNative(scVal);
+        return asset;
+      });
+      if (!assetAddress) throw new Error('Asset address not found')
+      const assetSymbol = await getSymbol(assetAddress)
+      const asset = { address: assetAddress, strategies: [strategy], symbol: assetSymbol! }
+      return asset
+    })).then((results) => {
+      const fullfilledResults = results.filter(result => result.status === 'fulfilled')
+      const rejectedResults = results.filter(result => result.status === 'rejected')
+      console.warn('Rejected strategies:', rejectedResults)
+      setAssets(fullfilledResults.map(result => result.value))
+    }).catch((error) => {
+      console.error('Error fetching strategies:', error);
+    }
+    )
+  }
+
+  useEffect(() => {
+    let network = getNetworkName(activeNetwork)
+    setNetworkName(network)
+    fetchStrategies(network ?? 'testnet');
+  }, [activeNetwork])
+
 
   return (
     <DialogRoot open={open} onOpenChange={(e) => { setOpen(e.open) }} placement={'center'}>
