@@ -56,7 +56,9 @@ export const useFactory = () => {
 export function useFactoryCallback() {
   const sorobanContext = useSorobanReact();
   const {activeNetwork} = sorobanContext;
-  const publicAddresses = usePublicAddresses(getNetworkName(activeNetwork)).data;
+  const publicAddresses = usePublicAddresses(
+    activeNetwork? getNetworkName(activeNetwork) : 'mainnet'
+  ).data;
   const { address: factoryAddress } = useFactory();
   if (!activeNetwork) {
     throw new Error('No active network found');

@@ -119,7 +119,7 @@ function AddStrategies() {
   const handleDepositAmount = (e: any, i: number) => {
     if (!decimalRegex.test(e.target.value) && e.target.value != '') return
     const assetAllocation = vaultContext?.newVault.assetAllocation.map((item, index) => {
-      if (item.address === assetContext?.assets[i].address) {
+      if (item.address === assetContext?.assets.find((asset) => asset.address === item.address)?.address) {
         return {
           ...item,
           amount: parseNumericInput(e.target.value, 7),
