@@ -27,7 +27,7 @@ export const soroswapRouterAddress = async (network: WalletNetwork | undefined) 
   }
 
   const response = await fetch(`https://raw.githubusercontent.com/soroswap/core/refs/heads/main/public/${getNetworkName(network)}.contracts.json`, {
-    cache: 'no-cache',
+    cache: 'reload',
   });
 
   if (!response.ok) {
