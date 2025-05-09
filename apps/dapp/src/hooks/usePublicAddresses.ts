@@ -35,7 +35,6 @@ export const soroswapRouterAddress = async (network: WalletNetwork | undefined) 
   }
 
   const data = await response.json();
-  console.log('Soroswap router address:', data);
   return data.ids.router;
 }
 

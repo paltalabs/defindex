@@ -20,7 +20,6 @@ const findFactoryAddress = (publicAddresses: Record<string, string>): string | u
   if (!publicAddresses || Object.keys(publicAddresses).length === 0) {
     throw new Error('No public addresses found');
   }
-  console.log("Public addresses", publicAddresses);
   const factoryAddress = publicAddresses['defindex_factory'];
   if (!factoryAddress) {
     throw new Error('Factory address not found in public addresses');
@@ -46,7 +45,6 @@ export const useFactory = () => {
     if (publicAddresses.error || !publicAddresses.data) {
       throw new Error(`Failed to fetch public addresses: ${publicAddresses.error}`);
     }
-    console.log("Public addresses", publicAddresses.data)
     const factoryAddress = findFactoryAddress(publicAddresses.data);
     setAddress(factoryAddress);
 
@@ -92,7 +90,6 @@ export function useFactoryCallback() {
             reconnectAfterTx: false,
           })) as TxResponse;
         }
-        console.log("Factory Callback result", result)
         if (!signAndSend) return result;
         if (
           isObject(result) &&
@@ -100,7 +97,6 @@ export function useFactoryCallback() {
         ) throw result;
         return result
       } catch (e: any) {
-        console.log(e)
         const error = e as Error;
         if (error.message.includes('ExistingValue')) throw new Error('Index already exists.')
         if (error.message.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')

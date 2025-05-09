@@ -30,7 +30,6 @@ export function useStrategyCallback() {
 
     return useCallback(
         async (address: string, method: StrategyMethod, args?: StellarSdk.xdr.ScVal[], signAndSend?: boolean) => {
-            console.log("Strategy Callback called");
             try {
                 const result = (await contractInvoke({
                     contractAddress: address,
@@ -40,7 +39,6 @@ export function useStrategyCallback() {
                     signAndSend: signAndSend,
                     reconnectAfterTx: false,
                 }));
-                console.log("Strategy Callback result", result);
                 if (!signAndSend) return result;
                 if (isTxResponse(result)) {
                     if (
@@ -51,7 +49,6 @@ export function useStrategyCallback() {
                 }
             } catch (e: any) {
                 const error = e.toString();
-                console.log(error);
                 if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
                 if (error.includes('Sign')) throw new Error('Request denied by user. Please try to sign again.');
                 if (error.includes('non-existing value for contract instance')) throw new Error(`Strategy: ${address} not found.`);
