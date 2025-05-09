@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react'
 import BackgroundCard from '../ui/BackgroundCard'
-import { Fieldset, HStack, createListCollection, Stack, Button, Flex } from '@chakra-ui/react'
+import { Fieldset, HStack, createListCollection, Stack, Button, Flex, Box } from '@chakra-ui/react'
 import { CustomSelect, FormField } from '../ui/CustomInputFields'
 import { baseMargin } from '../ui/Common'
 import { decimalRegex, parseNumericInput } from '@/helpers/input'
@@ -38,13 +38,10 @@ function SelectAssets() {
   const vaultContext = useContext(VaultContext);
   const [selectedAssets, setSelectedAssets] = React.useState<Asset[]>([])
   const handleSelect = (e: any) => {
-    console.log('Selected assets:', e)
-    console.log('assets:', assetContext?.assets)
     const selected = assetContext?.assets.filter((asset) => e.includes(asset.address))
     setSelectedAssets(selected || [])
   }
   useEffect(() => {
-    console.log('Selected assets:', selectedAssets)
     const newAssets: Asset[] = selectedAssets.map((asset) => ({
       address: asset.address,
       strategies: [],
@@ -160,6 +157,7 @@ function AddStrategies() {
 
 function VaultConfig() {
   const vaultContext = useContext(VaultContext);
+  const [upgradable, setUpgradable] = React.useState(true)
   const [vaultConfig, setVaultConfig] = React.useState<Partial<Vault>>({
     name: '',
     symbol: '',
@@ -192,6 +190,25 @@ function VaultConfig() {
         }}
       />
       <SelectAssets />
+
+      <Button
+        variant={upgradable ? 'solid' : 'outline'}
+        size={'lg'}
+        colorPalette={'green'}
+        alignSelf={'end'}
+        p={4}
+        rounded={16}
+        onClick={() => {
+          setUpgradable(!upgradable)
+          vaultContext?.setNewVault({
+            ...vaultContext.newVault,
+            upgradable: !upgradable,
+          })
+        }}
+      >
+        {upgradable ? 'Upgradable' : 'Non Upgradable'}
+      </Button>
+
     </VaultConfigSection>
   );
 }
