@@ -1,0 +1,53 @@
+@keyframes move {
+  100% {
+      transform: translate3d(0, 0, 1px) rotate(360deg);
+  }
+}
+
+.background {
+  position: absolute;
+  z-index: -1;
+  width: 100vw;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  background: #022227;
+  overflow: hidden;
+}
+
+.background span {
+  width: 25vmin;
+  height: 25vmin;
+  border-radius: 50vmin;
+  backface-visibility: hidden;
+  position: absolute;
+  animation: move;
+  animation-duration: 16;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+
+.background span:nth-child(1) {
+  color: hsla(86, 24%, 60%, 0.522);
+  top: 30%;
+  left: 30%;
+  animation-duration: 30s;
+  animation-delay: -226s;
+  transform-origin: -30vw 40vh;
+  translate: 10% -70%;
+  box-shadow: -100vmin 0 300px currentColor;
+
+}
+
+.background span:nth-child(2) {
+  color: #ffc5f15e;
+  top: 50%;
+  left: 30%;
+  animation-duration: 40s;
+  animation-delay: -162s;
+  transform-origin: -30vw 40vh;
+  translate: 200% 0%;
+  box-shadow: -100vmin 0 300px currentColor;
+
+}

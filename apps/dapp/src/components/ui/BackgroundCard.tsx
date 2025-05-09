@@ -1,5 +1,6 @@
 import { Box, Card } from '@chakra-ui/react'
 import React from 'react'
+import './BackgroundCard.css'
 
 function BackgroundCard({
   title,
@@ -13,7 +14,7 @@ function BackgroundCard({
   children?: React.ReactNode
 }) {
   return (
-    <Card.Root variant={'elevated'} p={10} borderRadius={'24px'}>
+    <Card.Root p={10} borderRadius={'24px'} className="background-card">
       <Card.Header>
         <Card.Title fontSize={titleFontSize} fontWeight={titleFontWeight}>{title}</Card.Title>
       </Card.Header>

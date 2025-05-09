@@ -6,6 +6,7 @@ import useMounted from "@/hooks/useMounted"
 import { StrategiesProvider } from "./StrategiesProvider"
 import { VaultProvider } from "./VaultProvider"
 
+
 export const MainProvider = ({ children }: { children: ReactNode }) => {
   const mounted = useMounted();
   if (!mounted) return null;

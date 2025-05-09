@@ -24,7 +24,7 @@ function VaultConfigSection({ title, children }: VaultConfigSectionProps) {
     <BackgroundCard title={title} titleFontWeight='bold' titleFontSize='xl'>
       <Fieldset.Root mt={baseMargin}>
         <Fieldset.Content>
-          <HStack gap={4} w={'full'} alignContent={'center'} justifyContent={'center'}>
+          <HStack gap={4} w={'full'} alignContent={'center'} justifyContent={'center'} alignItems={'center'} justifyItems={'center'}>
             {children}
           </HStack>
         </Fieldset.Content>
@@ -119,13 +119,14 @@ function AddStrategies() {
   const handleDepositAmount = (e: any, i: number) => {
     if (!decimalRegex.test(e.target.value) && e.target.value != '') return
     const assetAllocation = vaultContext?.newVault.assetAllocation.map((item, index) => {
-      if (item.address === assetContext?.assets.find((asset) => asset.address === item.address)?.address) {
-        return {
+      let newItem = item
+      if (item.address === vaultContext?.newVault.assetAllocation[i].address) {
+        newItem = {
           ...item,
-          amount: parseNumericInput(e.target.value, 7),
+          amount: parseNumericInput(e.target.value, 2),
         }
       }
-      return item
+      return newItem
     });
     vaultContext?.setNewVault({
       ...vaultContext.newVault,
@@ -311,8 +312,8 @@ function FeeConfig() {
         max={100}
         value={vaultContext!.newVault.feePercent}
         onChange={handeInput}
-        invalid={vaultContext!.newVault.feePercent < 0 || vaultContext!.newVault.feePercent > 100}
-        errorMessage={vaultContext!.newVault.feePercent < 0 || vaultContext!.newVault.feePercent > 100 ? 'Percentage must be between 0 and 100' : ''}
+        invalid={vaultContext!.newVault.feePercent <= 0 || vaultContext!.newVault.feePercent > 100}
+        errorMessage={vaultContext!.newVault.feePercent <= 0 || vaultContext!.newVault.feePercent > 100 ? 'Percentage not valid' : ''}
       />
     </VaultConfigSection>
   );
@@ -454,6 +455,7 @@ function CreateVaultButton() {
         loading={loading}
         onClick={handleCreateVault}
         disabled={disabled}
+        className='custom-button'
       >
         {sorobanContext.address ? 'Launch Vault' : 'Connect Wallet'}
       </Button>
@@ -465,7 +467,7 @@ function CreateVault() {
 
 
   return (
-    <Stack h={'full'} w={'full'} alignContent={'center'} justifyContent={'center'} gap={6}>
+    <Stack h={'full'} w={'full'} alignContent={'center'} justifyContent={'center'} gap={6} mt={16}>
       <VaultConfig />
       <AddStrategies />
       <ManagerConfig />

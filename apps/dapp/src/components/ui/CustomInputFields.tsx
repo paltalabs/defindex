@@ -1,6 +1,6 @@
 import { createListCollection, Field, Input, Portal, Select } from "@chakra-ui/react";
 import { basePadding } from "./Common";
-
+import './CustomInputFields.css';
 interface ReusableSelectProps {
   collection: ReturnType<typeof createListCollection<{ label: string; value: string }>>;
   label: string;
@@ -19,20 +19,20 @@ export function CustomSelect({ collection, label, placeholder, value, onSelect }
       onValueChange={(e) => onSelect?.(e.value)}
     >
       <Select.HiddenSelect />
-      <Select.Label>{label}</Select.Label>
+      <Select.Label className="custom-input-label">{label}</Select.Label>
       <Select.Control>
-        <Select.Trigger px={basePadding}>
+        <Select.Trigger px={basePadding} className="custom-select">
           <Select.ValueText placeholder={placeholder} />
         </Select.Trigger>
-        <Select.IndicatorGroup p={basePadding}>
+        <Select.IndicatorGroup p={basePadding} >
           <Select.Indicator />
         </Select.IndicatorGroup>
       </Select.Control>
       <Portal>
         <Select.Positioner>
-          <Select.Content>
+          <Select.Content className="custom-select-content">
             {collection.items.map((item, index) => (
-              <Select.Item key={index} item={item}>
+              <Select.Item key={index} item={item} className="custom-select-item">
                 {item.label}
                 <Select.ItemIndicator />
               </Select.Item>
@@ -67,8 +67,8 @@ export function FormField({
   errorMessage = undefined,
 }: ReusableFromProps) {
   return (
-    <Field.Root invalid={invalid}>
-      <Field.Label>{label}</Field.Label>
+    <Field.Root invalid={invalid} justifyItems={'start'}>
+      <Field.Label className="custom-input-label">{label}</Field.Label>
       <Input
         type={type}
         min={min}
@@ -77,6 +77,7 @@ export function FormField({
         px={basePadding}
         value={value}
         onChange={(e) => onChange?.(e)}
+        className="custom-input-field"
       />
       <Field.ErrorText>{errorMessage}</Field.ErrorText>
     </Field.Root>
