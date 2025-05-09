@@ -52,6 +52,8 @@ interface ReusableFromProps {
   max?: number;
   value?: string | number;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  invalid?: boolean;
+  errorMessage?: string;
 }
 export function FormField({
   label,
@@ -60,9 +62,12 @@ export function FormField({
   min = undefined,
   max = undefined,
   value,
-  onChange }: ReusableFromProps) {
+  onChange,
+  invalid = false,
+  errorMessage = undefined,
+}: ReusableFromProps) {
   return (
-    <Field.Root>
+    <Field.Root invalid={invalid}>
       <Field.Label>{label}</Field.Label>
       <Input
         type={type}
@@ -73,6 +78,7 @@ export function FormField({
         value={value}
         onChange={(e) => onChange?.(e)}
       />
+      <Field.ErrorText>{errorMessage}</Field.ErrorText>
     </Field.Root>
   );
 }

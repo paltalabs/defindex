@@ -12,6 +12,7 @@ import { useSorobanReact, WalletNetwork } from 'stellar-react'
 import { xdr } from '@stellar/stellar-sdk'
 import { soroswapRouterAddress } from '@/hooks/usePublicAddresses'
 import { toaster } from '../ui/toaster'
+import { isValidAddress } from '@/helpers/address'
 
 interface VaultConfigSectionProps {
   title: string;
@@ -84,13 +85,10 @@ function SelectStrategies({ asset }: { asset: Asset }) {
   })
 
   const handleSelect = (e: any) => {
-    console.log('Selected strategies:', e)
-    console.log('strategies:', asset.strategies)
     setSelectedStrategies(e)
   }
 
   useEffect(() => {
-    console.log('Selected strategies:', selectedStrategies)
     const newStrategies: Strategy[] = asset.strategies.filter((strategy) => selectedStrategies.includes(strategy.address))
     const assetAllocation = vaultContext?.newVault.assetAllocation.map((item) => {
       if (item.address === asset.address) {
@@ -105,7 +103,6 @@ function SelectStrategies({ asset }: { asset: Asset }) {
       ...vaultContext.newVault,
       assetAllocation: assetAllocation!,
     })
-    console.log('New vault:', vaultContext?.newVault)
   }, [selectedStrategies])
   return (
     <CustomSelect
@@ -224,6 +221,8 @@ function ManagerConfig() {
         onChange={(e) => {
           setManagerConfig({ ...managerConfig, vaultManager: e.target.value })
         }}
+        invalid={!isValidAddress(managerConfig.vaultManager!)}
+        errorMessage={!managerConfig.vaultManager || !isValidAddress(managerConfig.vaultManager) ? 'Invalid address' : ''}
       />
       <FormField
         label="Emergency Manager"
@@ -232,6 +231,8 @@ function ManagerConfig() {
         onChange={(e) => {
           setManagerConfig({ ...managerConfig, emergencyManager: e.target.value })
         }}
+        invalid={!isValidAddress(managerConfig.emergencyManager!)}
+        errorMessage={!managerConfig.emergencyManager || !isValidAddress(managerConfig.emergencyManager) ? 'Invalid address' : ''}
       />
       <FormField
         label="Rebalance manager"
@@ -240,6 +241,8 @@ function ManagerConfig() {
         onChange={(e) => {
           setManagerConfig({ ...managerConfig, rebalanceManager: e.target.value })
         }}
+        invalid={!isValidAddress(managerConfig.rebalanceManager!)}
+        errorMessage={!managerConfig.rebalanceManager || !isValidAddress(managerConfig.rebalanceManager) ? 'Invalid address' : ''}
       />
     </VaultConfigSection>
   );
@@ -280,6 +283,8 @@ function FeeConfig() {
         placeholder="Fee receiver address"
         value={vaultContext!.newVault.feeReceiver}
         onChange={handleFeeReceiver}
+        invalid={!isValidAddress(vaultContext!.newVault.feeReceiver!)}
+        errorMessage={!vaultContext!.newVault.feeReceiver || !isValidAddress(vaultContext!.newVault.feeReceiver) ? 'Invalid address' : ''}
       />
       <FormField
         label="Fee percentage"
@@ -289,6 +294,8 @@ function FeeConfig() {
         max={100}
         value={vaultContext!.newVault.feePercent}
         onChange={handeInput}
+        invalid={vaultContext!.newVault.feePercent < 0 || vaultContext!.newVault.feePercent > 100}
+        errorMessage={vaultContext!.newVault.feePercent < 0 || vaultContext!.newVault.feePercent > 100 ? 'Percentage must be between 0 and 100' : ''}
       />
     </VaultConfigSection>
   );
@@ -335,7 +342,6 @@ function CreateVaultButton() {
 
     const isCreateAndDeposit = newVault.assetAllocation.some((asset) => asset.amount > 0);
     if (isCreateAndDeposit) {
-
       if (!sorobanContext.address) return;
       params = getCreateDeFindexVaultDepositParams(
         sorobanContext.address,
@@ -370,7 +376,7 @@ function CreateVaultButton() {
         console.error('Error creating vault:', error);
         toaster.create({
           title: 'Error creating vault',
-          description: error.toString(),
+          description: error.message,
           type: 'error',
           duration: 5000,
         });
@@ -405,11 +411,11 @@ function CreateVaultButton() {
           }
         });
         setLoading(false);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error creating vault:', error);
         toaster.create({
           title: 'Error creating vault',
-          description: error,
+          description: error.message,
           type: 'error',
           duration: 5000,
         });
