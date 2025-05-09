@@ -1,23 +1,16 @@
 "use client"
 
-import { ChakraProvider, defaultSystem, createSystem, defaultConfig } from "@chakra-ui/react"
-import { ColorModeProvider } from "./color-mode"
+import { ChakraProvider, defaultSystem } from "@chakra-ui/react"
+import { system } from "./theme"
+import {
+  ColorModeProvider,
+  type ColorModeProviderProps,
+} from "./color-mode"
 
-export const system = createSystem(defaultConfig, {
-  theme: {
-    tokens: {
-      fonts: {
-        heading: { value: `'Figtree', sans-serif` },
-        body: { value: `'Figtree', sans-serif` },
-      },
-    },
-  },
-})
-
-export function Provider(props: React.PropsWithChildren) {
+export function ThemeProvider(props: ColorModeProviderProps) {
   return (
     <ChakraProvider value={system}>
-      <ColorModeProvider>{props.children}</ColorModeProvider>
+      <ColorModeProvider {...props} />
     </ChakraProvider>
   )
 }
