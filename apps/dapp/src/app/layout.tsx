@@ -4,6 +4,7 @@ import "./globals.css";
 import { MainProvider } from "@/providers/MainProvider";
 import NavBar from "@/components/NavBar/NavBar";
 import { Stack } from "@chakra-ui/react";
+import { Toaster } from "@/components/ui/toaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,6 +32,7 @@ export default function RootLayout({
         <MainProvider>
           <Stack w={"full"} h="full">
             <NavBar />
+            <Toaster />
             {children}
           </Stack>
         </MainProvider>

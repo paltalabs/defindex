@@ -1,6 +1,8 @@
 import { Strategy } from '@/contexts';
 import useSWR from 'swr';
 import { StrategyMethod, useStrategyCallback } from './useStrategy';
+import { WalletNetwork } from 'stellar-react';
+import { getNetworkName } from '@/helpers/networkName';
 export const usePublicAddresses = (network: string) => {
   const fetcher = async (url: string) => {
     const response = await fetch(url, {cache: 'reload'});
@@ -13,13 +15,31 @@ export const usePublicAddresses = (network: string) => {
   );
 
   return {
-    data: data as string[],
+    data: data as Record<string, string>,
     isLoading,
     error,
   };
 };
 
-export async function extractStrategies(publicAddresses: string[]): Promise<Strategy[]> {
+export const soroswapRouterAddress = async (network: WalletNetwork | undefined) => {
+  if (!network) {
+    throw new Error('Network is undefined');
+  }
+
+  const response = await fetch(`https://raw.githubusercontent.com/soroswap/core/refs/heads/main/public/${getNetworkName(network)}.contracts.json`, {
+    cache: 'no-cache',
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch router address for network: ${getNetworkName(network)}`);
+  }
+
+  const data = await response.json();
+  console.log('Soroswap router address:', data);
+  return data.ids.router;
+}
+
+export async function extractStrategies(publicAddresses: Record<string, string>): Promise<Strategy[]> {
   const strategies: Strategy[] = [];
 
   for (const key in publicAddresses) {

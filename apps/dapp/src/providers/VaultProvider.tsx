@@ -5,7 +5,6 @@ import useMounted from "@/hooks/useMounted"
 
 
 export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
-  const [network, setNetwork] = useState<'testnet' | 'mainnet'>('testnet');
   const isMounted = useMounted();
 
   const [newVault, setNewVault] = useState<Vault>({
@@ -17,6 +16,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
     rebalanceManager: '',
     feeReceiver: '',
     feePercent: 0,
+    upgradable: true,
   });
   const [vaults, setVaults] = useState<Vault[]>([]);
   const [selectedVault, setSelectedVault] = useState<Vault | null>(null);

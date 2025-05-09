@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import BackgroundCard from '../ui/BackgroundCard'
 import { Fieldset, HStack, createListCollection, Stack, Button, Flex } from '@chakra-ui/react'
 import { CustomSelect, FormField } from '../ui/CustomInputFields'
@@ -6,6 +6,12 @@ import { baseMargin } from '../ui/Common'
 import { decimalRegex, parseNumericInput } from '@/helpers/input'
 import { Asset, AssetContext, Strategy, Vault, VaultContext } from '@/contexts'
 import { parsePascalCase } from '@/helpers/utils'
+import { FactoryMethod, useFactoryCallback } from '@/hooks/useFactory'
+import { getAssetParamsSCVal, getCreateDeFindexVaultDepositParams, getCreateDeFindexVaultParams } from '@/helpers/vault'
+import { useSorobanReact, WalletNetwork } from 'stellar-react'
+import { xdr } from '@stellar/stellar-sdk'
+import { soroswapRouterAddress } from '@/hooks/usePublicAddresses'
+import { toaster } from '../ui/toaster'
 
 interface VaultConfigSectionProps {
   title: string;
@@ -289,6 +295,130 @@ function FeeConfig() {
 }
 
 function CreateVaultButton() {
+  const vaultContext = useContext(VaultContext);
+  const useFactory = useFactoryCallback();
+  const sorobanContext = useSorobanReact();
+  const [loading, setLoading] = useState(false);
+  const [disabled, setDisabled] = useState(false);
+
+  useEffect(() => {
+    if (
+      !sorobanContext.address
+      || !vaultContext
+      || !vaultContext.newVault.name
+      || !vaultContext.newVault.symbol
+      || !vaultContext.newVault.vaultManager
+      || !vaultContext.newVault.emergencyManager
+      || !vaultContext.newVault.rebalanceManager
+      || !vaultContext.newVault.feeReceiver
+      || !vaultContext.newVault.feePercent
+      || vaultContext.newVault.assetAllocation.length === 0
+    ) {
+      setDisabled(true);
+    } else {
+      setDisabled(false);
+    }
+  }, [sorobanContext, vaultContext, vaultContext!.newVault]);
+
+  const handleCreateVault = async () => {
+    if (!vaultContext) return;
+    setLoading(true);
+    const soroswapRouter = await soroswapRouterAddress(sorobanContext.activeNetwork);
+
+    const newVault = vaultContext.newVault;
+    if (!newVault) return;
+
+    const assetParams = getAssetParamsSCVal(
+      newVault.assetAllocation
+    );
+    let params: xdr.ScVal[] = [];
+
+    const isCreateAndDeposit = newVault.assetAllocation.some((asset) => asset.amount > 0);
+    if (isCreateAndDeposit) {
+
+      if (!sorobanContext.address) return;
+      params = getCreateDeFindexVaultDepositParams(
+        sorobanContext.address,
+        newVault.emergencyManager,
+        newVault.rebalanceManager,
+        newVault.feeReceiver,
+        newVault.vaultManager,
+        newVault.feePercent,
+        newVault.name,
+        newVault.symbol,
+        assetParams,
+        soroswapRouter,
+        newVault.upgradable,
+        newVault.assetAllocation
+      );
+      try {
+        const result = await useFactory(FactoryMethod.CREATE_DEFINDEX_VAULT_DEPOSIT, params, true);
+        toaster.create({
+          title: 'Vault created',
+          description: 'Vault created successfully',
+          type: 'success',
+          duration: 5000,
+          action: {
+            label: 'View transaction',
+            onClick: () => {
+              window.open(`https://stellar.expert/explorer/${sorobanContext.activeNetwork == WalletNetwork.TESTNET ? 'testnet' : 'public'}/search?term=${result.txHash}`, '_blank');
+            }
+          }
+        });
+        setLoading(false);
+      } catch (error: any) {
+        console.error('Error creating vault:', error);
+        toaster.create({
+          title: 'Error creating vault',
+          description: error.toString(),
+          type: 'error',
+          duration: 5000,
+        });
+        setLoading(false);
+        return;
+      }
+    } else {
+      params = getCreateDeFindexVaultParams(
+        newVault.emergencyManager,
+        newVault.rebalanceManager,
+        newVault.feeReceiver,
+        newVault.vaultManager,
+        newVault.feePercent,
+        newVault.name,
+        newVault.symbol,
+        assetParams,
+        soroswapRouter,
+        newVault.upgradable,
+      );
+      try {
+        const result = await useFactory(FactoryMethod.CREATE_DEFINDEX_VAULT, params, true);
+        toaster.create({
+          title: 'Vault created',
+          description: `Vault created successfully`,
+          type: 'success',
+          duration: 5000,
+          action: {
+            label: 'View transaction',
+            onClick: () => {
+              window.open(`https://stellar.expert/explorer/${sorobanContext.activeNetwork == WalletNetwork.TESTNET ? 'testnet' : 'public'}/search?term=${result.txHash}`, '_blank');
+            }
+          }
+        });
+        setLoading(false);
+      } catch (error) {
+        console.error('Error creating vault:', error);
+        toaster.create({
+          title: 'Error creating vault',
+          description: error,
+          type: 'error',
+          duration: 5000,
+        });
+        setLoading(false);
+        return;
+      }
+    }
+    setLoading(false);
+  }
   return (
     <Flex w={'full'} h={'full'} alignItems={'center'} justifyContent={'end'}>
       <Button
@@ -297,14 +427,20 @@ function CreateVaultButton() {
         variant={'outline'}
         size={'lg'}
         mb={baseMargin}
-        colorPalette={'green'}>
-        Launch Vault
+        colorPalette={'green'}
+        loading={loading}
+        onClick={handleCreateVault}
+        disabled={disabled}
+      >
+        {sorobanContext.address ? 'Launch Vault' : 'Connect Wallet'}
       </Button>
     </Flex>
   )
 }
 
 function CreateVault() {
+
+
   return (
     <Stack h={'full'} w={'full'} alignContent={'center'} justifyContent={'center'} gap={6}>
       <VaultConfig />

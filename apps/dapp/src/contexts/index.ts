@@ -13,6 +13,7 @@ export interface Vault {
   rebalanceManager: string;
   feeReceiver: string;
   feePercent: number;
+  upgradable: boolean;
 }
 
 export interface Asset {
