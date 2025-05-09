@@ -6,14 +6,15 @@ import { extractStrategies, usePublicAddresses } from "@/hooks/usePublicAddresse
 import { useSorobanReact, WalletNetwork } from "stellar-react"
 import { StrategyMethod, useStrategyCallback } from "@/hooks/useStrategy"
 import { scValToNative, xdr } from "@stellar/stellar-sdk"
+import { getNetworkName } from "@/helpers/networkName"
 
 
 export const StrategiesProvider = ({ children }: { children: React.ReactNode }) => {
   const [assets, setAssets] = useState<Asset[]>([]);
-  const [network, setNetwork] = useState<'testnet' | 'mainnet'>('testnet');
-  const { data: publicAddresses, isLoading, error } = usePublicAddresses(network);
-  const isMounted = useMounted();
+
   const sorobanContext = useSorobanReact();
+  const { data: publicAddresses, isLoading, error } = usePublicAddresses(getNetworkName(sorobanContext!.activeNetwork));
+  const isMounted = useMounted();
   const useStrategy = useStrategyCallback();
 
   const fetchStrategies = async (network: string) => {
@@ -69,24 +70,18 @@ export const StrategiesProvider = ({ children }: { children: React.ReactNode }) 
   }
 
   useEffect(() => {
-    fetchStrategies(network).then((assets) => {
+    fetchStrategies(getNetworkName(sorobanContext.activeNetwork)).then((assets) => {
       if (assets) {
         setAssets(assets);
       }
     })
-  }, [network, publicAddresses]);
+  }, [sorobanContext.activeNetwork, publicAddresses]);
 
   const AssetContextValue: AssetContextType = {
     assets,
     setAssets
   }
 
-  useEffect(() => {
-    if (sorobanContext.activeNetwork) {
-      const network = sorobanContext.activeNetwork === WalletNetwork.TESTNET ? 'testnet' : 'mainnet';
-      setNetwork(network);
-    }
-  }, [sorobanContext.activeNetwork]);
 
 
   if (!isMounted) return null;
