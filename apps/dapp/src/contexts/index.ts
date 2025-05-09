@@ -3,29 +3,47 @@ export enum AllowedAssets {
   XLM = 'xlm',
   USDC = 'usdc'
 }
-interface Vault {
+export const allowedAssets = Object.values(AllowedAssets);
+export interface Vault {
   name: string;
   symbol: string;
-  assets: {
-    assetSymbol: AllowedAssets;
-    amount?: number;
-  }[];
-  strategies: Strategy[];
+  assetAllocation: Asset[];
   vaultManager: string;
   emergencyManager: string;
   rebalanceManager: string;
   feeReceiver: string;
   feePercent: number;
 }
+
+export interface Asset {
+  address: string;
+  strategies: Strategy[];
+  amount: number;
+  symbol: string;
+}
 export interface Strategy{
   address: string;
   assetSymbol: string;
+  assetAddress?: string;
   name: string;
+  paused: boolean;
+  amount?: number;
 }
 
-export type StrategiesContextType = {
-  strategies: Strategy[];
-  setStrategies: (strategies: Strategy[]) => void;
+export type AssetContextType = {
+  assets: Asset[];
+  setAssets: (assets: Asset[]) => void;
 }
 
-export const StrategiesContext = React.createContext<StrategiesContextType | null>(null);
+export const AssetContext = React.createContext<AssetContextType | null>(null);
+
+export type VaultContextType = {
+  newVault: Vault;
+  setNewVault: (vault: Vault) => void;
+  vaults: Vault[];
+  setVaults: (vaults: Vault[]) => void;
+  selectedVault: Vault | null;
+  setSelectedVault: (vault: Vault | null) => void;
+}
+
+export const VaultContext = React.createContext<VaultContextType | null>(null);

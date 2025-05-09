@@ -1,5 +1,6 @@
 import { Strategy } from '@/contexts';
 import useSWR from 'swr';
+import { StrategyMethod, useStrategyCallback } from './useStrategy';
 export const usePublicAddresses = (network: string) => {
   const fetcher = async (url: string) => {
     const response = await fetch(url, {cache: 'reload'});
@@ -20,6 +21,7 @@ export const usePublicAddresses = (network: string) => {
 
 export async function extractStrategies(publicAddresses: string[]): Promise<Strategy[]> {
   const strategies: Strategy[] = [];
+
   for (const key in publicAddresses) {
     if (key.endsWith('_strategy')) {
       const address = publicAddresses[key];
@@ -35,7 +37,7 @@ export async function extractStrategies(publicAddresses: string[]): Promise<Stra
       } else {
         continue;
       }
-      strategies.push({ assetSymbol, name, address });
+      strategies.push({ assetSymbol, name, address, paused: false });
     }
   }
   return strategies;
