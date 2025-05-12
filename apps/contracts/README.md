@@ -80,6 +80,7 @@ First you need to complete the following steps:
 ```
 yarn deploy-blend <network>
 ```
+3. Then, to make it available for the frontend, you need to copy the new deployed strategies from `.soroban/<network>.contracts.json` into the `public/<network>.contracts.json` file.
 
 ## Generate Docs
 ```bash
