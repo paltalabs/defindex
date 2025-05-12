@@ -58,6 +58,7 @@ yarn publish-addresses <network>
 yarn deploy-vault <network> <asset_symbol>
 ```
 #### Multi deploy blend
+This is for testing purposes.
 ```
 # yarn multi-deploy-blend <network> <number of strategies >= 2> <asset key "usdc" / "xlm">
 yarn multi-deploy-blend testnet 2 usdc
@@ -72,6 +73,13 @@ yarn  test  testnet  -h
 ```
 it will show the next message where you can see all the available tests and the specific flags to run them.
 
+## Production deployment of blend strategies
+First you need to complete the following steps:
+1. review the `blend_deploy_config.json` file to ensure that the strategies are correctly configured. In this file you can see a list of the strategies to deploy and the parameters for each one.
+2. run the deploy_blend script to deploy the strategies:
+```
+yarn deploy-blend <network>
+```
 
 ## Generate Docs
 ```bash
