@@ -268,7 +268,21 @@ function ManagerConfig() {
 
 function FeeConfig() {
   const vaultContext = useContext(VaultContext);
+  const [showWarning, setShowWarning] = useState(false)
 
+  const handleWarning = () => {
+    if (vaultContext?.newVault.feePercent! > 50) {
+      console.log('show warning')
+      setShowWarning(true)
+    }
+    else {
+
+      setShowWarning(false)
+    }
+  }
+  useEffect(() => {
+    handleWarning()
+  }, [vaultContext?.newVault.feePercent])
   const handeInput = (e: any) => {
     if (!decimalRegex.test(e.target.value) && e.target.value != '') return
     if (e.target.value == '') {
@@ -312,8 +326,8 @@ function FeeConfig() {
         max={100}
         value={vaultContext!.newVault.feePercent}
         onChange={handeInput}
-        invalid={vaultContext!.newVault.feePercent <= 0 || vaultContext!.newVault.feePercent > 100}
-        errorMessage={vaultContext!.newVault.feePercent <= 0 || vaultContext!.newVault.feePercent > 100 ? 'Percentage not valid' : ''}
+        invalid={showWarning}
+        errorMessage={'Too high fees could lead to issues'}
       />
     </VaultConfigSection>
   );
@@ -467,7 +481,7 @@ function CreateVault() {
 
 
   return (
-    <Stack h={'full'} w={'full'} alignContent={'center'} justifyContent={'center'} gap={6} mt={16}>
+    <Stack alignContent={'center'} justifyContent={'center'} gap={6} mt={'10dvh'}>
       <VaultConfig />
       <AddStrategies />
       <ManagerConfig />

@@ -67,7 +67,7 @@ export function FormField({
   errorMessage = undefined,
 }: ReusableFromProps) {
   return (
-    <Field.Root invalid={invalid} justifyItems={'start'}>
+    <Field.Root invalid={value !== '' && invalid} justifyItems={'start'}>
       <Field.Label className="custom-input-label">{label}</Field.Label>
       <Input
         type={type}

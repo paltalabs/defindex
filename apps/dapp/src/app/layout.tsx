@@ -36,7 +36,7 @@ export default function RootLayout({
       <body className={customFontClass} style={{ backgroundColor }}>
 
         <MainProvider>
-          <Stack w={"100vw"} h="100vh">
+          <Stack w={"100dvw"} h="100dvh">
 
             <NavBar />
             <Toaster />
