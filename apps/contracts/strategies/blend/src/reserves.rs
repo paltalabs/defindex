@@ -266,7 +266,7 @@ pub fn withdraw(
 /// * `b_tokens_amount` - The amount of bTokens minted from the reinvestment.
 ///
 /// # Returns
-/// * `Result<(), StrategyError>` - Returns `Ok(())` if successful, otherwise an error.
+/// * `Result<StrategyReserves, StrategyError>` - Returns the strategy reserves if successful, otherwise an error.
 ///
 /// # Errors
 /// * `StrategyError::InvalidArgument` - If `b_tokens_amount` is not positive.
@@ -275,7 +275,7 @@ pub fn harvest(
     e: &Env,
     b_tokens_amount: i128,
     config: &Config,
-) -> Result<(), StrategyError> {
+) -> Result<StrategyReserves, StrategyError> {
     let mut reserves = get_strategy_reserve_updated(e, &config);
 
     if b_tokens_amount <= 0 {
@@ -287,7 +287,7 @@ pub fn harvest(
         .checked_add(b_tokens_amount)
         .ok_or_else(|| StrategyError::UnderflowOverflow)?;
 
-    storage::set_strategy_reserves(&e, reserves);
+    storage::set_strategy_reserves(&e, reserves.clone());
 
-    Ok(())
+    Ok(reserves)
 }

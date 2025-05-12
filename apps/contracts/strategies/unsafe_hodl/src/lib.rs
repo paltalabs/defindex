@@ -61,7 +61,7 @@ impl DeFindexStrategyTrait for HodlStrategy {
     fn harvest(e: Env, from: Address, _data: Option<Bytes>) -> Result<(), StrategyError> {
         extend_instance_ttl(&e);
 
-        event::emit_harvest(&e, String::from_str(&e, STARETEGY_NAME), 0i128, from);
+        event::emit_harvest(&e, String::from_str(&e, STARETEGY_NAME), 0i128, from, 0i128);
         Ok(())
     }
 

@@ -1,7 +1,7 @@
 //! Definition of the Events used in the DeFindex Vault contract
 use soroban_sdk::{contracttype, symbol_short, Address, Env, Symbol, Val, Vec};
 
-use crate::{models::AssetInvestmentAllocation, report::Report};
+use crate::{models::{AssetInvestmentAllocation, CurrentAssetInvestmentAllocation}, report::Report};
 
 // DEPOSIT EVENT
 #[contracttype]
@@ -10,6 +10,8 @@ pub struct VaultDepositEvent {
     pub depositor: Address,
     pub amounts: Vec<i128>,
     pub df_tokens_minted: i128,
+    pub total_supply_before: i128,
+    pub total_managed_funds_before: Vec<CurrentAssetInvestmentAllocation>,
 }
 
 /// Publishes a `VaultDepositEvent` to the event stream.
@@ -18,11 +20,15 @@ pub(crate) fn emit_deposit_event(
     depositor: Address,
     amounts: Vec<i128>,
     df_tokens_minted: i128,
+    total_supply_before: i128,
+    total_managed_funds_before: Vec<CurrentAssetInvestmentAllocation>,
 ) {
     let event = VaultDepositEvent {
         depositor,
         amounts,
         df_tokens_minted,
+        total_supply_before,
+        total_managed_funds_before,
     };
 
     e.events()
@@ -36,6 +42,8 @@ pub struct VaultWithdrawEvent {
     pub withdrawer: Address,
     pub df_tokens_burned: i128,
     pub amounts_withdrawn: Vec<i128>,
+    pub total_supply_before: i128,
+    pub total_managed_funds_before: Vec<CurrentAssetInvestmentAllocation>,
 }
 
 /// Publishes a `VaultWithdrawEvent` to the event stream.
@@ -44,11 +52,15 @@ pub(crate) fn emit_withdraw_event(
     withdrawer: Address,
     df_tokens_burned: i128,
     amounts_withdrawn: Vec<i128>,
+    total_supply_before: i128,
+    total_managed_funds_before: Vec<CurrentAssetInvestmentAllocation>,
 ) {
     let event = VaultWithdrawEvent {
         withdrawer,
         df_tokens_burned,
         amounts_withdrawn,
+        total_supply_before,
+        total_managed_funds_before,
     };
 
     e.events()

@@ -242,14 +242,14 @@ impl VaultTrait for DeFindexVault {
         // Setting the flag to `true` ensures that strategy reports are updated and new fees are locked during the process.
         let total_managed_funds = fetch_total_managed_funds(&e, true)?;
 
-        let (amounts, shares_to_mint) = process_deposit(
+        let (amounts, shares_to_mint, total_shares_supply) = process_deposit(
             &e,
             &total_managed_funds,
             &amounts_desired,
             &amounts_min,
             &from,
         )?;
-        events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone());
+        events::emit_deposit_event(&e, from, amounts.clone(), shares_to_mint.clone(), total_shares_supply, total_managed_funds.clone());
 
         let asset_investments = if invest {
             let allocations = generate_investment_allocations(&e, &total_managed_funds, &amounts)?;
@@ -410,7 +410,7 @@ impl VaultTrait for DeFindexVault {
             
         }
 
-        events::emit_withdraw_event(&e, from, withdraw_shares, withdrawn_amounts.clone());
+        events::emit_withdraw_event(&e, from, withdraw_shares, withdrawn_amounts.clone(), total_shares_supply, total_managed_funds);
 
         Ok(withdrawn_amounts)
     }
