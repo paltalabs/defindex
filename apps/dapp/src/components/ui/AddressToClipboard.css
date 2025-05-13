@@ -1,0 +1,23 @@
+
+.icon-button{
+  color: var(--defindex-transparent-white);
+}
+.icon-button:hover{
+  background: var(--defindex-secondary-button-hover);
+}
+.icon-button:active{
+  background: var(--defindex-secondary-button-active);
+}
+
+.label{
+  color: var(--defindex-blue-light);
+  font-weight: 400;
+  font-family: var(--font-familijen-grotesk);
+}
+
+.value{
+  color: var(--defindex-transparent-white);
+  font-weight: 400;
+  font-family: var(--font-inter);
+  font-size: 14px;
+}

@@ -10,6 +10,9 @@ export function shortenAddress(address: string): string {
   return `${firstThree}...${lastThree}`;
 }
 export const isValidAddress = (address: string) => {
+  if (address == ''){
+    return null
+  }
   if (StrKey.isValidEd25519PublicKey(address) || StrKey.isValidMed25519PublicKey(address) || StrKey.isValidContract(address)) {
     return true
   } else {

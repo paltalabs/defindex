@@ -1,0 +1,11 @@
+.custom-button {
+  background-color: #ffffff00 !important;
+  border: solid 1px #D3FFB4 !important;
+  color: #D3FFB4;
+  font-family: var(--font-inter);
+  font-weight: 600;
+  line-height: 60px;
+  letter-spacing: 0%;
+}
+
+

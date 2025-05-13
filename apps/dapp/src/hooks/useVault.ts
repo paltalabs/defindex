@@ -1,12 +1,12 @@
-import { TxResponse, contractInvoke } from '@soroban-react/contracts';
-import { useSorobanReact } from "@soroban-react/core";
+import { contractInvoke, useSorobanReact } from 'stellar-react';
 import * as StellarSdk from '@stellar/stellar-sdk';
+import { xdr } from '@stellar/stellar-sdk';
 import { scValToNative } from "@stellar/stellar-sdk";
 import { useCallback } from "react";
 
-import { getTokenSymbol } from "@/helpers/getTokenInfo";
-import { AssetAmmount, VaultData } from "@/store/lib/types";
-
+import { Asset, Vault } from "@/contexts";
+import { TxResponse } from 'stellar-react/dist/contracts/types';
+import { getTokenSymbol } from '@/helpers/getTokenInfo';
 
 export enum VaultMethod {
     // VaultTrait methods
@@ -65,18 +65,19 @@ export function useVaultCallback() {
     
                 if (
                     isObject(result) &&
-                    result?.status !== StellarSdk.SorobanRpc.Api.GetTransactionStatus.SUCCESS
+                    result?.status !== StellarSdk.rpc.Api.GetTransactionStatus.SUCCESS
                 ) throw result;
                 return result
             } catch (e: any) {
-                console.log(e)
                 const error = e.toString()
                 if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
                 if (error.includes('UnexpectedSize')) throw new Error('Invalid arguments length.')
                 if (error.includes('Error(Contract, #10)')) throw new Error('Insufficient funds.')
-                if (error.includes('Error(Contract, #128)')) throw new Error('Unwind more than available.')
                 if (error.includes('Error(Contract, #117)')) throw new Error('Insufficient amount.')
+                if (error.includes('Error(Contract, #128)')) throw new Error('Unwind more than available.')
+                if (error.includes('Error(Contract, #130)')) throw new Error('Action requires authorization.')
                 if (error.includes('Error(Contract, #144)')) throw new Error('Strategy paused.')
+                if (error.includes('trying to get non-existing value for contract instance')) throw new Error('Vault not found.')
                 throw new Error('Failed to process the request.', error)
             }
         }
@@ -93,42 +94,31 @@ export const useVault = (vaultAddress?: string | undefined) => {
             emergencyManager, 
             feeReceiver, 
             name, 
-            assets,
-            TVL,
+            TotalManagedFunds,
             totalSupply,
-            idleFunds,
-            investedFunds,
             fees
         ] = await Promise.all([
             getVaultManager(vaultAddress),
             getVaultEmergencyManager(vaultAddress),
             getVaultFeeReceiver(vaultAddress),
             getVaultName(vaultAddress),
-            getVaultAssets(vaultAddress),
-            getTVL(vaultAddress),
+            getTotalManagedFunds(vaultAddress),
             getVaultTotalSupply(vaultAddress),
-            getIdleFunds(vaultAddress),
-            getInvestedFunds(vaultAddress),
             getFees(vaultAddress)
         ]);
-        for (let asset of assets){
-            const symbol = await getTokenSymbol(asset.address, sorobanContext);
-            if(symbol === 'native') asset.symbol = 'XLM'
-            else asset.symbol = symbol
-        }
         getInvestedFunds(vaultAddress);
-        const newData: VaultData = {
+        const newData: Vault = {
             name: name || '',
+            symbol: name || '',
             address: vaultAddress,
-            manager: manager,
+            vaultManager: manager,
+            rebalanceManager: manager,
             emergencyManager: emergencyManager,
             feeReceiver: feeReceiver,
-            assets: assets || [],
-            TVL: TVL || 0,
+            assetAllocation: TotalManagedFunds || [],
+            feePercent: fees || [50,0],
+            upgradable: true,
             totalSupply: totalSupply || 0,
-            idleFunds: idleFunds || [],
-            investedFunds: investedFunds || [],
-            fees: fees || [50,0],
         }
     return newData
     } catch (error) {
@@ -138,10 +128,11 @@ export const useVault = (vaultAddress?: string | undefined) => {
 
     const getVaultManager = async (selectedVault: string) => {
         try {
-        const manager = await vault(VaultMethod.GET_MANAGER, selectedVault, undefined, false).then((res: any) => scValToNative(res));
+        const manager = await vault(VaultMethod.GET_MANAGER, selectedVault, undefined, false).then((res: any) => scValToNative(res as xdr.ScVal));
         return manager;
         } catch (error) {
         console.error(error);
+        throw new Error('Failed to fetch vault manager');
         }
     }
     const getVaultEmergencyManager = async (selectedVault: string) => {
@@ -150,6 +141,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
         return emergencyManager;
         } catch (error) {
         console.error(error);
+        throw new Error('Failed to fetch vault emergency manager');
         }
     }
     const getVaultFeeReceiver = async (selectedVault: string) => {
@@ -158,6 +150,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
         return feeReceiver;
         } catch (error) {
         console.error(error);
+        throw new Error('Failed to fetch vault fee receiver');
         }
     }
     const getVaultName = async (selectedVault: string) => {
@@ -179,26 +172,17 @@ export const useVault = (vaultAddress?: string | undefined) => {
     const getVaultTotalSupply = async (selectedVault: string) => {
         try {
         const totalSupply = await vault(VaultMethod.TOTAL_SUPPLY, selectedVault, undefined, false).then((res: any) => scValToNative(res));
-        const parsedTotalSupply = Number(totalSupply) / 10 ** 7;
+        const parsedTotalSupply = Number(totalSupply);
         return parsedTotalSupply;
         } catch (error) {
         console.error(error);
         }
     }
-    interface TotalManagedFunds {
-        asset: string;
-        idle_amounts: number;
-        invested_amounts: number;
-        strategy_allocation: any[];
-        total_amount: number;
-    }
 
-    const getTVL = async (selectedVault: string) => {
+    const getTotalManagedFunds = async (selectedVault: string) => {
         try {
-        const totalValues = await vault(VaultMethod.TOTAL_MANAGED_FUNDS, selectedVault, undefined, false).then((res: any) => scValToNative(res));
-        const {total_amount:value} = Object.values(totalValues)[0] as TotalManagedFunds;
-        const parsedValue = Number(value) / 10 ** 7;
-        return parsedValue;
+            const TotalManagedFunds: Asset[] = await vault(VaultMethod.TOTAL_MANAGED_FUNDS, selectedVault, undefined, false).then((res: any) => scValToNative(res));
+            return TotalManagedFunds;
         } catch (error) {
         console.error(error);
         }
@@ -221,8 +205,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
     const getIdleFunds = async (vaultAddress: string) => {
         try {
             const assets = await getVaultAssets(vaultAddress);
-            console.log('🚀 « assets:', assets);
-            const idleFunds: AssetAmmount[] = [];
+            const idleFunds: Partial<Asset>[] = [];
             for (const asset of assets) {
                 const rawBalance: any = await contractInvoke({
                     contractAddress: asset.address,
@@ -245,7 +228,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
         try {
         const rawInvestedFunds = await vault(VaultMethod.TOTAL_MANAGED_FUNDS, vaultAddress, undefined, false).then((res: any) => scValToNative(res));
         const assets = Object.keys(rawInvestedFunds);
-        const investedFunds: AssetAmmount[] = [];
+        const investedFunds: Partial<Asset>[] = [];
         assets.forEach((asset)=>{
             const address = rawInvestedFunds[asset].asset;
             const amount =  Number(rawInvestedFunds[asset].invested_amount) / 10 ** 7;
@@ -277,7 +260,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
         getVaultAssets, 
         getVaultTotalSupply, 
         getUserBalance, 
-        getTVL,
+        getTotalManagedFunds,
         getIdleFunds,
         getInvestedFunds,
         getFees
