@@ -47,3 +47,6 @@
 * [General/FAQ](users/general-faq/README.md)
   * [Concepts](users/general-faq/01-concepts.md)
   * [Additional Resources](users/general-faq/additional-resources.md)
+
+## Security
+* [Security Audit](https://drive.proton.me/urls/GYBBP5TS00#kCE6EHDN6sth)
