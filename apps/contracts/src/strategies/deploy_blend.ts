@@ -1,4 +1,4 @@
-import { Address, nativeToScVal, scValToNative, xdr } from "@stellar/stellar-sdk";
+import { Address, Keypair, nativeToScVal, scValToNative, xdr } from "@stellar/stellar-sdk";
 import * as fs from 'fs';
 import * as path from 'path';
 import { dirname } from 'path';
@@ -72,12 +72,14 @@ async function loadAdminAccount(horizonRpc: any, admin: any) {
     });
   }
   
-function getNativeBalance(account: any): Array<{ asset_type: string; balance: string; [key: string]: any }> {
+export function getNativeBalance(account: any): Array<{ asset_type: string; balance: string; [key: string]: any }> {
   return account.balances.filter((item: { asset_type: string; balance: string; [key: string]: any }) => item.asset_type == "native");
 }
-  
-function checkAllowedAsset(asset_symbol: string | undefined, allowedAssets: string[]): boolean {
-  return asset_symbol !== undefined && allowedAssets.includes(asset_symbol.toUpperCase());
+
+function getBalanceInStroops(balance: string): bigint {
+  const [whole, decimal] = balance.split(".");
+  const decimalPart = decimal.padEnd(7, "0").slice(0, 7); // Ensure exactly 7 decimal places
+  return BigInt(whole + decimalPart);
 }
 
 function constructBlendStrategyArgs(strategy: any): xdr.ScVal[] {
@@ -99,7 +101,7 @@ async function calculateDepositAmount(
   blendPoolAddress: string,
   asset: string,
   admin: any
-): Promise<number> {
+): Promise<bigint> {
   const reserves = await invokeCustomContract(
     blendPoolAddress,
     "get_reserve",
@@ -110,9 +112,23 @@ async function calculateDepositAmount(
     true
   );
   const reservesData = scValToNative(reserves.result.retval);
-  const b_rate = reservesData.data.b_rate;
+  const b_rate: bigint = reservesData.data.b_rate;
   
-  return b_rate * 1001 / 1000000000000 + 1;
+  return b_rate * 1001n / 1000000000000n + 1n;
+}
+
+async function getAssetBalance(admin: Keypair, asset: string): Promise<bigint> {
+  const balanceResult = await invokeCustomContract(
+    asset,
+    "balance",
+    [
+      new Address(admin.publicKey()).toScVal(),
+    ],
+    admin,
+    true
+  )
+  const balanceData = scValToNative(balanceResult.result.retval);
+  return balanceData;
 }
 
 export async function deployBlendStrategy(addressBook: AddressBook, asset_symbol?: string) {
@@ -131,6 +147,30 @@ export async function deployBlendStrategy(addressBook: AddressBook, asset_symbol
   console.log("publicKey", loadedConfig.admin.publicKey());
   let balance = getNativeBalance(account);
   console.log("Current Admin account balance:", balance[0].balance);
+  // Convert balance string to BigInt with 7 decimal places
+  const balanceInStroops = getBalanceInStroops(balance[0].balance);
+  // Check if we have enough balance to deploy the strategy, and the first amount
+  if (balanceInStroops < 350000000n) {
+    console.log("Not enough balance to deploy the strategy");
+    return;
+  }
+  for (const strategy of blendDeployConfig[network].strategies) {
+    const depositAmount = await calculateDepositAmount(
+      strategy.blend_pool_address,
+      strategy.asset,
+      loadedConfig.admin
+    );
+
+    const assetBalance = await getAssetBalance(loadedConfig.admin, strategy.asset);
+    console.log('🚀 ~ getAssetBalance ~ assetBalance:', assetBalance);
+    if (assetBalance < depositAmount) {
+      console.log(`Not enough balance of ${strategy.asset_symbol} to make the first deposit for strategy ${strategy.name} (pool: ${strategy.blend_pool_name})`);
+      console.log(`Required: ${depositAmount}, Available: ${assetBalance}`);
+      return;
+    }
+  }
+
+
 
   console.log("-------------------------------------------------------");
   console.log("Deploying Blend Strategy");
