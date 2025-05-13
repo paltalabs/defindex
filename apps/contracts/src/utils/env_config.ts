@@ -17,6 +17,7 @@ interface NetworkConfig {
   blend_keeper: string;
   defindex_factory_admin: string;
   defindex_fee_receiver: string;
+  defindex_fee: string;
   vault_fee_receiver: string;
   vault_emergency_manager: string;
   vault_rebalance_manager: string;
@@ -39,6 +40,7 @@ export class EnvConfig {
   blendKeeper: string;
   defindexFeeReceiver: string;
   defindexFactoryAdmin: string;
+  defindexFee: string;
   vaultFeeReceiver: string;
   vaultEmergencyManager: string;
   vaultRebalanceManager: string;
@@ -54,6 +56,7 @@ export class EnvConfig {
     blendKeeper: string,
     defindexFeeReceiver: string,
     defindexFactoryAdmin: string,
+    defindexFee: string,
     vaultFeeReceiver: string,
     vaultEmergencyManager: string,
     vaultRebalanceManager: string,
@@ -68,6 +71,7 @@ export class EnvConfig {
     this.blendKeeper = blendKeeper;
     this.defindexFeeReceiver = defindexFeeReceiver;
     this.defindexFactoryAdmin = defindexFactoryAdmin;
+    this.defindexFee = defindexFee;
     this.vaultFeeReceiver = vaultFeeReceiver;
     this.vaultEmergencyManager = vaultEmergencyManager;
     this.vaultRebalanceManager = vaultRebalanceManager;
@@ -86,7 +90,7 @@ export class EnvConfig {
     );
     const configs: Config = JSON.parse(fileContents);
 
-    let rpc_url, horizon_rpc_url, friendbot_url, passphrase, blendKeeper, defindexFeeReceiver, defindexFactoryAdmin, vaultFeeReceiver;
+    let rpc_url, horizon_rpc_url, friendbot_url, passphrase, blendKeeper, defindexFeeReceiver, defindexFactoryAdmin, defindexFee, vaultFeeReceiver;
     let vaultEmergencyManager, vaultRebalanceManager, vaultName, vaultSymbol;
 
     const networkConfig = configs.networkConfig.find(
@@ -103,6 +107,7 @@ export class EnvConfig {
       "blend_keeper",
       "defindex_fee_receiver",
       "defindex_factory_admin",
+      "defindex_fee",
       "vault_fee_receiver",
       "vault_emergency_manager",
       "vault_rebalance_manager",
@@ -116,6 +121,7 @@ export class EnvConfig {
     blendKeeper = networkConfig.blend_keeper;
     defindexFeeReceiver = networkConfig.defindex_fee_receiver;
     defindexFactoryAdmin = networkConfig.defindex_factory_admin;
+    defindexFee = networkConfig.defindex_fee;
     vaultFeeReceiver = networkConfig.vault_fee_receiver;
     vaultEmergencyManager = networkConfig.vault_emergency_manager;
     vaultRebalanceManager = networkConfig.vault_rebalance_manager;
@@ -164,6 +170,7 @@ export class EnvConfig {
       blendKeeper,
       defindexFeeReceiver,
       defindexFactoryAdmin,
+      defindexFee,
       vaultFeeReceiver,
       vaultEmergencyManager,
       vaultRebalanceManager,

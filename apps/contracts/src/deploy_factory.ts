@@ -24,12 +24,13 @@ export async function deployContracts(addressBook: AddressBook) {
   await installContract("defindex_factory", addressBook, loadedConfig.admin);
 
   const defindexReceiver = loadedConfig.defindexFeeReceiver;
+  const defindexFee = loadedConfig.defindexFee;
   if (network != "mainnet") await airdropAddress(defindexReceiver);
 
   const factoryInitParams: xdr.ScVal[] = [
     new Address(loadedConfig.defindexFactoryAdmin).toScVal(),
     new Address(defindexReceiver).toScVal(),
-    nativeToScVal(50, {type: "u32"}),
+    nativeToScVal(defindexFee, {type: "u32"}),
     nativeToScVal(Buffer.from(addressBook.getWasmHash("defindex_vault"), "hex")),
   ];
 
