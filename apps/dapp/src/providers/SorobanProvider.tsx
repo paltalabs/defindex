@@ -21,7 +21,7 @@ export default function MySorobanReactProvider({ children }: { children: React.R
     <SorobanReactProvider
       appName={"Example Stellar App"}
       allowedNetworkDetails={[mainnetNetworkDetails, testnetNetworkDetails]}
-      activeNetwork={WalletNetwork.TESTNET}
+      activeNetwork={WalletNetwork.PUBLIC}
     >
       {children}
     </SorobanReactProvider>

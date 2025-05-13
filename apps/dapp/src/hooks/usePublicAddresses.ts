@@ -26,7 +26,7 @@ export const soroswapRouterAddress = async (network: WalletNetwork | undefined) 
     throw new Error('Network is undefined');
   }
 
-  const response = await fetch(`https://raw.githubusercontent.com/soroswap/core/refs/heads/main/public/${network === WalletNetwork.TESTNET ? 'testnet' : 'mainnet'}.contracts.json`, {
+  const response = await fetch(`https://raw.githubusercontent.com/soroswap/core/refs/heads/main/public/${network === WalletNetwork.PUBLIC ? 'mainnet' : 'testnet'}.contracts.json`, {
     cache: 'reload',
   });
 

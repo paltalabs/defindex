@@ -399,7 +399,7 @@ function CreateVaultButton() {
           action: {
             label: 'View transaction',
             onClick: () => {
-              window.open(`https://stellar.expert/explorer/${sorobanContext.activeNetwork == WalletNetwork.TESTNET ? 'testnet' : 'public'}/search?term=${result.txHash}`, '_blank');
+              window.open(`https://stellar.expert/explorer/${sorobanContext.activeNetwork == WalletNetwork.PUBLIC ? 'public' : 'testnet'}/search?term=${result.txHash}`, '_blank');
             }
           }
         });
@@ -438,7 +438,7 @@ function CreateVaultButton() {
           action: {
             label: 'View transaction',
             onClick: () => {
-              window.open(`https://stellar.expert/explorer/${sorobanContext.activeNetwork == WalletNetwork.TESTNET ? 'testnet' : 'public'}/search?term=${result.txHash}`, '_blank');
+              window.open(`https://stellar.expert/explorer/${sorobanContext.activeNetwork == WalletNetwork.PUBLIC ? 'public' : 'testnet'}/search?term=${result.txHash}`, '_blank');
             }
           }
         });

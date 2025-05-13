@@ -27,7 +27,7 @@ function AddressToClipboard({ label, vaultAddress }: { label: string, vaultAddre
   };
 
   const openInExplorer = () => {
-    const networkName = sorobanContext.activeNetwork === WalletNetwork.TESTNET ? 'testnet' : 'public';
+    const networkName = sorobanContext.activeNetwork === WalletNetwork.PUBLIC ? 'public' : 'testnet';
     const url = `https://stellar.expert/explorer/${networkName}/contract/${vaultAddress}`;
     window.open(url, '_blank');
   }
