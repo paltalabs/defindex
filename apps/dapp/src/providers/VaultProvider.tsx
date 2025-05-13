@@ -10,6 +10,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
   const [newVault, setNewVault] = useState<Vault>({
     name: '',
     symbol: '',
+    address: '',
     assetAllocation: [],
     vaultManager: '',
     emergencyManager: '',
