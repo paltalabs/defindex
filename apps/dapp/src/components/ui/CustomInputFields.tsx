@@ -19,7 +19,7 @@ export function CustomSelect({ collection, label, placeholder, value, onSelect }
       onValueChange={(e) => onSelect?.(e.value)}
     >
       <Select.HiddenSelect />
-      <Select.Label className="custom-input-label">{label}</Select.Label>
+      <Select.Label truncate className="custom-input-label">{label}</Select.Label>
       <Select.Control>
         <Select.Trigger px={basePadding} className="custom-select">
           <Select.ValueText placeholder={placeholder} />
@@ -68,7 +68,7 @@ export function FormField({
 }: ReusableFromProps) {
   return (
     <Field.Root invalid={value !== '' && invalid} justifyItems={'start'}>
-      <Field.Label className="custom-input-label">{label}</Field.Label>
+      <Field.Label truncate className="custom-input-label">{label}</Field.Label>
       <Input
         type={type}
         min={min}

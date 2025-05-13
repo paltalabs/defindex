@@ -40,3 +40,12 @@ a {
     color-scheme: dark;
   }
 }
+
+
+:where(html){
+  --defindex-blue-light: rgba(211, 251, 255, 0.8);
+  --defindex-green-border: rgba(211, 255, 180, 0.3);
+  --defindex-secondary-button-hover: rgba(226, 226, 226, 0.4);
+  --defindex-secondary-button-active: rgba(95, 95, 95, 0.4);
+  --defindex-transparent-white: rgba(255, 255, 255, 0.5);
+}
