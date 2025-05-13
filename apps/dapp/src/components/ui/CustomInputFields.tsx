@@ -7,12 +7,13 @@ interface ReusableSelectProps {
   placeholder: string;
   value?: string[];
   onSelect?: (value: string[]) => void;
+  multiple?: boolean;
 }
 
-export function CustomSelect({ collection, label, placeholder, value, onSelect }: ReusableSelectProps) {
+export function CustomSelect({ collection, label, placeholder, value, onSelect, multiple }: ReusableSelectProps) {
   return (
     <Select.Root
-      multiple
+      multiple={multiple}
       collection={collection}
       disabled={collection.items.length === 0}
       value={value}

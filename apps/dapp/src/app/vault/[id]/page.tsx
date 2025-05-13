@@ -1,12 +1,13 @@
-import { Stack } from '@chakra-ui/react';
+import { Stack, useConst } from '@chakra-ui/react';
 import { navBarHeight } from '@/components/ui/Common';
-import { VaultDetailsBanner } from '@/components/VaultDetails/VaultDetails';
+import VaultDetailsPage from '@/components/VaultDetails/VaultDetailsPage';
 
 export default async function VaultPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: vaultAddress } = await params;
+
   return (
-    <Stack alignItems={'center'} justifyContent={'flex-start'} mt={navBarHeight}>
-      <VaultDetailsBanner vaultAddress={vaultAddress} />
+    <Stack alignContent={'center'} justifyItems={'center'} w={'100dvw'} h={'full'} px={8} justifyContent={'flex-start'} mt={navBarHeight}>
+      <VaultDetailsPage vaultAddress={vaultAddress} />
     </Stack>
   );
 } 

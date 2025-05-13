@@ -66,6 +66,7 @@ function SelectAssets() {
       placeholder="Select assets"
       value={selectedAssets.map((asset) => asset.address)}
       onSelect={handleSelect}
+      multiple={true}
     />
   )
 }
@@ -108,6 +109,7 @@ function SelectStrategies({ asset }: { asset: Asset }) {
       placeholder="Select strategies"
       value={selectedStrategies}
       onSelect={handleSelect}
+      multiple={true}
     />
   )
 }

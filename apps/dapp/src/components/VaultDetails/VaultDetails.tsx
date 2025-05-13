@@ -22,7 +22,7 @@ export function VaultDetailsAmounts({ title, amount }: { title: string, amount: 
 export function VaultDetailsBanner({ vaultAddress }: { vaultAddress: string }) {
   return (
     <BackgroundCard>
-      <Stack gap={4} w={'80dvw'} h={'full'} alignItems={'start'} justifyContent={'center'}>
+      <Stack gap={4} alignItems={'start'} justifyContent={'center'}>
         <HStack>
           <Image
             src={strategyLogo}

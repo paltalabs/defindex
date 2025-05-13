@@ -1,0 +1,19 @@
+
+
+.indicator{
+  background-color: var(--defindex-green-border) !important;
+  box-shadow: none !important;
+  border: none !important;
+  opacity: 0.8 !important;
+  border-radius: 12px 12px 0px 0px  !important;
+  margin-left: 1px;
+}
+.button {
+  font-family: var(--font-inter);
+  font-weight: 700;
+}
+.separator{
+    height: 2px;
+    opacity: 0.8 !important;
+    background-color: var(--defindex-green-border);
+}

@@ -2,11 +2,12 @@
 import { useState, useContext } from "react"
 import { Vault, VaultContext, VaultContextType } from "@/contexts"
 import useMounted from "@/hooks/useMounted"
+import { useVault } from "@/hooks/useVault"
 
 
 export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
   const isMounted = useMounted();
-
+  const vault = useVault();
   const [newVault, setNewVault] = useState<Vault>({
     name: '',
     symbol: '',
@@ -17,6 +18,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
     rebalanceManager: '',
     feeReceiver: '',
     feePercent: 0,
+    totalSupply: 0,
     upgradable: true,
   });
   const [vaults, setVaults] = useState<Vault[]>([]);

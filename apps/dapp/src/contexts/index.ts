@@ -15,18 +15,17 @@ export interface Vault {
   feeReceiver: string;
   feePercent: number;
   upgradable: boolean;
+  totalSupply: number;
 }
 
 export interface Asset {
   address: string;
+  total_amount: number;
+  idle_amount: number;
+  invested_amount: number;
   strategies: Strategy[];
   amount: number;
-  symbol: string;
-}
-
-export interface AssetAmmount {
-  address: string;
-  amount: number;
+  assetSymbol?: string;
 }
 export interface Strategy{
   address: string;
