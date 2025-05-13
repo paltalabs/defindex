@@ -1,8 +1,13 @@
+---
+cover: ../../.gitbook/assets/image 31.png
+coverY: 0
+---
+
 # Introduction
 
 With the introduction of Protocol 20 of Stellar, new Smart Contract based Descentralized Protocols have arised in the Stellar Blockchain. Automated Market Makers like **Soroswap.Finance**, or Lending and Borrowing protocols like **Blend Capital** are just the beggining of a new set of DeFi Protocols.
 
-These protocols allow from simple to complex investment stragtegies. The most simple strategy can be holding assets, other simple strategies can be investing in a Soroswap.Finance AMM Constant Product Liquidity Pool. Also, a more complex strategy can be lending USDC in a Blend Market, harvest the BLND reward to later swap those BLND harvested  to USDC and reinvest them in the lending pool.
+These protocols allow from simple to complex investment stragtegies. The most simple strategy can be holding assets, other simple strategies can be investing in a Soroswap.Finance AMM Constant Product Liquidity Pool. Also, a more complex strategy can be lending USDC in a Blend Market, harvest the BLND reward to later swap those BLND harvested to USDC and reinvest them in the lending pool.
 
 However, this is very time consuming and requires a lot of knowledge about the protocols and strategies. From one side, a crypto investor would need to spend a lot of time learning about the protocols and strategies, and then, would need to manually manage their investments. From another side, it's just too complex for non-expert users, or even for wallets users that prefer a very simple interface.
 

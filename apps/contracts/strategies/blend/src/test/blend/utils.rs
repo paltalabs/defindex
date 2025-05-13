@@ -1,11 +1,17 @@
 #![cfg(test)]
+
+// Standard library imports
+use soroban_sdk::{testutils::Address as _, Address, Env};
+
+// External crate imports
+use sep_41_token::testutils::MockTokenClient;
+
+// Local module imports
 use crate::test::blend::soroswap_setup::create_soroswap_pool;
 use crate::test::{
     create_blend_pool, register_blend_strategy, BlendFixture, EnvTestUtils
 };
-use sep_41_token::testutils::MockTokenClient;
-use soroban_sdk::testutils::Address as _;
-use soroban_sdk::{Address, Env};
+use crate::BlendStrategyClient;
 
 #[allow(dead_code)]
 pub struct GenericBlendData<'a> {
@@ -22,6 +28,7 @@ pub struct GenericBlendData<'a> {
   pub address: Address,
   pub reserve_blnd: i128,
   pub reserve_usdc: i128,
+  pub keeper: Address,
 }
 
 pub fn create_generic_strategy() -> GenericBlendData<'static> {
@@ -80,5 +87,13 @@ pub fn create_generic_strategy() -> GenericBlendData<'static> {
         address: strategy_address,
         reserve_blnd: amount_a,
         reserve_usdc: amount_b,
+        keeper,
     }
+}
+
+pub fn mint_and_deposit_to_strategy(e: &GenericBlendData, user: &Address, amount: i128) {
+    e.usdc_client.mint(user, &amount);
+
+    let strategy_client = BlendStrategyClient::new(&e.e, &e.address);
+    strategy_client.deposit(&amount, user);
 }

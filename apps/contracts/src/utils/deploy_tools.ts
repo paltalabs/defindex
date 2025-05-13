@@ -1,12 +1,12 @@
-import { exit } from "process";
-import { config, EnvConfig } from "./env_config.js";
 import { Address, Asset, nativeToScVal, xdr } from "@stellar/stellar-sdk";
-import { AddressBook } from "./address_book.js";
+import { exit } from "process";
 import { BLEND_POOL, BLEND_TOKEN, SOROSWAP_ROUTER } from "../constants.js";
+import { AddressBook } from "./address_book.js";
+import { EnvConfig } from "./env_config.js";
 
 
 export enum Strategies {
-  BLEND = "blend",
+  BLEND = "blend_autocompound_fixed_xlm_usdc",
   HODL = "hodl",
   FIXED_APR = "fixed_apr",
 }

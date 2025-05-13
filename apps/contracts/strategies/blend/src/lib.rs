@@ -6,6 +6,7 @@ mod soroswap;
 mod storage;
 mod utils;
 
+use constants::SCALAR_12;
 pub use defindex_strategy_core::{event, DeFindexStrategyTrait, StrategyError};
 use soroban_fixed_point_math::i128;
 use soroban_sdk::{
@@ -240,13 +241,14 @@ impl DeFindexStrategyTrait for BlendStrategy {
             _ => 0, // Default to 0 if no data is provided or empty bytes
         };
         
-        blend_pool::perform_reinvest(&e, &config, amount_out_min)?;
+        let reserves = blend_pool::perform_reinvest(&e, &config, amount_out_min)?;
 
         event::emit_harvest(
             &e,
             String::from_str(&e, STRATEGY_NAME),
             harvested_blend,
             keeper,
+            shares_to_underlying(SCALAR_12, reserves)?
         );
         Ok(())
     }

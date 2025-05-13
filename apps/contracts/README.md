@@ -58,6 +58,7 @@ yarn publish-addresses <network>
 yarn deploy-vault <network> <asset_symbol>
 ```
 #### Multi deploy blend
+This is for testing purposes.
 ```
 # yarn multi-deploy-blend <network> <number of strategies >= 2> <asset key "usdc" / "xlm">
 yarn multi-deploy-blend testnet 2 usdc
@@ -71,6 +72,28 @@ If you want to see all the avaliable test you can do so by running:
 yarn  test  testnet  -h
 ```
 it will show the next message where you can see all the available tests and the specific flags to run them.
+
+## Production deployment
+### blend strategies
+First you need to complete the following steps:
+1. review the `blend_deploy_config.json` file to ensure that the strategies are correctly configured. In this file you can see a list of the strategies to deploy and the parameters for each one.
+2. run the deploy_blend script to deploy the strategies:
+```
+yarn deploy-blend <network>
+```
+3. Then, to make it available for the frontend, you need to copy the new deployed strategies from `.soroban/<network>.contracts.json` into the `public/<network>.contracts.json` file.
+
+### Factory
+Make sure you have compiled the contracts:
+```
+make  build
+```
+and then you can deploy the factory with the following command:
+```
+yarn deploy-factory <network>
+```
+Copy the deployed factory address from the output on `.soroban/<network>.contracts.json` and paste it in `public/<network>.contracts.json`
+
 
 
 ## Generate Docs

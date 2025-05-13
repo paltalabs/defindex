@@ -15,8 +15,11 @@ interface NetworkConfig {
   soroban_rpc_url?: string;
   soroban_network_passphrase: string;
   blend_keeper: string;
+  defindex_factory_admin: string;
   defindex_fee_receiver: string;
+  defindex_fee: string;
   vault_fee_receiver: string;
+  vault_manager: string;
   vault_emergency_manager: string;
   vault_rebalance_manager: string;
   vault_name: string;
@@ -37,7 +40,10 @@ export class EnvConfig {
   admin: Keypair;
   blendKeeper: string;
   defindexFeeReceiver: string;
+  defindexFactoryAdmin: string;
+  defindexFee: string;
   vaultFeeReceiver: string;
+  vaultManager: string;
   vaultEmergencyManager: string;
   vaultRebalanceManager: string;
   vaultName: string;
@@ -51,7 +57,10 @@ export class EnvConfig {
     admin: Keypair,
     blendKeeper: string,
     defindexFeeReceiver: string,
+    defindexFactoryAdmin: string,
+    defindexFee: string,
     vaultFeeReceiver: string,
+    vaultManager: string,
     vaultEmergencyManager: string,
     vaultRebalanceManager: string,
     vaultName: string,
@@ -64,7 +73,10 @@ export class EnvConfig {
     this.admin = admin;
     this.blendKeeper = blendKeeper;
     this.defindexFeeReceiver = defindexFeeReceiver;
+    this.defindexFactoryAdmin = defindexFactoryAdmin;
+    this.defindexFee = defindexFee;
     this.vaultFeeReceiver = vaultFeeReceiver;
+    this.vaultManager = vaultManager;
     this.vaultEmergencyManager = vaultEmergencyManager;
     this.vaultRebalanceManager = vaultRebalanceManager;
     this.vaultName = vaultName;
@@ -82,7 +94,7 @@ export class EnvConfig {
     );
     const configs: Config = JSON.parse(fileContents);
 
-    let rpc_url, horizon_rpc_url, friendbot_url, passphrase, blendKeeper, defindexFeeReceiver, vaultFeeReceiver;
+    let rpc_url, horizon_rpc_url, friendbot_url, passphrase, blendKeeper, defindexFeeReceiver, defindexFactoryAdmin, defindexFee, vaultFeeReceiver, vaultManager;
     let vaultEmergencyManager, vaultRebalanceManager, vaultName, vaultSymbol;
 
     const networkConfig = configs.networkConfig.find(
@@ -98,37 +110,36 @@ export class EnvConfig {
       "soroban_network_passphrase",
       "blend_keeper",
       "defindex_fee_receiver",
+      "defindex_factory_admin",
+      "defindex_fee",
       "vault_fee_receiver",
+      "vault_manager",
       "vault_emergency_manager",
       "vault_rebalance_manager",
       "vault_name",
       "vault_symbol",
     ];
 
+    // Common assignments
+    passphrase = networkConfig.soroban_network_passphrase;
+    horizon_rpc_url = networkConfig.horizon_rpc_url;
+    blendKeeper = networkConfig.blend_keeper;
+    defindexFeeReceiver = networkConfig.defindex_fee_receiver;
+    defindexFactoryAdmin = networkConfig.defindex_factory_admin;
+    defindexFee = networkConfig.defindex_fee;
+    vaultFeeReceiver = networkConfig.vault_fee_receiver;
+    vaultManager = networkConfig.vault_manager;
+    vaultEmergencyManager = networkConfig.vault_emergency_manager;
+    vaultRebalanceManager = networkConfig.vault_rebalance_manager;
+    vaultName = networkConfig.vault_name;
+    vaultSymbol = networkConfig.vault_symbol;
+
     if (network === "mainnet") {
-      passphrase = networkConfig.soroban_network_passphrase;
       rpc_url = process.env.MAINNET_RPC_URL;
-      horizon_rpc_url = networkConfig.horizon_rpc_url;
       friendbot_url = undefined;
-      blendKeeper = networkConfig.blend_keeper;
-      defindexFeeReceiver = networkConfig.defindex_fee_receiver;
-      vaultFeeReceiver = networkConfig.vault_fee_receiver;
-      vaultEmergencyManager = networkConfig.vault_emergency_manager;
-      vaultRebalanceManager = networkConfig.vault_rebalance_manager;
-      vaultName = networkConfig.vault_name;
-      vaultSymbol = networkConfig.vault_symbol;
     } else {
       rpc_url = networkConfig.soroban_rpc_url;
-      horizon_rpc_url = networkConfig.horizon_rpc_url;
       friendbot_url = networkConfig.friendbot_url;
-      passphrase = networkConfig.soroban_network_passphrase;
-      blendKeeper = networkConfig.blend_keeper;
-      defindexFeeReceiver = networkConfig.defindex_fee_receiver;
-      vaultFeeReceiver = networkConfig.vault_fee_receiver;
-      vaultEmergencyManager = networkConfig.vault_emergency_manager;
-      vaultRebalanceManager = networkConfig.vault_rebalance_manager;
-      vaultName = networkConfig.vault_name;
-      vaultSymbol = networkConfig.vault_symbol;
       config_fields.push("friendbot_url");
       config_fields.push("soroban_rpc_url");
     }
@@ -164,7 +175,10 @@ export class EnvConfig {
       Keypair.fromSecret(admin!),
       blendKeeper,
       defindexFeeReceiver,
+      defindexFactoryAdmin,
+      defindexFee,
       vaultFeeReceiver,
+      vaultManager,
       vaultEmergencyManager,
       vaultRebalanceManager,
       vaultName,

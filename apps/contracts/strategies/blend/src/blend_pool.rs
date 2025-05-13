@@ -7,6 +7,7 @@ use soroban_sdk::{
 
 use crate::{
     reserves,
+    reserves::StrategyReserves,
     soroswap::internal_swap_exact_tokens_for_tokens,
     storage::{Config},
 };
@@ -206,16 +207,18 @@ pub fn claim(e: &Env, from: &Address, config: &Config) -> i128 {
 /// * `config` - The contract configuration containing asset and pool details.
 ///
 /// # Returns
-/// * `Result<bool, StrategyError>` - Returns `true` if reinvestment was successful,
+/// * `Result<StrategyReserves, StrategyError>` - Returns the strategy reserves if reinvestment was successful,
 ///   `false` if skipped due to low BLND balance, or an error if any step fails.
-pub fn perform_reinvest(e: &Env, config: &Config, amount_out_min: i128) -> Result<bool, StrategyError> {
+pub fn perform_reinvest(e: &Env, config: &Config, amount_out_min: i128) -> Result<StrategyReserves, StrategyError> {
     // Check the current BLND balance
     let blnd_balance =
         TokenClient::new(e, &config.blend_token).balance(&e.current_contract_address());
 
     // If balance does not exceed threshold, skip harvest
     if blnd_balance < config.reward_threshold {
-        return Ok(false);
+        // get current reserves
+        let reserves = reserves::get_strategy_reserve_updated(&e, &config);
+        return Ok(reserves);
     }
 
     let swap_path = vec![e, config.blend_token.clone(), config.asset.clone()];
@@ -244,9 +247,9 @@ pub fn perform_reinvest(e: &Env, config: &Config, amount_out_min: i128) -> Resul
     // Supplying underlying asset into blend pool
     let b_tokens_minted = supply(&e, &e.current_contract_address(), &amount_out, &config, true)?;
 
-    reserves::harvest(&e, b_tokens_minted, &config)?;
+    let reserves = reserves::harvest(&e, b_tokens_minted, &config)?;
 
-    Ok(true)
+    Ok(reserves)
 }
 
 
