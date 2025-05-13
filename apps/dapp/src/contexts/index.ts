@@ -7,6 +7,7 @@ export const allowedAssets = Object.values(AllowedAssets);
 export interface Vault {
   name: string;
   symbol: string;
+  address: string;
   assetAllocation: Asset[];
   vaultManager: string;
   emergencyManager: string;
@@ -21,6 +22,11 @@ export interface Asset {
   strategies: Strategy[];
   amount: number;
   symbol: string;
+}
+
+export interface AssetAmmount {
+  address: string;
+  amount: number;
 }
 export interface Strategy{
   address: string;

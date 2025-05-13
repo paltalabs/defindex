@@ -1,0 +1,10 @@
+.vault-details__amount-title{
+  font-weight: 400;
+  font-family: var(--font-familjen-grotesk);
+  color: var(--defindex-blue-light);
+}
+.vault-details__amount{
+  font-weight: 700;
+  font-family: var(--font-inter);
+  color: rgba(255, 255, 255, 0.8);
+}
