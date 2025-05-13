@@ -10,6 +10,7 @@
 * [Getting Started](getting-started/README.md)
   * [How DeFindex Works](getting-started/how-defindex-works.md)
   * [Creating a DeFindex Vault](getting-started/creating-a-defindex-vault.md)
+  * [Mainnet Deployment](getting-started/mainnet-deployment.md)
 
 ## Whitepaper
 

@@ -12,7 +12,7 @@ const deposit = async () => {
   const amount = [1_0_000_000];
   const invest = false;
   try {
-    const vault_address = addressBook.getContractId("usdc_blend_vault");
+    const vault_address = addressBook.getContractId("usdc_palta_vault");
     
     const user = config(network).getUser('TEST_USER');
     if (network !== "mainnet") await airdropAccount(user);
@@ -48,7 +48,7 @@ const withdraw = async (
   const withdrawAmount = 2_0_000_000;
   const min_amounts_out = [0];
   try {
-    const vault_address = addressBook.getContractId("usdc_blend_vault");
+    const vault_address = addressBook.getContractId("usdc_palta_vault");
     
     const user = config(network).getUser('TEST_USER');
     if (network !== "mainnet") await airdropAccount(user);
@@ -79,7 +79,7 @@ const withdraw = async (
 const invest = async () => {
   const amount = 1_0_000_000;
   try {
-    const vault_address = addressBook.getContractId("usdc_blend_vault");
+    const vault_address = addressBook.getContractId("usdc_palta_vault");
     const admin = config(network).getUser('DEPLOYER_SECRET_KEY');
     if (network !== "mainnet") await airdropAccount(admin);
 
@@ -87,7 +87,7 @@ const invest = async () => {
     const instructions: Instruction[] = [
       {
         type: "Invest",
-        strategy: addressBook.getContractId("usdc_blend_strategy"),
+        strategy: addressBook.getContractId("usdc_blend_autocompound_fixed_strategy"),
         amount: invest_amount,
       }
     ];
@@ -115,7 +115,7 @@ const invest = async () => {
 const unwind = async () => {
   const amount = 4_0_000_000;
   try {
-    const vault_address = addressBook.getContractId("usdc_blend_vault");
+    const vault_address = addressBook.getContractId("usdc_palta_vault");
     const admin = config(network).getUser('DEPLOYER_SECRET_KEY');
     if (network !== "mainnet") await airdropAccount(admin);
 
@@ -123,7 +123,7 @@ const unwind = async () => {
     const instructions: Instruction[] = [
       {
         type: "Unwind",
-        strategy: addressBook.getContractId("usdc_blend_strategy"),
+        strategy: addressBook.getContractId("usdc_blend_autocompound_fixed_strategy"),
         amount: invest_amount,
       }
     ];
