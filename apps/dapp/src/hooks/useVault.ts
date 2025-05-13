@@ -69,7 +69,6 @@ export function useVaultCallback() {
                 ) throw result;
                 return result
             } catch (e: any) {
-                console.log(e)
                 const error = e.toString()
                 if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
                 if (error.includes('UnexpectedSize')) throw new Error('Invalid arguments length.')
@@ -78,6 +77,7 @@ export function useVaultCallback() {
                 if (error.includes('Error(Contract, #128)')) throw new Error('Unwind more than available.')
                 if (error.includes('Error(Contract, #130)')) throw new Error('Action requires authorization.')
                 if (error.includes('Error(Contract, #144)')) throw new Error('Strategy paused.')
+                if (error.includes('trying to get non-existing value for contract instance')) throw new Error('Vault not found.')
                 throw new Error('Failed to process the request.', error)
             }
         }

@@ -41,7 +41,7 @@ export const StrategiesProvider = ({ children }: { children: React.ReactNode }) 
             address: assetAddress as string,
             strategies: [strategy],
             symbol: strategy.assetSymbol!,
-          } as Asset;
+          } as Partial<Asset>;
         })
       );
 

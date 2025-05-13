@@ -1,6 +1,5 @@
 'use client'
-
-import { Box } from '@chakra-ui/react'
+import { Box, Container, Stack } from '@chakra-ui/react'
 import React, { useContext, useEffect } from 'react'
 import { VaultDetailsBanner } from './VaultDetails'
 import VaultInteraction from './VaultInteraction'
@@ -27,10 +26,10 @@ function VaultDetailsPage({ vaultAddress }: { vaultAddress: string }) {
     })
   }, [vaultAddress, sorobanContext.address, sorobanContext.activeNetwork])
   return (
-    <Box gap={4}>
+    <Stack gap={4}>
       <VaultDetailsBanner vaultAddress={vaultAddress} />
       <VaultInteraction vaultAddress={vaultAddress} />
-    </Box>
+    </Stack>
   )
 }
 

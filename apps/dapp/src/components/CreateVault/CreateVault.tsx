@@ -45,7 +45,10 @@ function SelectAssets() {
     const newAssets: Asset[] = selectedAssets.map((asset) => ({
       address: asset.address,
       strategies: [],
-      symbol: asset.symbol,
+      symbol: asset.assetSymbol,
+      total_amount: asset.total_amount,
+      invested_amount: asset.invested_amount,
+      idle_amount: asset.idle_amount,
       amount: 0,
     }));
     vaultContext?.setNewVault({
@@ -55,7 +58,7 @@ function SelectAssets() {
   }, [selectedAssets])
   const assetsCollection = createListCollection({
     items: assetContext?.assets.map((asset) => ({
-      label: asset.symbol?.toUpperCase()!,
+      label: asset.assetSymbol?.toUpperCase()!,
       value: asset.address,
     })) || []
   })
@@ -143,7 +146,7 @@ function AddStrategies() {
         {vaultContext?.newVault.assetAllocation.map((item, index) => (
           <Stack key={index} w={'full'} alignContent={'center'} justifyContent={'center'} mt={baseMargin} gap={4}>
             <FormField
-              label={item.symbol?.toUpperCase() || ''}
+              label={item.assetSymbol?.toUpperCase() || ''}
               placeholder="Initial deposit"
               type="number"
               min={0}
