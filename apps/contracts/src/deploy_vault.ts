@@ -94,7 +94,7 @@ export async function deployVault(
     Keypair.fromPublicKey(loadedConfig.vaultEmergencyManager), //Emergency manager
     Keypair.fromPublicKey(loadedConfig.vaultRebalanceManager), //Rebalance manager
     Keypair.fromPublicKey(loadedConfig.defindexFeeReceiver), //Fee receiver
-    loadedConfig.admin, //Manager
+    Keypair.fromPublicKey(loadedConfig.vaultManager), //Manager
     vaultName, 
     vaultSymbol,
     assetAllocations,
