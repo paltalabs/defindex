@@ -13,13 +13,15 @@ export const toaster = createToaster({
   placement: "bottom-end",
   pauseOnPageIdle: true,
 })
+import './toaster.css'
+import { basePadding } from "./Common"
 
 export const Toaster = () => {
   return (
     <Portal>
       <ChakraToaster toaster={toaster} insetInline={{ mdDown: "4" }}>
         {(toast) => (
-          <Toast.Root width={{ md: "xl" }}>
+          <Toast.Root width={{ md: "xl" }} className={`toaster ${toast.type}`} p={basePadding * 4}>
             {toast.type === "loading" ? (
               <Spinner size="sm" color="blue.solid" />
             ) : (
@@ -32,7 +34,7 @@ export const Toaster = () => {
               )}
             </Stack>
             {toast.action && (
-              <Toast.ActionTrigger>{toast.action.label}</Toast.ActionTrigger>
+              <Toast.ActionTrigger px={2}>{toast.action.label}</Toast.ActionTrigger>
             )}
             {toast.meta?.closable && <Toast.CloseTrigger />}
           </Toast.Root>
