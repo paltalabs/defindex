@@ -1,10 +1,10 @@
-import { TxResponse, contractInvoke } from '@soroban-react/contracts';
-import { SorobanContextType, useSorobanReact } from "@soroban-react/core";
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { useCallback, useEffect, useState } from "react";
+import { contractInvoke, SorobanContextType, useSorobanReact } from 'stellar-react';
 
 import { getNetworkName } from "@/helpers/networkName";
-import { fetchFactoryAddress } from "@/utils/factory";
+import { TxResponse } from 'stellar-react/dist/contracts/types';
+import { usePublicAddresses } from './usePublicAddresses';
 
 export enum FactoryMethod {
   CREATE_DEFINDEX_VAULT = "create_defindex_vault",
@@ -15,46 +15,61 @@ export enum FactoryMethod {
 }
 
 const isObject = (val: unknown) => typeof val === 'object' && val !== null && !Array.isArray(val);
+
+const findFactoryAddress = (publicAddresses: Record<string, string>): string | undefined => {
+  if (!publicAddresses || Object.keys(publicAddresses).length === 0) {
+    throw new Error('No public addresses found');
+  }
+  const factoryAddress = publicAddresses['defindex_factory'];
+  if (!factoryAddress) {
+    throw new Error('Factory address not found in public addresses');
+  }
+  return factoryAddress;
+}
 export const useFactory = () => {
   const sorobanContext: SorobanContextType = useSorobanReact();
-  const { activeChain } = sorobanContext;
+  const publicAddresses = usePublicAddresses(getNetworkName(sorobanContext.activeNetwork));
+  const { activeNetwork } = sorobanContext;
+  if (!activeNetwork) {
+    throw new Error('No active network found');
+  }
   const [address, setAddress] = useState<string>();
-  const networkName = getNetworkName(activeChain?.networkPassphrase as string);
+  const networkName = getNetworkName(activeNetwork);
   useEffect(() => {
-    if (!sorobanContext) return;
+    if (!sorobanContext || !publicAddresses) return;
     if (networkName !== 'mainnet' && networkName !== 'testnet') {
-      throw new Error(`Invalid network when fetching factory address: ${activeChain?.id}. It should be mainnet or testnet`);
+      throw new Error(`Invalid network when fetching factory address: ${networkName}. It should be mainnet or testnet`);
     }
 
-    fetchFactoryAddress(networkName).then(
-      (factoryAddress) => {
-        setAddress(factoryAddress);
-      }
-    ).catch((error) => {
-      throw new Error(`Failed to fetch factory address: ${error}`);
-    });
+    if (publicAddresses.isLoading) return;
+    if (publicAddresses.error || !publicAddresses.data) {
+      throw new Error(`Failed to fetch public addresses: ${publicAddresses.error}`);
+    }
+    const factoryAddress = findFactoryAddress(publicAddresses.data);
+    setAddress(factoryAddress);
 
-  }, [activeChain?.id]);
+  }, [activeNetwork,publicAddresses]);
 
   return { address };
 }
 
 export function useFactoryCallback() {
   const sorobanContext = useSorobanReact();
-  const {activeChain} = sorobanContext;
+  const {activeNetwork} = sorobanContext;
+  const publicAddresses = usePublicAddresses(
+    activeNetwork? getNetworkName(activeNetwork) : 'mainnet'
+  ).data;
   const { address: factoryAddress } = useFactory();
-  const networkName = getNetworkName(activeChain?.networkPassphrase as string);
+  if (!activeNetwork) {
+    throw new Error('No active network found');
+  }
 
   return useCallback(
     async (method: FactoryMethod, args?: StellarSdk.xdr.ScVal[], signAndSend?: boolean) => {
       try {
         let result: TxResponse;
         if(!factoryAddress) {
-          const fallbackAddress = await fetchFactoryAddress(networkName)
-          .catch((error) => {
-            console.warn(`Failed to fetch fallback address: ${error}`);
-            return undefined;
-          });
+          const fallbackAddress = findFactoryAddress(publicAddresses);
           if (!fallbackAddress) {
             throw new Error('Failed to fetch fallback address');
           }
@@ -77,21 +92,21 @@ export function useFactoryCallback() {
             reconnectAfterTx: false,
           })) as TxResponse;
         }
-        console.log("Factory Callback result", result)
         if (!signAndSend) return result;
         if (
           isObject(result) &&
-          result?.status !== StellarSdk.SorobanRpc.Api.GetTransactionStatus.SUCCESS
+          result?.status !== StellarSdk.rpc.Api.GetTransactionStatus.SUCCESS
         ) throw result;
         return result
       } catch (e: any) {
-        console.log(e)
-        const error = e.toString()
-        if (error.includes('ExistingValue')) throw new Error('Index already exists.')
-        if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
-        if (error.includes('UnexpectedSize')) throw new Error('Invalid arguments length.')
-        if (error.includes('Error(Contract, #10)')) throw new Error('Insufficient funds.')
-        throw new Error('Failed to create vault.', e)
+        const error = e as Error;
+        if (error.message.includes('ExistingValue')) throw new Error('Index already exists.')
+        if (error.message.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
+        if (error.message.includes('UnexpectedSize')) throw new Error('Invalid arguments length.')
+        if (error.message.includes('Error(Contract, #10)')) throw new Error('Insufficient funds.')
+        if (error.message.includes('invoke non-existent contract function')) throw new Error('Contract function does not exist.')
+        if (error.message.includes('MissingValue')) throw new Error('Contract not found.')
+        throw new Error(error.message)
       }
-    }, [sorobanContext, factoryAddress])
+    }, [sorobanContext, factoryAddress, publicAddresses])
 }

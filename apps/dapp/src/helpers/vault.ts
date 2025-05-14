@@ -1,5 +1,4 @@
-import { ActionType, RebalanceInstruction } from "@/hooks/types";
-import { Asset } from "@/store/lib/types";
+import { Asset } from "@/contexts"
 import { Address, nativeToScVal, xdr } from "@stellar/stellar-sdk";
 
 export function getAssetAmountsSCVal(assets: Asset[]) {
@@ -8,7 +7,7 @@ export function getAssetAmountsSCVal(assets: Asset[]) {
     const truncatedAmount = Math.floor(parsedAmount * 1e7) / 1e7;
     const convertedAmount = Number(truncatedAmount) * Math.pow(10, 7)
     if (assets[index]?.amount === 0) return nativeToScVal(0, { type: "i128" });
-    return nativeToScVal(convertedAmount, { type: "i128" });
+    return nativeToScVal(Math.ceil(convertedAmount), { type: "i128" });
   })
 }
 
@@ -88,7 +87,7 @@ export function getCreateDeFindexVaultParams(
 
   return [
     roles,
-    nativeToScVal(vault_fee, { type: "u32" }), // Setting vault_fee as 100 bps for demonstration
+    nativeToScVal(vault_fee * 100, { type: "u32" }), // Converting vault_fee to basis points (bps)
     xdr.ScVal.scvVec(asset_allocations),
     new Address(router_address).toScVal(),
     nameSymbol,
@@ -127,7 +126,7 @@ export function getCreateDeFindexVaultDepositParams(
   return [callerAddress.toScVal(), ...defindexVaultParams, xdr.ScVal.scvVec(amounts)];
 }
 
-export function mapInstructionsToParams(
+/* export function mapInstructionsToParams(
   instructions: RebalanceInstruction[]
 ): xdr.ScVal {
   return xdr.ScVal.scvVec(
@@ -177,4 +176,4 @@ export function mapInstructionsToParams(
       }
     })
   );
-}
+} */

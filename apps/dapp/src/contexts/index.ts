@@ -1,91 +1,56 @@
 import React from 'react';
-
-export enum TransactionStatusModalStatus {
-  SUCCESS = 'success',
-  ERROR = 'error',
-  PENDING = 'pending',
+export enum AllowedAssets {
+  XLM = 'xlm',
+  USDC = 'usdc'
 }
-export enum TransactionStatusModalOperation {
-  DEPLOY_VAULT = 'deploy_vault',
-  DEPOSIT = 'deposit',
-  WITHDRAW = 'withdraw',
-  EMERGENCY_WITHDRAW = 'emergency_withdraw',
+export const allowedAssets = Object.values(AllowedAssets);
+export interface Vault {
+  name: string;
+  symbol: string;
+  address: string;
+  assetAllocation: Asset[];
+  vaultManager: string;
+  emergencyManager: string;
+  rebalanceManager: string;
+  feeReceiver: string;
+  feePercent: number;
+  upgradable: boolean;
 }
 
-type ToggleModalProps = {
-  isOpen: boolean
-  setIsOpen: (value: boolean) => void
-};
-
-type TransactionStatusModalProps = {
-  isOpen: boolean
-  setIsOpen: (value: boolean) => void
-  step: number
-  setStep: (value: number) => void
-  status: TransactionStatusModalStatus | ''
-  setStatus: (value: TransactionStatusModalStatus | '') => void
-  operation: TransactionStatusModalOperation | ''
-  setOperation: (value: TransactionStatusModalOperation | '') => void
-  error: string
-  setError: (value: string) => void
-  txHash: string
-  setTxHash: (value: string) => void
-  resetModal: () => void
-  initModal: () => void
-  handleSuccess: (txHash: string) => void
-  handleError: (error: string) => void
+export interface Asset {
+  address: string;
+  strategies: Strategy[];
+  amount: number;
+  symbol: string;
 }
-export type ModalContextType = {
-  transactionStatusModal: TransactionStatusModalProps,
-  deployVaultModal: ToggleModalProps,
-  inspectVaultModal: ToggleModalProps,
-  interactWithVaultModal: ToggleModalProps,
-  editVaultModal: ToggleModalProps,
-  rebalanceVaultModal: ToggleModalProps,
-  investStrategiesModal: ToggleModalProps,
 
-};
-export const ModalContext = React.createContext<ModalContextType>({
-  transactionStatusModal:{
-    isOpen: false,
-    setIsOpen: () => {},
-    step: 0,
-    setStep: () => {},
-    status: TransactionStatusModalStatus.PENDING,
-    setStatus: (value: TransactionStatusModalStatus |'') => {},
-    operation: '',
-    setOperation: (value: TransactionStatusModalOperation | '') => {},
-    error: '',
-    setError: (value: string) => {},
-    txHash: '',
-    setTxHash: (value: string) => {},
-    resetModal: () => {},
-    initModal: () => {},
-    handleSuccess: (txHash: string) => {},
-    handleError: (error: string) => {},
-  },
-  deployVaultModal: {
-    isOpen: false,
-    setIsOpen: () => {},
-  },
-  inspectVaultModal: {
-    isOpen: false,
-    setIsOpen: () => {},
-  },
-  interactWithVaultModal: {
-    isOpen: false,
-    setIsOpen: () => {},
-  },
-  editVaultModal: {
-    isOpen: false,
-    setIsOpen: () => {},
-  },
-  rebalanceVaultModal: {
-    isOpen: false,
-    setIsOpen: () => {},
-  },
-  investStrategiesModal: {
-    isOpen: false,
-    setIsOpen: () => {},
-  },
-});
+export interface AssetAmmount {
+  address: string;
+  amount: number;
+}
+export interface Strategy{
+  address: string;
+  assetSymbol: string;
+  assetAddress?: string;
+  name: string;
+  paused: boolean;
+  amount?: number;
+}
+
+export type AssetContextType = {
+  assets: Asset[];
+  setAssets: (assets: Asset[]) => void;
+}
+
+export const AssetContext = React.createContext<AssetContextType | null>(null);
+
+export type VaultContextType = {
+  newVault: Vault;
+  setNewVault: (vault: Vault) => void;
+  vaults: Vault[];
+  setVaults: (vaults: Vault[]) => void;
+  selectedVault: Vault | null;
+  setSelectedVault: (vault: Vault | null) => void;
+}
+
+export const VaultContext = React.createContext<VaultContextType | null>(null);

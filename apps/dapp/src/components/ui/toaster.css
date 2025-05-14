@@ -1,0 +1,13 @@
+.toaster{
+  font-family: var(--font-familijen-grotesk);
+  backdrop-filter: blur(16px);
+  border-radius: 18px;
+}
+
+.success {
+  background: var(--defindex-green-light);
+}
+
+.error {
+  background: var(--defindex-red-light);
+}

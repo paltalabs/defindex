@@ -1,0 +1,5 @@
+.background-card {
+  background-color: rgba(196, 196, 196, 0.1);
+  backdrop-filter: blur(8px);
+  border: none;
+}
