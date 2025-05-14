@@ -1,15 +1,13 @@
 'use client'
-import { Box, Flex, Link, Image, HStack } from '@chakra-ui/react'
-import React from 'react'
+import { Box, Flex, Image, Link } from '@chakra-ui/react'
+import { navBarHeight } from '../ui/Common'
 import ConnectButton from '../web3/ConnectWallet'
 import './NavBar.css'
-import { navBarHeight } from '../ui/Common'
 
 
 const links = [
-  { name: 'Defindex Vaults', href: '/' },
-  { name: 'Portfolio', href: '/' },
-  { name: 'Defindex home', href: '/' },
+  { name: 'Docs', href: 'https://docs.defindex.io/' },
+  { name: 'Defindex Home', href: 'https://defindex.io/' },
 ]
 function NavBar() {
   return (

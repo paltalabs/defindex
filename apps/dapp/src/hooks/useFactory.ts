@@ -1,10 +1,10 @@
-import { contractInvoke, SorobanContextType, useSorobanReact } from 'stellar-react';
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { useCallback, useEffect, useState } from "react";
+import { contractInvoke, SorobanContextType, useSorobanReact } from 'stellar-react';
 
 import { getNetworkName } from "@/helpers/networkName";
-import { usePublicAddresses } from './usePublicAddresses';
 import { TxResponse } from 'stellar-react/dist/contracts/types';
+import { usePublicAddresses } from './usePublicAddresses';
 
 export enum FactoryMethod {
   CREATE_DEFINDEX_VAULT = "create_defindex_vault",
@@ -48,7 +48,7 @@ export const useFactory = () => {
     const factoryAddress = findFactoryAddress(publicAddresses.data);
     setAddress(factoryAddress);
 
-  }, [activeNetwork]);
+  }, [activeNetwork,publicAddresses]);
 
   return { address };
 }
@@ -108,5 +108,5 @@ export function useFactoryCallback() {
         if (error.message.includes('MissingValue')) throw new Error('Contract not found.')
         throw new Error(error.message)
       }
-    }, [sorobanContext, factoryAddress])
+    }, [sorobanContext, factoryAddress, publicAddresses])
 }
