@@ -1,20 +1,8 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/create-next-app).
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
 
-### Create a .env file
-
-Copy the .env.example file to .env and fill in the values.
-
-```bash
-cp env.example .env
-```
-
->[!NOTE]
-> If you want to use your own deployment of the smart contract, you can set the .env property `NEXT_PUBLIC_IS_LOCAL` to true and uncomment the lines 2, 11-13 of the file `src/helpers/getRemoteConfig.ts` and do not commit this changes.
-
-## Running the app
-Run the development server:
+First, run the development server:
 
 ```bash
 npm run dev
@@ -26,16 +14,11 @@ pnpm dev
 bun dev
 ```
 
-## Install dependencies
-```bash
-yarn install
-```
-
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load Inter, a custom Google Font.
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
 

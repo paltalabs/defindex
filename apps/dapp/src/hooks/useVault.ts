@@ -1,12 +1,12 @@
-import { TxResponse, contractInvoke } from '@soroban-react/contracts';
-import { useSorobanReact } from "@soroban-react/core";
+import { contractInvoke, useSorobanReact } from 'stellar-react';
 import * as StellarSdk from '@stellar/stellar-sdk';
+import { xdr } from '@stellar/stellar-sdk';
 import { scValToNative } from "@stellar/stellar-sdk";
 import { useCallback } from "react";
 
-import { getTokenSymbol } from "@/helpers/getTokenInfo";
-import { AssetAmmount, VaultData } from "@/store/lib/types";
-
+import { AssetAmmount, Vault } from "@/contexts";
+import { TxResponse } from 'stellar-react/dist/contracts/types';
+import { getTokenSymbol } from '@/helpers/getTokenInfo';
 
 export enum VaultMethod {
     // VaultTrait methods
@@ -65,7 +65,7 @@ export function useVaultCallback() {
     
                 if (
                     isObject(result) &&
-                    result?.status !== StellarSdk.SorobanRpc.Api.GetTransactionStatus.SUCCESS
+                    result?.status !== StellarSdk.rpc.Api.GetTransactionStatus.SUCCESS
                 ) throw result;
                 return result
             } catch (e: any) {
@@ -74,8 +74,9 @@ export function useVaultCallback() {
                 if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
                 if (error.includes('UnexpectedSize')) throw new Error('Invalid arguments length.')
                 if (error.includes('Error(Contract, #10)')) throw new Error('Insufficient funds.')
-                if (error.includes('Error(Contract, #128)')) throw new Error('Unwind more than available.')
                 if (error.includes('Error(Contract, #117)')) throw new Error('Insufficient amount.')
+                if (error.includes('Error(Contract, #128)')) throw new Error('Unwind more than available.')
+                if (error.includes('Error(Contract, #130)')) throw new Error('Action requires authorization.')
                 if (error.includes('Error(Contract, #144)')) throw new Error('Strategy paused.')
                 throw new Error('Failed to process the request.', error)
             }
@@ -117,18 +118,18 @@ export const useVault = (vaultAddress?: string | undefined) => {
             else asset.symbol = symbol
         }
         getInvestedFunds(vaultAddress);
-        const newData: VaultData = {
+        const newData: Vault = {
             name: name || '',
+            symbol: name || '',
             address: vaultAddress,
-            manager: manager,
+            vaultManager: manager,
+            rebalanceManager: manager,
             emergencyManager: emergencyManager,
             feeReceiver: feeReceiver,
-            assets: assets || [],
-            TVL: TVL || 0,
-            totalSupply: totalSupply || 0,
-            idleFunds: idleFunds || [],
-            investedFunds: investedFunds || [],
-            fees: fees || [50,0],
+            assetAllocation: assets || [],
+            feePercent: fees || [50,0],
+            upgradable: true,
+
         }
     return newData
     } catch (error) {
@@ -138,10 +139,11 @@ export const useVault = (vaultAddress?: string | undefined) => {
 
     const getVaultManager = async (selectedVault: string) => {
         try {
-        const manager = await vault(VaultMethod.GET_MANAGER, selectedVault, undefined, false).then((res: any) => scValToNative(res));
+        const manager = await vault(VaultMethod.GET_MANAGER, selectedVault, undefined, false).then((res: any) => scValToNative(res as xdr.ScVal));
         return manager;
         } catch (error) {
         console.error(error);
+        throw new Error('Failed to fetch vault manager');
         }
     }
     const getVaultEmergencyManager = async (selectedVault: string) => {
@@ -150,6 +152,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
         return emergencyManager;
         } catch (error) {
         console.error(error);
+        throw new Error('Failed to fetch vault emergency manager');
         }
     }
     const getVaultFeeReceiver = async (selectedVault: string) => {
@@ -158,6 +161,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
         return feeReceiver;
         } catch (error) {
         console.error(error);
+        throw new Error('Failed to fetch vault fee receiver');
         }
     }
     const getVaultName = async (selectedVault: string) => {

@@ -1,0 +1,17 @@
+.nav-link {
+  font-weight: 400;
+  font-family: var(--font-inter);
+  font-size: 12px;
+  line-height: 60px;
+  letter-spacing: 0%;
+}
+
+.nav-bar {
+  z-index: 1000;
+  position: fixed;
+  justify-content: space-between;
+  padding: 4px 4.8vw;
+  gap: 6px;
+  width: 100vw;
+  backdrop-filter: blur(18px);
+}
