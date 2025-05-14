@@ -5,8 +5,7 @@ coverY: 0
 
 # Creating a DeFindex Vault
 
-Webapp: https://app.defindex.io/
-Vault Example: https://app.defindex.io/vault/CCFWKCD52JNSQLN5OS4F7EG6BPDT4IRJV6KODIEIZLWPM35IKHOKT6S2
+Webapp: [https://app.defindex.io/](https://app.defindex.io/)
 
 ### Prerequisites: Vault Roles
 
