@@ -19,7 +19,7 @@ export default function MySorobanReactProvider({ children }: { children: React.R
   if (!mounted) return null;
   return (
     <SorobanReactProvider
-      appName={"Example Stellar App"}
+      appName={"Defindex Dapp"}
       allowedNetworkDetails={[mainnetNetworkDetails, testnetNetworkDetails]}
       activeNetwork={WalletNetwork.PUBLIC}
     >

@@ -1,10 +1,10 @@
 import { contractInvoke, SorobanContextType, useSorobanReact } from 'stellar-react';
 import * as StellarSdk from '@stellar/stellar-sdk';
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 
 import { getNetworkName } from "@/helpers/networkName";
-import { usePublicAddresses } from './usePublicAddresses';
 import { TxResponse } from 'stellar-react/dist/contracts/types';
+import { PublicAddressesContext } from '@/contexts';
 
 export enum FactoryMethod {
   CREATE_DEFINDEX_VAULT = "create_defindex_vault",
@@ -28,7 +28,7 @@ const findFactoryAddress = (publicAddresses: Record<string, string>): string | u
 }
 export const useFactory = () => {
   const sorobanContext: SorobanContextType = useSorobanReact();
-  const publicAddresses = usePublicAddresses(getNetworkName(sorobanContext.activeNetwork));
+  const publicAddresses = useContext(PublicAddressesContext);
   const { activeNetwork } = sorobanContext;
   if (!activeNetwork) {
     throw new Error('No active network found');
@@ -40,13 +40,7 @@ export const useFactory = () => {
     if (networkName !== 'mainnet' && networkName !== 'testnet') {
       throw new Error(`Invalid network when fetching factory address: ${networkName}. It should be mainnet or testnet`);
     }
-
-    if (publicAddresses.isLoading) return;
-    if (publicAddresses.error || !publicAddresses.data) {
-      throw new Error(`Failed to fetch public addresses: ${publicAddresses.error}`);
-    }
-    const factoryAddress = findFactoryAddress(publicAddresses.data);
-    setAddress(factoryAddress);
+    setAddress(publicAddresses.factoryAddress);
 
   }, [activeNetwork]);
 
@@ -56,9 +50,7 @@ export const useFactory = () => {
 export function useFactoryCallback() {
   const sorobanContext = useSorobanReact();
   const {activeNetwork} = sorobanContext;
-  const publicAddresses = usePublicAddresses(
-    activeNetwork? getNetworkName(activeNetwork) : 'mainnet'
-  ).data;
+  const publicAddresses = useContext(PublicAddressesContext);
   const { address: factoryAddress } = useFactory();
   if (!activeNetwork) {
     throw new Error('No active network found');
@@ -69,7 +61,7 @@ export function useFactoryCallback() {
       try {
         let result: TxResponse;
         if(!factoryAddress) {
-          const fallbackAddress = findFactoryAddress(publicAddresses);
+          const fallbackAddress = publicAddresses?.factoryAddress;
           if (!fallbackAddress) {
             throw new Error('Failed to fetch fallback address');
           }
@@ -100,6 +92,7 @@ export function useFactoryCallback() {
         return result
       } catch (e: any) {
         const error = e as Error;
+        console.error('Error in useFactoryCallback:', error);
         if (error.message.includes('ExistingValue')) throw new Error('Index already exists.')
         if (error.message.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
         if (error.message.includes('UnexpectedSize')) throw new Error('Invalid arguments length.')

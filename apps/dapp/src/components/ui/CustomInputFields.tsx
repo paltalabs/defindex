@@ -11,11 +11,12 @@ interface ReusableSelectProps {
 }
 
 export function CustomSelect({ collection, label, placeholder, value, onSelect, multiple }: ReusableSelectProps) {
+  if (!collection.items || collection.items.length === 0) return null;
   return (
     <Select.Root
       multiple={multiple}
       collection={collection}
-      disabled={collection.items.length === 0}
+      disabled={!collection.items || collection.items.length === 0}
       value={value}
       onValueChange={(e) => onSelect?.(e.value)}
     >

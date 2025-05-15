@@ -1,10 +1,10 @@
 import React, { useContext, useEffect, useState } from 'react'
 import BackgroundCard from '../ui/BackgroundCard'
-import { Fieldset, HStack, createListCollection, Stack, Button, Flex, Box } from '@chakra-ui/react'
+import { Fieldset, HStack, createListCollection, Stack, Button, Flex, Box, Switch } from '@chakra-ui/react'
 import { CustomSelect, FormField } from '../ui/CustomInputFields'
 import { baseMargin } from '../ui/Common'
 import { decimalRegex, parseNumericInput } from '@/helpers/input'
-import { Asset, AssetContext, Strategy, Vault, VaultContext } from '@/contexts'
+import { Asset, AssetContext, PublicAddressesContext, Strategy, Vault, VaultContext } from '@/contexts'
 import { parsePascalCase } from '@/helpers/utils'
 import { FactoryMethod, useFactoryCallback } from '@/hooks/useFactory'
 import { getAssetParamsSCVal, getCreateDeFindexVaultDepositParams, getCreateDeFindexVaultParams } from '@/helpers/vault'
@@ -13,6 +13,7 @@ import { xdr } from '@stellar/stellar-sdk'
 import { soroswapRouterAddress } from '@/hooks/usePublicAddresses'
 import { toaster } from '../ui/toaster'
 import { isValidAddress } from '@/helpers/address'
+import { HiCheck, HiX } from 'react-icons/hi'
 
 interface VaultConfigSectionProps {
   title: string;
@@ -34,34 +35,47 @@ function VaultConfigSection({ title, children }: VaultConfigSectionProps) {
 }
 
 function SelectAssets() {
-  const assetContext = useContext(AssetContext);
+  const publicAddressesContext = useContext(PublicAddressesContext);
   const vaultContext = useContext(VaultContext);
   const [selectedAssets, setSelectedAssets] = React.useState<Asset[]>([])
+  const [assetsCollection, setAssetsCollection] = React.useState<any>([])
   const handleSelect = (e: any) => {
-    const selected = assetContext?.assets.filter((asset) => e.includes(asset.address))
+    const selected = publicAddressesContext?.assets.filter((asset) => e.includes(asset.address))
+    console.log('Selected assets:', selected)
     setSelectedAssets(selected || [])
   }
   useEffect(() => {
-    const newAssets: Asset[] = selectedAssets.map((asset) => ({
-      address: asset.address,
-      strategies: [],
-      symbol: asset.assetSymbol,
-      total_amount: asset.total_amount,
-      invested_amount: asset.invested_amount,
-      idle_amount: asset.idle_amount,
-      amount: 0,
-    }));
-    vaultContext?.setNewVault({
-      ...vaultContext.newVault,
-      assetAllocation: newAssets,
-    })
+    const updateAssets = async () => {
+      let newAssets: Asset[] = await Promise.all(selectedAssets.map(async (asset) => ({
+        address: asset.address,
+        strategies: [],
+        assetSymbol: asset.assetSymbol.toUpperCase(),
+        total_amount: asset.total_amount,
+        invested_amount: asset.invested_amount,
+        idle_amount: asset.idle_amount,
+        amount: 0,
+      })));
+
+      vaultContext?.setNewVault({
+        ...vaultContext.newVault,
+        assetAllocation: newAssets,
+      });
+    };
+    updateAssets();
   }, [selectedAssets])
-  const assetsCollection = createListCollection({
-    items: assetContext?.assets.map((asset) => ({
-      label: asset.assetSymbol?.toUpperCase()!,
-      value: asset.address,
-    })) || []
-  })
+
+
+  useEffect(() => {
+    if (!publicAddressesContext) return
+    const collection = createListCollection({
+      items: publicAddressesContext.assets.map((asset) => ({
+        label: asset.assetSymbol.toUpperCase(),
+        value: asset.address,
+      }))
+    })
+    setAssetsCollection(collection)
+  }, [publicAddressesContext && publicAddressesContext.assets])
+  if (!assetsCollection || assetsCollection.length === 0) return null
   return (
     <CustomSelect
       collection={assetsCollection}
@@ -77,13 +91,17 @@ function SelectAssets() {
 function SelectStrategies({ asset }: { asset: Asset }) {
   const vaultContext = useContext(VaultContext);
   const [selectedStrategies, setSelectedStrategies] = React.useState<string[]>([])
-  const strategiesCollection = createListCollection({
-    items: asset.strategies.map((strategy) =>
-    ({
-      label: parsePascalCase(strategy.name),
-      value: strategy.address,
-    }))
-  })
+  const [strategiesCollection, setStrategiesCollection] = React.useState<any>([])
+
+  useEffect(() => {
+    const collection = createListCollection({
+      items: asset.strategies.map((strategy) => ({
+        label: parsePascalCase(strategy.name),
+        value: strategy.address,
+      }))
+    })
+    setStrategiesCollection(collection)
+  }, [asset && asset.strategies])
 
   const handleSelect = (e: any) => {
     setSelectedStrategies(e)
@@ -105,6 +123,8 @@ function SelectStrategies({ asset }: { asset: Asset }) {
       assetAllocation: assetAllocation!,
     })
   }, [selectedStrategies])
+
+  if (!asset || !asset.strategies || asset.strategies.length === 0) return null
   return (
     <CustomSelect
       collection={strategiesCollection}
@@ -118,7 +138,7 @@ function SelectStrategies({ asset }: { asset: Asset }) {
 }
 
 function AddStrategies() {
-  const assetContext = useContext(AssetContext);
+  const publicAddressesContext = useContext(PublicAddressesContext);
   const vaultContext = useContext(VaultContext);
 
   const handleDepositAmount = (e: any, i: number) => {
@@ -153,7 +173,7 @@ function AddStrategies() {
               value={vaultContext.newVault.assetAllocation[index].amount}
               onChange={(e) => handleDepositAmount(e, index)}
             />
-            <SelectStrategies asset={assetContext!.assets[index]} />
+            <SelectStrategies asset={publicAddressesContext?.assets[index]!} />
           </Stack>
         ))}
       </HStack>
@@ -163,7 +183,6 @@ function AddStrategies() {
 
 function VaultConfig() {
   const vaultContext = useContext(VaultContext);
-  const [upgradable, setUpgradable] = React.useState(true)
   const [vaultConfig, setVaultConfig] = React.useState<Partial<Vault>>({
     name: '',
     symbol: '',
@@ -197,23 +216,28 @@ function VaultConfig() {
       />
       <SelectAssets />
 
-      <Button
-        variant={upgradable ? 'solid' : 'outline'}
-        size={'lg'}
-        colorPalette={'green'}
-        alignSelf={'end'}
-        p={4}
-        rounded={16}
-        onClick={() => {
-          setUpgradable(!upgradable)
+      <Switch.Root
+        onCheckedChange={(e) => {
           vaultContext?.setNewVault({
             ...vaultContext.newVault,
-            upgradable: !upgradable,
+            upgradable: e.checked,
           })
         }}
+        colorPalette={'green'}
+        alignContent={'center'}
       >
-        {upgradable ? 'Upgradable' : 'Non Upgradable'}
-      </Button>
+        <Switch.HiddenInput />
+        <Switch.Control>
+          <Switch.Thumb>
+            <Switch.ThumbIndicator fallback={<HiX color={'white'} />}>
+              <HiCheck />
+            </Switch.ThumbIndicator>
+          </Switch.Thumb>
+        </Switch.Control>
+        <Switch.Label>
+          Upgradable
+        </Switch.Label>
+      </Switch.Root>
 
     </VaultConfigSection>
   );
@@ -340,6 +364,7 @@ function FeeConfig() {
 
 function CreateVaultButton() {
   const vaultContext = useContext(VaultContext);
+  const publicAddresses = useContext(PublicAddressesContext);
   const useFactory = useFactoryCallback();
   const sorobanContext = useSorobanReact();
   const [loading, setLoading] = useState(false);
@@ -365,9 +390,9 @@ function CreateVaultButton() {
   }, [sorobanContext, vaultContext, vaultContext!.newVault]);
 
   const handleCreateVault = async () => {
-    if (!vaultContext) return;
+    if (!vaultContext || !publicAddresses) return;
     setLoading(true);
-    const soroswapRouter = await soroswapRouterAddress(sorobanContext.activeNetwork);
+    const soroswapRouter = publicAddresses.soroswapRouterAddress;
 
     const newVault = vaultContext.newVault;
     if (!newVault) return;

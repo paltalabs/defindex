@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/ui/provider"
 import useMounted from "@/hooks/useMounted"
 import { StrategiesProvider } from "./StrategiesProvider"
 import { VaultProvider } from "./VaultProvider"
+import PublicAddressesProvider from "./PublicAddressesProvider"
 
 
 export const MainProvider = ({ children }: { children: ReactNode }) => {
@@ -13,11 +14,13 @@ export const MainProvider = ({ children }: { children: ReactNode }) => {
   return (
     <MySorobanReactProvider>
       <ThemeProvider>
-        <StrategiesProvider>
-          <VaultProvider>
-            {children}
-          </VaultProvider>
-        </StrategiesProvider>
+        <PublicAddressesProvider>
+          <StrategiesProvider>
+            <VaultProvider>
+              {children}
+            </VaultProvider>
+          </StrategiesProvider>
+        </PublicAddressesProvider>
       </ThemeProvider>
     </MySorobanReactProvider>
   )

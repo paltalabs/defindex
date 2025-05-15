@@ -12,7 +12,7 @@ import { toaster } from '../ui/toaster'
 
 
 
-function VaultInteraction({ vaultAddress }: { vaultAddress: string }) {
+function VaultInteraction({ vault }: { vault: Vault }) {
   const [amount, setAmount] = React.useState(0);
   const [tolerance, setTolerance] = React.useState(0);
   const sorobanContext = useSorobanReact();
@@ -20,7 +20,7 @@ function VaultInteraction({ vaultAddress }: { vaultAddress: string }) {
   const { address } = sorobanContext;
   const [selectedAsset, setSelectedAsset] = React.useState<string | null>(null);
   const useVaultCB = useVaultCallback();
-  const vault = useVault();
+  const vaultHook = useVault();
   const assetCollection = createListCollection({
     items: [
       { label: 'USDC', value: 'usdc' },
@@ -91,10 +91,10 @@ function VaultInteraction({ vaultAddress }: { vaultAddress: string }) {
         })
       }
       ).finally(async () => {
-        const newBalance = await vault.getUserBalance(selectedVault.address, address)
-        const newIdleFunds = await vault.getIdleFunds(selectedVault.address!)
-        const newInvestedFunds = await vault.getInvestedFunds(selectedVault.address)
-        const newTVL = await vault.getTotalManagedFunds(selectedVault?.address!)
+        const newBalance = await vaultHook.getUserBalance(selectedVault.address, address)
+        const newIdleFunds = await vaultHook.getIdleFunds(selectedVault.address!)
+        const newInvestedFunds = await vaultHook.getInvestedFunds(selectedVault.address)
+        const newTVL = await vaultHook.getTotalManagedFunds(selectedVault?.address!)
         const newVaultData: Partial<Vault> = {
           address: selectedVault.address,
         }
