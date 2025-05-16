@@ -1,5 +1,5 @@
 'use client'
-import React, { useContext } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import BackgroundCard from '../ui/BackgroundCard'
 import { Button, createListCollection, Separator, Tabs } from '@chakra-ui/react'
 import { CustomSelect, FormField } from '../ui/CustomInputFields'
@@ -18,15 +18,10 @@ function VaultInteraction({ vault }: { vault: Vault }) {
   const sorobanContext = useSorobanReact();
   const { selectedVault } = useContext(VaultContext)!;
   const { address } = sorobanContext;
-  const [selectedAsset, setSelectedAsset] = React.useState<string | null>(null);
+  const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
+  const [assetCollection, setAssetCollection] = useState<ReturnType<typeof createListCollection<{ label: string; value: string }>>>()
   const useVaultCB = useVaultCallback();
   const vaultHook = useVault();
-  const assetCollection = createListCollection({
-    items: [
-      { label: 'USDC', value: 'usdc' },
-      { label: 'XLM', value: 'xlm' },
-    ]
-  });
 
 
   const vaultOperation = async (vaultMethod: VaultMethod, selectedVault: Vault) => {
@@ -92,11 +87,9 @@ function VaultInteraction({ vault }: { vault: Vault }) {
       }
       ).finally(async () => {
         const newBalance = await vaultHook.getUserBalance(selectedVault.address, address)
-        const newIdleFunds = await vaultHook.getIdleFunds(selectedVault.address!)
-        const newInvestedFunds = await vaultHook.getInvestedFunds(selectedVault.address)
-        const newTVL = await vaultHook.getTotalManagedFunds(selectedVault?.address!)
+        const newAssets = await vaultHook.getTotalManagedFunds(selectedVault?.address!)
         const newVaultData: Partial<Vault> = {
-          address: selectedVault.address,
+          assetAllocation: newAssets,
         }
       });
     }
@@ -112,7 +105,6 @@ function VaultInteraction({ vault }: { vault: Vault }) {
       setAmount(0)
     }
   }
-
 
   const handleDeposit = async () => {
     if (!selectedAsset) {
@@ -148,6 +140,19 @@ function VaultInteraction({ vault }: { vault: Vault }) {
     }
   }
 
+  useEffect(() => {
+    if (selectedVault && selectedVault.assetAllocation) {
+      console.log('selectedVault', selectedVault)
+      const assets = selectedVault.assetAllocation.map((asset) => ({
+        label: asset.assetSymbol,
+        value: asset.assetSymbol,
+      }));
+      setAssetCollection(createListCollection({
+        items: assets
+      }));
+    }
+  }, [selectedVault])
+  if (!assetCollection) return null;
   return (
     <BackgroundCard>
       <Tabs.Root defaultValue={"deposit"} w={"100%"} variant="plain">
@@ -159,7 +164,7 @@ function VaultInteraction({ vault }: { vault: Vault }) {
         <Separator orientation="vertical" w='full' className='separator' />
 
         <Tabs.Content value="deposit">
-          <CustomSelect label="From wallet" placeholder='USDc' collection={assetCollection} multiple={false} onSelect={(value) => setSelectedAsset(value.toString())} />
+          <CustomSelect label="From wallet" placeholder='USDC' collection={assetCollection} multiple={false} onSelect={(value) => setSelectedAsset(value.toString())} />
           <FormField label="Amount" placeholder='0.00' type="number" onChange={(e) => setAmount(Number(e.target.value))} />
           <Button
             variant="outline"
@@ -169,7 +174,7 @@ function VaultInteraction({ vault }: { vault: Vault }) {
         </Tabs.Content>
 
         <Tabs.Content value="withdraw">
-          <CustomSelect label="From wallet" placeholder='USDc' collection={assetCollection} multiple={false} onSelect={(value) => setSelectedAsset(value.toString())} />
+          <CustomSelect label="From vault" placeholder='USDC' collection={assetCollection} multiple={false} onSelect={(value) => setSelectedAsset(value.toString())} />
           <FormField label="Amount" placeholder='0.00' type="number" onChange={(e) => setAmount(Number(e.target.value))} />
           <FormField label="Tolerance" placeholder='0.00' type="number" onChange={(e) => setTolerance(Number(e.target.value))} />
           <Button

@@ -21,6 +21,12 @@ export function VaultDetailsBanner({ vault }: { vault: Vault }) {
     { title: 'Holdings', amount: vault.totalSupply },
     { title: 'Deposits', amount: vault.assetAllocation[0].total_amount },
   ]
+  function parseAndFormatString(input: string): string {
+    return input
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
   return (
     <BackgroundCard>
       <Stack gap={4} alignItems={'start'} justifyContent={'center'}>
@@ -33,7 +39,7 @@ export function VaultDetailsBanner({ vault }: { vault: Vault }) {
             alt="Strategy Image Placeholder"
             mr={4}
           />
-          <Heading textAlign={'left'} fontSize={'4xl'}>{vault.name}</Heading>
+          <Heading textAlign={'left'} fontSize={'4xl'}>{parseAndFormatString(vault.name)}</Heading>
         </HStack>
         <HStack justify={'space-between'} w={'100%'}>
           {vaultAmounts.map((vaultAmount, index) => (

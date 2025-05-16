@@ -19,7 +19,7 @@ export interface Vault {
 }
 
 export interface Asset {
-  address: string;
+  asset: string;
   total_amount: number;
   idle_amount: number;
   invested_amount: number;

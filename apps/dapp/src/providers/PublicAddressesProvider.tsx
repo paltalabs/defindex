@@ -42,7 +42,7 @@ function PublicAddressesProvider({ children }: { children: React.ReactNode }) {
         const assetAddress = await useStrategyCB(assetStrategy.address, StrategyMethod.ASSET, [], false);
         const parseAssetAddress = scValToNative(assetAddress as xdr.ScVal);
         const tempAsset = {
-          address: parseAssetAddress,
+          asset: parseAssetAddress,
           assetSymbol: asset,
           total_amount: 0,
           idle_amount: 0,

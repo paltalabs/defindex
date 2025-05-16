@@ -182,7 +182,17 @@ export const useVault = (vaultAddress?: string | undefined) => {
     const getTotalManagedFunds = async (selectedVault: string) => {
         try {
             const TotalManagedFunds: Asset[] = await vault(VaultMethod.TOTAL_MANAGED_FUNDS, selectedVault, undefined, false).then((res: any) => scValToNative(res));
-            return TotalManagedFunds;
+            const assets: Asset[] = await Promise.all(TotalManagedFunds.map(async (asset: Asset) => {
+                console.log(asset)
+                const assetSymbol = await Promise.resolve(getTokenSymbol(asset.asset, sorobanContext));
+                console.log('🚀 « assetSymbol:', assetSymbol);
+                const newAsset: Asset = {
+                    ...asset,
+                    assetSymbol: assetSymbol || '',
+                };
+                return newAsset;
+            }));
+            return assets;
         } catch (error) {
         console.error(error);
         }
@@ -216,7 +226,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
                 });
                 const balance = scValToNative(rawBalance);
                 console.log('🚀 « balance:', balance);
-                idleFunds.push({ address: asset.address, amount: Number(balance) / 10 ** 7 });
+                idleFunds.push({ asset: asset.address, amount: Number(balance) / 10 ** 7 });
             }
             return idleFunds;
         } catch (error) {
@@ -232,7 +242,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
         assets.forEach((asset)=>{
             const address = rawInvestedFunds[asset].asset;
             const amount =  Number(rawInvestedFunds[asset].invested_amount) / 10 ** 7;
-            investedFunds.push({address: address, amount: amount});
+            investedFunds.push({asset: address, amount: amount});
         })
         return investedFunds;
         } catch (error) {
