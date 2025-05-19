@@ -1,7 +1,8 @@
-import { contractInvoke, useSorobanReact } from 'stellar-react';
+import { contractInvoke, useSorobanReact, WalletNetwork } from 'stellar-react';
 import { TxResponse } from 'stellar-react/dist/contracts/types';
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { useCallback } from "react";
+import { toaster } from '@/components/ui/toaster';
 
 export enum StrategyMethod {
     INITIALIZE = "initialize",
@@ -45,10 +46,28 @@ export function useStrategyCallback() {
                         isObject(result) &&
                         result?.status !== StellarSdk.rpc.Api.GetTransactionStatus.SUCCESS
                     ) throw result;
+                    toaster.create({
+                        type: 'success',
+                        title: 'Success',
+                        description: `Transaction successful!`,
+                        duration: 5000,
+                        action: {
+                        label: 'View transaction',
+                        onClick: () => {
+                            window.open(`https://stellar.expert/explorer/${sorobanContext.activeNetwork === WalletNetwork.PUBLIC ? 'public' : 'testnet'}/search?term=${result.txHash}`, '_blank');
+                        }
+                        }
+                    })
                     return result;
                 }
             } catch (e: any) {
                 const error = e.toString();
+                toaster.create({
+                    type: 'error',
+                    title: 'Error',
+                    description: error.message,
+                    duration: 5000,
+                })
                 if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
                 if (error.includes('Sign')) throw new Error('Request denied by user. Please try to sign again.');
                 if (error.includes('non-existing value for contract instance')) throw new Error(`Strategy: ${address} not found.`);

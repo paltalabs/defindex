@@ -1,4 +1,4 @@
-import { contractInvoke, useSorobanReact } from 'stellar-react';
+import { contractInvoke, useSorobanReact, WalletNetwork } from 'stellar-react';
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { xdr } from '@stellar/stellar-sdk';
 import { scValToNative } from "@stellar/stellar-sdk";
@@ -7,6 +7,7 @@ import { useCallback } from "react";
 import { Asset, Vault } from "@/contexts";
 import { TxResponse } from 'stellar-react/dist/contracts/types';
 import { getTokenSymbol } from '@/helpers/getTokenInfo';
+import { toaster } from '@/components/ui/toaster';
 
 export enum VaultMethod {
     // VaultTrait methods
@@ -67,9 +68,27 @@ export function useVaultCallback() {
                     isObject(result) &&
                     result?.status !== StellarSdk.rpc.Api.GetTransactionStatus.SUCCESS
                 ) throw result;
+                toaster.create({
+                    type: 'success',
+                    title: 'Success',
+                    description: `Transaction successful!`,
+                    duration: 5000,
+                    action: {
+                    label: 'View transaction',
+                    onClick: () => {
+                        window.open(`https://stellar.expert/explorer/${sorobanContext.activeNetwork === WalletNetwork.PUBLIC ? 'public' : 'testnet'}/search?term=${result.txHash}`, '_blank');
+                    }
+                    }
+                })
                 return result
             } catch (e: any) {
                 const error = e.toString()
+                toaster.create({
+                    type: 'error',
+                    title: 'Error',
+                    description: error.message,
+                    duration: 5000,
+                })
                 if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
                 if (error.includes('UnexpectedSize')) throw new Error('Invalid arguments length.')
                 if (error.includes('Error(Contract, #10)')) throw new Error('Insufficient funds.')
@@ -188,7 +207,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
                 console.log('🚀 « assetSymbol:', assetSymbol);
                 const newAsset: Asset = {
                     ...asset,
-                    assetSymbol: assetSymbol || '',
+                    assetSymbol: assetSymbol === 'native' ? 'XLM' : assetSymbol || '',
                 };
                 return newAsset;
             }));

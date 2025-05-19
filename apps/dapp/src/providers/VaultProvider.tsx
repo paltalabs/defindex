@@ -32,6 +32,14 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [publicAddresses]);
 
+  const refreshSelectedVault = async () => {
+    if (selectedVault) {
+      const vaultAddress = selectedVault.address;
+      const vaultInfo = await vault.getVaultInfo(vaultAddress);
+      setSelectedVault(vaultInfo!);
+    }
+  }
+
   const vaultContextValue: VaultContextType = {
     newVault,
     setNewVault,
@@ -39,6 +47,7 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
     setVaults,
     selectedVault,
     setSelectedVault,
+    refreshSelectedVault
   }
 
   if (!isMounted) return null;

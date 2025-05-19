@@ -50,6 +50,7 @@ export type VaultContextType = {
   setVaults: (vaults: Vault[]) => void;
   selectedVault: Vault | null;
   setSelectedVault: (vault: Vault | null) => void;
+  refreshSelectedVault: () => Promise<void>;
 }
 
 export const VaultContext = React.createContext<VaultContextType | null>(null);

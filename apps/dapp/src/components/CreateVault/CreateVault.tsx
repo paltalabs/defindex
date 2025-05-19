@@ -10,7 +10,6 @@ import { FactoryMethod, useFactoryCallback } from '@/hooks/useFactory'
 import { getAssetParamsSCVal, getCreateDeFindexVaultDepositParams, getCreateDeFindexVaultParams } from '@/helpers/vault'
 import { useSorobanReact, WalletNetwork } from 'stellar-react'
 import { xdr } from '@stellar/stellar-sdk'
-import { soroswapRouterAddress } from '@/hooks/usePublicAddresses'
 import { toaster } from '../ui/toaster'
 import { isValidAddress } from '@/helpers/address'
 import { HiCheck, HiX } from 'react-icons/hi'
@@ -40,14 +39,14 @@ function SelectAssets() {
   const [selectedAssets, setSelectedAssets] = React.useState<Asset[]>([])
   const [assetsCollection, setAssetsCollection] = React.useState<any>([])
   const handleSelect = (e: any) => {
-    const selected = publicAddressesContext?.assets.filter((asset) => e.includes(asset.address))
+    const selected = publicAddressesContext?.assets.filter((asset) => e.includes(asset.asset))
     console.log('Selected assets:', selected)
     setSelectedAssets(selected || [])
   }
   useEffect(() => {
     const updateAssets = async () => {
       let newAssets: Asset[] = await Promise.all(selectedAssets.map(async (asset) => ({
-        address: asset.address,
+        asset: asset.asset,
         strategies: [],
         assetSymbol: asset.assetSymbol.toUpperCase(),
         total_amount: asset.total_amount,
@@ -70,7 +69,7 @@ function SelectAssets() {
     const collection = createListCollection({
       items: publicAddressesContext.assets.map((asset) => ({
         label: asset.assetSymbol.toUpperCase(),
-        value: asset.address,
+        value: asset.asset,
       }))
     })
     setAssetsCollection(collection)
@@ -81,7 +80,7 @@ function SelectAssets() {
       collection={assetsCollection}
       label="Assets"
       placeholder="Select assets"
-      value={selectedAssets.map((asset) => asset.address)}
+      value={selectedAssets.map((asset) => asset.asset)}
       onSelect={handleSelect}
       multiple={true}
     />
@@ -110,7 +109,7 @@ function SelectStrategies({ asset }: { asset: Asset }) {
   useEffect(() => {
     const newStrategies: Strategy[] = asset.strategies.filter((strategy) => selectedStrategies.includes(strategy.address))
     const assetAllocation = vaultContext?.newVault.assetAllocation.map((item) => {
-      if (item.address === asset.address) {
+      if (item.asset === asset.asset) {
         return {
           ...item,
           strategies: newStrategies,
@@ -145,7 +144,7 @@ function AddStrategies() {
     if (!decimalRegex.test(e.target.value) && e.target.value != '') return
     const assetAllocation = vaultContext?.newVault.assetAllocation.map((item, index) => {
       let newItem = item
-      if (item.address === vaultContext?.newVault.assetAllocation[i].address) {
+      if (item.asset === vaultContext?.newVault.assetAllocation[i].asset) {
         newItem = {
           ...item,
           amount: parseNumericInput(e.target.value, 2),

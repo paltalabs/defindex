@@ -1,22 +1,33 @@
 'use client'
 import React, { useContext, useEffect, useState } from 'react'
 import BackgroundCard from '../ui/BackgroundCard'
-import { Button, createListCollection, Separator, Tabs } from '@chakra-ui/react'
-import { CustomSelect, FormField } from '../ui/CustomInputFields'
+import { Button, createListCollection, Flex, Separator, Tabs, Text } from '@chakra-ui/react'
+import { FormField } from '../ui/CustomInputFields'
 import './VaultInteraction.css'
 import { Asset, Vault, VaultContext } from '@/contexts'
 import { useVault, useVaultCallback, VaultMethod } from '@/hooks/useVault'
 import { Address, nativeToScVal, xdr } from '@stellar/stellar-sdk'
-import { useSorobanReact } from 'stellar-react'
+import { useSorobanReact, WalletNetwork } from 'stellar-react'
 import { toaster } from '../ui/toaster'
+import { parseNumericInput } from '@/helpers/input'
 
-
-
+function VaultInteractionButton({ buttonTitle, onClick }: { buttonTitle: string, onClick: () => void }) {
+  return (
+    <Button
+      borderRadius={20}
+      px={16}
+      className='custom-button'
+      variant="outline"
+      onClick={onClick}>
+      {buttonTitle}
+    </Button>
+  )
+}
 function VaultInteraction({ vault }: { vault: Vault }) {
   const [amount, setAmount] = React.useState(0);
   const [tolerance, setTolerance] = React.useState(0);
   const sorobanContext = useSorobanReact();
-  const { selectedVault } = useContext(VaultContext)!;
+  const { selectedVault, refreshSelectedVault } = useContext(VaultContext)!;
   const { address } = sorobanContext;
   const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
   const [assetCollection, setAssetCollection] = useState<ReturnType<typeof createListCollection<{ label: string; value: string }>>>()
@@ -77,38 +88,21 @@ function VaultInteraction({ vault }: { vault: Vault }) {
         selectedVault?.address!,
         params,
         true,
-      ).then(async (res) => {
-        toaster.create({
-          type: 'success',
-          title: 'Success',
-          description: `Transaction successful! ${res.txHash}`,
-          duration: 5000,
-        })
-      }
       ).finally(async () => {
         const newBalance = await vaultHook.getUserBalance(selectedVault.address, address)
-        const newAssets = await vaultHook.getTotalManagedFunds(selectedVault?.address!)
-        const newVaultData: Partial<Vault> = {
-          assetAllocation: newAssets,
-        }
+        await refreshSelectedVault();
       });
     }
     catch (error: any) {
       console.error('Error:', error)
-      toaster.create({
-        type: 'error',
-        title: 'Error',
-        description: error.message,
-        duration: 5000,
-      })
     } finally {
       setAmount(0)
     }
   }
 
   const handleDeposit = async () => {
-    if (!selectedAsset) {
-      alert('Please select an asset');
+    if (!address) {
+      alert('Please connect your wallet');
       return;
     }
     if (amount <= 0) {
@@ -140,6 +134,14 @@ function VaultInteraction({ vault }: { vault: Vault }) {
     }
   }
 
+  const handleTolerance = async (tolerance: any) => {
+    const input: number = parseNumericInput(tolerance.toString(), 2);
+    console.log(input)
+    if (input >= 0 && input <= 100) {
+      setTolerance(input);
+    } else return;
+  }
+
   useEffect(() => {
     if (selectedVault && selectedVault.assetAllocation) {
       console.log('selectedVault', selectedVault)
@@ -155,7 +157,7 @@ function VaultInteraction({ vault }: { vault: Vault }) {
   if (!assetCollection) return null;
   return (
     <BackgroundCard>
-      <Tabs.Root defaultValue={"deposit"} w={"100%"} variant="plain">
+      <Tabs.Root value={'deposit'} w={"100%"} variant="plain">
         <Tabs.List gap={4} className="tabs-list"  >
           <Tabs.Trigger className="button" px={4} justifyItems={'center'} value="deposit">Deposit</Tabs.Trigger>
           <Tabs.Trigger className="button" px={4} justifyItems={'center'} value="withdraw">Withdraw</Tabs.Trigger>
@@ -164,9 +166,38 @@ function VaultInteraction({ vault }: { vault: Vault }) {
         <Separator orientation="vertical" w='full' className='separator' />
 
         <Tabs.Content value="deposit">
-          <CustomSelect label="From wallet" placeholder='USDC' collection={assetCollection} multiple={false} onSelect={(value) => setSelectedAsset(value.toString())} />
-          <FormField label="Amount" placeholder='0.00' type="number" onChange={(e) => setAmount(Number(e.target.value))} />
+          {selectedVault?.assetAllocation.map((asset) => {
+            return (
+              <Flex
+                direction={{ sm: 'column', md: 'row' }}
+                justifyContent={'space-between'}
+                alignItems={'end'}
+                key={asset.assetSymbol}
+                gap={4}
+                my={8}
+              >
+                <FormField
+                  label={'Asset'}
+                  placeholder='XLM'
+                  value={asset.assetSymbol}
+                />
+                <FormField
+                  label="Amount"
+                  placeholder='0.00'
+                  type="number"
+                  onChange={(e) => setAmount(Number(e.target.value))}
+                  endElement={
+                    <Text pr={2}>{asset.assetSymbol}</Text>
+                  } />
+              </Flex>
+            )
+          }
+          )}
+
           <Button
+            borderRadius={20}
+            px={16}
+            className='custom-button'
             variant="outline"
             onClick={handleDeposit}>
             Deposit
@@ -174,16 +205,53 @@ function VaultInteraction({ vault }: { vault: Vault }) {
         </Tabs.Content>
 
         <Tabs.Content value="withdraw">
-          <CustomSelect label="From vault" placeholder='USDC' collection={assetCollection} multiple={false} onSelect={(value) => setSelectedAsset(value.toString())} />
-          <FormField label="Amount" placeholder='0.00' type="number" onChange={(e) => setAmount(Number(e.target.value))} />
-          <FormField label="Tolerance" placeholder='0.00' type="number" onChange={(e) => setTolerance(Number(e.target.value))} />
+
+          {selectedVault?.assetAllocation.map((asset) => {
+            return (
+              <Flex
+                direction={{ sm: 'column', md: 'row' }}
+                justifyContent={'space-between'}
+                alignItems={'end'}
+                key={asset.assetSymbol}
+                gap={4}
+                my={8}
+              >
+                <FormField
+                  label={'Asset'}
+                  placeholder='XLM'
+                  value={asset.assetSymbol}
+                />
+                <FormField
+                  label="Amount"
+                  placeholder='0.00'
+                  type="number"
+                  onChange={(e) => setAmount(Number(e.target.value))}
+                  endElement={
+                    <Text pr={2}>USDC</Text>
+                  } />
+                <FormField
+                  label="Tolerance"
+                  placeholder='0.00'
+                  min={0}
+                  value={tolerance}
+                  onChange={(e) => handleTolerance(e.target.value)}
+                  endElement={
+                    <Text pr={2}>%</Text>
+                  }
+                />
+              </Flex>
+            )
+          })}
           <Button
-            variant="outline"
+            className='custom-button'
+            borderRadius={20}
+            px={16}
             onClick={handleWithdraw}>
             Withdraw
           </Button>
         </Tabs.Content>
       </Tabs.Root>
+      <VaultInteractionButton onClick={handleDeposit} buttonTitle='Deposit' />
 
     </BackgroundCard>
   )

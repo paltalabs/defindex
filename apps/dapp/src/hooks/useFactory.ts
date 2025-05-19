@@ -1,10 +1,11 @@
-import { contractInvoke, SorobanContextType, useSorobanReact } from 'stellar-react';
+import { contractInvoke, SorobanContextType, useSorobanReact, WalletNetwork } from 'stellar-react';
 import * as StellarSdk from '@stellar/stellar-sdk';
 import { useCallback, useContext, useEffect, useState } from "react";
 
 import { getNetworkName } from "@/helpers/networkName";
 import { TxResponse } from 'stellar-react/dist/contracts/types';
 import { PublicAddressesContext } from '@/contexts';
+import { toaster } from '@/components/ui/toaster';
 
 export enum FactoryMethod {
   CREATE_DEFINDEX_VAULT = "create_defindex_vault",
@@ -89,10 +90,27 @@ export function useFactoryCallback() {
           isObject(result) &&
           result?.status !== StellarSdk.rpc.Api.GetTransactionStatus.SUCCESS
         ) throw result;
+        toaster.create({
+            type: 'success',
+            title: 'Success',
+            description: `Transaction successful!`,
+            duration: 5000,
+            action: {
+            label: 'View transaction',
+            onClick: () => {
+                window.open(`https://stellar.expert/explorer/${sorobanContext.activeNetwork === WalletNetwork.PUBLIC ? 'public' : 'testnet'}/search?term=${result.txHash}`, '_blank');
+            }
+            }
+        })
         return result
       } catch (e: any) {
         const error = e as Error;
-        console.error('Error in useFactoryCallback:', error);
+        toaster.create({
+            type: 'error',
+            title: 'Error',
+            description: error.message,
+            duration: 5000,
+        })
         if (error.message.includes('ExistingValue')) throw new Error('Index already exists.')
         if (error.message.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
         if (error.message.includes('UnexpectedSize')) throw new Error('Invalid arguments length.')

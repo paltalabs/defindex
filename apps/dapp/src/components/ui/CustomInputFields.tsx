@@ -1,4 +1,4 @@
-import { createListCollection, Field, Input, Portal, Select } from "@chakra-ui/react";
+import { createListCollection, Field, Input, InputGroup, Portal, Select } from "@chakra-ui/react";
 import { basePadding } from "./Common";
 import './CustomInputFields.css';
 interface ReusableSelectProps {
@@ -56,6 +56,8 @@ interface ReusableFromProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   invalid?: boolean;
   errorMessage?: string;
+  startElement?: React.ReactNode;
+  endElement?: React.ReactNode;
 }
 export function FormField({
   label,
@@ -67,20 +69,24 @@ export function FormField({
   onChange,
   invalid = false,
   errorMessage = undefined,
+  startElement = undefined,
+  endElement = undefined,
 }: ReusableFromProps) {
   return (
     <Field.Root invalid={value !== '' && invalid} justifyItems={'start'}>
       <Field.Label truncate className="custom-input-label">{label}</Field.Label>
-      <Input
-        type={type}
-        min={min}
-        max={max}
-        placeholder={placeholder}
-        px={basePadding}
-        value={value}
-        onChange={(e) => onChange?.(e)}
-        className="custom-input-field"
-      />
+      <InputGroup startElement={startElement} endElement={endElement} className="custom-input-group">
+        <Input
+          type={type}
+          min={min}
+          max={max}
+          placeholder={placeholder}
+          value={value}
+          px={2}
+          onChange={(e) => onChange?.(e)}
+          className="custom-input-field"
+        />
+      </InputGroup>
       <Field.ErrorText>{errorMessage}</Field.ErrorText>
     </Field.Root>
   );

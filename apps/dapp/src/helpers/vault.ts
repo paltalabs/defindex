@@ -33,7 +33,7 @@ export function getAssetParamsSCVal(assets: Asset[]) {
     return xdr.ScVal.scvMap([
       new xdr.ScMapEntry({
         key: xdr.ScVal.scvSymbol('address'),
-        val: new Address(asset.address).toScVal(),
+        val: new Address(asset.asset).toScVal(),
       }),
       new xdr.ScMapEntry({
         key: xdr.ScVal.scvSymbol('strategies'),
