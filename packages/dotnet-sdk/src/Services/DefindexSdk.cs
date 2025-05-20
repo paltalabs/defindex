@@ -260,6 +260,8 @@ public class DefindexSdk : IDefindexSdk
             if (idsNode is JsonObject idsObject)
             {
                 var id = idsObject.Where(x => x.Value != null && x.Value.ToString() == assetAllocation[0].StrategyAllocations[0].StrategyAddress);
+                var strategyKey = id.FirstOrDefault().Key;
+                Console.WriteLine($"Found strategy: {strategyKey}");
             }
         }
 
