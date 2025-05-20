@@ -1,6 +1,7 @@
 using System;
 using DeFindex.Sdk.Interfaces;
 using StellarDotnetSdk.Responses.SorobanRpc;
+using System.Collections.Generic;
 
 namespace DeFindex.Sdk.Services
 {
@@ -9,19 +10,15 @@ namespace DeFindex.Sdk.Services
         /// <summary>
         /// Calculates the APY (Annual Percentage Yield) for a pool based on various parameters
         /// </summary>
-        /// <param name="poolConfig">The pool's configuration</param>
-        /// <param name="reserveEmissionData">The emission data for the reserve tokens</param>
-        /// <param name="reserveData">The data for the reserve asset</param>
-        /// <param name="assetReserves">The reserves for the asset (token0, token1)</param>
-        /// <param name="blndReserves">The reserves for BLND token (token0, token1)</param>
+        /// <param name="poolConfigDict">Dictionary of pool configurations</param>
+        /// <param name="reserveEmissionsDict">Dictionary of reserve emission data</param>
+        /// <param name="reserveDataDict">Dictionary of reserve data</param>
         /// <param name="managedFunds">The total managed funds for the vault</param>
         /// <returns>The calculated APY as a decimal value</returns>
         public static decimal calculateAPY(
-            PoolConfig poolConfig,
-            ReserveEmissionData reserveEmissionData,
-            ReserveData reserveData,
-            (long, long) assetReserves,
-            (long, long) blndReserves,
+            Dictionary<string, PoolConfig> poolConfigDict,
+            Dictionary<string, ReserveEmissionData> reserveEmissionsDict,
+            Dictionary<string, ReserveData> reserveDataDict,
             ManagedFundsResult managedFunds)
         {
             // TODO: Implement the actual APY calculation logic using managedFunds
@@ -31,14 +28,12 @@ namespace DeFindex.Sdk.Services
         /// <summary>
         /// Calculates the Supply APY (Annual Percentage Yield) for a pool based on supply parameters
         /// </summary>
-        /// <param name="poolConfig">The pool's configuration</param>
-        /// <param name="reserveData">The data for the reserve asset</param>
-        /// <param name="assetReserves">The reserves for the asset (token0, token1)</param>
-        /// <param name="blndReserves">The reserves for BLND token (token0, token1)</param>
+        /// <param name="poolConfigDict">Dictionary of pool configurations</param>
+        /// <param name="reserveDataDict">Dictionary of reserve data</param>
         /// <returns>The calculated Supply APY as a decimal value</returns>
         public static decimal calculateSupplyAPY(
-            PoolConfig poolConfig,
-            ReserveData reserveData
+            Dictionary<string, PoolConfig> poolConfigDict,
+            Dictionary<string, ReserveData> reserveDataDict
         )
         {
             // TODO: Implement the supply APY calculation logic

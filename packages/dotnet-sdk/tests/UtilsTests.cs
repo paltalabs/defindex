@@ -70,16 +70,28 @@ namespace DeFindex.Sdk.Tests
         public void CalculateAPY_ReturnsExpectedValue()
         {
             // Arrange
-            var reserveEmissionData = CreateDefaultReserveEmissionData();
+            var poolConfigDict = new Dictionary<string, PoolConfig>
+            {
+                { "test_pool", DefaultPoolConfig }
+            };
+
+            var reserveEmissionsDict = new Dictionary<string, ReserveEmissionData>
+            {
+                { "test_pool", CreateDefaultReserveEmissionData() }
+            };
+
+            var reserveDataDict = new Dictionary<string, ReserveData>
+            {
+                { "test_pool", DefaultReserveData }
+            };
+
             var managedFunds = CreateDefaultManagedFunds();
 
             // Act
             var result = Utils.calculateAPY(
-                DefaultPoolConfig,
-                reserveEmissionData,
-                DefaultReserveData,
-                DefaultAssetReserves,
-                DefaultBlndReserves,
+                poolConfigDict,
+                reserveEmissionsDict,
+                reserveDataDict,
                 managedFunds
             );
 
@@ -90,10 +102,21 @@ namespace DeFindex.Sdk.Tests
         [Fact]
         public void CalculateSupplyAPY_ReturnsExpectedValue()
         {
+            // Arrange
+            var poolConfigDict = new Dictionary<string, PoolConfig>
+            {
+                { "test_pool", DefaultPoolConfig }
+            };
+
+            var reserveDataDict = new Dictionary<string, ReserveData>
+            {
+                { "test_pool", DefaultReserveData }
+            };
+
             // Act
             var result = Utils.calculateSupplyAPY(
-                DefaultPoolConfig,
-                DefaultReserveData
+                poolConfigDict,
+                reserveDataDict
             );
 
             // Assert
