@@ -28,9 +28,7 @@ class Program
             case "mainnet":
                 Console.WriteLine("Using mainnet");
                 Network.UsePublicNetwork();
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Mainnet is not yet supported");
-                return;
+                break;
         }
         Console.ResetColor();
 
@@ -38,32 +36,32 @@ class Program
         Console.WriteLine("Generated public key: " + keypair.AccountId);
 
         var server = new Server("https://horizon-testnet.stellar.org");
-        var friendbot = server.TestNetFriendBot;
 
-        try {
-            var response = await friendbot.FundAccount(keypair.AccountId).Execute();
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(response.Hash);
-            Console.ResetColor();
-        } catch (Exception ex) {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Error.WriteLine("Error while funding account: " + ex.Message);
-            Console.ResetColor();
-        }
+        // var friendbot = server.TestNetFriendBot;
+        // try {
+        //     var response = await friendbot.FundAccount(keypair.AccountId).Execute();
+        //     Console.ForegroundColor = ConsoleColor.Green;
+        //     Console.WriteLine(response.Hash);
+        //     Console.ResetColor();
+        // } catch (Exception ex) {
+        //     Console.ForegroundColor = ConsoleColor.Red;
+        //     Console.Error.WriteLine("Error while funding account: " + ex.Message);
+        //     Console.ResetColor();
+        // }
 
         //View account balances
-        var account = await server.Accounts.Account(keypair.AccountId);
-        if(account.Balances[0].BalanceString != "10000.0000000"){
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Account not funded");
-            Console.ResetColor();
-        }
-        else
-        {
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Ok.");
-            Console.ResetColor();
-        }
+        // var account = await server.Accounts.Account(keypair.AccountId);
+        // if(account.Balances[0].BalanceString != "10000.0000000"){
+        //     Console.ForegroundColor = ConsoleColor.Red;
+        //     Console.WriteLine("Account not funded");
+        //     Console.ResetColor();
+        // }
+        // else
+        // {
+        //     Console.ForegroundColor = ConsoleColor.Green;
+        //     Console.WriteLine("Ok.");
+        //     Console.ResetColor();
+        // }
 
 
         var soroban_server = new SorobanServer("https://soroban-testnet.stellar.org/");

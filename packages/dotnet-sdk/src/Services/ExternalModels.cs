@@ -10,17 +10,17 @@ namespace DeFindex.Sdk.Services
         /// <summary>
         /// The contract address of the oracle
         /// </summary>
-        public string Oracle { get; set; }
+        public string OracleAddress { get; set; }
 
         /// <summary>
         /// The minimum amount of collateral required to open a liability position
         /// </summary>
-        public long MinCollateral { get; set; }
+        public ulong MinCollateral { get; set; }
 
         /// <summary>
         /// The rate the backstop takes on accrued debt interest, expressed in 7 decimals
         /// </summary>
-        public uint BstopRate { get; set; }
+        public uint BStopRate { get; set; }
 
         /// <summary>
         /// The status of the pool
@@ -31,6 +31,15 @@ namespace DeFindex.Sdk.Services
         /// The maximum number of effective positions a single user can hold
         /// </summary>
         public uint MaxPositions { get; set; }
+
+        public PoolConfig(uint bStopRate, uint maxPositions, ulong minCollateral, string oracleAddress, uint status)
+        {
+            BStopRate = bStopRate;
+            MaxPositions = maxPositions;
+            MinCollateral = minCollateral;
+            OracleAddress = oracleAddress;
+            Status = status;
+        }
     }
 
     /// <summary>

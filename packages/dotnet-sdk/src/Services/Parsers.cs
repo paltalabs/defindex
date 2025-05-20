@@ -1,25 +1,9 @@
 using DeFindex.Sdk.Interfaces;
+using DeFindex.Sdk.Services;
 using StellarDotnetSdk.Responses.SorobanRpc;
 using StellarDotnetSdk.Soroban;
 using System.Text.Json.Nodes;
 
-public class PoolConfig
-{
-    public uint BStopRate { get; }
-    public uint MaxPositions { get; }
-    public ulong MinCollateral { get; } // Usamos SCInt128 para mantener la precisión de i128
-    public string OracleAddress { get; }
-    public uint Status { get; }
-
-    public PoolConfig(uint bStopRate, uint maxPositions, ulong minCollateral, string oracleAddress, uint status)
-    {
-        BStopRate = bStopRate;
-        MaxPositions = maxPositions;
-        MinCollateral = minCollateral;
-        OracleAddress = oracleAddress;
-        Status = status;
-    }
-}
 public class DefindexResponseParser
 {
     public static List<ManagedFundsResult> ParseManagedFundsResult(SimulateTransactionResponse response)
