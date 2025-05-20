@@ -113,4 +113,10 @@ public interface IDefindexSdk
     /// Parse a successful transaction response
     /// </summary>
     Task<List<TransactionResult>> ParseTransactionResponse(GetTransactionResponse response);
+
+    /// <summary>
+    /// Gets the vault's current APY
+    /// </summary>
+
+    Task<decimal> GetVaultAPY();
 }

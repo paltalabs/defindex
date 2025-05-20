@@ -12,13 +12,15 @@ class Program
 
     async static Task Main(string[] args)
     {
-        if(args.Length == 0 || args.Length > 1 || (args[0] != "testnet" && args[0] != "mainnet")){
+        if (args.Length == 0 || args.Length > 1 || (args[0] != "testnet" && args[0] != "mainnet"))
+        {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("Please provide a network: testnet or mainnet");
             return;
         }
         var network = args[0];
-        switch (network) {
+        switch (network)
+        {
             case "testnet":
                 Console.WriteLine("Using testnet");
                 Network.UseTestNetwork();
@@ -55,7 +57,9 @@ class Program
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("Account not funded");
             Console.ResetColor();
-        } else {
+        }
+        else
+        {
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Ok.");
             Console.ResetColor();
@@ -64,10 +68,13 @@ class Program
 
         var soroban_server = new SorobanServer("https://soroban-testnet.stellar.org/");
 
-        var vault_string = "CBHREBXNXH2ES2SFIIR576BJJET5NBXSH3DIEJXTT356SFOYCTPBKABA";
-        var vaultInstance = new DefindexSdk(vault_string, soroban_server); 
+        var vault_string = "CBETBBRUN5TGO6Z4ERJ3AH3C2K2UREAK44633ULMZBIO4HR7N2H7FRKE";
+        var vaultInstance = new DefindexSdk(vault_string, soroban_server);
 
-        var vaultTotalShares = await vaultInstance.GetVaultTotalShares();
+        var vaultStrategies = await vaultInstance.GetVaultAPY();
+        Console.WriteLine($"Vault APY: {vaultStrategies}");
+
+        /* var vaultTotalShares = await vaultInstance.GetVaultTotalShares();
         Console.WriteLine($"Vault Total Shares: {vaultTotalShares}");
 
         var amountsDesired = new List<ulong> { 10000000 };
@@ -121,7 +128,7 @@ class Program
         var withdrawCheckedTx = await CheckTransactionStatus(soroban_server, submittedWithdrawTx.Hash);
         var parsedWithdrawTx = vaultInstance.ParseTransactionResponse(withdrawCheckedTx);
         DisplayParsedTransactionResponse(parsedWithdrawTx.Result);
-        return;
+        return; */
     }
 
     private static void ConsoleInfo(string message)

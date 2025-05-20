@@ -10,11 +10,17 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using StellarDotnetSdk.Responses.SorobanRpc;
+using System.Net.Http;
+using System.Text.Json.Nodes;
 
 public class DefindexSdk : IDefindexSdk
 {
     private readonly SCContractId _contractId;
     private readonly SorobanServer _server;
+
+    private string? _blendDeployConfigJson;
+
+    private string? _defindexDeploymentsJson;
 
     public DefindexSdk(string contractId, SorobanServer server)
     {
@@ -55,22 +61,22 @@ public class DefindexSdk : IDefindexSdk
         var xdr = StellarDotnetSdk.Xdr.SCVal.Decode(resultXdr);
         var parsedResult = (SCInt128)SCInt128.FromSCValXdr(xdr);
         Console.WriteLine($"get balance transaction: {parsedResult.Lo}");
-        
+
         return simulatedTransaction;
     }
 
     public async Task<List<ManagedFundsResult>> FetchTotalManagedFunds()
     {
         var keypair = KeyPair.Random();
-        var args = new SCVal[] {};
+        var args = new SCVal[] { };
         var symbol = new SCSymbol("fetch_total_managed_funds");
         var invokeContractOperation = new InvokeContractOperation(_contractId, symbol, args);
-        
-        var loadedAccount = new Account(keypair.AccountId, 0); 
+
+        var loadedAccount = new Account(keypair.AccountId, 0);
         var transaction = new TransactionBuilder(loadedAccount)
             .AddOperation(invokeContractOperation)
             .Build();
-        
+
         var simulatedTransaction = await _server.SimulateTransaction(transaction);
         if (simulatedTransaction.Error != null || simulatedTransaction.Results == null || simulatedTransaction.Results.Count() == 0)
         {
@@ -96,11 +102,11 @@ public class DefindexSdk : IDefindexSdk
         };
         var symbol = new SCSymbol("balance");
         var invokeContractOperation = new InvokeContractOperation(_contractId, symbol, args);
-        var loadedAccount = new Account(keypair.AccountId, 0); 
+        var loadedAccount = new Account(keypair.AccountId, 0);
         var transaction = new TransactionBuilder(loadedAccount)
             .AddOperation(invokeContractOperation)
             .Build();
-        
+
         var simulatedTransaction = await _server.SimulateTransaction(transaction);
         if (simulatedTransaction.Error != null || simulatedTransaction.Results == null || simulatedTransaction.Results.Count() == 0)
         {
@@ -118,14 +124,14 @@ public class DefindexSdk : IDefindexSdk
     {
         //Simular llamada a la función total_supply
         var keypair = KeyPair.Random();
-        var args = new SCVal[] {};
+        var args = new SCVal[] { };
         var symbol = new SCSymbol("total_supply");
         var invokeContractOperation = new InvokeContractOperation(_contractId, symbol, args);
-        var loadedAccount = new Account(keypair.AccountId, 0); 
+        var loadedAccount = new Account(keypair.AccountId, 0);
         var transaction = new TransactionBuilder(loadedAccount)
             .AddOperation(invokeContractOperation)
             .Build();
-        
+
         var simulatedTransaction = await _server.SimulateTransaction(transaction);
         if (simulatedTransaction.Error != null || simulatedTransaction.Results == null || simulatedTransaction.Results.Count() == 0)
         {
@@ -199,4 +205,69 @@ public class DefindexSdk : IDefindexSdk
         return Task.FromResult(parsedResponse);
     }
 
-} 
+    public async Task<string?> FetchBlendDeployConfig()
+    {
+        using (var httpClient = new HttpClient())
+        {
+            try
+            {
+                var jsonUrl = "https://raw.githubusercontent.com/paltalabs/defindex/refs/heads/main/apps/contracts/src/strategies/blend_deploy_config.json";
+                _blendDeployConfigJson = await httpClient.GetStringAsync(jsonUrl);
+                Console.WriteLine("blend_deploy_config.json fetched successfully.");
+                // Puedes procesar el _blendDeployConfigJson aquí o simplemente devolverlo/usarlo.
+                return _blendDeployConfigJson;
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine($"Error fetching blend_deploy_config.json: {e.Message}");
+                return null;
+            }
+        }
+    }
+    
+    public async Task<JsonObject?> FetchDefindexDeployments()
+    {
+        var network = (GetNetworkResponse)await this.Server.GetNetwork();
+        var networkName = network.Passphrase.IndexOf("public", StringComparison.OrdinalIgnoreCase) >= 0 ? "mainnet" : "testnet";
+        using (var httpClient = new HttpClient())
+        {
+            try
+            {
+                var jsonUrl = $"https://raw.githubusercontent.com/paltalabs/defindex/refs/heads/main/public/{networkName}.contracts.json";
+                _defindexDeploymentsJson = await httpClient.GetStringAsync(jsonUrl);
+
+                Console.WriteLine($"{networkName}.contracts.json fetched successfully.");
+                return JsonNode.Parse(_defindexDeploymentsJson)?.AsObject();
+            }
+            catch (HttpRequestException e)
+            {
+                Console.WriteLine($"Error fetching {networkName}.contracts.json: {e.Message}");
+                return null;
+            }
+        }
+    }
+
+    public async Task<decimal> GetVaultAPY()
+    {
+        Console.WriteLine("Getting vault APY...");
+        Console.WriteLine($"Contract ID: {this.ContractId}");
+        var assetAllocation = await this.FetchTotalManagedFunds();
+        var strategiesList = new HashSet<string>();
+        var defindexDeploymentsJson = await this.FetchDefindexDeployments();
+        if (defindexDeploymentsJson != null && defindexDeploymentsJson.ContainsKey("ids"))
+        {
+            var idsNode = defindexDeploymentsJson["ids"];
+            if (idsNode is JsonObject idsObject)
+            {
+                var id = idsObject.Where(x => x.Value != null && x.Value.ToString() == assetAllocation[0].StrategyAllocations[0].StrategyAddress);
+            }
+        }
+
+        var blendDeployConfig = await this.FetchBlendDeployConfig();
+
+
+
+        return 0.0m;
+    }
+
+}
