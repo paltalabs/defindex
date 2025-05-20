@@ -3,7 +3,23 @@ using StellarDotnetSdk.Responses.SorobanRpc;
 using StellarDotnetSdk.Soroban;
 using System.Text.Json.Nodes;
 
+public class PoolConfig
+{
+    public uint BStopRate { get; }
+    public uint MaxPositions { get; }
+    public ulong MinCollateral { get; } // Usamos SCInt128 para mantener la precisión de i128
+    public string OracleAddress { get; }
+    public uint Status { get; }
 
+    public PoolConfig(uint bStopRate, uint maxPositions, ulong minCollateral, string oracleAddress, uint status)
+    {
+        BStopRate = bStopRate;
+        MaxPositions = maxPositions;
+        MinCollateral = minCollateral;
+        OracleAddress = oracleAddress;
+        Status = status;
+    }
+}
 public class DefindexResponseParser
 {
     public static List<ManagedFundsResult> ParseManagedFundsResult(SimulateTransactionResponse response)
@@ -123,47 +139,403 @@ public class DefindexResponseParser
         return new List<TransactionResult> { response };
     }
   
-  List<string> FindBlendPoolAddresses(List<string> strategyIds, JsonArray blendStrategies)
-{
-    var blendPoolAddresses = new List<string>();
-
-    foreach (var strategyId in strategyIds)
+    public static PoolConfig? ParsePoolConfigResult(SimulateTransactionResponse response)
     {
-        foreach (var configEntryNode in blendStrategies)
+        if (response.Results == null || response.Results.Length == 0)
         {
-            if (configEntryNode is not JsonObject configEntry)
-                continue;
+            Console.WriteLine("No results found in SimulateTransactionResponse for PoolConfig.");
+            return null;
+        }
 
-            var strategyName = configEntry["name"]?.GetValue<string>();
-            var assetSymbol = configEntry["asset_symbol"]?.GetValue<string>();
-            var blendPoolName = configEntry["blend_pool_name"]?.GetValue<string>();
+        var xdrString = response.Results[0].Xdr;
 
-            if (string.IsNullOrEmpty(strategyName) ||
-                string.IsNullOrEmpty(assetSymbol) ||
-                string.IsNullOrEmpty(blendPoolName))
+        if (string.IsNullOrEmpty(xdrString))
+        {
+            Console.WriteLine("XDR string for PoolConfig is null or empty.");
+            return null;
+        }
+
+        try
+        {
+            var scVal = StellarDotnetSdk.Soroban.SCVal.FromXdrBase64(xdrString);
+
+            if (scVal is not SCMap poolConfigMap)
             {
-                Console.WriteLine($"Invalid config entry: {configEntry}");
-                continue;
+                Console.WriteLine("Expected SCMap for PoolConfig but received different type.");
+                return null;
             }
 
-            var expectedId = $"{assetSymbol.ToLowerInvariant()}_blend_{strategyName.ToLowerInvariant()}_{blendPoolName.ToLowerInvariant().Replace(" ", "_")}_strategy";
+            uint bStopRate = 0;
+            uint maxPositions = 0;
+            ulong minCollateral = 0;
+            string oracleAddress = string.Empty;
+            uint status = 0;
 
-            if (!strategyId.Equals(expectedId, StringComparison.OrdinalIgnoreCase))
-                continue;
+            foreach (var entry in poolConfigMap.Entries)
+            {
+                if (entry.Key is not SCSymbol keySymbol) continue;
 
-            var blendPoolAddress = configEntry["blend_pool_address"]?.GetValue<string>();
-            if (!string.IsNullOrEmpty(blendPoolAddress))
-            {
-                blendPoolAddresses.Add(blendPoolAddress);
-                break;
+                switch (keySymbol.InnerValue)
+                {
+                    case "bstop_rate":
+                        if (entry.Value is SCUint32 valBStopRate)
+                            bStopRate = valBStopRate.InnerValue;
+                        break;
+                    case "max_positions":
+                        if (entry.Value is SCUint32 valMaxPositions)
+                            maxPositions = valMaxPositions.InnerValue;
+                        break;
+                    case "min_collateral":
+                        if (entry.Value is SCInt128 valMinCollateral)
+                        {
+                            var tempCollateral = (SCInt128)SCInt128.FromSCValXdr(entry.Value.ToXdr());
+                            minCollateral = tempCollateral.Lo;
+                        }
+                        break;
+                    case "oracle":
+                        if (entry.Value is SCAddress valOracleAddress)
+                        {
+                            var tempOracleAddress = (SCContractId)SCContractId.FromSCValXdr(entry.Value.ToXdr());
+                            oracleAddress = tempOracleAddress.InnerValue;
+                        }
+                        else if (entry.Value is SCContractId valOracleContractId)
+                             oracleAddress = valOracleContractId.InnerValue;
+                        break;
+                    case "status":
+                        if (entry.Value is SCUint32 valStatus)
+                            status = valStatus.InnerValue;
+                        break;
+                }
             }
-            else
-            {
-                Console.WriteLine($"Blend pool address not found for strategy ID: {strategyId}");
-            }
+            return new PoolConfig(bStopRate, maxPositions, minCollateral, oracleAddress, status);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error parsing PoolConfig: {ex.Message}");
+            return null;
+        }
+    }
+ 
+    public class ReserveConfig
+    {
+        public uint CFactor { get; }
+        public uint Decimals { get; }
+        public bool Enabled { get; }
+        public uint Index { get; }
+        public uint LFactor { get; }
+        public uint MaxUtil { get; }
+        public uint RBase { get; }
+        public uint ROne { get; }
+        public uint RThree { get; }
+        public uint RTwo { get; }
+        public uint Reactivity { get; }
+        public SCInt128 SupplyCap { get; }
+        public uint Util { get; }
+
+        public ReserveConfig(uint cFactor, uint decimals, bool enabled, uint index, uint lFactor, uint maxUtil, uint rBase, uint rOne, uint rThree, uint rTwo, uint reactivity, SCInt128 supplyCap, uint util)
+        {
+            CFactor = cFactor;
+            Decimals = decimals;
+            Enabled = enabled;
+            Index = index;
+            LFactor = lFactor;
+            MaxUtil = maxUtil;
+            RBase = rBase;
+            ROne = rOne;
+            RThree = rThree;
+            RTwo = rTwo;
+            Reactivity = reactivity;
+            SupplyCap = supplyCap;
+            Util = util;
         }
     }
 
-    return blendPoolAddresses;
-}
+    public class ReserveData
+    {
+        public SCInt128 BRate { get; }
+        public SCInt128 BSupply { get; }
+        public SCInt128 BackstopCredit { get; }
+        public SCInt128 DRate { get; }
+        public SCInt128 DSupply { get; }
+        public SCInt128 IrMod { get; }
+        public ulong LastTime { get; }
+
+        public ReserveData(SCInt128 bRate, SCInt128 bSupply, SCInt128 backstopCredit, SCInt128 dRate, SCInt128 dSupply, SCInt128 irMod, ulong lastTime)
+        {
+            BRate = bRate;
+            BSupply = bSupply;
+            BackstopCredit = backstopCredit;
+            DRate = dRate;
+            DSupply = dSupply;
+            IrMod = irMod;
+            LastTime = lastTime;
+        }
+    }
+
+    public class Reserve
+    {
+        public string Asset { get; }
+        public ReserveConfig? Config { get; }
+        public ReserveData? Data { get; }
+        public SCInt128 Scalar { get; }
+
+        public Reserve(string asset, ReserveConfig? config, ReserveData? data, SCInt128 scalar)
+        {
+            Asset = asset;
+            Config = config;
+            Data = data;
+            Scalar = scalar;
+        }
+    }
+
+    public static Reserve? ParseReserveResult(SimulateTransactionResponse response)
+    {
+        if (response.Results == null || response.Results.Length == 0)
+        {
+            Console.WriteLine("No results found in SimulateTransactionResponse for Reserve.");
+            return null;
+        }
+
+        var xdrString = response.Results[0].Xdr;
+        if (string.IsNullOrEmpty(xdrString))
+        {
+            Console.WriteLine("XDR string for Reserve is null or empty.");
+            return null;
+        }
+
+        try
+        {
+            var scVal = StellarDotnetSdk.Soroban.SCVal.FromXdrBase64(xdrString);
+            if (scVal is not SCMap reserveMap)
+            {
+                Console.WriteLine("Expected SCMap for Reserve but received different type.");
+                return null;
+            }
+
+            string asset = string.Empty;
+            ReserveConfig? config = null;
+            ReserveData? data = null;
+            SCInt128 scalar = new SCInt128(0, 0);
+
+            foreach (var entry in reserveMap.Entries)
+            {
+                if (entry.Key is not SCSymbol keySymbol) continue;
+                switch (keySymbol.InnerValue)
+                {
+                    case "asset":
+                        if (entry.Value is SCAddress scAddressValue){
+                            var tempAddress = (SCContractId)SCContractId.FromSCValXdr(entry.Value.ToXdr());
+                            asset = tempAddress.InnerValue;
+                        }
+                        else if (entry.Value is SCContractId scContractIdValue)
+                            asset = scContractIdValue.InnerValue;
+                        break;
+                    case "config":
+                        if (entry.Value is SCMap configMap)
+                            config = ParseReserveConfigMap(configMap);
+                        break;
+                    case "data":
+                        if (entry.Value is SCMap dataMap)
+                            data = ParseReserveDataMap(dataMap);
+                        break;
+                    case "scalar":
+                        if (entry.Value is SCInt128 scalarVal)
+                            scalar = scalarVal;
+                        break;
+                }
+            }
+
+            if (string.IsNullOrEmpty(asset) || config == null || data == null)
+            {
+                Console.WriteLine($"Failed to parse all required fields for Reserve. Asset: {!string.IsNullOrEmpty(asset)}, Config: {config != null}, Data: {data != null}");
+                return null;
+            }
+
+            return new Reserve(asset, config, data, scalar);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error parsing Reserve: {ex.Message}");
+            return null;
+        }
+    }
+
+    private static ReserveConfig? ParseReserveConfigMap(SCMap configMap)
+    {
+        uint cFactor = 0;
+        uint decimals = 0;
+        bool enabled = false;
+        uint index = 0;
+        uint lFactor = 0;
+        uint maxUtil = 0;
+        uint rBase = 0;
+        uint rOne = 0;
+        uint rThree = 0;
+        uint rTwo = 0;
+        uint reactivity = 0;
+        SCInt128 supplyCap = new SCInt128(0, 0);
+        uint util = 0;
+
+        foreach (var entry in configMap.Entries)
+        {
+            if (entry.Key is not SCSymbol keySymbol) continue;
+            switch (keySymbol.InnerValue)
+            {
+                case "c_factor":
+                    if (entry.Value is SCUint32 valCFactor) cFactor = valCFactor.InnerValue;
+                    break;
+                case "decimals":
+                    if (entry.Value is SCUint32 valDecimals) decimals = valDecimals.InnerValue;
+                    break;
+                case "enabled":
+                    if (entry.Value is SCBool valEnabled) enabled = valEnabled.InnerValue;
+                    break;
+                case "index":
+                    if (entry.Value is SCUint32 valIndex) index = valIndex.InnerValue;
+                    break;
+                case "l_factor":
+                    if (entry.Value is SCUint32 valLFactor) lFactor = valLFactor.InnerValue;
+                    break;
+                case "max_util":
+                    if (entry.Value is SCUint32 valMaxUtil) maxUtil = valMaxUtil.InnerValue;
+                    break;
+                case "r_base":
+                    if (entry.Value is SCUint32 valRBase) rBase = valRBase.InnerValue;
+                    break;
+                case "r_one":
+                    if (entry.Value is SCUint32 valROne) rOne = valROne.InnerValue;
+                    break;
+                case "r_three":
+                    if (entry.Value is SCUint32 valRThree) rThree = valRThree.InnerValue;
+                    break;
+                case "r_two":
+                    if (entry.Value is SCUint32 valRTwo) rTwo = valRTwo.InnerValue;
+                    break;
+                case "reactivity":
+                    if (entry.Value is SCUint32 valReactivity) reactivity = valReactivity.InnerValue;
+                    break;
+                case "supply_cap":
+                    if (entry.Value is SCInt128 valSupplyCap) supplyCap = valSupplyCap;
+                    break;
+                case "util":
+                    if (entry.Value is SCUint32 valUtil) util = valUtil.InnerValue;
+                    break;
+            }
+        }
+        return new ReserveConfig(cFactor, decimals, enabled, index, lFactor, maxUtil, rBase, rOne, rThree, rTwo, reactivity, supplyCap, util);
+    }
+
+    private static ReserveData? ParseReserveDataMap(SCMap dataMap)
+    {
+        SCInt128 bRate = new SCInt128(0, 0);
+        SCInt128 bSupply = new SCInt128(0, 0);
+        SCInt128 backstopCredit = new SCInt128(0, 0);
+        SCInt128 dRate = new SCInt128(0, 0);
+        SCInt128 dSupply = new SCInt128(0, 0);
+        SCInt128 irMod = new SCInt128(0, 0);
+        ulong lastTime = 0;
+
+        foreach (var entry in dataMap.Entries)
+        {
+            if (entry.Key is not SCSymbol keySymbol) continue;
+            switch (keySymbol.InnerValue)
+            {
+                case "b_rate":
+                    if (entry.Value is SCInt128 valBRate) bRate = valBRate;
+                    break;
+                case "b_supply":
+                    if (entry.Value is SCInt128 valBSupply) bSupply = valBSupply;
+                    break;
+                case "backstop_credit":
+                    if (entry.Value is SCInt128 valBackstopCredit) backstopCredit = valBackstopCredit;
+                    break;
+                case "d_rate":
+                    if (entry.Value is SCInt128 valDRate) dRate = valDRate;
+                    break;
+                case "d_supply":
+                    if (entry.Value is SCInt128 valDSupply) dSupply = valDSupply;
+                    break;
+                case "ir_mod":
+                    if (entry.Value is SCInt128 valIrMod) irMod = valIrMod;
+                    break;
+                case "last_time":
+                    if (entry.Value is SCUint64 valLastTime) lastTime = valLastTime.InnerValue;
+                    break;
+            }
+        }
+        return new ReserveData(bRate, bSupply, backstopCredit, dRate, dSupply, irMod, lastTime);
+    }
+
+    public class ReserveEmissionData
+    {
+        public ulong Eps { get; }
+        public ulong Expiration { get; }
+        public SCInt128 Index { get; }
+        public ulong LastTime { get; }
+
+        public ReserveEmissionData(ulong eps, ulong expiration, SCInt128 index, ulong lastTime)
+        {
+            Eps = eps;
+            Expiration = expiration;
+            Index = index;
+            LastTime = lastTime;
+        }
+    }
+
+    public static ReserveEmissionData? ParseReserveEmissionData(SimulateTransactionResponse response)
+    {
+        if (response.Results == null || response.Results.Length == 0)
+        {
+            Console.WriteLine("No results found in SimulateTransactionResponse for ReserveEmissionData.");
+            return null;
+        }
+
+        var xdrString = response.Results[0].Xdr;
+        if (string.IsNullOrEmpty(xdrString))
+        {
+            Console.WriteLine("XDR string for ReserveEmissionData is null or empty.");
+            return null;
+        }
+
+        try
+        {
+            var scVal = StellarDotnetSdk.Soroban.SCVal.FromXdrBase64(xdrString);
+            if (scVal is not SCMap emissionMap)
+            {
+                Console.WriteLine("Expected SCMap for ReserveEmissionData but received different type.");
+                return null;
+            }
+
+            ulong eps = 0;
+            ulong expiration = 0;
+            SCInt128 index = new SCInt128(0, 0);
+            ulong lastTime = 0;
+
+            foreach (var entry in emissionMap.Entries)
+            {
+                if (entry.Key is not SCSymbol keySymbol) continue;
+                switch (keySymbol.InnerValue)
+                {
+                    case "eps":
+                        if (entry.Value is SCUint64 valEps) eps = valEps.InnerValue;
+                        break;
+                    case "expiration":
+                        if (entry.Value is SCUint64 valExpiration) expiration = valExpiration.InnerValue;
+                        break;
+                    case "index":
+                        if (entry.Value is SCInt128 valIndex) index = valIndex;
+                        break;
+                    case "last_time":
+                        if (entry.Value is SCUint64 valLastTime) lastTime = valLastTime.InnerValue;
+                        break;
+                }
+            }
+            return new ReserveEmissionData(eps, expiration, index, lastTime);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error parsing ReserveEmissionData: {ex.Message}");
+            return null;
+        }
+    }
 }
