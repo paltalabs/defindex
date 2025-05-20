@@ -216,4 +216,253 @@ public class DefindexResponseParser
         }
     }
  
+    public class ReserveConfig
+    {
+        public uint CFactor { get; }
+        public uint Decimals { get; }
+        public bool Enabled { get; }
+        public uint Index { get; }
+        public uint LFactor { get; }
+        public uint MaxUtil { get; }
+        public uint RBase { get; }
+        public uint ROne { get; }
+        public uint RThree { get; }
+        public uint RTwo { get; }
+        public uint Reactivity { get; }
+        public SCInt128 SupplyCap { get; }
+        public uint Util { get; }
+
+        public ReserveConfig(uint cFactor, uint decimals, bool enabled, uint index, uint lFactor, uint maxUtil, uint rBase, uint rOne, uint rThree, uint rTwo, uint reactivity, SCInt128 supplyCap, uint util)
+        {
+            CFactor = cFactor;
+            Decimals = decimals;
+            Enabled = enabled;
+            Index = index;
+            LFactor = lFactor;
+            MaxUtil = maxUtil;
+            RBase = rBase;
+            ROne = rOne;
+            RThree = rThree;
+            RTwo = rTwo;
+            Reactivity = reactivity;
+            SupplyCap = supplyCap;
+            Util = util;
+        }
+    }
+
+    public class ReserveData
+    {
+        public SCInt128 BRate { get; }
+        public SCInt128 BSupply { get; }
+        public SCInt128 BackstopCredit { get; }
+        public SCInt128 DRate { get; }
+        public SCInt128 DSupply { get; }
+        public SCInt128 IrMod { get; }
+        public ulong LastTime { get; }
+
+        public ReserveData(SCInt128 bRate, SCInt128 bSupply, SCInt128 backstopCredit, SCInt128 dRate, SCInt128 dSupply, SCInt128 irMod, ulong lastTime)
+        {
+            BRate = bRate;
+            BSupply = bSupply;
+            BackstopCredit = backstopCredit;
+            DRate = dRate;
+            DSupply = dSupply;
+            IrMod = irMod;
+            LastTime = lastTime;
+        }
+    }
+
+    public class Reserve
+    {
+        public string Asset { get; }
+        public ReserveConfig? Config { get; }
+        public ReserveData? Data { get; }
+        public SCInt128 Scalar { get; }
+
+        public Reserve(string asset, ReserveConfig? config, ReserveData? data, SCInt128 scalar)
+        {
+            Asset = asset;
+            Config = config;
+            Data = data;
+            Scalar = scalar;
+        }
+    }
+
+    public static Reserve? ParseReserveResult(SimulateTransactionResponse response)
+    {
+        if (response.Results == null || response.Results.Length == 0)
+        {
+            Console.WriteLine("No results found in SimulateTransactionResponse for Reserve.");
+            return null;
+        }
+
+        var xdrString = response.Results[0].Xdr;
+        if (string.IsNullOrEmpty(xdrString))
+        {
+            Console.WriteLine("XDR string for Reserve is null or empty.");
+            return null;
+        }
+
+        try
+        {
+            var scVal = StellarDotnetSdk.Soroban.SCVal.FromXdrBase64(xdrString);
+            if (scVal is not SCMap reserveMap)
+            {
+                Console.WriteLine("Expected SCMap for Reserve but received different type.");
+                return null;
+            }
+
+            string asset = string.Empty;
+            ReserveConfig? config = null;
+            ReserveData? data = null;
+            SCInt128 scalar = new SCInt128(0, 0);
+
+            foreach (var entry in reserveMap.Entries)
+            {
+                if (entry.Key is not SCSymbol keySymbol) continue;
+                switch (keySymbol.InnerValue)
+                {
+                    case "asset":
+                        if (entry.Value is SCAddress scAddressValue){
+                            var tempAddress = (SCContractId)SCContractId.FromSCValXdr(entry.Value.ToXdr());
+                            asset = tempAddress.InnerValue;
+                        }
+                        else if (entry.Value is SCContractId scContractIdValue)
+                            asset = scContractIdValue.InnerValue;
+                        break;
+                    case "config":
+                        if (entry.Value is SCMap configMap)
+                            config = ParseReserveConfigMap(configMap);
+                        break;
+                    case "data":
+                        if (entry.Value is SCMap dataMap)
+                            data = ParseReserveDataMap(dataMap);
+                        break;
+                    case "scalar":
+                        if (entry.Value is SCInt128 scalarVal)
+                            scalar = scalarVal;
+                        break;
+                }
+            }
+
+            if (string.IsNullOrEmpty(asset) || config == null || data == null)
+            {
+                Console.WriteLine($"Failed to parse all required fields for Reserve. Asset: {!string.IsNullOrEmpty(asset)}, Config: {config != null}, Data: {data != null}");
+                return null;
+            }
+
+            return new Reserve(asset, config, data, scalar);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error parsing Reserve: {ex.Message}");
+            return null;
+        }
+    }
+
+    private static ReserveConfig? ParseReserveConfigMap(SCMap configMap)
+    {
+        uint cFactor = 0;
+        uint decimals = 0;
+        bool enabled = false;
+        uint index = 0;
+        uint lFactor = 0;
+        uint maxUtil = 0;
+        uint rBase = 0;
+        uint rOne = 0;
+        uint rThree = 0;
+        uint rTwo = 0;
+        uint reactivity = 0;
+        SCInt128 supplyCap = new SCInt128(0, 0);
+        uint util = 0;
+
+        foreach (var entry in configMap.Entries)
+        {
+            if (entry.Key is not SCSymbol keySymbol) continue;
+            switch (keySymbol.InnerValue)
+            {
+                case "c_factor":
+                    if (entry.Value is SCUint32 valCFactor) cFactor = valCFactor.InnerValue;
+                    break;
+                case "decimals":
+                    if (entry.Value is SCUint32 valDecimals) decimals = valDecimals.InnerValue;
+                    break;
+                case "enabled":
+                    if (entry.Value is SCBool valEnabled) enabled = valEnabled.InnerValue;
+                    break;
+                case "index":
+                    if (entry.Value is SCUint32 valIndex) index = valIndex.InnerValue;
+                    break;
+                case "l_factor":
+                    if (entry.Value is SCUint32 valLFactor) lFactor = valLFactor.InnerValue;
+                    break;
+                case "max_util":
+                    if (entry.Value is SCUint32 valMaxUtil) maxUtil = valMaxUtil.InnerValue;
+                    break;
+                case "r_base":
+                    if (entry.Value is SCUint32 valRBase) rBase = valRBase.InnerValue;
+                    break;
+                case "r_one":
+                    if (entry.Value is SCUint32 valROne) rOne = valROne.InnerValue;
+                    break;
+                case "r_three":
+                    if (entry.Value is SCUint32 valRThree) rThree = valRThree.InnerValue;
+                    break;
+                case "r_two":
+                    if (entry.Value is SCUint32 valRTwo) rTwo = valRTwo.InnerValue;
+                    break;
+                case "reactivity":
+                    if (entry.Value is SCUint32 valReactivity) reactivity = valReactivity.InnerValue;
+                    break;
+                case "supply_cap":
+                    if (entry.Value is SCInt128 valSupplyCap) supplyCap = valSupplyCap;
+                    break;
+                case "util":
+                    if (entry.Value is SCUint32 valUtil) util = valUtil.InnerValue;
+                    break;
+            }
+        }
+        return new ReserveConfig(cFactor, decimals, enabled, index, lFactor, maxUtil, rBase, rOne, rThree, rTwo, reactivity, supplyCap, util);
+    }
+
+    private static ReserveData? ParseReserveDataMap(SCMap dataMap)
+    {
+        SCInt128 bRate = new SCInt128(0, 0);
+        SCInt128 bSupply = new SCInt128(0, 0);
+        SCInt128 backstopCredit = new SCInt128(0, 0);
+        SCInt128 dRate = new SCInt128(0, 0);
+        SCInt128 dSupply = new SCInt128(0, 0);
+        SCInt128 irMod = new SCInt128(0, 0);
+        ulong lastTime = 0;
+
+        foreach (var entry in dataMap.Entries)
+        {
+            if (entry.Key is not SCSymbol keySymbol) continue;
+            switch (keySymbol.InnerValue)
+            {
+                case "b_rate":
+                    if (entry.Value is SCInt128 valBRate) bRate = valBRate;
+                    break;
+                case "b_supply":
+                    if (entry.Value is SCInt128 valBSupply) bSupply = valBSupply;
+                    break;
+                case "backstop_credit":
+                    if (entry.Value is SCInt128 valBackstopCredit) backstopCredit = valBackstopCredit;
+                    break;
+                case "d_rate":
+                    if (entry.Value is SCInt128 valDRate) dRate = valDRate;
+                    break;
+                case "d_supply":
+                    if (entry.Value is SCInt128 valDSupply) dSupply = valDSupply;
+                    break;
+                case "ir_mod":
+                    if (entry.Value is SCInt128 valIrMod) irMod = valIrMod;
+                    break;
+                case "last_time":
+                    if (entry.Value is SCUint64 valLastTime) lastTime = valLastTime.InnerValue;
+                    break;
+            }
+        }
+        return new ReserveData(bRate, bSupply, backstopCredit, dRate, dSupply, irMod, lastTime);
+    }
 }

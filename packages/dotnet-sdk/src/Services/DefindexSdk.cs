@@ -13,6 +13,7 @@ using StellarDotnetSdk.Responses.SorobanRpc;
 using System.Net.Http;
 using System.Text.Json.Nodes;
 using Newtonsoft.Json;
+using StellarDotnetSdk.Assets;
 
 public class DefindexSdk : IDefindexSdk
 {
@@ -352,16 +353,31 @@ public class DefindexSdk : IDefindexSdk
             return null;
 
         var blendPoolAddressesFound = FindBlendPoolAddresses(strategiesIds, blendStrategiesArray);
-        foreach (var pool in blendPoolAddressesFound)
+        /* foreach (var pool in blendPoolAddressesFound)
         {
-            var result = await CallContractMethod(pool, "get_config", new SCVal[] { });
-            if (result is null || result.Error != null || result.Results == null || result.Results.Count() == 0)
+            var blendPoolConfig = await CallContractMethod(pool, "get_config", new SCVal[] { });
+            if (blendPoolConfig is null || blendPoolConfig.Error != null || blendPoolConfig.Results == null || blendPoolConfig.Results.Count() == 0)
             {
-                Console.WriteLine($"Error calling get_config on pool {pool}: {result?.Error}");
+                Console.WriteLine($"Error calling get_config on pool {pool}: {blendPoolConfig?.Error}");
                 continue;
             }
-            var parsedResponse = DefindexResponseParser.ParsePoolConfigResult(result);
+            var parsedResponse = DefindexResponseParser.ParsePoolConfigResult(blendPoolConfig);
             Console.WriteLine($"Parsed PoolConfig: {JsonConvert.SerializeObject(parsedResponse, Formatting.Indented)}");
+        } */
+        foreach (var pool in blendPoolAddressesFound)
+        {
+            var args = new SCVal[] { 
+                new SCContractId(assetAllocation[0].Asset!),
+            };
+            var blendPoolReserves = await CallContractMethod(pool, "get_reserve", args);
+            if (blendPoolReserves is null || blendPoolReserves.Error != null || blendPoolReserves.Results == null || blendPoolReserves.Results.Count() == 0)
+            {
+                Console.WriteLine($"Error calling get_reserves on pool {pool}: {blendPoolReserves?.Error}");
+                continue;
+            }
+            Console.WriteLine($"blendPoolReserves: {blendPoolReserves.Results[0].Xdr}");
+            var parsedResponse = DefindexResponseParser.ParseReserveResult(blendPoolReserves);
+            Console.WriteLine($"Parsed pool reserves: {JsonConvert.SerializeObject(parsedResponse, Formatting.Indented)}");
         }
 
         return 0.0m;
