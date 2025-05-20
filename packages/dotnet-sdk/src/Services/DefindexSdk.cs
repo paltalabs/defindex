@@ -3,6 +3,7 @@ using StellarDotnetSdk.Operations;
 using StellarDotnetSdk.Transactions;
 using StellarDotnetSdk.Accounts;
 using DeFindex.Sdk.Interfaces;
+using DeFindex.Sdk.Services;
 
 namespace DeFindex.Sdk.Services;
 
@@ -354,6 +355,7 @@ public class DefindexSdk : IDefindexSdk
         var blendPoolAddressesFound = FindBlendPoolAddresses(strategiesIds, blendStrategiesArray);
 
         Console.WriteLine("Found Blend Pool Addresses: " + string.Join(", ", blendPoolAddressesFound));
+        // var apy = Utils.calculateAPY();
         return 0.0m;
     }
 
