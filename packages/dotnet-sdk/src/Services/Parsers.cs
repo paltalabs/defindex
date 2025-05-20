@@ -3,7 +3,23 @@ using StellarDotnetSdk.Responses.SorobanRpc;
 using StellarDotnetSdk.Soroban;
 using System.Text.Json.Nodes;
 
+public class PoolConfig
+{
+    public uint BStopRate { get; }
+    public uint MaxPositions { get; }
+    public ulong MinCollateral { get; } // Usamos SCInt128 para mantener la precisión de i128
+    public string OracleAddress { get; }
+    public uint Status { get; }
 
+    public PoolConfig(uint bStopRate, uint maxPositions, ulong minCollateral, string oracleAddress, uint status)
+    {
+        BStopRate = bStopRate;
+        MaxPositions = maxPositions;
+        MinCollateral = minCollateral;
+        OracleAddress = oracleAddress;
+        Status = status;
+    }
+}
 public class DefindexResponseParser
 {
     public static List<ManagedFundsResult> ParseManagedFundsResult(SimulateTransactionResponse response)
@@ -123,47 +139,81 @@ public class DefindexResponseParser
         return new List<TransactionResult> { response };
     }
   
-  List<string> FindBlendPoolAddresses(List<string> strategyIds, JsonArray blendStrategies)
-{
-    var blendPoolAddresses = new List<string>();
-
-    foreach (var strategyId in strategyIds)
+    public static PoolConfig? ParsePoolConfigResult(SimulateTransactionResponse response)
     {
-        foreach (var configEntryNode in blendStrategies)
+        if (response.Results == null || response.Results.Length == 0)
         {
-            if (configEntryNode is not JsonObject configEntry)
-                continue;
+            Console.WriteLine("No results found in SimulateTransactionResponse for PoolConfig.");
+            return null;
+        }
 
-            var strategyName = configEntry["name"]?.GetValue<string>();
-            var assetSymbol = configEntry["asset_symbol"]?.GetValue<string>();
-            var blendPoolName = configEntry["blend_pool_name"]?.GetValue<string>();
+        var xdrString = response.Results[0].Xdr;
 
-            if (string.IsNullOrEmpty(strategyName) ||
-                string.IsNullOrEmpty(assetSymbol) ||
-                string.IsNullOrEmpty(blendPoolName))
+        if (string.IsNullOrEmpty(xdrString))
+        {
+            Console.WriteLine("XDR string for PoolConfig is null or empty.");
+            return null;
+        }
+
+        try
+        {
+            var scVal = StellarDotnetSdk.Soroban.SCVal.FromXdrBase64(xdrString);
+
+            if (scVal is not SCMap poolConfigMap)
             {
-                Console.WriteLine($"Invalid config entry: {configEntry}");
-                continue;
+                Console.WriteLine("Expected SCMap for PoolConfig but received different type.");
+                return null;
             }
 
-            var expectedId = $"{assetSymbol.ToLowerInvariant()}_blend_{strategyName.ToLowerInvariant()}_{blendPoolName.ToLowerInvariant().Replace(" ", "_")}_strategy";
+            uint bStopRate = 0;
+            uint maxPositions = 0;
+            ulong minCollateral = 0;
+            string oracleAddress = string.Empty;
+            uint status = 0;
 
-            if (!strategyId.Equals(expectedId, StringComparison.OrdinalIgnoreCase))
-                continue;
+            foreach (var entry in poolConfigMap.Entries)
+            {
+                if (entry.Key is not SCSymbol keySymbol) continue;
 
-            var blendPoolAddress = configEntry["blend_pool_address"]?.GetValue<string>();
-            if (!string.IsNullOrEmpty(blendPoolAddress))
-            {
-                blendPoolAddresses.Add(blendPoolAddress);
-                break;
+                switch (keySymbol.InnerValue)
+                {
+                    case "bstop_rate":
+                        if (entry.Value is SCUint32 valBStopRate)
+                            bStopRate = valBStopRate.InnerValue;
+                        break;
+                    case "max_positions":
+                        if (entry.Value is SCUint32 valMaxPositions)
+                            maxPositions = valMaxPositions.InnerValue;
+                        break;
+                    case "min_collateral":
+                        if (entry.Value is SCInt128 valMinCollateral)
+                        {
+                            var tempCollateral = (SCInt128)SCInt128.FromSCValXdr(entry.Value.ToXdr());
+                            minCollateral = tempCollateral.Lo;
+                        }
+                        break;
+                    case "oracle":
+                        if (entry.Value is SCAddress valOracleAddress)
+                        {
+                            var tempOracleAddress = (SCContractId)SCContractId.FromSCValXdr(entry.Value.ToXdr());
+                            oracleAddress = tempOracleAddress.InnerValue;
+                        }
+                        else if (entry.Value is SCContractId valOracleContractId)
+                             oracleAddress = valOracleContractId.InnerValue;
+                        break;
+                    case "status":
+                        if (entry.Value is SCUint32 valStatus)
+                            status = valStatus.InnerValue;
+                        break;
+                }
             }
-            else
-            {
-                Console.WriteLine($"Blend pool address not found for strategy ID: {strategyId}");
-            }
+            return new PoolConfig(bStopRate, maxPositions, minCollateral, oracleAddress, status);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error parsing PoolConfig: {ex.Message}");
+            return null;
         }
     }
-
-    return blendPoolAddresses;
-}
+ 
 }

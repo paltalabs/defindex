@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using StellarDotnetSdk.Responses.SorobanRpc;
 using System.Net.Http;
 using System.Text.Json.Nodes;
+using Newtonsoft.Json;
 
 public class DefindexSdk : IDefindexSdk
 {
@@ -316,7 +317,7 @@ public class DefindexSdk : IDefindexSdk
         return strategiesIds;
     }
 
-    public async Task<bool?> CallContractMethod(string contractAddress, string methodName, SCVal[] args)
+    public async Task<SimulateTransactionResponse?> CallContractMethod(string contractAddress, string methodName, SCVal[] args)
     {
         var keypair = KeyPair.Random();
         var loadedAccount = new Account(keypair.AccountId, 0);
@@ -324,13 +325,12 @@ public class DefindexSdk : IDefindexSdk
         var transaction = new TransactionBuilder(loadedAccount)
             .AddOperation(invokeContractOperation)
             .Build();
-
-        var simulatedTransaction = await this.Server.SimulateTransaction(transaction);
+        var simulatedTransaction = (SimulateTransactionResponse) await this.Server.SimulateTransaction(transaction);
         if (simulatedTransaction.Error != null || simulatedTransaction.Results == null || simulatedTransaction.Results.Count() == 0)
         {
             throw new Exception($"Error calling contract method: {simulatedTransaction.Error}");
         }
-        return true;
+        return simulatedTransaction;
     }
     
     public async Task<decimal?> GetVaultAPY()
@@ -352,8 +352,18 @@ public class DefindexSdk : IDefindexSdk
             return null;
 
         var blendPoolAddressesFound = FindBlendPoolAddresses(strategiesIds, blendStrategiesArray);
+        foreach (var pool in blendPoolAddressesFound)
+        {
+            var result = await CallContractMethod(pool, "get_config", new SCVal[] { });
+            if (result is null || result.Error != null || result.Results == null || result.Results.Count() == 0)
+            {
+                Console.WriteLine($"Error calling get_config on pool {pool}: {result?.Error}");
+                continue;
+            }
+            var parsedResponse = DefindexResponseParser.ParsePoolConfigResult(result);
+            Console.WriteLine($"Parsed PoolConfig: {JsonConvert.SerializeObject(parsedResponse, Formatting.Indented)}");
+        }
 
-        Console.WriteLine("Found Blend Pool Addresses: " + string.Join(", ", blendPoolAddressesFound));
         return 0.0m;
     }
 
