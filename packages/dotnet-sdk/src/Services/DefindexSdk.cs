@@ -244,7 +244,7 @@ public class DefindexSdk : IDefindexSdk
         Console.WriteLine($"PoolConfigDict: {JsonConvert.SerializeObject(poolConfigDict, Formatting.Indented)}");
 
         // Uncomment the following lines to fetch pool reserves
-        var reserveDataDict = new Dictionary<string, DefindexResponseParser.Reserve>();
+        var reserveDataDict = new Dictionary<string, Reserve>();
         foreach (var pool in blendPoolAddressesFound)
         {
             var args = new SCVal[] { 
@@ -264,7 +264,7 @@ public class DefindexSdk : IDefindexSdk
         Console.WriteLine($"ReserveDataDict: {JsonConvert.SerializeObject(reserveDataDict, Formatting.Indented)}");
 
         // Uncomment the following lines to fetch reserve emissions
-        var reserveEmissionsDict = new Dictionary<string, DefindexResponseParser.ReserveEmissionData>();
+        var reserveEmissionsDict = new Dictionary<string, ReserveEmissionData>();
         foreach (var pool in blendPoolAddressesFound)
         {
             var args = new SCVal[] { 

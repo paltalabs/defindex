@@ -1,4 +1,5 @@
 using System;
+using StellarDotnetSdk.Soroban;
 
 namespace DeFindex.Sdk.Services
 {
@@ -43,29 +44,59 @@ namespace DeFindex.Sdk.Services
     }
 
     /// <summary>
-    /// Represents the emission data for the reserve b or d token
+    /// Represents the configuration for a reserve
     /// </summary>
-    public class ReserveEmissionData
+    public class ReserveConfig
     {
-        /// <summary>
-        /// The expiration timestamp of the emission
-        /// </summary>
-        public long Expiration { get; set; }
+        public uint CFactor { get; }
+        public uint Decimals { get; }
+        public bool Enabled { get; }
+        public uint Index { get; }
+        public uint LFactor { get; }
+        public uint MaxUtil { get; }
+        public uint RBase { get; }
+        public uint ROne { get; }
+        public uint RThree { get; }
+        public uint RTwo { get; }
+        public uint Reactivity { get; }
+        public SCInt128 SupplyCap { get; }
+        public uint Util { get; }
 
-        /// <summary>
-        /// The emission per second rate
-        /// </summary>
-        public ulong Eps { get; set; }
+        public ReserveConfig(uint cFactor, uint decimals, bool enabled, uint index, uint lFactor, uint maxUtil, uint rBase, uint rOne, uint rThree, uint rTwo, uint reactivity, SCInt128 supplyCap, uint util)
+        {
+            CFactor = cFactor;
+            Decimals = decimals;
+            Enabled = enabled;
+            Index = index;
+            LFactor = lFactor;
+            MaxUtil = maxUtil;
+            RBase = rBase;
+            ROne = rOne;
+            RThree = rThree;
+            RTwo = rTwo;
+            Reactivity = reactivity;
+            SupplyCap = supplyCap;
+            Util = util;
+        }
+    }
 
-        /// <summary>
-        /// The current emission index
-        /// </summary>
-        public long Index { get; set; }
+    /// <summary>
+    /// Represents a reserve in the system
+    /// </summary>
+    public class Reserve
+    {
+        public string Asset { get; }
+        public ReserveConfig? Config { get; }
+        public ReserveData? Data { get; }
+        public SCInt128 Scalar { get; }
 
-        /// <summary>
-        /// The last time the emission data was updated
-        /// </summary>
-        public long LastTime { get; set; }
+        public Reserve(string asset, ReserveConfig? config, ReserveData? data, SCInt128 scalar)
+        {
+            Asset = asset;
+            Config = config;
+            Data = data;
+            Scalar = scalar;
+        }
     }
 
     /// <summary>
@@ -74,38 +105,102 @@ namespace DeFindex.Sdk.Services
     public class ReserveData
     {
         /// <summary>
-        /// The conversion rate from dToken to underlying with 12 decimals
-        /// </summary>
-        public long DRate { get; set; }
-
-        /// <summary>
         /// The conversion rate from bToken to underlying with 12 decimals
         /// </summary>
-        public long BRate { get; set; }
-
-        /// <summary>
-        /// The interest rate curve modifier with 7 decimals
-        /// </summary>
-        public long IrMod { get; set; }
+        public SCInt128 BRate { get; set; }
 
         /// <summary>
         /// The total supply of b tokens, in the underlying token's decimals
         /// </summary>
-        public long BSupply { get; set; }
-
-        /// <summary>
-        /// The total supply of d tokens, in the underlying token's decimals
-        /// </summary>
-        public long DSupply { get; set; }
+        public SCInt128 BSupply { get; set; }
 
         /// <summary>
         /// The amount of underlying tokens currently owed to the backstop
         /// </summary>
-        public long BackstopCredit { get; set; }
+        public SCInt128 BackstopCredit { get; set; }
+
+        /// <summary>
+        /// The conversion rate from dToken to underlying with 12 decimals
+        /// </summary>
+        public SCInt128 DRate { get; set; }
+
+        /// <summary>
+        /// The total supply of d tokens, in the underlying token's decimals
+        /// </summary>
+        public SCInt128 DSupply { get; set; }
+
+        /// <summary>
+        /// The interest rate curve modifier with 7 decimals
+        /// </summary>
+        public SCInt128 IrMod { get; set; }
 
         /// <summary>
         /// The last time the reserve data was updated
         /// </summary>
-        public long LastTime { get; set; }
+        public ulong LastTime { get; set; }
+
+        public ReserveData()
+        {
+            BRate = new SCInt128(0, 0);
+            BSupply = new SCInt128(0, 0);
+            BackstopCredit = new SCInt128(0, 0);
+            DRate = new SCInt128(0, 0);
+            DSupply = new SCInt128(0, 0);
+            IrMod = new SCInt128(0, 0);
+            LastTime = 0;
+        }
+
+        public ReserveData(SCInt128 bRate, SCInt128 bSupply, SCInt128 backstopCredit, SCInt128 dRate, SCInt128 dSupply, SCInt128 irMod, ulong lastTime)
+        {
+            BRate = bRate;
+            BSupply = bSupply;
+            BackstopCredit = backstopCredit;
+            DRate = dRate;
+            DSupply = dSupply;
+            IrMod = irMod;
+            LastTime = lastTime;
+        }
+    }
+
+    /// <summary>
+    /// Represents the emission data for the reserve b or d token
+    /// </summary>
+    public class ReserveEmissionData
+    {
+        /// <summary>
+        /// The emission per second rate
+        /// </summary>
+        public SCUint64 Eps { get; set; }
+
+        /// <summary>
+        /// The expiration timestamp of the emission
+        /// </summary>
+        public ulong Expiration { get; set; }
+
+        /// <summary>
+        /// The current emission index
+        /// </summary>
+        public SCInt128 Index { get; set; }
+
+        /// <summary>
+        /// The last time the emission data was updated
+        /// </summary>
+        public ulong LastTime { get; set; }
+
+        public ReserveEmissionData()
+        {
+            Eps = new SCUint64(0);
+            Expiration = 0;
+            Index = new SCInt128(0, 0);
+            LastTime = 0;
+        }
+
+        public ReserveEmissionData(SCUint64 eps, ulong expiration, SCInt128 index, ulong lastTime)
+        {
+            Eps = eps;
+            Expiration = expiration;
+            Index = index;
+            LastTime = lastTime;
+        }
     }
 } 

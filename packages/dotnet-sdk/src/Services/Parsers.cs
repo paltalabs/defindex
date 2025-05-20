@@ -199,78 +199,6 @@ public class DefindexResponseParser
             return null;
         }
     }
- 
-    public class ReserveConfig
-    {
-        public uint CFactor { get; }
-        public uint Decimals { get; }
-        public bool Enabled { get; }
-        public uint Index { get; }
-        public uint LFactor { get; }
-        public uint MaxUtil { get; }
-        public uint RBase { get; }
-        public uint ROne { get; }
-        public uint RThree { get; }
-        public uint RTwo { get; }
-        public uint Reactivity { get; }
-        public SCInt128 SupplyCap { get; }
-        public uint Util { get; }
-
-        public ReserveConfig(uint cFactor, uint decimals, bool enabled, uint index, uint lFactor, uint maxUtil, uint rBase, uint rOne, uint rThree, uint rTwo, uint reactivity, SCInt128 supplyCap, uint util)
-        {
-            CFactor = cFactor;
-            Decimals = decimals;
-            Enabled = enabled;
-            Index = index;
-            LFactor = lFactor;
-            MaxUtil = maxUtil;
-            RBase = rBase;
-            ROne = rOne;
-            RThree = rThree;
-            RTwo = rTwo;
-            Reactivity = reactivity;
-            SupplyCap = supplyCap;
-            Util = util;
-        }
-    }
-
-    public class ReserveData
-    {
-        public SCInt128 BRate { get; }
-        public SCInt128 BSupply { get; }
-        public SCInt128 BackstopCredit { get; }
-        public SCInt128 DRate { get; }
-        public SCInt128 DSupply { get; }
-        public SCInt128 IrMod { get; }
-        public ulong LastTime { get; }
-
-        public ReserveData(SCInt128 bRate, SCInt128 bSupply, SCInt128 backstopCredit, SCInt128 dRate, SCInt128 dSupply, SCInt128 irMod, ulong lastTime)
-        {
-            BRate = bRate;
-            BSupply = bSupply;
-            BackstopCredit = backstopCredit;
-            DRate = dRate;
-            DSupply = dSupply;
-            IrMod = irMod;
-            LastTime = lastTime;
-        }
-    }
-
-    public class Reserve
-    {
-        public string Asset { get; }
-        public ReserveConfig? Config { get; }
-        public ReserveData? Data { get; }
-        public SCInt128 Scalar { get; }
-
-        public Reserve(string asset, ReserveConfig? config, ReserveData? data, SCInt128 scalar)
-        {
-            Asset = asset;
-            Config = config;
-            Data = data;
-            Scalar = scalar;
-        }
-    }
 
     public static Reserve? ParseReserveResult(SimulateTransactionResponse response)
     {
@@ -450,22 +378,6 @@ public class DefindexResponseParser
         return new ReserveData(bRate, bSupply, backstopCredit, dRate, dSupply, irMod, lastTime);
     }
 
-    public class ReserveEmissionData
-    {
-        public ulong Eps { get; }
-        public ulong Expiration { get; }
-        public SCInt128 Index { get; }
-        public ulong LastTime { get; }
-
-        public ReserveEmissionData(ulong eps, ulong expiration, SCInt128 index, ulong lastTime)
-        {
-            Eps = eps;
-            Expiration = expiration;
-            Index = index;
-            LastTime = lastTime;
-        }
-    }
-
     public static ReserveEmissionData? ParseReserveEmissionData(SimulateTransactionResponse response)
     {
         if (response.Results == null || response.Results.Length == 0)
@@ -514,7 +426,7 @@ public class DefindexResponseParser
                         break;
                 }
             }
-            return new ReserveEmissionData(eps, expiration, index, lastTime);
+            return new ReserveEmissionData(new SCUint64(eps), expiration, index, lastTime);
         }
         catch (Exception ex)
         {
