@@ -205,7 +205,7 @@ public class DefindexSdk : IDefindexSdk
         return Task.FromResult(parsedResponse);
     }
 
-    public async Task<string?> FetchBlendDeployConfig()
+    public async Task<JsonObject?> FetchBlendDeployConfig()
     {
         using (var httpClient = new HttpClient())
         {
@@ -215,7 +215,7 @@ public class DefindexSdk : IDefindexSdk
                 _blendDeployConfigJson = await httpClient.GetStringAsync(jsonUrl);
                 Console.WriteLine("blend_deploy_config.json fetched successfully.");
                 // Puedes procesar el _blendDeployConfigJson aquí o simplemente devolverlo/usarlo.
-                return _blendDeployConfigJson;
+                return JsonNode.Parse(_blendDeployConfigJson)?.AsObject();
             }
             catch (HttpRequestException e)
             {
@@ -246,29 +246,94 @@ public class DefindexSdk : IDefindexSdk
             }
         }
     }
+    
+    List<string> FindBlendPoolAddresses(List<string> strategyIds, JsonArray blendStrategies)
+{
+    var blendPoolAddresses = new List<string>();
 
-    public async Task<decimal> GetVaultAPY()
+    foreach (var strategyId in strategyIds)
     {
-        Console.WriteLine("Getting vault APY...");
-        Console.WriteLine($"Contract ID: {this.ContractId}");
-        var assetAllocation = await this.FetchTotalManagedFunds();
-        var strategiesList = new HashSet<string>();
-        var defindexDeploymentsJson = await this.FetchDefindexDeployments();
-        if (defindexDeploymentsJson != null && defindexDeploymentsJson.ContainsKey("ids"))
+        foreach (var configEntryNode in blendStrategies)
         {
-            var idsNode = defindexDeploymentsJson["ids"];
-            if (idsNode is JsonObject idsObject)
+            if (configEntryNode is not JsonObject configEntry)
+                continue;
+
+            var strategyName = configEntry["name"]?.GetValue<string>();
+            var assetSymbol = configEntry["asset_symbol"]?.GetValue<string>();
+            var blendPoolName = configEntry["blend_pool_name"]?.GetValue<string>();
+
+            if (string.IsNullOrEmpty(strategyName) ||
+                string.IsNullOrEmpty(assetSymbol) ||
+                string.IsNullOrEmpty(blendPoolName))
             {
-                var id = idsObject.Where(x => x.Value != null && x.Value.ToString() == assetAllocation[0].StrategyAllocations[0].StrategyAddress);
-                var strategyKey = id.FirstOrDefault().Key;
-                Console.WriteLine($"Found strategy: {strategyKey}");
+                Console.WriteLine($"Invalid config entry: {configEntry}");
+                continue;
+            }
+
+            var expectedId = $"{assetSymbol.ToLowerInvariant()}_blend_{strategyName.ToLowerInvariant()}_{blendPoolName.ToLowerInvariant().Replace(" ", "_")}_strategy";
+
+            if (!strategyId.Equals(expectedId, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var blendPoolAddress = configEntry["blend_pool_address"]?.GetValue<string>();
+            if (!string.IsNullOrEmpty(blendPoolAddress))
+            {
+                blendPoolAddresses.Add(blendPoolAddress);
+                break;
+            }
+            else
+            {
+                Console.WriteLine($"Blend pool address not found for strategy ID: {strategyId}");
             }
         }
+    }
 
+    return blendPoolAddresses;
+}
+
+    public async Task<decimal?> GetVaultAPY()
+    {
+        var assetAllocation = await this.FetchTotalManagedFunds();
+        var defindexDeploymentsJson = await this.FetchDefindexDeployments();
         var blendDeployConfig = await this.FetchBlendDeployConfig();
 
+        if (defindexDeploymentsJson is null || !defindexDeploymentsJson.ContainsKey("ids"))
+            return null;
 
+        if (defindexDeploymentsJson["ids"] is not JsonObject idsObject)
+            return null;
 
+        var strategyIdLookup = idsObject
+            .Where(kvp => kvp.Value is not null)
+            .ToDictionary(
+                kvp => kvp.Value!.ToString() ?? string.Empty,
+                kvp => kvp.Key,
+                StringComparer.OrdinalIgnoreCase
+            );
+
+        var strategiesIds = assetAllocation
+            .SelectMany(asset => asset.StrategyAllocations)
+            .Select(strategy => strategy.StrategyAddress)
+            .Where(addr => addr is not null && strategyIdLookup.TryGetValue(addr, out _))
+            .Select(addr => strategyIdLookup[addr!])
+            .ToList();
+
+        Console.WriteLine("Strategies IDs: " + string.Join(", ", strategiesIds));
+
+        if (blendDeployConfig is null || !strategiesIds.Any())
+            return null;
+
+        var networkResponse = await this.Server.GetNetwork();
+        var networkName = networkResponse.Passphrase.IndexOf("public", StringComparison.OrdinalIgnoreCase) >= 0 ? "mainnet" : "testnet";
+
+        if (!blendDeployConfig.TryGetPropertyValue(networkName, out var networkConfigNode) || networkConfigNode is not JsonObject networkConfig)
+            return null;
+
+        if (!networkConfig.TryGetPropertyValue("strategies", out var strategiesNode) || strategiesNode is not JsonArray blendStrategiesArray)
+            return null;
+
+        var blendPoolAddressesFound = FindBlendPoolAddresses(strategiesIds, blendStrategiesArray);
+        Console.WriteLine("Found Blend Pool Addresses: " + string.Join(", ", blendPoolAddressesFound));
         return 0.0m;
     }
 

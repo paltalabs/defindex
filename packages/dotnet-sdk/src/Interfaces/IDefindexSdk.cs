@@ -118,5 +118,5 @@ public interface IDefindexSdk
     /// Gets the vault's current APY
     /// </summary>
 
-    Task<decimal> GetVaultAPY();
+    Task<decimal?> GetVaultAPY();
 }
