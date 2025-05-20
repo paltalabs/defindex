@@ -10,10 +10,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using StellarDotnetSdk.Responses.SorobanRpc;
-using System.Net.Http;
 using System.Text.Json.Nodes;
 using Newtonsoft.Json;
-using StellarDotnetSdk.Assets;
 
 public class DefindexSdk : IDefindexSdk
 {
@@ -32,7 +30,7 @@ public class DefindexSdk : IDefindexSdk
 
     public string ContractId => _contractId.InnerValue;
     public SorobanServer Server => _server;
-
+    public DefindexHelpers defindexHelpers = new DefindexHelpers();
     public async Task<SimulateTransactionResponse> CreateBalanceTransaction(Account account, string accountIdToCheck)
     {
         var getBalanceArgs = new SCVal[] {
@@ -207,144 +205,19 @@ public class DefindexSdk : IDefindexSdk
         return Task.FromResult(parsedResponse);
     }
 
-    public async Task<JsonObject?> FetchBlendDeployConfig()
-    {
-        using (var httpClient = new HttpClient())
-        {
-            try
-            {
-                var jsonUrl = "https://raw.githubusercontent.com/paltalabs/defindex/refs/heads/main/apps/contracts/src/strategies/blend_deploy_config.json";
-                _blendDeployConfigJson = await httpClient.GetStringAsync(jsonUrl);
-                Console.WriteLine("blend_deploy_config.json fetched successfully.");
-                // Puedes procesar el _blendDeployConfigJson aquí o simplemente devolverlo/usarlo.
-                return JsonNode.Parse(_blendDeployConfigJson)?.AsObject();
-            }
-            catch (HttpRequestException e)
-            {
-                Console.WriteLine($"Error fetching blend_deploy_config.json: {e.Message}");
-                return null;
-            }
-        }
-    }
-    
-    public async Task<JsonObject?> FetchDefindexDeployments()
-    {
-        var network = (GetNetworkResponse)await this.Server.GetNetwork();
-        var networkName = network.Passphrase.IndexOf("public", StringComparison.OrdinalIgnoreCase) >= 0 ? "mainnet" : "testnet";
-        using (var httpClient = new HttpClient())
-        {
-            try
-            {
-                var jsonUrl = $"https://raw.githubusercontent.com/paltalabs/defindex/refs/heads/main/public/{networkName}.contracts.json";
-                _defindexDeploymentsJson = await httpClient.GetStringAsync(jsonUrl);
-
-                Console.WriteLine($"{networkName}.contracts.json fetched successfully.");
-                return JsonNode.Parse(_defindexDeploymentsJson)?.AsObject();
-            }
-            catch (HttpRequestException e)
-            {
-                Console.WriteLine($"Error fetching {networkName}.contracts.json: {e.Message}");
-                return null;
-            }
-        }
-    }
-    
-    List<string> FindBlendPoolAddresses(List<string> strategyIds, JsonArray blendStrategies)
-    {
-        var blendPoolAddresses = new List<string>();
-
-        foreach (var strategyId in strategyIds)
-        {
-            foreach (var configEntryNode in blendStrategies)
-            {
-                if (configEntryNode is not JsonObject configEntry)
-                    continue;
-
-                var strategyName = configEntry["name"]?.GetValue<string>();
-                var assetSymbol = configEntry["asset_symbol"]?.GetValue<string>();
-                var blendPoolName = configEntry["blend_pool_name"]?.GetValue<string>();
-
-                if (string.IsNullOrEmpty(strategyName) ||
-                    string.IsNullOrEmpty(assetSymbol) ||
-                    string.IsNullOrEmpty(blendPoolName))
-                {
-                    Console.WriteLine($"Invalid config entry: {configEntry}");
-                    continue;
-                }
-
-                var expectedId = $"{assetSymbol.ToLowerInvariant()}_blend_{strategyName.ToLowerInvariant()}_{blendPoolName.ToLowerInvariant().Replace(" ", "_")}_strategy";
-
-                if (!strategyId.Equals(expectedId, StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                var blendPoolAddress = configEntry["blend_pool_address"]?.GetValue<string>();
-                if (!string.IsNullOrEmpty(blendPoolAddress))
-                {
-                    blendPoolAddresses.Add(blendPoolAddress);
-                    break;
-                }
-                else
-                {
-                    Console.WriteLine($"Blend pool address not found for strategy ID: {strategyId}");
-                }
-            }
-        }
-
-        return blendPoolAddresses;
-    }
-    List<string> ExtractStrategyIds(List<ManagedFundsResult> assetAllocation, JsonObject defindexDeploymentsJson)
-    {
-        if (defindexDeploymentsJson is null || !defindexDeploymentsJson.ContainsKey("ids"))
-        return new List<string>();
-
-        if (defindexDeploymentsJson["ids"] is not JsonObject idsObject)
-        return new List<string>();
-
-        var strategyIdLookup = idsObject
-        .Where(kvp => kvp.Value is not null)
-        .ToDictionary(
-            kvp => kvp.Value!.ToString() ?? string.Empty,
-            kvp => kvp.Key,
-            StringComparer.OrdinalIgnoreCase
-        );
-
-        var strategiesIds = assetAllocation
-        .SelectMany(asset => asset.StrategyAllocations)
-        .Select(strategy => strategy.StrategyAddress)
-        .Where(addr => addr is not null && strategyIdLookup.TryGetValue(addr, out _))
-        .Select(addr => strategyIdLookup[addr!])
-        .ToList();
-
-        return strategiesIds;
-    }
-
-    public async Task<SimulateTransactionResponse?> CallContractMethod(string contractAddress, string methodName, SCVal[] args)
-    {
-        var keypair = KeyPair.Random();
-        var loadedAccount = new Account(keypair.AccountId, 0);
-        var invokeContractOperation = new InvokeContractOperation(new SCContractId(contractAddress), new SCSymbol(methodName), args);
-        var transaction = new TransactionBuilder(loadedAccount)
-            .AddOperation(invokeContractOperation)
-            .Build();
-        var simulatedTransaction = (SimulateTransactionResponse) await this.Server.SimulateTransaction(transaction);
-        if (simulatedTransaction.Error != null || simulatedTransaction.Results == null || simulatedTransaction.Results.Count() == 0)
-        {
-            throw new Exception($"Error calling contract method: {simulatedTransaction.Error}");
-        }
-        return simulatedTransaction;
-    }
     
     public async Task<decimal?> GetVaultAPY()
     {
         var assetAllocation = await this.FetchTotalManagedFunds();
-        var defindexDeploymentsJson = await this.FetchDefindexDeployments();
-        var blendDeployConfig = await this.FetchBlendDeployConfig();
+        var network = await this.Server.GetNetwork();
+        var networkName = network.Passphrase.IndexOf("public", StringComparison.OrdinalIgnoreCase) >= 0 ? "mainnet" : "testnet";
+
+        var defindexDeploymentsJson = await defindexHelpers.FetchDefindexDeployments(networkName);
+        var blendDeployConfig = await defindexHelpers.FetchBlendDeployConfig();
         if (defindexDeploymentsJson is null || !defindexDeploymentsJson.ContainsKey("ids")) return null;
-        var strategiesIds = ExtractStrategyIds(assetAllocation, defindexDeploymentsJson);
+        var strategiesIds = defindexHelpers.ExtractStrategyIds(assetAllocation, defindexDeploymentsJson);
         if (strategiesIds is null || !strategiesIds.Any() || blendDeployConfig is null || !strategiesIds.Any())
             return null;
-        var networkResponse = await this.Server.GetNetwork();
-        var networkName = networkResponse.Passphrase.IndexOf("public", StringComparison.OrdinalIgnoreCase) >= 0 ? "mainnet" : "testnet";
 
         if (!blendDeployConfig.TryGetPropertyValue(networkName, out var networkConfigNode) || networkConfigNode is not JsonObject networkConfig)
             return null;
@@ -352,10 +225,12 @@ public class DefindexSdk : IDefindexSdk
         if (!networkConfig.TryGetPropertyValue("strategies", out var strategiesNode) || strategiesNode is not JsonArray blendStrategiesArray)
             return null;
 
-        var blendPoolAddressesFound = FindBlendPoolAddresses(strategiesIds, blendStrategiesArray);
+        var blendPoolAddressesFound = defindexHelpers.FindBlendPoolAddresses(strategiesIds, blendStrategiesArray);
+
+        // Uncomment the following lines to fetch pool configurations
         /* foreach (var pool in blendPoolAddressesFound)
         {
-            var blendPoolConfig = await CallContractMethod(pool, "get_config", new SCVal[] { });
+            var blendPoolConfig = await defindexHelpers.CallContractMethod(pool, "get_config", new SCVal[] { }, this.Server);
             if (blendPoolConfig is null || blendPoolConfig.Error != null || blendPoolConfig.Results == null || blendPoolConfig.Results.Count() == 0)
             {
                 Console.WriteLine($"Error calling get_config on pool {pool}: {blendPoolConfig?.Error}");
@@ -364,12 +239,14 @@ public class DefindexSdk : IDefindexSdk
             var parsedResponse = DefindexResponseParser.ParsePoolConfigResult(blendPoolConfig);
             Console.WriteLine($"Parsed PoolConfig: {JsonConvert.SerializeObject(parsedResponse, Formatting.Indented)}");
         } */
-        foreach (var pool in blendPoolAddressesFound)
+
+        // Uncomment the following lines to fetch pool reserves
+        /* foreach (var pool in blendPoolAddressesFound)
         {
             var args = new SCVal[] { 
                 new SCContractId(assetAllocation[0].Asset!),
             };
-            var blendPoolReserves = await CallContractMethod(pool, "get_reserve", args);
+            var blendPoolReserves = await defindexHelpers.CallContractMethod(pool, "get_reserve", args, this.Server);
             if (blendPoolReserves is null || blendPoolReserves.Error != null || blendPoolReserves.Results == null || blendPoolReserves.Results.Count() == 0)
             {
                 Console.WriteLine($"Error calling get_reserves on pool {pool}: {blendPoolReserves?.Error}");
@@ -378,7 +255,24 @@ public class DefindexSdk : IDefindexSdk
             Console.WriteLine($"blendPoolReserves: {blendPoolReserves.Results[0].Xdr}");
             var parsedResponse = DefindexResponseParser.ParseReserveResult(blendPoolReserves);
             Console.WriteLine($"Parsed pool reserves: {JsonConvert.SerializeObject(parsedResponse, Formatting.Indented)}");
-        }
+        } */
+
+        // Uncomment the following lines to fetch reserve emissions
+        /* foreach (var pool in blendPoolAddressesFound)
+        {
+            var args = new SCVal[] { 
+                new SCUint32(2),
+            };
+            var bpReserveEmissions = await defindexHelpers.CallContractMethod(pool, "get_reserve_emissions", args, this.Server);
+            if (bpReserveEmissions is null || bpReserveEmissions.Error != null || bpReserveEmissions.Results == null || bpReserveEmissions.Results.Count() == 0)
+            {
+                Console.WriteLine($"Error calling get_reserve_emissions on pool {pool}: {bpReserveEmissions?.Error}");
+                continue;
+            }
+            Console.WriteLine($"bpReserveEmissions: {bpReserveEmissions.Results[0].Xdr}");
+            var parsedResponse = DefindexResponseParser.ParseReserveEmissionData(bpReserveEmissions);
+            Console.WriteLine($"Parsed pool reserves: {JsonConvert.SerializeObject(parsedResponse, Formatting.Indented)}");
+        } */
 
         return 0.0m;
     }

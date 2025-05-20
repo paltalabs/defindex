@@ -465,4 +465,77 @@ public class DefindexResponseParser
         }
         return new ReserveData(bRate, bSupply, backstopCredit, dRate, dSupply, irMod, lastTime);
     }
+
+    public class ReserveEmissionData
+    {
+        public ulong Eps { get; }
+        public ulong Expiration { get; }
+        public SCInt128 Index { get; }
+        public ulong LastTime { get; }
+
+        public ReserveEmissionData(ulong eps, ulong expiration, SCInt128 index, ulong lastTime)
+        {
+            Eps = eps;
+            Expiration = expiration;
+            Index = index;
+            LastTime = lastTime;
+        }
+    }
+
+    public static ReserveEmissionData? ParseReserveEmissionData(SimulateTransactionResponse response)
+    {
+        if (response.Results == null || response.Results.Length == 0)
+        {
+            Console.WriteLine("No results found in SimulateTransactionResponse for ReserveEmissionData.");
+            return null;
+        }
+
+        var xdrString = response.Results[0].Xdr;
+        if (string.IsNullOrEmpty(xdrString))
+        {
+            Console.WriteLine("XDR string for ReserveEmissionData is null or empty.");
+            return null;
+        }
+
+        try
+        {
+            var scVal = StellarDotnetSdk.Soroban.SCVal.FromXdrBase64(xdrString);
+            if (scVal is not SCMap emissionMap)
+            {
+                Console.WriteLine("Expected SCMap for ReserveEmissionData but received different type.");
+                return null;
+            }
+
+            ulong eps = 0;
+            ulong expiration = 0;
+            SCInt128 index = new SCInt128(0, 0);
+            ulong lastTime = 0;
+
+            foreach (var entry in emissionMap.Entries)
+            {
+                if (entry.Key is not SCSymbol keySymbol) continue;
+                switch (keySymbol.InnerValue)
+                {
+                    case "eps":
+                        if (entry.Value is SCUint64 valEps) eps = valEps.InnerValue;
+                        break;
+                    case "expiration":
+                        if (entry.Value is SCUint64 valExpiration) expiration = valExpiration.InnerValue;
+                        break;
+                    case "index":
+                        if (entry.Value is SCInt128 valIndex) index = valIndex;
+                        break;
+                    case "last_time":
+                        if (entry.Value is SCUint64 valLastTime) lastTime = valLastTime.InnerValue;
+                        break;
+                }
+            }
+            return new ReserveEmissionData(eps, expiration, index, lastTime);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error parsing ReserveEmissionData: {ex.Message}");
+            return null;
+        }
+    }
 }
