@@ -4,6 +4,7 @@ using StellarDotnetSdk;
 using StellarDotnetSdk.Accounts;
 using StellarDotnetSdk.Responses.SorobanRpc;
 using StellarDotnetSdk.Soroban;
+using DotNetEnv;
 
 class Program
 {
@@ -12,6 +13,9 @@ class Program
 
     async static Task Main(string[] args)
     {
+        // Load environment variables from .env file
+        Env.Load();
+
         if (args.Length == 0 || args.Length > 1 || (args[0] != "testnet" && args[0] != "mainnet"))
         {
             Console.ForegroundColor = ConsoleColor.Red;
@@ -64,9 +68,12 @@ class Program
         // }
 
 
-        var soroban_server = new SorobanServer("https://soroban-testnet.stellar.org/");
+        // Get SorobanServer URL from environment variable
+        var sorobanServerUrl = Environment.GetEnvironmentVariable("MAINNET_RPC_URL") ?? "https://soroban-testnet.stellar.org/";
+        Console.WriteLine("🚀 ~ sorobanServerUrl:", sorobanServerUrl);
+        var soroban_server = new SorobanServer(sorobanServerUrl);
 
-        var vault_string = "CBETBBRUN5TGO6Z4ERJ3AH3C2K2UREAK44633ULMZBIO4HR7N2H7FRKE";
+        var vault_string = "CAQ6PAG4X6L7LJVGOKSQ6RU2LADWK4EQXRJGMUWL7SECS7LXUEQLM5U7";
         var vaultInstance = new DefindexSdk(vault_string, soroban_server);
 
         var vaultStrategies = await vaultInstance.GetVaultAPY();

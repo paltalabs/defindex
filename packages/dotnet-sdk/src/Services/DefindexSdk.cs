@@ -4,7 +4,6 @@ using StellarDotnetSdk.Transactions;
 using StellarDotnetSdk.Accounts;
 using DeFindex.Sdk.Interfaces;
 using DeFindex.Sdk.Services;
-
 namespace DeFindex.Sdk.Services;
 
 using System;
@@ -229,7 +228,8 @@ public class DefindexSdk : IDefindexSdk
         var blendPoolAddressesFound = defindexHelpers.FindBlendPoolAddresses(strategiesIds, blendStrategiesArray);
 
         // Uncomment the following lines to fetch pool configurations
-        /* foreach (var pool in blendPoolAddressesFound)
+        var poolConfigDict = new Dictionary<string, PoolConfig>();
+        foreach (var pool in blendPoolAddressesFound)
         {
             var blendPoolConfig = await defindexHelpers.CallContractMethod(pool, "get_config", new SCVal[] { }, this.Server);
             if (blendPoolConfig is null || blendPoolConfig.Error != null || blendPoolConfig.Results == null || blendPoolConfig.Results.Count() == 0)
@@ -238,11 +238,14 @@ public class DefindexSdk : IDefindexSdk
                 continue;
             }
             var parsedResponse = DefindexResponseParser.ParsePoolConfigResult(blendPoolConfig);
+            poolConfigDict[pool] = parsedResponse;
             Console.WriteLine($"Parsed PoolConfig: {JsonConvert.SerializeObject(parsedResponse, Formatting.Indented)}");
-        } */
+        }
+        Console.WriteLine($"PoolConfigDict: {JsonConvert.SerializeObject(poolConfigDict, Formatting.Indented)}");
 
         // Uncomment the following lines to fetch pool reserves
-        /* foreach (var pool in blendPoolAddressesFound)
+        var reserveDataDict = new Dictionary<string, DefindexResponseParser.Reserve>();
+        foreach (var pool in blendPoolAddressesFound)
         {
             var args = new SCVal[] { 
                 new SCContractId(assetAllocation[0].Asset!),
@@ -256,10 +259,13 @@ public class DefindexSdk : IDefindexSdk
             Console.WriteLine($"blendPoolReserves: {blendPoolReserves.Results[0].Xdr}");
             var parsedResponse = DefindexResponseParser.ParseReserveResult(blendPoolReserves);
             Console.WriteLine($"Parsed pool reserves: {JsonConvert.SerializeObject(parsedResponse, Formatting.Indented)}");
-        } */
+            reserveDataDict[pool] = parsedResponse;
+        }
+        Console.WriteLine($"ReserveDataDict: {JsonConvert.SerializeObject(reserveDataDict, Formatting.Indented)}");
 
         // Uncomment the following lines to fetch reserve emissions
-        /* foreach (var pool in blendPoolAddressesFound)
+        var reserveEmissionsDict = new Dictionary<string, DefindexResponseParser.ReserveEmissionData>();
+        foreach (var pool in blendPoolAddressesFound)
         {
             var args = new SCVal[] { 
                 new SCUint32(2),
@@ -273,7 +279,10 @@ public class DefindexSdk : IDefindexSdk
             Console.WriteLine($"bpReserveEmissions: {bpReserveEmissions.Results[0].Xdr}");
             var parsedResponse = DefindexResponseParser.ParseReserveEmissionData(bpReserveEmissions);
             Console.WriteLine($"Parsed pool reserves: {JsonConvert.SerializeObject(parsedResponse, Formatting.Indented)}");
-        } */
+            reserveEmissionsDict[pool] = parsedResponse;
+        }
+        Console.WriteLine($"ReserveEmissionsDict: {JsonConvert.SerializeObject(reserveEmissionsDict, Formatting.Indented)}");
+
 
         // var apy = Utils.calculateAPY();
         return 0.0m;
