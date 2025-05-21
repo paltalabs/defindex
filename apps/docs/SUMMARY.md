@@ -34,12 +34,17 @@
 * [Vault](wallet-developer/vault.md)
 * [Flutter SDK](wallet-developer/01-fluter-sdk.md)
 * [Typescript SDK](wallet-developer/02-typescript-sdk.md)
-* [Building the Blend Strategy](wallet-developer/03-how-to-create-a-strategy.md)
+* [Vault APY](wallet-developer/vault-apy.md)
 
 ## STRATEGIES
 
 * [What is a strategy?](strategies/what-is-a-strategy.md)
 * [What is Blend Capital?](strategies/what-is-blend-capital.md)
+* [Strategies APY](strategies/strategies-apy.md)
+
+***
+
+* [Building the Blend Strategy](03-how-to-create-a-strategy.md)
 
 ## Users
 
@@ -49,4 +54,5 @@
   * [Additional Resources](users/general-faq/additional-resources.md)
 
 ## Security
+
 * [Security Audit](https://drive.proton.me/urls/GYBBP5TS00#kCE6EHDN6sth)

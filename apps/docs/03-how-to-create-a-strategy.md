@@ -1,5 +1,6 @@
 ---
-cover: ../.gitbook/assets/image 31.png
+hidden: true
+cover: .gitbook/assets/image 31.png
 coverY: 0
 ---
 
@@ -9,7 +10,7 @@ coverY: 0
 
 Welcome to this guide on implementing the **Blend Strategy** for DeFindex. This tutorial is designed to provide a comprehensive walkthrough of the Blend Strategy smart contract, which integrates with the **Blend Protocol**, a lending and borrowing platform.
 
-*Note: This guide is for understanding how to create a strategy. The actual strategy may differ from this example. Do not use this code as is, but rather use it as a reference to create your own strategy.*
+_Note: This guide is for understanding how to create a strategy. The actual strategy may differ from this example. Do not use this code as is, but rather use it as a reference to create your own strategy._
 
 The Blend Strategy implements the `DeFindexStrategyTrait` from the core strategy module, providing a standardized interface for interacting with the DeFindex vault while managing positions in the Blend Protocol.
 
@@ -379,7 +380,7 @@ pub fn get_strategy_reserves(e: &Env) -> StrategyReserves {
 
 1. **Configuration**:
    * The Config struct holds all necessary parameters for the strategy.
-   * The constructor uses set_config to initialize these values.
+   * The constructor uses set\_config to initialize these values.
 2. **Vault Positions**:
    * Shares are stored with the VaultPos key and are specific to each vault or user.
    * Precision is managed with 7 decimal places to ensure accuracy.
@@ -662,6 +663,7 @@ pub fn internal_swap_exact_tokens_for_tokens(
 The Blend Strategy for DeFindex showcases the power of modular architecture in decentralized finance. By acting as a proxy between the Vault and external protocols, the strategy ensures seamless integration while maintaining flexibility and security.
 
 This guide provides a complete walkthrough for implementing the Blend Strategy, covering:
+
 * Initialization and storage management
 * Interactions with the Blend Pool
 * Reinvestment logic using Soroswap
