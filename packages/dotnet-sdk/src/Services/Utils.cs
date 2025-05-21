@@ -69,16 +69,16 @@ namespace DeFindex.Sdk.Services
             return 0;
         }
 
-        public static ulong totalSupply(
-            ReserveData reserveData
+        public static BigInteger totalSupply(
+            ReserveData reserveData,
+            ReserveConfig reserveConfig
         )
         {
-            // TODO: Implement the total supply calculation logic
-            return 0;
+            return toAssetFromBToken(reserveData.BSupply, reserveData, reserveConfig); 
         }
 
         public static BigInteger toAssetFromBToken(
-            ulong bTokenAmount,
+            BigInteger bTokenAmount,
             ReserveData reserveData,
             ReserveConfig reserveConfig
         )
@@ -87,11 +87,11 @@ namespace DeFindex.Sdk.Services
             {
                 return 0;
             }
-            return new BigInteger(bTokenAmount) *reserveData.BRate / 10^(new BigInteger(reserveConfig.Decimals));
+            return bTokenAmount *reserveData.BRate / 10^(new BigInteger(reserveConfig.Decimals));
         }
 
         public static BigInteger toAssetFromDToken(
-            ulong dTokenAmount,
+            BigInteger dTokenAmount,
             ReserveData reserveData
         )
         {
