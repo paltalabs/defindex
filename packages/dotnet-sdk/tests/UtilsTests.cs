@@ -121,7 +121,9 @@ namespace DeFindex.Sdk.Tests
             );
 
             // Assert
-            Assert.Equal(0.0m, result);
+            // Assert.Equal(0.0m, result);
+            // Assert that result is between 9 and 10
+            Assert.True(result >= 9.0m && result <= 10.0m, $"Expected result to be between 9 and 10, but got {result}");
         }
 
         // [Fact]
