@@ -36,6 +36,7 @@ namespace DeFindex.Sdk.Services
             Dictionary<string, ReserveData> reserveDataDict
         )
         {
+
             // TODO: Implement the supply APY calculation logic
             return 0.0m;
         }
@@ -56,6 +57,53 @@ namespace DeFindex.Sdk.Services
         {
             // TODO: Implement the emissions APR calculation logic
             return 0.0m;
+        }
+
+        public static ulong getUtilization(
+            PoolConfig poolConfig,
+            ReserveData reserveData
+        )
+        {
+            // TODO: Implement the utilization calculation logic
+            return 0;
+        }
+
+        public static ulong totalSupply(
+            ReserveData reserveData
+        )
+        {
+            // TODO: Implement the total supply calculation logic
+            return 0;
+        }
+
+        public static ulong toAssetFromBToken(
+            ulong bTokenAmount,
+            ReserveData reserveData,
+            ReserveConfig reserveConfig
+        )
+        {
+            if (bTokenAmount == 0)
+            {
+                return 0;
+            }
+            
+            // Convert bTokens to assets using the bRate from reserve data
+            // This is equivalent to: FixedMath.mulFloor(bTokens, this.data.bRate, FixedMath.toFixed(1, this.rateDecimals))
+            // Convert bTokens to assets using regular math
+            // bTokenAmount * bRate / 10^rateDecimals
+            return 0;
+        }
+
+        public static ulong toAssetFromDToken(
+            ulong dTokenAmount,
+            ReserveData reserveData
+        )
+        {
+            if (dTokenAmount == 0)
+            {
+                return 0;
+            }
+            return 0;
         }
     }
 } 
