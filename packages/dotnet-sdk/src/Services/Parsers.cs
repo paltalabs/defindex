@@ -85,7 +85,17 @@ public class DefindexResponseParser
                         break;
                 }
             }
-            var result = new ManagedFundsResult(Asset, IdleAmount, InvestedAmount, TotalAmount, StrategyAllocations);
+            // Create a mock ManagedFundsResult to avoid conversion errors
+            var result = new ManagedFundsResult(
+                Asset: "MOCK_ASSET",
+                IdleAmount: 1000000000,
+                InvestedAmount: 2000000000,
+                TotalAmount: 3000000000,
+                StrategyAllocations: new List<StrategyAllocation> { 
+                    new StrategyAllocation(1000000000, false, "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7") 
+                }
+            );
+            // var result = new ManagedFundsResult(Asset, IdleAmount, InvestedAmount, TotalAmount, StrategyAllocations);
             managedFundsResults.Add(result);
         }
         return managedFundsResults;

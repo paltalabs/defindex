@@ -4,6 +4,7 @@ using DeFindex.Sdk.Interfaces;
 using System;
 using System.Collections.Generic;
 using StellarDotnetSdk.Soroban;
+using System.Numerics;
 
 namespace DeFindex.Sdk.Tests
 {
@@ -26,25 +27,25 @@ namespace DeFindex.Sdk.Tests
 
         private static readonly ReserveData DefaultReserveData = new ReserveData
         {
-            DRate = new SCInt128("1008674205479"),
-            BRate = new SCInt128("1005739211313"),
-            IrMod = new SCInt128("11064275"),
-            BSupply = new SCInt128("1903776551256"),
-            DSupply = new SCInt128("1687391443495"),
-            BackstopCredit = new SCInt128("699805978"),
+            DRate = new BigInteger(1008674205479),
+            BRate = new BigInteger(1005739211313),
+            IrMod = new BigInteger(11064275),
+            BSupply = new BigInteger(1903776551256),
+            DSupply = new BigInteger(1687391443495),
+            BackstopCredit = new BigInteger(699805978),
             LastTime = 1747730608UL
         };
 
-        private static readonly (SCInt128, SCInt128) DefaultAssetReserves = (new SCInt128("2724548742322"), new SCInt128("2415996815711"));
-        private static readonly (SCInt128, SCInt128) DefaultBlndReserves = (new SCInt128("502"), new SCInt128("24012"));
+        private static readonly (BigInteger, BigInteger) DefaultAssetReserves = (new BigInteger(2724548742322), new BigInteger(2415996815711));
+        private static readonly (BigInteger, BigInteger) DefaultBlndReserves = (new BigInteger(502), new BigInteger(24012));
 
         private static ReserveEmissionData CreateDefaultReserveEmissionData()
         {
             return new ReserveEmissionData
             {
                 Expiration = (ulong)DateTimeOffset.UtcNow.AddDays(365).ToUnixTimeSeconds(),
-                Eps = new SCUint64(1000000), // 1 token per second with 7 decimals
-                Index = new SCInt128("1000000000"), // 1 token with 7 decimals
+                Eps = 1000000, // 1 token per second with 7 decimals
+                Index = 1000000000, // 1 token with 7 decimals
                 LastTime = (ulong)DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             };
         }

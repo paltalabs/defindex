@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using StellarDotnetSdk.Soroban;
 
 namespace DeFindex.Sdk.Services
@@ -59,10 +60,10 @@ namespace DeFindex.Sdk.Services
         public uint RThree { get; }
         public uint RTwo { get; }
         public uint Reactivity { get; }
-        public SCInt128 SupplyCap { get; }
+        public BigInteger SupplyCap { get; }
         public uint Util { get; }
 
-        public ReserveConfig(uint cFactor, uint decimals, bool enabled, uint index, uint lFactor, uint maxUtil, uint rBase, uint rOne, uint rThree, uint rTwo, uint reactivity, SCInt128 supplyCap, uint util)
+        public ReserveConfig(uint cFactor, uint decimals, bool enabled, uint index, uint lFactor, uint maxUtil, uint rBase, uint rOne, uint rThree, uint rTwo, uint reactivity, BigInteger supplyCap, uint util)
         {
             CFactor = cFactor;
             Decimals = decimals;
@@ -88,9 +89,9 @@ namespace DeFindex.Sdk.Services
         public string Asset { get; }
         public ReserveConfig? Config { get; }
         public ReserveData? Data { get; }
-        public SCInt128 Scalar { get; }
+        public BigInteger Scalar { get; }
 
-        public Reserve(string asset, ReserveConfig? config, ReserveData? data, SCInt128 scalar)
+        public Reserve(string asset, ReserveConfig? config, ReserveData? data, BigInteger scalar)
         {
             Asset = asset;
             Config = config;
@@ -107,32 +108,32 @@ namespace DeFindex.Sdk.Services
         /// <summary>
         /// The conversion rate from bToken to underlying with 12 decimals
         /// </summary>
-        public SCInt128 BRate { get; set; }
+        public BigInteger BRate { get; set; }
 
         /// <summary>
         /// The total supply of b tokens, in the underlying token's decimals
         /// </summary>
-        public SCInt128 BSupply { get; set; }
+        public BigInteger BSupply { get; set; }
 
         /// <summary>
         /// The amount of underlying tokens currently owed to the backstop
         /// </summary>
-        public SCInt128 BackstopCredit { get; set; }
+        public BigInteger BackstopCredit { get; set; }
 
         /// <summary>
         /// The conversion rate from dToken to underlying with 12 decimals
         /// </summary>
-        public SCInt128 DRate { get; set; }
+        public BigInteger DRate { get; set; }
 
         /// <summary>
         /// The total supply of d tokens, in the underlying token's decimals
         /// </summary>
-        public SCInt128 DSupply { get; set; }
+        public BigInteger DSupply { get; set; }
 
         /// <summary>
         /// The interest rate curve modifier with 7 decimals
         /// </summary>
-        public SCInt128 IrMod { get; set; }
+        public BigInteger IrMod { get; set; }
 
         /// <summary>
         /// The last time the reserve data was updated
@@ -141,16 +142,16 @@ namespace DeFindex.Sdk.Services
 
         public ReserveData()
         {
-            BRate = new SCInt128(0, 0);
-            BSupply = new SCInt128(0, 0);
-            BackstopCredit = new SCInt128(0, 0);
-            DRate = new SCInt128(0, 0);
-            DSupply = new SCInt128(0, 0);
-            IrMod = new SCInt128(0, 0);
+            BRate = BigInteger.Zero;
+            BSupply = BigInteger.Zero;
+            BackstopCredit = BigInteger.Zero;
+            DRate = BigInteger.Zero;
+            DSupply = BigInteger.Zero;
+            IrMod = BigInteger.Zero;
             LastTime = 0;
         }
 
-        public ReserveData(SCInt128 bRate, SCInt128 bSupply, SCInt128 backstopCredit, SCInt128 dRate, SCInt128 dSupply, SCInt128 irMod, ulong lastTime)
+        public ReserveData(BigInteger bRate, BigInteger bSupply, BigInteger backstopCredit, BigInteger dRate, BigInteger dSupply, BigInteger irMod, ulong lastTime)
         {
             BRate = bRate;
             BSupply = bSupply;
@@ -170,7 +171,7 @@ namespace DeFindex.Sdk.Services
         /// <summary>
         /// The emission per second rate
         /// </summary>
-        public SCUint64 Eps { get; set; }
+        public ulong Eps { get; set; }
 
         /// <summary>
         /// The expiration timestamp of the emission
@@ -180,7 +181,7 @@ namespace DeFindex.Sdk.Services
         /// <summary>
         /// The current emission index
         /// </summary>
-        public SCInt128 Index { get; set; }
+        public BigInteger Index { get; set; }
 
         /// <summary>
         /// The last time the emission data was updated
@@ -189,13 +190,13 @@ namespace DeFindex.Sdk.Services
 
         public ReserveEmissionData()
         {
-            Eps = new SCUint64(0);
+            Eps = 0;
             Expiration = 0;
-            Index = new SCInt128(0, 0);
+            Index = BigInteger.Zero;
             LastTime = 0;
         }
 
-        public ReserveEmissionData(SCUint64 eps, ulong expiration, SCInt128 index, ulong lastTime)
+        public ReserveEmissionData(ulong eps, ulong expiration, BigInteger index, ulong lastTime)
         {
             Eps = eps;
             Expiration = expiration;
