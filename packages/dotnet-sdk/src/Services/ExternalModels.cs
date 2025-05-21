@@ -105,39 +105,12 @@ namespace DeFindex.Sdk.Services
     /// </summary>
     public class ReserveData
     {
-        /// <summary>
-        /// The conversion rate from bToken to underlying with 12 decimals
-        /// </summary>
         public BigInteger BRate { get; set; }
-
-        /// <summary>
-        /// The total supply of b tokens, in the underlying token's decimals
-        /// </summary>
         public BigInteger BSupply { get; set; }
-
-        /// <summary>
-        /// The amount of underlying tokens currently owed to the backstop
-        /// </summary>
         public BigInteger BackstopCredit { get; set; }
-
-        /// <summary>
-        /// The conversion rate from dToken to underlying with 12 decimals
-        /// </summary>
         public BigInteger DRate { get; set; }
-
-        /// <summary>
-        /// The total supply of d tokens, in the underlying token's decimals
-        /// </summary>
         public BigInteger DSupply { get; set; }
-
-        /// <summary>
-        /// The interest rate curve modifier with 7 decimals
-        /// </summary>
         public BigInteger IrMod { get; set; }
-
-        /// <summary>
-        /// The last time the reserve data was updated
-        /// </summary>
         public ulong LastTime { get; set; }
 
         public ReserveData()
@@ -168,24 +141,10 @@ namespace DeFindex.Sdk.Services
     /// </summary>
     public class ReserveEmissionData
     {
-        /// <summary>
-        /// The emission per second rate
-        /// </summary>
+
         public ulong Eps { get; set; }
-
-        /// <summary>
-        /// The expiration timestamp of the emission
-        /// </summary>
         public ulong Expiration { get; set; }
-
-        /// <summary>
-        /// The current emission index
-        /// </summary>
         public BigInteger Index { get; set; }
-
-        /// <summary>
-        /// The last time the emission data was updated
-        /// </summary>
         public ulong LastTime { get; set; }
 
         public ReserveEmissionData()
