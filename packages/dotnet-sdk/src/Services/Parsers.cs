@@ -2,10 +2,18 @@ using DeFindex.Sdk.Interfaces;
 using DeFindex.Sdk.Services;
 using StellarDotnetSdk.Responses.SorobanRpc;
 using StellarDotnetSdk.Soroban;
-using System.Text.Json.Nodes;
+using System.Numerics;
 
 public class DefindexResponseParser
 {
+    public static BigInteger ToBigInteger(SCInt128 value)
+    {
+        BigInteger result = value.Hi;
+        result <<= 64;
+        result |= value.Lo;
+
+        return result;
+    }
     public static List<ManagedFundsResult> ParseManagedFundsResult(SimulateTransactionResponse response)
     {
         var managedFundsResults = new List<ManagedFundsResult>();
@@ -91,8 +99,8 @@ public class DefindexResponseParser
                 IdleAmount: 1000000000,
                 InvestedAmount: 2000000000,
                 TotalAmount: 3000000000,
-                StrategyAllocations: new List<StrategyAllocation> { 
-                    new StrategyAllocation(1000000000, false, "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7") 
+                StrategyAllocations: new List<StrategyAllocation> {
+                    new StrategyAllocation(1000000000, false, "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7")
                 }
             );
             // var result = new ManagedFundsResult(Asset, IdleAmount, InvestedAmount, TotalAmount, StrategyAllocations);
@@ -237,7 +245,7 @@ public class DefindexResponseParser
             string asset = string.Empty;
             ReserveConfig? config = null;
             ReserveData? data = null;
-            SCInt128 scalar = new SCInt128(0, 0);
+            BigInteger scalar = 0;
 
             foreach (var entry in reserveMap.Entries)
             {
@@ -262,7 +270,7 @@ public class DefindexResponseParser
                         break;
                     case "scalar":
                         if (entry.Value is SCInt128 scalarVal)
-                            scalar = scalarVal;
+                            scalar = ToBigInteger(scalarVal);
                         break;
                 }
             }
@@ -295,7 +303,7 @@ public class DefindexResponseParser
         uint rThree = 0;
         uint rTwo = 0;
         uint reactivity = 0;
-        SCInt128 supplyCap = new SCInt128(0, 0);
+        BigInteger supplyCap = 0;
         uint util = 0;
 
         foreach (var entry in configMap.Entries)
@@ -337,7 +345,7 @@ public class DefindexResponseParser
                     if (entry.Value is SCUint32 valReactivity) reactivity = valReactivity.InnerValue;
                     break;
                 case "supply_cap":
-                    if (entry.Value is SCInt128 valSupplyCap) supplyCap = valSupplyCap;
+                    if (entry.Value is SCInt128 valSupplyCap) supplyCap = ToBigInteger(valSupplyCap);
                     break;
                 case "util":
                     if (entry.Value is SCUint32 valUtil) util = valUtil.InnerValue;
@@ -349,12 +357,12 @@ public class DefindexResponseParser
 
     private static ReserveData? ParseReserveDataMap(SCMap dataMap)
     {
-        SCInt128 bRate = new SCInt128(0, 0);
-        SCInt128 bSupply = new SCInt128(0, 0);
-        SCInt128 backstopCredit = new SCInt128(0, 0);
-        SCInt128 dRate = new SCInt128(0, 0);
-        SCInt128 dSupply = new SCInt128(0, 0);
-        SCInt128 irMod = new SCInt128(0, 0);
+        BigInteger bRate = 0;
+        BigInteger bSupply = 0;
+        BigInteger backstopCredit = 0;
+        BigInteger dRate = 0;
+        BigInteger dSupply = 0;
+        BigInteger irMod = 0;
         ulong lastTime = 0;
 
         foreach (var entry in dataMap.Entries)
@@ -363,22 +371,22 @@ public class DefindexResponseParser
             switch (keySymbol.InnerValue)
             {
                 case "b_rate":
-                    if (entry.Value is SCInt128 valBRate) bRate = valBRate;
+                    if (entry.Value is SCInt128 valBRate) bRate = ToBigInteger(valBRate);
                     break;
                 case "b_supply":
-                    if (entry.Value is SCInt128 valBSupply) bSupply = valBSupply;
+                    if (entry.Value is SCInt128 valBSupply) bSupply = ToBigInteger(valBSupply);
                     break;
                 case "backstop_credit":
-                    if (entry.Value is SCInt128 valBackstopCredit) backstopCredit = valBackstopCredit;
+                    if (entry.Value is SCInt128 valBackstopCredit) backstopCredit = ToBigInteger(valBackstopCredit);
                     break;
                 case "d_rate":
-                    if (entry.Value is SCInt128 valDRate) dRate = valDRate;
+                    if (entry.Value is SCInt128 valDRate) dRate = ToBigInteger(valDRate);
                     break;
                 case "d_supply":
-                    if (entry.Value is SCInt128 valDSupply) dSupply = valDSupply;
+                    if (entry.Value is SCInt128 valDSupply) dSupply = ToBigInteger(valDSupply);
                     break;
                 case "ir_mod":
-                    if (entry.Value is SCInt128 valIrMod) irMod = valIrMod;
+                    if (entry.Value is SCInt128 valIrMod) irMod = ToBigInteger(valIrMod);
                     break;
                 case "last_time":
                     if (entry.Value is SCUint64 valLastTime) lastTime = valLastTime.InnerValue;
@@ -414,7 +422,7 @@ public class DefindexResponseParser
 
             ulong eps = 0;
             ulong expiration = 0;
-            SCInt128 index = new SCInt128(0, 0);
+            BigInteger index = 0;
             ulong lastTime = 0;
 
             foreach (var entry in emissionMap.Entries)
@@ -429,14 +437,14 @@ public class DefindexResponseParser
                         if (entry.Value is SCUint64 valExpiration) expiration = valExpiration.InnerValue;
                         break;
                     case "index":
-                        if (entry.Value is SCInt128 valIndex) index = valIndex;
+                        if (entry.Value is SCInt128 valIndex) index = ToBigInteger(valIndex);
                         break;
                     case "last_time":
                         if (entry.Value is SCUint64 valLastTime) lastTime = valLastTime.InnerValue;
                         break;
                 }
             }
-            return new ReserveEmissionData(new SCUint64(eps), expiration, index, lastTime);
+            return new ReserveEmissionData(eps, expiration, index, lastTime);
         }
         catch (Exception ex)
         {
