@@ -1,7 +1,8 @@
 using System;
+using System.Numerics;
+using System.Collections.Generic;
 using DeFindex.Sdk.Interfaces;
 using StellarDotnetSdk.Responses.SorobanRpc;
-using System.Collections.Generic;
 
 namespace DeFindex.Sdk.Services
 {
@@ -76,7 +77,7 @@ namespace DeFindex.Sdk.Services
             return 0;
         }
 
-        public static ulong toAssetFromBToken(
+        public static BigInteger toAssetFromBToken(
             ulong bTokenAmount,
             ReserveData reserveData,
             ReserveConfig reserveConfig
@@ -86,15 +87,10 @@ namespace DeFindex.Sdk.Services
             {
                 return 0;
             }
-            
-            // Convert bTokens to assets using the bRate from reserve data
-            // This is equivalent to: FixedMath.mulFloor(bTokens, this.data.bRate, FixedMath.toFixed(1, this.rateDecimals))
-            // Convert bTokens to assets using regular math
-            // bTokenAmount * bRate / 10^rateDecimals
-            return 0;
+            return new BigInteger(bTokenAmount) *reserveData.BRate / 10^(new BigInteger(reserveConfig.Decimals));
         }
 
-        public static ulong toAssetFromDToken(
+        public static BigInteger toAssetFromDToken(
             ulong dTokenAmount,
             ReserveData reserveData
         )
