@@ -34,7 +34,7 @@ namespace DeFindex.Sdk.Services
         /// <returns>The calculated Supply APY as a decimal value</returns>
         public static decimal calculateSupplyAPY(
             Dictionary<string, PoolConfig> poolConfigDict,
-            Dictionary<string, ReserveData> reserveDataDict
+            Dictionary<string, Reserve> reserveDict
         )
         {
 
@@ -87,7 +87,7 @@ namespace DeFindex.Sdk.Services
             {
                 return 0;
             }
-            return bTokenAmount *reserveData.BRate / 10^(new BigInteger(reserveConfig.Decimals));
+            return bTokenAmount *reserveData.BRate / (new BigInteger(Math.Pow(10,reserveConfig.Decimals)));
         }
 
         public static BigInteger toAssetFromDToken(
