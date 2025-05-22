@@ -4,34 +4,12 @@ using StellarDotnetSdk.Soroban;
 
 namespace DeFindex.Sdk.Services
 {
-    /// <summary>
-    /// Represents the pool's configuration
-    /// </summary>
     public class PoolConfig
     {
-        /// <summary>
-        /// The contract address of the oracle
-        /// </summary>
         public string OracleAddress { get; set; }
-
-        /// <summary>
-        /// The minimum amount of collateral required to open a liability position
-        /// </summary>
         public ulong MinCollateral { get; set; }
-
-        /// <summary>
-        /// The rate the backstop takes on accrued debt interest, expressed in 7 decimals
-        /// </summary>
         public uint BStopRate { get; set; }
-
-        /// <summary>
-        /// The status of the pool
-        /// </summary>
         public uint Status { get; set; }
-
-        /// <summary>
-        /// The maximum number of effective positions a single user can hold
-        /// </summary>
         public uint MaxPositions { get; set; }
 
         public PoolConfig(uint bStopRate, uint maxPositions, ulong minCollateral, string oracleAddress, uint status)
@@ -44,24 +22,21 @@ namespace DeFindex.Sdk.Services
         }
     }
 
-    /// <summary>
-    /// Represents the configuration for a reserve
-    /// </summary>
     public class ReserveConfig
     {
-        public uint CFactor { get; }
-        public uint Decimals { get; }
-        public bool Enabled { get; }
-        public uint Index { get; }
-        public uint LFactor { get; }
-        public uint MaxUtil { get; }
-        public uint RBase { get; }
-        public uint ROne { get; }
-        public uint RThree { get; }
-        public uint RTwo { get; }
-        public uint Reactivity { get; }
-        public BigInteger SupplyCap { get; }
-        public uint Util { get; }
+        public uint CFactor { get; set; }
+        public uint Decimals { get; set; }
+        public bool Enabled { get; set; }
+        public uint Index { get; set; }
+        public uint LFactor { get; set; }
+        public uint MaxUtil { get; set; }
+        public uint RBase { get; set; }
+        public uint ROne { get; set; }
+        public uint RThree { get; set; }
+        public uint RTwo { get; set; }
+        public uint Reactivity { get; set; }
+        public BigInteger SupplyCap { get; set; }
+        public uint Util { get; set; }
 
         public ReserveConfig(uint cFactor, uint decimals, bool enabled, uint index, uint lFactor, uint maxUtil, uint rBase, uint rOne, uint rThree, uint rTwo, uint reactivity, BigInteger supplyCap, uint util)
         {
@@ -86,10 +61,10 @@ namespace DeFindex.Sdk.Services
     /// </summary>
     public class Reserve
     {
-        public string Asset { get; }
-        public ReserveConfig? Config { get; }
-        public ReserveData? Data { get; }
-        public BigInteger Scalar { get; }
+        public string Asset { get; set; }
+        public ReserveConfig? Config { get; set; }
+        public ReserveData? Data { get; set; }
+        public BigInteger Scalar { get; set; }
 
         public Reserve(string asset, ReserveConfig? config, ReserveData? data, BigInteger scalar)
         {
