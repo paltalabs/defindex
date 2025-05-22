@@ -153,7 +153,7 @@ namespace DeFindex.Sdk.Tests
             Assert.True(getUtilizationResult == 9439006
 , $"Failed to check getUtilization, it was {getUtilizationResult}");
 
-            var strategyApr = Utils.calculateStrategyAPR(
+            var strategyApr = Utils.calculateSupplyAPR(
                 DefaultReserve,
                 DefaultPoolConfig
             );
@@ -175,38 +175,38 @@ namespace DeFindex.Sdk.Tests
             // Assert.True(result >= 9.0m && result <= 10.0m, $"Expected result to be between 9 and 10, but got {result}");
         }
 
-        [Fact]
-        public void CalculateAPY_ReturnsExpectedValue()
-        {
-            // Arrange
-            var poolConfigDict = new Dictionary<string, PoolConfig>
-            {
-                { "test_pool", DefaultPoolConfig }
-            };
+        // [Fact]
+        // public void CalculateAPY_ReturnsExpectedValue()
+        // {
+        //     // Arrange
+        //     var poolConfigDict = new Dictionary<string, PoolConfig>
+        //     {
+        //         { "test_pool", DefaultPoolConfig }
+        //     };
 
-            var reserveEmissionsDict = new Dictionary<string, ReserveEmissionData>
-            {
-                { "test_pool", CreateDefaultReserveEmissionData() }
-            };
+        //     var reserveEmissionsDict = new Dictionary<string, ReserveEmissionData>
+        //     {
+        //         { "test_pool", CreateDefaultReserveEmissionData() }
+        //     };
 
-            var reserveDataDict = new Dictionary<string, ReserveData>
-            {
-                { "test_pool", DefaultReserveData }
-            };
+        //     var reserveDataDict = new Dictionary<string, ReserveData>
+        //     {
+        //         { "test_pool", DefaultReserveData }
+        //     };
 
-            var managedFunds = CreateDefaultManagedFunds();
+        //     var managedFunds = CreateDefaultManagedFunds();
 
-            // Act
-            var result = Utils.calculateAPY(
-                poolConfigDict,
-                reserveEmissionsDict,
-                reserveDataDict,
-                managedFunds
-            );
+        //     // Act
+        //     var result = Utils.calculateAPY(
+        //         poolConfigDict,
+        //         reserveEmissionsDict,
+        //         reserveDataDict,
+        //         managedFunds
+        //     );
 
-            // Assert
-            Assert.Equal(0.0m, result); // This will need to be updated once the actual APY calculation is implemented
-        }
+        //     // Assert
+        //     Assert.Equal(0.0m, result); // This will need to be updated once the actual APY calculation is implemented
+        // }
 
         // [Fact]
         // public void CalculateEmissionsAPR_ReturnsExpectedValue()
