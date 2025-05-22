@@ -39,8 +39,6 @@ class Program
         var keypair = KeyPair.Random();
         Console.WriteLine("Generated public key: " + keypair.AccountId);
 
-        var server = new Server("https://horizon-testnet.stellar.org");
-
         // var friendbot = server.TestNetFriendBot;
         // try {
         //     var response = await friendbot.FundAccount(keypair.AccountId).Execute();
@@ -69,8 +67,7 @@ class Program
 
 
         // Get SorobanServer URL from environment variable
-        var sorobanServerUrl = Environment.GetEnvironmentVariable("MAINNET_RPC_URL") ?? "https://soroban-testnet.stellar.org/";
-        Console.WriteLine("🚀 ~ sorobanServerUrl:", sorobanServerUrl);
+        var sorobanServerUrl = Env.GetString("MAINNET_RPC_URL") ?? "https://soroban-testnet.stellar.org/";
         var soroban_server = new SorobanServer(sorobanServerUrl);
 
         var vault_string = "CAQ6PAG4X6L7LJVGOKSQ6RU2LADWK4EQXRJGMUWL7SECS7LXUEQLM5U7";
