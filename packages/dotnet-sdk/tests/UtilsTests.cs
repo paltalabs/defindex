@@ -145,6 +145,12 @@ namespace DeFindex.Sdk.Tests
             Console.WriteLine(totalLiabilitiesResult.ToString());
             Assert.Equal(totalLiabilitiesResult, toAssetFromDTokenResult);
             
+            var getUtilizationResult = Utils.getUtilization(
+                DefaultReserve.Config,
+                DefaultReserveData
+            );
+            Console.WriteLine(getUtilizationResult.ToString());
+            Assert.True(getUtilizationResult == 8889256, $"Failed to check getUtilization, it was {getUtilizationResult}");
             
             // Act
             // var result = Utils.calculateSupplyAPY(

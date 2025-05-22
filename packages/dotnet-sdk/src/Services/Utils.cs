@@ -60,13 +60,20 @@ namespace DeFindex.Sdk.Services
             return 0.0m;
         }
 
-        public static ulong getUtilization(
-            PoolConfig poolConfig,
+        public static BigInteger getUtilization(
+            ReserveConfig reserveConfig,
             ReserveData reserveData
         )
         {
-            // TODO: Implement the utilization calculation logic
-            return 0;
+            var totalSupplyVar = totalSupply(reserveData, reserveConfig);
+            if (totalSupplyVar == 0)
+            {
+                return 0;
+            }
+            var totalLiabilitiesVar = totalLiabilities(reserveData, reserveConfig);
+            return (totalLiabilitiesVar*
+            (BigInteger)Math.Pow(10,reserveConfig.Decimals)-1) / totalSupplyVar+1;
+
         }
 
         public static BigInteger totalSupply(
