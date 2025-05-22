@@ -83,11 +83,15 @@ namespace DeFindex.Sdk.Services
                 curIr = extraRate + intersection;
             }
 
-            var supplyCapture = (SCALAR_7- poolConfig.BStopRate)*curIr/SCALAR_7;
+            var supplyCapture = (SCALAR_7- poolConfig.BStopRate)*curUtil/SCALAR_7;
 
             var supplyApr = (decimal)curIr * (decimal)supplyCapture / (decimal)SCALAR_7 / (decimal)SCALAR_7;
             // Convert supplyApr to decimal, assuming supplyApr is in 7 decimals fixed-point
             return supplyApr;
+        }
+        public static decimal aprToApy(decimal apr)
+        {
+            return (decimal)Math.Pow(1 + (double)apr/52, 52) - 1;
         }
 
         // Helper for fixed-point division with ceiling

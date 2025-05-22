@@ -44,20 +44,20 @@ namespace DeFindex.Sdk.Tests
 
         private static readonly ReserveData DefaultReserveData = new ReserveData
         {
-            DRate = new BigInteger(1008674205479),
-            BRate = new BigInteger(1005739211313),
-            IrMod = new BigInteger(11064275),
-            BSupply = new BigInteger(1903776551256),
-            DSupply = new BigInteger(1687391443495),
-            BackstopCredit = new BigInteger(699805978),
-            LastTime = 1747730608UL
+            BRate = new BigInteger(1006465757461),
+            BSupply = new BigInteger(12851732605704),
+            BackstopCredit = new BigInteger(56783860),
+            DRate = new BigInteger(1009204687675),
+            DSupply = new BigInteger(12097835563259),
+            IrMod = new BigInteger(8744173),
+            LastTime = 1747913623UL
         };
 
         private static readonly Reserve DefaultReserve = new Reserve(
             "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75",
             DefaultReserveConfig,
             DefaultReserveData,
-            10000000
+            new BigInteger(10000000)
         );
 
         private static readonly (BigInteger, BigInteger) DefaultAssetReserves = (new BigInteger(2724548742322), new BigInteger(2415996815711));
@@ -118,10 +118,10 @@ namespace DeFindex.Sdk.Tests
             // Console.WriteLine(toAssetFromBTokenResult/(new BigInteger(Math.Pow(10,17))));
             // Console.WriteLine(toAssetFromBTokenResult/(new BigInteger(Math.Pow(10,3))));
             // On calc i got 1.91470272717639E+017
-            var amountToCheck=toAssetFromBTokenResult/(new BigInteger(Math.Pow(10,3)));
-            Assert.True((amountToCheck)==191470272717639,$"Failed check of 13 first number, it was {amountToCheck}");
+            var amountToCheck=toAssetFromBTokenResult/(new BigInteger(Math.Pow(10,4)));
+            Assert.True((amountToCheck)==129348287916861,$"Failed check of 13 first number, it was {amountToCheck}");
             // // We verify that the order of magnitud is correct
-            Assert.True((toAssetFromBTokenResult/(new BigInteger(Math.Pow(10,17)))) == 1, $"it failed with {toAssetFromBTokenResult}");
+            Assert.True((toAssetFromBTokenResult/(new BigInteger(Math.Pow(10,18)))) == 1, $"it failed with {toAssetFromBTokenResult}");
             
             var totalSupplyResult = Utils.totalSupply(
                 reserveDict["test_pool"].Data,
@@ -136,7 +136,7 @@ namespace DeFindex.Sdk.Tests
                 reserveDict["test_pool"].Data
             );
             // Console.WriteLine(toAssetFromDTokenResult.ToString());
-            Assert.True(toAssetFromDTokenResult/(new BigInteger(Math.Pow(10,17)))== 1 ,$"Magnitud incorrect, with {toAssetFromDTokenResult/(new BigInteger(Math.Pow(10,17)))}");
+            Assert.True(toAssetFromDTokenResult/(new BigInteger(Math.Pow(10,18)))== 1 ,$"Magnitud incorrect, with {toAssetFromDTokenResult/(new BigInteger(Math.Pow(10,18)))}");
 
             var totalLiabilitiesResult = Utils.totalLiabilities(
                 reserveDict["test_pool"].Data,
@@ -150,7 +150,8 @@ namespace DeFindex.Sdk.Tests
                 DefaultReserveData
             );
             // Console.WriteLine(getUtilizationResult.ToString());
-            Assert.True(getUtilizationResult == 8889256, $"Failed to check getUtilization, it was {getUtilizationResult}");
+            Assert.True(getUtilizationResult == 9439006
+, $"Failed to check getUtilization, it was {getUtilizationResult}");
 
             var strategyApr = Utils.calculateStrategyAPR(
                 DefaultReserve,
@@ -158,6 +159,9 @@ namespace DeFindex.Sdk.Tests
             );
             Assert.True(strategyApr > 0, $"StrategyAPR: {strategyApr}");
             Assert.True(strategyApr <1, $"StrategyAPR: {strategyApr}");
+
+            var strategyApy = Utils.aprToApy(strategyApr);
+            Assert.True(strategyApy == (decimal)0.12985563048252, $"Failed apy with {strategyApy}");
             
             // Act
             // var result = Utils.calculateSupplyAPY(
