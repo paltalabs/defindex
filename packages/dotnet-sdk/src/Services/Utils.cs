@@ -37,9 +37,70 @@ namespace DeFindex.Sdk.Services
             Dictionary<string, Reserve> reserveDict
         )
         {
-
             // TODO: Implement the supply APY calculation logic
             return 0.0m;
+        }
+
+        public static decimal calculateStrategyAPR(
+            Reserve reserve,
+            PoolConfig poolConfig
+        )
+        {
+            var curUtil = getUtilization(reserve.Config, reserve.Data);
+            if (curUtil == 0)
+            {
+                return 0.0m;
+            }
+            const long IR_MOD_SCALAR = 10000000;
+            const long SCALAR_7 = 10000000;
+            var targetUtil = new BigInteger(reserve.Config.Util);
+            var fixed_95_percent = new BigInteger(9500000);
+            var fixed_5_percent = new BigInteger(500000);
+
+            BigInteger curIr = 0;
+
+            if (curUtil <= targetUtil)
+            {
+                var utilScalar = curUtil * SCALAR_7 / targetUtil;
+                var baseRate = (utilScalar * reserve.Config.ROne) / SCALAR_7 + reserve.Config.RBase;
+                curIr = baseRate * reserve.Data.IrMod / IR_MOD_SCALAR;
+            }
+            else if (curUtil <= fixed_95_percent)
+            {
+                var utilScalar = DivCeil(curUtil - targetUtil, fixed_95_percent - targetUtil, SCALAR_7);
+                var baseRate = MulCeil(utilScalar, reserve.Config.RTwo, SCALAR_7) + reserve.Config.ROne + reserve.Config.RBase;
+                curIr = MulCeil(baseRate, reserve.Data.IrMod, IR_MOD_SCALAR);
+            }
+            else
+            {
+                var utilScalar = DivCeil(curUtil - fixed_95_percent, fixed_5_percent, SCALAR_7);
+                var extraRate = MulCeil(utilScalar, reserve.Config.RThree, SCALAR_7);
+                var intersection = MulCeil(
+                    reserve.Data.IrMod,
+                    reserve.Config.RTwo + reserve.Config.ROne + reserve.Config.RBase,
+                    IR_MOD_SCALAR
+                );
+                curIr = extraRate + intersection;
+            }
+
+            var supplyCapture = (SCALAR_7- poolConfig.BStopRate)*curIr/SCALAR_7;
+
+            var supplyApr = (decimal)curIr * (decimal)supplyCapture / (decimal)SCALAR_7 / (decimal)SCALAR_7;
+            // Convert supplyApr to decimal, assuming supplyApr is in 7 decimals fixed-point
+            return supplyApr;
+        }
+
+        // Helper for fixed-point division with ceiling
+        private static BigInteger DivCeil(BigInteger a, BigInteger b, BigInteger scalar)
+        {
+            if (b == 0) return 0;
+            return (a * scalar + b - 1) / b;
+        }
+
+        // Helper for fixed-point multiplication with ceiling
+        private static BigInteger MulCeil(BigInteger a, BigInteger b, BigInteger scalar)
+        {
+            return (a * b + scalar - 1) / scalar;
         }
 
         /// <summary>

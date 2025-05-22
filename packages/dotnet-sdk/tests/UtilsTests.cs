@@ -127,7 +127,7 @@ namespace DeFindex.Sdk.Tests
                 reserveDict["test_pool"].Data,
                 reserveDict["test_pool"].Config
             );
-            Console.WriteLine(totalSupplyResult.ToString());
+            // Console.WriteLine(totalSupplyResult.ToString());
 
             Assert.Equal(totalSupplyResult, toAssetFromBTokenResult);
 
@@ -135,22 +135,29 @@ namespace DeFindex.Sdk.Tests
                 reserveDict["test_pool"].Data.DSupply,
                 reserveDict["test_pool"].Data
             );
-            Console.WriteLine(toAssetFromDTokenResult.ToString());
+            // Console.WriteLine(toAssetFromDTokenResult.ToString());
             Assert.True(toAssetFromDTokenResult/(new BigInteger(Math.Pow(10,17)))== 1 ,$"Magnitud incorrect, with {toAssetFromDTokenResult/(new BigInteger(Math.Pow(10,17)))}");
 
             var totalLiabilitiesResult = Utils.totalLiabilities(
                 reserveDict["test_pool"].Data,
                 reserveDict["test_pool"].Config
             );
-            Console.WriteLine(totalLiabilitiesResult.ToString());
+            // Console.WriteLine(totalLiabilitiesResult.ToString());
             Assert.Equal(totalLiabilitiesResult, toAssetFromDTokenResult);
             
             var getUtilizationResult = Utils.getUtilization(
                 DefaultReserve.Config,
                 DefaultReserveData
             );
-            Console.WriteLine(getUtilizationResult.ToString());
+            // Console.WriteLine(getUtilizationResult.ToString());
             Assert.True(getUtilizationResult == 8889256, $"Failed to check getUtilization, it was {getUtilizationResult}");
+
+            var strategyApr = Utils.calculateStrategyAPR(
+                DefaultReserve,
+                DefaultPoolConfig
+            );
+            Assert.True(strategyApr > 0, $"StrategyAPR: {strategyApr}");
+            Assert.True(strategyApr <1, $"StrategyAPR: {strategyApr}");
             
             // Act
             // var result = Utils.calculateSupplyAPY(
