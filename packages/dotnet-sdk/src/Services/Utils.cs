@@ -77,6 +77,14 @@ namespace DeFindex.Sdk.Services
             return toAssetFromBToken(reserveData.BSupply, reserveData, reserveConfig); 
         }
 
+        public static BigInteger totalLiabilities(
+            ReserveData reserveData,
+            ReserveConfig reserveConfig
+        )
+        {
+            return toAssetFromDToken(reserveData.DSupply, reserveData);
+        }
+
         public static BigInteger toAssetFromBToken(
             BigInteger bTokenAmount,
             ReserveData reserveData,
@@ -99,7 +107,7 @@ namespace DeFindex.Sdk.Services
             {
                 return 0;
             }
-            return 0;
+            return dTokenAmount * reserveData.DRate / (new BigInteger(Math.Pow(10, 7))); // Using 7 decimals as seen in the test data
         }
     }
 } 

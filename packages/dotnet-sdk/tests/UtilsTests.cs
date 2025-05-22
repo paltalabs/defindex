@@ -27,19 +27,19 @@ namespace DeFindex.Sdk.Tests
 
         private static readonly ReserveConfig DefaultReserveConfig = new ReserveConfig
         (
-            1, // uint CFactor
+            9500000, // uint CFactor
             7, // uint Decimals
             true, // bool Enabled
             1, // uint Index
-            1, // uint LFactor
-            1, // uint MaxUtil
-            1, // uint RBase
-            1, // uint ROne
-            1, // uint RThree
-            1, // uint RTwo
-            1, // uint Reactivity
-            1, // BigInteger SupplyCap
-            1 // uint Util
+            9500000, // uint LFactor
+            9500000, // uint MaxUtil
+            300000, // uint RBase
+            400000, // uint ROne
+            50000000, // uint RThree
+            1200000, // uint RTwo
+            20, // uint Reactivity
+            BigInteger.Parse("2000000000000000"), // BigInteger SupplyCap
+            8000000 // uint Util
         );
 
         private static readonly ReserveData DefaultReserveData = new ReserveData
@@ -54,7 +54,7 @@ namespace DeFindex.Sdk.Tests
         };
 
         private static readonly Reserve DefaultReserve = new Reserve(
-            "mock_asset",
+            "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75",
             DefaultReserveConfig,
             DefaultReserveData,
             10000000
@@ -114,14 +114,37 @@ namespace DeFindex.Sdk.Tests
                 reserveDict["test_pool"].Data, 
                 reserveDict["test_pool"].Config);
 
-            Console.WriteLine(toAssetFromBTokenResult.ToString());
-            Console.WriteLine(toAssetFromBTokenResult/(new BigInteger(Math.Pow(10,17))));
-            Console.WriteLine(toAssetFromBTokenResult/(new BigInteger(Math.Pow(10,3))));
-            // We verify that the order of magnitud is correct
+            // Console.WriteLine(toAssetFromBTokenResult.ToString());
+            // Console.WriteLine(toAssetFromBTokenResult/(new BigInteger(Math.Pow(10,17))));
+            // Console.WriteLine(toAssetFromBTokenResult/(new BigInteger(Math.Pow(10,3))));
             // On calc i got 1.91470272717639E+017
             var amountToCheck=toAssetFromBTokenResult/(new BigInteger(Math.Pow(10,3)));
             Assert.True((amountToCheck)==191470272717639,$"Failed check of 13 first number, it was {amountToCheck}");
+            // // We verify that the order of magnitud is correct
             Assert.True((toAssetFromBTokenResult/(new BigInteger(Math.Pow(10,17)))) == 1, $"it failed with {toAssetFromBTokenResult}");
+            
+            var totalSupplyResult = Utils.totalSupply(
+                reserveDict["test_pool"].Data,
+                reserveDict["test_pool"].Config
+            );
+            Console.WriteLine(totalSupplyResult.ToString());
+
+            Assert.Equal(totalSupplyResult, toAssetFromBTokenResult);
+
+            var toAssetFromDTokenResult = Utils.toAssetFromDToken(
+                reserveDict["test_pool"].Data.DSupply,
+                reserveDict["test_pool"].Data
+            );
+            Console.WriteLine(toAssetFromDTokenResult.ToString());
+            Assert.True(toAssetFromDTokenResult/(new BigInteger(Math.Pow(10,17)))== 1 ,$"Magnitud incorrect, with {toAssetFromDTokenResult/(new BigInteger(Math.Pow(10,17)))}");
+
+            var totalLiabilitiesResult = Utils.totalLiabilities(
+                reserveDict["test_pool"].Data,
+                reserveDict["test_pool"].Config
+            );
+            Console.WriteLine(totalLiabilitiesResult.ToString());
+            Assert.Equal(totalLiabilitiesResult, toAssetFromDTokenResult);
+            
             
             // Act
             // var result = Utils.calculateSupplyAPY(
