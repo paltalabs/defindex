@@ -8,23 +8,47 @@ namespace DeFindex.Sdk.Services
 {
     public static class Utils
     {
+        public const uint BPS = 10000;
         /// <summary>
         /// Calculates the APY (Annual Percentage Yield) for a pool based on various parameters
         /// </summary>
         /// <param name="poolConfigDict">Dictionary of pool configurations</param>
         /// <param name="reserveEmissionsDict">Dictionary of reserve emission data</param>
-        /// <param name="reserveDataDict">Dictionary of reserve data</param>
+        /// <param name="reserveDict">Dictionary of reserve </param>
         /// <param name="managedFunds">The total managed funds for the vault</param>
         /// <returns>The calculated APY as a decimal value</returns>
         public static decimal calculateAPY(
             Dictionary<string, PoolConfig> poolConfigDict,
             Dictionary<string, ReserveEmissionData> reserveEmissionsDict,
-            Dictionary<string, ReserveData> reserveDataDict,
+            Dictionary<string, Reserve> reserveDict,
             ManagedFundsResult managedFunds)
         {
+            
             // TODO: Implement the actual APY calculation logic using managedFunds
             return 0.0m;
         }
+
+        public static decimal calculateAssetAPY(
+            Dictionary<string, PoolConfig> poolConfigDict,
+            Dictionary<string, ReserveEmissionData> reserveEmissionsDict,
+            Dictionary<string, Reserve> reserveDict,
+            ManagedFundsResult managedFunds,
+            uint vaultFeeBps)
+        {
+            decimal investedSum = 0;
+            foreach (var strategy in managedFunds.StrategyAllocations){
+                var supplyApy = calculateSupplyAPY(
+                    reserveDict[strategy.StrategyAddress],
+                    poolConfigDict[strategy.StrategyAddress]
+                );
+                var supplyApyWithFee = supplyApy*(BPS-vaultFeeBps)/BPS;
+                investedSum=investedSum+strategy.Amount*(1+supplyApyWithFee);
+
+            }
+            var numerator = managedFunds.IdleAmount+investedSum;
+            return numerator/managedFunds.TotalAmount-1;
+        }
+
 
         /// <summary>
         /// Calculates the Supply APY (Annual Percentage Yield) for a pool based on supply parameters
@@ -41,7 +65,7 @@ namespace DeFindex.Sdk.Services
             return 0.0m;
         }
 
-        public static decimal calculateStrategyAPR(
+        public static decimal calculateSupplyAPR(
             Reserve reserve,
             PoolConfig poolConfig
         )
@@ -92,6 +116,18 @@ namespace DeFindex.Sdk.Services
         public static decimal aprToApy(decimal apr)
         {
             return (decimal)Math.Pow(1 + (double)apr/52, 52) - 1;
+        }
+
+        public static decimal calculateSupplyAPY(
+            Reserve reserve,
+            PoolConfig poolConfig
+        ){
+            return aprToApy(
+                calculateSupplyAPR(
+                    reserve,
+                    poolConfig
+                )
+            );
         }
 
         // Helper for fixed-point division with ceiling

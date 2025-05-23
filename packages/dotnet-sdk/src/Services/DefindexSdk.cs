@@ -237,63 +237,94 @@ public class DefindexSdk : IDefindexSdk
 
         /* // Uncomment the following lines to fetch pool configurations
         var poolConfigDict = new Dictionary<string, PoolConfig>();
-        foreach (var pool in blendPoolAddressesFound)
+        foreach (var (strategyId, poolAddress) in blendPoolAddressesFound)
         {
-            var blendPoolConfig = await Helpers.CallContractMethod(pool, "get_config", new SCVal[] { }, this.Server);
+            var strategyAddress = defindexHelpers.GetStrategyAddressFromId(strategyId, defindexDeploymentsJson);
+            if (strategyAddress == null)
+            {
+                Console.WriteLine($"Could not find strategy address for ID: {strategyId}");
+                continue;
+            }
+
+            var blendPoolConfig = await defindexHelpers.CallContractMethod(poolAddress, "get_config", new SCVal[] { }, this.Server);
             if (blendPoolConfig is null || blendPoolConfig.Error != null || blendPoolConfig.Results == null || blendPoolConfig.Results.Count() == 0)
             {
-                Console.WriteLine($"Error calling get_config on pool {pool}: {blendPoolConfig?.Error}");
+                Console.WriteLine($"Error calling get_config on pool {poolAddress}: {blendPoolConfig?.Error}");
                 continue;
             }
             var parsedResponse = DefindexResponseParser.ParsePoolConfigResult(blendPoolConfig);
-            poolConfigDict[pool] = parsedResponse;
+            poolConfigDict[strategyAddress] = parsedResponse;
             Console.WriteLine($"Parsed PoolConfig: {JsonConvert.SerializeObject(parsedResponse, Formatting.Indented)}");
         }
         Console.WriteLine($"PoolConfigDict: {JsonConvert.SerializeObject(poolConfigDict, Formatting.Indented)}");
 
         // Uncomment the following lines to fetch pool reserves
         var reserveDataDict = new Dictionary<string, Reserve>();
-        foreach (var pool in blendPoolAddressesFound)
+        foreach (var (strategyId, poolAddress) in blendPoolAddressesFound)
         {
+            var strategyAddress = defindexHelpers.GetStrategyAddressFromId(strategyId, defindexDeploymentsJson);
+            if (strategyAddress == null)
+            {
+                Console.WriteLine($"Could not find strategy address for ID: {strategyId}");
+                continue;
+            }
+
             var args = new SCVal[] { 
                 new SCContractId(assetAllocation[0].Asset!),
             };
-            var blendPoolReserves = await Helpers.CallContractMethod(pool, "get_reserve", args, this.Server);
+            var blendPoolReserves = await defindexHelpers.CallContractMethod(poolAddress, "get_reserve", args, this.Server);
             if (blendPoolReserves is null || blendPoolReserves.Error != null || blendPoolReserves.Results == null || blendPoolReserves.Results.Count() == 0)
             {
-                Console.WriteLine($"Error calling get_reserves on pool {pool}: {blendPoolReserves?.Error}");
+                Console.WriteLine($"Error calling get_reserves on pool {poolAddress}: {blendPoolReserves?.Error}");
                 continue;
             }
             Console.WriteLine($"blendPoolReserves: {blendPoolReserves.Results[0].Xdr}");
             var parsedResponse = DefindexResponseParser.ParseReserveResult(blendPoolReserves);
             Console.WriteLine($"Parsed pool reserves: {JsonConvert.SerializeObject(parsedResponse, Formatting.Indented)}");
-            reserveDataDict[pool] = parsedResponse;
+            reserveDataDict[strategyAddress] = parsedResponse;
         }
         Console.WriteLine($"ReserveDataDict: {JsonConvert.SerializeObject(reserveDataDict, Formatting.Indented)}");
 
         // Uncomment the following lines to fetch reserve emissions
         var reserveEmissionsDict = new Dictionary<string, ReserveEmissionData>();
-        foreach (var pool in blendPoolAddressesFound)
+        foreach (var (strategyId, poolAddress) in blendPoolAddressesFound)
         {
+            var strategyAddress = defindexHelpers.GetStrategyAddressFromId(strategyId, defindexDeploymentsJson);
+            if (strategyAddress == null)
+            {
+                Console.WriteLine($"Could not find strategy address for ID: {strategyId}");
+                continue;
+            }
+
             var args = new SCVal[] { 
                 new SCUint32(2),
             };
-            var bpReserveEmissions = await Helpers.CallContractMethod(pool, "get_reserve_emissions", args, this.Server);
+            var bpReserveEmissions = await defindexHelpers.CallContractMethod(poolAddress, "get_reserve_emissions", args, this.Server);
             if (bpReserveEmissions is null || bpReserveEmissions.Error != null || bpReserveEmissions.Results == null || bpReserveEmissions.Results.Count() == 0)
             {
-                Console.WriteLine($"Error calling get_reserve_emissions on pool {pool}: {bpReserveEmissions?.Error}");
+                Console.WriteLine($"Error calling get_reserve_emissions on pool {poolAddress}: {bpReserveEmissions?.Error}");
                 continue;
             }
             Console.WriteLine($"bpReserveEmissions: {bpReserveEmissions.Results[0].Xdr}");
             var parsedResponse = DefindexResponseParser.ParseReserveEmissionData(bpReserveEmissions);
             Console.WriteLine($"Parsed pool reserves: {JsonConvert.SerializeObject(parsedResponse, Formatting.Indented)}");
-            reserveEmissionsDict[pool] = parsedResponse;
+            reserveEmissionsDict[strategyAddress] = parsedResponse;
         }
         Console.WriteLine($"ReserveEmissionsDict: {JsonConvert.SerializeObject(reserveEmissionsDict, Formatting.Indented)}");
- */
 
-        // var apy = Utils.calculateAPY();
-        return 0.0m;
+        // Calculate APY using the collected data
+        const uint VAULT_FEE_BPS = 100; // 1% fee in basis points
+        var apy = Utils.calculateAssetAPY(
+            poolConfigDict,
+            reserveEmissionsDict,
+            reserveDataDict,
+            assetAllocation[0],
+            VAULT_FEE_BPS
+        );
+        
+        return apy;
+
+        // return 0.0m;
     }
 
 }

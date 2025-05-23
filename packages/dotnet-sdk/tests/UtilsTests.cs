@@ -54,7 +54,7 @@ namespace DeFindex.Sdk.Tests
         };
 
         private static readonly Reserve DefaultReserve = new Reserve(
-            "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75",
+            "testStrategy",
             DefaultReserveConfig,
             DefaultReserveData,
             new BigInteger(10000000)
@@ -84,10 +84,10 @@ namespace DeFindex.Sdk.Tests
                 StrategyAllocations: new List<StrategyAllocation>
                 {
                     new StrategyAllocation(
-                        Amount: 1000000000, // 1 token with 7 decimals
+                        Amount: 2000000000, // 1 token with 7 decimals
                         Paused: false,
-                        StrategyAddress: "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7"
-                    )
+                        StrategyAddress: "testStrategy"
+                    ),
                 }
             );
         }
@@ -101,18 +101,23 @@ namespace DeFindex.Sdk.Tests
             // Arrange
             var poolConfigDict = new Dictionary<string, PoolConfig>
             {
-                { "test_pool", DefaultPoolConfig }
+                { "testStrategy", DefaultPoolConfig }
+            };
+            var reserveEmissionData = CreateDefaultReserveEmissionData();
+            var reserveEmissionsDict = new Dictionary<string, ReserveEmissionData>
+            {
+                {"testStrategy", reserveEmissionData}
             };
 
             var reserveDict = new Dictionary<string, Reserve>
             {
-                { "test_pool", DefaultReserve }
+                { "testStrategy", DefaultReserve }
             };
 
             var toAssetFromBTokenResult = Utils.toAssetFromBToken(
-                reserveDict["test_pool"].Data.BSupply, 
-                reserveDict["test_pool"].Data, 
-                reserveDict["test_pool"].Config);
+                reserveDict["testStrategy"].Data.BSupply, 
+                reserveDict["testStrategy"].Data, 
+                reserveDict["testStrategy"].Config);
 
             // Console.WriteLine(toAssetFromBTokenResult.ToString());
             // Console.WriteLine(toAssetFromBTokenResult/(new BigInteger(Math.Pow(10,17))));
@@ -124,23 +129,23 @@ namespace DeFindex.Sdk.Tests
             Assert.True((toAssetFromBTokenResult/(new BigInteger(Math.Pow(10,18)))) == 1, $"it failed with {toAssetFromBTokenResult}");
             
             var totalSupplyResult = Utils.totalSupply(
-                reserveDict["test_pool"].Data,
-                reserveDict["test_pool"].Config
+                reserveDict["testStrategy"].Data,
+                reserveDict["testStrategy"].Config
             );
             // Console.WriteLine(totalSupplyResult.ToString());
 
             Assert.Equal(totalSupplyResult, toAssetFromBTokenResult);
 
             var toAssetFromDTokenResult = Utils.toAssetFromDToken(
-                reserveDict["test_pool"].Data.DSupply,
-                reserveDict["test_pool"].Data
+                reserveDict["testStrategy"].Data.DSupply,
+                reserveDict["testStrategy"].Data
             );
             // Console.WriteLine(toAssetFromDTokenResult.ToString());
             Assert.True(toAssetFromDTokenResult/(new BigInteger(Math.Pow(10,18)))== 1 ,$"Magnitud incorrect, with {toAssetFromDTokenResult/(new BigInteger(Math.Pow(10,18)))}");
 
             var totalLiabilitiesResult = Utils.totalLiabilities(
-                reserveDict["test_pool"].Data,
-                reserveDict["test_pool"].Config
+                reserveDict["testStrategy"].Data,
+                reserveDict["testStrategy"].Config
             );
             // Console.WriteLine(totalLiabilitiesResult.ToString());
             Assert.Equal(totalLiabilitiesResult, toAssetFromDTokenResult);
@@ -153,7 +158,7 @@ namespace DeFindex.Sdk.Tests
             Assert.True(getUtilizationResult == 9439006
 , $"Failed to check getUtilization, it was {getUtilizationResult}");
 
-            var strategyApr = Utils.calculateStrategyAPR(
+            var strategyApr = Utils.calculateSupplyAPR(
                 DefaultReserve,
                 DefaultPoolConfig
             );
@@ -163,6 +168,15 @@ namespace DeFindex.Sdk.Tests
             var strategyApy = Utils.aprToApy(strategyApr);
             Assert.True(strategyApy == (decimal)0.12985563048252, $"Failed apy with {strategyApy}");
             
+            var managedFunds = CreateDefaultManagedFunds();
+            var assetAPY = Utils.calculateAssetAPY(
+                poolConfigDict,
+                reserveEmissionsDict,
+                reserveDict,
+                managedFunds,
+                2000
+            );
+            Assert.True(assetAPY<strategyApy, $"calculate asset apy failed with {assetAPY}");
             // Act
             // var result = Utils.calculateSupplyAPY(
             //     poolConfigDict,
@@ -175,38 +189,38 @@ namespace DeFindex.Sdk.Tests
             // Assert.True(result >= 9.0m && result <= 10.0m, $"Expected result to be between 9 and 10, but got {result}");
         }
 
-        [Fact]
-        public void CalculateAPY_ReturnsExpectedValue()
-        {
-            // Arrange
-            var poolConfigDict = new Dictionary<string, PoolConfig>
-            {
-                { "test_pool", DefaultPoolConfig }
-            };
+        // [Fact]
+        // public void CalculateAPY_ReturnsExpectedValue()
+        // {
+        //     // Arrange
+        //     var poolConfigDict = new Dictionary<string, PoolConfig>
+        //     {
+        //         { "test_pool", DefaultPoolConfig }
+        //     };
 
-            var reserveEmissionsDict = new Dictionary<string, ReserveEmissionData>
-            {
-                { "test_pool", CreateDefaultReserveEmissionData() }
-            };
+        //     var reserveEmissionsDict = new Dictionary<string, ReserveEmissionData>
+        //     {
+        //         { "test_pool", CreateDefaultReserveEmissionData() }
+        //     };
 
-            var reserveDataDict = new Dictionary<string, ReserveData>
-            {
-                { "test_pool", DefaultReserveData }
-            };
+        //     var reserveDataDict = new Dictionary<string, ReserveData>
+        //     {
+        //         { "test_pool", DefaultReserveData }
+        //     };
 
-            var managedFunds = CreateDefaultManagedFunds();
+        //     var managedFunds = CreateDefaultManagedFunds();
 
-            // Act
-            var result = Utils.calculateAPY(
-                poolConfigDict,
-                reserveEmissionsDict,
-                reserveDataDict,
-                managedFunds
-            );
+        //     // Act
+        //     var result = Utils.calculateAPY(
+        //         poolConfigDict,
+        //         reserveEmissionsDict,
+        //         reserveDataDict,
+        //         managedFunds
+        //     );
 
-            // Assert
-            Assert.Equal(0.0m, result); // This will need to be updated once the actual APY calculation is implemented
-        }
+        //     // Assert
+        //     Assert.Equal(0.0m, result); // This will need to be updated once the actual APY calculation is implemented
+        // }
 
         // [Fact]
         // public void CalculateEmissionsAPR_ReturnsExpectedValue()
