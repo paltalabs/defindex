@@ -258,6 +258,11 @@ public sealed record TransactionResult(
     ulong SharesChanged);
 ```
 
+## Environment Variables
+
+- `MAINNET_RPC_URL`: The RPC URL for the mainnet.
+you may export it when using it in Program.cs
+
 ---
 
 ## **Summary**
