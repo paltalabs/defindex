@@ -8,6 +8,7 @@ make build
 sha256sum ./target/wasm32-unknown-unknown/release/blend_strategy.optimized.wasm | cut -d ' ' -f 1
 sha256sum ./target/wasm32-unknown-unknown/release/defindex_vault.optimized.wasm | cut -d ' ' -f 1
 ```
+These values should be compared with the wasm hashes that you see at Stellar.Expert in the `Hash` field```
 
 ## 🔎 What's inside?
 
