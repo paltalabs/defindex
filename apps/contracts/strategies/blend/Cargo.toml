@@ -1,5 +1,5 @@
 [package]
-name = "blend_strategy"
+name = "blend-strategy"
 version = { workspace = true }
 authors = ["coderipper <joaquin@paltalabs.io>"]
 license = { workspace = true }
