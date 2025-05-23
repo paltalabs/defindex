@@ -1,0 +1,58 @@
+name: Build contracts and release 
+on:
+  workflow_dispatch:
+    inputs:
+      release_name:
+        description: 'DeFindex Contracts Release'
+        required: true
+        type: string
+permissions:
+  contents: write
+  pull-requests: write 
+  repository-projects: write
+  packages: write
+defaults:
+  run:
+    working-directory: ./
+
+jobs:
+  release-blend-strategy:
+    uses: stellar-expert/soroban-build-workflow/.github/workflows/release.yml@main
+    with:
+      release_name: ${{ github.ref_name }}
+      release_description: 'DeFindex Blend Strategy contract release'
+      relative_path: './contracts/strategies/blend'
+      package: "blend-strategy"
+      make_target: './Makefile'
+    secrets:
+      release_token: ${{ secrets.GITHUB_TOKEN }}
+  # release-soroswap-aggregator-deployer:
+  #   uses: stellar-expert/soroban-build-workflow/.github/workflows/release.yml@main
+  #   with:
+  #     release_name: ${{ github.ref_name }}
+  #     release_description: 'Soroswap Aggregator contract release'
+  #     relative_path: './contracts/deployer'
+  #     package: "soroswap-aggregator-deployer"
+  #     make_target: './Makefile'
+  #   secrets:
+  #     release_token: ${{ secrets.GITHUB_TOKEN }}
+  # release-soroswap-adapter:
+  #   uses: stellar-expert/soroban-build-workflow/.github/workflows/release.yml@main
+  #   with:
+  #     release_name: ${{ github.ref_name }}
+  #     release_description: 'Soroswap Aggregator contract release'
+  #     relative_path: './contracts/adapters/soroswap'
+  #     package: "soroswap-adapter"
+  #     make_target: './Makefile'
+  #   secrets:
+  #     release_token: ${{ secrets.GITHUB_TOKEN }}
+  # release-phoenix-adapter:
+  #   uses: stellar-expert/soroban-build-workflow/.github/workflows/release.yml@main
+  #   with:
+  #     release_name: ${{ github.ref_name }}
+  #     release_description: 'Soroswap Aggregator contract release'
+  #     relative_path: './contracts/adapters/phoenix'
+  #     package: "phoenix-adapter"
+  #     make_target: './Makefile'
+  #   secrets:
+  #     release_token: ${{ secrets.GITHUB_TOKEN }}
