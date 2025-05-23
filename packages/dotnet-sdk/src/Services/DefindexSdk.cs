@@ -235,18 +235,18 @@ public class DefindexSdk : IDefindexSdk
         
         Console.WriteLine($"Blend pool addresses found: {JsonConvert.SerializeObject(blendPoolAddressesFound, Formatting.Indented)}");
 
-        /* // Uncomment the following lines to fetch pool configurations
+        // Uncomment the following lines to fetch pool configurations
         var poolConfigDict = new Dictionary<string, PoolConfig>();
         foreach (var (strategyId, poolAddress) in blendPoolAddressesFound)
         {
-            var strategyAddress = defindexHelpers.GetStrategyAddressFromId(strategyId, defindexDeploymentsJson);
+            var strategyAddress = Helpers.GetStrategyAddressFromId(strategyId, defindexDeploymentsJson);
             if (strategyAddress == null)
             {
                 Console.WriteLine($"Could not find strategy address for ID: {strategyId}");
                 continue;
             }
 
-            var blendPoolConfig = await defindexHelpers.CallContractMethod(poolAddress, "get_config", new SCVal[] { }, this.Server);
+            var blendPoolConfig = await Helpers.CallContractMethod(poolAddress, "get_config", new SCVal[] { }, this.Server);
             if (blendPoolConfig is null || blendPoolConfig.Error != null || blendPoolConfig.Results == null || blendPoolConfig.Results.Count() == 0)
             {
                 Console.WriteLine($"Error calling get_config on pool {poolAddress}: {blendPoolConfig?.Error}");
@@ -262,7 +262,7 @@ public class DefindexSdk : IDefindexSdk
         var reserveDataDict = new Dictionary<string, Reserve>();
         foreach (var (strategyId, poolAddress) in blendPoolAddressesFound)
         {
-            var strategyAddress = defindexHelpers.GetStrategyAddressFromId(strategyId, defindexDeploymentsJson);
+            var strategyAddress = Helpers.GetStrategyAddressFromId(strategyId, defindexDeploymentsJson);
             if (strategyAddress == null)
             {
                 Console.WriteLine($"Could not find strategy address for ID: {strategyId}");
@@ -272,7 +272,7 @@ public class DefindexSdk : IDefindexSdk
             var args = new SCVal[] { 
                 new SCContractId(assetAllocation[0].Asset!),
             };
-            var blendPoolReserves = await defindexHelpers.CallContractMethod(poolAddress, "get_reserve", args, this.Server);
+            var blendPoolReserves = await Helpers.CallContractMethod(poolAddress, "get_reserve", args, this.Server);
             if (blendPoolReserves is null || blendPoolReserves.Error != null || blendPoolReserves.Results == null || blendPoolReserves.Results.Count() == 0)
             {
                 Console.WriteLine($"Error calling get_reserves on pool {poolAddress}: {blendPoolReserves?.Error}");
@@ -289,7 +289,7 @@ public class DefindexSdk : IDefindexSdk
         var reserveEmissionsDict = new Dictionary<string, ReserveEmissionData>();
         foreach (var (strategyId, poolAddress) in blendPoolAddressesFound)
         {
-            var strategyAddress = defindexHelpers.GetStrategyAddressFromId(strategyId, defindexDeploymentsJson);
+            var strategyAddress = Helpers.GetStrategyAddressFromId(strategyId, defindexDeploymentsJson);
             if (strategyAddress == null)
             {
                 Console.WriteLine($"Could not find strategy address for ID: {strategyId}");
@@ -299,7 +299,7 @@ public class DefindexSdk : IDefindexSdk
             var args = new SCVal[] { 
                 new SCUint32(2),
             };
-            var bpReserveEmissions = await defindexHelpers.CallContractMethod(poolAddress, "get_reserve_emissions", args, this.Server);
+            var bpReserveEmissions = await Helpers.CallContractMethod(poolAddress, "get_reserve_emissions", args, this.Server);
             if (bpReserveEmissions is null || bpReserveEmissions.Error != null || bpReserveEmissions.Results == null || bpReserveEmissions.Results.Count() == 0)
             {
                 Console.WriteLine($"Error calling get_reserve_emissions on pool {poolAddress}: {bpReserveEmissions?.Error}");
