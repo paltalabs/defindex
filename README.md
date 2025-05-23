@@ -1,5 +1,14 @@
 # 📊 DeFindex Monorepo
 
+# How to validate the code?
+```
+docker compose up -d
+cd contracts
+make build
+sha256sum ./target/wasm32-unknown-unknown/release/blend_strategy.optimized.wasm | cut -d ' ' -f 1
+sha256sum ./target/wasm32-unknown-unknown/release/defindex_vault.optimized.wasm | cut -d ' ' -f 1
+```
+
 ## 🔎 What's inside?
 
 This repo includes the following packages/apps:
