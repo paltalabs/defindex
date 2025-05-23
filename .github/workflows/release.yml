@@ -1,4 +1,4 @@
-name: Build contracts and release 
+name: Build contracts and release
 on:
   workflow_dispatch:
     inputs:
@@ -8,9 +8,11 @@ on:
         type: string
 permissions:
   contents: write
-  pull-requests: write 
+  pull-requests: write
   repository-projects: write
   packages: write
+  attestations: write  # Add this
+  id-token: write     # Add this
 defaults:
   run:
     working-directory: ./
