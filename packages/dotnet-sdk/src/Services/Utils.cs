@@ -8,6 +8,7 @@ namespace DeFindex.Sdk.Services
 {
     public static class Utils
     {
+        public const uint BPS = 10000;
         /// <summary>
         /// Calculates the APY (Annual Percentage Yield) for a pool based on various parameters
         /// </summary>
@@ -34,12 +35,18 @@ namespace DeFindex.Sdk.Services
             ManagedFundsResult managedFunds,
             uint vaultFeeBps)
         {
+            decimal investedSum = 0;
             foreach (var strategy in managedFunds.StrategyAllocations){
-                var strategyApy = 1;
+                var supplyApy = calculateSupplyAPY(
+                    reserveDict[strategy.StrategyAddress],
+                    poolConfigDict[strategy.StrategyAddress]
+                );
+                var supplyApyWithFee = supplyApy*(BPS-vaultFeeBps)/BPS;
+                investedSum=investedSum+strategy.Amount*(1+supplyApyWithFee);
 
             }
-            // TODO: Implement the actual APY calculation logic using managedFunds
-            return 0.0m;
+            var numerator = managedFunds.IdleAmount+investedSum;
+            return numerator/managedFunds.TotalAmount-1;
         }
 
 

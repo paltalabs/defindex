@@ -54,7 +54,7 @@ namespace DeFindex.Sdk.Tests
         };
 
         private static readonly Reserve DefaultReserve = new Reserve(
-            "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75",
+            "testStrategy",
             DefaultReserveConfig,
             DefaultReserveData,
             new BigInteger(10000000)
@@ -84,10 +84,10 @@ namespace DeFindex.Sdk.Tests
                 StrategyAllocations: new List<StrategyAllocation>
                 {
                     new StrategyAllocation(
-                        Amount: 1000000000, // 1 token with 7 decimals
+                        Amount: 2000000000, // 1 token with 7 decimals
                         Paused: false,
-                        StrategyAddress: "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7"
-                    )
+                        StrategyAddress: "testStrategy"
+                    ),
                 }
             );
         }
@@ -101,18 +101,23 @@ namespace DeFindex.Sdk.Tests
             // Arrange
             var poolConfigDict = new Dictionary<string, PoolConfig>
             {
-                { "test_pool", DefaultPoolConfig }
+                { "testStrategy", DefaultPoolConfig }
+            };
+            var reserveEmissionData = CreateDefaultReserveEmissionData();
+            var reserveEmissionsDict = new Dictionary<string, ReserveEmissionData>
+            {
+                {"testStrategy", reserveEmissionData}
             };
 
             var reserveDict = new Dictionary<string, Reserve>
             {
-                { "test_pool", DefaultReserve }
+                { "testStrategy", DefaultReserve }
             };
 
             var toAssetFromBTokenResult = Utils.toAssetFromBToken(
-                reserveDict["test_pool"].Data.BSupply, 
-                reserveDict["test_pool"].Data, 
-                reserveDict["test_pool"].Config);
+                reserveDict["testStrategy"].Data.BSupply, 
+                reserveDict["testStrategy"].Data, 
+                reserveDict["testStrategy"].Config);
 
             // Console.WriteLine(toAssetFromBTokenResult.ToString());
             // Console.WriteLine(toAssetFromBTokenResult/(new BigInteger(Math.Pow(10,17))));
@@ -124,23 +129,23 @@ namespace DeFindex.Sdk.Tests
             Assert.True((toAssetFromBTokenResult/(new BigInteger(Math.Pow(10,18)))) == 1, $"it failed with {toAssetFromBTokenResult}");
             
             var totalSupplyResult = Utils.totalSupply(
-                reserveDict["test_pool"].Data,
-                reserveDict["test_pool"].Config
+                reserveDict["testStrategy"].Data,
+                reserveDict["testStrategy"].Config
             );
             // Console.WriteLine(totalSupplyResult.ToString());
 
             Assert.Equal(totalSupplyResult, toAssetFromBTokenResult);
 
             var toAssetFromDTokenResult = Utils.toAssetFromDToken(
-                reserveDict["test_pool"].Data.DSupply,
-                reserveDict["test_pool"].Data
+                reserveDict["testStrategy"].Data.DSupply,
+                reserveDict["testStrategy"].Data
             );
             // Console.WriteLine(toAssetFromDTokenResult.ToString());
             Assert.True(toAssetFromDTokenResult/(new BigInteger(Math.Pow(10,18)))== 1 ,$"Magnitud incorrect, with {toAssetFromDTokenResult/(new BigInteger(Math.Pow(10,18)))}");
 
             var totalLiabilitiesResult = Utils.totalLiabilities(
-                reserveDict["test_pool"].Data,
-                reserveDict["test_pool"].Config
+                reserveDict["testStrategy"].Data,
+                reserveDict["testStrategy"].Config
             );
             // Console.WriteLine(totalLiabilitiesResult.ToString());
             Assert.Equal(totalLiabilitiesResult, toAssetFromDTokenResult);
@@ -163,6 +168,15 @@ namespace DeFindex.Sdk.Tests
             var strategyApy = Utils.aprToApy(strategyApr);
             Assert.True(strategyApy == (decimal)0.12985563048252, $"Failed apy with {strategyApy}");
             
+            var managedFunds = CreateDefaultManagedFunds();
+            var assetAPY = Utils.calculateAssetAPY(
+                poolConfigDict,
+                reserveEmissionsDict,
+                reserveDict,
+                managedFunds,
+                2000
+            );
+            Assert.True(assetAPY<strategyApy, $"calculate asset apy failed with {assetAPY}");
             // Act
             // var result = Utils.calculateSupplyAPY(
             //     poolConfigDict,
