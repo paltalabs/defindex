@@ -94,7 +94,7 @@ public class DefindexResponseParser
                 }
             }
             // Create a mock ManagedFundsResult to avoid conversion errors
-            var result = new ManagedFundsResult(
+            /* var result = new ManagedFundsResult(
                 Asset: "MOCK_ASSET",
                 IdleAmount: 1000000000,
                 InvestedAmount: 2000000000,
@@ -102,8 +102,8 @@ public class DefindexResponseParser
                 StrategyAllocations: new List<StrategyAllocation> {
                     new StrategyAllocation(1000000000, false, "GAAZI4TCR3TY5OJHCTJC2A4QSY6CJWJH5IAJTGKIN2ER7LBNVKOCCWN7")
                 }
-            );
-            // var result = new ManagedFundsResult(Asset, IdleAmount, InvestedAmount, TotalAmount, StrategyAllocations);
+            ); */
+            var result = new ManagedFundsResult(Asset, IdleAmount, InvestedAmount, TotalAmount, StrategyAllocations);
             managedFundsResults.Add(result);
         }
         return managedFundsResults;
@@ -282,16 +282,16 @@ public class DefindexResponseParser
             }
             // Create a mock Reserve to avoid conversion errors
             // This is a temporary solution until proper parsing is implemented
-            var mockReserve = new Reserve(
+           /*  var mockReserve = new Reserve(
                 asset: "MOCK_ASSET",
                 config: new ReserveConfig(0, 0, false, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
                 data: new ReserveData(),
                 scalar: 7
-            );
+            ); */
             
             // Return the mock instead of creating a new Reserve
-            return mockReserve;
-            // return new Reserve(asset, config, data, scalar);
+            //urn mockReserve;
+            return new Reserve(asset, config, data, scalar);
         }
         catch (Exception ex)
         {
@@ -362,8 +362,8 @@ public class DefindexResponseParser
                     break;
             }
         }
-        return new ReserveConfig(0, 0, false, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
-        // return new ReserveConfig(cFactor, decimals, enabled, index, lFactor, maxUtil, rBase, rOne, rThree, rTwo, reactivity, supplyCap, util);
+        //return new ReserveConfig(0, 0, false, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        return new ReserveConfig(cFactor, decimals, enabled, index, lFactor, maxUtil, rBase, rOne, rThree, rTwo, reactivity, supplyCap, util);
     }
 
     private static ReserveData? ParseReserveDataMap(SCMap dataMap)
@@ -404,8 +404,8 @@ public class DefindexResponseParser
                     break;
             }
         }
-        return new ReserveData();
-        // return new ReserveData(bRate, bSupply, backstopCredit, dRate, dSupply, irMod, lastTime);
+        //return new ReserveData();
+        return new ReserveData(bRate, bSupply, backstopCredit, dRate, dSupply, irMod, lastTime);
     }
 
     public static ReserveEmissionData? ParseReserveEmissionData(SimulateTransactionResponse response)

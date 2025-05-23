@@ -17,7 +17,6 @@ public class DefindexHelpers
                 var jsonUrl = "https://raw.githubusercontent.com/paltalabs/defindex/refs/heads/main/apps/contracts/src/strategies/blend_deploy_config.json";
                 var blendDeployConfigJson = await httpClient.GetStringAsync(jsonUrl);
                 Console.WriteLine("blend_deploy_config.json fetched successfully.");
-                // Puedes procesar el _blendDeployConfigJson aquí o simplemente devolverlo/usarlo.
                 return JsonNode.Parse(blendDeployConfigJson)?.AsObject();
             }
             catch (HttpRequestException e)
@@ -36,8 +35,6 @@ public class DefindexHelpers
             {
                 var jsonUrl = $"https://raw.githubusercontent.com/paltalabs/defindex/refs/heads/main/public/{networkName}.contracts.json";
                 var defindexDeploymentsJson = await httpClient.GetStringAsync(jsonUrl);
-
-                Console.WriteLine($"{networkName}.contracts.json fetched successfully.");
                 return JsonNode.Parse(defindexDeploymentsJson)?.AsObject();
             }
             catch (HttpRequestException e)
@@ -106,14 +103,12 @@ public class DefindexHelpers
             kvp => kvp.Key,
             StringComparer.OrdinalIgnoreCase
         );
-
         var strategiesIds = assetAllocation
         .SelectMany(asset => asset.StrategyAllocations)
         .Select(strategy => strategy.StrategyAddress)
         .Where(addr => addr is not null && strategyIdLookup.TryGetValue(addr, out _))
         .Select(addr => strategyIdLookup[addr!])
         .ToList();
-
         return strategiesIds;
     }
 
