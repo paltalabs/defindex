@@ -23,7 +23,7 @@ jobs:
     with:
       release_name: ${{ github.ref_name }}
       release_description: 'DeFindex Blend Strategy contract release'
-      relative_path: './contracts/strategies/blend'
+      relative_path: './apps/contracts/strategies/blend'
       package: "blend-strategy"
       make_target: './Makefile'
     secrets:
