@@ -45,9 +45,9 @@ public class DefindexHelpers
         }
     }
     
-    public List<string> FindBlendPoolAddresses(List<string> strategyIds, JsonArray blendStrategies)
+    public List<(string StrategyId, string BlendPoolAddress)> FindBlendPoolAddresses(List<string> strategyIds, JsonArray blendStrategies)
     {
-        var blendPoolAddresses = new List<string>();
+        var blendPoolAddresses = new List<(string StrategyId, string BlendPoolAddress)>();
 
         foreach (var strategyId in strategyIds)
         {
@@ -76,7 +76,7 @@ public class DefindexHelpers
                 var blendPoolAddress = configEntry["blend_pool_address"]?.GetValue<string>();
                 if (!string.IsNullOrEmpty(blendPoolAddress))
                 {
-                    blendPoolAddresses.Add(blendPoolAddress);
+                    blendPoolAddresses.Add((strategyId, blendPoolAddress));
                     break;
                 }
                 else
@@ -128,4 +128,14 @@ public class DefindexHelpers
         return simulatedTransaction;
     }
     
+    public string? GetStrategyAddressFromId(string strategyId, JsonObject defindexDeploymentsJson)
+    {
+        if (defindexDeploymentsJson is null || !defindexDeploymentsJson.ContainsKey("ids"))
+            return null;
+
+        if (defindexDeploymentsJson["ids"] is not JsonObject idsObject)
+            return null;
+
+        return idsObject[strategyId]?.GetValue<string>();
+    }
 }
