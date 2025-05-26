@@ -314,6 +314,8 @@ public class DefindexSdk : IDefindexSdk
 
         // Calculate APY using the collected data
         const uint VAULT_FEE_BPS = 100; // 1% fee in basis points
+
+        // TODO: use the vault fee from the contract
         var apy = Utils.calculateAssetAPY(
             poolConfigDict,
             reserveEmissionsDict,

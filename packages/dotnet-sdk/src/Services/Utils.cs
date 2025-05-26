@@ -41,28 +41,15 @@ namespace DeFindex.Sdk.Services
                     reserveDict[strategy.StrategyAddress],
                     poolConfigDict[strategy.StrategyAddress]
                 );
+
+                // TODO: Implement the Emissions APY
+
                 var supplyApyWithFee = supplyApy*(BPS-vaultFeeBps)/BPS;
                 investedSum=investedSum+strategy.Amount*(1+supplyApyWithFee);
 
             }
             var numerator = managedFunds.IdleAmount+investedSum;
             return numerator/managedFunds.TotalAmount-1;
-        }
-
-
-        /// <summary>
-        /// Calculates the Supply APY (Annual Percentage Yield) for a pool based on supply parameters
-        /// </summary>
-        /// <param name="poolConfigDict">Dictionary of pool configurations</param>
-        /// <param name="reserveDataDict">Dictionary of reserve data</param>
-        /// <returns>The calculated Supply APY as a decimal value</returns>
-        public static decimal calculateSupplyAPY(
-            Dictionary<string, PoolConfig> poolConfigDict,
-            Dictionary<string, Reserve> reserveDict
-        )
-        {
-            // TODO: Implement the supply APY calculation logic
-            return 0.0m;
         }
 
         public static decimal calculateSupplyAPR(
@@ -154,12 +141,25 @@ namespace DeFindex.Sdk.Services
         /// <returns>The calculated Emissions APR as a decimal value</returns>
         public static decimal calculateEmissionsAPR(
             ReserveEmissionData reserveEmissionData,
-            (long, long) assetReserves,
-            (long, long) blndReserves)
+            (long, long) assetReserves, // TODO change this to dict
+            (long, long) blndReserves) // TODO add supply as param
         {
+            // Formula:Total emissions per year = EPS*Seconds in a year / Supply
+            // EmissionsAPR = Total emissions per year * PrecioBLND/Precio UnderlyingAsset
+            // EmissionsAPR = Total emissions per year *ReserveUnderlyingAsset/ReserveBLND
             // TODO: Implement the emissions APR calculation logic
+            // supply = toAssetFromBToken( Reserve.Data.BSupply)
+
             return 0.0m;
         }
+
+        public static decimal calculateEmissionsAPY(
+            decimal emissionsAPR,
+            decimal priceBLND,
+            decimal priceUnderlyingAsset
+        ){
+            // Anualize the emissions APR per day.
+        }   
 
         public static BigInteger getUtilization(
             ReserveConfig reserveConfig,
