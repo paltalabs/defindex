@@ -60,17 +60,24 @@ namespace DeFindex.Sdk.Tests
             new BigInteger(10000000)
         );
 
-        private static readonly (BigInteger, BigInteger) DefaultAssetReserves = (new BigInteger(2724548742322), new BigInteger(2415996815711));
-        private static readonly (BigInteger, BigInteger) DefaultBlndReserves = (new BigInteger(502), new BigInteger(24012));
+        private static readonly Dictionary<string, BigInteger> DefaultAssetReserves = new Dictionary<string, BigInteger>
+        {
+            {
+                "USDC", 502
+            },
+            {
+                Utils.BLND, 24012
+            }
+        };
 
         private static ReserveEmissionData CreateDefaultReserveEmissionData()
         {
             return new ReserveEmissionData
             {
-                Expiration = (ulong)DateTimeOffset.UtcNow.AddDays(365).ToUnixTimeSeconds(),
-                Eps = 1000000, // 1 token per second with 7 decimals
-                Index = 1000000000, // 1 token with 7 decimals
-                LastTime = (ulong)DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                Expiration = 1748844060,
+                Eps = 3418718601537, // 1 token per second with 7 decimals
+                Index = 8661023573105, // 1 token with 7 decimals
+                LastTime = 1748354327
             };
         }
 
@@ -169,11 +176,7 @@ namespace DeFindex.Sdk.Tests
             Assert.True(strategyApy == (decimal)0.12985563048252, $"Failed apy with {strategyApy}");
 
             var managedFunds = CreateDefaultManagedFunds();
-            var reserves = new Dictionary<string, BigInteger>
-            {
-                { managedFunds.Asset, DefaultAssetReserves.Item1 },
-                { Utils.BLND, DefaultBlndReserves.Item1 }
-            };
+            var reserves = DefaultAssetReserves;
             
             var assetAPY = Utils.calculateAssetAPY(
                 poolConfigDict,
