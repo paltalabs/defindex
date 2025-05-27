@@ -16,7 +16,7 @@ namespace DeFindex.Sdk.Services
         public const uint BPS = 10000;
         const long IR_MOD_SCALAR = 10000000;
         const long SCALAR_7 = 10000000;
-        const string BLND = "CD25MNVTZDL4Y3XBCPCJXGXATV5WUHHOWMYFF4YBEGU5FCPGMYTVG5JY"; // BLND token address
+        public const string BLND = "CD25MNVTZDL4Y3XBCPCJXGXATV5WUHHOWMYFF4YBEGU5FCPGMYTVG5JY"; // BLND token address
         /// <summary>
         /// Calculates the APY (Annual Percentage Yield) for a pool based on various parameters
         /// </summary>
@@ -49,6 +49,7 @@ namespace DeFindex.Sdk.Services
             foreach (var strategy in managedFunds.StrategyAllocations)
             {
                 Console.WriteLine($"Strategy Address: {strategy.StrategyAddress}");
+                var assetAddress = managedFunds.Asset;
                 var supplyApy = calculateSupplyAPY(
                     reserveDict[strategy.StrategyAddress],
                     poolConfigDict[strategy.StrategyAddress]
@@ -57,22 +58,23 @@ namespace DeFindex.Sdk.Services
                 var emmissionsAPR = calculateEmissionsAPR(
                     reserveEmissionsDict[strategy.StrategyAddress],
                     reserveDict[strategy.StrategyAddress].Data,
-                    pairReserves
+                    pairReserves,
+                    assetAddress
                 );
                 var emmisionsAPY = calculateEmissionsAPY(
                     emmissionsAPR
                 );
-                var supplyApyWithFee =((decimal)supplyApy  * (BPS - vaultFeeBps) / BPS) * SCALAR_7;
-                Console.WriteLine($"Supply APY with fee: {supplyApyWithFee}");
-                investedSum = investedSum + strategy.Amount * (SCALAR_7 + (BigInteger)supplyApyWithFee) / SCALAR_7 ;
-                Console.WriteLine($"🟡investedsum: {investedSum}");
+                var bigSupplyApy = (BigInteger)(SCALAR_7 * supplyApy);
+                var bigEmmisionsAPY = (BigInteger)(SCALAR_7 * emmisionsAPY);
+                var supplyApyWithFee = bigSupplyApy + bigEmmisionsAPY * (BPS - vaultFeeBps) / BPS;
+                investedSum = investedSum + strategy.Amount * (SCALAR_7 + (BigInteger)supplyApyWithFee) / SCALAR_7;
 
             }
             var numerator = managedFunds.IdleAmount + investedSum;
             Console.WriteLine($"Managed Funds Total Amount: {managedFunds.TotalAmount}");
             Console.WriteLine($"Numerator: {numerator}");
-            var result = (decimal)numerator - (decimal)managedFunds.TotalAmount  - 1.0m;
-            Console.WriteLine($"Result: {result}");
+            var result = (decimal)numerator / (decimal)managedFunds.TotalAmount  - 1.0m;
+
             return result;
         }
 
@@ -167,7 +169,8 @@ namespace DeFindex.Sdk.Services
         public static decimal calculateEmissionsAPR(
             ReserveEmissionData reserveEmissionData,
             ReserveData blendReserveData,
-            Dictionary<string, BigInteger> pairReserves)
+            Dictionary<string, BigInteger> pairReserves,
+            string AssetAddress)
         {
             // Formula:Total emissions per year = EPS*Seconds in a year / Supply
             // EmissionsAPR = Total emissions per year * PrecioBLND/Precio UnderlyingAsset
@@ -175,8 +178,8 @@ namespace DeFindex.Sdk.Services
             // TODO: Implement the emissions APR calculation logic
             // supply = toAssetFromBToken( Reserve.Data.BSupply)
             BigInteger secondsInYear = (365 * 24 * 60 * 60);
-            Console.WriteLine($"Reserve emmissions {JsonConvert.SerializeObject(reserveEmissionData, Formatting.Indented)}");
-            var num = reserveEmissionData.Eps * secondsInYear * pairReserves["CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75"];
+            Console.WriteLine($"🟡pairReserve {JsonConvert.SerializeObject(pairReserves, Formatting.Indented)}");
+            var num = reserveEmissionData.Eps * secondsInYear * pairReserves[AssetAddress];
             var denom = blendReserveData.BSupply * pairReserves[BLND];
             var totalEmissionsPerYear = num / denom;
 
@@ -195,7 +198,6 @@ namespace DeFindex.Sdk.Services
         {
             // Anualize the emissions APR per day.
             double baseValue = 1 + (double)emissionsAPR / SCALAR_7 / 365;
-            Console.WriteLine($"Base Value: {baseValue}");
             double powResult = Math.Pow(baseValue, 365) - 1;
             if (double.IsInfinity(powResult) || powResult > (double)decimal.MaxValue)
             {
@@ -205,6 +207,7 @@ namespace DeFindex.Sdk.Services
             {
                 return decimal.MinValue;
             }
+            Console.WriteLine($"Emissions APY: {powResult}");
             return (decimal)powResult;
         }
 

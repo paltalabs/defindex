@@ -258,9 +258,8 @@ public class DefindexSdk : IDefindexSdk
         if (!networkConfig.TryGetPropertyValue("strategies", out var strategiesNode) || strategiesNode is not JsonArray blendStrategiesArray)
             return null;
 
-        var BlendTokenAddress = "CD25MNVTZDL4Y3XBCPCJXGXATV5WUHHOWMYFF4YBEGU5FCPGMYTVG5JY";
         var blendPoolAddressesFound = Helpers.FindBlendPoolAddresses(strategiesIds, blendStrategiesArray);
-        var reserves = await Router.GetPairReserves(assetAllocation[0].Asset!, BlendTokenAddress, this.Server);
+        var reserves = await Router.GetPairReserves(assetAllocation[0].Asset!, Utils.BLND, this.Server);
         Console.WriteLine($"Reserves: {JsonConvert.SerializeObject(reserves, Formatting.Indented)}");
 
 
@@ -366,11 +365,9 @@ public class DefindexSdk : IDefindexSdk
         }
         Console.WriteLine($"ReserveEmissionsDict: {JsonConvert.SerializeObject(reserveEmissionsDict, Formatting.Indented)}");
 
-        // Calculate APY using the collected data
         var defindexVaultFees = await GetVaultFee();
         var vaultFee = defindexVaultFees.Count > 0 ? defindexVaultFees[0] : 0; // Default to 0 if no fees are found
 
-        // TODO: use the vault fee from the contract
         var apy = Utils.calculateAssetAPY(
             poolConfigDict,
             reserveEmissionsDict,
