@@ -7,12 +7,14 @@ using Paltalabs.Defindex.Services;
 using StellarDotnetSdk;
 using StellarDotnetSdk.Soroban;
 using Newtonsoft.Json;
+using System.Text.Json.Nodes;
 
 namespace DeFindex.Sdk.Services
 {
     public static class Utils
     {
         public readonly static SoroswapRouter router = new SoroswapRouter();
+        public readonly static DefindexHelpers Helpers = new DefindexHelpers();
         public const uint BPS = 10000;
         const long IR_MOD_SCALAR = 10000000;
         const long SCALAR_7 = 10000000;
@@ -70,7 +72,7 @@ namespace DeFindex.Sdk.Services
 
             }
             var numerator = managedFunds.IdleAmount + investedSum;
-            var result = (decimal)numerator / (decimal)managedFunds.TotalAmount  - 1.0m;
+            var result = (decimal)numerator / (decimal)managedFunds.TotalAmount - 1.0m;
 
             return result;
         }
@@ -116,7 +118,7 @@ namespace DeFindex.Sdk.Services
             }
 
             var supplyCapture = (SCALAR_7 - poolConfig.BStopRate) * curUtil / SCALAR_7;
-            
+
             var supplyApr = (decimal)curIr * (decimal)supplyCapture / (decimal)SCALAR_7 / (decimal)SCALAR_7;
             // Convert supplyApr to decimal, assuming supplyApr is in 7 decimals fixed-point
             return supplyApr;
@@ -256,6 +258,109 @@ namespace DeFindex.Sdk.Services
                 return 0;
             }
             return dTokenAmount * reserveData.DRate / (new BigInteger(Math.Pow(10, 7))); // Using 7 decimals as seen in the test data
+        }
+        public static JsonObject? GetNetworkConfig(JsonObject blendDeployConfig, string networkName)
+        {
+            if (!blendDeployConfig.TryGetPropertyValue(networkName, out var networkConfigNode) || networkConfigNode is not JsonObject networkConfig)
+                return null;
+            return networkConfig;
+        }
+
+        public static JsonArray? GetBlendStrategiesArray(JsonObject networkConfig)
+        {
+            if (!networkConfig.TryGetPropertyValue("strategies", out var strategiesNode) || strategiesNode is not JsonArray blendStrategiesArray)
+                return null;
+            return blendStrategiesArray;
+        }
+
+        public static async Task<Dictionary<string, PoolConfig>> FetchPoolConfigs(List<(string strategyId, string poolAddress)> blendPoolAddressesFound, JsonObject defindexDeploymentsJson, SorobanServer server)
+        {
+            var poolConfigDict = new Dictionary<string, PoolConfig>();
+            foreach (var (strategyId, poolAddress) in blendPoolAddressesFound)
+            {
+                var strategyAddress = Helpers.GetStrategyAddressFromId(strategyId, defindexDeploymentsJson);
+                if (strategyAddress == null)
+                {
+                    Console.WriteLine($"Could not find strategy address for ID: {strategyId}");
+                    continue;
+                }
+                var blendPoolConfig = await Helpers.CallContractMethod(poolAddress, "get_config", new SCVal[] { }, server);
+                if (blendPoolConfig is null || blendPoolConfig.Error != null || blendPoolConfig.Results == null || blendPoolConfig.Results.Count() == 0)
+                {
+                    Console.WriteLine($"Error calling get_config on pool {poolAddress}: {blendPoolConfig?.Error}");
+                    continue;
+                }
+                var parsedResponse = DefindexResponseParser.ParsePoolConfigResult(blendPoolConfig);
+                poolConfigDict[strategyAddress] = parsedResponse;
+            }
+            return poolConfigDict;
+        }
+
+        public static async Task<Dictionary<string, Reserve>> FetchReserveData(List<(string strategyId, string poolAddress)> blendPoolAddressesFound, JsonObject defindexDeploymentsJson, string asset, SorobanServer server)
+        {
+            var reserveDataDict = new Dictionary<string, Reserve>();
+            foreach (var (strategyId, poolAddress) in blendPoolAddressesFound)
+            {
+                var strategyAddress = Helpers.GetStrategyAddressFromId(strategyId, defindexDeploymentsJson);
+                if (strategyAddress == null)
+                {
+                    Console.WriteLine($"Could not find strategy address for ID: {strategyId}");
+                    continue;
+                }
+                var args = new SCVal[] { new SCContractId(asset) };
+                var blendPoolReserves = await Helpers.CallContractMethod(poolAddress, "get_reserve", args, server);
+                if (blendPoolReserves is null || blendPoolReserves.Error != null || blendPoolReserves.Results == null || blendPoolReserves.Results.Count() == 0)
+                {
+                    Console.WriteLine($"Error calling get_reserves on pool {poolAddress}: {blendPoolReserves?.Error}");
+                    continue;
+                }
+                var parsedResponse = DefindexResponseParser.ParseReserveResult(blendPoolReserves);
+                reserveDataDict[strategyAddress] = parsedResponse;
+            }
+            return reserveDataDict;
+        }
+
+        public static async Task<Dictionary<string, ReserveEmissionData>> FetchReserveEmissions(List<(string strategyId, string poolAddress)> blendPoolAddressesFound, JsonObject defindexDeploymentsJson, Dictionary<string, Reserve> reserveDataDict, SorobanServer server)
+        {
+            var reserveEmissionsDict = new Dictionary<string, ReserveEmissionData>();
+            foreach (var (strategyId, poolAddress) in blendPoolAddressesFound)
+            {
+                var strategyAddress = Helpers.GetStrategyAddressFromId(strategyId, defindexDeploymentsJson);
+                if (strategyAddress == null)
+                {
+                    Console.WriteLine($"Could not find strategy address for ID: {strategyId}");
+                    continue;
+                }
+                var id = reserveDataDict[strategyAddress].Config.Index * 2 + 1;
+                var args = new SCVal[] { new SCUint32(id) };
+                try
+                {
+                    var bpReserveEmissions = await Helpers.CallContractMethod(poolAddress, "get_reserve_emissions", args, server);
+                    if (bpReserveEmissions is null || bpReserveEmissions.Error != null || bpReserveEmissions.Results == null || bpReserveEmissions.Results.Count() == 0)
+                    {
+                        Console.WriteLine($"Error calling get_reserve_emissions on pool {poolAddress}: {bpReserveEmissions?.Error}");
+                        continue;
+                    }
+                    var parsedResponse = DefindexResponseParser.ParseReserveEmissionData(bpReserveEmissions);
+                    if (parsedResponse == null)
+                    {
+                        throw new Exception($"Parsed response is null for strategy address: {strategyAddress}");
+                    }
+                    reserveEmissionsDict[strategyAddress] = parsedResponse;
+                }
+                catch (Exception ex)
+                {
+                    reserveEmissionsDict[strategyAddress] = new ReserveEmissionData
+                    {
+                        Eps = 0,
+                        Expiration = 0,
+                        Index = System.Numerics.BigInteger.Zero,
+                        LastTime = 0
+                    };
+                    continue;
+                }
+            }
+            return reserveEmissionsDict;
         }
     }
 } 

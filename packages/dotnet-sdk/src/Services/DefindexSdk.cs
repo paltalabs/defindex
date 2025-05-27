@@ -241,127 +241,50 @@ public class DefindexSdk : IDefindexSdk
     
     public async Task<decimal?> GetVaultAPY()
     {
-        var assetAllocation = await this.FetchTotalManagedFunds();
-        var network = await this.Server.GetNetwork();
-        var networkName = network.Passphrase.IndexOf("public", StringComparison.OrdinalIgnoreCase) >= 0 ? "mainnet" : "testnet";
-
-        var defindexDeploymentsJson = await Helpers.FetchDefindexDeployments(networkName);
-        var blendDeployConfig = await Helpers.FetchBlendDeployConfig();
-        if (defindexDeploymentsJson is null || !defindexDeploymentsJson.ContainsKey("ids")) return null;
-        var strategiesIds = Helpers.ExtractStrategyIds(assetAllocation, defindexDeploymentsJson);
-        if (strategiesIds is null || !strategiesIds.Any() || blendDeployConfig is null || !strategiesIds.Any())
-            return null;
-
-        if (!blendDeployConfig.TryGetPropertyValue(networkName, out var networkConfigNode) || networkConfigNode is not JsonObject networkConfig)
-            return null;
-
-        if (!networkConfig.TryGetPropertyValue("strategies", out var strategiesNode) || strategiesNode is not JsonArray blendStrategiesArray)
-            return null;
-
-        var blendPoolAddressesFound = Helpers.FindBlendPoolAddresses(strategiesIds, blendStrategiesArray);
-        var reserves = await Router.GetPairReserves(assetAllocation[0].Asset!, Utils.BLND, this.Server);
-
-        // Uncomment the following lines to fetch pool configurations
-        var poolConfigDict = new Dictionary<string, PoolConfig>();
-        foreach (var (strategyId, poolAddress) in blendPoolAddressesFound)
+        try
         {
-            var strategyAddress = Helpers.GetStrategyAddressFromId(strategyId, defindexDeploymentsJson);
-            if (strategyAddress == null)
-            {
-                Console.WriteLine($"Could not find strategy address for ID: {strategyId}");
-                continue;
-            }
+            var assetAllocation = await FetchTotalManagedFunds();
+            var network = await Server.GetNetwork();
+            var networkName = network.Passphrase.IndexOf("public", StringComparison.OrdinalIgnoreCase) >= 0 ? "mainnet" : "testnet";
+            
+            var defindexDeploymentsJson = await Helpers.FetchDefindexDeployments(networkName);
+            var blendDeployConfig = await Helpers.FetchBlendDeployConfig();
+            if (defindexDeploymentsJson is null || !defindexDeploymentsJson.ContainsKey("ids")) return null;
+            var strategiesIds = Helpers.ExtractStrategyIds(assetAllocation, defindexDeploymentsJson);
+            if (strategiesIds is null || !strategiesIds.Any() || blendDeployConfig is null || !strategiesIds.Any())
+                return null;
 
-            var blendPoolConfig = await Helpers.CallContractMethod(poolAddress, "get_config", new SCVal[] { }, this.Server);
-            if (blendPoolConfig is null || blendPoolConfig.Error != null || blendPoolConfig.Results == null || blendPoolConfig.Results.Count() == 0)
-            {
-                Console.WriteLine($"Error calling get_config on pool {poolAddress}: {blendPoolConfig?.Error}");
-                continue;
-            }
-            var parsedResponse = DefindexResponseParser.ParsePoolConfigResult(blendPoolConfig);
-            poolConfigDict[strategyAddress] = parsedResponse;
+            var networkConfig = Utils.GetNetworkConfig(blendDeployConfig, networkName);
+            if (networkConfig == null) return null;
+            var blendStrategiesArray = Utils.GetBlendStrategiesArray(networkConfig);
+            if (blendStrategiesArray == null) return null;
+
+            var blendPoolAddressesFound = Helpers.FindBlendPoolAddresses(strategiesIds, blendStrategiesArray);
+            var reserves = await Router.GetPairReserves(assetAllocation[0].Asset!, Utils.BLND, Server);
+
+            var poolConfigDict = await Utils.FetchPoolConfigs(blendPoolAddressesFound, defindexDeploymentsJson, Server);
+            var reserveDataDict = await Utils.FetchReserveData(blendPoolAddressesFound, defindexDeploymentsJson, assetAllocation[0].Asset!, Server);
+            var reserveEmissionsDict = await Utils.FetchReserveEmissions(blendPoolAddressesFound, defindexDeploymentsJson, reserveDataDict, Server);
+
+            var defindexVaultFees = await GetVaultFee();
+            var vaultFee = defindexVaultFees.Count > 0 ? defindexVaultFees[0] : 0;
+
+            var apy = Utils.calculateAssetAPY(
+                poolConfigDict,
+                reserveEmissionsDict,
+                reserveDataDict,
+                assetAllocation[0],
+                reserves,
+                vaultFee
+            );
+
+            return apy;
         }
-
-        // Uncomment the following lines to fetch pool reserves
-        var reserveDataDict = new Dictionary<string, Reserve>();
-        foreach (var (strategyId, poolAddress) in blendPoolAddressesFound)
+        catch (Exception ex)
         {
-            var strategyAddress = Helpers.GetStrategyAddressFromId(strategyId, defindexDeploymentsJson);
-            if (strategyAddress == null)
-            {
-                Console.WriteLine($"Could not find strategy address for ID: {strategyId}");
-                continue;
-            }
-
-            var args = new SCVal[] {
-                new SCContractId(assetAllocation[0].Asset!),
-            };
-            var blendPoolReserves = await Helpers.CallContractMethod(poolAddress, "get_reserve", args, this.Server);
-            if (blendPoolReserves is null || blendPoolReserves.Error != null || blendPoolReserves.Results == null || blendPoolReserves.Results.Count() == 0)
-            {
-                Console.WriteLine($"Error calling get_reserves on pool {poolAddress}: {blendPoolReserves?.Error}");
-                continue;
-            }
-            var parsedResponse = DefindexResponseParser.ParseReserveResult(blendPoolReserves);
-            reserveDataDict[strategyAddress] = parsedResponse;
+            Console.WriteLine($"Error in GetVaultAPY: {ex.Message}");
+            return null;
         }
-
-        // Uncomment the following lines to fetch reserve emissions
-        var reserveEmissionsDict = new Dictionary<string, ReserveEmissionData>();
-        foreach (var (strategyId, poolAddress) in blendPoolAddressesFound)
-        {   
-
-            var strategyAddress = Helpers.GetStrategyAddressFromId(strategyId, defindexDeploymentsJson);
-            if (strategyAddress == null)
-            {
-                Console.WriteLine($"Could not find strategy address for ID: {strategyId}");
-                continue;
-            }
-            var id = reserveDataDict[strategyAddress].Config.Index * 2 + 1;
-            var args = new SCVal[] {
-                new SCUint32(id),
-            };
-            try
-            {
-                var bpReserveEmissions = await Helpers.CallContractMethod(poolAddress, "get_reserve_emissions", args, this.Server);
-                if (bpReserveEmissions is null || bpReserveEmissions.Error != null || bpReserveEmissions.Results == null || bpReserveEmissions.Results.Count() == 0)
-                {
-                    Console.WriteLine($"Error calling get_reserve_emissions on pool {poolAddress}: {bpReserveEmissions?.Error}");
-                    continue;
-                }
-                var parsedResponse = DefindexResponseParser.ParseReserveEmissionData(bpReserveEmissions);
-                if (parsedResponse == null)
-                {
-                    throw new Exception($"Parsed response is null for strategy address: {strategyAddress}");
-                }
-                reserveEmissionsDict[strategyAddress] = parsedResponse;
-            }
-            catch (Exception ex)
-            {
-                reserveEmissionsDict[strategyAddress] = new ReserveEmissionData
-                {
-                    Eps = 0,
-                    Expiration = 0,
-                    Index = BigInteger.Zero,
-                    LastTime = 0
-                };
-                continue;
-            }
-        }
-
-        var defindexVaultFees = await GetVaultFee();
-        var vaultFee = defindexVaultFees.Count > 0 ? defindexVaultFees[0] : 0; // Default to 0 if no fees are found
-
-        var apy = Utils.calculateAssetAPY(
-            poolConfigDict,
-            reserveEmissionsDict,
-            reserveDataDict,
-            assetAllocation[0],
-            reserves,
-            vaultFee
-        );
-
-        return apy;
     }
 
 }
