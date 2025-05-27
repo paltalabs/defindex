@@ -50,6 +50,17 @@ namespace DeFindex.Sdk.Services
             BigInteger investedSum = 0;
             foreach (var strategy in managedFunds.StrategyAllocations)
             {
+                if(
+                    strategy.StrategyAddress == null ||
+                    !poolConfigDict.ContainsKey(strategy.StrategyAddress) ||
+                    poolConfigDict[strategy.StrategyAddress] == null ||
+                    !reserveDict.ContainsKey(strategy.StrategyAddress) ||
+                    reserveDict[strategy.StrategyAddress].Data == null
+                )
+                {
+                    Console.WriteLine($"Strategy address {strategy.StrategyAddress} not found in poolConfigDict or reserveDict.");
+                    continue;
+                }
                 var assetAddress = managedFunds.Asset;
                 var supplyApy = calculateSupplyAPY(
                     reserveDict[strategy.StrategyAddress],
@@ -58,9 +69,9 @@ namespace DeFindex.Sdk.Services
                 // TODO: Implement the Emissions APY
                 var emmisionsAPR = calculateEmissionsAPR(
                     reserveEmissionsDict[strategy.StrategyAddress],
-                    reserveDict[strategy.StrategyAddress].Data,
+                    reserveDict[strategy.StrategyAddress].Data!,
                     pairReserves,
-                    assetAddress
+                    assetAddress!
                 );
                 var emmisionsAPY = calculateEmissionsAPY(
                     emmisionsAPR
@@ -82,6 +93,10 @@ namespace DeFindex.Sdk.Services
             PoolConfig poolConfig
         )
         {
+            if (reserve.Config == null || reserve.Data == null)
+            {
+                throw new ArgumentException("Reserve config or data is null");
+            }
             var curUtil = getUtilization(reserve.Config, reserve.Data);
             if (curUtil == 0)
             {
@@ -291,6 +306,10 @@ namespace DeFindex.Sdk.Services
                     continue;
                 }
                 var parsedResponse = DefindexResponseParser.ParsePoolConfigResult(blendPoolConfig);
+                if (parsedResponse == null)
+                {
+                    continue;
+                }
                 poolConfigDict[strategyAddress] = parsedResponse;
             }
             return poolConfigDict;
@@ -315,6 +334,10 @@ namespace DeFindex.Sdk.Services
                     continue;
                 }
                 var parsedResponse = DefindexResponseParser.ParseReserveResult(blendPoolReserves);
+                if (parsedResponse == null)
+                {
+                    continue;
+                }
                 reserveDataDict[strategyAddress] = parsedResponse;
             }
             return reserveDataDict;
@@ -328,10 +351,15 @@ namespace DeFindex.Sdk.Services
                 var strategyAddress = Helpers.GetStrategyAddressFromId(strategyId, defindexDeploymentsJson);
                 if (strategyAddress == null)
                 {
-                    Console.WriteLine($"Could not find strategy address for ID: {strategyId}");
+                    Console.WriteLine($"Could not find strategy address or config for ID: {strategyId}");
                     continue;
                 }
-                var id = reserveDataDict[strategyAddress].Config.Index * 2 + 1;
+                if (!reserveDataDict.ContainsKey(strategyAddress) || reserveDataDict[strategyAddress].Config == null)
+                {
+                    Console.WriteLine($"No reserve data found for strategy address: {strategyAddress}");
+                    continue;
+                }
+                var id = reserveDataDict[strategyAddress].Config!.Index * 2 + 1;
                 var args = new SCVal[] { new SCUint32(id) };
                 try
                 {
@@ -350,6 +378,7 @@ namespace DeFindex.Sdk.Services
                 }
                 catch (Exception ex)
                 {
+                    Console.WriteLine($"{ex.Message}");
                     reserveEmissionsDict[strategyAddress] = new ReserveEmissionData
                     {
                         Eps = 0,
