@@ -55,14 +55,14 @@ namespace DeFindex.Sdk.Services
                     poolConfigDict[strategy.StrategyAddress]
                 );
                 // TODO: Implement the Emissions APY
-                var emmissionsAPR = calculateEmissionsAPR(
+                var emmisionsAPR = calculateEmissionsAPR(
                     reserveEmissionsDict[strategy.StrategyAddress],
                     reserveDict[strategy.StrategyAddress].Data,
                     pairReserves,
                     assetAddress
                 );
                 var emmisionsAPY = calculateEmissionsAPY(
-                    emmissionsAPR
+                    emmisionsAPR
                 );
                 var bigSupplyApy = (BigInteger)(SCALAR_7 * supplyApy);
                 var bigEmmisionsAPY = (BigInteger)(SCALAR_7 * emmisionsAPY);
