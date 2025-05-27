@@ -1,8 +1,15 @@
 import { Strategy } from '@/contexts';
-import useSWR from 'swr';
-import { StrategyMethod, useStrategyCallback } from './useStrategy';
-import { WalletNetwork } from 'stellar-react';
 import { getNetworkName } from '@/helpers/networkName';
+import { WalletNetwork } from 'stellar-react';
+import useSWR from 'swr';
+
+
+export enum AllowedAssets {
+  XLM = 'xlm',
+  USDC = 'usdc',
+  EURC = 'eurc'
+}
+
 export const usePublicAddresses = (network: string) => {
   const fetcher = async (url: string) => {
     const response = await fetch(url, {cache: 'reload'});
@@ -44,19 +51,15 @@ export async function extractStrategies(publicAddresses: Record<string, string>)
   for (const key in publicAddresses) {
     if (key.endsWith('_strategy')) {
       const address = publicAddresses[key];
-      let assetSymbol: 'xlm' | 'usdc';
+      let assetSymbol: AllowedAssets;
       let name = key.replace('_strategy', '');
 
-      if (name.startsWith('xlm_')) {
-        assetSymbol = 'xlm';
-        name = name.replace('xlm_', '');
-      } else if (name.startsWith('usdc_')) {
-        assetSymbol = 'usdc';
-        name = name.replace('usdc_', '');
-      } else {
-        continue;
-      }
-      strategies.push({ assetSymbol, name, address, paused: false });
+      Object.values(AllowedAssets).forEach((asset) => {
+        if (name.startsWith(asset)) {
+          assetSymbol = asset as AllowedAssets;
+          strategies.push({ assetSymbol, name, address, paused: false });
+        }
+      });
     }
   }
   return strategies;
