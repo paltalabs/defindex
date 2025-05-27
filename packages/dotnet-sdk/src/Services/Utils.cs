@@ -48,7 +48,6 @@ namespace DeFindex.Sdk.Services
             BigInteger investedSum = 0;
             foreach (var strategy in managedFunds.StrategyAllocations)
             {
-                Console.WriteLine($"Strategy Address: {strategy.StrategyAddress}");
                 var assetAddress = managedFunds.Asset;
                 var supplyApy = calculateSupplyAPY(
                     reserveDict[strategy.StrategyAddress],
@@ -71,8 +70,6 @@ namespace DeFindex.Sdk.Services
 
             }
             var numerator = managedFunds.IdleAmount + investedSum;
-            Console.WriteLine($"Managed Funds Total Amount: {managedFunds.TotalAmount}");
-            Console.WriteLine($"Numerator: {numerator}");
             var result = (decimal)numerator / (decimal)managedFunds.TotalAmount  - 1.0m;
 
             return result;
@@ -119,12 +116,8 @@ namespace DeFindex.Sdk.Services
             }
 
             var supplyCapture = (SCALAR_7 - poolConfig.BStopRate) * curUtil / SCALAR_7;
-            Console.WriteLine($"Current Utilization: {curUtil}");
-            Console.WriteLine($"Current Interest Rate: {curIr}");
-            Console.WriteLine($"Supply Capture: {supplyCapture}");
             
             var supplyApr = (decimal)curIr * (decimal)supplyCapture / (decimal)SCALAR_7 / (decimal)SCALAR_7;
-            Console.WriteLine($"Supply APR: {supplyApr}");
             // Convert supplyApr to decimal, assuming supplyApr is in 7 decimals fixed-point
             return supplyApr;
         }
@@ -178,7 +171,6 @@ namespace DeFindex.Sdk.Services
             // TODO: Implement the emissions APR calculation logic
             // supply = toAssetFromBToken( Reserve.Data.BSupply)
             BigInteger secondsInYear = (365 * 24 * 60 * 60);
-            Console.WriteLine($"🟡pairReserve {JsonConvert.SerializeObject(pairReserves, Formatting.Indented)}");
             var num = reserveEmissionData.Eps * secondsInYear * pairReserves[AssetAddress];
             var denom = blendReserveData.BSupply * pairReserves[BLND];
             var totalEmissionsPerYear = num / denom;
@@ -186,7 +178,6 @@ namespace DeFindex.Sdk.Services
             var emmissionsAPR = (decimal)totalEmissionsPerYear;
             if (emmissionsAPR > 0)
             {
-            Console.WriteLine($"Emissions APR: {emmissionsAPR}");
                 return emmissionsAPR;
             }
             return emmissionsAPR;
@@ -207,7 +198,6 @@ namespace DeFindex.Sdk.Services
             {
                 return decimal.MinValue;
             }
-            Console.WriteLine($"Emissions APY: {powResult}");
             return (decimal)powResult;
         }
 

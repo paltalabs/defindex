@@ -428,7 +428,6 @@ public class DefindexResponseParser
             var scVal = StellarDotnetSdk.Soroban.SCVal.FromXdrBase64(xdrString);
             if (scVal is not SCMap emissionMap)
             {
-                Console.WriteLine("Expected SCMap for ReserveEmissionData but received different type.");
                 return null;
             }
 

@@ -260,10 +260,6 @@ public class DefindexSdk : IDefindexSdk
 
         var blendPoolAddressesFound = Helpers.FindBlendPoolAddresses(strategiesIds, blendStrategiesArray);
         var reserves = await Router.GetPairReserves(assetAllocation[0].Asset!, Utils.BLND, this.Server);
-        Console.WriteLine($"Reserves: {JsonConvert.SerializeObject(reserves, Formatting.Indented)}");
-
-
-        Console.WriteLine($"Blend pool addresses found: {JsonConvert.SerializeObject(blendPoolAddressesFound, Formatting.Indented)}");
 
         // Uncomment the following lines to fetch pool configurations
         var poolConfigDict = new Dictionary<string, PoolConfig>();
@@ -284,9 +280,7 @@ public class DefindexSdk : IDefindexSdk
             }
             var parsedResponse = DefindexResponseParser.ParsePoolConfigResult(blendPoolConfig);
             poolConfigDict[strategyAddress] = parsedResponse;
-            Console.WriteLine($"Parsed PoolConfig: {JsonConvert.SerializeObject(parsedResponse, Formatting.Indented)}");
         }
-        Console.WriteLine($"PoolConfigDict: {JsonConvert.SerializeObject(poolConfigDict, Formatting.Indented)}");
 
         // Uncomment the following lines to fetch pool reserves
         var reserveDataDict = new Dictionary<string, Reserve>();
@@ -308,19 +302,15 @@ public class DefindexSdk : IDefindexSdk
                 Console.WriteLine($"Error calling get_reserves on pool {poolAddress}: {blendPoolReserves?.Error}");
                 continue;
             }
-            Console.WriteLine($"blendPoolReserves: {blendPoolReserves.Results[0].Xdr}");
             var parsedResponse = DefindexResponseParser.ParseReserveResult(blendPoolReserves);
-            Console.WriteLine($"Parsed pool reserves: {JsonConvert.SerializeObject(parsedResponse, Formatting.Indented)}");
             reserveDataDict[strategyAddress] = parsedResponse;
         }
-        Console.WriteLine($"ReserveDataDict: {JsonConvert.SerializeObject(reserveDataDict, Formatting.Indented)}");
 
         // Uncomment the following lines to fetch reserve emissions
         var reserveEmissionsDict = new Dictionary<string, ReserveEmissionData>();
         foreach (var (strategyId, poolAddress) in blendPoolAddressesFound)
         {   
 
-            Console.WriteLine($"🟡Processing strategy ID: {strategyId} with pool address: {poolAddress}");
             var strategyAddress = Helpers.GetStrategyAddressFromId(strategyId, defindexDeploymentsJson);
             if (strategyAddress == null)
             {
@@ -333,26 +323,21 @@ public class DefindexSdk : IDefindexSdk
             };
             try
             {
-                Console.WriteLine($"🟡Calling get_reserve_emissions on pool {poolAddress} with args: {id}");
                 var bpReserveEmissions = await Helpers.CallContractMethod(poolAddress, "get_reserve_emissions", args, this.Server);
                 if (bpReserveEmissions is null || bpReserveEmissions.Error != null || bpReserveEmissions.Results == null || bpReserveEmissions.Results.Count() == 0)
                 {
                     Console.WriteLine($"Error calling get_reserve_emissions on pool {poolAddress}: {bpReserveEmissions?.Error}");
                     continue;
                 }
-                Console.WriteLine($"bpReserveEmissions: {bpReserveEmissions.Results[0].Xdr}");
                 var parsedResponse = DefindexResponseParser.ParseReserveEmissionData(bpReserveEmissions);
-                Console.WriteLine($"Parsed pool reserves: {JsonConvert.SerializeObject(parsedResponse, Formatting.Indented)}");
                 if (parsedResponse == null)
                 {
-                    Console.WriteLine($"Parsed response is null for strategy address: {strategyAddress}");
                     throw new Exception($"Parsed response is null for strategy address: {strategyAddress}");
                 }
                 reserveEmissionsDict[strategyAddress] = parsedResponse;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"🔴Error serializing args for get_reserve_emissions: {ex.Message}");
                 reserveEmissionsDict[strategyAddress] = new ReserveEmissionData
                 {
                     Eps = 0,
@@ -363,7 +348,6 @@ public class DefindexSdk : IDefindexSdk
                 continue;
             }
         }
-        Console.WriteLine($"ReserveEmissionsDict: {JsonConvert.SerializeObject(reserveEmissionsDict, Formatting.Indented)}");
 
         var defindexVaultFees = await GetVaultFee();
         var vaultFee = defindexVaultFees.Count > 0 ? defindexVaultFees[0] : 0; // Default to 0 if no fees are found
@@ -378,8 +362,6 @@ public class DefindexSdk : IDefindexSdk
         );
 
         return apy;
-
-        // return 0.0m;
     }
 
 }
