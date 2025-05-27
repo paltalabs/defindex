@@ -73,6 +73,9 @@ class Program
         var vault_string = "CAQ6PAG4X6L7LJVGOKSQ6RU2LADWK4EQXRJGMUWL7SECS7LXUEQLM5U7";
         var vaultInstance = new DefindexSdk(vault_string, soroban_server);
 
+        var vaultFee = await vaultInstance.GetVaultFee();
+        Console.WriteLine($"Vault Fee: {vaultFee}");
+
         var vaultStrategies = await vaultInstance.GetVaultAPY();
         Console.WriteLine($"Vault APY: {vaultStrategies}");
 

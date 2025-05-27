@@ -167,6 +167,12 @@ namespace DeFindex.Sdk.Tests
 
             var strategyApy = Utils.aprToApy(strategyApr);
             Assert.True(strategyApy == (decimal)0.12985563048252, $"Failed apy with {strategyApy}");
+
+            var reserves = new Dictionary<string, BigInteger>
+            {
+                { "USDC", DefaultAssetReserves.Item1 },
+                { "BLND", DefaultBlndReserves.Item1 }
+            };
             
             var managedFunds = CreateDefaultManagedFunds();
             var assetAPY = Utils.calculateAssetAPY(
@@ -174,6 +180,7 @@ namespace DeFindex.Sdk.Tests
                 reserveEmissionsDict,
                 reserveDict,
                 managedFunds,
+                reserves,
                 2000
             );
             Assert.True(assetAPY<strategyApy, $"calculate asset apy failed with {assetAPY}");

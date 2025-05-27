@@ -13,6 +13,7 @@ using StellarDotnetSdk.Responses.SorobanRpc;
 using System.Text.Json.Nodes;
 using Newtonsoft.Json;
 using Paltalabs.Defindex.Services;
+using System.Numerics;
 
 public class DefindexSdk : IDefindexSdk
 {
@@ -207,6 +208,36 @@ public class DefindexSdk : IDefindexSdk
         return Task.FromResult(parsedResponse);
     }
 
+    public async Task<List<uint>> GetVaultFee()
+    {
+        var simulatedTx = await Helpers.CallContractMethod(
+            this._contractId.InnerValue,
+            "get_fees",
+            new SCVal[] { },
+            this.Server
+        );
+        var result = simulatedTx?.Results?.FirstOrDefault()?.Xdr;
+        if (result == null)
+        {
+            throw new Exception("Failed to get vault fee: result is null.");
+        }
+        var xdrDataInputStream = new StellarDotnetSdk.Xdr.XdrDataInputStream(Convert.FromBase64String(result));
+        var xdr = StellarDotnetSdk.Xdr.SCVal.Decode(xdrDataInputStream).Vec.InnerValue;
+        var results = new List<uint>();
+        foreach (var item in xdr)
+        {
+            if (item.U32 is StellarDotnetSdk.Xdr.Uint32 uint32Value)
+            {
+                results.Add(uint32Value.InnerValue);
+            }
+            else
+            {
+                throw new Exception($"Unexpected type in results: {item.GetType()}");
+            }
+        }
+        return results;
+    }
+
     
     public async Task<decimal?> GetVaultAPY()
     {
@@ -226,13 +257,13 @@ public class DefindexSdk : IDefindexSdk
 
         if (!networkConfig.TryGetPropertyValue("strategies", out var strategiesNode) || strategiesNode is not JsonArray blendStrategiesArray)
             return null;
-            
+
         var BlendTokenAddress = "CD25MNVTZDL4Y3XBCPCJXGXATV5WUHHOWMYFF4YBEGU5FCPGMYTVG5JY";
         var blendPoolAddressesFound = Helpers.FindBlendPoolAddresses(strategiesIds, blendStrategiesArray);
         var reserves = await Router.GetPairReserves(assetAllocation[0].Asset!, BlendTokenAddress, this.Server);
         Console.WriteLine($"Reserves: {JsonConvert.SerializeObject(reserves, Formatting.Indented)}");
 
-        
+
         Console.WriteLine($"Blend pool addresses found: {JsonConvert.SerializeObject(blendPoolAddressesFound, Formatting.Indented)}");
 
         // Uncomment the following lines to fetch pool configurations
@@ -269,7 +300,7 @@ public class DefindexSdk : IDefindexSdk
                 continue;
             }
 
-            var args = new SCVal[] { 
+            var args = new SCVal[] {
                 new SCContractId(assetAllocation[0].Asset!),
             };
             var blendPoolReserves = await Helpers.CallContractMethod(poolAddress, "get_reserve", args, this.Server);
@@ -288,32 +319,56 @@ public class DefindexSdk : IDefindexSdk
         // Uncomment the following lines to fetch reserve emissions
         var reserveEmissionsDict = new Dictionary<string, ReserveEmissionData>();
         foreach (var (strategyId, poolAddress) in blendPoolAddressesFound)
-        {
+        {   
+
+            Console.WriteLine($"🟡Processing strategy ID: {strategyId} with pool address: {poolAddress}");
             var strategyAddress = Helpers.GetStrategyAddressFromId(strategyId, defindexDeploymentsJson);
             if (strategyAddress == null)
             {
                 Console.WriteLine($"Could not find strategy address for ID: {strategyId}");
                 continue;
             }
-
-            var args = new SCVal[] { 
-                new SCUint32(2),
+            var id = reserveDataDict[strategyAddress].Config.Index * 2 + 1;
+            var args = new SCVal[] {
+                new SCUint32(id),
             };
-            var bpReserveEmissions = await Helpers.CallContractMethod(poolAddress, "get_reserve_emissions", args, this.Server);
-            if (bpReserveEmissions is null || bpReserveEmissions.Error != null || bpReserveEmissions.Results == null || bpReserveEmissions.Results.Count() == 0)
+            try
             {
-                Console.WriteLine($"Error calling get_reserve_emissions on pool {poolAddress}: {bpReserveEmissions?.Error}");
+                Console.WriteLine($"🟡Calling get_reserve_emissions on pool {poolAddress} with args: {id}");
+                var bpReserveEmissions = await Helpers.CallContractMethod(poolAddress, "get_reserve_emissions", args, this.Server);
+                if (bpReserveEmissions is null || bpReserveEmissions.Error != null || bpReserveEmissions.Results == null || bpReserveEmissions.Results.Count() == 0)
+                {
+                    Console.WriteLine($"Error calling get_reserve_emissions on pool {poolAddress}: {bpReserveEmissions?.Error}");
+                    continue;
+                }
+                Console.WriteLine($"bpReserveEmissions: {bpReserveEmissions.Results[0].Xdr}");
+                var parsedResponse = DefindexResponseParser.ParseReserveEmissionData(bpReserveEmissions);
+                Console.WriteLine($"Parsed pool reserves: {JsonConvert.SerializeObject(parsedResponse, Formatting.Indented)}");
+                if (parsedResponse == null)
+                {
+                    Console.WriteLine($"Parsed response is null for strategy address: {strategyAddress}");
+                    throw new Exception($"Parsed response is null for strategy address: {strategyAddress}");
+                }
+                reserveEmissionsDict[strategyAddress] = parsedResponse;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"🔴Error serializing args for get_reserve_emissions: {ex.Message}");
+                reserveEmissionsDict[strategyAddress] = new ReserveEmissionData
+                {
+                    Eps = 0,
+                    Expiration = 0,
+                    Index = BigInteger.Zero,
+                    LastTime = 0
+                };
                 continue;
             }
-            Console.WriteLine($"bpReserveEmissions: {bpReserveEmissions.Results[0].Xdr}");
-            var parsedResponse = DefindexResponseParser.ParseReserveEmissionData(bpReserveEmissions);
-            Console.WriteLine($"Parsed pool reserves: {JsonConvert.SerializeObject(parsedResponse, Formatting.Indented)}");
-            reserveEmissionsDict[strategyAddress] = parsedResponse;
         }
         Console.WriteLine($"ReserveEmissionsDict: {JsonConvert.SerializeObject(reserveEmissionsDict, Formatting.Indented)}");
 
         // Calculate APY using the collected data
-        const uint VAULT_FEE_BPS = 100; // 1% fee in basis points
+        var defindexVaultFees = await GetVaultFee();
+        var vaultFee = defindexVaultFees.Count > 0 ? defindexVaultFees[0] : 0; // Default to 0 if no fees are found
 
         // TODO: use the vault fee from the contract
         var apy = Utils.calculateAssetAPY(
@@ -321,9 +376,10 @@ public class DefindexSdk : IDefindexSdk
             reserveEmissionsDict,
             reserveDataDict,
             assetAllocation[0],
-            VAULT_FEE_BPS
+            reserves,
+            vaultFee
         );
-        
+
         return apy;
 
         // return 0.0m;

@@ -37,9 +37,9 @@ public class DefindexResponseParser
         foreach (var i in xdr.Vec.InnerValue)
         {
             string Asset = "";
-            ulong IdleAmount = 0;
-            ulong InvestedAmount = 0;
-            ulong TotalAmount = 0;
+            BigInteger IdleAmount = 0;
+            BigInteger InvestedAmount = 0;
+            BigInteger TotalAmount = 0;
             List<StrategyAllocation> StrategyAllocations = new List<StrategyAllocation>();
             foreach (var j in xdr.Vec.InnerValue[0].Map.InnerValue)
             {
@@ -51,15 +51,15 @@ public class DefindexResponseParser
                         break;
                     case "idle_amount":
                         var idleAmount = (SCInt128)SCInt128.FromSCValXdr(j.Val);
-                        IdleAmount = idleAmount.Lo;
+                        IdleAmount = ToBigInteger(idleAmount);
                         break;
                     case "invested_amount":
                         var investedAmount = (SCInt128)SCInt128.FromSCValXdr(j.Val);
-                        InvestedAmount = investedAmount.Lo;
+                        InvestedAmount = ToBigInteger(investedAmount);
                         break;
                     case "total_amount":
                         var totalAmount = (SCInt128)SCInt128.FromSCValXdr(j.Val);
-                        TotalAmount = totalAmount.Lo;
+                        TotalAmount = ToBigInteger(totalAmount);
                         break;
                     case "strategy_allocations":
                         var strategyAllocations = (SCVec)SCVec.FromSCValXdr(j.Val);
@@ -110,8 +110,8 @@ public class DefindexResponseParser
     }
     public static List<TransactionResult> ParseSubmittedTransaction(SCVal result, string txHash)
     {
-        List<ulong> Amounts = new List<ulong>();
-        ulong SharesChanged = 0;
+        List<BigInteger> Amounts = new List<BigInteger>();
+        BigInteger SharesChanged = 0;
         var res = result.ToXdr().Vec.InnerValue;
         if (res.Length == 3)
         {
@@ -128,8 +128,8 @@ public class DefindexResponseParser
             foreach (var i in res)
             {
                 var amount = (SCInt128)SCInt128.FromSCValXdr(i);
-                SharesChanged += amount.Lo;
-                Amounts.Add(amount.Lo);
+                SharesChanged += ToBigInteger(amount);
+                Amounts.Add(ToBigInteger(amount));
             }
         }
         else
