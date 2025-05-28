@@ -1,18 +1,18 @@
-import React, { useContext, useEffect, useState } from 'react'
-import BackgroundCard from '../ui/BackgroundCard'
-import { Fieldset, HStack, createListCollection, Stack, Button, Flex, Box } from '@chakra-ui/react'
-import { CustomSelect, FormField } from '../ui/CustomInputFields'
-import { baseMargin } from '../ui/Common'
-import { decimalRegex, parseNumericInput } from '@/helpers/input'
 import { Asset, AssetContext, Strategy, Vault, VaultContext } from '@/contexts'
-import { parsePascalCase } from '@/helpers/utils'
-import { FactoryMethod, useFactoryCallback } from '@/hooks/useFactory'
-import { getAssetParamsSCVal, getCreateDeFindexVaultDepositParams, getCreateDeFindexVaultParams } from '@/helpers/vault'
-import { useSorobanReact, WalletNetwork } from 'stellar-react'
-import { xdr } from '@stellar/stellar-sdk'
-import { soroswapRouterAddress } from '@/hooks/usePublicAddresses'
-import { toaster } from '../ui/toaster'
 import { isValidAddress } from '@/helpers/address'
+import { decimalRegex, parseNumericInput } from '@/helpers/input'
+import { parsePascalCase } from '@/helpers/utils'
+import { getAssetParamsSCVal, getCreateDeFindexVaultDepositParams, getCreateDeFindexVaultParams } from '@/helpers/vault'
+import { FactoryMethod, useFactoryCallback } from '@/hooks/useFactory'
+import { soroswapRouterAddress } from '@/hooks/usePublicAddresses'
+import { Button, createListCollection, Fieldset, Flex, HStack, Stack } from '@chakra-ui/react'
+import { xdr } from '@stellar/stellar-sdk'
+import React, { useContext, useEffect, useState } from 'react'
+import { useSorobanReact, WalletNetwork } from 'stellar-react'
+import BackgroundCard from '../ui/BackgroundCard'
+import { baseMargin } from '../ui/Common'
+import { CustomSelect, FormField } from '../ui/CustomInputFields'
+import { toaster } from '../ui/toaster'
 
 interface VaultConfigSectionProps {
   title: string;
@@ -148,7 +148,7 @@ function AddStrategies() {
               value={vaultContext.newVault.assetAllocation[index].amount}
               onChange={(e) => handleDepositAmount(e, index)}
             />
-            <SelectStrategies asset={assetContext!.assets[index]} />
+            <SelectStrategies asset={assetContext!.assets.find((a) => a.address === item.address)!} />
           </Stack>
         ))}
       </HStack>
