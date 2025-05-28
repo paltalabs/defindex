@@ -150,19 +150,17 @@ Creates an unsigned transaction to deposit into a vault.
 public async Task<Transaction> CreateDepositTransaction(
     List<ulong> amountsDesired,
     List<ulong> amountsMin,
-    Address from,
+    string from,
     bool invest)
 ```
 
 **Inputs:**
-
 - `amountsDesired`: List of desired deposit amounts.
 - `amountsMin`: List of minimum acceptable deposit amounts.
-- `from`: Address of the depositor.
+- `from`: Address (string) of the depositor.
 - `invest`: Whether the deposit invests immediately into strategies.
 
 **Returns:**
-
 - `Transaction`: The unsigned deposit transaction.
 
 ---
@@ -175,22 +173,21 @@ Creates an unsigned transaction to withdraw from a vault.
 
 ```C#
 public async Task<Transaction> CreateWithdrawTransaction(
-    long withdrawShares,
-    List<ulong> amountsMin,
-    Address from)
+    ulong withdrawShares,
+    List<ulong> amountsMinOut,
+    string from)
 ```
 
 **Inputs:**
-
 - `withdrawShares`: Amount of vault shares to withdraw.
-- `amountsMin`: List of minimum acceptable withdrawal amounts per asset.
-- `from`: Address of the withdrawer.
+- `amountsMinOut`: List of minimum acceptable withdrawal amounts per asset.
+- `from`: Address (string) of the withdrawer.
 
 **Returns:**
-
 - `Transaction`: The unsigned withdrawal transaction.
 
 ---
+
 ### **6. ParseTransactionResponse**
 
 Parses the transaction response from the network.
@@ -202,17 +199,31 @@ public async Task<List<TransactionResult>> ParseTransactionResponse(GetTransacti
 ```
 
 **Inputs:**
-
 - `response`: A previously validated transaction response from the network.
 
 **Returns:**
-  
-- `TransactionResult`: A sealed record containing:
+- `List<TransactionResult>`: List of transaction results.
     - `IsSuccess`: Boolean indicating if the transaction succeeded.
     - `TransactionHash`: The hash of the submitted transaction (if successful).
     - `Amounts`: An array of amounts deposited or withdrawn.
     - `SharesChanged`: The amount of shares minted or burned.
 
+---
+
+### **7. GetVaultAPY**
+
+Retrieves the current estimated APY for the vault.
+
+**Method Signature:**
+
+```C#
+public async Task<decimal?> GetVaultAPY()
+```
+
+**Returns:**
+- `decimal?`: Estimated APY for the vault, or null if not available.
+
+---
 
 ## **Data Models**
 
@@ -257,6 +268,11 @@ public sealed record TransactionResult(
     List<ulong> Amounts,
     ulong SharesChanged);
 ```
+
+## Environment Variables
+
+- `MAINNET_RPC_URL`: The RPC URL for the mainnet.
+you may export it when using it in Program.cs
 
 ---
 

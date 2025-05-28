@@ -4,6 +4,7 @@ using StellarDotnetSdk;
 using StellarDotnetSdk.Accounts;
 using StellarDotnetSdk.Responses.SorobanRpc;
 using StellarDotnetSdk.Soroban;
+using DotNetEnv;
 
 class Program
 {
@@ -12,13 +13,18 @@ class Program
 
     async static Task Main(string[] args)
     {
-        if(args.Length == 0 || args.Length > 1 || (args[0] != "testnet" && args[0] != "mainnet")){
+        // Load environment variables from .env file
+        Env.Load();
+
+        if (args.Length == 0 || args.Length > 1 || (args[0] != "testnet" && args[0] != "mainnet"))
+        {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("Please provide a network: testnet or mainnet");
             return;
         }
         var network = args[0];
-        switch (network) {
+        switch (network)
+        {
             case "testnet":
                 Console.WriteLine("Using testnet");
                 Network.UseTestNetwork();
@@ -26,48 +32,51 @@ class Program
             case "mainnet":
                 Console.WriteLine("Using mainnet");
                 Network.UsePublicNetwork();
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Mainnet is not yet supported");
-                return;
+                break;
         }
         Console.ResetColor();
 
         var keypair = KeyPair.Random();
         Console.WriteLine("Generated public key: " + keypair.AccountId);
 
-        var server = new Server("https://horizon-testnet.stellar.org");
-        var friendbot = server.TestNetFriendBot;
-
-        try {
-            var response = await friendbot.FundAccount(keypair.AccountId).Execute();
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(response.Hash);
-            Console.ResetColor();
-        } catch (Exception ex) {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Error.WriteLine("Error while funding account: " + ex.Message);
-            Console.ResetColor();
-        }
+        // var friendbot = server.TestNetFriendBot;
+        // try {
+        //     var response = await friendbot.FundAccount(keypair.AccountId).Execute();
+        //     Console.ForegroundColor = ConsoleColor.Green;
+        //     Console.WriteLine(response.Hash);
+        //     Console.ResetColor();
+        // } catch (Exception ex) {
+        //     Console.ForegroundColor = ConsoleColor.Red;
+        //     Console.Error.WriteLine("Error while funding account: " + ex.Message);
+        //     Console.ResetColor();
+        // }
 
         //View account balances
-        var account = await server.Accounts.Account(keypair.AccountId);
-        if(account.Balances[0].BalanceString != "10000.0000000"){
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Account not funded");
-            Console.ResetColor();
-        } else {
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Ok.");
-            Console.ResetColor();
-        }
+        // var account = await server.Accounts.Account(keypair.AccountId);
+        // if(account.Balances[0].BalanceString != "10000.0000000"){
+        //     Console.ForegroundColor = ConsoleColor.Red;
+        //     Console.WriteLine("Account not funded");
+        //     Console.ResetColor();
+        // }
+        // else
+        // {
+        //     Console.ForegroundColor = ConsoleColor.Green;
+        //     Console.WriteLine("Ok.");
+        //     Console.ResetColor();
+        // }
 
 
-        var soroban_server = new SorobanServer("https://soroban-testnet.stellar.org/");
+        // Get SorobanServer URL from environment variable
+        var sorobanServerUrl = Env.GetString("MAINNET_RPC_URL") ?? "https://soroban-testnet.stellar.org/";
+        var soroban_server = new SorobanServer(sorobanServerUrl);
 
-        var vault_string = "CBHREBXNXH2ES2SFIIR576BJJET5NBXSH3DIEJXTT356SFOYCTPBKABA";
-        var vaultInstance = new DefindexSdk(vault_string, soroban_server); 
+        var vault_string = "CAQ6PAG4X6L7LJVGOKSQ6RU2LADWK4EQXRJGMUWL7SECS7LXUEQLM5U7";
+        var vaultInstance = new DefindexSdk(vault_string, soroban_server);
 
-        var vaultTotalShares = await vaultInstance.GetVaultTotalShares();
+        var vaultStrategies = await vaultInstance.GetVaultAPY();
+        Console.WriteLine($"Vault APY: {vaultStrategies}");
+
+        /* var vaultTotalShares = await vaultInstance.GetVaultTotalShares();
         Console.WriteLine($"Vault Total Shares: {vaultTotalShares}");
 
         var amountsDesired = new List<ulong> { 10000000 };
@@ -121,7 +130,7 @@ class Program
         var withdrawCheckedTx = await CheckTransactionStatus(soroban_server, submittedWithdrawTx.Hash);
         var parsedWithdrawTx = vaultInstance.ParseTransactionResponse(withdrawCheckedTx);
         DisplayParsedTransactionResponse(parsedWithdrawTx.Result);
-        return;
+        return; */
     }
 
     private static void ConsoleInfo(string message)

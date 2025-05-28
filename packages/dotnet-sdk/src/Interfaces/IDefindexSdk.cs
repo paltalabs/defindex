@@ -1,6 +1,7 @@
 using StellarDotnetSdk.Transactions;
 using StellarDotnetSdk.Soroban;
 using StellarDotnetSdk.Responses.SorobanRpc;
+using System.Numerics;
 
 namespace DeFindex.Sdk.Interfaces;
 
@@ -26,9 +27,9 @@ public sealed record VaultShares
 public sealed record ManagedFundsResult
 (
     string? Asset,
-    ulong IdleAmount,
-    ulong InvestedAmount,
-    ulong TotalAmount,
+    BigInteger IdleAmount,
+    BigInteger InvestedAmount,
+    BigInteger TotalAmount,
     List<StrategyAllocation> StrategyAllocations
 );
 
@@ -40,7 +41,7 @@ public sealed record ManagedFundsResult
 /// <param name="StrategyAddress"></param>
 public sealed record StrategyAllocation
 (
-    ulong Amount,
+    BigInteger Amount,
     bool Paused,
     string? StrategyAddress
 );
@@ -61,8 +62,8 @@ public sealed record VaultFunds(
 public sealed record TransactionResult(
     bool IsSuccess,
     string? TransactionHash,
-    List<ulong> Amounts,
-    ulong SharesChanged);
+    List<BigInteger> Amounts,
+    BigInteger SharesChanged);
 
 public interface IDefindexSdk
 {
@@ -113,4 +114,10 @@ public interface IDefindexSdk
     /// Parse a successful transaction response
     /// </summary>
     Task<List<TransactionResult>> ParseTransactionResponse(GetTransactionResponse response);
+
+    /// <summary>
+    /// Gets the vault's current APY
+    /// </summary>
+
+    Task<decimal?> GetVaultAPY();
 }

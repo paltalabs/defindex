@@ -13,7 +13,7 @@
     
     <!-- Package Information -->
     <PackageId>DeFindex.Sdk</PackageId>
-    <Version>0.1.4</Version>
+    <Version>0.2.1</Version>
     <Authors>paltalabs</Authors>
     <Company>paltalabs</Company>
     <Description>Defindex core SDK.</Description>
@@ -23,7 +23,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageTags>Defindex;SDK;.Net;Paltalabs;Stellar</PackageTags>
     <PackageProjectUrl>https://github.com/paltalabs/defindex/tree/main/packages/dotnet-sdk</PackageProjectUrl>
-    <PackageReleaseNotes>Add minAmountsOut to create withdraw transaction method</PackageReleaseNotes>
+    <PackageReleaseNotes>Add method to estimate the vault APY</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,11 +31,12 @@
     <PackageReference Include="xunit" Version="2.6.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.4" />
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
-     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
     <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="MSTest.TestAdapter" Version="3.8.0" />
     <PackageReference Include="MSTest.TestFramework" Version="3.8.0" />
     <PackageReference Include="NUnit" Version="4.3.2" />
+    <PackageReference Include="DotNetEnv" Version="2.5.0" />
   </ItemGroup>
 
   <ItemGroup>
