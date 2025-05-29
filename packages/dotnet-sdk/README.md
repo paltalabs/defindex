@@ -225,54 +225,87 @@ public async Task<decimal?> GetVaultAPY()
 
 ---
 
-## **Data Models**
+### **8. GetAssetAmountsPerShares**
 
-### **VaultShares** (Represents user’s vault shares)
+Converts a given number of vault shares to the corresponding underlying asset amounts.
+
+**Method Signature:**
 
 ```C#
+public async Task<List<BigInteger>> GetAssetAmountsPerShares(BigInteger vaultShares)
+```
+
+**Inputs:**
+- `vaultShares`: The number of vault shares to convert.
+
+**Returns:**
+- `List<BigInteger>`: List of asset amounts corresponding to the given vault shares.
+
+---
+
+### **9. CreateWithdrawUnderlyingTx**
+
+Creates an unsigned transaction to withdraw a specific amount of underlying asset from the vault, with a basis points tolerance.
+
+**Method Signature:**
+
+```C#
+public async Task<Transaction> CreateWithdrawUnderlyingTx(
+    BigInteger withdrawAmount,
+    int bpsTolerance,
+    string from
+)
+```
+
+**Inputs:**
+- `withdrawAmount`: The amount of underlying asset to withdraw.
+- `bpsTolerance`: The basis points tolerance for the withdrawal.
+- `from`: The account to withdraw from.
+
+**Returns:**
+- `Transaction`: The unsigned withdrawal transaction for underlying assets.
+
+---
+
+## **Data Models**
+
+### VaultShares
+```C#
 public sealed record VaultShares(
-		string AccountId, 
-		decimal Shares
+    string AccountId,
+    ulong Shares
 );
 ```
 
-### ManagedFundsResponse (Represents vault's total managed funds per asset)
-
+### ManagedFundsResult
 ```C#
-public sealed record VaultFunds(
-		string Asset,
-		ulong IdleFunds,
-		ulong InvestedFunds,
-		ulong TotalAmount,
-		StrategyAllocation StrategyAllocations
-    );
+public sealed record ManagedFundsResult(
+    string? Asset,
+    BigInteger IdleAmount,
+    BigInteger InvestedAmount,
+    BigInteger TotalAmount,
+    List<StrategyAllocation> StrategyAllocations
+);
 ```
 
-### StrategyAllocations (Represents Strategy info)
-
+### StrategyAllocation
 ```C#
-public sealed record StrategyAllocation
-{
-    ulong Amount,
+public sealed record StrategyAllocation(
+    BigInteger Amount,
     bool Paused,
-    string? StrategyAddress,
-}
+    string? StrategyAddress
+);
 ```
 
-### **TransactionResult** (Represents the result of submitting a transaction)
-
+### TransactionResult
 ```C#
 public sealed record TransactionResult(
     bool IsSuccess,
     string? TransactionHash,
-    List<ulong> Amounts,
-    ulong SharesChanged);
+    List<BigInteger> Amounts,
+    BigInteger SharesChanged
+);
 ```
-
-## Environment Variables
-
-- `MAINNET_RPC_URL`: The RPC URL for the mainnet.
-you may export it when using it in Program.cs
 
 ---
 
@@ -283,9 +316,12 @@ you may export it when using it in Program.cs
 | `GetUserShares(string accountId)` | Retrieves user’s vault shares |
 | `FetchTotalManagedFunds()` | Gets total vault funds, idle funds, invested funds, and per-strategy breakdown for each asset |
 | `GetVaultTotalShares()` | Fetches total vault shares issued |
-| `CreateDepositTransaction(...)` | Creates an unsigned transaction to deposit into a vault |
-| `CreateWithdrawTransaction(...)` | Creates an unsigned transaction to withdraw from a vault |
+| `CreateDepositTransaction(List<ulong> amountsDesired, List<ulong> amountsMin, string from, bool invest)` | Creates an unsigned transaction to deposit into a vault |
+| `CreateWithdrawTransaction(ulong withdrawShares, List<ulong> amountsMinOut, string from)` | Creates an unsigned transaction to withdraw from a vault |
 | `ParseTransactionResponse(GetTransactionResponse response)` | Parses a transaction response from the network |
+| `GetVaultAPY()` | Retrieves the current estimated APY for the vault |
+| `GetAssetAmountsPerShares(BigInteger vaultShares)` | Converts vault shares to underlying asset amounts |
+| `CreateWithdrawUnderlyingTx(BigInteger withdrawAmount, int bpsTolerance, string from)` | Creates an unsigned transaction to withdraw underlying assets from a vault |
 
 Made with ❤️ by [PaltaLabs🥑](https://github.com/paltalabs)
 
