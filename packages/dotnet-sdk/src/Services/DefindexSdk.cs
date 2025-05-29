@@ -238,7 +238,7 @@ public class DefindexSdk : IDefindexSdk
         return results;
     }
 
-    
+
     public async Task<decimal?> GetVaultAPY()
     {
         try
@@ -246,7 +246,7 @@ public class DefindexSdk : IDefindexSdk
             var assetAllocation = await FetchTotalManagedFunds();
             var network = await Server.GetNetwork();
             var networkName = network.Passphrase.IndexOf("public", StringComparison.OrdinalIgnoreCase) >= 0 ? "mainnet" : "testnet";
-            
+
             var defindexDeploymentsJson = await Helpers.FetchDefindexDeployments(networkName);
             var blendDeployConfig = await Helpers.FetchBlendDeployConfig();
             if (defindexDeploymentsJson is null || !defindexDeploymentsJson.ContainsKey("ids")) return null;
@@ -285,6 +285,41 @@ public class DefindexSdk : IDefindexSdk
             Console.WriteLine($"Error in GetVaultAPY: {ex.Message}");
             return null;
         }
+    }
+
+    public async Task<List<BigInteger>> GetAssetAmountsPerShares(BigInteger vaultShares)
+    {   
+        if (vaultShares <= 0)
+        {
+            throw new ArgumentException("Vault shares must be greater than zero.");
+        }
+        var assetAmounts= new List<BigInteger>();
+        var response = await Helpers.CallContractMethod(
+            this._contractId.InnerValue,
+            "get_asset_amounts_per_shares", 
+            new SCVal[] { new SCInt128(vaultShares.ToString()) },
+            this.Server
+        );
+        if (response?.Results == null || response.Results.Count() == 0)
+        {
+            throw new Exception("No results found in the response.");
+        }
+        var xdrString = response.Results[0].Xdr;
+        if (string.IsNullOrEmpty(xdrString))
+        {
+            throw new Exception("XDR string is null or empty.");
+        };
+        var rawVec = (SCVec)StellarDotnetSdk.Soroban.SCVec.FromXdrBase64(xdrString);
+        foreach (var item in rawVec.InnerValue)
+        {
+            if (item is SCInt128)
+            {
+                var bigIntValue = DefindexResponseParser.ToBigInteger((SCInt128)item);
+                assetAmounts.Add(bigIntValue);
+                Console.WriteLine($"Asset Amount: {bigIntValue}");
+            }
+        }
+        return assetAmounts;
     }
 
 }

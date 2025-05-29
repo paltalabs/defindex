@@ -109,7 +109,6 @@ public interface IDefindexSdk
         List<ulong> amountsMinOut,
         string from);
 
-
     /// <summary>
     /// Parse a successful transaction response
     /// </summary>
@@ -120,4 +119,10 @@ public interface IDefindexSdk
     /// </summary>
 
     Task<decimal?> GetVaultAPY();
+
+    /// <summary>
+    /// Converts vault shares to underlying asset amounts
+    /// </summary>
+    /// <param name="vaultShares"> The number of vault shares to calculate the underlying asset amounts for a specific amount of vault shares</param>
+    Task<List<BigInteger>> GetAssetAmountsPerShares(BigInteger vaultShares);
 }
