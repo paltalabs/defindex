@@ -125,4 +125,17 @@ public interface IDefindexSdk
     /// </summary>
     /// <param name="vaultShares"> The number of vault shares to calculate the underlying asset amounts for a specific amount of vault shares</param>
     Task<List<BigInteger>> GetAssetAmountsPerShares(BigInteger vaultShares);
+
+    /// <summary>
+    /// Creates an unsigned transaction to withdraw underlying assets from a vault
+    /// </summary>
+    /// <param name="withdrawAmount">The amount of underlying asset to withdraw</param>
+    /// <param name="bpsTolerance">The basis points tolerance for the withdrawal</param>
+    /// <param name="from">The account to withdraw from</param>
+    Task<Transaction> CreateWithdrawUnderlyingTx
+    (
+        BigInteger withdrawAmount,
+        int bpsTolerance,
+        string from
+    );
 }
