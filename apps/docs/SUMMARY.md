@@ -37,14 +37,12 @@
 * [Typescript SDK](wallet-developer/02-typescript-sdk.md)
 * [Vault APY](wallet-developer/vault-apy.md)
 
-## STRATEGIES
+## DeFi DEVELOPERS
 
+* [Developer Introduction](strategies/developer-introduction.md)
 * [What is a strategy?](strategies/what-is-a-strategy.md)
 * [What is Blend Capital?](strategies/what-is-blend-capital.md)
 * [Strategies APY](strategies/strategies-apy.md)
-
-***
-
 * [Building the Blend Strategy](03-how-to-create-a-strategy.md)
 
 ## Users
