@@ -1,23 +1,24 @@
-import 'package:flutter/material.dart';
 import 'package:defindex_sdk/defindex_sdk.dart';
+import 'package:flutter/material.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
+var userAccount = 'GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE';
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Defindex SDK Example',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page 1'),
+      home: const MyHomePage(title: 'Defindex SDK Example Home Page'),
     );
   }
 }
@@ -32,22 +33,17 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+
   var vault = Vault(
     sorobanRPCUrl: 'https://soroban-testnet.stellar.org',
     network: SorobanNetwork.TESTNET,
-    contractId: 'CC4J2YNRVGDUWEUVIFHTPGKDA4QMOM6RJAP4S4P7PTI3O4Q6RRHVXELH',
+    contractId: 'CCTQFZ5KDP4ZXPRB7WTQ4ESELOL2FHTJQN3W4CQGVOB6D45WLGTHYECQ',
   );
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
+  
   Future<void> _executeDeposit() async {
     try {
       String? transactionHash = await vault.deposit(
-        'GCGKMP4VMPGECGWBMFTA5663QBNYFMO5QG7WPWKYTHWFEJVTNZNAVVR7',
+        userAccount,
         100.0,
         (transaction) async => signerFunction(transaction),
       );
@@ -55,11 +51,13 @@ class _MyHomePageState extends State<MyHomePage> {
       print('Transaction hash: $transactionHash');
 
       // You can also show a dialog or snackbar with the result
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Transaction hash: $transactionHash')),
       );
     } catch (error) {
       print('Error: $error');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error during deposit: $error')),
       );
@@ -70,7 +68,7 @@ class _MyHomePageState extends State<MyHomePage> {
   try {
     String? transactionHash = await vault.withdraw(
       100.0,
-      'GCGKMP4VMPGECGWBMFTA5663QBNYFMO5QG7WPWKYTHWFEJVTNZNAVVR7',
+      userAccount,
       (transaction) async => signerFunction(transaction),
     );
 
@@ -99,14 +97,8 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            SizedBox(height: 20),
             FutureBuilder<double?>(
-              future: vault.balance('GCGKMP4VMPGECGWBMFTA5663QBNYFMO5QG7WPWKYTHWFEJVTNZNAVVR7'),
+              future: vault.balance(userAccount),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const CircularProgressIndicator();
@@ -120,23 +112,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 }
               },
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _executeDeposit,
               child: const Text('Execute Deposit'),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _executeWithdraw,
               child: const Text('Execute Withdraw'),
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
