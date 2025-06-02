@@ -1,7 +1,7 @@
 library defindex_sdk;
 
-import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 import 'package:defindex_sdk/custom_soroban_server.dart';
+import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 
 enum SorobanNetwork {
   PUBLIC,
@@ -25,7 +25,7 @@ class Vault {
         ? StellarSDK.TESTNET
         : StellarSDK.PUBLIC;
   }
-
+  var caller = "GDA74ERJAEXDUI4G7SADU7MF4QEPAXTKFFXAC7GC4ICSO5XYEYKIRQ6S";
   // poll until success or error
   Future<GetTransactionResponse> pollStatus(String transactionId) async {
     var status = GetTransactionResponse.STATUS_NOT_FOUND;
@@ -34,6 +34,7 @@ class Vault {
     while (status == GetTransactionResponse.STATUS_NOT_FOUND) {
       await Future.delayed(const Duration(seconds: 5), () {});
       transactionResponse = await sorobanServer.getTransaction(transactionId);
+      print("Transaction response: ${transactionResponse}");
       assert(transactionResponse.error == null);
       status = transactionResponse.status!;
       if (status == GetTransactionResponse.STATUS_FAILED) {
@@ -153,6 +154,10 @@ class Vault {
       XdrSCVal arg1 = XdrSCVal.forI128(
           XdrInt128Parts(XdrInt64(0), XdrUint64(transformedValue)));
 
+      XdrSCVal minAmountsOut = XdrSCVal.forVec([
+        XdrSCVal.forI128(XdrInt128Parts(XdrInt64(0), XdrUint64(transformedValue * 0.95.toInt())))
+      ]);
+
       XdrSCVal arg2 = XdrSCVal.forAddress(XdrSCAddress.forAccountId(accountId));
       // Prepare the "invoke" operation
       InvokeContractHostFunction hostFunction = InvokeContractHostFunction(
@@ -199,7 +204,7 @@ class Vault {
   }
 
   Future<double?> balance(String accountId) async {
-    sorobanServer.enableLogging = true;
+    sorobanServer.enableLogging = false;
 
     GetHealthResponse healthResponse = await sorobanServer.getHealth();
 
@@ -231,9 +236,14 @@ class Vault {
         XdrSCVal xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(xdrValue!);
         dfBalance = BigInt.from(xdrSCVal.i128!.lo.uint64).toDouble() / 10000000; 
       }
-
       dynamic totalManagedFunds = await fetchTotalManagedFunds();
-      double totalAmount = totalManagedFunds.values.first["total_amount"];
+      if (totalManagedFunds == null || totalManagedFunds.isEmpty) {
+        print("🔴No managed funds found.");
+        return 0;
+      }
+      print("🟢Total Managed Funds: $totalManagedFunds");
+      double totalAmount = totalManagedFunds.values.first[0];
+      print("🟢Total Amount: $totalAmount");
       double? totalSupplySim = await totalSupply();
 
       return dfBalance*totalAmount/totalSupplySim!;
@@ -242,13 +252,14 @@ class Vault {
   }
 
   Future<double?> totalSupply() async {
-    sorobanServer.enableLogging = true;
+    print("🟡Fetching total supply...");
+    sorobanServer.enableLogging = false;
 
     GetHealthResponse healthResponse = await sorobanServer.getHealth();
     
     if (GetHealthResponse.HEALTHY == healthResponse.status) {
       // We'll use the contract's address as the account for this read-only operation
-      AccountResponse account = await sdk.accounts.account("GAHSP3MM23XG6L3AUBYXTRQWLC2Q6SWM6OCMCIAYV43CE2IXYSRARFDD");
+      AccountResponse account = await sdk.accounts.account(caller);
       
       // Name of the function to be invoked
       String functionName = "total_supply";
@@ -282,13 +293,14 @@ class Vault {
   }
 
   Future<Map<String, dynamic>?> fetchTotalManagedFunds() async {
-    sorobanServer.enableLogging = true;
+    print("🟡Fetching total managed funds...");
+    sorobanServer.enableLogging = false;
 
     GetHealthResponse healthResponse = await sorobanServer.getHealth();
     
     if (GetHealthResponse.HEALTHY == healthResponse.status) {
-      AccountResponse account = await sdk.accounts.account("GAHSP3MM23XG6L3AUBYXTRQWLC2Q6SWM6OCMCIAYV43CE2IXYSRARFDD");
-      
+      AccountResponse account = await sdk.accounts.account(caller);
+      print("🟡Account: ${account.accountId}");
       String functionName = "fetch_total_managed_funds";
 
       InvokeContractHostFunction hostFunction = InvokeContractHostFunction(
@@ -308,14 +320,19 @@ class Vault {
 
       if (simulateResponse.results != null && simulateResponse.results!.isNotEmpty) {
         String? xdrValue = simulateResponse.results![0].xdr;
-
-        XdrSCVal xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(xdrValue!);
-
+        print("🟡XDR Value: $xdrValue");
+        List<XdrSCVal> xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(xdrValue!).vec!;
         try {
-          Map<String, dynamic> parsedMap = parseMap(xdrSCVal);
+
+            Map<String, dynamic> parsedMap = {};
+            for (var scVal in xdrSCVal) {
+            Map<String, dynamic> map = parseMap(scVal);
+            parsedMap.addAll(map);
+            }
+            print("🟢Parsed Map: $parsedMap");
           return parsedMap;
         } catch (e) {
-          throw Exception('Unsupported type: ${xdrSCVal.discriminant}');
+          throw Exception('Unsupported type: ${xdrSCVal[0].discriminant}');
         }
       }
     }
@@ -328,14 +345,15 @@ Map<String, dynamic> parseMap(XdrSCVal scval) {
   if (scval.discriminant != XdrSCValType.SCV_MAP) {
     throw Exception('Expected Map type, got ${scval.discriminant}');
   }
-
   Map<String, dynamic> result = {};
+  print("🟡Map entries: ${scval.map!.length}");
   for (var entry in scval.map!) {
     String key = parseScVal(entry.key);
     dynamic value = parseScVal(entry.val);
     
     result[key] = value;
   }
+  print("🟡Parsed Map: $result");
   return result;
 }
 
@@ -344,30 +362,43 @@ dynamic parseScVal(XdrSCVal val) {
     case XdrSCValType.SCV_BOOL:
       return val.b;
     case XdrSCValType.SCV_U32:
+      print("🔵Parsing SCVal U32: ${val.u32!.uint32}");
       return BigInt.from(val.u32!.uint32).toDouble();
     case XdrSCValType.SCV_I32:
+      print("🔵Parsing SCVal I32: ${val.i32!.int32}");
       return BigInt.from(val.i32!.int32).toDouble();
     case XdrSCValType.SCV_U64:
+      print("🔵Parsing SCVal U64: ${val.u64!.uint64}");
       return BigInt.from(val.u64!.uint64).toDouble();
     case XdrSCValType.SCV_I64:
+      print("🔵Parsing SCVal I64: ${val.i64!.int64}");
       return BigInt.from(val.i64!.int64).toDouble();
     case XdrSCValType.SCV_U128:
+      print("🔵Parsing SCVal U128: ${val.u128!.lo.uint64}");
       return BigInt.from(val.u128!.lo.uint64).toDouble();
     case XdrSCValType.SCV_I128:
+      print("🔵Parsing SCVal I128: ${val.i128!.lo.uint64}");
       return BigInt.from(val.i128!.lo.uint64).toDouble();
     case XdrSCValType.SCV_STRING:
+      print("🔵Parsing SCVal STRING: ${val.str}");
       return val.str;
     case XdrSCValType.SCV_BYTES:
+      print("🔵Parsing SCVal BYTES: ${val.bytes}");
       return val.bytes;
     case XdrSCValType.SCV_ADDRESS:
-      return val.address.toString();
+      print("🔵Parsing SCVal ADDRESS: ${val.address!.contractId}");
+      return val.address!.contractId.toString();
     case XdrSCValType.SCV_SYMBOL:
+      print("🔵Parsing SCVal SYMBOL: ${val.sym}");
       return val.sym;
     case XdrSCValType.SCV_VEC:
+      print("🔵Parsing SCVal VEC: ${val.vec}");
       return val.vec?.map((e) => parseScVal(e)).toList();
     case XdrSCValType.SCV_MAP:
+      print("🔵Parsing SCVal MAP: ${val.map}");
       return parseMap(val);
     default:
+      print("🔴Unknown SCVal: $val");
       throw Exception('Unsupported type: ${val.discriminant}');
   }
 }
