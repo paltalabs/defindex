@@ -1,4 +1,3 @@
-import React from "react";
 import Unit from "@/components/globals/Frequently/Unit";
 
 function Frequently() {
@@ -26,7 +25,8 @@ function Frequently() {
                         />{" "}
                         <Unit
                             title="Is DeFindex secure and decentralized?"
-                            description="Yes, DeFindex operates through secure and transparent smart contracts, ensuring that all transactions are decentralized and under the full control of the user, providing peace of mind to partners and users alike."
+                            description="Yes, DeFindex operates through secure and transparent smart contracts, ensuring that all transactions are decentralized and under the full control of the user, providing peace of mind to partners and users alike. You can view our security audit"
+                            auditLink="https://drive.proton.me/urls/GYBBP5TS00#kCE6EHDN6sth"
                         />
                     </div>
                 </div>

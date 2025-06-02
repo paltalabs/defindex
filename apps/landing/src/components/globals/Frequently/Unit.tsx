@@ -1,15 +1,16 @@
 "use client";
-import React, { useState } from "react";
+import { useState } from "react";
 import SmoothCollapse from "react-smooth-collapse";
 
 interface Props {
     title: string;
     description: string;
     isOpen?: boolean;
+    auditLink?: string;
 }
 
 function Unit(props: Props) {
-    const { title, description, isOpen = false } = props;
+    const { title, description, isOpen = false, auditLink } = props;
 
     const [open, setOpen] = useState(isOpen);
     const handleToggle = () => setOpen((v) => !v);
@@ -30,6 +31,16 @@ function Unit(props: Props) {
                 <div className="w-[calc(100%-80px)]">
                     <p className="font-inter-tight text-[16px] md:text-sm text-cyan-950">
                         {description}
+                        {auditLink && (
+                            <a 
+                                href={auditLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 ml-1"
+                            >
+                                here
+                            </a>
+                        )}
                     </p>
                 </div>
             </SmoothCollapse>

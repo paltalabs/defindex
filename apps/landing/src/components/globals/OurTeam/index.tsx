@@ -1,44 +1,8 @@
 "use client";
-import Slider, { Settings } from "react-slick";
-import "slick-carousel/slick/slick-theme.css";
-import "slick-carousel/slick/slick.css";
 
 function OurTeam() {
-    const settings: Settings = {
-        dots: false,
-        infinite: true,
-        speed: 500,
-        slidesToScroll: 3,
-        centerMode: true,
-        variableWidth: true,
-        arrows: false,
-    };
-
-    const ourTeam = [
-        {
-            alt: "Esteban Iglesias",
-            image: "/people/person1.png"
-        },
-        {
-            alt: "Francisco Catrileo",
-            image: "/people/person3.png"
-        },
-        {
-            alt: "Joaquin Soza",
-            image: "/people/person2.png"
-        },
-        {
-            alt: "Matias Poblete",
-            image: "/people/person5.png"
-        },
-        {
-            alt: "Jenny",
-            image: "/people/person6.png"
-        }
-    ]
-
     return (
-        <section id="our-team">
+        <section id="our-team" className="mb-16">
             <div className="container">
                 <div className="pt-24 md:pt-28 xl:pt-[150px]">
                     <div className="max-w-[850px] mx-auto flex gap-2 xl:gap-4 items-center flex-col">
@@ -51,26 +15,6 @@ function OurTeam() {
                             and now AMM aggregator). We also created multiple developer tools such
                             as Soroban-react, create-soroban-dapp, mercury-sdk
                         </p>
-                    </div>
-                    <div className="py-16 md:py-24 xl:py-[120px]">
-                        <div className="h-[300px] md:h-[400px] xl:h-[522px]">
-                            <div>
-                                <Slider {...settings}>
-                                    {ourTeam.map((info, index) => (
-                                        <div
-                                            className="px-2 md:px-4 grid place-content-center"
-                                            key={index}
-                                        >
-                                            <img
-                                                className="rounded-3xl xl:rounded-[40px] w-ful item-wrapper h-[220px] md:h-[340px] xl:h-[442px] aspect-[407/522]"
-                                                src={info.image}
-                                                alt={info.alt}
-                                            />
-                                        </div>
-                                    ))}
-                                </Slider>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
