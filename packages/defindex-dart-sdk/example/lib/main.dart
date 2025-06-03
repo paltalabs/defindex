@@ -1,12 +1,16 @@
 import 'package:defindex_sdk/defindex_sdk.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 
-void main() {
+void main() async {
+  await dotenv.load(fileName: ".env");
   runApp(const MyApp());
 }
 
-var userAccount = 'GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE';
+final String userAccount = dotenv.env['USER_PUBLIC_KEY'] ?? '';
+final String userSecret = dotenv.env['USER_SECRET'] ?? '';
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -68,6 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
   try {
     String? transactionHash = await vault.withdraw(
       100.0,
+      100,
       userAccount,
       (transaction) async => signerFunction(transaction),
     );
@@ -150,7 +155,7 @@ String signerFunction(String transactionXdr) {
   );
   
   // Create keypair and sign
-  KeyPair keyPair = KeyPair.fromSecretSeed("SDI5ZSGJBJS2BD7PE7MPA6EXHUPJQM7I6TX5SB63HSSSZVD47OYE5X6X");
+  KeyPair keyPair = KeyPair.fromSecretSeed(userSecret);
   transaction.sign(keyPair, Network.TESTNET);
   
   // Return signed XDR
