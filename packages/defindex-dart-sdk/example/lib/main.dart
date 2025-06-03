@@ -5,15 +5,14 @@ import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 
 void main() async {
   await dotenv.load(fileName: ".env");
+  String userSecret = dotenv.env['USER_SECRET'] ?? '';
   runApp(const MyApp());
 }
 
-final String userAccount = dotenv.env['USER_PUBLIC_KEY'] ?? '';
-final String userSecret = dotenv.env['USER_SECRET'] ?? '';
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -37,7 +36,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
+  String userAccount = dotenv.env['USER_PUBLIC_KEY'] ?? '';
   var vault = Vault(
     sorobanRPCUrl: 'https://soroban-testnet.stellar.org',
     network: SorobanNetwork.TESTNET,
@@ -150,6 +149,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
 String signerFunction(String transactionXdr) {
   // Create transaction from XDR
+  String userSecret = dotenv.env['USER_SECRET'] ?? 'GD3WC73MFWITLW3HR7DNJRD7GR4FYP5QPKX7FZKD4375IQDPZXWXENFP';
+
   AbstractTransaction transaction = AbstractTransaction.fromEnvelopeXdrString(
     transactionXdr,
   );

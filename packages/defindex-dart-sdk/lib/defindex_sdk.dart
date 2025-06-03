@@ -13,7 +13,6 @@ class Vault {
   late final StellarSDK sdk;
   late final SorobanNetwork network;
   late String contractId;
-  late DotEnv env;
 
   Vault({
     required this.sorobanRPCUrl,
@@ -26,7 +25,7 @@ class Vault {
         : StellarSDK.PUBLIC;
   }
   // Load the USER_PUBLIC_KEY from environment variables
-  late final String caller = env.env['USER_PUBLIC_KEY'] ?? '';
+  late final String caller = dotenv.env['USER_PUBLIC_KEY'] ?? '';
   // poll until success or error
   Future<GetTransactionResponse> pollStatus(String transactionId) async {
     var status = GetTransactionResponse.STATUS_NOT_FOUND;
