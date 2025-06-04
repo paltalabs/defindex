@@ -2,6 +2,74 @@ library defindex_sdk;
 import 'package:defindex_sdk/custom_soroban_server.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
+
+class StrategyAllocation {
+  final double amount;
+  final bool paused;
+  final String strategyAddress;
+
+  StrategyAllocation({
+    required this.amount,
+    required this.paused,
+    required this.strategyAddress,
+  });
+
+  factory StrategyAllocation.fromMap(Map<String, dynamic> map) {
+    return StrategyAllocation(
+      amount: map['amount'] is num ? (map['amount'] as num).toDouble() : 0.0,
+      paused: map['paused'] as bool,
+      strategyAddress: map['strategy_address'] as String,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'amount': amount,
+      'paused': paused,
+      'strategy_address': strategyAddress,
+    };
+  }
+}
+
+
+class TotalManagedFunds {
+  final String asset;
+  final double idleAmount;
+  final double investedAmount;
+  final List<StrategyAllocation> strategyAllocations;
+  final double totalAmount;
+
+  TotalManagedFunds({
+    required this.asset,
+    required this.idleAmount,
+    required this.investedAmount,
+    required this.strategyAllocations,
+    required this.totalAmount,
+  });
+
+  factory TotalManagedFunds.fromMap(Map<String, dynamic> map) {
+    return TotalManagedFunds(
+      asset: map['asset'] as String,
+      idleAmount: map['idle_amount'] is num ? (map['idle_amount'] as num).toDouble() : 0.0,
+      investedAmount: map['invested_amount'] is num ? (map['invested_amount'] as num).toDouble() : 0.0,
+      strategyAllocations: (map['strategy_allocations'] as List?)
+          ?.map((allocation) => StrategyAllocation.fromMap(allocation as Map<String, dynamic>))
+          .toList() ?? [],
+      totalAmount: map['total_amount'] is num ? (map['total_amount'] as num).toDouble() : 0.0,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'asset': asset,
+      'idle_amount': idleAmount,
+      'invested_amount': investedAmount,
+      'strategy_allocations': strategyAllocations.map((allocation) => allocation.toMap()).toList(),
+      'total_amount': totalAmount,
+    };
+  }
+}
+
 enum SorobanNetwork {
   PUBLIC,
   TESTNET,
@@ -236,11 +304,16 @@ class Vault {
         XdrSCVal xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(xdrValue);
         dfBalance = BigInt.from(xdrSCVal.i128!.lo.uint64).toDouble() / 10000000; 
       }
-      dynamic totalManagedFunds = await fetchTotalManagedFunds();
-      if (totalManagedFunds == null || totalManagedFunds.isEmpty) {
+      print("dfBalance ${dfBalance}");
+      TotalManagedFunds? totalManagedFunds = await fetchTotalManagedFunds();
+      print("🟡totalManagedFunds ${totalManagedFunds}");
+      if (totalManagedFunds == null) {
+        print("No managed funds found");
         return 0;
       }
-      double totalAmount = totalManagedFunds.values.first[0];
+      print("totalManagedFunds ${totalManagedFunds.toMap()}");
+      double totalAmount = totalManagedFunds.totalAmount;
+      print("totalAmount ${totalAmount}");
       double? totalSupplySim = await totalSupply();
 
       return dfBalance*totalAmount/totalSupplySim!;
@@ -288,7 +361,7 @@ class Vault {
     return null;
   }
 
-  Future<Map<String, dynamic>?> fetchTotalManagedFunds() async {
+  Future<TotalManagedFunds?> fetchTotalManagedFunds() async {
     sorobanServer.enableLogging = false;
 
     GetHealthResponse healthResponse = await sorobanServer.getHealth();
@@ -314,16 +387,15 @@ class Vault {
 
       if (simulateResponse.results != null && simulateResponse.results!.isNotEmpty) {
         String? xdrValue = simulateResponse.results![0].xdr;
-        XdrSCVal xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(xdrValue);
+        List<XdrSCVal> xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(xdrValue).vec!;
         try {
-            var parsedMap = parseScVal(xdrSCVal);
-          return parsedMap;
+          Map<String, dynamic> resultMap = parseScVal(xdrSCVal[0]);
+          return TotalManagedFunds.fromMap(resultMap);
         } catch (e) {
-          throw Exception('Unsupported type: ${xdrSCVal.discriminant}');
+          throw Exception('Unsupported type: ${xdrSCVal[0].discriminant}');
         }
       }
     }
-    
     return null;
   }
 }
@@ -364,10 +436,13 @@ dynamic parseScVal(XdrSCVal val) {
       return val.bytes;
     case XdrSCValType.SCV_ADDRESS:
       try {
-        var address = val.address!;
-        var contractId = Address.fromXdr(address).contractId!;
-        var parsedAddress = Address.forContractId(contractId);
-        return parsedAddress;
+        if (val.address?.contractId != null) {
+          final contractIdHex = Util.bytesToHex(val.address!.contractId!.hash);
+          final strKeyContractId = StrKey.encodeContractIdHex(contractIdHex);
+          return strKeyContractId;
+        } else {
+          throw Exception('Invalid address format');
+        }
       } catch (e) {
         throw Exception('Invalid address format');
       }
