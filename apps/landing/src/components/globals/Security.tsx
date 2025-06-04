@@ -1,10 +1,10 @@
-import React from "react";
 import Image from "next/image";
 
 const steps = [
     {
         id: 1,
         title: "DeFindex operates on secure, transparent smart contracts",
+        link: "https://drive.proton.me/urls/GYBBP5TS00#kCE6EHDN6sth"
     },
     {
         id: 2,
@@ -43,15 +43,27 @@ function Security() {
                         </div>
                         <div className="lg:max-w-[422px]">
                             <ul className="flex gap-4 lg:gap-8 flex-col ">
-                                {steps.map(({ id, title }) => (
+                                {steps.map(({ id, title, link }) => (
                                     <li key={id}>
                                         <div className="flex gap-4 items-center">
                                             <span className="font-familjen-grotesk text-[#DEC9F4] -translate-y-[0.095em] font-bold text-[48px] md:text-[56px] xl:text-[64px]">
                                                 {id}.
                                             </span>
-                                            <p className="font-inter-tight text-[18px] md:text-[22px] xl:text-lg text-blue-100">
-                                                {title}
-                                            </p>
+                                            <div>
+                                                <p className="font-inter-tight text-[18px] md:text-[22px] xl:text-lg text-blue-100">
+                                                    {title}
+                                                </p>
+                                                {link && (
+                                                    <a 
+                                                        href={link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-blue-400 hover:text-blue-300 text-sm mt-1 inline-block"
+                                                    >
+                                                        View Audit Report →
+                                                    </a>
+                                                )}
+                                            </div>
                                         </div>
                                     </li>
                                 ))}

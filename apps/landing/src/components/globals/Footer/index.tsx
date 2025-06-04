@@ -1,6 +1,6 @@
-import React from "react";
 import Link from "next/link";
-import { FaXTwitter, FaDiscord, FaLinkedin, FaGithub } from "react-icons/fa6";
+import React from "react";
+import { FaDiscord, FaGithub, FaLinkedin, FaXTwitter } from "react-icons/fa6";
 
 const links: [React.ElementType, string][] = [
     [FaXTwitter, "https://x.com/PaltaLabs"],
@@ -29,13 +29,13 @@ function Footer() {
                                 </b>
                                 <Link
                                     className="font-manrope text-xs leading-normal text-white hover:text-lime-200 duration-200"
-                                    href="/"
+                                    href="https://docs.defindex.io/wallet-developer/introduction"
                                 >
                                     For Wallets Builders
                                 </Link>
                                 <Link
                                     className="font-manrope text-xs leading-normal text-white hover:text-lime-200 duration-200"
-                                    href="/"
+                                    href="https://docs.defindex.io/defi-developers/developer-introduction"
                                 >
                                     For Developers
                                 </Link>
@@ -52,7 +52,7 @@ function Footer() {
                                 </Link>
                                 <Link
                                     className="font-manrope text-xs leading-normal text-white duration-200 hover:text-lime-200"
-                                    href="https://paltalabs.io/#contact-us"
+                                    href="mailto:dev@paltalabs.io"
                                 >
                                     Contact Us
                                 </Link>

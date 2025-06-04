@@ -1,6 +1,5 @@
-import React from "react";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 
 function WalletExperience() {
     return (
@@ -28,12 +27,6 @@ function WalletExperience() {
                             href="mailto:dev@paltalabs.io"
                         >
                             Schedule a Demo
-                        </Link>
-                        <Link
-                            href="mailto:dev@paltalabs.io"
-                            className="rounded-3xl border border-white outlined-button px-6 leading-none py-4 lg:py-5 lg:min-h-[60px] flex gap-2.5 items-center justify-center font-extrabold font-manrope text-[14px] md:leading-none md:text-xs text-white"
-                        >
-                            Join the Waitlist
                         </Link>
                     </div>
                 </div>
