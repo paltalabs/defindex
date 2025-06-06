@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
-String indexerURL = dotenv.env['INDEXER_URL']!;
+String indexerURL = dotenv.env['INDEXER_URL'] ?? 
+    (throw Exception('Environment variable INDEXER_URL is not set.'));
 
 class DeFindexGraphQLClient {
   late final GraphQLClient _client;

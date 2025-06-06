@@ -5,5 +5,5 @@
 # Xcode-related
 **/dgph
 **/xcuserdata/
-**/**.xcconfig
+**/*.xcconfig
 
