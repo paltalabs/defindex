@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
-const indexerURL = "https://index-api.onfinality.io/sq/soroswap/testnet-indexer";
+String indexerURL = dotenv.env['INDEXER_URL']!;
 
 class DeFindexGraphQLClient {
   late final GraphQLClient _client;

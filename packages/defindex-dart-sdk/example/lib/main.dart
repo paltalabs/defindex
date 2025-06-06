@@ -38,9 +38,9 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String userAccount = dotenv.env['USER_PUBLIC_KEY'] ?? '';
   var vault = Vault(
-    sorobanRPCUrl: 'https://soroban-testnet.stellar.org',
-    network: SorobanNetwork.TESTNET,
-    contractId: 'CCTQFZ5KDP4ZXPRB7WTQ4ESELOL2FHTJQN3W4CQGVOB6D45WLGTHYECQ',
+    sorobanRPCUrl: dotenv.env['SOROBAN_RPC_URL'] ?? 'https://soroban-testnet.stellar.org',
+    network: SorobanNetwork.PUBLIC,
+    contractId: 'CAIZ3NMNPEN5SQISJV7PD2YY6NI6DIPFA4PCRUBOGDE4I7A3DXDLK5OI',
   );
   
   Future<void> _executeDeposit() async {
