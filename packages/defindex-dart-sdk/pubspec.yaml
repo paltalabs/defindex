@@ -13,6 +13,8 @@ dependencies:
     sdk: flutter
   stellar_flutter_sdk: ^2.0.0
   flutter_dotenv: ^5.2.1
+  graphql_flutter: ^5.2.0
+  graphql: ^5.2.1
 
 dev_dependencies:
   flutter_test:

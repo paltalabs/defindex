@@ -68,27 +68,42 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _executeWithdraw() async {
-  try {
-    String? transactionHash = await vault.withdraw(
-      100.0,
-      100,
-      userAccount,
-      (transaction) async => signerFunction(transaction),
-    );
+    try {
+      String? transactionHash = await vault.withdraw(
+        100.0,
+        100,
+        userAccount,
+        (transaction) async => signerFunction(transaction),
+      );
 
-    print('Transaction hash: $transactionHash');
+      print('Transaction hash: $transactionHash');
 
-    // You can also show a dialog or snackbar with the result
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Transaction hash: $transactionHash')),
-    );
-  } catch (error) {
-    print('Error: $error');
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error during deposit: $error')),
-    );
+      // You can also show a dialog or snackbar with the result
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Transaction hash: $transactionHash')),
+      );
+    } catch (error) {
+      print('Error: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error during deposit: $error')),
+      );
+    }
   }
-}
+
+  Future<void> _getAPY() async {
+    try {
+      double apy = await vault.getAPY();
+      print('APY: $apy');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('APY: ${(apy * 100).toStringAsFixed(2)}%')),
+      );
+    } catch (error) {
+      print('Error: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error getting APY: $error')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -125,6 +140,10 @@ class _MyHomePageState extends State<MyHomePage> {
             ElevatedButton(
               onPressed: _executeWithdraw,
               child: const Text('Execute Withdraw'),
+            ),
+             ElevatedButton(
+              onPressed: _getAPY,
+              child: const Text('Get APY'),
             ),
           ],
         ),

@@ -1,5 +1,9 @@
 library defindex_sdk;
+import 'dart:convert';
+import 'dart:math' as Math;
+
 import 'package:defindex_sdk/custom_soroban_server.dart';
+import 'package:defindex_sdk/graph_ql_server.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 
@@ -67,6 +71,111 @@ class TotalManagedFunds {
       'strategy_allocations': strategyAllocations.map((allocation) => allocation.toMap()).toList(),
       'total_amount': totalAmount,
     };
+  }
+}
+
+class VaultEvent {
+  final double amounts;
+  final double dfTokens;
+  final double previousPricePerShare;
+  final double totalManagedFunds;
+  final double totalSupplyBefore;
+  final String eventType;
+  final int ledger;
+  final DateTime date;
+
+  VaultEvent({
+    required this.amounts,
+    required this.dfTokens,
+    required this.previousPricePerShare,
+    required this.totalManagedFunds,
+    required this.totalSupplyBefore,
+    required this.eventType,
+    required this.ledger,
+    required this.date,
+  });
+
+  factory VaultEvent.fromMap(Map<String, dynamic> map) {
+    // Procesar valores numéricos que pueden estar en formato [valor] o como objetos complejos
+    double extractDoubleValue(dynamic value) {
+      if (value is num) {
+        return value.toDouble();
+      } else if (value is List && value.isNotEmpty) {
+        if (value[0] is num) {
+          return (value[0] as num).toDouble();
+        } else if (value[0] is String) {
+          return double.tryParse(value[0] as String) ?? 0.0;
+        }
+      } else if (value is String) {
+        return double.tryParse(value) ?? 0.0;
+      } else if (value is Map<String, dynamic>) {
+        // Si es un objeto complejo como totalManagedFundsBefore
+        if (value.containsKey('total_amount')) {
+          var totalAmount = value['total_amount'];
+          if (totalAmount is String) {
+            return double.tryParse(totalAmount) ?? 0.0;
+          } else if (totalAmount is num) {
+            return totalAmount.toDouble();
+          }
+        }
+      }
+      return 0.0;
+    }
+
+    // Procesar fecha que puede venir en varios formatos
+    DateTime extractDate(dynamic dateValue) {
+      if (dateValue is DateTime) {
+        return dateValue;
+      } else if (dateValue is int) {
+        return DateTime.fromMillisecondsSinceEpoch(dateValue);
+      } else if (dateValue is String) {
+        try {
+          return DateTime.parse(dateValue);
+        } catch (e) {
+          return DateTime.now();
+        }
+      }
+      return DateTime.now();
+    }
+
+    // Parsear totalManagedFundsBefore como JSON
+    Map<String, dynamic> parseJson(dynamic value) {
+      if (value is String) {
+        try {
+          return Map<String, dynamic>.from(jsonDecode(value));
+        } catch (e) {
+        }
+      }
+      return {};
+    }
+
+    final totalManagedFundsBefore = parseJson(map['totalManagedFundsBefore']);
+
+    return VaultEvent(
+      amounts: extractDoubleValue(map['amounts']),
+      dfTokens: extractDoubleValue(map['dfTokens']),
+      previousPricePerShare: extractDoubleValue(map['previousPricePerShare']),
+      totalManagedFunds: extractDoubleValue(totalManagedFundsBefore['total_amount']),
+      totalSupplyBefore: extractDoubleValue(map['totalSupplyBefore']),
+      eventType: map['eventType'] as String? ?? '',
+      ledger: map['ledger'] is num ? (map['ledger'] as num).toInt() : 0,
+      date: extractDate(map['date']),
+    );
+  }
+
+  // Calcular el precio por acción (PPS)
+  double calculatePricePerShare() {
+    if (eventType.toLowerCase() == 'deposit') {
+      return (totalManagedFunds + amounts) / (totalSupplyBefore + dfTokens);
+    } else if (eventType.toLowerCase() == 'withdraw') {
+      return (totalManagedFunds - amounts) / (totalSupplyBefore - dfTokens);
+    } else {
+      // Default fallback: avoid division by zero
+      if (totalSupplyBefore != 0) {
+        return totalManagedFunds / totalSupplyBefore;
+      }
+      return 0.0;
+    }
   }
 }
 
@@ -304,16 +413,11 @@ class Vault {
         XdrSCVal xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(xdrValue);
         dfBalance = BigInt.from(xdrSCVal.i128!.lo.uint64).toDouble() / 10000000; 
       }
-      print("dfBalance ${dfBalance}");
       TotalManagedFunds? totalManagedFunds = await fetchTotalManagedFunds();
-      print("🟡totalManagedFunds ${totalManagedFunds}");
       if (totalManagedFunds == null) {
-        print("No managed funds found");
         return 0;
       }
-      print("totalManagedFunds ${totalManagedFunds.toMap()}");
       double totalAmount = totalManagedFunds.totalAmount;
-      print("totalAmount ${totalAmount}");
       double? totalSupplySim = await totalSupply();
 
       return dfBalance*totalAmount/totalSupplySim!;
@@ -397,6 +501,128 @@ class Vault {
       }
     }
     return null;
+  }
+
+  Future<double> getAPY() async {
+    /* 
+    Para sacar APY hay que:
+    1.- Tomar el evento mas cercano al date de hace 7 días (o un mes). y obtener total_managed_funds_before, total_supply_before, amounts, df_tokens_minted/burned.
+    2.- Tomar el evento mas cercano al momento actual. y obtener total_managed_funds_after, total_supply_after, amounts, df_tokens_minted/burned.
+    3.- Crear una función para calcular el PPS (Price Per Share) como total_managed_funds/total_supply, (total_managed_funds_before+amounts)/(total_supply_before+df_tokens_minted) or substracting amounts and df tokens burned.
+    4.- Calcular el APR por día como (PPS_today-PPS_previous)/period_in_days-1, so you can use period_in_days as 7, or for more accurate it can be (date_closest_event_today-date_closest_event_previous)/seconds_in_day. (I dont remember if dates is in seconds or miliseconds),
+    5.- anualizar con APY = (1+APR_daily)^365.2425 */
+    
+    try {
+      // Crear cliente GraphQL
+      final graphQLClient = DeFindexGraphQLClient();
+      
+      // Estimar el ledger actual basado en el tiempo
+      // Suponiendo aproximadamente un ledger cada 5 segundos
+      final lastEvent = await graphQLClient.query(
+        DeFindexQueries.getVaultEvent,
+        variables: {
+          'vaultAddress': contractId,
+          'orderBy': 'LEDGER_ASC', 
+          'first': 1, 
+        },
+      );
+      final lastEventData = graphQLClient.getResultData(lastEvent);
+      
+      if (lastEventData == null || 
+          !lastEventData.containsKey('deFindexVaults') || 
+          lastEventData['deFindexVaults']['nodes'].isEmpty) {
+        return 0.0;
+      }
+      
+      final firstEvent = await graphQLClient.query(
+        DeFindexQueries.getVaultEvent,
+        variables: {
+          'vaultAddress': contractId,
+          'orderBy': 'LEDGER_DESC', // Ordenar por ledger ascendente para obtener los más antiguos
+          'last': 1,
+        },
+      );
+      
+      if (firstEvent.hasException) {
+      }
+      
+      // Extraer datos de las respuestas
+      final currentData = lastEventData;
+      final pastData = graphQLClient.getResultData(firstEvent);
+      
+      if (currentData.isEmpty || pastData == null) {
+        return 0.0;
+      }
+      
+      // Convertir a eventos
+      List<VaultEvent> currentEvents = [];
+      List<VaultEvent> pastEvents = [];
+      
+      try {
+        // Extraer y mapear los eventos actuales
+        final currentNodes = currentData['deFindexVaults']['nodes'] as List;
+        currentEvents = currentNodes
+            .map((node) => VaultEvent.fromMap(node as Map<String, dynamic>))
+            .toList();
+        
+        // Extraer y mapear los eventos pasados
+        final pastNodes = pastData['deFindexVaults']['nodes'] as List;
+        pastEvents = pastNodes
+            .map((node) => VaultEvent.fromMap(node as Map<String, dynamic>))
+            .toList();
+      } catch (e) {
+        // Mostrar más información de debug
+        if (currentData.containsKey('deFindexVaults')) {
+          print("Estructura de deFindexVaults: ${currentData['deFindexVaults']}");
+        }
+        return 0.0;
+      }
+      
+      // Verificar que hay suficientes datos
+      if (currentEvents.isEmpty || pastEvents.isEmpty) {
+        return 0.0;
+      }
+      
+      // Ordenar por ledger (de más reciente a más antiguo)
+      currentEvents.sort((a, b) => b.ledger.compareTo(a.ledger));
+      pastEvents.sort((a, b) => b.ledger.compareTo(a.ledger));
+      
+      // Tomar el evento más reciente y el evento más antiguo
+      final mostRecentEvent = currentEvents.first;
+      final oldestEvent = pastEvents.first;
+      
+      // Calcular el precio por acción (PPS) para ambos eventos
+      final currentPPS = mostRecentEvent.calculatePricePerShare();
+      final pastPPS = oldestEvent.calculatePricePerShare();
+      
+      if (currentPPS <= 0 || pastPPS <= 0) {
+        return 0.0;
+      }
+      
+      // Calcular días transcurridos
+      final daysDifference = (mostRecentEvent.date.difference(oldestEvent.date).inSeconds / 86400);
+      
+      if (daysDifference <= 0) {
+        return 0.0;
+      }
+      
+      // Calcular APR diario
+      final daily = (currentPPS / pastPPS - 1) / daysDifference;
+      
+      // Anualizar para obtener el APY
+      final apy = Math.pow(1 + daily, 365.2425) - 1;
+      
+      // Limitar el valor a un rango razonable (0% a infinito)
+      // Y formatear como porcentaje
+      final result = (apy as double).clamp(0.0, double.infinity);
+      
+      // Almacenar el resultado calculado (podría ser útil para consultas futuras)
+      final apyCalculado = result;
+      
+      return apyCalculado;
+    } catch (e) {
+      return 0.00; // Valor por defecto en caso de error
+    }
   }
 }
 
