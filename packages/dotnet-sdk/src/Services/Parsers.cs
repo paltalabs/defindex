@@ -14,6 +14,15 @@ public class DefindexResponseParser
 
         return result;
     }
+
+    public static ulong BigIntegerToUlongSafe(BigInteger bigIntValue)
+    {
+        if (bigIntValue < ulong.MinValue || bigIntValue > ulong.MaxValue)
+        {
+            throw new OverflowException("BigInteger is outside the range of ulong.");
+        }
+        return (ulong)bigIntValue;
+    }
     public static List<ManagedFundsResult> ParseManagedFundsResult(SimulateTransactionResponse response)
     {
         var managedFundsResults = new List<ManagedFundsResult>();

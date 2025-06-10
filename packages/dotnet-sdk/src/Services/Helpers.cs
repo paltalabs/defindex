@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Text.Json.Nodes;
 using DeFindex.Sdk.Interfaces;
 using StellarDotnetSdk.Accounts;
@@ -8,7 +9,7 @@ using StellarDotnetSdk.Transactions;
 
 public class DefindexHelpers
 {
-  public async Task<JsonObject?> FetchBlendDeployConfig()
+    public async Task<JsonObject?> FetchBlendDeployConfig()
     {
         using (var httpClient = new HttpClient())
         {
@@ -26,7 +27,7 @@ public class DefindexHelpers
             }
         }
     }
-    
+
     public async Task<JsonObject?> FetchDefindexDeployments(string networkName)
     {
         using (var httpClient = new HttpClient())
@@ -44,7 +45,7 @@ public class DefindexHelpers
             }
         }
     }
-    
+
     public List<(string StrategyId, string BlendPoolAddress)> FindBlendPoolAddresses(List<string> strategyIds, JsonArray blendStrategies)
     {
         var blendPoolAddresses = new List<(string StrategyId, string BlendPoolAddress)>();
@@ -91,10 +92,10 @@ public class DefindexHelpers
     public List<string> ExtractStrategyIds(List<ManagedFundsResult> assetAllocation, JsonObject defindexDeploymentsJson)
     {
         if (defindexDeploymentsJson is null || !defindexDeploymentsJson.ContainsKey("ids"))
-        return new List<string>();
+            return new List<string>();
 
         if (defindexDeploymentsJson["ids"] is not JsonObject idsObject)
-        return new List<string>();
+            return new List<string>();
 
         var strategyIdLookup = idsObject
         .Where(kvp => kvp.Value is not null)
@@ -120,14 +121,14 @@ public class DefindexHelpers
         var transaction = new TransactionBuilder(loadedAccount)
             .AddOperation(invokeContractOperation)
             .Build();
-        var simulatedTransaction = (SimulateTransactionResponse) await server.SimulateTransaction(transaction);
+        var simulatedTransaction = (SimulateTransactionResponse)await server.SimulateTransaction(transaction);
         if (simulatedTransaction.Error != null || simulatedTransaction.Results == null || simulatedTransaction.Results.Count() == 0)
         {
             throw new Exception($"Error calling contract method: {simulatedTransaction.Error}");
         }
         return simulatedTransaction;
     }
-    
+
     public string? GetStrategyAddressFromId(string strategyId, JsonObject defindexDeploymentsJson)
     {
         if (defindexDeploymentsJson is null || !defindexDeploymentsJson.ContainsKey("ids"))
