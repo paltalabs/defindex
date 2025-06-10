@@ -5,7 +5,6 @@ using StellarDotnetSdk.Accounts;
 using StellarDotnetSdk.Responses.SorobanRpc;
 using StellarDotnetSdk.Soroban;
 using DotNetEnv;
-using StellarDotnetSdk.Xdr;
 
 class Program
 {
