@@ -308,8 +308,7 @@ public class DefindexSdk : IDefindexSdk
         if (string.IsNullOrEmpty(xdrString))
         {
             throw new Exception("XDR string is null or empty.");
-        }
-        ;
+        };
         var rawVec = (SCVec)StellarDotnetSdk.Soroban.SCVec.FromXdrBase64(xdrString);
         foreach (var item in rawVec.InnerValue)
         {
@@ -322,20 +321,38 @@ public class DefindexSdk : IDefindexSdk
         return assetAmounts;
     }
 
+    public async Task<BigInteger> FromAssetToShares(
+        BigInteger assetAmount
+        )
+    {
+        var sharesValue = await GetAssetAmountsPerShares(10000000);
+        if (sharesValue == null || sharesValue.Count == 0)
+        {
+            throw new Exception("Failed to get asset amounts per shares.");
+        }
+        BigInteger sharesAmount = assetAmount * sharesValue[0] / 10000000;
+
+        return sharesAmount;
+    }
+
     public async Task<Transaction> CreateWithdrawUnderlyingTx(
         BigInteger withdrawAmount,
         int toleranceBPS,
         string from
     )
     {
-        var amountToShares = await GetAssetAmountsPerShares(withdrawAmount);
-        if (amountToShares == null || amountToShares.Count == 0)
+        if (withdrawAmount <= 0)
         {
-            throw new Exception("Failed to get asset amounts per shares.");
+            throw new ArgumentException("Withdraw amount must be greater than zero.");
         }
+        if (toleranceBPS < 0 || toleranceBPS > 10000)
+        {
+            throw new ArgumentOutOfRangeException("Tolerance BPS must be between 0 and 10000.");
+        }
+        BigInteger amountToShares = await FromAssetToShares(withdrawAmount);
         var amountWithTolerance = withdrawAmount * (10000 - toleranceBPS) / 10000;
-        var minAmountsOut = new List<ulong> { DefindexResponseParser.BigIntegerToUlongSafe(amountWithTolerance)};
-        var withdrawShares = DefindexResponseParser.BigIntegerToUlongSafe(amountToShares[0]);
+        var minAmountsOut = new List<ulong> { DefindexResponseParser.BigIntegerToUlongSafe(amountWithTolerance) };
+        var withdrawShares = DefindexResponseParser.BigIntegerToUlongSafe(amountToShares);
         var transaction = await CreateWithdrawTransaction(
             withdrawShares,
             minAmountsOut,
