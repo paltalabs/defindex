@@ -1,7 +1,3 @@
-Absolutely\! Here's the English translation of your documentation, maintaining all the details and formatting.
-
------
-
 # Integrating DeFindex into Your Wallet
 
 ## Prerequisites:
