@@ -168,7 +168,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
 String signerFunction(String transactionXdr) {
   // Create transaction from XDR
-  String userSecret = dotenv.env['USER_SECRET'] ?? 'GD3WC73MFWITLW3HR7DNJRD7GR4FYP5QPKX7FZKD4375IQDPZXWXENFP';
+  String userSecret = dotenv.env['USER_SECRET']!;
+  if (userSecret.isEmpty) {
+    throw Exception('USER_SECRET not found in .env file');
+  }
 
   AbstractTransaction transaction = AbstractTransaction.fromEnvelopeXdrString(
     transactionXdr,
