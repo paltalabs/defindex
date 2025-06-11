@@ -8,7 +8,7 @@ To integrate DeFindex into your wallet, you can choose between two approaches:
 2.  **Smart Contracts**: Interact directly with DeFindex's smart contracts, giving you greater control over transactions but requiring a deeper understanding of the protocol's structure.
 
 DeFindex is a protocol that allows users to interact with various investment strategies and liquidity pools. To integrate it into your wallet, you need to understand how transactions and the smart contracts that make up the protocol are structured.
-For this purpose, you can review the contract addresses in the `~/public/mainnet.contracts.json` folder, where you'll find information about the contract addresses, or deploy your own custom vault and strategies using our Factory contract.
+For this purpose, you can review the contract addresses in the [`~/public/`](https://github.com/paltalabs/defindex/tree/main/public) folder, where you'll find information about the contract addresses, or deploy your own custom vault and strategies using our Factory contract.
 
 -----
 
@@ -25,6 +25,8 @@ If you want to create a vault using the strategies available in DeFindex without
 3.  **Complete the vault creation form**: Provide the required information, such as the vault's name, symbol, select the asset you wish to use, and use the switch to choose if you want your vault to be **upgradable**.
 <figure><img src="../.gitbook/assets/GUI_SELECT_ASSET.png" alt=""><figcaption></figcaption></figure>
 4.  **Select strategies**: Choose the strategies you want to include in your vault. You can select multiple strategies based on your preferences.
+>[!NOTE]
+> The available strategies you can select will depend on the asset you have chosen for your vault. Only compatible strategies for the selected asset will be displayed. 
 <figure><img src="../.gitbook/assets/GUI_ADD_STRATEGY.png" alt=""><figcaption></figcaption></figure>
 5.  **Configure the remaining fields**: Finish completing the form with the required information, such as manager addresses, fees, and other relevant parameters.
 <figure><img src="../.gitbook/assets/GUI_VAULT.png" alt=""><figcaption></figcaption></figure>
@@ -42,13 +44,44 @@ If you want to create a vault using the strategies available in DeFindex without
 
 If you prefer to interact directly with the DeFindex Factory contract to create a vault, here's a step-by-step guide:
 
-1.  **Locate the Factory contract**: Find the DeFindex Factory contract address in the `~/public/mainnet.contracts.json` folder.
+1.  **Locate the Factory contract**: Find the DeFindex Factory contract address in the [`~/public/`](https://github.com/paltalabs/defindex/tree/main/public) folder.
 
 2.  **Prepare the transaction**: Use your preferred method to prepare a transaction that interacts with the Factory contract. You will need to provide the following parameters:
 
       * `roles`: A `Map` containing role identifiers (`u32`) and their respective addresses (`Address`). Example: `{1: "GCINP...", 2: "GCINP..."}`.
       * `vault_fee`: The commission rate in basis points (1 basis point = 0.01%). Example: `100` for a 1% fee.
-      * `assets`: A vector of `AssetStrategySet` structures that define the strategies and assets managed by the vault.
+      * `assets`: A vector of [`AssetStrategySet`](../../contracts/common/src/models.rs) structures that define the strategies and assets managed by the vault.
+        * **Structure of AssetStrategySet**:
+          ```rust
+          struct AssetStrategySet {
+              address: Address,  // The address of the asset (token)
+              strategies: Vec<Strategy>,  // A vector of strategies for this asset
+          }
+          
+          struct Strategy {
+              address: Address,  // The address of the strategy contract
+              name: String,      // The name of the strategy
+              paused: bool,      // Whether the strategy is initially paused
+          }
+          ```
+        * **Example**:
+          ```json
+          {
+            "address": "CBZ5WXLMCH...",  // USDC token address
+            "strategies": [
+              {
+                "address": "CCIN4WQP5Z...",  // Lending strategy address
+                "name": "DummyStrategy",
+                "paused": false
+              },
+              {
+                "address": "CD2QVXMN7Y...",  // Yield farming strategy address
+                "name": "DummyStrategy2",
+                "paused": false
+              }
+            ]
+          }
+          ```
       * `soroswap_router`: The address of the Soroswap router (`Address`) that facilitates exchanges within the vault. (You can find the address [here](https://api.soroswap.finance/api/mainnet/router))
       * `name_symbol`: A `Map` containing the name and symbol of the vault. Example: `{"name": "MyVault", "symbol": "MVLT"}`.
       * `upgradable`: A boolean indicating whether the vault contract will support upgrades. Example: `true` or `false`.
@@ -57,18 +90,37 @@ If you prefer to interact directly with the DeFindex Factory contract to create 
 
 4.  **Wait for confirmation**: After submitting the transaction, wait for it to be confirmed on the blockchain. Once confirmed, your vault will be active, and you can start interacting with it.
 
+>[!NOTE]
+> In order to reduce the complexity of the transaction, and to avoid limit errors on the transaction, we recommend creating the vault with only one asset and max two strategies. 
+
 -----
 
 ## Understanding DeFindex Structure
 
 ### Roles
 
-**Roles** are unique identifiers that assign specific responsibilities within the vault and are the only entities with privileges to perform critical actions. Each role is associated with an `Address` that represents the entity responsible for that function. Common examples of roles include:
+**Roles** are unique identifiers that assign specific responsibilities within the vault and are the only entities with privileges to perform critical actions. Each role is associated with an `Address` that represents the entity responsible for that function.
 
-  * **Manager**: Responsible for managing the vault's strategies and operations.
-  * **Emergency Manager**: Responsible for making critical decisions in emergency situations.
-  * **Rebalance Manager**: Responsible for making adjustments to asset allocation within the vault.
-  * **Fee Receiver**: Receives fees generated by the vault.
+  * **Manager**: 
+    - Responsible for managing the vault's strategies and operations.
+    - Can change the Emergency Manager and Fee Receiver.
+    - Can execute all the methods of the other roles.
+    - Can upgrade the vault WASM code if the `upgrade` option was enabled on deploy.
+  * **Emergency Manager**: 
+    - Responsible for making critical decisions in emergency situations.
+    - Can rescue funds in case of an emergency.
+    - Can pause or unpause strategies.
+  * **Rebalance Manager**: 
+    - Responsible for making adjustments to asset allocation within the vault.
+    - Can rebalance between strategies to optimize performance and minimize risk.
+  * **Fee Receiver**: 
+    - Receives fees generated by the vault.
+    - Can distribute fees from the vault.
+
+>[!NOTE]
+> In order to reduce risks and ensure the security of the vault, it is recommended to set a multisig address as the `Manager` role. This way, multiple parties must approve critical actions, enhancing security and accountability.
+
+If you need more information about the roles, you can check the [Roles](../getting-started/creating-a-defindex-vault.md#core-roles) section at the "getting started" page.
 
 ### Fees
 
@@ -95,13 +147,24 @@ Within vault interactions, there are several methods you can use to manage and q
 
 **Management methods:**
 
-  * **Rebalance**: Allows adjusting asset allocation within the vault.
-  * **Rescue**: Allows recovering assets in critical situations.
-  * **Fees**: Allows managing the fees associated with the vault.
-  * **Pause / Unpause**: Allows pausing or resuming vault operations.
-  * **Upgrade**: Allows changing the WASM code without requiring user signatures.
+  * **rebalance**: Allows adjusting asset allocation within the vault.
+  * **rescue**: Allows recovering assets in critical situations.
+  * **set_fees**: Allows managing the fees associated with the vault.
+  * **pause / unpause**: Allows pausing or resuming vault operations.
 
------
+**Methods available only to the `Manager` role:**
+
+  * **set_fee_receiver**: Allows changing the fee receiver of the vault.
+  * **set_manager**: Allows changing the manager of the vault.
+  * **set_emergency_manager**: Allows changing the emergency manager of the vault.
+  * **set_rebalance_manager**: Allows changing the rebalance manager of the vault.
+  * **upgrade**: Allows changing the WASM code without requiring users signatures.
+  * **lock_fees**: Allows locking the fees in the vault, preventing them from being withdrawn until the lock is released.
+  * **release_fees**: Allows releasing the locked fees in the vault, making them available for withdrawal.
+
+
+You can find the complete list of methods and their parameters in the [Vault contract](../../contracts/vault//src//interface.rs)
+
 
 ### Creating Transactions to Interact with the Vault
 
