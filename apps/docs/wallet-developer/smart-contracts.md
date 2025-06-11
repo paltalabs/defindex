@@ -127,7 +127,6 @@ If you need more information about the roles, you can check the [Roles](../getti
 **Fees** are percentages in basis points (1 basis point = 0.01%) applied to transactions within the vault. These fees can include:
 
   * **Vault Fee**: The fee assigned to the `Fee Receiver`.
-  * **Defindex Fee**: The fee designated for the DeFindex protocol.
 
 ### Upgrade
 
