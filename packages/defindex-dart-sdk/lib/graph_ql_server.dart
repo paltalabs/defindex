@@ -175,23 +175,23 @@ class DeFindexQueries {
   ''';
 
   // create here more queries as needed
-  static String getVaultEventsForAPYQuery = r'''
-    query getVaultEvents($vaultAddress: String!, $ledger: Int!) {
-      deFindexVaults(filter: {vault: {equalTo: $vaultAddress}, ledger:  {
-        lessThanOrEqualTo: $ledger
-      }}) {
-        nodes {
-          amounts
-          dfTokens
-          previousPricePerShare
-          totalManagedFundsBefore
-          totalSupplyBefore
-          eventType
-          ledger
-          date
-        }
+  static String getVaultEventByLedger = r'''
+  query getVaultEventsByLedger($vaultAddress: String, $orderBy: [DeFindexVaultsOrderBy!], $last: Int, $ledger: Int) {
+    deFindexVaults(filter: {vault: {equalTo: $vaultAddress}, ledger:  {
+      greaterThanOrEqualTo: $ledger
+    }}, orderBy: $orderBy, last: $last,) {
+      nodes {
+        amounts
+        dfTokens
+        previousPricePerShare
+        totalManagedFundsBefore
+        totalSupplyBefore
+        eventType
+        ledger
+        date
       }
     }
+  }
   ''';
   
   static String getVaultEvent = r'''
