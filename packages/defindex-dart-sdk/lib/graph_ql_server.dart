@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
-String indexerURL = dotenv.env['INDEXER_URL'] ?? 
-    (throw Exception('Environment variable INDEXER_URL is not set.'));
+String indexerURL = 'https://index-api.onfinality.io/sq/soroswap/indexer';
 
 class DeFindexGraphQLClient {
   late final GraphQLClient _client;
