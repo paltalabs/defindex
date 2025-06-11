@@ -1,14 +1,15 @@
 # Integrating DeFindex into Your Wallet
 
-## Prerequisites:
-
 To integrate DeFindex into your wallet, you can choose between two approaches:
 
 1.  **SDKs**: Utilize the SDKs provided by DeFindex, which facilitate interaction with the protocol and are faster to implement.
 2.  **Smart Contracts**: Interact directly with DeFindex's smart contracts, giving you greater control over transactions but requiring a deeper understanding of the protocol's structure.
 
 DeFindex is a protocol that allows users to interact with various investment strategies and liquidity pools. To integrate it into your wallet, you need to understand how transactions and the smart contracts that make up the protocol are structured.
-For this purpose, you can review the contract addresses in the [`~/public/`](https://github.com/paltalabs/defindex/tree/main/public) folder, where you'll find information about the contract addresses, or deploy your own custom vault and strategies using our Factory contract.
+
+You can review the contract addresses in the [`~/public/`](https://github.com/paltalabs/defindex/tree/main/public) folder, where you'll find information about the contract addresses, or deploy your own custom vault and strategies using our Factory contract.
+
+The first thing you need to do is to deploy a vault instance.
 
 -----
 
@@ -20,23 +21,27 @@ If you want to create a vault using the strategies available in DeFindex without
 
 1.  **Visit the DeFindex page**: Go to [app.defindex.io](https://app.defindex.io) and navigate to the vault creation section in the DeFindex user interface.
 <figure><img src="../.gitbook/assets/GUI_EMPTY_VAULT.png" alt=""><figcaption></figcaption></figure>
+
 2.  **Connect your wallet**: Make sure your wallet is connected to the correct network and that you have the necessary funds to pay for transaction fees.
 <figure><img src="../.gitbook/assets/GUI_CONNECT_WALLET.png" alt=""><figcaption></figcaption></figure>
+
 3.  **Complete the vault creation form**: Provide the required information, such as the vault's name, symbol, select the asset you wish to use, and use the switch to choose if you want your vault to be **upgradable**.
 <figure><img src="../.gitbook/assets/GUI_SELECT_ASSET.png" alt=""><figcaption></figcaption></figure>
-4.  **Select strategies**: Choose the strategies you want to include in your vault. You can select multiple strategies based on your preferences.
+
+1.  **Select strategies**: Choose the strategies you want to include in your vault. You can select multiple strategies based on your preferences.
 >[!NOTE]
 > The available strategies you can select will depend on the asset you have chosen for your vault. Only compatible strategies for the selected asset will be displayed. 
 <figure><img src="../.gitbook/assets/GUI_ADD_STRATEGY.png" alt=""><figcaption></figcaption></figure>
-5.  **Configure the remaining fields**: Finish completing the form with the required information, such as manager addresses, fees, and other relevant parameters.
+
+1.  **Configure the remaining fields**: Finish completing the form with the required information, such as manager addresses, fees, and other relevant parameters.
 <figure><img src="../.gitbook/assets/GUI_VAULT.png" alt=""><figcaption></figcaption></figure>
 
-6.  **Review and confirm**: Before submitting the transaction, review all the details to ensure everything is correct.
+1.  **Review and confirm**: Before submitting the transaction, review all the details to ensure everything is correct.
 <figure><img src="../.gitbook/assets/GUI_CONFIRMATION.png" alt=""><figcaption></figcaption></figure>
 
-7.  **Submit the transaction**: Once you are sure all the information is correct, sign and submit the transaction to create your vault with your wallet.
+1.  **Submit the transaction**: Once you are sure all the information is correct, sign and submit the transaction to create your vault with your wallet.
 
-8.  **Wait for confirmation**: After submitting the transaction, wait for it to be confirmed on the blockchain. Once confirmed, your vault will be active, and you can start interacting with it.
+2.  **Wait for confirmation**: After submitting the transaction, wait for it to be confirmed on the blockchain. Once confirmed, your vault will be active, and you can start interacting with it.
 <figure><img src="../.gitbook/assets/GUI_SUCCESS.png" alt=""><figcaption></figcaption></figure>
 -----
 
