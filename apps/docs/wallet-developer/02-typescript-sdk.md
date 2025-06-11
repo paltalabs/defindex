@@ -23,7 +23,7 @@ yarn add defindex-sdk
 import { Vault, SorobanNetwork } from 'defindex-sdk';
 
 const vault = new Vault({
-    network: SorobanNetwork.TESTNET,
+    network: SorobanNetwork.PUBLIC,
     contractId: 'YOUR_VAULT_CONTRACT_ID'
 });
 ```
