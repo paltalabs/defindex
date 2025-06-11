@@ -7,6 +7,7 @@ import 'package:defindex_sdk/graph_ql_server.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 
+const dayInLedgers = 17280;
 class StrategyAllocation {
   final double amount;
   final bool paused;
@@ -503,21 +504,10 @@ class Vault {
     return null;
   }
 
-  Future<double> getAPY() async {
-    /* 
-    Para sacar APY hay que:
-    1.- Tomar el evento mas cercano al date de hace 7 días (o un mes). y obtener total_managed_funds_before, total_supply_before, amounts, df_tokens_minted/burned.
-    2.- Tomar el evento mas cercano al momento actual. y obtener total_managed_funds_after, total_supply_after, amounts, df_tokens_minted/burned.
-    3.- Crear una función para calcular el PPS (Price Per Share) como total_managed_funds/total_supply, (total_managed_funds_before+amounts)/(total_supply_before+df_tokens_minted) or substracting amounts and df tokens burned.
-    4.- Calcular el APR por día como (PPS_today-PPS_previous)/period_in_days-1, so you can use period_in_days as 7, or for more accurate it can be (date_closest_event_today-date_closest_event_previous)/seconds_in_day. (I dont remember if dates is in seconds or miliseconds),
-    5.- anualizar con APY = (1+APR_daily)^365.2425 */
-    
+  Future<double> getAPY() async {    
     try {
-      // Crear cliente GraphQL
       final graphQLClient = DeFindexGraphQLClient();
       
-      // Estimar el ledger actual basado en el tiempo
-      // Suponiendo aproximadamente un ledger cada 5 segundos
       final lastEvent = await graphQLClient.query(
         DeFindexQueries.getVaultEvent,
         variables: {
@@ -534,64 +524,55 @@ class Vault {
         return 0.0;
       }
       
+      final lastEventLedger = lastEventData['deFindexVaults']['nodes'][0]['ledger'] as int;
+      final firstEventLedger = lastEventLedger - (dayInLedgers * 7); 
+
       final firstEvent = await graphQLClient.query(
-        DeFindexQueries.getVaultEvent,
+        DeFindexQueries.getVaultEventByLedger,
         variables: {
           'vaultAddress': contractId,
-          'orderBy': 'LEDGER_DESC', // Ordenar por ledger ascendente para obtener los más antiguos
+          'orderBy': 'DATE_DESC', 
           'last': 1,
+          'ledger': firstEventLedger,
         },
       );
       
       if (firstEvent.hasException) {
       }
       
-      // Extraer datos de las respuestas
       final currentData = lastEventData;
       final pastData = graphQLClient.getResultData(firstEvent);
-      
+
       if (currentData.isEmpty || pastData == null) {
         return 0.0;
       }
       
-      // Convertir a eventos
       List<VaultEvent> currentEvents = [];
       List<VaultEvent> pastEvents = [];
       
       try {
-        // Extraer y mapear los eventos actuales
         final currentNodes = currentData['deFindexVaults']['nodes'] as List;
         currentEvents = currentNodes
             .map((node) => VaultEvent.fromMap(node as Map<String, dynamic>))
             .toList();
         
-        // Extraer y mapear los eventos pasados
         final pastNodes = pastData['deFindexVaults']['nodes'] as List;
         pastEvents = pastNodes
             .map((node) => VaultEvent.fromMap(node as Map<String, dynamic>))
             .toList();
       } catch (e) {
-        // Mostrar más información de debug
-        if (currentData.containsKey('deFindexVaults')) {
-          print("Estructura de deFindexVaults: ${currentData['deFindexVaults']}");
+        if (currentData.containsKey('deFindexVaults')) {;
         }
         return 0.0;
       }
       
-      // Verificar que hay suficientes datos
       if (currentEvents.isEmpty || pastEvents.isEmpty) {
         return 0.0;
       }
       
-      // Ordenar por ledger (de más reciente a más antiguo)
-      currentEvents.sort((a, b) => b.ledger.compareTo(a.ledger));
-      pastEvents.sort((a, b) => b.ledger.compareTo(a.ledger));
-      
-      // Tomar el evento más reciente y el evento más antiguo
       final mostRecentEvent = currentEvents.first;
       final oldestEvent = pastEvents.first;
       
-      // Calcular el precio por acción (PPS) para ambos eventos
       final currentPPS = mostRecentEvent.calculatePricePerShare();
       final pastPPS = oldestEvent.calculatePricePerShare();
       
@@ -599,29 +580,21 @@ class Vault {
         return 0.0;
       }
       
-      // Calcular días transcurridos
       final daysDifference = (mostRecentEvent.date.difference(oldestEvent.date).inSeconds / 86400);
       
       if (daysDifference <= 0) {
         return 0.0;
       }
       
-      // Calcular APR diario
       final daily = (currentPPS / pastPPS - 1) / daysDifference;
       
-      // Anualizar para obtener el APY
       final apy = math.pow(1 + daily, 365.2425) - 1;
       
-      // Limitar el valor a un rango razonable (0% a infinito)
-      // Y formatear como porcentaje
       final result = (apy as double).clamp(0.0, double.infinity);
-      
-      // Almacenar el resultado calculado (podría ser útil para consultas futuras)
-      final apyCalculado = result;
-      
-      return apyCalculado;
+
+      return result;
     } catch (e) {
-      return 0.00; // Valor por defecto en caso de error
+      return 0.00;
     }
   }
 }
