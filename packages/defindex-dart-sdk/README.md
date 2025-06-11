@@ -12,37 +12,6 @@ This package provides a Dart interface to interact with the Defindex Smart Contr
 
 To use this package, add `defindex` as a [dependency in your pubspec.yaml file](https://flutter.dev/docs/development/packages-and-plugins/using-packages).
 
-## Configuration
-
-To configure the package, you can use `.env` files to store sensitive information such as keys and URLs. This allows you to keep your credentials secure and separate from your codebase.
-
-### Example `.env` file
-
-Here is an example of a `.env` file:
-
-```properties
-USER_SECRET=your_secret_key
-USER_PUBLIC_KEY=your_public_key
-SOROBAN_RPC_URL=https://your_rpc_url
-INDEXER_URL=https://your_indexer_url
-```
-
-
-```dart
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
-void main() async {
-  await dotenv.load(fileName: ".env");
-
-  var rpcUrl = dotenv.env['SOROBAN_RPC_URL'];
-  var indexerUrl = dotenv.env['INDEXER_URL'];
-
-  print('RPC URL: $rpcUrl');
-  print('Indexer URL: $indexerUrl');
-}
-```
-
-Make sure to include the `.env` file in your `.gitignore` to prevent sensitive information from being exposed in your repository.
 
 ## Usage
 
@@ -68,3 +37,16 @@ void main() async {
 }
 ```
 
+## Example Configuration
+
+In order to run the example, you can use `.env` files to store sensitive information such as keys and URLs. This allows you to keep your credentials secure and separate from your codebase.
+
+### Example `.env` file
+
+Here is an example of a `.env` file:
+
+```properties
+USER_SECRET=your_secret_key
+USER_PUBLIC_KEY=your_public_key
+SOROBAN_RPC_URL=https://your_rpc_url
+```
