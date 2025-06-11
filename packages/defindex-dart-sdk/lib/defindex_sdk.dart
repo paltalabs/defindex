@@ -1,6 +1,6 @@
 library defindex_sdk;
 import 'dart:convert';
-import 'dart:math' as Math;
+import 'dart:math' as math;
 
 import 'package:defindex_sdk/custom_soroban_server.dart';
 import 'package:defindex_sdk/graph_ql_server.dart';
@@ -610,7 +610,7 @@ class Vault {
       final daily = (currentPPS / pastPPS - 1) / daysDifference;
       
       // Anualizar para obtener el APY
-      final apy = Math.pow(1 + daily, 365.2425) - 1;
+      final apy = math.pow(1 + daily, 365.2425) - 1;
       
       // Limitar el valor a un rango razonable (0% a infinito)
       // Y formatear como porcentaje
