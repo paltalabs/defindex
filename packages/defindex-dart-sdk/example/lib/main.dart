@@ -141,7 +141,8 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: _executeWithdraw,
               child: const Text('Execute Withdraw'),
             ),
-             ElevatedButton(
+            const SizedBox(height: 20),
+            ElevatedButton(
               onPressed: _getAPY,
               child: const Text('Get APY'),
             ),
