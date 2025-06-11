@@ -287,51 +287,7 @@ class VaultTransaction {
   }
 }
 
-/// Modelo para eventos de Vault utilizados para el cálculo de APY
-class VaultEvent {
-  final double amounts;
-  final double dfTokens;
-  final double previousPricePerShare;
-  final double totalManagedFundsBefore;
-  final double totalSupplyBefore;
-  final String eventType;
-  final int ledger;
-  final DateTime date;
 
-  VaultEvent({
-    required this.amounts,
-    required this.dfTokens,
-    required this.previousPricePerShare,
-    required this.totalManagedFundsBefore,
-    required this.totalSupplyBefore,
-    required this.eventType,
-    required this.ledger,
-    required this.date,
-  });
-
-  factory VaultEvent.fromMap(Map<String, dynamic> map) {
-    return VaultEvent(
-      amounts: map['amounts'] is num ? (map['amounts'] as num).toDouble() : 0.0,
-      dfTokens: map['dfTokens'] is num ? (map['dfTokens'] as num).toDouble() : 0.0,
-      previousPricePerShare: map['previousPricePerShare'] is num ? (map['previousPricePerShare'] as num).toDouble() : 0.0,
-      totalManagedFundsBefore: map['totalManagedFundsBefore'] is num ? (map['totalManagedFundsBefore'] as num).toDouble() : 0.0,
-      totalSupplyBefore: map['totalSupplyBefore'] is num ? (map['totalSupplyBefore'] as num).toDouble() : 0.0,
-      eventType: map['eventType'] as String,
-      ledger: map['ledger'] is num ? (map['ledger'] as num).toInt() : 0,
-      date: map['date'] is DateTime 
-          ? map['date'] 
-          : map['date'] is int 
-              ? DateTime.fromMillisecondsSinceEpoch(map['date'] as int) 
-              : DateTime.now(),
-    );
-  }
-
-  // Calcular el precio por acción (PPS)
-  double calculatePricePerShare() {
-    if (totalSupplyBefore <= 0) return 0;
-    return totalManagedFundsBefore / totalSupplyBefore;
-  }
-}
 
 /// Ejemplo de uso:
 ///
