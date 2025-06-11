@@ -208,7 +208,7 @@ class Vault {
   }
 
   Future<double?> balance(String accountId) async {
-    sorobanServer.enableLogging = false;
+    sorobanServer.enableLogging = true;
 
     GetHealthResponse healthResponse = await sorobanServer.getHealth();
 
@@ -244,7 +244,7 @@ class Vault {
       if (totalManagedFunds == null) {
         return 0;
       }
-      double totalAmount = totalManagedFunds.totalAmount.toDouble() / 10000000; // Convert to double with 7 decimal places
+      double totalAmount = totalManagedFunds.totalAmount.toDouble() / 10000000;
       double? totalSupplySim = await totalSupply();
 
       return dfBalance*totalAmount/totalSupplySim!;
@@ -253,7 +253,7 @@ class Vault {
   }
 
   Future<double?> totalSupply() async {
-    sorobanServer.enableLogging = false;
+    sorobanServer.enableLogging = true;
 
     GetHealthResponse healthResponse = await sorobanServer.getHealth();
     
@@ -293,7 +293,7 @@ class Vault {
   }
 
   Future<TotalManagedFunds?> fetchTotalManagedFunds() async {
-    sorobanServer.enableLogging = false;
+    sorobanServer.enableLogging = true;
 
     GetHealthResponse healthResponse = await sorobanServer.getHealth();
     
