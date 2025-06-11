@@ -1,189 +1,15 @@
 library defindex_sdk;
-import 'dart:convert';
-import 'dart:math' as math;
 
 import 'package:defindex_sdk/custom_soroban_server.dart';
-import 'package:defindex_sdk/graph_ql_server.dart';
+import 'package:defindex_sdk/models/vault_models.dart';
+import 'package:defindex_sdk/utils/sc_val_utils.dart';
+import 'package:defindex_sdk/utils/vault_event_utils.dart' as vault_utils;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 
-const dayInLedgers = 17280;
-class StrategyAllocation {
-  final double amount;
-  final bool paused;
-  final String strategyAddress;
-
-  StrategyAllocation({
-    required this.amount,
-    required this.paused,
-    required this.strategyAddress,
-  });
-
-  factory StrategyAllocation.fromMap(Map<String, dynamic> map) {
-    return StrategyAllocation(
-      amount: map['amount'] is num ? (map['amount'] as num).toDouble() : 0.0,
-      paused: map['paused'] as bool,
-      strategyAddress: map['strategy_address'] as String,
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'amount': amount,
-      'paused': paused,
-      'strategy_address': strategyAddress,
-    };
-  }
-}
-
-
-class TotalManagedFunds {
-  final String asset;
-  final double idleAmount;
-  final double investedAmount;
-  final List<StrategyAllocation> strategyAllocations;
-  final double totalAmount;
-
-  TotalManagedFunds({
-    required this.asset,
-    required this.idleAmount,
-    required this.investedAmount,
-    required this.strategyAllocations,
-    required this.totalAmount,
-  });
-
-  factory TotalManagedFunds.fromMap(Map<String, dynamic> map) {
-    return TotalManagedFunds(
-      asset: map['asset'] as String,
-      idleAmount: map['idle_amount'] is num ? (map['idle_amount'] as num).toDouble() : 0.0,
-      investedAmount: map['invested_amount'] is num ? (map['invested_amount'] as num).toDouble() : 0.0,
-      strategyAllocations: (map['strategy_allocations'] as List?)
-          ?.map((allocation) => StrategyAllocation.fromMap(allocation as Map<String, dynamic>))
-          .toList() ?? [],
-      totalAmount: map['total_amount'] is num ? (map['total_amount'] as num).toDouble() : 0.0,
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'asset': asset,
-      'idle_amount': idleAmount,
-      'invested_amount': investedAmount,
-      'strategy_allocations': strategyAllocations.map((allocation) => allocation.toMap()).toList(),
-      'total_amount': totalAmount,
-    };
-  }
-}
-
-class VaultEvent {
-  final double amounts;
-  final double dfTokens;
-  final double previousPricePerShare;
-  final double totalManagedFunds;
-  final double totalSupplyBefore;
-  final String eventType;
-  final int ledger;
-  final DateTime date;
-
-  VaultEvent({
-    required this.amounts,
-    required this.dfTokens,
-    required this.previousPricePerShare,
-    required this.totalManagedFunds,
-    required this.totalSupplyBefore,
-    required this.eventType,
-    required this.ledger,
-    required this.date,
-  });
-
-  factory VaultEvent.fromMap(Map<String, dynamic> map) {
-    // Procesar valores numéricos que pueden estar en formato [valor] o como objetos complejos
-    double extractDoubleValue(dynamic value) {
-      if (value is num) {
-        return value.toDouble();
-      } else if (value is List && value.isNotEmpty) {
-        if (value[0] is num) {
-          return (value[0] as num).toDouble();
-        } else if (value[0] is String) {
-          return double.tryParse(value[0] as String) ?? 0.0;
-        }
-      } else if (value is String) {
-        return double.tryParse(value) ?? 0.0;
-      } else if (value is Map<String, dynamic>) {
-        // Si es un objeto complejo como totalManagedFundsBefore
-        if (value.containsKey('total_amount')) {
-          var totalAmount = value['total_amount'];
-          if (totalAmount is String) {
-            return double.tryParse(totalAmount) ?? 0.0;
-          } else if (totalAmount is num) {
-            return totalAmount.toDouble();
-          }
-        }
-      }
-      return 0.0;
-    }
-
-    // Procesar fecha que puede venir en varios formatos
-    DateTime extractDate(dynamic dateValue) {
-      if (dateValue is DateTime) {
-        return dateValue;
-      } else if (dateValue is int) {
-        return DateTime.fromMillisecondsSinceEpoch(dateValue);
-      } else if (dateValue is String) {
-        try {
-          return DateTime.parse(dateValue);
-        } catch (e) {
-          return DateTime.now();
-        }
-      }
-      return DateTime.now();
-    }
-
-    // Parsear totalManagedFundsBefore como JSON
-    Map<String, dynamic> parseJson(dynamic value) {
-      if (value is String) {
-        try {
-          return Map<String, dynamic>.from(jsonDecode(value));
-        } catch (e) {
-        }
-      }
-      return {};
-    }
-
-    final totalManagedFundsBefore = parseJson(map['totalManagedFundsBefore']);
-
-    return VaultEvent(
-      amounts: extractDoubleValue(map['amounts']),
-      dfTokens: extractDoubleValue(map['dfTokens']),
-      previousPricePerShare: extractDoubleValue(map['previousPricePerShare']),
-      totalManagedFunds: extractDoubleValue(totalManagedFundsBefore['total_amount']),
-      totalSupplyBefore: extractDoubleValue(map['totalSupplyBefore']),
-      eventType: map['eventType'] as String? ?? '',
-      ledger: map['ledger'] is num ? (map['ledger'] as num).toInt() : 0,
-      date: extractDate(map['date']),
-    );
-  }
-
-  // Calcular el precio por acción (PPS)
-  double calculatePricePerShare() {
-    if (eventType.toLowerCase() == 'deposit') {
-      return (totalManagedFunds + amounts) / (totalSupplyBefore + dfTokens);
-    } else if (eventType.toLowerCase() == 'withdraw') {
-      return (totalManagedFunds - amounts) / (totalSupplyBefore - dfTokens);
-    } else {
-      // Default fallback: avoid division by zero
-      if (totalSupplyBefore != 0) {
-        return totalManagedFunds / totalSupplyBefore;
-      }
-      return 0.0;
-    }
-  }
-}
-
-enum SorobanNetwork {
-  PUBLIC,
-  TESTNET,
-}
+export 'package:defindex_sdk/models/vault_event_models.dart';
+// Exportar modelos y utilidades para que estén disponibles al importar el SDK
+export 'package:defindex_sdk/models/vault_models.dart';
 
 class Vault {
   String sorobanRPCUrl;
@@ -418,7 +244,7 @@ class Vault {
       if (totalManagedFunds == null) {
         return 0;
       }
-      double totalAmount = totalManagedFunds.totalAmount;
+      double totalAmount = totalManagedFunds.totalAmount.toDouble() / 10000000; // Convert to double with 7 decimal places
       double? totalSupplySim = await totalSupply();
 
       return dfBalance*totalAmount/totalSupplySim!;
@@ -494,6 +320,7 @@ class Vault {
         String? xdrValue = simulateResponse.results![0].xdr;
         List<XdrSCVal> xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(xdrValue).vec!;
         try {
+          // Usando la función auxiliar del módulo sc_val_utils
           Map<String, dynamic> resultMap = parseScVal(xdrSCVal[0]);
           return TotalManagedFunds.fromMap(resultMap);
         } catch (e) {
@@ -504,154 +331,16 @@ class Vault {
     return null;
   }
 
+
   Future<double> getAPY() async {    
     try {
-      final graphQLClient = DeFindexGraphQLClient();
+      final eventPair = await vault_utils.fetchVaultEventPair(contractId);
       
-      final lastEvent = await graphQLClient.query(
-        DeFindexQueries.getVaultEvent,
-        variables: {
-          'vaultAddress': contractId,
-          'orderBy': 'LEDGER_ASC', 
-          'first': 1, 
-        },
-      );
-      final lastEventData = graphQLClient.getResultData(lastEvent);
+      if (eventPair == null) return 0.0;
       
-      if (lastEventData == null || 
-          !lastEventData.containsKey('deFindexVaults') || 
-          lastEventData['deFindexVaults']['nodes'].isEmpty) {
-        return 0.0;
-      }
-      
-      final lastEventLedger = lastEventData['deFindexVaults']['nodes'][0]['ledger'] as int;
-      final firstEventLedger = lastEventLedger - (dayInLedgers * 7); 
-
-      final firstEvent = await graphQLClient.query(
-        DeFindexQueries.getVaultEventByLedger,
-        variables: {
-          'vaultAddress': contractId,
-          'orderBy': 'DATE_DESC', 
-          'last': 1,
-          'ledger': firstEventLedger,
-        },
-      );
-      
-      if (firstEvent.hasException) {
-      }
-      
-      final currentData = lastEventData;
-      final pastData = graphQLClient.getResultData(firstEvent);
-
-      if (currentData.isEmpty || pastData == null) {
-        return 0.0;
-      }
-      
-      List<VaultEvent> currentEvents = [];
-      List<VaultEvent> pastEvents = [];
-      
-      try {
-        final currentNodes = currentData['deFindexVaults']['nodes'] as List;
-        currentEvents = currentNodes
-            .map((node) => VaultEvent.fromMap(node as Map<String, dynamic>))
-            .toList();
-        
-        final pastNodes = pastData['deFindexVaults']['nodes'] as List;
-        pastEvents = pastNodes
-            .map((node) => VaultEvent.fromMap(node as Map<String, dynamic>))
-            .toList();
-      } catch (e) {
-        if (currentData.containsKey('deFindexVaults')) {;
-        }
-        return 0.0;
-      }
-      
-      if (currentEvents.isEmpty || pastEvents.isEmpty) {
-        return 0.0;
-      }
-      
-      final mostRecentEvent = currentEvents.first;
-      final oldestEvent = pastEvents.first;
-      
-      final currentPPS = mostRecentEvent.calculatePricePerShare();
-      final pastPPS = oldestEvent.calculatePricePerShare();
-      
-      if (currentPPS <= 0 || pastPPS <= 0) {
-        return 0.0;
-      }
-      
-      final daysDifference = (mostRecentEvent.date.difference(oldestEvent.date).inSeconds / 86400);
-      
-      if (daysDifference <= 0) {
-        return 0.0;
-      }
-      
-      final daily = (currentPPS / pastPPS - 1) / daysDifference;
-      
-      final apy = math.pow(1 + daily, 365.2425) - 1;
-      
-      final result = (apy as double).clamp(0.0, double.infinity);
-
-      return result;
+      return eventPair.calculateAPY();
     } catch (e) {
-      return 0.00;
+      return 0.0;
     }
-  }
-}
-
-Map<String, dynamic> parseMap(XdrSCVal scval) {
-  if (scval.discriminant != XdrSCValType.SCV_MAP) {
-    throw Exception('Expected Map type, got ${scval.discriminant}');
-  }
-  Map<String, dynamic> result = {};
-  for (var entry in scval.map!) {
-    String key = parseScVal(entry.key);
-    dynamic value = parseScVal(entry.val);
-
-    result[key] = value;
-  }
-  return result;
-}
-
-dynamic parseScVal(XdrSCVal val) {
-  switch (val.discriminant) {
-    case XdrSCValType.SCV_BOOL:
-      return val.b;
-    case XdrSCValType.SCV_U32:
-      return BigInt.from(val.u32!.uint32).toDouble();
-    case XdrSCValType.SCV_I32:
-      return BigInt.from(val.i32!.int32).toDouble();
-    case XdrSCValType.SCV_U64:
-      return BigInt.from(val.u64!.uint64).toDouble();
-    case XdrSCValType.SCV_I64:
-      return BigInt.from(val.i64!.int64).toDouble();
-    case XdrSCValType.SCV_U128:
-      return BigInt.from(val.u128!.lo.uint64).toDouble();
-    case XdrSCValType.SCV_I128:
-      return BigInt.from(val.i128!.lo.uint64).toDouble();
-    case XdrSCValType.SCV_STRING:
-      return val.str;
-    case XdrSCValType.SCV_BYTES:
-      return val.bytes;
-    case XdrSCValType.SCV_ADDRESS:
-      try {
-        if (val.address?.contractId != null) {
-          final contractIdHex = Util.bytesToHex(val.address!.contractId!.hash);
-          final strKeyContractId = StrKey.encodeContractIdHex(contractIdHex);
-          return strKeyContractId;
-        } else {
-          throw Exception('Invalid address format');
-        }
-      } catch (e) {
-        throw Exception('Invalid address format');
-      }
-    case XdrSCValType.SCV_SYMBOL:
-      return val.sym;
-    case XdrSCValType.SCV_VEC:
-      return val.vec?.map((e) => parseScVal(e)).toList();
-    case XdrSCValType.SCV_MAP:
-      return parseMap(val);
-    default:
-      throw Exception('Unsupported type: ${val.discriminant}');
   }
 }
