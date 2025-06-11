@@ -1,3 +1,4 @@
 build
 .dart_tool
 .env
+example/macos
