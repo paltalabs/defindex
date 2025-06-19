@@ -1,6 +1,4 @@
-import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 
 interface Props {
     label: string;
@@ -16,11 +14,23 @@ interface Props {
     color: "red" | "green";
 }
 
+import { useEffect, useState } from "react";
+
 function Solutions(props: Props) {
     const { advices, learn_more, thumb, label, title, strategies, color } = props;
+    const [activeStrategy, setActiveStrategy] = useState<string | number>(strategies[0]?.id);
+
+    const [visible, setVisible] = useState(false);
+
+    useEffect(() => {
+        setVisible(true);
+    }, [activeStrategy]);
 
     return (
-        <div>
+        <div className={`
+                transition-opacity duration-1000
+                ${visible ? "opacity-100" : "opacity-0"}
+            `}>
             <div className="flex gap-4 justify-center flex-col max-w-w-[629px] mb-16 lg:mb-20">
                 <p className="font-familjen-grotesk text-[20px] lg:text-lg uppercase leading-[1.425em] tracking-[-0.03em] text-uppercase text-cyan-950">
                     {label}
@@ -41,9 +51,10 @@ function Solutions(props: Props) {
                 </div>
             </div>
             <div className="grid sm:grid-cols-4 mb-12 md:mb-16 lg:mb-20">
-                <Image
-                    width={304}
-                    height={329}
+                <img
+                    loading="lazy"
+                    width={'auto'}
+                    height={'full'}
                     src={thumb}
                     className="rounded-t-xl sm:rounded-t-none sm:rounded-tl-3xl sm:rounded-l-3xl sm:w-auto w-full"
                     alt=""
@@ -51,12 +62,24 @@ function Solutions(props: Props) {
                 {strategies.map(({ icon, description, id }) => (
                     <div
                         key={id}
-                        className={`${color === "red" ? "[&:nth-child(2)]:bg-item-linear" : "[&:nth-child(2)]:bg-item-linear-green"} group grid place-content-center border ${color === "red" ? "border-orange-500/40" : "border-[#014751]/40"} p-4 xl:p-10 sm:last:rounded-r-3xl last:rounded-b-xl sm:last:rounded-b-none sm:last:rounded-br-3xl sm:border-r-0 border-b-0 sm:border-b last:border-b last:border-r`}
+                        className={`
+                            group grid place-content-center border p-4 xl:p-10 sm:last:rounded-r-3xl last:rounded-b-xl sm:last:rounded-b-none sm:last:rounded-br-3xl sm:border-r-0 border-b-0 sm:border-b last:border-b last:border-r
+                            ${
+                                activeStrategy === id
+                                    ? (color === "red"
+                                        ? "bg-orange-500/20 border-orange-500"
+                                        : "bg-green-700/20 border-green-700")
+                                    : (color === "red"
+                                        ? "border-orange-500/40"
+                                        : "border-green-700/40 opacity-50")
+                            }
+                        `}
+                        onClick={() => setActiveStrategy(id)}
                     >
-                        <div className="mb-6 flex justify-center group-[&:nth-child(n+3)]:opacity-30 group-[&:nth-child(n+3)]:contrast-0">
+                        <div className={`mb-6 flex justify-center ${activeStrategy !== id ? "opacity-30 contrast-0" : ""}`}>
                             <img src={icon} alt="" className="md:w-auto w-6" />
                         </div>
-                        <p className="font-inter-tight text-center text-[16px] xl:text-md group-[&:nth-child(n+3)]:text-opacity-30 text-cyan-950 line-clamp-3">
+                        <p className={`font-inter-tight text-center text-[16px] xl:text-md text-cyan-950 line-clamp-3 ${activeStrategy !== id ? "text-opacity-30" : ""}`}>
                             {description}
                         </p>
                     </div>
