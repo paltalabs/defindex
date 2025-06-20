@@ -33,6 +33,7 @@
 
 * [Introduction](wallet-developer/introduction.md)
 * [Smart Contracts](wallet-developer/smart-contracts.md)
+* [API Integration Tutorial](wallet-developer/api.md)
 * [Vault](wallet-developer/vault.md)
 * [Flutter SDK](wallet-developer/01-fluter-sdk.md)
 * [Typescript SDK](wallet-developer/02-typescript-sdk.md)
