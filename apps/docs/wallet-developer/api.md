@@ -19,13 +19,13 @@ import StellarSdk from 'stellar-sdk';
 
 class ApiClient {
     private accessToken: string | null = null;
-    private readonly apiEndpoint = "api.defindex.io";
+    private readonly apiUrl = "api.defindex.io";
 
     constructor(private username: string, private password: string) {}
 
     // Authenticate and store the access token
     async login(): Promise<void> {
-        const response = await fetch(`https://${this.apiEndpoint}/login`, {
+        const response = await fetch(`https://${this.apiUrl}/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username: this.username, password: this.password }),
@@ -38,10 +38,10 @@ class ApiClient {
     }
 
     // Helper for POST requests
-    async postData(endpoint: string, vault: string, params: Record<string, any>): Promise<any> {
+    async postData(endpoint: string, vaultAddress: string, params: Record<string, any>): Promise<any> {
         if (!this.accessToken) throw new Error("Not authenticated");
 
-        const response = await fetch(`https://${this.apiEndpoint}/${vault}/${endpoint}`, {
+        const response = await fetch(`https://${this.apiUrl}/vault/${vaultAddress}/${endpoint}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -57,8 +57,8 @@ class ApiClient {
         if (!this.accessToken) throw new Error("Not authenticated");
 
         const url = params
-            ? `https://${this.apiEndpoint}/${endpoint}?${new URLSearchParams(params).toString()}`
-            : `https://${this.apiEndpoint}/${endpoint}`;
+            ? `https://${this.apiUrl}/vault/${vaultAddress}/${endpoint}?${new URLSearchParams(params).toString()}`
+            : `https://${this.apiUrl}/vault/${vaultAddress}/${endpoint}`;
 
         const response = await fetch(url, {
             method: 'GET',
@@ -82,21 +82,21 @@ Below are the main functions you'll need: `deposit`, `withdraw`, `balance`, and 
 Deposits funds into the DeFindex vault.
 
 ```typescript
-const vault = 'CAQ6PAG4X6L7LJVGOKSQ6RU2LADWK4EQXRJGMUWL7SECS7LXUEQLM5U7';
+const vaultAddress = 'CAQ6PAG4X6L7LJVGOKSQ6RU2LADWK4EQXRJGMUWL7SECS7LXUEQLM5U7';
 
 async function deposit(amount: number, user: string, apiClient: ApiClient, signerFunction: (tx: string) => string) {
     // Step 1: Request an unsigned transaction from the API
-    const { transaction: unsignedTx } = await apiClient.postData("deposit", vault, {
-        amount,
-        user
+    const { xdr: unsignedTx } = await apiClient.postData("deposit", vaultAddress, {
+        amounts: [amount],
+        from: user
     });
 
     // Step 2: Sign the transaction (implement your own signer)
     const signedTx = signerFunction(unsignedTx);
 
     // Step 3: Send the signed transaction back to the API
-    const response = await apiClient.postData("send", vault, {
-        signedTx
+    const response = await apiClient.postData("send", vaultAddress, {
+        xdr: signedTx
     });
     return response;
 }
@@ -110,16 +110,16 @@ Withdraws funds from the DeFindex vault.
 const vault = 'CAQ6PAG4X6L7LJVGOKSQ6RU2LADWK4EQXRJGMUWL7SECS7LXUEQLM5U7';
 
 async function withdraw(amount: number, user: string, apiClient: ApiClient, signerFunction: (tx: string) => string) {
-    const { transaction: unsignedTx } = await apiClient.postData("withdraw", vault, {
-        amount,
-        user
+    const { xdr: unsignedTx } = await apiClient.postData("withdraw", vault, {
+        amounts: [amount],
+        from: user
     });
 
     // This should be done by implementer
     const signedTx = signerFunction(unsignedTx);
 
     const response = await apiClient.postData("send", vault, {
-        signedTx
+        xdr: signedTx
     });
 
     return response;
@@ -133,11 +133,11 @@ Fetches the balance for a user.
 ```typescript
 const vault = 'CAQ6PAG4X6L7LJVGOKSQ6RU2LADWK4EQXRJGMUWL7SECS7LXUEQLM5U7';
 
-async function balance(user: string, apiClient: ApiClient) {
-    const data = await apiClient.postData("balance", vault, {
-        user
+async function balance(user: string, apiClient: ApiClient): bigint {
+    const {underlyingBalance: balance} = await apiClient.getData("balance", vault, {
+        from: user
     });
-    return data;
+    return BigInt(balance[0]);
 }
 ```
 
@@ -148,9 +148,9 @@ Fetches the current APY for the vault.
 ```typescript
 const vault = 'CAQ6PAG4X6L7LJVGOKSQ6RU2LADWK4EQXRJGMUWL7SECS7LXUEQLM5U7';
 
-async function apy(apiClient: ApiClient) {
-    const data = await apiClient.getData("apy", vault);
-    return data;
+async function apy(apiClient: ApiClient): number {
+    const {apy} = await apiClient.getData("apy", vault);
+    return apy;
 }
 ```
 
@@ -167,7 +167,6 @@ async function main() {
     // Implement your own signer function
     const signerFunction = (unsignedTx: string) => {
         // Use StellarSdk or your wallet to sign the transaction
-        // Example: return StellarSdk.TransactionBuilder.fromXDR(unsignedTx, StellarSdk.Networks.TESTNET).sign(...).toXDR();
         return unsignedTx; // Replace with actual signing logic
     };
 
