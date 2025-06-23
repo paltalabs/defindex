@@ -12,6 +12,7 @@ This package provides a Dart interface to interact with the Defindex Smart Contr
 
 To use this package, add `defindex` as a [dependency in your pubspec.yaml file](https://flutter.dev/docs/development/packages-and-plugins/using-packages).
 
+
 ## Usage
 
 Here's a simple example of how to use the `DefiIndex` class to deposit an amount into an account:
@@ -34,4 +35,18 @@ void main() async {
 
   print('Transaction hash: $transactionHash');
 }
+```
+
+## Example Configuration
+
+In order to run the example, you can use `.env` files to store sensitive information such as keys and URLs. This allows you to keep your credentials secure and separate from your codebase.
+
+### Example `.env` file
+
+Here is an example of a `.env` file:
+
+```properties
+USER_SECRET=your_secret_key
+USER_PUBLIC_KEY=your_public_key
+SOROBAN_RPC_URL=https://your_rpc_url
 ```

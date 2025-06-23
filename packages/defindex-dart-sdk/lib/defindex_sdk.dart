@@ -1,12 +1,15 @@
 library defindex_sdk;
 
-import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 import 'package:defindex_sdk/custom_soroban_server.dart';
+import 'package:defindex_sdk/models/vault_models.dart';
+import 'package:defindex_sdk/utils/sc_val_utils.dart';
+import 'package:defindex_sdk/utils/vault_event_utils.dart' as vault_utils;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:stellar_flutter_sdk/stellar_flutter_sdk.dart';
 
-enum SorobanNetwork {
-  PUBLIC,
-  TESTNET,
-}
+export 'package:defindex_sdk/models/vault_event_models.dart';
+// Exportar modelos y utilidades para que estén disponibles al importar el SDK
+export 'package:defindex_sdk/models/vault_models.dart';
 
 class Vault {
   String sorobanRPCUrl;
@@ -25,7 +28,8 @@ class Vault {
         ? StellarSDK.TESTNET
         : StellarSDK.PUBLIC;
   }
-
+  // Load the USER_PUBLIC_KEY from environment variables
+  late final String caller = dotenv.env['USER_PUBLIC_KEY'] ?? '';
   // poll until success or error
   Future<GetTransactionResponse> pollStatus(String transactionId) async {
     var status = GetTransactionResponse.STATUS_NOT_FOUND;
@@ -130,7 +134,8 @@ class Vault {
 
   Future<String?> withdraw(
       double amount,
-      String accountId, 
+      int toleranceBPS,
+      String accountId,
       Future<String> Function(String) signer) async {
     sorobanServer.enableLogging = true;
 
@@ -153,11 +158,15 @@ class Vault {
       XdrSCVal arg1 = XdrSCVal.forI128(
           XdrInt128Parts(XdrInt64(0), XdrUint64(transformedValue)));
 
+      XdrSCVal minAmountsOut = XdrSCVal.forVec([
+        XdrSCVal.forI128(XdrInt128Parts(XdrInt64(0), XdrUint64(transformedValue * toleranceBPS ~/ 10000)))
+      ]);
+
       XdrSCVal arg2 = XdrSCVal.forAddress(XdrSCAddress.forAccountId(accountId));
       // Prepare the "invoke" operation
       InvokeContractHostFunction hostFunction = InvokeContractHostFunction(
           contractId, functionName,
-          arguments: [arg1, arg2]);
+          arguments: [arg1, minAmountsOut, arg2]);
 
       InvokeHostFunctionOperation operation =
           InvokeHostFuncOpBuilder(hostFunction).build();
@@ -228,12 +237,14 @@ class Vault {
 
       if (simulateResponse.results != null && simulateResponse.results!.isNotEmpty) {
         String? xdrValue = simulateResponse.results![0].xdr;
-        XdrSCVal xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(xdrValue!);
+        XdrSCVal xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(xdrValue);
         dfBalance = BigInt.from(xdrSCVal.i128!.lo.uint64).toDouble() / 10000000; 
       }
-
-      dynamic totalManagedFunds = await fetchTotalManagedFunds();
-      double totalAmount = totalManagedFunds.values.first["total_amount"];
+      TotalManagedFunds? totalManagedFunds = await fetchTotalManagedFunds();
+      if (totalManagedFunds == null) {
+        return 0;
+      }
+      double totalAmount = totalManagedFunds.totalAmount.toDouble() / 10000000;
       double? totalSupplySim = await totalSupply();
 
       return dfBalance*totalAmount/totalSupplySim!;
@@ -248,7 +259,7 @@ class Vault {
     
     if (GetHealthResponse.HEALTHY == healthResponse.status) {
       // We'll use the contract's address as the account for this read-only operation
-      AccountResponse account = await sdk.accounts.account("GAHSP3MM23XG6L3AUBYXTRQWLC2Q6SWM6OCMCIAYV43CE2IXYSRARFDD");
+      AccountResponse account = await sdk.accounts.account(caller);
       
       // Name of the function to be invoked
       String functionName = "total_supply";
@@ -272,7 +283,7 @@ class Vault {
       if (simulateResponse.results != null && simulateResponse.results!.isNotEmpty) {
         String? xdrValue = simulateResponse.results![0].xdr;
         
-        XdrSCVal xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(xdrValue!);
+        XdrSCVal xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(xdrValue);
         
         return BigInt.from(xdrSCVal.i128!.lo.uint64).toDouble();
       }
@@ -281,14 +292,13 @@ class Vault {
     return null;
   }
 
-  Future<Map<String, dynamic>?> fetchTotalManagedFunds() async {
+  Future<TotalManagedFunds?> fetchTotalManagedFunds() async {
     sorobanServer.enableLogging = true;
 
     GetHealthResponse healthResponse = await sorobanServer.getHealth();
     
     if (GetHealthResponse.HEALTHY == healthResponse.status) {
-      AccountResponse account = await sdk.accounts.account("GAHSP3MM23XG6L3AUBYXTRQWLC2Q6SWM6OCMCIAYV43CE2IXYSRARFDD");
-      
+      AccountResponse account = await sdk.accounts.account(caller);
       String functionName = "fetch_total_managed_funds";
 
       InvokeContractHostFunction hostFunction = InvokeContractHostFunction(
@@ -308,66 +318,29 @@ class Vault {
 
       if (simulateResponse.results != null && simulateResponse.results!.isNotEmpty) {
         String? xdrValue = simulateResponse.results![0].xdr;
-
-        XdrSCVal xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(xdrValue!);
-
+        List<XdrSCVal> xdrSCVal = XdrSCVal.fromBase64EncodedXdrString(xdrValue).vec!;
         try {
-          Map<String, dynamic> parsedMap = parseMap(xdrSCVal);
-          return parsedMap;
+          // Usando la función auxiliar del módulo sc_val_utils
+          Map<String, dynamic> resultMap = parseScVal(xdrSCVal[0]);
+          return TotalManagedFunds.fromMap(resultMap);
         } catch (e) {
-          throw Exception('Unsupported type: ${xdrSCVal.discriminant}');
+          throw Exception('Unsupported type: ${xdrSCVal[0].discriminant}');
         }
       }
     }
-    
     return null;
   }
-}
 
-Map<String, dynamic> parseMap(XdrSCVal scval) {
-  if (scval.discriminant != XdrSCValType.SCV_MAP) {
-    throw Exception('Expected Map type, got ${scval.discriminant}');
-  }
 
-  Map<String, dynamic> result = {};
-  for (var entry in scval.map!) {
-    String key = parseScVal(entry.key);
-    dynamic value = parseScVal(entry.val);
-    
-    result[key] = value;
-  }
-  return result;
-}
-
-dynamic parseScVal(XdrSCVal val) {
-  switch (val.discriminant) {
-    case XdrSCValType.SCV_BOOL:
-      return val.b;
-    case XdrSCValType.SCV_U32:
-      return BigInt.from(val.u32!.uint32).toDouble();
-    case XdrSCValType.SCV_I32:
-      return BigInt.from(val.i32!.int32).toDouble();
-    case XdrSCValType.SCV_U64:
-      return BigInt.from(val.u64!.uint64).toDouble();
-    case XdrSCValType.SCV_I64:
-      return BigInt.from(val.i64!.int64).toDouble();
-    case XdrSCValType.SCV_U128:
-      return BigInt.from(val.u128!.lo.uint64).toDouble();
-    case XdrSCValType.SCV_I128:
-      return BigInt.from(val.i128!.lo.uint64).toDouble();
-    case XdrSCValType.SCV_STRING:
-      return val.str;
-    case XdrSCValType.SCV_BYTES:
-      return val.bytes;
-    case XdrSCValType.SCV_ADDRESS:
-      return val.address.toString();
-    case XdrSCValType.SCV_SYMBOL:
-      return val.sym;
-    case XdrSCValType.SCV_VEC:
-      return val.vec?.map((e) => parseScVal(e)).toList();
-    case XdrSCValType.SCV_MAP:
-      return parseMap(val);
-    default:
-      throw Exception('Unsupported type: ${val.discriminant}');
+  Future<double> getAPY() async {    
+    try {
+      final eventPair = await vault_utils.fetchVaultEventPair(contractId);
+      
+      if (eventPair == null) return 0.0;
+      
+      return eventPair.calculateAPY();
+    } catch (e) {
+      return 0.0;
+    }
   }
 }
