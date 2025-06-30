@@ -44,13 +44,5 @@ jobs:
         run: |
           set -e
           cd apps/contracts && 
-          make build || exit 1
-        continue-on-error: false
-    
-      - name: test contracts
-        shell: sh
-        run: |
-          set -e
-          cd apps/contracts && 
-          cargo test --release || exit 1
+          make build && make test || exit 1
         continue-on-error: false
