@@ -74,14 +74,6 @@ yarn  test  testnet  -h
 it will show the next message where you can see all the available tests and the specific flags to run them.
 
 ## Production deployment
-### blend strategies
-First you need to complete the following steps:
-1. review the `blend_deploy_config.json` file to ensure that the strategies are correctly configured. In this file you can see a list of the strategies to deploy and the parameters for each one.
-2. run the deploy_blend script to deploy the strategies:
-```
-yarn deploy-blend <network>
-```
-3. Then, to make it available for the frontend, you need to copy the new deployed strategies from `.soroban/<network>.contracts.json` into the `public/<network>.contracts.json` file.
 
 ### Factory
 Make sure you have compiled the contracts:
@@ -93,8 +85,32 @@ and then you can deploy the factory with the following command:
 yarn deploy-factory <network>
 ```
 Copy the deployed factory address from the output on `.soroban/<network>.contracts.json` and paste it in `public/<network>.contracts.json`
+or just run the following command to copy it automatically:
 
+```
+    yarn publish-addresses <network>
+```
 
+### blend strategies
+First you need to complete the following steps:
+1. review the `blend_deploy_config.json` file to ensure that the strategies are correctly configured. In this file you can see a list of the strategies to deploy and the parameters for each one.
+2. ensure that the addresses in the `<network>.contracts.json` file are correct and match the ones in the `blend_deploy_config.json` file.
+3. ensure that the blend_keeper and blend_deployer secret keys are set in the `.env` file. Also, make sure that the `BLEND_KEEPER_SECRET_KEY` and `BLEND_DEPLOYER_SECRET_KEY` has trustlines set with all the assets that will be used in the strategies.
+4. run the deploy_blend script to deploy the strategies:
+```
+yarn deploy-blend <network>
+```
+5. Then, to make it available for the frontend, you need to copy the new deployed strategies from `.soroban/<network>.contracts.json` into the `~/public/<network>.contracts.json` file.
+
+### Deploy vault
+Before deploying a vault, ensure that you have the `~/public/<network>.contracts.json` file updated with the latest contract addresses. This file should contain the addresses of all the necesary contracts deployed on the specified network, such as the factory, strategies, and blend addresses.
+
+To deploy a vault, you need to run the following command:
+```
+yarn deploy-vault <network> <asset>
+```
+where `<network>` is the network you want to deploy to (e.g., `testnet`, `mainnet`) and `<asset>` is the asset you want to use (e.g., `usdc`, `xlm`). 
+>[!NOTE] Make sure to double-check that the configuration in the `./configs.json` and the addresses at the public/`<network>`.contracts.json files are correct before deploying.
 
 ## Generate Docs
 ```bash
