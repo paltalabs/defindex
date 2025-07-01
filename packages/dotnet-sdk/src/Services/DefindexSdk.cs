@@ -308,7 +308,7 @@ public class DefindexSdk : IDefindexSdk
         if (string.IsNullOrEmpty(xdrString))
         {
             throw new Exception("XDR string is null or empty.");
-        };
+        }
         var rawVec = (SCVec)StellarDotnetSdk.Soroban.SCVec.FromXdrBase64(xdrString);
         foreach (var item in rawVec.InnerValue)
         {
