@@ -20,9 +20,7 @@ public class DefindexSdk : IDefindexSdk
     private readonly SCContractId _contractId;
     private readonly SorobanServer _server;
 
-    private string? _blendDeployConfigJson;
-
-    private string? _defindexDeploymentsJson;
+    private const int ScaleFactor = 10000000;
 
     public DefindexSdk(string contractId, SorobanServer server)
     {
@@ -325,12 +323,12 @@ public class DefindexSdk : IDefindexSdk
         BigInteger assetAmount
         )
     {
-        var sharesValue = await GetAssetAmountsPerShares(ScaleFactor);
-        if (sharesValue == null || sharesValue.Count == 0)
+        var assetAmountsPerShares = await GetAssetAmountsPerShares(ScaleFactor);
+        if (assetAmountsPerShares == null || assetAmountsPerShares.Count == 0)
         {
             throw new Exception("Failed to get asset amounts per shares.");
         }
-        BigInteger sharesAmount = assetAmount * sharesValue[0] / ScaleFactor;
+        BigInteger sharesAmount = assetAmount * assetAmountsPerShares[0] / ScaleFactor;
 
         return sharesAmount;
     }

@@ -252,14 +252,14 @@ Creates an unsigned transaction to withdraw a specific amount of underlying asse
 ```C#
 public async Task<Transaction> CreateWithdrawUnderlyingTx(
     BigInteger withdrawAmount,
-    int bpsTolerance,
+    int toleranceBPS,
     string from
 )
 ```
 
 **Inputs:**
 - `withdrawAmount`: The amount of underlying asset to withdraw.
-- `bpsTolerance`: The basis points tolerance for the withdrawal.
+- `toleranceBPS`: The basis points tolerance for the withdrawal.
 - `from`: The account to withdraw from.
 
 **Returns:**
@@ -321,7 +321,7 @@ public sealed record TransactionResult(
 | `ParseTransactionResponse(GetTransactionResponse response)` | Parses a transaction response from the network |
 | `GetVaultAPY()` | Retrieves the current estimated APY for the vault |
 | `GetAssetAmountsPerShares(BigInteger vaultShares)` | Converts vault shares to underlying asset amounts |
-| `CreateWithdrawUnderlyingTx(BigInteger withdrawAmount, int bpsTolerance, string from)` | Creates an unsigned transaction to withdraw underlying assets from a vault |
+| `CreateWithdrawUnderlyingTx(BigInteger withdrawAmount, int toleranceBPS, string from)` | Creates an unsigned transaction to withdraw underlying assets from a vault |
 
 Made with ❤️ by [PaltaLabs🥑](https://github.com/paltalabs)
 
