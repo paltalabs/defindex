@@ -67,10 +67,10 @@ class Program
 
 
         // Get SorobanServer URL from environment variable
-        var sorobanServerUrl = Env.GetString("MAINNET_RPC_URL") ?? "https://soroban-testnet.stellar.org/";
+        var sorobanServerUrl = network == "mainnet" ? Env.GetString("MAINNET_RPC_URL") ?? "https://soroban-testnet.stellar.org/" : Env.GetString("TESTNET_RPC_URL") ?? "https://soroban-testnet.stellar.org/";
         var soroban_server = new SorobanServer(sorobanServerUrl);
 
-        var vault_string = "CAQ6PAG4X6L7LJVGOKSQ6RU2LADWK4EQXRJGMUWL7SECS7LXUEQLM5U7";
+        var vault_string = "CAQEPGA3XDBZSWHYLBUSH2UIP2SHHTEMXMHFPLIEN6RYH7G6GEGJWHGN";
         var vaultInstance = new DefindexSdk(vault_string, soroban_server);
 
         var userKeypair = KeyPair.FromSecretSeed(Env.GetString("USER_SECRET")) ?? null;
