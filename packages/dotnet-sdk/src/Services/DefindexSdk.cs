@@ -325,12 +325,12 @@ public class DefindexSdk : IDefindexSdk
         BigInteger assetAmount
         )
     {
-        var sharesValue = await GetAssetAmountsPerShares(10000000);
+        var sharesValue = await GetAssetAmountsPerShares(ScaleFactor);
         if (sharesValue == null || sharesValue.Count == 0)
         {
             throw new Exception("Failed to get asset amounts per shares.");
         }
-        BigInteger sharesAmount = assetAmount * sharesValue[0] / 10000000;
+        BigInteger sharesAmount = assetAmount * sharesValue[0] / ScaleFactor;
 
         return sharesAmount;
     }
