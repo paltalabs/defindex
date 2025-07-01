@@ -63,38 +63,38 @@
         "strategies":[
             {
                 "name": "autocompound",
-                "keeper": "GBXAQZ2DBYQCU26DWOHQR5UNGBG5JLT37LNNABSJGBQN2C7FXYUOQZGU",
+                "keeper": "GAZORYCZ2X3UGQXZSSOPSTZWEY44BBUA6E7YAF7GWERI26J6YNZL3HAZ",
                 "asset": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
                 "asset_symbol": "XLM",
                 "reward_threshold": "40",
-                "blend_pool_address": "CAMKTT6LIXNOKZJVFI64EBEQE25UYAQZBTHDIQ4LEDJLTCM6YVME6IIY",
+                "blend_pool_address": "CCLBPEYS3XFK65MYYXSBMOGKUI4ODN5S7SUZBGD7NALUQF64QILLX5B5",
                 "blend_pool_name": "fixed_xlm_usdc"
             },
             {
                 "name": "autocompound",
-                "keeper": "GBXAQZ2DBYQCU26DWOHQR5UNGBG5JLT37LNNABSJGBQN2C7FXYUOQZGU",
+                "keeper": "GAZORYCZ2X3UGQXZSSOPSTZWEY44BBUA6E7YAF7GWERI26J6YNZL3HAZ",
                 "asset": "CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU",
                 "asset_symbol": "USDC",
                 "reward_threshold": "40",
-                "blend_pool_address": "CAMKTT6LIXNOKZJVFI64EBEQE25UYAQZBTHDIQ4LEDJLTCM6YVME6IIY",
+                "blend_pool_address": "CCLBPEYS3XFK65MYYXSBMOGKUI4ODN5S7SUZBGD7NALUQF64QILLX5B5",
                 "blend_pool_name": "fixed_xlm_usdc"
             },
             {
                 "name": "autocompound",
-                "keeper": "GBXAQZ2DBYQCU26DWOHQR5UNGBG5JLT37LNNABSJGBQN2C7FXYUOQZGU",
+                "keeper": "GAZORYCZ2X3UGQXZSSOPSTZWEY44BBUA6E7YAF7GWERI26J6YNZL3HAZ",
                 "asset": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
                 "asset_symbol": "XLM",
                 "reward_threshold": "40",
-                "blend_pool_address": "CAMKTT6LIXNOKZJVFI64EBEQE25UYAQZBTHDIQ4LEDJLTCM6YVME6IIY",
+                "blend_pool_address": "CCLBPEYS3XFK65MYYXSBMOGKUI4ODN5S7SUZBGD7NALUQF64QILLX5B5",
                 "blend_pool_name": "YieldBlox"
             },
             {
                 "name": "autocompound",
-                "keeper": "GBXAQZ2DBYQCU26DWOHQR5UNGBG5JLT37LNNABSJGBQN2C7FXYUOQZGU",
+                "keeper": "GAZORYCZ2X3UGQXZSSOPSTZWEY44BBUA6E7YAF7GWERI26J6YNZL3HAZ",
                 "asset": "CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU",
                 "asset_symbol": "USDC",
                 "reward_threshold": "40",
-                "blend_pool_address": "CAMKTT6LIXNOKZJVFI64EBEQE25UYAQZBTHDIQ4LEDJLTCM6YVME6IIY",
+                "blend_pool_address": "CCLBPEYS3XFK65MYYXSBMOGKUI4ODN5S7SUZBGD7NALUQF64QILLX5B5",
                 "blend_pool_name": "YieldBlox"
             }
         ]
