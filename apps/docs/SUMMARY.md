@@ -11,6 +11,7 @@
   * [How DeFindex Works](getting-started/how-defindex-works.md)
   * [Creating a DeFindex Vault](getting-started/creating-a-defindex-vault.md)
   * [Mainnet Deployment](getting-started/mainnet-deployment.md)
+  * [Troubleshooting](getting-started/troubleshooting.md)
 
 ## Whitepaper
 
@@ -31,19 +32,20 @@
 
 ## WALLET DEVELOPER
 
+* [Introduction](wallet-developer/introduction.md)
+* [Smart Contracts](wallet-developer/smart-contracts.md)
+* [API Integration Tutorial](wallet-developer/api.md)
 * [Vault](wallet-developer/vault.md)
 * [Flutter SDK](wallet-developer/01-fluter-sdk.md)
 * [Typescript SDK](wallet-developer/02-typescript-sdk.md)
 * [Vault APY](wallet-developer/vault-apy.md)
 
-## STRATEGIES
+## DeFi DEVELOPERS
 
+* [Developer Introduction](strategies/developer-introduction.md)
 * [What is a strategy?](strategies/what-is-a-strategy.md)
 * [What is Blend Capital?](strategies/what-is-blend-capital.md)
 * [Strategies APY](strategies/strategies-apy.md)
-
-***
-
 * [Building the Blend Strategy](03-how-to-create-a-strategy.md)
 
 ## Users

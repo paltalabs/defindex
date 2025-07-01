@@ -155,5 +155,9 @@ async function deployDefindexVault() {
     }
 };
 
-await deployDefindexVault();
-addressBook.writeToFile();
+const deployResult = await deployDefindexVault();
+if (deployResult.address) {
+  console.log(green, `Deployed vault at address: ${deployResult.address}`);
+}
+addressBook.setContractId(`${asset.toLowerCase()}_paltalabs_vault`, deployResult.address);
+await addressBook.writeToFile();

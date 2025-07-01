@@ -12,7 +12,7 @@ export const MainProvider = ({ children }: { children: ReactNode }) => {
   if (!mounted) return null;
   return (
     <MySorobanReactProvider>
-      <ThemeProvider>
+      <ThemeProvider forcedTheme="dark">
         <StrategiesProvider>
           <VaultProvider>
             {children}
