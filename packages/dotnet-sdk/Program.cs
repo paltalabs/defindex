@@ -75,7 +75,7 @@ class Program
 
         var userKeypair = KeyPair.FromSecretSeed(Env.GetString("USER_SECRET")) ?? null;
         Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine($"Using user account: {userKeypair.AccountId}");
+        Console.WriteLine($"Using user account: {userKeypair!.AccountId}");
         Console.ResetColor();
 
         var depositTransaction = await vaultInstance.CreateDepositTransaction([10000000], [10000000], userKeypair.AccountId, false);
