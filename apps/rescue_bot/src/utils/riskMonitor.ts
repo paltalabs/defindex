@@ -1,7 +1,8 @@
-import { scValToNative } from "@stellar/stellar-base";
-import { RISK_TOLERANCE_FACTOR, RISK_CHECK_INTERVAL_MS } from "./constants";
-import { getBalance, addressFor, simulateInvocation } from "./soroban-toolkit";
+import { Address, Keypair, scValToNative } from "@stellar/stellar-base";
 import { exit } from "process";
+import { invokeContract } from "soroban-toolkit";
+import { RISK_CHECK_INTERVAL_MS, RISK_TOLERANCE_FACTOR } from "./constants";
+import { addressFor, getBalance, simulateInvocation, toolkit } from "./soroban-toolkit";
 
 export async function totalUnderlyingInCometPool(): Promise<bigint> {
   const assetBalance = await getBalance("assetAddress", "cometPool");
@@ -82,12 +83,57 @@ export async function evaluateVaultRisk(): Promise<boolean | undefined> {
   }
 }
 
+async function getAdminKeypairAndAddresses() {
+  if (!process.env.ADMIN_SECRET) {
+    throw new Error("ADMIN_SECRET environment variable is not set.");
+  }
+  const adminKeypair = Keypair.fromSecret(process.env.ADMIN_SECRET);
+  const adminAddress = new Address(adminKeypair.publicKey()).toScVal();
+  const strategyAddress = new Address(addressFor("defindexStrategy")).toScVal();
+  return { adminKeypair, adminAddress, strategyAddress };
+}
+
+export async function executeRescue(): Promise<void> {
+  try {
+    const { adminKeypair, adminAddress, strategyAddress } = await getAdminKeypairAndAddresses();
+    const rescueResult = await invokeContract(
+      toolkit,
+      "defindexVault",
+      "rescue",
+      [strategyAddress, adminAddress],
+      false,
+      adminKeypair
+    );
+    return rescueResult;
+  } catch (error) {
+    console.error("Error executing rescue:", error);
+  }
+}
+
+export async function unpauseStrategy(): Promise<void> {
+  try {
+    const { adminKeypair, adminAddress, strategyAddress } = await getAdminKeypairAndAddresses();
+    const unpauseResult = await invokeContract(
+      toolkit,
+      "defindexVault",
+      "unpause_strategy",
+      [strategyAddress, adminAddress],
+      false,
+      adminKeypair
+    );
+    return unpauseResult;
+  } catch (error) {
+    console.error("Error unpausing strategy:", error);
+  }
+}
+
 export async function startRiskMonitoring(): Promise<void> {
   while (true) {
     console.log("Checking strategy risk...");
     const risk = await evaluateVaultRisk();
     if (risk && risk) {
       console.error("Risky strategy detected. do something!");
+      //await executeRescue();
       exit(0);
     }
     await new Promise((resolve) => setTimeout(resolve, RISK_CHECK_INTERVAL_MS));
