@@ -1,0 +1,27 @@
+{
+  "name": "rescue-bot",
+  "version": "0.0.1",
+  "description": "DeFindex rescue bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "test",
+    "start": "yarn ts-node src/index.ts",
+    "dev": "nodemon --watch src --exec yarn ts-node src/index.ts",
+    "build": "yarn tsc"
+  },
+  "author": "PaltaLabs",
+  "license": "ISC",
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
+  "dependencies": {
+    "@stellar/stellar-sdk": "^13.3.0",
+    "dotenv": "^17.0.1",
+    "soroban-toolkit": "^0.1.5"
+  },
+  "devDependencies": {
+    "@stellar/tsconfig": "^1.0.2",
+    "@types/node": "^24.0.10",
+    "nodemon": "^3.1.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
