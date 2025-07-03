@@ -21,6 +21,10 @@
       "path": "apps/landing",
     },
     {
+      "name": "Rescue bot",
+      "path": "apps/rescue_bot",
+    },
+    {
       "name": "DeFindex Dart SDK",
       "path": "packages/defindex-dart-sdk",
     },
