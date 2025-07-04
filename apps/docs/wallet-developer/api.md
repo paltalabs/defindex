@@ -2,6 +2,8 @@
 
 This guide will walk you through integrating DeFindex into your app using the provided API. We'll use TypeScript for the examples, but the concepts apply to any language.
 
+Complete reference: [API Reference](https://api.defindex.io/docs)
+
 ## Prerequisites
 
 - Basic knowledge of TypeScript or JavaScript
