@@ -122,9 +122,9 @@ namespace DeFindex.Sdk.Tests
             };
 
             var toAssetFromBTokenResult = Utils.toAssetFromBToken(
-                reserveDict["testStrategy"].Data.BSupply, 
-                reserveDict["testStrategy"].Data, 
-                reserveDict["testStrategy"].Config);
+                reserveDict["testStrategy"].Data!.BSupply, 
+                reserveDict["testStrategy"].Data!, 
+                reserveDict["testStrategy"].Config!);
 
             // Console.WriteLine(toAssetFromBTokenResult.ToString());
             // Console.WriteLine(toAssetFromBTokenResult/(new BigInteger(Math.Pow(10,17))));
@@ -136,29 +136,29 @@ namespace DeFindex.Sdk.Tests
             Assert.True((toAssetFromBTokenResult/(new BigInteger(Math.Pow(10,18)))) == 1, $"it failed with {toAssetFromBTokenResult}");
             
             var totalSupplyResult = Utils.totalSupply(
-                reserveDict["testStrategy"].Data,
-                reserveDict["testStrategy"].Config
+                reserveDict["testStrategy"].Data!,
+                reserveDict["testStrategy"].Config!
             );
             // Console.WriteLine(totalSupplyResult.ToString());
 
             Assert.Equal(totalSupplyResult, toAssetFromBTokenResult);
 
             var toAssetFromDTokenResult = Utils.toAssetFromDToken(
-                reserveDict["testStrategy"].Data.DSupply,
-                reserveDict["testStrategy"].Data
+                reserveDict["testStrategy"].Data!.DSupply,
+                reserveDict["testStrategy"].Data!
             );
             // Console.WriteLine(toAssetFromDTokenResult.ToString());
             Assert.True(toAssetFromDTokenResult/(new BigInteger(Math.Pow(10,18)))== 1 ,$"Magnitud incorrect, with {toAssetFromDTokenResult/(new BigInteger(Math.Pow(10,18)))}");
 
             var totalLiabilitiesResult = Utils.totalLiabilities(
-                reserveDict["testStrategy"].Data,
-                reserveDict["testStrategy"].Config
+                reserveDict["testStrategy"].Data!,
+                reserveDict["testStrategy"].Config!
             );
             // Console.WriteLine(totalLiabilitiesResult.ToString());
             Assert.Equal(totalLiabilitiesResult, toAssetFromDTokenResult);
             
             var getUtilizationResult = Utils.getUtilization(
-                DefaultReserve.Config,
+                DefaultReserve.Config!,
                 DefaultReserveData
             );
             // Console.WriteLine(getUtilizationResult.ToString());

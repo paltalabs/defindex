@@ -20,9 +20,7 @@ public class DefindexSdk : IDefindexSdk
     private readonly SCContractId _contractId;
     private readonly SorobanServer _server;
 
-    private string? _blendDeployConfigJson;
-
-    private string? _defindexDeploymentsJson;
+    private const int ScaleFactor = 10000000;
 
     public DefindexSdk(string contractId, SorobanServer server)
     {
@@ -238,7 +236,7 @@ public class DefindexSdk : IDefindexSdk
         return results;
     }
 
-    
+
     public async Task<decimal?> GetVaultAPY()
     {
         try
@@ -246,7 +244,7 @@ public class DefindexSdk : IDefindexSdk
             var assetAllocation = await FetchTotalManagedFunds();
             var network = await Server.GetNetwork();
             var networkName = network.Passphrase.IndexOf("public", StringComparison.OrdinalIgnoreCase) >= 0 ? "mainnet" : "testnet";
-            
+
             var defindexDeploymentsJson = await Helpers.FetchDefindexDeployments(networkName);
             var blendDeployConfig = await Helpers.FetchBlendDeployConfig();
             if (defindexDeploymentsJson is null || !defindexDeploymentsJson.ContainsKey("ids")) return null;
@@ -287,4 +285,77 @@ public class DefindexSdk : IDefindexSdk
         }
     }
 
+    public async Task<List<BigInteger>> GetAssetAmountsPerShares(BigInteger vaultShares)
+    {
+        if (vaultShares <= 0)
+        {
+            throw new ArgumentException("Vault shares must be greater than zero.");
+        }
+        var assetAmounts = new List<BigInteger>();
+        var response = await Helpers.CallContractMethod(
+            this._contractId.InnerValue,
+            "get_asset_amounts_per_shares",
+            new SCVal[] { new SCInt128(vaultShares.ToString()) },
+            this.Server
+        );
+        if (response?.Results == null || response.Results.Count() == 0)
+        {
+            throw new Exception("No results found in the response.");
+        }
+        var xdrString = response.Results[0].Xdr;
+        if (string.IsNullOrEmpty(xdrString))
+        {
+            throw new Exception("XDR string is null or empty.");
+        }
+        var rawVec = (SCVec)StellarDotnetSdk.Soroban.SCVec.FromXdrBase64(xdrString);
+        foreach (var item in rawVec.InnerValue)
+        {
+            if (item is SCInt128)
+            {
+                var bigIntValue = DefindexResponseParser.ToBigInteger((SCInt128)item);
+                assetAmounts.Add(bigIntValue);
+            }
+        }
+        return assetAmounts;
+    }
+
+    public async Task<BigInteger> FromAssetToShares(
+        BigInteger assetAmount
+        )
+    {
+        var assetAmountsPerShares = await GetAssetAmountsPerShares(ScaleFactor);
+        if (assetAmountsPerShares == null || assetAmountsPerShares.Count == 0)
+        {
+            throw new Exception("Failed to get asset amounts per shares.");
+        }
+        BigInteger sharesAmount = assetAmount * assetAmountsPerShares[0] / ScaleFactor;
+
+        return sharesAmount;
+    }
+
+    public async Task<Transaction> CreateWithdrawUnderlyingTx(
+        BigInteger withdrawAmount,
+        int toleranceBPS,
+        string from
+    )
+    {
+        if (withdrawAmount <= 0)
+        {
+            throw new ArgumentException("Withdraw amount must be greater than zero.");
+        }
+        if (toleranceBPS < 0 || toleranceBPS > 10000)
+        {
+            throw new ArgumentOutOfRangeException("Tolerance BPS must be between 0 and 10000.");
+        }
+        BigInteger amountToShares = await FromAssetToShares(withdrawAmount);
+        var amountWithTolerance = withdrawAmount * (10000 - toleranceBPS) / 10000;
+        var minAmountsOut = new List<ulong> { DefindexResponseParser.BigIntegerToUlongSafe(amountWithTolerance) };
+        var withdrawShares = DefindexResponseParser.BigIntegerToUlongSafe(amountToShares);
+        var transaction = await CreateWithdrawTransaction(
+            withdrawShares,
+            minAmountsOut,
+            from
+        );
+        return transaction;
+    }
 }
