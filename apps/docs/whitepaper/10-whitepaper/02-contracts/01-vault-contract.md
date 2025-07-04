@@ -63,7 +63,7 @@ When the Vault only holds one asset, the deposit process is straightforward: the
 2. **When There Are Existing Funds**:\
    If the Vault already holds funds, `shares_to_deposit` are calculated based on the current `total_managed_funds` and `total_supply` (i.e., the current number of shares), according to the following formula:
 
-Let’s denote the total supply at time 0 as $s\_0$ and the total managed funds as $v\_0$. At time 1, a user wants to deposit an additional amount $v'$, and new shares $s'$ are minted. The value of any share $val(s)$ at time $t$ is calculated as:
+Let’s denote the total supply at time 0 as $s_0$ and the total managed funds as $v\_0$. At time 1, a user wants to deposit an additional amount $v'$, and new shares $s'$ are minted. The value of any share $val(s)$ at time $t$ is calculated as:
 
 $$
 val(s)_t = \frac{v_t}{s_t} \cdot s
