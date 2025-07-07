@@ -109,7 +109,6 @@ public interface IDefindexSdk
         List<ulong> amountsMinOut,
         string from);
 
-
     /// <summary>
     /// Parse a successful transaction response
     /// </summary>
@@ -120,4 +119,23 @@ public interface IDefindexSdk
     /// </summary>
 
     Task<decimal?> GetVaultAPY();
+
+    /// <summary>
+    /// Converts vault shares to underlying asset amounts
+    /// </summary>
+    /// <param name="vaultShares"> The number of vault shares to calculate the underlying asset amounts for a specific amount of vault shares</param>
+    Task<List<BigInteger>> GetAssetAmountsPerShares(BigInteger vaultShares);
+
+    /// <summary>
+    /// Creates an unsigned transaction to withdraw underlying assets from a vault
+    /// </summary>
+    /// <param name="withdrawAmount">The amount of underlying asset to withdraw</param>
+    /// <param name="toleranceBPS">The basis points tolerance for the withdrawal</param>
+    /// <param name="from">The account to withdraw from</param>
+    Task<Transaction> CreateWithdrawUnderlyingTx
+    (
+        BigInteger withdrawAmount,
+        int toleranceBPS,
+        string from
+    );
 }
