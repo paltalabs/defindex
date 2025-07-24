@@ -172,15 +172,22 @@ function VaultConfig() {
     })
   }, [vaultConfig])
 
+  const handleVaultNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value.length <= 20) {
+      setVaultConfig({ ...vaultConfig, name: value });
+    }
+  }
+
   return (
     <VaultConfigSection title="Creating a Vault">
       <FormField
         label="Vault Name"
         placeholder="Vault name"
         value={vaultConfig.name}
-        onChange={(e) => {
-          setVaultConfig({ ...vaultConfig, name: e.target.value })
-        }}
+        onChange={handleVaultNameChange}
+        invalid={vaultConfig.name !== undefined && vaultConfig.name.length == 20}
+        errorMessage={vaultConfig.name && vaultConfig.name.length >= 20 ? 'Vault name must be 20 characters or less' : ''}
       />
       <FormField
         label="Tag for the vault"
