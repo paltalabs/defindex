@@ -123,13 +123,10 @@
 
 - **How to Measure Completion:**  
   Contracts will be audited and published in our repo.
-- **Estimated date of completion:**  
-  Mid January 2024
-- **Budget:**  
-  20k
 - **Result:**
-    - 🛠️ Contracts audited and published in the repository
-
+    - ✅ Contracts audited and published in the repository https://github.com/paltalabs/defindex/tree/main/apps/contracts
+    - ✅ Audit available in https://drive.proton.me/urls/GYBBP5TS00#kCE6EHDN6sth
+    - ✅ Mainnet Beans Blend Vaults: https://stellar.expert/explorer/public/contract/CBNKCU3HGFKHFOF7JTGXQCNKE3G3DXS5RDBQUKQMIIECYKXPIOUGB2S3 and https://https://stellar.expert/explorer/public/contract/CAIZ3NMNPEN5SQISJV7PD2YY6NI6DIPFA4PCRUBOGDE4I7A3DXDLK5OI 
 ---
 
 ### [D2] Metrics 📊
@@ -138,13 +135,11 @@
   Write Zephyr Programs to get metrics to estimate the profitability and health state of Blend Strategies. Show these metrics on our Dashboard. Provide metrics to Keepers and Bots.
 - **How to Measure Completion:**  
   Zephyr Contracts will be published on our repo, Dashboard will be available on our frontend.
-- **Estimated date of completion:**  
-  Mid February 2024
-- **Budget:**  
-  10k
 - **Result:**
-    - 🛠️ Zephyr contracts published in the repository
-    - 📈 Metrics available on the dashboard
+    - Note: PaltaLabs decided to move out from Zephyr after this submission was made, and all was finally done in Subquery
+    - ✅ Subquery handlers available in https://github.com/soroswap/subql/blob/defindex/src/defindex/index.ts
+    - ✅ API giving APY per Vault https://api.defindex.io/docs 
+    - ✅ Dune Dashboard in progress https://dune.com/paltalabs/defindex (Dune is still having problems querying data from Stellar, https://discord.com/channels/897514728459468821/1214961876253933649/1398076655875915807 ) 
 
 ---
 
@@ -154,13 +149,8 @@
   Creation of predetermined Keepers that monitor the health of strategies and can trigger a rescue fund transaction on Soroban to secure funds of end users.
 - **How to Measure Completion:**  
   Managers will be able to fork our project, set up the keeper and run a keeper easily.
-- **Estimated date of completion:**  
-  Early March
-- **Budget:**  
-  15k
 - **Result:**
-    - 🛠️ Keeper setup instructions available
-    - ✅ Keeper can be run by managers
+    - ✅ Rescue bot that can be run by managers https://github.com/paltalabs/defindex/tree/main/apps/rescue_bot 
 
 ---
 
@@ -170,10 +160,6 @@
   Hire agency to improve design. Implement design.
 - **How to Measure Completion:**  
   Dashboard looks good, with all the needed functionality.
-- **Estimated date of completion:**  
-  End of March
-- **Budget:**  
-  5k
 - **Result:**
-    - 🛠️ Dashboard design improved and implemented
-    - ✅ All required functionality present
+    - ✅ Figma is available if you ask access
+    - 🛠️ DeFindex Vault page will be announced by Meridian 2025
