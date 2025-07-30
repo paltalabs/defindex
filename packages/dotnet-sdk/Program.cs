@@ -67,14 +67,61 @@ class Program
 
 
         // Get SorobanServer URL from environment variable
-        var sorobanServerUrl = Env.GetString("MAINNET_RPC_URL") ?? "https://soroban-testnet.stellar.org/";
+        var sorobanServerUrl = network == "mainnet" ? Env.GetString("MAINNET_RPC_URL") ?? "https://soroban-testnet.stellar.org/" : Env.GetString("TESTNET_RPC_URL") ?? "https://soroban-testnet.stellar.org/";
         var soroban_server = new SorobanServer(sorobanServerUrl);
 
-        var vault_string = "CAQ6PAG4X6L7LJVGOKSQ6RU2LADWK4EQXRJGMUWL7SECS7LXUEQLM5U7";
+        var vault_string = "CAQEPGA3XDBZSWHYLBUSH2UIP2SHHTEMXMHFPLIEN6RYH7G6GEGJWHGN";
         var vaultInstance = new DefindexSdk(vault_string, soroban_server);
 
-        var vaultStrategies = await vaultInstance.GetVaultAPY();
-        Console.WriteLine($"Vault APY: {vaultStrategies}");
+        var userKeypair = KeyPair.FromSecretSeed(Env.GetString("USER_SECRET")) ?? null;
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine($"Using user account: {userKeypair!.AccountId}");
+        Console.ResetColor();
+
+        var depositTransaction = await vaultInstance.CreateDepositTransaction([10000000], [10000000], userKeypair.AccountId, false);
+
+        ConsoleInfo("Simulating deposit transaction.");
+        var simulatedDepositTransaction = await soroban_server.SimulateTransaction(depositTransaction);
+        if(simulatedDepositTransaction.SorobanTransactionData == null || simulatedDepositTransaction.SorobanAuthorization == null || simulatedDepositTransaction.MinResourceFee == null){
+            Console.WriteLine("Simulated transaction data is null.");
+            return;
+        }
+
+        depositTransaction.SetSorobanTransactionData(simulatedDepositTransaction.SorobanTransactionData);
+        depositTransaction.SetSorobanAuthorization(simulatedDepositTransaction.SorobanAuthorization);
+        depositTransaction.AddResourceFee(simulatedDepositTransaction.MinResourceFee.Value + 100000);
+        depositTransaction.Sign(userKeypair);
+
+        ConsoleInfo("Submitting deposit transaction.");
+        var submittedTx = await soroban_server.SendTransaction(depositTransaction);
+        PrintTxResult("Deposit tx result", submittedTx);
+
+        var depositTxResult = await CheckTransactionStatus(soroban_server, submittedTx.Hash);
+        var parsedDepositTx = vaultInstance.ParseTransactionResponse(depositTxResult);
+        DisplayParsedTransactionResponse(parsedDepositTx.Result);
+
+
+
+        var withdrawTransaction = await vaultInstance.CreateWithdrawUnderlyingTx(10000000, 1, userKeypair.AccountId);
+
+        ConsoleInfo("Simulating withdraw transaction.");
+        var simulatedWithdrawTx = await soroban_server.SimulateTransaction(withdrawTransaction);
+        if(simulatedWithdrawTx.SorobanTransactionData == null || simulatedWithdrawTx.SorobanAuthorization == null || simulatedWithdrawTx.MinResourceFee == null){
+            Console.WriteLine("Simulated transaction data is null.");
+            return;
+        }
+        withdrawTransaction.SetSorobanTransactionData(simulatedWithdrawTx.SorobanTransactionData);
+        withdrawTransaction.SetSorobanAuthorization(simulatedWithdrawTx.SorobanAuthorization);
+        withdrawTransaction.AddResourceFee(simulatedWithdrawTx.MinResourceFee.Value + 100000);
+        withdrawTransaction.Sign(userKeypair);
+
+        ConsoleInfo("Submitting withdraw transaction.");
+        var submittedWithdrawTx = await soroban_server.SendTransaction(withdrawTransaction);
+        PrintTxResult("Withdraw tx result", submittedWithdrawTx);
+
+        var withdrawCheckedTx = await CheckTransactionStatus(soroban_server, submittedWithdrawTx.Hash);
+        var parsedWithdrawTx = vaultInstance.ParseTransactionResponse(withdrawCheckedTx);
+        DisplayParsedTransactionResponse(parsedWithdrawTx.Result);
 
         /* var vaultTotalShares = await vaultInstance.GetVaultTotalShares();
         Console.WriteLine($"Vault Total Shares: {vaultTotalShares}");
