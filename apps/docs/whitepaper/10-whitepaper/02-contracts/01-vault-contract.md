@@ -50,9 +50,7 @@ To withdraw assets, users call the `withdraw` function to burn their dfTokens, r
 
 Thus, the value per dfToken reflects a multi-asset backing. Using the above example, to mint 1 dfToken, a user would need to deposit 1 unit of asset A, 2 units of asset B, and 3 units of asset C. Therefore, the value of 1 dfToken can be represented as:
 
-$$
-p(\text{dfToken}) = (1 \text{A}, 2 \text{B}, 3 \text{C})
-$$
+$$p(\text{dfToken}) = (1 \text{A}, 2 \text{B}, 3 \text{C})$$
 
 ### Depositing When Total Assets = 1
 
@@ -63,23 +61,17 @@ When the Vault only holds one asset, the deposit process is straightforward: the
 2. **When There Are Existing Funds**:\
    If the Vault already holds funds, `shares_to_deposit` are calculated based on the current `total_managed_funds` and `total_supply` (i.e., the current number of shares), according to the following formula:
 
-Let’s denote the total supply at time 0 as $s\_0$ and the total managed funds as $v\_0$. At time 1, a user wants to deposit an additional amount $v'$, and new shares $s'$ are minted. The value of any share $val(s)$ at time $t$ is calculated as:
+Let's denote the total supply at time 0 as $s_0$ and the total managed funds as $v_0$. At time 1, a user wants to deposit an additional amount $v'$, and new shares $s'$ are minted. The value of any share $val(s)$ at time $t$ is calculated as:
 
-$$
-val(s)_t = \frac{v_t}{s_t} \cdot s
-$$
+$$val(s)_t = \frac{v_t}{s_t} \cdot s$$
 
-At time $t\_1$, this must hold:
+At time $t_1$, this must hold:
 
-$$
-val(s') = \frac{v_1}{s_1} \cdot s'
-$$
+$$val(s') = \frac{v_1}{s_1} \cdot s'$$
 
-Given that $v\_1 = v\_0 + v'$ and $s\_1 = s\_0 + s'$, we can rearrange terms to find the new shares:
+Given that $v_1 = v_0 + v'$ and $s_1 = s_0 + s'$, we can rearrange terms to find the new shares:
 
-$$
-s' = \frac{v'}{v_0} \cdot s_0
-$$
+$$s' = \frac{v'}{v_0} \cdot s_0$$
 
 ## Withdrawals
 
@@ -87,40 +79,34 @@ When a user wishes to withdraw funds, they must burn a corresponding amount of d
 
 If there are sufficient **IDLE funds** available, the withdrawal is fulfilled directly from these IDLE funds. If additional assets are needed beyond what is available in the IDLE funds, a liquidation process is triggered to release the required assets.
 
-To calculate the amount of each asset $a\_i$ to be withdrawn, use the following formula:
+To calculate the amount of each asset $a_i$ to be withdrawn, use the following formula:
 
-$$
-a_i = \frac{m_s}{M_s} \cdot A_i \quad \forall i \in \text{Underlying Asset}
-$$
+$$a_i = \frac{m_s}{M_s} \cdot A_i \quad \forall i \in \text{Underlying Asset}$$
 
 where:
 
-* $a\_i$: Amount of asset $i$ to receive
-* $m\_s$: Amount of shares to burn
-* $M\_s$: Total supply of dfTokens (shares)
-* $A\_i$: Total amount of asset $i$ held by the **DeFindex**
+* $a_i$: Amount of asset $i$ to receive
+* $m_s$: Amount of shares to burn
+* $M_s$: Total supply of dfTokens (shares)
+* $A_i$: Total amount of asset $i$ held by the **DeFindex**
 
-As discussed in the [Underlying Assets](01-vault-contract.md#underlying-assets) section, $A\_i$ is the sum of balances held by every strategy that works with asset $i$, plus total amount of iddle assets $i$.
+As discussed in the [Underlying Assets](01-vault-contract.md#underlying-assets) section, $A_i$ is the sum of balances held by every strategy that works with asset $i$, plus total amount of idle assets $i$.
 
-$$
-A_i = a_{i, \text{IDLE}} + \sum^{j \in S_i} a_{i,s^i_j}
-$$
+$$A_i = a_{i, \text{IDLE}} + \sum^{j \in S_i} a_{i,s^i_j}$$
 
-Here $a\_{i,s^i\_j} $ represents the amount of assets $i$ held by any strategy $s^i\_j$, and $S\_i$ is the set os stretegies that works with asset $i$ that are supported by the Vault.
+Here $a_{i,s^i_j}$ represents the amount of assets $i$ held by any strategy $s^i_j$, and $S_i$ is the set of strategies that works with asset $i$ that are supported by the Vault.
 
 #### Liquidation on Withdrawal
 
-For every time that the amount to assets to withdraw $a\_i$ is greater than IDLE assets, the `withdraw()` function will liquidate the positions in the strategies to get the remaining assets, allways mantaining the following relationship:
+For every time that the amount to assets to withdraw $a_i$ is greater than IDLE assets, the `withdraw()` function will liquidate the positions in the strategies to get the remaining assets, always maintaining the following relationship:
 
-$$
-a_i = a_{i, \text{IDLE}} + a_{i, \text{Strategy}} \quad \forall a_i>a_{i, \text{IDLE}}
-$$
+$$a_i = a_{i, \text{IDLE}} + a_{i, \text{Strategy}} \quad \forall a_i>a_{i, \text{IDLE}}$$
 
 Where:
 
-* $a\_{i}$: Amount of asset $i$ withdraw.
-* $a\_{i, \text{IDLE\}}$: Amount of asset $i$ to get from the IDLE funds
-* $a\_{i, \text{Strategy\}}$: Amount of asset $i$ to get from the strategies
+* $a_i$: Amount of asset $i$ withdraw.
+* $a_{i, \text{IDLE}}$: Amount of asset $i$ to get from the IDLE funds
+* $a_{i, \text{Strategy}}$: Amount of asset $i$ to get from the strategies
 
 ## Rebalancing
 
