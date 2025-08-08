@@ -1,15 +1,18 @@
+"use client";
+import dynamic from "next/dynamic";
 import React from "react";
 import { IoCloseOutline } from "react-icons/io5";
-import Drawer from "react-modern-drawer";
 import "react-modern-drawer/dist/index.css";
 
+const Drawer = dynamic(() => import("react-modern-drawer"), { ssr: false });
+
+import Image from "next/image";
+import { default as Link, default as NextLink } from "next/link";
+import { FaDiscord, FaGithub, FaLinkedin, FaXTwitter } from "react-icons/fa6";
+import { Link as ScrollLink } from "react-scroll";
 import SimpleBar from "simplebar-react";
 import "simplebar-react/dist/simplebar.min.css";
-import Image from "next/image";
-import NextLink from "next/link";
 import Lists from "./Lists";
-import Link from "next/link";
-import { FaDiscord, FaGithub, FaLinkedin, FaXTwitter } from "react-icons/fa6";
 
 interface Props {
     isOpen: boolean;
@@ -54,14 +57,15 @@ function NavDrawer({ toggleDrawer, isOpen }: Props) {
                                 <Lists toggle={toggleDrawer} />
                             </div>
                             <div className="sm:hidden">
-                                <NextLink
+                                <ScrollLink
                                     className="rounded-3xl outlined-button border border-lime-200 px-6 py-3 w-full flex justify-center text-center"
-                                    href="/"
+                                    to="cta-form"
+                                    offset={-150}
                                 >
                                     <span className="font-extrabold font-manrope text-[14px] lg:text-xs leading-tight text-lime-200">
-                                        Schedule a Demo
+                                        Contact Us
                                     </span>
-                                </NextLink>
+                                </ScrollLink>
                             </div>
                         </div>
                     </SimpleBar>
