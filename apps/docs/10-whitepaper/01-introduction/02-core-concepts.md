@@ -31,6 +31,6 @@ These are some concepts to understand the DeFindex protocol:
     If a user deposits 100 USDC in a strategy with 30% APR, after one year the user will have 130 USDC. However, if the user reinvests the rewards every day, she will get more! Let's see how this works:
 
     1. A 30% APR is 0.082191781% per day. Because daily return is APR/365 = 0.082191781%
-    2. If the user reinvests the rewards every day, after one year the user will have \~135 USDC. Because $(1 + 0.00082191781)^{365} = 1,349692488$ Meaning that instead of 30% APR, the user will have 34.96% APY.
+    2. If the user reinvests the rewards every day, after one year the user will have ~135 USDC. Because $(1 + 0.00082191781)^{365} = 1.349692488$ Meaning that instead of 30% APR, the user will have 34.96% APY.
 
     This shows how powerful the autocompounding is!
