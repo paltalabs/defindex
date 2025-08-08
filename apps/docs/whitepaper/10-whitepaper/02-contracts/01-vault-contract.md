@@ -61,15 +61,15 @@ When the Vault only holds one asset, the deposit process is straightforward: the
 2. **When There Are Existing Funds**:\
    If the Vault already holds funds, `shares_to_deposit` are calculated based on the current `total_managed_funds` and `total_supply` (i.e., the current number of shares), according to the following formula:
 
-Let's denote the total supply at time 0 as $s_0$ and the total managed funds as $v_0$. At time 1, a user wants to deposit an additional amount $v'$, and new shares $s'$ are minted. The value of any share $val(s)$ at time $t$ is calculated as:
+Let's denote the total supply at time 0 as s<sub>0</sub> and the total managed funds as v<sub>0</sub>. At time 1, a user wants to deposit an additional amount v', and new shares s' are minted. The value of any share val(s) at time t is calculated as:
 
 $$val(s)_t = \frac{v_t}{s_t} \cdot s$$
 
-At time $t_1$, this must hold:
+At time t<sub>1</sub>, this must hold:
 
 $$val(s') = \frac{v_1}{s_1} \cdot s'$$
 
-Given that $v_1 = v_0 + v'$ and $s_1 = s_0 + s'$, we can rearrange terms to find the new shares:
+Given that v<sub>1</sub> = v<sub>0</sub> + v' and s<sub>1</sub> = s<sub>0</sub> + s', we can rearrange terms to find the new shares:
 
 $$s' = \frac{v'}{v_0} \cdot s_0$$
 
@@ -79,34 +79,34 @@ When a user wishes to withdraw funds, they must burn a corresponding amount of d
 
 If there are sufficient **IDLE funds** available, the withdrawal is fulfilled directly from these IDLE funds. If additional assets are needed beyond what is available in the IDLE funds, a liquidation process is triggered to release the required assets.
 
-To calculate the amount of each asset $a_i$ to be withdrawn, use the following formula:
+To calculate the amount of each asset a<sub>i</sub> to be withdrawn, use the following formula:
 
 $$a_i = \frac{m_s}{M_s} \cdot A_i \quad \forall i \in \text{Underlying Asset}$$
 
 where:
 
-* $a_i$: Amount of asset $i$ to receive
-* $m_s$: Amount of shares to burn
-* $M_s$: Total supply of dfTokens (shares)
-* $A_i$: Total amount of asset $i$ held by the **DeFindex**
+* a<sub>i</sub>: Amount of asset i to receive
+* m<sub>s</sub>: Amount of shares to burn
+* M<sub>s</sub>: Total supply of dfTokens (shares)
+* A<sub>i</sub>: Total amount of asset i held by the **DeFindex**
 
-As discussed in the [Underlying Assets](01-vault-contract.md#underlying-assets) section, $A_i$ is the sum of balances held by every strategy that works with asset $i$, plus total amount of idle assets $i$.
+As discussed in the [Underlying Assets](01-vault-contract.md#underlying-assets) section, A<sub>i</sub> is the sum of balances held by every strategy that works with asset i, plus total amount of idle assets i.
 
 $$A_i = a_{i, \text{IDLE}} + \sum^{j \in S_i} a_{i,s^i_j}$$
 
-Here $a_{i,s^i_j}$ represents the amount of assets $i$ held by any strategy $s^i_j$, and $S_i$ is the set of strategies that works with asset $i$ that are supported by the Vault.
+Here a<sub>i,s^i_j</sub> represents the amount of assets i held by any strategy s<sub>j</sub><sup>i</sup>, and S<sub>i</sub> is the set of strategies that works with asset i that are supported by the Vault.
 
 #### Liquidation on Withdrawal
 
-For every time that the amount to assets to withdraw $a_i$ is greater than IDLE assets, the `withdraw()` function will liquidate the positions in the strategies to get the remaining assets, always maintaining the following relationship:
+For every time that the amount to assets to withdraw a<sub>i</sub> is greater than IDLE assets, the `withdraw()` function will liquidate the positions in the strategies to get the remaining assets, always maintaining the following relationship:
 
 $$a_i = a_{i, \text{IDLE}} + a_{i, \text{Strategy}} \quad \forall a_i>a_{i, \text{IDLE}}$$
 
 Where:
 
-* $a_i$: Amount of asset $i$ withdraw.
-* $a_{i, \text{IDLE}}$: Amount of asset $i$ to get from the IDLE funds
-* $a_{i, \text{Strategy}}$: Amount of asset $i$ to get from the strategies
+* a<sub>i</sub>: Amount of asset i withdraw.
+* a<sub>i, IDLE</sub>: Amount of asset i to get from the IDLE funds
+* a<sub>i, Strategy</sub>: Amount of asset i to get from the strategies
 
 ## Rebalancing
 
