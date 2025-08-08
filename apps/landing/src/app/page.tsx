@@ -1,16 +1,16 @@
 "use client";
-import React, { useState } from "react";
-import Navbar from "@/components/globals/navbar/Navbar";
-import HowWorks from "@/components/globals/HowWorks";
-import WalletBuilders from "@/components/globals/WalletBuilders";
-import Security from "@/components/globals/Security";
-import OurTeam from "@/components/globals/OurTeam";
-import Frequently from "@/components/globals/Frequently";
-import WalletExperience from "@/components/globals/WalletExperience";
+import CTAForm from "@/components/common/CTAFrom";
 import Footer from "@/components/globals/Footer";
+import Frequently from "@/components/globals/Frequently";
 import Hero from "@/components/globals/Hero";
-import Image from "next/image";
+import HowWorks from "@/components/globals/HowWorks";
+import Navbar from "@/components/globals/navbar/Navbar";
+import OurTeam from "@/components/globals/OurTeam";
+import Security from "@/components/globals/Security";
+import WalletBuilders from "@/components/globals/WalletBuilders";
 import NavigateTab from "@/context/NavigateTab";
+import Image from "next/image";
+import { useState } from "react";
 
 function Home() {
     const [index, setIndex] = useState(0);
@@ -29,11 +29,12 @@ function Home() {
                 <Hero />
                 <HowWorks />
                 <WalletBuilders />
-            </NavigateTab.Provider>
             <Security />
             <OurTeam />
             <Frequently />
-            <WalletExperience />
+            {/* <WalletExperience /> */}
+            <CTAForm className="mt-20" />
+            </NavigateTab.Provider>
             <Footer />
         </div>
     );
