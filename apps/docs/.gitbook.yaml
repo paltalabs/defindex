@@ -1,0 +1,15 @@
+root: ./
+
+structure:
+  readme: README.md
+  summary: SUMMARY.md
+
+format: gitbook
+
+plugins:
+  - favicon
+
+pluginsConfig:
+  favicon:
+    shortcut: .gitbook/assets/favicon.ico
+    apple-touch-icon: .gitbook/assets/favicon.ico
