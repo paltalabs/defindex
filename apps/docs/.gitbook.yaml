@@ -8,8 +8,20 @@ format: gitbook
 
 plugins:
   - favicon
+  - katex
+  - mathjax
 
 pluginsConfig:
   favicon:
     shortcut: .gitbook/assets/favicon.ico
     apple-touch-icon: .gitbook/assets/favicon.ico
+  mathjax:
+    forceSVG: true
+  katex:
+    delimiters:
+      - left: "$$"
+        right: "$$"
+        display: true
+      - left: "$"
+        right: "$"
+        display: false
