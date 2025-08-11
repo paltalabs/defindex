@@ -50,7 +50,9 @@ To withdraw assets, users call the `withdraw` function to burn their dfTokens, r
 
 Thus, the value per dfToken reflects a multi-asset backing. Using the above example, to mint 1 dfToken, a user would need to deposit 1 unit of asset A, 2 units of asset B, and 3 units of asset C. Therefore, the value of 1 dfToken can be represented as:
 
-$$p(\text{dfToken}) = (1 \text{A}, 2 \text{B}, 3 \text{C})$$
+$$
+p(\text{dfToken}) = (1 \text{A}, 2 \text{B}, 3 \text{C})
+$$
 
 ### Depositing When Total Assets = 1
 
@@ -63,15 +65,21 @@ When the Vault only holds one asset, the deposit process is straightforward: the
 
 Let's denote the total supply at time 0 as s<sub>0</sub> and the total managed funds as v<sub>0</sub>. At time 1, a user wants to deposit an additional amount v', and new shares s' are minted. The value of any share val(s) at time t is calculated as:
 
-$$val(s)_t = \frac{v_t}{s_t} \cdot s$$
+$$
+val(s)_t = \frac{v_t}{s_t} \cdot s
+$$
 
 At time t<sub>1</sub>, this must hold:
 
-$$val(s') = \frac{v_1}{s_1} \cdot s'$$
+$$
+val(s') = \frac{v_1}{s_1} \cdot s'
+$$
 
 Given that v<sub>1</sub> = v<sub>0</sub> + v' and s<sub>1</sub> = s<sub>0</sub> + s', we can rearrange terms to find the new shares:
 
-$$s' = \frac{v'}{v_0} \cdot s_0$$
+$$
+s' = \frac{v'}{v_0} \cdot s_0
+$$
 
 ## Withdrawals
 
@@ -81,7 +89,9 @@ If there are sufficient **IDLE funds** available, the withdrawal is fulfilled di
 
 To calculate the amount of each asset a<sub>i</sub> to be withdrawn, use the following formula:
 
-$$a_i = \frac{m_s}{M_s} \cdot A_i \quad \forall i \in \text{Underlying Asset}$$
+$$
+a_i = \frac{m_s}{M_s} \cdot A_i \quad \forall i \in \text{Underlying Asset}
+$$
 
 where:
 
@@ -92,15 +102,19 @@ where:
 
 As discussed in the [Underlying Assets](01-vault-contract.md#underlying-assets) section, A<sub>i</sub> is the sum of balances held by every strategy that works with asset i, plus total amount of idle assets i.
 
-$$A_i = a_{i, \text{IDLE}} + \sum^{j \in S_i} a_{i,s^i_j}$$
+$$
+A_i = a_{i, \text{IDLE}} + \sum^{j \in S_i} a_{i,s^i_j}
+$$
 
-Here a<sub>i,s^i_j</sub> represents the amount of assets i held by any strategy s<sub>j</sub><sup>i</sup>, and S<sub>i</sub> is the set of strategies that works with asset i that are supported by the Vault.
+Here a<sub>i,s^i_j</sub> represents the amount of assets i held by any strategy s<sup>i</sup><sub>j</sub>, and S<sub>i</sub> is the set of strategies that works with asset i that are supported by the Vault.
 
 #### Liquidation on Withdrawal
 
 For every time that the amount to assets to withdraw a<sub>i</sub> is greater than IDLE assets, the `withdraw()` function will liquidate the positions in the strategies to get the remaining assets, always maintaining the following relationship:
 
-$$a_i = a_{i, \text{IDLE}} + a_{i, \text{Strategy}} \quad \forall a_i>a_{i, \text{IDLE}}$$
+$$
+a_i = a_{i, \text{IDLE}} + a_{i, \text{Strategy}} \quad \forall a_i>a_{i, \text{IDLE}}
+$$
 
 Where:
 
