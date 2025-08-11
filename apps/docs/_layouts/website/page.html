@@ -1,0 +1,8 @@
+{% extends template.self %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="shortcut icon" href="{{ ".gitbook/assets/favicon.svg" | resolveAsset }}" type="image/svg+xml">
+    <link rel="icon" href="{{ ".gitbook/assets/favicon.svg" | resolveAsset }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{{ ".gitbook/assets/favicon.svg" | resolveAsset }}">
+{% endblock %}

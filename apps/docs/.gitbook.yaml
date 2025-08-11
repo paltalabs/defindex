@@ -7,14 +7,10 @@ structure:
 format: gitbook
 
 plugins:
-  - favicon
   - katex
   - mathjax
 
 pluginsConfig:
-  favicon:
-    shortcut: .gitbook/assets/favicon.ico
-    apple-touch-icon: .gitbook/assets/favicon.ico
   mathjax:
     forceSVG: true
   katex:
@@ -25,3 +21,12 @@ pluginsConfig:
       - left: "$"
         right: "$"
         display: false
+
+links:
+  sidebar:
+    "DeFindex": "/"
+
+assets:
+  - .gitbook/assets/
+
+favicon: .gitbook/assets/favicon.svg
