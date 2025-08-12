@@ -10,7 +10,7 @@ function OurTeam() {
                             Our <b>Team</b>
                         </h2>
                         <p className="font-inter-tight text-center sm:text-[18px] md:text-[22px] xl:text-lg leading-[1.333em] text-white">
-                            A diverse team of engineers, developers, and communicators from Latin
+                            PaltaLabs🥑 is a diverse team of engineers, developers, and communicators from Latin
                             America. We are also the team behind Soroswap (the First DEX of Soroban,
                             and now AMM aggregator). We also created multiple developer tools such
                             as Soroban-react, create-soroban-dapp, mercury-sdk

@@ -3,7 +3,7 @@ import React from "react";
 import { FaDiscord, FaGithub, FaLinkedin, FaXTwitter } from "react-icons/fa6";
 
 const links: [React.ElementType, string][] = [
-    [FaXTwitter, "https://x.com/PaltaLabs"],
+    [FaXTwitter, "https://x.com/defindex_"],
     [FaDiscord, "https://discord.gg/CUC26qUTw7"],
     [FaLinkedin, "https://www.linkedin.com/company/paltalabs"],
     [FaGithub, "https://github.com/paltalabs/defindex"],

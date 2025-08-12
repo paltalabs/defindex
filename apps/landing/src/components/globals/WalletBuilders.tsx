@@ -78,7 +78,7 @@ function WalletBuilders() {
                                 />
                             </TabPanel>
                         </div>
-                        <div>
+                        <div id="for-developers">
                             <TabPanel>
                                 <Solutions
                                     color="green"
