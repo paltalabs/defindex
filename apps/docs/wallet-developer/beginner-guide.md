@@ -1,4 +1,4 @@
-# 🚀 DeFindex Integration Guide for Beginners
+# DeFindex Integration Guide for Beginners
 
 ## 📖 What You'll Learn
 
