@@ -201,3 +201,6 @@ main();
 ---
 
 For more details, refer to the [DeFindex API documentation](https://api.defindex.io/docs).
+
+Postman collection json [here](postman_collection.json)
+

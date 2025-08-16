@@ -1,0 +1,1135 @@
+{
+  "info": {
+    "_postman_id": "ae601432-93b3-46c1-9a88-682a18cee79b",
+    "name": "DeFindex API Public",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "46319029",
+    "_collection_link": "https://solar-zodiac-853470.postman.co/workspace/DeFindex-API~fb912f0b-2acf-4607-a902-1e0fd7af9a21/collection/46319029-ae601432-93b3-46c1-9a88-682a18cee79b?action=share&source=collection_link&creator=46319029"
+  },
+  "item": [
+    {
+      "name": "App",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/health",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "usertest",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "password",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "example@gmail.com",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{host}}/register",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "// Assuming the response contains tokens in a JSON object",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Check if tokens exist in the response",
+                  "pm.test(\"JWT token is present\", function () {",
+                  "    pm.expect(responseJson.jwt).to.exist;",
+                  "});",
+                  "",
+                  "pm.test(\"Refresh token is present\", function () {",
+                  "    pm.expect(responseJson.refreshToken).to.exist;",
+                  "});",
+                  "",
+                  "// Update environment variables with the extracted tokens",
+                  "if (responseJson.jwt) {",
+                  "    pm.environment.set(\"jwt_token\", responseJson.jwt);",
+                  "}",
+                  "",
+                  "if (responseJson.refreshToken) {",
+                  "    pm.environment.set(\"refresh_token\", responseJson.refreshToken);",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}\n"
+            },
+            "url": {
+              "raw": "{{host}}/login",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "// Assuming the response contains tokens in a JSON object",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Check if tokens exist in the response",
+                  "pm.test(\"JWT token is present\", function () {",
+                  "    pm.expect(responseJson.jwt).to.exist;",
+                  "});",
+                  "",
+                  "pm.test(\"Refresh token is present\", function () {",
+                  "    pm.expect(responseJson.refreshToken).to.exist;",
+                  "});",
+                  "",
+                  "// Update environment variables with the extracted tokens",
+                  "if (responseJson.jwt) {",
+                  "    pm.environment.set(\"jwt_token\", responseJson.jwt);",
+                  "}",
+                  "",
+                  "if (responseJson.refreshToken) {",
+                  "    pm.environment.set(\"refresh_token\", responseJson.refreshToken);",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{refresh_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "access_token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoiZGV2QHBhbHRhbGFicy5pbyIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc1MDI2OTE2NCwiZXhwIjoxNzUwMjcyNzY0fQ.QyPmLMWsEcJkLr86RdTFiNemuTmkpkQX3Uru7Vi4Nyg",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{host}}/refresh",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "refresh"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "User Api Key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "});",
+                  "",
+                  "// Extract the api_key from the response",
+                  "const response = pm.response.json();",
+                  "const newApiKey = response[0].key;",
+                  "",
+                  "// Update the environment variable with the new api_key",
+                  "pm.environment.set(\"api_key\", newApiKey);",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{host}}/api-keys",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api-keys"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Vault",
+      "item": [
+        {
+          "name": "Admin",
+          "item": [
+            {
+              "name": "Rescue",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"strategy_address\": \"CC5CE6MWISDXT3MLNQ7R3FVILFVFEIH3COWGH45GJKL6BD2ZHF7F7JVI\",\n    \"caller\": \"GA3GWDNI6KYNXPJQVAXMKW6O47ADEQ25KWAEWZKA5JCXQ5APL6VKZR2N\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/vault/:vaultAddress/rescue?network=mainnet",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "rescue"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CAIZ3NMNPEN5SQISJV7PD2YY6NI6DIPFA4PCRUBOGDE4I7A3DXDLK5OI"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Pause Strategy",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"strategy_address\": \"CC5CE6MWISDXT3MLNQ7R3FVILFVFEIH3COWGH45GJKL6BD2ZHF7F7JVI\",\n    \"caller\": \"GA3GWDNI6KYNXPJQVAXMKW6O47ADEQ25KWAEWZKA5JCXQ5APL6VKZR2N\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/vault/:vaultAddress/pause-strategy?network=mainnet",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "pause-strategy"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CAIZ3NMNPEN5SQISJV7PD2YY6NI6DIPFA4PCRUBOGDE4I7A3DXDLK5OI"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Unpause Strategy",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"strategy_address\": \"CC5CE6MWISDXT3MLNQ7R3FVILFVFEIH3COWGH45GJKL6BD2ZHF7F7JVI\",\n    \"caller\": \"GA3GWDNI6KYNXPJQVAXMKW6O47ADEQ25KWAEWZKA5JCXQ5APL6VKZR2N\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/vault/:vaultAddress/unpause-strategy?network=mainnet",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "unpause-strategy"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CAIZ3NMNPEN5SQISJV7PD2YY6NI6DIPFA4PCRUBOGDE4I7A3DXDLK5OI"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Set Role",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"caller\": \"GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE\",\n    \"new_address\": \"GBZXUKUYGXLASTLIXGIV2RJGWQHVRIS7AANR7AHXFPA67LNSAGO6WPPE\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/vault/:vaultAddress/set/fee-receiver?network=testnet",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "set",
+                    "fee-receiver"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "testnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Role",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{host}}/vault/:vaultAddress/get/manager?network=testnet",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "get",
+                    "manager"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "testnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Rebalance",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"caller\": \"GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE\",\n    \"instructions\": [\n        {\n            \"type\": \"Invest\",\n            \"strategy_address\": \"CBX562AQZZRGIFBLVTQAGIHXOQX6L2MXJLJNL5O2GUZ7EZ6HSKB36BKY\",\n            \"amount\": 10000000\n        }\n    ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/vault/:vaultAddress/rebalance?network=testnet",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "rebalance"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "testnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Lock fees",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"caller\": \"GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE\"//,\n    //\"new_fee_bps\": 100\n}   ",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/vault/:vaultAddress/lock-fees?network=testnet",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "lock-fees"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "testnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Release fees",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"amount\": 1000000,\n    \"caller\": \"GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE\",\n    \"strategy_address\": \"CBX562AQZZRGIFBLVTQAGIHXOQX6L2MXJLJNL5O2GUZ7EZ6HSKB36BKY\"    \n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/vault/:vaultAddress/release-fees?network=testnet",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "release-fees"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "testnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Distribute fees",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"caller\": \"GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/vault/:vaultAddress/distribute-fees?network=testnet",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "distribute-fees"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "testnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Upgrade WASM",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"caller\": \"GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE\",\n    \"new_wasm_hash\": \"ae3409a4090bc087b86b4e9b444d2b8017ccd97b90b069d44d005ab9f8e1468b\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/vault/:vaultAddress/upgrade?network=testnet",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "upgrade"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "testnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Public",
+          "item": [
+            {
+              "name": "Vault Info",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": []
+                },
+                "url": {
+                  "raw": "{{host}}/vault/:vaultAddress?network=testnet",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "testnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Vault APY",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": []
+                },
+                "url": {
+                  "raw": "{{host}}/vault/:vaultAddress/apy",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "apy"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "testnet",
+                      "disabled": true
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CAIZ3NMNPEN5SQISJV7PD2YY6NI6DIPFA4PCRUBOGDE4I7A3DXDLK5OI"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "User Balance",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": []
+                },
+                "url": {
+                  "raw": "{{host}}/vault/:vaultAddress/balance?from=GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE&network=testnet",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "balance"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE"
+                    },
+                    {
+                      "key": "network",
+                      "value": "testnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Deposit",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"amounts\": [\n        10000000\n    ],\n    \"caller\": \"GBZXUKUYGXLASTLIXGIV2RJGWQHVRIS7AANR7AHXFPA67LNSAGO6WPPE\",\n    \"invest\": false,\n    \"slippageBps\": 100\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/vault/:vaultAddress/deposit?network=testnet",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "deposit"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "testnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Withdraw",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"amounts\": [\n        49852148\n    ],\n    \"caller\": \"GAWXKXDQ4ZNNVFZLBQHSGAUQ242O3F5ASWLTPGFPZK4EM7JSDJMAWY5C\",\n    \"slippageBps\": 100\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/vault/:vaultAddress/withdraw",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "withdraw"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet",
+                      "disabled": true
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CAIZ3NMNPEN5SQISJV7PD2YY6NI6DIPFA4PCRUBOGDE4I7A3DXDLK5OI"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "WithdrawShares",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"caller\": \"GAWXKXDQ4ZNNVFZLBQHSGAUQ242O3F5ASWLTPGFPZK4EM7JSDJMAWY5C\",\n    \"shares\": 49610635,\n    \"slippageBps\": 100\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/vault/:vaultAddress/withdraw-shares",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "withdraw-shares"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet",
+                      "disabled": true
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CAIZ3NMNPEN5SQISJV7PD2YY6NI6DIPFA4PCRUBOGDE4I7A3DXDLK5OI"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Send",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"xdr\": \"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\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/send?network=testnet",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "send"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet",
+                      "disabled": true
+                    },
+                    {
+                      "key": "network",
+                      "value": "testnet"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Report",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{host}}/vault/:vaultAddress/report?network=testnet",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "report"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "testnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Factory",
+      "item": [
+        {
+          "name": "address",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/factory/address?network=testnet",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "factory",
+                "address"
+              ],
+              "query": [
+                {
+                  "key": "network",
+                  "value": "testnet"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create vault deposit",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"roles\": {\n        \"0\": \"GCKW55QPHVNG4OFJF3CNH3C5BJPFQOQI3JIG4LIDTA4EKUQVASUCNJXY\",\n        \"1\": \"GCKW55QPHVNG4OFJF3CNH3C5BJPFQOQI3JIG4LIDTA4EKUQVASUCNJXY\",\n        \"2\": \"GCKW55QPHVNG4OFJF3CNH3C5BJPFQOQI3JIG4LIDTA4EKUQVASUCNJXY\",\n        \"3\": \"GCKW55QPHVNG4OFJF3CNH3C5BJPFQOQI3JIG4LIDTA4EKUQVASUCNJXY\"\n    },\n    \"vault_fee_bps\": 100,\n    \"assets\": [\n        {\n            \"address\": \"CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU\",\n            \"strategies\": [\n                {\n                    \"address\": \"CA57GWLEGS2N5GLSKHQGAA4LKVKFL3MROF2SPFY6CVNDYWH3BUU5VKK7\",\n                    \"name\": \"any_name\",\n                    \"paused\": false\n\n                }\n            ]\n        }\n    ],\n    \"name_symbol\": {\n        \"name\": \"Vault\",\n        \"symbol\": \"vltsym\"\n    },\n    \"caller\": \"GCKW55QPHVNG4OFJF3CNH3C5BJPFQOQI3JIG4LIDTA4EKUQVASUCNJXY\",\n    \"deposit_amounts\": [10000000],\n    \"upgradable\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/factory/create-vault-deposit?network=testnet",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "factory",
+                "create-vault-deposit"
+              ],
+              "query": [
+                {
+                  "key": "network",
+                  "value": "testnet"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "create vault",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"roles\": {\n        \"0\": \"GCKW55QPHVNG4OFJF3CNH3C5BJPFQOQI3JIG4LIDTA4EKUQVASUCNJXY\",\n        \"1\": \"GCKW55QPHVNG4OFJF3CNH3C5BJPFQOQI3JIG4LIDTA4EKUQVASUCNJXY\",\n        \"2\": \"GCKW55QPHVNG4OFJF3CNH3C5BJPFQOQI3JIG4LIDTA4EKUQVASUCNJXY\",\n        \"3\": \"GCKW55QPHVNG4OFJF3CNH3C5BJPFQOQI3JIG4LIDTA4EKUQVASUCNJXY\"\n    },\n    \"vault_fee_bps\": 100,\n    \"assets\": [\n        {\n            \"address\": \"CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU\",\n            \"strategies\": [\n                {\n                    \"address\": \"CA57GWLEGS2N5GLSKHQGAA4LKVKFL3MROF2SPFY6CVNDYWH3BUU5VKK7\",\n                    \"name\": \"any_name\",\n                    \"paused\": false\n\n                }\n            ]\n        }\n    ],\n    \"name_symbol\": {\n        \"name\": \"Vault\",\n        \"symbol\": \"vltsym\"\n    },\n    \"upgradable\": true,\n    \"caller\": \"GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/factory/create-vault?network=testnet",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "factory",
+                "create-vault"
+              ],
+              "query": [
+                {
+                  "key": "network",
+                  "value": "testnet"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [
+          "pm.sendRequest({",
+          "    url: `${pm.environment.get(\"host\")}/login`,",
+          "    method: \"POST\",",
+          "    header: {",
+          "        \"Content-Type\": \"application/json\"",
+          "    },",
+          "    body: {",
+          "        mode: \"raw\",",
+          "        raw: JSON.stringify({",
+          "            email: pm.environment.get(\"admin_email\"),",
+          "            password: pm.environment.get(\"admin_password\")",
+          "        })",
+          "    }",
+          "}, function (err, res) {",
+          "    if (!err) {",
+          "        let access_token = res.json().access_token;",
+          "        let refresh_token = res.json().refresh_token;",
+          "        pm.environment.set(\"jwt_token\", access_token);",
+          "        pm.environment.set(\"refresh_token\", refresh_token);",
+          "    }",
+          "});"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Beginner's DeFindex Tutorial</title>
+    
+    <!-- Simple styling to make it look better -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        button {
+            background: #00cc47;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 10px 5px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        button:hover:not(:disabled) {
+            background: #00a33e;
+        }
+        
+        .status {
+            background: #e8f4fd;
+            border-left: 4px solid #ccc900;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .success {
+            background: #e8f5e8;
+            border-left-color: #4caf50;
+        }
+        
+        .error {
+            background: #ffeaa7;
+            border-left-color: #ff6b6b;
+        }
+        
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+            resize: vertical;
+        }
+        
+        .hidden { display: none; }
+        
+        .step {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        
+        .step h3 {
+            margin-top: 0;
+            color: #0066cc;
+        }
+        
+        code {
+            background: #f1f3f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <h1>🚀 Your First DeFindex Vault Deposit</h1>
+        <p>This tutorial will walk you through depositing 1 XLM into a yield-generating vault step by step.</p>
+        
+        <!-- Step-by-step instructions -->
+        <div class="step">
+            <h3>📖 How this works:</h3>
+            <ol>
+                <li><strong>Connect:</strong> Link your Freighter wallet to this app</li>
+                <li><strong>Vault Info:</strong> Get information about the DeFindex vault</li>
+                <li><strong>Deposit:</strong> Build a deposit transaction to earn yield</li>
+                <li><strong>Sign:</strong> Authorize the transaction in your wallet</li>
+                <li><strong>Send:</strong> Submit the transaction to the network</li>
+            </ol>
+        </div>
+
+        <!-- Connection Status Display -->
+        <div id="connection-status" class="status hidden">
+            <strong>Wallet Status:</strong> <span id="account-display">Not connected</span>
+        </div>
+
+        <!-- Action Buttons Section -->
+        <div class="button-section">
+            <h3>🎮 Actions:</h3>
+            
+            <!-- Step 1: Connect Wallet -->
+            <button id="connect-btn" onclick="connectWallet()">
+                🔗 Step 1: Connect Freighter Wallet
+            </button>
+            
+            <!-- Step 2: Get Vault Info and Build Deposit -->
+            <button id="vault-info-btn" onclick="getVaultInfo()" disabled>
+                🏦 Step 2: Get Vault Info & Build Deposit
+            </button>
+
+            <!-- Step 3: Sign transaction -->
+            <button id="sign-btn" onclick="signTransaction()" disabled>
+                ✍️ Step 3: Sign the deposit transaction
+            </button>
+            
+            <!-- Step 4: Send Transaction -->
+            <button id="send-btn" onclick="sendTransaction()" disabled>
+                🚀 Step 4: Send Transaction to Network
+            </button>
+        </div>
+
+        <!-- Progress and Results Section -->
+        <div id="progress-area">
+            <h3>📊 Progress & Results:</h3>
+            <div id="status-display" class="status">
+                👋 Welcome! Click "Connect Freighter Wallet" to begin your vault deposit journey.
+            </div>
+        </div>
+
+        <!-- Technical Details Section (for learning) -->
+        <div id="technical-details" class="hidden">
+            <h3>🔧 Technical Details (for learning):</h3>
+            
+            <h4>Unsigned Transaction (XDR):</h4>
+            <textarea id="unsigned-xdr" rows="6" placeholder="The raw transaction before signing will appear here..." readonly></textarea>
+            
+            <h4>Signed Transaction (XDR):</h4>
+            <textarea id="signed-xdr" rows="6" placeholder="The transaction after signing will appear here..." readonly></textarea>
+        </div>
+
+        <!-- Final Results -->
+        <div id="final-results" class="status hidden">
+            <h3>🎉 Transaction Complete!</h3>
+            <div id="transaction-link"></div>
+        </div>
+    </div>
+
+    <!-- External Libraries -->
+    
+    <!-- 📚 Freighter API: Connects to the Freighter wallet extension -->
+    <script src="https://cdn.jsdelivr.net/npm/@stellar/freighter-api@4.1.0/build/index.min.js"></script>
+
+    <script>
+        // 🌟 WELCOME TO THE CODE SECTION! 🌟
+        // Everything below this line is JavaScript that makes the vault deposit work.
+        // Read through the comments to understand what each part does.
+
+        // ==========================================
+        // 📋 SECTION 1: CONFIGURATION & SETUP
+        // ==========================================
+        
+        // 🔗 Get reference to Freighter wallet API
+        const freighterAPI = window.freighterApi;
+        
+        // ⚙️ Configuration Settings
+        const CONFIG = {
+            // 🌐 API Settings
+            API_BASE_URL: 'https://api.defindex.io',            // DeFindex API endpoint
+            API_KEY: 'sk_test_1234567890abcdef',                // Your API key (replace this!)
+            NETWORK: 'testnet',                                 // Use testnet for learning
+            
+            // 🏦 Vault Settings
+            VAULT_ADDRESS: 'CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL',  // Example vault address
+            
+            // 🪙 Token Addresses (these are like bank account numbers for tokens)
+            TOKENS: {
+                XLM: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',        // Native Stellar Lumens
+                USDC: 'CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU'        // Blend testnet USDC token
+            },
+            
+            // 💰 Deposit Settings
+            DEPOSIT: {
+                AMOUNT: 10000000,                               // 1 XLM (Stellar uses 7 decimal places)
+                INVEST: true,                                   // Auto-invest into strategies
+                SLIPPAGE: 50                                    // 0.5% slippage tolerance
+            }
+        };
+
+        // 🏠 Get references to HTML elements (like getting addresses of houses)
+        const ELEMENTS = {
+            // Buttons
+            connectBtn: document.getElementById('connect-btn'),
+            vaultInfoBtn: document.getElementById('vault-info-btn'),
+            signBtn: document.getElementById('sign-btn'),
+            sendBtn: document.getElementById('send-btn'),
+            
+            // Display areas
+            connectionStatus: document.getElementById('connection-status'),
+            accountDisplay: document.getElementById('account-display'),
+            statusDisplay: document.getElementById('status-display'),
+            technicalDetails: document.getElementById('technical-details'),
+            unsignedXdr: document.getElementById('unsigned-xdr'),
+            signedXdr: document.getElementById('signed-xdr'),
+            finalResults: document.getElementById('final-results'),
+            transactionLink: document.getElementById('transaction-link')
+        };
+
+        // 💾 Application State (keeps track of what's happening)
+        let appState = {
+            connected: false,           // Is wallet connected?
+            walletAddress: null,        // User's wallet address
+            unsignedXdr: null,          // Unsigned transaction XDR
+            signedTransaction: null,    // Signed transaction waiting to be sent
+            vaultInfo: null,            // Vault information
+            userBalance: null           // User's current vault balance
+        };
+
+        // ==========================================
+        // 📋 SECTION 2: UTILITY FUNCTIONS
+        // ==========================================
+
+        /**
+         * 🎨 Updates the status display with a message
+         * @param {string} message - Message to show the user
+         * @param {string} type - Type of message: 'info', 'success', 'error'
+         */
+        function updateStatus(message, type = 'info') {
+            ELEMENTS.statusDisplay.innerHTML = message;
+            ELEMENTS.statusDisplay.className = `status ${type}`;
+            console.log(`[${type.toUpperCase()}] ${message.replace(/<[^>]*>/g, '')}`); // Log without HTML
+        }
+
+        /**
+         * 🔄 Updates button states based on current application state
+         */
+        function updateButtonStates() {
+            ELEMENTS.connectBtn.disabled = appState.connected;
+            ELEMENTS.vaultInfoBtn.disabled = !appState.connected || appState.unsignedXdr;
+            ELEMENTS.signBtn.disabled = !appState.unsignedXdr || appState.signedTransaction;
+            ELEMENTS.sendBtn.disabled = !appState.signedTransaction || !appState.unsignedXdr;
+        }
+
+        /**
+         * 💰 Converts raw token amount to human-readable format
+         * @param {string} amount - Raw amount (like "10000000")
+         * @param {number} decimals - Number of decimal places (default 7 for XLM)
+         * @returns {string} Formatted amount (like "1.00")
+         */
+        function formatAmount(amount, decimals = 7) {
+            return (parseInt(amount) / Math.pow(10, decimals)).toFixed(2);
+        }
+
+        /**
+         * 🌐 Makes HTTP requests to the DeFindex API with error handling
+         * @param {string} endpoint - API endpoint (like '/vault/ADDRESS')
+         * @param {Object} data - Data to send in the request
+         * @param {string} method - HTTP method (GET, POST)
+         * @returns {Promise<Object>} API response
+         */
+        async function makeAPIRequest(endpoint, data, method = 'POST', hasQuery = false) {
+            console.log(`🟢 Making API request to ${endpoint} with method ${method}`, data, hasQuery || '');
+            try {
+                let url = `${CONFIG.API_BASE_URL}${endpoint}`;
+                if(!hasQuery){
+                    url += `?network=${CONFIG.NETWORK}`;
+                } else {
+                    url += `&network=${CONFIG.NETWORK}`;
+                }
+                console.log(`🔗 Making API request to ${url} with method ${method}`, data || '');
+                const options = {
+                    method,
+                    headers: {
+                        'Authorization': `Bearer ${CONFIG.API_KEY}`,
+                        'Content-Type': 'application/json'
+                    }
+                };
+                
+                if (method === 'POST' && data) {
+                    options.body = JSON.stringify(data);
+                }
+
+                const response = await fetch(url, options);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API Error: ${errorData.message || response.statusText}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error(`API request failed for ${endpoint}:`, error);
+                throw error;
+            }
+        }
+
+        // ==========================================
+        // 📋 SECTION 3: MAIN FUNCTIONS
+        // ==========================================
+
+        /**
+         * 🔗 STEP 1: Connect to Freighter Wallet
+         * This function establishes a connection between your app and the user's wallet
+         */
+        async function connectWallet() {
+            try {
+                updateStatus('🔄 Connecting to Freighter wallet...', 'info');
+
+                // Check if Freighter extension is installed
+                if (!freighterAPI) {
+                    throw new Error('Freighter wallet extension not found. Please install it from freighter.app');
+                }
+
+                // Check if Freighter is connected and ready
+                const connectionCheck = await freighterAPI.isConnected();
+                if (!connectionCheck.isConnected) {
+                    throw new Error('Freighter wallet is not connected. Please connect it manually first.');
+                }
+
+                // Request permission to access the wallet
+                updateStatus('🔄 Requesting wallet access...', 'info');
+                const accessResult = await freighterAPI.requestAccess();
+                
+                // Store the wallet address
+                appState.walletAddress = accessResult.address;
+                appState.connected = true;
+
+                // Update the user interface
+                ELEMENTS.accountDisplay.textContent = `${appState.walletAddress.substring(0, 8)}...${appState.walletAddress.substring(appState.walletAddress.length - 8)}`;
+                ELEMENTS.connectionStatus.classList.remove('hidden');
+                
+                updateStatus('✅ Wallet connected successfully! You can now get a quote.', 'success');
+                updateButtonStates();
+
+            } catch (error) {
+                console.error('Wallet connection failed:', error);
+                updateStatus(`❌ Connection failed: ${error.message}`, 'error');
+            }
+        }
+
+        /**
+         * 🏦 STEP 2: Get Vault Info and Build Deposit Transaction
+         * This function gets vault information and prepares a deposit transaction
+         */
+        async function getVaultInfo() {
+            try {
+                // Make sure wallet is connected
+                if (!appState.connected) {
+                    updateStatus('❌ Please connect your wallet first!', 'error');
+                    return;
+                }
+
+                // PHASE 1: Get Vault Information
+                updateStatus('🔄 Getting vault information...', 'info');
+                
+                appState.vaultInfo = await makeAPIRequest(`/vault/${CONFIG.VAULT_ADDRESS}`, null, 'GET');
+                
+                updateStatus(`✅ Vault loaded: ${appState.vaultInfo.name || 'DeFindex Vault'}<br>🔄 Getting your current balance...`, 'info');
+
+                // PHASE 2: Get User Balance
+                try {
+                    appState.userBalance = await makeAPIRequest(`/vault/${CONFIG.VAULT_ADDRESS}/balance?from=${appState.walletAddress}`, null, 'GET', true);
+                    const currentShares = formatAmount(appState.userBalance.dfTokens || 0, 7);
+                    updateStatus(`✅ Current vault shares: ${currentShares} dfTokens<br>🔄 Building deposit transaction...`, 'info');
+                } catch (error) {
+                    updateStatus(`✅ Vault loaded (first time deposit)<br>🔄 Building deposit transaction...`, 'info');
+                }
+
+                // PHASE 3: Build Deposit Transaction
+                const depositRequest = {
+                    amounts: [CONFIG.DEPOSIT.AMOUNT],    // Amount to deposit (1 XLM)
+                    caller: appState.walletAddress,      // Who's depositing
+                    invest: CONFIG.DEPOSIT.INVEST,       // Auto-invest into strategies
+                    slippageBps: CONFIG.DEPOSIT.SLIPPAGE // Slippage tolerance
+                };
+
+                const buildResult = await makeAPIRequest(`/vault/${CONFIG.VAULT_ADDRESS}/deposit`, depositRequest);
+                appState.unsignedXdr = buildResult.xdr;
+                
+                // Show the unsigned transaction for educational purposes
+                ELEMENTS.unsignedXdr.value = buildResult.xdr;
+                ELEMENTS.technicalDetails.classList.remove('hidden');
+
+                updateStatus(`✅ Deposit transaction built!<br>🔄 Ready to sign and deposit 1 XLM into the vault...`, 'info');
+                updateButtonStates();
+            } catch (error) {
+                console.error('Vault info/deposit process failed:', error);
+                updateStatus(`❌ Process failed: ${error.message}`, 'error');
+            }
+        }
+
+        /**
+         * 🚀 STEP 3: Sign transaction with wallet
+         * This function signs a xdr transaction to submit to the Stellar network
+         */
+        async function signTransaction() {
+            try {
+                // Make sure wallet is connected
+                if (!appState.connected) {
+                    updateStatus('❌ Please connect your wallet first!', 'error');
+                    return;
+                }
+
+                // Sign the transaction
+                const signResult = await freighterAPI.signTransaction(appState.unsignedXdr, {
+                    network: CONFIG.NETWORK,
+                    networkPassphrase: 'Test SDF Network ; September 2015',
+                    address: appState.walletAddress
+                });
+
+                appState.signedTransaction = signResult.signedTxXdr;
+                // Show the signed transaction for educational purposes
+                ELEMENTS.signedXdr.value = appState.signedTransaction;
+                updateStatus(`✅ Transaction signed successfully!`, 'success');
+                updateStatus(`✅ Deposit transaction signed successfully!<br>✅ Ready to deposit 1 XLM and earn yield!`, 'success');
+                updateButtonStates();
+            } catch (error) {
+                console.error('Transaction signing failed:', error);
+                updateStatus(`❌ Transaction signing failed: ${error.message}`, 'error');
+            }
+        }
+
+        /**
+         * 🚀 STEP 4: Send Transaction to Network
+         * This function submits the signed transaction to the Stellar network
+         */
+        async function sendTransaction() {
+            try {                
+           
+                // Make sure we have a signed transaction
+                if (!appState.signedTransaction) {
+                    updateStatus('❌ No signed transaction available. Please get a quote first.', 'error');
+                    return;
+                }
+
+                updateStatus('🚀 Broadcasting transaction to Stellar network...', 'info');
+
+                // Send the signed transaction
+                const sendRequest = {
+                    xdr: appState.signedTransaction,    // The signed transaction
+                    launchtube: false                   // Use normal fees (not gasless)
+                };
+
+                const sendResult = await makeAPIRequest('/send', sendRequest);
+
+                // Create link to view transaction on Stellar Expert
+                const explorerUrl = `https://stellar.expert/explorer/${CONFIG.NETWORK}/tx/${sendResult.txHash}`;
+                
+                // Show success message
+                ELEMENTS.transactionLink.innerHTML = `
+                    <strong>Transaction Hash:</strong> <code>${sendResult.txHash}</code><br>
+                    <a href="${explorerUrl}" target="_blank" rel="noopener">🔗 View on Stellar Expert</a>
+                `;
+                ELEMENTS.finalResults.classList.remove('hidden');
+
+                updateStatus('🎉 Vault deposit completed successfully! You now own dfTokens (vault shares) that will earn yield. Check the transaction link below.', 'success');
+
+                // Reset for next transaction
+                appState.unsignedXdr = null;
+                appState.signedTransaction = null;
+                updateButtonStates();
+
+            } catch (error) {
+                console.error('Transaction send failed:', error);
+                updateStatus(`❌ Transaction failed: ${error.message}`, 'error');
+            }
+        }
+
+        // ==========================================
+        // 📋 SECTION 4: INITIALIZATION
+        // ==========================================
+
+        /**
+         * 🚀 Initialize the application when the page loads
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 DeFindex Beginner Tutorial Loaded!');
+            console.log('📋 Configuration:', CONFIG);
+            
+            // Set initial button states
+            updateButtonStates();
+            
+            // Show welcome message
+            updateStatus('👋 Welcome! This tutorial will teach you how to deposit into DeFindex vaults and earn yield on Stellar.', 'info');
+            updateStatus('🏃🏻 Run <code>debugState()</code> in the console to see the app state.', 'info');
+        });
+
+        // ==========================================
+        // 📋 SECTION 5: HELPER FUNCTIONS FOR DEBUGGING
+        // ==========================================
+
+        /**
+         * 🔍 Debug function to check current state (call from browser console)
+         */
+        function debugState() {
+            console.log('Current App State:', appState);
+            console.log('Configuration:', CONFIG);
+            return {
+                state: appState,
+                config: CONFIG,
+                elements: ELEMENTS
+            };
+        }
+
+        // Make debug function globally available
+        window.debugState = debugState;
+
+        // 🎉 Congratulations! You've reached the end of the code.
+        // Try running debugState() in your browser console to see the app's current state!
+        // Learn more about DeFindex vaults and yield strategies at https://docs.defindex.io
+    </script>
+</body>
+</html>
