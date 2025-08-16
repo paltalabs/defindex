@@ -1,0 +1,36 @@
+{
+  "title": "DeFindex Documentation",
+  "description": "DeFindex Protocol Documentation",
+  "author": "DeFindex Team",
+  "language": "en",
+  "gitbook": ">=3.2.0",
+  "root": "./",
+  "structure": {
+    "readme": "README.md",
+    "summary": "SUMMARY.md"
+  },
+  "plugins": [
+    "favicon",
+    "katex",
+    "mathjax"
+  ],
+  "pluginsConfig": {
+    "favicon": {
+      "shortcut": ".gitbook/assets/favicon.svg",
+      "bookmark": ".gitbook/assets/favicon.svg",
+      "appleTouch": ".gitbook/assets/favicon.svg",
+      "appleTouchMore": {
+        "120x120": ".gitbook/assets/favicon.svg",
+        "180x180": ".gitbook/assets/favicon.svg"
+      }
+    },
+    "mathjax": {
+      "forceSVG": true
+    }
+  },
+  "links": {
+    "sidebar": {
+      "DeFindex": "https://defindex.io"
+    }
+  }
+}

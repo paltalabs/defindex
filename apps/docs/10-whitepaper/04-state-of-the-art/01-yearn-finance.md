@@ -100,13 +100,13 @@ def _issue_shares_for_amount(amount: uint256, recipient: address) -> uint256:
 ```
 
 This function calculates and issues new shares based on the amount of assets deposited.
-What these functions do is to mantain the relation between shares and assets invested. In fact, if $S_t$ is the Total Share Supply at time $t$, $A_t$ is the total amount of Assets at time $t$, $s$ is the new amount of shares to be minted and $a$ is the amount of assets being invested, what this code is doing is to maintain the following relationship
+What these functions do is to maintain the relation between shares and assets invested. In fact, if S<sub>t</sub> is the Total Share Supply at time t, A<sub>t</sub> is the total amount of Assets at time t, s is the new amount of shares to be minted and a is the amount of assets being invested, what this code is doing is to maintain the following relationship
 
 $$
 \frac{S_t}{A_t} = \frac{s}{a} 
 $$
 
-Because, when `_issue_shares_for_amount` is being called, `total_assets` is alreeady $A_0 + a = A_1$, but `total_supply` is still `S_0` then the relationshit will be
+Because, when `_issue_shares_for_amount` is being called, `total_assets` is already A<sub>0</sub> + a = A<sub>1</sub>, but `total_supply` is still S<sub>0</sub> then the relationship will be
 
 $$
 \frac{S_1}{A_1} = \frac{S_0 + s}{A_1} = \frac{s}{a}  
