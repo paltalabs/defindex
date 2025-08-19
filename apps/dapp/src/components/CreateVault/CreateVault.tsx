@@ -123,7 +123,6 @@ function AddStrategies() {
     const assetAllocation = vaultContext?.newVault.assetAllocation.map((item) => {
       let newItem = item
       const amount = parseNumericInput(e.target.value, 7);
-      console.log('handleDepositAmount', item, amount, vaultContext?.newVault.assetAllocation[i].address)
       if (item.address === vaultContext?.newVault.assetAllocation[i].address) {
         newItem = {
           ...item,
