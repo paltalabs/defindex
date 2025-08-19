@@ -15,14 +15,10 @@ export enum StrategyMethod {
 const isObject = (val: unknown) => typeof val === 'object' && val !== null && !Array.isArray(val);
 
 // Type guard to check if result is TxResponse
-function isTxResponse(result: any): result is TxResponse {
-    return result && typeof result === 'object' && 'status' in result;
+function isTxResponse(result: unknown): result is TxResponse {
+    return Boolean(result && typeof result === 'object' && result !== null && 'status' in result);
 }
 
-// Type guard to check if result is StellarSdk.xdr.ScVal
-function isScVal(result: any): result is StellarSdk.xdr.ScVal {
-    return result instanceof StellarSdk.xdr.ScVal;
-}
 
 
 export function useStrategyCallback() {
@@ -47,8 +43,8 @@ export function useStrategyCallback() {
                     ) throw result;
                     return result;
                 }
-            } catch (e: any) {
-                const error = e.toString();
+            } catch (e: unknown) {
+                const error = String(e);
                 if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
                 if (error.includes('Sign')) throw new Error('Request denied by user. Please try to sign again.');
                 if (error.includes('non-existing value for contract instance')) throw new Error(`Strategy: ${address} not found.`);
