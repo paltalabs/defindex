@@ -2,6 +2,21 @@
 
 This guide will walk you through integrating DeFindex into your app using the provided API. We'll use TypeScript for the examples, but the concepts apply to any language.
 
+## 🚀 TypeScript SDK Available!
+
+If you're developing in TypeScript, we highly recommend using our official SDK instead of direct API integration. The SDK provides:
+- Type safety and comprehensive TypeScript definitions
+- Simplified authentication with API keys
+- Built-in error handling and validation
+- Complete coverage of all API endpoints
+- Working examples and detailed documentation
+
+**[Check out the DeFindex TypeScript SDK documentation](./03-defindex-sdk.md) for the easiest integration experience.**
+
+For non-TypeScript projects or custom integrations, continue with this direct API guide below.
+
+---
+
 Complete reference: [API Reference](https://api.defindex.io/docs)
 
 ## Prerequisites
@@ -9,6 +24,7 @@ Complete reference: [API Reference](https://api.defindex.io/docs)
 - Basic knowledge of TypeScript or JavaScript
 - Node.js environment
 - [Stellar SDK](https://www.stellar.org/developers/reference/) installed (`npm install stellar-sdk`)
+- DeFindex API key (contact PaltaLabs team for access)
 
 ---
 
@@ -20,34 +36,20 @@ First, create an `ApiClient` class to handle authentication and API requests.
 import StellarSdk from 'stellar-sdk';
 
 class ApiClient {
-    private accessToken: string | null = null;
     private readonly apiUrl = "api.defindex.io";
+    private readonly apiKey: string;
 
-    constructor(private username: string, private password: string) {}
-
-    // Authenticate and store the access token
-    async login(): Promise<void> {
-        const response = await fetch(`https://${this.apiUrl}/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username: this.username, password: this.password }),
-        });
-
-        if (!response.ok) throw new Error("Login failed");
-
-        const data = await response.json();
-        this.accessToken = data.token;
+    constructor(apiKey: string) {
+        this.apiKey = apiKey;
     }
 
     // Helper for POST requests
     async postData(endpoint: string, vaultAddress: string, params: Record<string, any>): Promise<any> {
-        if (!this.accessToken) throw new Error("Not authenticated");
-
         const response = await fetch(`https://${this.apiUrl}/vault/${vaultAddress}/${endpoint}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${this.accessToken}`
+                'Authorization': `Bearer ${this.apiKey}`
             },
             body: JSON.stringify(params)
         });
@@ -55,9 +57,7 @@ class ApiClient {
     }
 
     // Helper for GET requests
-    async getData(endpoint: string, vault: string, params?: Record<string, any>): Promise<any> {
-        if (!this.accessToken) throw new Error("Not authenticated");
-
+    async getData(endpoint: string, vaultAddress: string, params?: Record<string, any>): Promise<any> {
         const url = params
             ? `https://${this.apiUrl}/vault/${vaultAddress}/${endpoint}?${new URLSearchParams(params).toString()}`
             : `https://${this.apiUrl}/vault/${vaultAddress}/${endpoint}`;
@@ -65,7 +65,7 @@ class ApiClient {
         const response = await fetch(url, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${this.accessToken}`
+                'Authorization': `Bearer ${this.apiKey}`
             }
         });
         return await response.json();
@@ -161,11 +161,10 @@ async function apy(apiClient: ApiClient): number {
 ## 3. Usage Example
 
 ```typescript
-const apiClient = new ApiClient('your-username', 'your-password');
+// Initialize with API key (get from PaltaLabs team)
+const apiClient = new ApiClient('sk_your_api_key_here');
 
 async function main() {
-    await apiClient.login();
-
     // Implement your own signer function
     const signerFunction = (unsignedTx: string) => {
         // Use StellarSdk or your wallet to sign the transaction
@@ -194,10 +193,14 @@ main();
 
 ## 4. Notes
 
+- **API Key:** Contact the PaltaLabs team to obtain your API key. Store it securely as an environment variable.
 - **Signer Function:** You must implement the `signerFunction` to sign transactions using your wallet or key management system.
 - **Error Handling:** Add appropriate error handling for production use.
-- **Security:** Never expose your private keys or sensitive credentials.
+- **Security:** Never expose your private keys, API keys, or sensitive credentials in your code.
 
 ---
 
 For more details, refer to the [DeFindex API documentation](https://api.defindex.io/docs).
+
+Postman collection json [here](postman_collection.json)
+

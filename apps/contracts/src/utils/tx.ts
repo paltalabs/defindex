@@ -68,7 +68,7 @@ export async function invokeTransaction(
   const sim_tx_data = simulation_resp.transactionData
     .setResources(
       txResources.instructions() == 0 ? 0 : txResources.instructions() + 500000,
-      txResources.readBytes(),
+      txResources.diskReadBytes(),
       txResources.writeBytes()
     )
     .build();

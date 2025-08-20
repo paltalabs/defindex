@@ -7,7 +7,11 @@ import useSWR from 'swr';
 export enum AllowedAssets {
   XLM = 'xlm',
   USDC = 'usdc',
-  EURC = 'eurc'
+  EURC = 'eurc',
+  CETES = 'cetes',
+  USTRY = 'ustry',
+  AQUA = 'aqua',
+  USDGLO = 'usdglo'
 }
 
 export const usePublicAddresses = (network: string) => {
@@ -52,7 +56,7 @@ export async function extractStrategies(publicAddresses: Record<string, string>)
     if (key.endsWith('_strategy')) {
       const address = publicAddresses[key];
       let assetSymbol: AllowedAssets;
-      let name = key.replace('_strategy', '');
+      const name = key.replace('_strategy', '');
 
       Object.values(AllowedAssets).forEach((asset) => {
         if (name.startsWith(asset)) {

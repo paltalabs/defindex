@@ -55,6 +55,42 @@
                 "reward_threshold": "40",
                 "blend_pool_address": "CCCCIQSDILITHMM7PBSLVDT5MISSY7R26MNZXCX4H7J5JQ5FPIYOGYFS",
                 "blend_pool_name": "yieldblox"
+            },
+            {
+                "name": "autocompound",
+                "keeper": "GC7LSNNCRW4PNLLHIXE53RB7N5BKSQVXTGWYHIYBA7LAWY7XYPC4JGCP",
+                "asset": "CAL6ER2TI6CTRAY6BFXWNWA7WTYXUXTQCHUBCIBU5O6KM3HJFG6Z6VXV",
+                "asset_symbol": "CETES",
+                "reward_threshold": "40",
+                "blend_pool_address": "CCCCIQSDILITHMM7PBSLVDT5MISSY7R26MNZXCX4H7J5JQ5FPIYOGYFS",
+                "blend_pool_name": "yieldblox"
+            },
+            {
+                "name": "autocompound",
+                "keeper": "GC7LSNNCRW4PNLLHIXE53RB7N5BKSQVXTGWYHIYBA7LAWY7XYPC4JGCP",
+                "asset": "CAUIKL3IYGMERDRUN6YSCLWVAKIFG5Q4YJHUKM4S4NJZQIA3BAS6OJPK",
+                "asset_symbol": "AQUA",
+                "reward_threshold": "40",
+                "blend_pool_address": "CCCCIQSDILITHMM7PBSLVDT5MISSY7R26MNZXCX4H7J5JQ5FPIYOGYFS",
+                "blend_pool_name": "yieldblox"
+            },
+            {
+                "name": "autocompound",
+                "keeper": "GC7LSNNCRW4PNLLHIXE53RB7N5BKSQVXTGWYHIYBA7LAWY7XYPC4JGCP",
+                "asset": "CBLV4ATSIWU67CFSQU2NVRKINQIKUZ2ODSZBUJTJ43VJVRSBTZYOPNUR",
+                "asset_symbol": "USTRY",
+                "reward_threshold": "40",
+                "blend_pool_address": "CCCCIQSDILITHMM7PBSLVDT5MISSY7R26MNZXCX4H7J5JQ5FPIYOGYFS",
+                "blend_pool_name": "yieldblox"
+            },
+            {
+                "name": "autocompound",
+                "keeper": "GC7LSNNCRW4PNLLHIXE53RB7N5BKSQVXTGWYHIYBA7LAWY7XYPC4JGCP",
+                "asset": "CB226ZOEYXTBPD3QEGABTJYSKZVBP2PASEISLG3SBMTN5CE4QZUVZ3CE",
+                "asset_symbol": "USDGLO",
+                "reward_threshold": "40",
+                "blend_pool_address": "CCCCIQSDILITHMM7PBSLVDT5MISSY7R26MNZXCX4H7J5JQ5FPIYOGYFS",
+                "blend_pool_name": "yieldblox"
             }
         ]
     },
@@ -67,7 +103,7 @@
                 "asset": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
                 "asset_symbol": "XLM",
                 "reward_threshold": "40",
-                "blend_pool_address": "CCLBPEYS3XFK65MYYXSBMOGKUI4ODN5S7SUZBGD7NALUQF64QILLX5B5",
+                "blend_pool_address": "CDDG7DLOWSHRYQ2HWGZEZ4UTR7LPTKFFHN3QUCSZEXOWOPARMONX6T65",
                 "blend_pool_name": "fixed_xlm_usdc"
             },
             {
@@ -76,26 +112,8 @@
                 "asset": "CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU",
                 "asset_symbol": "USDC",
                 "reward_threshold": "40",
-                "blend_pool_address": "CCLBPEYS3XFK65MYYXSBMOGKUI4ODN5S7SUZBGD7NALUQF64QILLX5B5",
+                "blend_pool_address": "CDDG7DLOWSHRYQ2HWGZEZ4UTR7LPTKFFHN3QUCSZEXOWOPARMONX6T65",
                 "blend_pool_name": "fixed_xlm_usdc"
-            },
-            {
-                "name": "autocompound",
-                "keeper": "GAZORYCZ2X3UGQXZSSOPSTZWEY44BBUA6E7YAF7GWERI26J6YNZL3HAZ",
-                "asset": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
-                "asset_symbol": "XLM",
-                "reward_threshold": "40",
-                "blend_pool_address": "CCLBPEYS3XFK65MYYXSBMOGKUI4ODN5S7SUZBGD7NALUQF64QILLX5B5",
-                "blend_pool_name": "YieldBlox"
-            },
-            {
-                "name": "autocompound",
-                "keeper": "GAZORYCZ2X3UGQXZSSOPSTZWEY44BBUA6E7YAF7GWERI26J6YNZL3HAZ",
-                "asset": "CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU",
-                "asset_symbol": "USDC",
-                "reward_threshold": "40",
-                "blend_pool_address": "CCLBPEYS3XFK65MYYXSBMOGKUI4ODN5S7SUZBGD7NALUQF64QILLX5B5",
-                "blend_pool_name": "YieldBlox"
             }
         ]
     }
