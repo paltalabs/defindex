@@ -33,6 +33,9 @@
 ## WALLET DEVELOPER
 
 * [Introduction](wallet-developer/introduction.md)
+* [Quick Start Guide](wallet-developer/quickstart.md)
+* [Beginner Guide](wallet-developer/beginner-guide.md)
+* [Interactive Example](wallet-developer/beginner-example.html)
 * [Smart Contracts](wallet-developer/smart-contracts.md)
 * [API Integration Tutorial](wallet-developer/api.md)
 * [Vault](wallet-developer/vault.md)
