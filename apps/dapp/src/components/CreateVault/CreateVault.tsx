@@ -37,7 +37,7 @@ function SelectAssets() {
   const assetContext = useContext(AssetContext);
   const vaultContext = useContext(VaultContext);
   const [selectedAssets, setSelectedAssets] = React.useState<Asset[]>([])
-  const handleSelect = (e: any) => {
+  const handleSelect = (e: string[]) => {
     const selected = assetContext?.assets.filter((asset) => e.includes(asset.address))
     setSelectedAssets(selected || [])
   }
@@ -52,10 +52,11 @@ function SelectAssets() {
       ...vaultContext.newVault,
       assetAllocation: newAssets,
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedAssets])
   const assetsCollection = createListCollection({
     items: assetContext?.assets.map((asset) => ({
-      label: asset.symbol?.toUpperCase()!,
+      label: asset.symbol?.toUpperCase() || '',
       value: asset.address,
     })) || []
   })
@@ -81,7 +82,7 @@ function SelectStrategies({ asset }: { asset: Asset }) {
     }))
   })
 
-  const handleSelect = (e: any) => {
+  const handleSelect = (e: string[]) => {
     setSelectedStrategies(e)
   }
 
@@ -100,7 +101,8 @@ function SelectStrategies({ asset }: { asset: Asset }) {
       ...vaultContext.newVault,
       assetAllocation: assetAllocation!,
     })
-  }, [selectedStrategies])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedStrategies, asset.address, asset.strategies])
   return (
     <CustomSelect
       collection={strategiesCollection}
@@ -116,14 +118,15 @@ function AddStrategies() {
   const assetContext = useContext(AssetContext);
   const vaultContext = useContext(VaultContext);
 
-  const handleDepositAmount = (e: any, i: number) => {
+  const handleDepositAmount = (e: React.ChangeEvent<HTMLInputElement>, i: number) => {
     if (!decimalRegex.test(e.target.value) && e.target.value != '') return
-    const assetAllocation = vaultContext?.newVault.assetAllocation.map((item, index) => {
+    const assetAllocation = vaultContext?.newVault.assetAllocation.map((item) => {
       let newItem = item
+      const amount = parseNumericInput(e.target.value, 7);
       if (item.address === vaultContext?.newVault.assetAllocation[i].address) {
         newItem = {
           ...item,
-          amount: parseNumericInput(e.target.value, 2),
+          amount: Number(amount),
         }
       }
       return newItem
@@ -145,7 +148,7 @@ function AddStrategies() {
               placeholder="Initial deposit"
               type="number"
               min={0}
-              value={vaultContext.newVault.assetAllocation[index].amount}
+              value={parseNumericInput(vaultContext.newVault.assetAllocation[index]?.amount.toString(), 7) || 0}
               onChange={(e) => handleDepositAmount(e, index)}
             />
             <SelectStrategies asset={assetContext!.assets.find((a) => a.address === item.address)!} />
@@ -170,6 +173,7 @@ function VaultConfig() {
       name: vaultConfig.name || '',
       symbol: vaultConfig.symbol || '',
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vaultConfig])
 
   const handleVaultNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -235,6 +239,7 @@ function ManagerConfig() {
       emergencyManager: managerConfig.emergencyManager || '',
       rebalanceManager: managerConfig.rebalanceManager || '',
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [managerConfig])
 
   return (
@@ -277,20 +282,19 @@ function FeeConfig() {
   const vaultContext = useContext(VaultContext);
   const [showWarning, setShowWarning] = useState(false)
 
-  const handleWarning = () => {
-    if (vaultContext?.newVault.feePercent! > 50) {
-      console.log('show warning')
-      setShowWarning(true)
-    }
-    else {
-
-      setShowWarning(false)
-    }
-  }
   useEffect(() => {
+    const handleWarning = () => {
+      if (vaultContext && vaultContext.newVault.feePercent > 50) {
+        console.log('show warning')
+        setShowWarning(true)
+      }
+      else {
+        setShowWarning(false)
+      }
+    }
     handleWarning()
-  }, [vaultContext?.newVault.feePercent])
-  const handeInput = (e: any) => {
+  }, [vaultContext])
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!decimalRegex.test(e.target.value) && e.target.value != '') return
     if (e.target.value == '') {
       vaultContext?.setNewVault({
@@ -300,15 +304,15 @@ function FeeConfig() {
       return
     }
     if (parseFloat(e.target.value) >= 100) {
-      e.target.value = 100
+      e.target.value = '100'
     }
     vaultContext?.setNewVault({
       ...vaultContext.newVault,
-      feePercent: parseNumericInput(e.target.value, 2) || vaultContext.newVault.feePercent,
+      feePercent: Number(parseNumericInput(e.target.value, 2) || vaultContext.newVault.feePercent),
     })
   }
 
-  const handleFeeReceiver = (e: any) => {
+  const handleFeeReceiver = (e: React.ChangeEvent<HTMLInputElement>) => {
     vaultContext?.setNewVault({
       ...vaultContext.newVault,
       feeReceiver: e.target.value,
@@ -331,8 +335,8 @@ function FeeConfig() {
         type='number'
         min={0}
         max={100}
-        value={vaultContext!.newVault.feePercent}
-        onChange={handeInput}
+        value={parseNumericInput(vaultContext!.newVault.feePercent.toString(), 2) || 0}
+        onChange={handleInput}
         invalid={showWarning}
         errorMessage={'Too high fees could lead to issues'}
       />
@@ -342,7 +346,7 @@ function FeeConfig() {
 
 function CreateVaultButton() {
   const vaultContext = useContext(VaultContext);
-  const useFactory = useFactoryCallback();
+  const factoryCallback = useFactoryCallback();
   const sorobanContext = useSorobanReact();
   const [loading, setLoading] = useState(false);
   const [disabled, setDisabled] = useState(false);
@@ -364,7 +368,18 @@ function CreateVaultButton() {
     } else {
       setDisabled(false);
     }
-  }, [sorobanContext, vaultContext, vaultContext!.newVault]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    sorobanContext.address,
+    vaultContext?.newVault.name,
+    vaultContext?.newVault.symbol,
+    vaultContext?.newVault.vaultManager,
+    vaultContext?.newVault.emergencyManager,
+    vaultContext?.newVault.rebalanceManager,
+    vaultContext?.newVault.feeReceiver,
+    vaultContext?.newVault.feePercent,
+    vaultContext?.newVault.assetAllocation.length
+  ]);
 
   const handleCreateVault = async () => {
     if (!vaultContext) return;
@@ -397,7 +412,7 @@ function CreateVaultButton() {
         newVault.assetAllocation
       );
       try {
-        const result = await useFactory(FactoryMethod.CREATE_DEFINDEX_VAULT_DEPOSIT, params, true);
+        const result = await factoryCallback(FactoryMethod.CREATE_DEFINDEX_VAULT_DEPOSIT, params, true);
         toaster.create({
           title: 'Vault created',
           description: 'Vault created successfully',
@@ -411,11 +426,11 @@ function CreateVaultButton() {
           }
         });
         setLoading(false);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error creating vault:', error);
         toaster.create({
           title: 'Error creating vault',
-          description: error.message,
+          description: error instanceof Error ? error.message : 'An error occurred',
           type: 'error',
           duration: 5000,
         });
@@ -436,7 +451,7 @@ function CreateVaultButton() {
         newVault.upgradable,
       );
       try {
-        const result = await useFactory(FactoryMethod.CREATE_DEFINDEX_VAULT, params, true);
+        const result = await factoryCallback(FactoryMethod.CREATE_DEFINDEX_VAULT, params, true);
         toaster.create({
           title: 'Vault created',
           description: `Vault created successfully`,
@@ -450,11 +465,11 @@ function CreateVaultButton() {
           }
         });
         setLoading(false);
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Error creating vault:', error);
         toaster.create({
           title: 'Error creating vault',
-          description: error.message,
+          description: error instanceof Error ? error.message : 'An error occurred',
           type: 'error',
           duration: 5000,
         });

@@ -48,7 +48,7 @@ export const useFactory = () => {
     const factoryAddress = findFactoryAddress(publicAddresses.data);
     setAddress(factoryAddress);
 
-  }, [activeNetwork,publicAddresses]);
+  }, [activeNetwork, publicAddresses, networkName, sorobanContext]);
 
   return { address };
 }
@@ -98,7 +98,7 @@ export function useFactoryCallback() {
           result?.status !== StellarSdk.rpc.Api.GetTransactionStatus.SUCCESS
         ) throw result;
         return result
-      } catch (e: any) {
+      } catch (e: unknown) {
         const error = e as Error;
         if (error.message.includes('ExistingValue')) throw new Error('Index already exists.')
         if (error.message.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')

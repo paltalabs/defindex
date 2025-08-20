@@ -1,5 +1,5 @@
 "use client"
-import { useState, useContext } from "react"
+import { useState, useMemo } from "react"
 import { Vault, VaultContext, VaultContextType } from "@/contexts"
 import useMounted from "@/hooks/useMounted"
 
@@ -22,14 +22,14 @@ export const VaultProvider = ({ children }: { children: React.ReactNode }) => {
   const [vaults, setVaults] = useState<Vault[]>([]);
   const [selectedVault, setSelectedVault] = useState<Vault | null>(null);
 
-  const vaultContextValue: VaultContextType = {
+  const vaultContextValue: VaultContextType = useMemo(() => ({
     newVault,
     setNewVault,
     vaults,
     setVaults,
     selectedVault,
     setSelectedVault,
-  }
+  }), [newVault, setNewVault, vaults, setVaults, selectedVault, setSelectedVault])
 
   if (!isMounted) return null;
   return (

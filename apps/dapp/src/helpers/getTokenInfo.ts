@@ -7,7 +7,7 @@ export const getTokenSymbol = async (
   sorobanContext: SorobanContextType,
 ): Promise<string | null> => {
   try {
-    let result = await contractInvoke({
+    const result = await contractInvoke({
       contractAddress: tokenId as string,
       method: 'symbol',
       args: [],
