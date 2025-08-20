@@ -11,7 +11,7 @@ const menuItems = [
     { id: 5, name: "Our Team", to: "our-team" },
     { id: 6, name: "Frequently Asked Questions", to: "FAQ" },
 ];
-
+/* eslint-disable @typescript-eslint/no-unused-vars */
 function Lists({ toggle }: { toggle?: () => void }) {
     const { setIndex } = useContext(NavigateTab);
     const router = useRouter();
@@ -52,5 +52,6 @@ function Lists({ toggle }: { toggle?: () => void }) {
         </div>
     );
 }
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 export default Lists;

@@ -1,6 +1,6 @@
 'use client'
 
-import { POST } from '@/app/api/waitlist/rotue'
+import { POST } from '@/app/api/waitlist/route'
 import { WaitlistFormData } from '@/types'
 import { useState } from 'react'
 
