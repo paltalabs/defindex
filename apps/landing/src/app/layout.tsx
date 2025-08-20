@@ -1,6 +1,6 @@
-import "../styles/main.css";
 import type { Metadata } from "next";
-import { Manrope, Familjen_Grotesk, Inter_Tight, Inter } from "next/font/google";
+import { Familjen_Grotesk, Inter, Inter_Tight, Manrope } from "next/font/google";
+import "../styles/main.css";
 
 const manrope = Manrope({
     subsets: ["latin"],
@@ -26,11 +26,16 @@ const inter = Inter({
     variable: "--font-inter",
 });
 
+const favicon = "/images/favicon.ico";
+
 const fonts = [manrope, familjenGrotesk, interTight, inter].map((font) => font.variable).join(" ");
 
 export const metadata: Metadata = {
     title: "Defindex",
     description: "Diversified DeFi strategies for your users.",
+    icons: {
+        icon: favicon,
+    },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
