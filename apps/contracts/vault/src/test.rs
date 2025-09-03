@@ -15,7 +15,7 @@ use soroswap_setup::{
 // DeFindex Hodl Strategy Contract
 pub mod hodl_strategy {
     soroban_sdk::contractimport!(
-        file = "../target/wasm32-unknown-unknown/release/hodl_strategy.optimized.wasm"
+        file = "../target/wasm32v1-none/release/hodl_strategy.optimized.wasm"
     );
     pub type HodlStrategyClient<'a> = Client<'a>;
 }
@@ -28,7 +28,7 @@ pub fn create_hodl_strategy<'a>(e: &Env, asset: &Address) -> HodlStrategyClient<
 }
 pub mod unsafe_hodl_strategy {
     soroban_sdk::contractimport!(
-        file = "../target/wasm32-unknown-unknown/release/unsafe_hodl_strategy.optimized.wasm"
+        file = "../target/wasm32v1-none/release/unsafe_hodl_strategy.optimized.wasm"
     );
     pub type UnsafeHodlStrategyClient<'a> = Client<'a>;
 }
@@ -41,7 +41,7 @@ pub fn create_unsafe_hodl_strategy<'a>(e: &Env, asset: &Address) -> UnsafeHodlSt
 }
 pub mod fixed_strategy {
     soroban_sdk::contractimport!(
-        file = "../target/wasm32-unknown-unknown/release/fixed_apr_strategy.optimized.wasm"
+        file = "../target/wasm32v1-none/release/fixed_apr_strategy.optimized.wasm"
     );
     pub type FixedStrategyClient<'a> = Client<'a>;
 }
@@ -57,7 +57,7 @@ pub fn create_fixed_strategy<'a>(e: &Env, asset: &Address) -> FixedStrategyClien
 // DeFindex Vault Contract
 pub mod defindex_vault {
     soroban_sdk::contractimport!(
-        file = "../target/wasm32-unknown-unknown/release/defindex_vault.optimized.wasm"
+        file = "../target/wasm32v1-none/release/defindex_vault.optimized.wasm"
     );
     pub type DeFindexVaultClient<'a> = Client<'a>;
 }

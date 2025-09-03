@@ -1,7 +1,10 @@
 # 📊 DeFindex Monorepo
 
 # How to validate the code?
+First a commit, for example for mainnet deployment https://github.com/paltalabs/defindex/releases/tag/1.0.0
+
 ```
+git checkout f2d2785a805f40f5cb05921648ceec345168b7ed
 docker compose up -d
 cd contracts
 make build

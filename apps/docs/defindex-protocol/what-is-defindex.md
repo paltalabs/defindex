@@ -8,20 +8,31 @@ coverY: 0
 
 <figure><img src="../.gitbook/assets/Captura de pantalla 2024-12-03 a las 18.12.14.png" alt=""><figcaption></figcaption></figure>
 
-DeFindex is an innovative solution that enables wallet builders to offer yield-generating accounts to their users in a simple and secure way. By leveraging diverse decentralized finance (DeFi) strategies, DeFindex streamlines the process of earning passive income with crypto.
+**DeFindex** is a decentralized yield protocol designed to make DeFi simple.  
+It enables **wallet providers** to launch **yield-generating accounts** for their users—fast, secure, and without needing deep DeFi expertise. By connecting to a broad range of decentralized strategies, DeFindex makes it effortless to earn **passive income on crypto assets**.  
 
-### How DeFindex Works:
+### ⚙️ How DeFindex Works  
 
-* **Diverse Strategies**: Offers a wide range of DeFi options tailored to users' needs, making it simple to get started.
-* **Secure Automation**: Smart contracts handle everything, from investing to reinvesting.
-* **Maximized Earnings**: Earnings are automatically reinvested to achieve the best possible returns.
+- **Tokenized Vaults** → Users interact through DeFindex Vault contracts that gives them access to multiple DeFi opportunities.  
+- **Diverse Strategies** → Vaults can support one or more assets, and each asset can be allocated across multiple strategies—lending, liquidity pools, tokenized bonds, and more. Anyone can design strategies that plug into the DeFindex ecosystem.  
+- **Secure Management** → Vault managers can rebalance funds across strategies in a safe and descentralied way, always chasing the best available yield.  
+- **Optimized Returns** → Earnings are auto-compounded to maximize long-term returns, while **vault managers set fees** to monetize on top of user earnings.  
 
-### Solutions for Wallet Builders:
 
-* **Customized Portfolios**: Manage various DeFi strategies for your users that effectively maximize returns while reducing risk.
-* **Developer Tools**: Easily integrate customizable buttons into your apps, enabling users to start earning yield with just one click.
-* **Enhanced User Engagement**: Boost user participation with accounts that generate passive income.
+### 🧩 Solutions for Wallet Builders  
 
-### Security and Transparency:
+- **Dedicated User Vaults** → Launch a vault for your users, decide which assets and strategies to support, and manage fees.  
+- **Plug-and-Play Yield Accounts** → Offer savings and investment products directly inside your wallet.  
+- **Composable Portfolios** → Mix assets and strategies to tailor experiences and manage risk.  
+- **Developer-Friendly Tools** → APIs and SDKs make it easy to integrate yield with just a few lines of code.  
+- **Aligned Monetization** → Wallets earn a share of the yield whenever their users earn.  
 
-* **Secure, Decentralized Smart Contracts**: Every transaction is transparent and fully controlled by the user, ensuring peace of mind.
+### 🛠️ Solutions for DeFi Developers  
+
+- **Open Strategy Framework** → Build, test, and deploy strategies directly into the DeFindex ecosystem.  
+- **Plug-and-Play Exposure** → Once listed, your strategy can be adopted by multiple vaults and wallets instantly—scaling your impact and usage.  
+- **Composable Ecosystem** → Strategies are modular, allowing them to interact with other DeFi protocols and expand the range of opportunities available to users.  
+
+### 🔒 Security and Transparency  
+
+- **Built-in Safeguards** → Features like **Rebalance** and **Rescue** functions protect user funds against volatility and strategy risks.  

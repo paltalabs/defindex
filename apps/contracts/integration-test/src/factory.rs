@@ -1,6 +1,6 @@
 mod factory_contract {
     soroban_sdk::contractimport!(
-        file = "../target/wasm32-unknown-unknown/release/defindex_factory.optimized.wasm"
+        file = "../target/wasm32v1-none/release/defindex_factory.optimized.wasm"
     );
     pub type DeFindexFactoryClient<'a> = Client<'a>;
 }

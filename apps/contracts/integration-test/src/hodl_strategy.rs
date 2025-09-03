@@ -1,7 +1,7 @@
 // DeFindex Hodl Strategy Contract
 mod hodl_strategy {
     soroban_sdk::contractimport!(
-        file = "../target/wasm32-unknown-unknown/release/hodl_strategy.optimized.wasm"
+        file = "../target/wasm32v1-none/release/hodl_strategy.optimized.wasm"
     );
     pub type HodlStrategyClient<'a> = Client<'a>;
 }
