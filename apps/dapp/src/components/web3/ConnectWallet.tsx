@@ -5,7 +5,7 @@ import { shortenAddress } from "@/helpers/address"
 import './ConnectWallet.css'
 
 export const ConnectButton = () => {
-  const { address, kit, disconnect, connect } = useSorobanReact();
+  const { address, disconnect, connect } = useSorobanReact();
 
   const handleConnect = async () => {
     if (address) {

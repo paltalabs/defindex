@@ -68,9 +68,9 @@ export function useVaultCallback() {
                     result?.status !== StellarSdk.rpc.Api.GetTransactionStatus.SUCCESS
                 ) throw result;
                 return result
-            } catch (e: any) {
+            } catch (e: unknown) {
                 console.log(e)
-                const error = e.toString()
+                const error = String(e)
                 if (error.includes('The user rejected')) throw new Error('Request denied by user. Please try to sign again.')
                 if (error.includes('UnexpectedSize')) throw new Error('Invalid arguments length.')
                 if (error.includes('Error(Contract, #10)')) throw new Error('Insufficient funds.')
@@ -78,7 +78,7 @@ export function useVaultCallback() {
                 if (error.includes('Error(Contract, #128)')) throw new Error('Unwind more than available.')
                 if (error.includes('Error(Contract, #130)')) throw new Error('Action requires authorization.')
                 if (error.includes('Error(Contract, #144)')) throw new Error('Strategy paused.')
-                throw new Error('Failed to process the request.', error)
+                throw new Error('Failed to process the request.')
             }
         }
         , [sorobanContext])
@@ -95,10 +95,6 @@ export const useVault = (vaultAddress?: string | undefined) => {
             feeReceiver, 
             name, 
             assets,
-            TVL,
-            totalSupply,
-            idleFunds,
-            investedFunds,
             fees
         ] = await Promise.all([
             getVaultManager(vaultAddress),
@@ -106,13 +102,9 @@ export const useVault = (vaultAddress?: string | undefined) => {
             getVaultFeeReceiver(vaultAddress),
             getVaultName(vaultAddress),
             getVaultAssets(vaultAddress),
-            getTVL(vaultAddress),
-            getVaultTotalSupply(vaultAddress),
-            getIdleFunds(vaultAddress),
-            getInvestedFunds(vaultAddress),
             getFees(vaultAddress)
         ]);
-        for (let asset of assets){
+        for (const asset of assets){
             const symbol = await getTokenSymbol(asset.address, sorobanContext);
             if(symbol === 'native') asset.symbol = 'XLM'
             else asset.symbol = symbol
@@ -139,7 +131,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
 
     const getVaultManager = async (selectedVault: string) => {
         try {
-        const manager = await vault(VaultMethod.GET_MANAGER, selectedVault, undefined, false).then((res: any) => scValToNative(res as xdr.ScVal));
+        const manager = await vault(VaultMethod.GET_MANAGER, selectedVault, undefined, false).then((res: unknown) => scValToNative(res as xdr.ScVal));
         return manager;
         } catch (error) {
         console.error(error);
@@ -148,7 +140,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
     }
     const getVaultEmergencyManager = async (selectedVault: string) => {
         try {
-        const emergencyManager = await vault(VaultMethod.GET_EMERGENCY_MANAGER, selectedVault, undefined, false).then((res: any) => scValToNative(res));
+        const emergencyManager = await vault(VaultMethod.GET_EMERGENCY_MANAGER, selectedVault, undefined, false).then((res: unknown) => scValToNative(res as xdr.ScVal));
         return emergencyManager;
         } catch (error) {
         console.error(error);
@@ -157,7 +149,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
     }
     const getVaultFeeReceiver = async (selectedVault: string) => {
         try {
-        const feeReceiver = await vault(VaultMethod.GET_FEE_RECEIVER, selectedVault, undefined, false).then((res: any) => scValToNative(res));
+        const feeReceiver = await vault(VaultMethod.GET_FEE_RECEIVER, selectedVault, undefined, false).then((res: unknown) => scValToNative(res as xdr.ScVal));
         return feeReceiver;
         } catch (error) {
         console.error(error);
@@ -166,7 +158,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
     }
     const getVaultName = async (selectedVault: string) => {
         try {
-        const name = await vault(VaultMethod.GET_NAME, selectedVault, undefined, false).then((res: any) => scValToNative(res));
+        const name = await vault(VaultMethod.GET_NAME, selectedVault, undefined, false).then((res: unknown) => scValToNative(res as xdr.ScVal));
         return name;
         } catch (error) {
         console.error(error);
@@ -174,7 +166,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
     }
     const getVaultAssets = async (selectedVault: string) => {
         try {
-        const assets = await vault(VaultMethod.GET_ASSETS, selectedVault, undefined, false).then((res: any) => scValToNative(res));
+        const assets = await vault(VaultMethod.GET_ASSETS, selectedVault, undefined, false).then((res: unknown) => scValToNative(res as xdr.ScVal));
         return assets;
         } catch (error) {
         console.error(error);
@@ -182,7 +174,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
     }
     const getVaultTotalSupply = async (selectedVault: string) => {
         try {
-        const totalSupply = await vault(VaultMethod.TOTAL_SUPPLY, selectedVault, undefined, false).then((res: any) => scValToNative(res));
+        const totalSupply = await vault(VaultMethod.TOTAL_SUPPLY, selectedVault, undefined, false).then((res: unknown) => scValToNative(res as xdr.ScVal));
         const parsedTotalSupply = Number(totalSupply) / 10 ** 7;
         return parsedTotalSupply;
         } catch (error) {
@@ -193,13 +185,13 @@ export const useVault = (vaultAddress?: string | undefined) => {
         asset: string;
         idle_amounts: number;
         invested_amounts: number;
-        strategy_allocation: any[];
+        strategy_allocation: unknown[];
         total_amount: number;
     }
 
     const getTVL = async (selectedVault: string) => {
         try {
-        const totalValues = await vault(VaultMethod.TOTAL_MANAGED_FUNDS, selectedVault, undefined, false).then((res: any) => scValToNative(res));
+        const totalValues = await vault(VaultMethod.TOTAL_MANAGED_FUNDS, selectedVault, undefined, false).then((res: unknown) => scValToNative(res as xdr.ScVal));
         const {total_amount:value} = Object.values(totalValues)[0] as TotalManagedFunds;
         const parsedValue = Number(value) / 10 ** 7;
         return parsedValue;
@@ -210,10 +202,10 @@ export const useVault = (vaultAddress?: string | undefined) => {
     const getUserBalance = async (vaultAddress: string, address: string) => {
         try {
             const formattedAddress = new StellarSdk.Address(address).toScVal();
-            const dfTokens = await vault(VaultMethod.BALANCE, vaultAddress, [formattedAddress], false).then((res: any) => res);
-            const parsedDfTokens = scValToNative(dfTokens);
+            const dfTokens = await vault(VaultMethod.BALANCE, vaultAddress, [formattedAddress], false).then((res: unknown) => res);
+            const parsedDfTokens = scValToNative(dfTokens as xdr.ScVal);
             if(parsedDfTokens == '0') return 0;
-            const amount = await vault(VaultMethod.GET_ASSET_AMOUNT, vaultAddress, [dfTokens], false).then((res: any) => scValToNative(res));
+            const amount = await vault(VaultMethod.GET_ASSET_AMOUNT, vaultAddress, [dfTokens as xdr.ScVal], false).then((res: unknown) => scValToNative(res as xdr.ScVal));
             const amountValue = amount[0];
             const parsedAmount = Number(amountValue) / 10 ** 7;
         return parsedAmount;
@@ -228,14 +220,14 @@ export const useVault = (vaultAddress?: string | undefined) => {
             console.log('🚀 « assets:', assets);
             const idleFunds: AssetAmmount[] = [];
             for (const asset of assets) {
-                const rawBalance: any = await contractInvoke({
+                const rawBalance: unknown = await contractInvoke({
                     contractAddress: asset.address,
                     method: "balance",
                     args: [new StellarSdk.Address(vaultAddress).toScVal()],
                     sorobanContext,
                     signAndSend: false,
                 });
-                const balance = scValToNative(rawBalance);
+                const balance = scValToNative(rawBalance as xdr.ScVal);
                 console.log('🚀 « balance:', balance);
                 idleFunds.push({ address: asset.address, amount: Number(balance) / 10 ** 7 });
             }
@@ -247,7 +239,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
 
     const getInvestedFunds = async (vaultAddress: string) => {
         try {
-        const rawInvestedFunds = await vault(VaultMethod.TOTAL_MANAGED_FUNDS, vaultAddress, undefined, false).then((res: any) => scValToNative(res));
+        const rawInvestedFunds = await vault(VaultMethod.TOTAL_MANAGED_FUNDS, vaultAddress, undefined, false).then((res: unknown) => scValToNative(res as xdr.ScVal));
         const assets = Object.keys(rawInvestedFunds);
         const investedFunds: AssetAmmount[] = [];
         assets.forEach((asset)=>{
@@ -263,7 +255,7 @@ export const useVault = (vaultAddress?: string | undefined) => {
 
     const getFees = async (vaultAddress: string) => {
         try {
-        const fees = await vault(VaultMethod.GET_FEES, vaultAddress, undefined, false).then((res: any) => scValToNative(res));
+        const fees = await vault(VaultMethod.GET_FEES, vaultAddress, undefined, false).then((res: unknown) => scValToNative(res as xdr.ScVal));
         return fees || [50,0];
         } catch (error) {
         console.error(error);

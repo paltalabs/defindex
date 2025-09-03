@@ -2,6 +2,7 @@
 icon: hand-wave
 cover: .gitbook/assets/image 31.png
 coverY: 235
+favicon: .gitbook/assets/favicon.svg
 ---
 
 # Welcome

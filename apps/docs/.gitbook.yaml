@@ -1,0 +1,32 @@
+root: ./
+
+structure:
+  readme: README.md
+  summary: SUMMARY.md
+
+format: gitbook
+
+plugins:
+  - katex
+  - mathjax
+
+pluginsConfig:
+  mathjax:
+    forceSVG: true
+  katex:
+    delimiters:
+      - left: "$$"
+        right: "$$"
+        display: true
+      - left: "$"
+        right: "$"
+        display: false
+
+links:
+  sidebar:
+    "DeFindex": "/"
+
+assets:
+  - .gitbook/assets/
+
+favicon: .gitbook/assets/favicon.svg
