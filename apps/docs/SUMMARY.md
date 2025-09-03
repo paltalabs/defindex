@@ -12,6 +12,9 @@
   * [Creating a DeFindex Vault](getting-started/creating-a-defindex-vault.md)
   * [Mainnet Deployment](getting-started/mainnet-deployment.md)
   * [Troubleshooting](getting-started/troubleshooting.md)
+  * [General/FAQ](getting-started/general-faq/README.md)
+    * [Concepts](getting-started/general-faq/01-concepts.md)
+    * [Additional Resources](getting-started/general-faq/additional-resources.md)
 
 ## Whitepaper
 
@@ -35,7 +38,7 @@
 * [Introduction](wallet-developer/introduction.md)
 * [Quick Start Guide](wallet-developer/quickstart.md)
 * [Beginner Guide](wallet-developer/beginner-guide.md)
-* [Interactive Example](wallet-developer/beginner-example.html)
+* [Interactive Example](wallet-developer/interactive-example.md)
 * [Smart Contracts](wallet-developer/smart-contracts.md)
 * [API Integration Tutorial](wallet-developer/api.md)
 * [Vault](wallet-developer/vault.md)
@@ -52,13 +55,12 @@
 * [Strategies APY](strategies/strategies-apy.md)
 * [Building the Blend Strategy](03-how-to-create-a-strategy.md)
 
-## Users
-
-* [About Us](users/about-us.md)
-* [General/FAQ](users/general-faq/README.md)
-  * [Concepts](users/general-faq/01-concepts.md)
-  * [Additional Resources](users/general-faq/additional-resources.md)
-
 ## Security
 
 * [Security Audit](https://drive.proton.me/urls/GYBBP5TS00#kCE6EHDN6sth)
+
+## COMMUNITY
+
+* [About Us](community/about-us.md)
+* [Twitter](https://x.com/defindex_)
+* [Discord](https://discord.gg/e2qAhJCBmx)
