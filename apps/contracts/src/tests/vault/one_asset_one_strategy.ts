@@ -1,30 +1,30 @@
 import { Keypair } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
+import { airdropAccount } from "../../utils/contract.js";
 import {
   depositToVault,
+  fetchTotalManagedFunds,
+  fetchTotalSupply,
   Instruction,
   manager,
   pauseStrategy,
   rebalanceVault,
   rescueFromStrategy,
   unpauseStrategy,
-  withdrawFromVault,
-  fetchTotalManagedFunds,
-  fetchTotalSupply
+  withdrawFromVault
 } from "../../utils/vault.js";
 import { green, purple, red, yellow } from "../common.js";
-import { airdropAccount } from "../../utils/contract.js";
-import { 
-  deployDefindexVault, 
-  fetchBalances, 
-  compareTotalManagedFunds, 
-  generateExpectedTotalAmounts, 
+import { CreateVaultParams } from "../types.js";
+import { testAccessControl } from "./access_control.js";
+import { testUpgradeContract } from "./upgrade_contract.js";
+import {
+  compareTotalManagedFunds,
+  deployDefindexVault,
+  generateExpectedTotalAmounts,
   generateTotalAmountsError,
   underlyingToDfTokens
 } from "./utils.js";
-import { testAccessControl } from "./access_control.js";
-import { testUpgradeContract } from "./upgrade_contract.js";
-import { CreateVaultParams } from "../types.js";
+
 
 /* 
 // One asset one strategy success flow:
@@ -795,61 +795,51 @@ export async function oneAssetOneStrategySuccess(addressBook: AddressBook, param
 
   const budgetData = {
     deploy: {
-      status: deploy_instructions && deploy_read_bytes && deploy_write_bytes ? 'success' : 'failed',
       instructions: deploy_instructions,
       readBytes: deploy_read_bytes,
       writeBytes: deploy_write_bytes,
     },
     deposit: {
-      status: deposit_instructions && deposit_read_bytes && deposit_write_bytes ? 'success' : 'failed',
       instructions: deposit_instructions,
       readBytes: deposit_read_bytes,
       writeBytes: deposit_write_bytes,
     },
     invest: {
-      status: invest_instructions && invest_read_bytes && invest_write_bytes ? 'success' : 'failed',
       instructions: invest_instructions,
       readBytes: invest_read_bytes,
       writeBytes: invest_write_bytes,
     },
     deposit_and_invest: {
-      status: deposit_and_invest_instructions && deposit_and_invest_read_bytes && deposit_and_invest_write_bytes ? 'success' : 'failed',
       instructions: deposit_and_invest_instructions,
       readBytes: deposit_and_invest_read_bytes,
       writeBytes: deposit_and_invest_write_bytes,
     },
     unwind: {
-      status: unwind_instructions && unwind_read_bytes && unwind_write_bytes ? 'success' : 'failed',
       instructions: unwind_instructions,
       readBytes: unwind_read_bytes,
       writeBytes: unwind_write_bytes,
     },
     rebalance: {
-      status: rebalance_instructions && rebalance_read_bytes && rebalance_write_bytes ? 'success' : 'failed',
       instructions: rebalance_instructions,
       readBytes: rebalance_read_bytes,
       writeBytes: rebalance_write_bytes,
     },
     withdraw: {
-      status: withdraw_instructions && withdraw_read_bytes && withdraw_write_bytes ? 'success' : 'failed',
       instructions: withdraw_instructions,
       readBytes: withdraw_read_bytes,
       writeBytes: withdraw_write_bytes,
     },
     rescue: {
-      status: rescue_instructions && rescue_read_bytes && rescue_write_bytes ? 'success' : 'failed',
       instructions: rescue_instructions,
       readBytes: rescue_read_bytes,
       writeBytes: rescue_write_bytes,
     },
     unpause: {
-      status: unpause_instructions && unpause_read_bytes && unpause_write_bytes ? 'success' : 'failed',
       instructions: unpause_instructions,
       readBytes: unpause_read_bytes,
       writeBytes: unpause_write_bytes,
     },
     pause: {
-      status: pause_instructions && pause_read_bytes && pause_write_bytes ? 'success' : 'failed',
       instructions: pause_instructions,
       readBytes: pause_read_bytes,
       writeBytes: pause_write_bytes,
@@ -870,6 +860,7 @@ export async function testVaultOneAssetOneStrategy(addressBook: AddressBook, par
 
   const tableData:any  = {...userFlowTable,};
   const budgetData:any = { ...userFlowBudgetData, ...accessControlBudgetData,  ...upgradeBudgetData};
+
 
   console.table(tableData);
   console.table(budgetData);

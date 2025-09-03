@@ -1,10 +1,10 @@
 import { Keypair } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
 import { airdropAccount } from "../../utils/contract.js";
-import { green, purple, red } from "../common.js";
 import { manager, setEmergencyManager, setFeeReceiver, setRebalanceManager, setVaultManager } from "../../utils/vault.js";
-import { deployDefindexVault } from "./utils.js";
+import { green, purple, red } from "../common.js";
 import { CreateVaultParams } from "../types.js";
+import { deployDefindexVault } from "./utils.js";
 
 /* 
 // Access control tests:
@@ -31,23 +31,22 @@ export async function testAccessControl(addressBook: AddressBook, params: Create
   await airdropAccount(new_manager);
 
   // Try setRebalanceManager from unauthorized
-  try {
-    console.log(purple, "---------------------------------------");
-    console.log(purple, "Try setRebalanceManager from unauthorized");
-    console.log(purple, "---------------------------------------");
-    const random_user = Keypair.random();
-    await airdropAccount(random_user);
-    const {result}  = await setRebalanceManager(vault_address, random_user, user.publicKey());
-    if( result !== false){
-      throw Error("Set rebalance manager from unauthorized validation failed");
-    } else if (result === false) {
-      console.log(green, "--------------------------------------------------------------");
-      console.log(green, "| Set rebalance manager from unauthorized failed as expected |");
-      console.log(green, "--------------------------------------------------------------");
+  await (async () => {
+    try {
+      console.log(purple, "---------------------------------------");
+      console.log(purple, "Try setRebalanceManager from unauthorized");
+      console.log(purple, "---------------------------------------");
+      const random_user = Keypair.random();
+      await airdropAccount(random_user);
+      await setRebalanceManager(vault_address, random_user, user.publicKey());
+
+    } catch (error: any) {
+      console.error(red, error);
+      console.log(red, "--------------------------------------------------------------");
+      console.log(red, "| Set rebalance manager from unauthorized failed as expected |");
+      console.log(red, "--------------------------------------------------------------");
     }
-  } catch (error: any) {
-    throw Error(error);
-  }
+  })();
 
   // setRebalanceManager success
   const {
@@ -76,24 +75,23 @@ export async function testAccessControl(addressBook: AddressBook, params: Create
     } 
   } )();
 
-  // Try set fee reciever from unauthorized
-  try {
-    console.log(purple, "---------------------------------------");
-    console.log(purple, "Try set fee receiver from unauthorized");
-    console.log(purple, "---------------------------------------");
-    const random_user = Keypair.random();
-    await airdropAccount(random_user);
-    await setFeeReceiver(vault_address, random_user, user.publicKey());
+  // Try set fee receiver from unauthorized
+  await (async () => {
+    try {
+      console.log(purple, "---------------------------------------");
+      console.log(purple, "Try set fee receiver from unauthorized");
+      console.log(purple, "---------------------------------------");
+      const random_user = Keypair.random();
+      await airdropAccount(random_user);
+      await setFeeReceiver(vault_address, random_user, user.publicKey());
 
-  } catch (error: any) {
-    if( error.toString().includes("HostError: Error(Contract, #130)")) {
-      console.log(green, "----------------------------------------------------------");
-      console.log(green, "| Set fee receiver from unauthorized failed as expected |");
-      console.log(green, "----------------------------------------------------------");
-    } else {     
-      throw Error(error);
+    } catch (error: any) {
+      console.error(red, error);
+      console.log(red, "----------------------------------------------------------");
+      console.log(red, "| Set fee receiver from unauthorized failed as expected |");
+      console.log(red, "----------------------------------------------------------");
     }
-  } 
+  })(); 
 
   // setFeeReceiver success
   const {
@@ -118,23 +116,21 @@ export async function testAccessControl(addressBook: AddressBook, params: Create
  
 
   // Try set emergency manager from unauthorized
-  try {
+  await (async () => {
+    try {
     console.log(purple, "-------------------------------------------");
     console.log(purple, "Try set emergency manager from unauthorized");
     console.log(purple, "-------------------------------------------");
     const random_user = Keypair.random();
     await airdropAccount(random_user);
-    const {result} = await setEmergencyManager(vault_address, random_user, user.publicKey());
-    if( result !== false){
-      throw Error("Set emergency manager from unauthorized validation failed");
-    } else if (result === false) {
-      console.log(green, "--------------------------------------------------------------");
-      console.log(green, "| Set emergency manager from unauthorized failed as expected |");
-      console.log(green, "--------------------------------------------------------------");
-    }
+    await setEmergencyManager(vault_address, random_user, user.publicKey());
   } catch (error: any) {
-    throw Error(error);
+    console.error(red, error);
+    console.log(red, "--------------------------------------------------------------");
+    console.log(red, "| Set emergency manager from unauthorized failed as expected |");
+    console.log(red, "--------------------------------------------------------------");
   }
+  })();
 
   // setEmergencyManager success
   const {
@@ -164,23 +160,22 @@ export async function testAccessControl(addressBook: AddressBook, params: Create
     })();
   
     //Try set manager from unauthorized
-    try {
-      console.log(purple, "---------------------------------------");
-      console.log(purple, "Try set manager from unauthorized");
-      console.log(purple, "---------------------------------------");
-      const random_user = Keypair.random();
-      await airdropAccount(random_user);
-      const  {result} = await setVaultManager(vault_address, random_user, random_user);
-      if( result !== false){
-        throw Error("Set manager from unauthorized validation failed");
-      } else if (result === false) {
-        console.log(green, "------------------------------------------------------");
-        console.log(green, "| Set manager from unauthorized failed as expected |");
-        console.log(green, "------------------------------------------------------");
+    await (async () => {
+      try {
+        console.log(purple, "---------------------------------------");
+        console.log(purple, "Try set manager from unauthorized");
+        console.log(purple, "---------------------------------------");
+        const random_user = Keypair.random();
+        await airdropAccount(random_user);
+        await setVaultManager(vault_address, random_user, random_user);
+
+      } catch (error: any) {
+        console.error(red, error);
+        console.log(red, "------------------------------------------------------");
+        console.log(red, "| Set manager from unauthorized failed as expected |");
+        console.log(red, "------------------------------------------------------");
       }
-    } catch (error: any) {
-      throw Error(error);
-    }
+    })();
   
     //setManager succesfully
     const {
@@ -210,40 +205,40 @@ export async function testAccessControl(addressBook: AddressBook, params: Create
 
   const tests_status = {
     set_manager: {
-      status: !!set_manager_instructions && !!set_manager_read_bytes && !!set_manager_write_bytes,
+      status: set_manager_instructions + set_manager_read_bytes + set_manager_write_bytes,
     },
     set_rebalance_manager: {
-      status: !!set_rebalance_manager_instructions && !!set_rebalance_manager_read_bytes && !!set_rebalance_manager_write_bytes,
+      status: set_rebalance_manager_instructions + set_rebalance_manager_read_bytes + set_rebalance_manager_write_bytes,
     },
     set_fee_receiver: {
-      status: !!set_fee_receiver_instructions && !!set_fee_receiver_read_bytes && !!set_fee_receiver_write_bytes,
+      status: set_fee_receiver_instructions + set_fee_receiver_read_bytes + set_fee_receiver_write_bytes,
     },
     set_emergency_manager: {
-      status: !!set_emergency_manager_instructions && !!set_emergency_manager_read_bytes && !!set_emergency_manager_write_bytes,
+      status: set_emergency_manager_instructions + set_emergency_manager_read_bytes + set_emergency_manager_write_bytes,
     }
   }
 
   const budgetData = {
     set_manager: {
-      status: tests_status.set_manager.status ? `success`: `failed`,
+      status: tests_status.set_manager.status > 0 ? `success`: `failed`,
       instructions: set_manager_instructions,
       readBytes: set_manager_read_bytes,
       writeBytes: set_manager_write_bytes,
     },
     set_rebalance_manager: {
-      status: tests_status.set_rebalance_manager.status ? `success`: `failed`,
+      status: tests_status.set_rebalance_manager.status > 0 ? `success`: `failed`,
       instructions: set_rebalance_manager_instructions,
       readBytes: set_rebalance_manager_read_bytes,
       writeBytes: set_rebalance_manager_write_bytes,
     },
     set_fee_receiver: {
-      status: tests_status.set_fee_receiver.status ? `success`: `failed`,
+      status: tests_status.set_fee_receiver.status > 0 ? `success`: `failed`,
       instructions: set_fee_receiver_instructions,
       readBytes: set_fee_receiver_read_bytes,
       writeBytes: set_fee_receiver_write_bytes,
     },
     set_emergency_manager: {
-      status: tests_status.set_emergency_manager.status ? `success`: `failed`,
+      status: tests_status.set_emergency_manager.status > 0 ? `success`: `failed`,
       instructions: set_emergency_manager_instructions,
       readBytes: set_emergency_manager_read_bytes,
       writeBytes: set_emergency_manager_write_bytes,

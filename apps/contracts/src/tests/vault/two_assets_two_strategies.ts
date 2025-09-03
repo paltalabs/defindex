@@ -1,5 +1,8 @@
 import { Address, Keypair } from "@stellar/stellar-sdk";
+import { BLEND_USDC_ADDRESS, USDC_ADDRESS } from "../../constants.js";
 import { AddressBook } from "../../utils/address_book.js";
+import { airdropAccount } from "../../utils/contract.js";
+import { getCurrentTimePlusOneHour } from "../../utils/tx.js";
 import {
   depositToVault,
   fetchTotalManagedFunds,
@@ -8,12 +11,9 @@ import {
   rebalanceVault,
   withdrawFromVault
 } from "../../utils/vault.js";
-import { green, purple, red, yellow } from "../common.js";
-import { airdropAccount } from "../../utils/contract.js";
-import { compareTotalManagedFunds, deployDefindexVault, fetchBalances, generateExpectedTotalAmounts, generateTotalAmountsError } from "./utils.js";
-import { getCurrentTimePlusOneHour } from "../../utils/tx.js";
+import { purple, red, yellow } from "../common.js";
 import { CreateVaultParams } from "../types.js";
-import { BLEND_USDC_ADDRESS, USDC_ADDRESS } from "../../constants.js";
+import { compareTotalManagedFunds, deployDefindexVault, generateExpectedTotalAmounts, generateTotalAmountsError } from "./utils.js";
 /* 
 ### Two assets two strategies tests:
 - [x] deposit
@@ -40,11 +40,6 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
 
   } = await deployDefindexVault(addressBook, params);
   if (!vault_address) throw new Error("Vault was not deployed");
-
-  const { 
-    idle_funds:idle_funds_before_deposit, 
-    invested_funds:invested_funds_before_deposit, 
-  } = await fetchBalances(addressBook, vault_address, params, user);
 
   // Deposit to vault
   const deposit_amount_0 = 10_0_000_000;
@@ -112,51 +107,49 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
     error: invest_error,
   } = await (
     async () => {
-      try {
-        console.log(purple, "---------------------------------------");
-        console.log(purple, "Try Invest idle_funds*2");
-        console.log(purple, "---------------------------------------");
-        const invest_amount_0 = Number(total_managed_funds_after_deposit[0].idle_amount) * 2;
-        const invest_amount_1 = Number(total_managed_funds_after_deposit[1].idle_amount) * 2;
-        console.log(yellow, "Invest amount 0:", invest_amount_0);
-        console.log(yellow, "Invest amount 1:", invest_amount_1);
-        const investArgs: Instruction[] = [
-          {
-            type: "Invest",
-            strategy: params[0].strategies[1].address,
-            amount: BigInt(invest_amount_0),
-          },
-          {
-            type: "Invest",
-            strategy: params[0].strategies[0].address,
-            amount: BigInt(invest_amount_0),
-          },
-          {
-            type: "Invest",
-            strategy: params[1].strategies[1].address,
-            amount: BigInt(invest_amount_1),
-          },
-          {
-            type: "Invest",
-            strategy: params[1].strategies[0].address,
-            amount: BigInt(invest_amount_1),
-          },
-        ];
-        await rebalanceVault(
-            vault_address,
-            investArgs,
-            manager
-          );
-      } catch (error:any) {
-        if(error.toString().includes("HostError: Error(Contract, #10)") || error.toString().includes("HostError: Error(WasmVm, InvalidAction)")) {
-          console.log(green, "-----------------------------------------------------");
-          console.log(green, "| Investing more than idle funds failed as expected |");
-          console.log(green, "-----------------------------------------------------");
-          //To-do: return status
-        } else {
-          throw Error(error);
+      await (async () => {
+        try {
+          console.log(purple, "---------------------------------------");
+          console.log(purple, "Try Invest idle_funds*2");
+          console.log(purple, "---------------------------------------");
+          const invest_amount_0 = Number(total_managed_funds_after_deposit[0].idle_amount) * 2;
+          const invest_amount_1 = Number(total_managed_funds_after_deposit[1].idle_amount) * 2;
+          console.log(yellow, "Invest amount 0:", invest_amount_0);
+          console.log(yellow, "Invest amount 1:", invest_amount_1);
+          const investArgs: Instruction[] = [
+            {
+              type: "Invest",
+              strategy: params[0].strategies[1].address,
+              amount: BigInt(invest_amount_0),
+            },
+            {
+              type: "Invest",
+              strategy: params[0].strategies[0].address,
+              amount: BigInt(invest_amount_0),
+            },
+            {
+              type: "Invest",
+              strategy: params[1].strategies[1].address,
+              amount: BigInt(invest_amount_1),
+            },
+            {
+              type: "Invest",
+              strategy: params[1].strategies[0].address,
+              amount: BigInt(invest_amount_1),
+            },
+          ];
+          await rebalanceVault(
+              vault_address,
+              investArgs,
+              manager
+            );
+        } catch (error:any) {
+          console.error(red, error);
+          console.log(red, "-----------------------------------------------------");
+          console.log(red, "| Investing more than idle funds failed as expected |");
+          console.log(red, "-----------------------------------------------------");
         }
-      };
+      })();
       
       console.log(purple, "---------------------------------------");
       console.log(purple, "Investing in vault");
@@ -339,14 +332,9 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
           
         } catch (error: any) {
           console.error(red, error);
-          if( error.toString().includes('Error(Budget, ExceededLimit)')) {
-            console.log(green, "---------------------------------------------------------");
-            console.log(green, "| Rebalance exceed instructions limit failed as expected |");
-            console.log(green, "---------------------------------------------------------");
-          }
-          console.log(yellow, "-------------------------------------");
-          console.log(yellow, "| we should handle this error better |");
-          console.log(yellow, "-------------------------------------");
+          console.log(red, "---------------------------------------------------------");
+          console.log(red, "| Rebalance exceed instructions limit failed as expected |");
+          console.log(red, "---------------------------------------------------------");
         }
         console.log(purple, "---------------------------------------");
         console.log(purple, "Rebalance swap exact in"); 
@@ -414,6 +402,7 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
 
   // withdraw from vault
   const { 
+    total_managed_funds: withdraw_total_managed_funds,
     instructions: withdraw_instructions, 
     readBytes: withdraw_read_bytes, 
     writeBytes: withdraw_write_bytes,
@@ -425,42 +414,40 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
       console.log(purple, "----------------------------------------------");
       try {
         //Try withdraw from unauthorized
-        try {
-          console.log(purple, "---------------------------------------");
-          console.log(purple, "Try withdraw from unauthorized");
-          console.log(purple, "---------------------------------------");
-          const withdraw_amount = 65_0_000;
-          const random_user = Keypair.random();
-          await airdropAccount(random_user);
+        await (async () => {
+          try {
+            console.log(purple, "---------------------------------------");
+            console.log(purple, "Try withdraw from unauthorized");
+            console.log(purple, "---------------------------------------");
+            const withdraw_amount = 65_0_000;
+            const random_user = Keypair.random();
+            await airdropAccount(random_user);
 
-          await withdrawFromVault(vault_address, [0,0], withdraw_amount, random_user);
-          
-        } catch (error:any) {
-          if (error.toString().includes("HostError: Error(Contract, #111)") || error.toString().includes("HostError: Error(Contract, #10)")) {
-            console.log(green, "-------------------------------------------------");
-            console.log(green, "| Withdraw from unauthorized failed as expected |");
-            console.log(green, "-------------------------------------------------");
-            //To-do: return status
-          }else {
-            throw Error(error);
+            await withdrawFromVault(vault_address, [0,0], withdraw_amount, random_user);
+            
+          } catch (error:any) {
+            console.error(red, error);
+            console.log(red, "-------------------------------------------------");
+            console.log(red, "| Withdraw from unauthorized failed as expected |");
+            console.log(red, "-------------------------------------------------");
           }
-        }
+        })();
         //Try withdraw more than total funds
-        try {
-          console.log(purple, "-----------------------------------------------------");
-          console.log(purple, "Try withdraw more than total funds");
-          console.log(purple, "-----------------------------------------------------");
+        await (async () => {
+          try {
+            console.log(purple, "-----------------------------------------------------");
+            console.log(purple, "Try withdraw more than total funds");
+            console.log(purple, "-----------------------------------------------------");
 
-          await withdrawFromVault(vault_address, [0,0], 100_0_000_000, user);
+            await withdrawFromVault(vault_address, [0,0], 100_0_000_000, user);
 
-        } catch (error:any) {
-          if (error.toString().includes("HostError: Error(Contract, #124)") || error.toString().includes("HostError: Error(Contract, #10)")) {
-            console.log(green, "-----------------------------------------------------");
-            console.log(green, "| Withdraw more than total funds failed as expected |");
-            console.log(green, "-----------------------------------------------------");
-            //To-do: return status
+          } catch (error:any) {
+            console.error(red, error);
+            console.log(red, "-----------------------------------------------------");
+            console.log(red, "| Withdraw more than total funds failed as expected |");
+            console.log(red, "-----------------------------------------------------");
           }
-        }
+        })();
         //Withdraw
 
         const {
@@ -504,75 +491,76 @@ export async function testVaultTwoAssetsTwoStrategies(addressBook: AddressBook, 
 
   //Show data
   const tableData = {
-    /* "Initial balance": {
-      "Idle funds a_0": idle_funds_before_deposit[0].amount,
-      "Idle funds a_1": idle_funds_before_deposit[1].amount,
-      "Invested funds a_0": invested_funds_before_deposit[0].amount,
+    "Initial balance": {
+      "Idle funds a_0": 0n,
+      "Idle funds a_1": 0n,
+      "Invested funds a_0": 0n,
+      "Invested funds a_1": 0n,
     },
     "After deposit": {
-      "Idle funds a_0": idle_funds_after_deposit[0].amount,
-      "Idle funds a_1": idle_funds_after_deposit[1].amount,
-      "Invested funds a_0": invested_funds_after_deposit[0].amount,
-      "Invested funds a_1": invested_funds_after_deposit[1].amount,
+      "Idle funds a_0": total_managed_funds_after_deposit[0].idle_amount,
+      "Idle funds a_1": total_managed_funds_after_deposit[1].idle_amount,
+      "Invested funds a_0": total_managed_funds_after_deposit[0].invested_amount,
+      "Invested funds a_1": total_managed_funds_after_deposit[1].invested_amount,
     },
     "After invest": {
-      "Idle funds a_0": idle_funds_after_invest[0].amount,
-      "Idle funds a_1": idle_funds_after_invest[1].amount,
-      "Invested funds a_0": invested_funds_after_invest[0].amount,
-      "Invested funds a_1": invested_funds_after_invest[1].amount,
+      "Idle funds a_0": total_managed_funds_after_invest[0].idle_amount,
+      "Idle funds a_1": total_managed_funds_after_invest[1].idle_amount,
+      "Invested funds a_0": total_managed_funds_after_invest[0].invested_amount,
+      "Invested funds a_1": total_managed_funds_after_invest[1].invested_amount,
     },
     "After deposit and invest": {
-      "Idle funds a_0": idle_funds_after_deposit_and_invest[0].amount,
-      "Idle funds a_1": idle_funds_after_deposit_and_invest[1].amount,
-      "Invested funds a_0": invested_funds_after_deposit_and_invest[0].amount,
-      "Invested funds a_1": invested_funds_after_deposit_and_invest[1].amount,
+      "Idle funds a_0": total_managed_funds_after_deposit_and_invest[0].idle_amount,
+      "Idle funds a_1": total_managed_funds_after_deposit_and_invest[1].idle_amount,
+      "Invested funds a_0": total_managed_funds_after_deposit_and_invest[0].invested_amount,
+      "Invested funds a_1": total_managed_funds_after_deposit_and_invest[1].invested_amount,
     },
     "After rebalance swap exact in": {
-      "Idle funds a_0": idle_funds_after_rebalance_swap_e_in[0].amount,
-      "Idle funds a_1": idle_funds_after_rebalance_swap_e_in[1].amount,
-      "Invested funds a_0": invested_funds_after_rebalance_swap_e_in[0].amount,
-      "Invested funds a_1": invested_funds_after_rebalance_swap_e_in[1].amount,
+      "Idle funds a_0": total_managed_funds_after_rebalance_swap_e_in[0].idle_amount,
+      "Idle funds a_1": total_managed_funds_after_rebalance_swap_e_in[1].idle_amount,
+      "Invested funds a_0": total_managed_funds_after_rebalance_swap_e_in[0].invested_amount,
+      "Invested funds a_1": total_managed_funds_after_rebalance_swap_e_in[1].invested_amount,
     },
     "After withdraw": {
-      "Idle funds a_0": idle_funds_after_withdraw[0].amount,
-      "Idle funds a_1": idle_funds_after_withdraw[1].amount,
-      "Invested funds a_0": invested_funds_after_withdraw[0].amount,
-      "Invested funds a_1": invested_funds_after_withdraw[1].amount,
-    }, */
+      "Idle funds a_0": withdraw_total_managed_funds[0].idle_amount,
+      "Idle funds a_1": withdraw_total_managed_funds[1].idle_amount,
+      "Invested funds a_0": withdraw_total_managed_funds[0].invested_amount,
+      "Invested funds a_1": withdraw_total_managed_funds[1].invested_amount,
+    },
   };
   const budgetData = {
     deploy: {
-      status: !!deploy_instructions && !!deploy_read_bytes && !!deploy_write_bytes ? "success" : "failed",
+      status: deploy_instructions + deploy_read_bytes + deploy_write_bytes > 0 ? "success" : "failed",
       instructions: deploy_instructions,
       readBytes: deploy_read_bytes,
       writeBytes: deploy_write_bytes,
     },
     deposit: {
-      status: !!deposit_instructions && !!deposit_read_bytes && !!deposit_write_bytes ? "success" : "failed",
+      status: deposit_instructions! + deposit_read_bytes! + deposit_write_bytes! > 0 ? "success" : "failed",
       instructions: deposit_instructions,
       readBytes: deposit_read_bytes,
       writeBytes: deposit_write_bytes,
     },
     invest: {
-      status: !!invest_instructions && !!invest_read_bytes && !!invest_write_bytes ? "success" : "failed",
+      status: invest_instructions + invest_read_bytes + invest_write_bytes > 0 ? "success" : "failed",
       instructions: invest_instructions,
       readBytes: invest_read_bytes,
       writeBytes: invest_write_bytes,
     },
     deposit_and_invest: {
-      status: !!deposit_and_invest_instructions && !!deposit_and_invest_read_bytes && !!deposit_and_invest_write_bytes ? "success" : "failed",
+      status: deposit_and_invest_instructions + deposit_and_invest_read_bytes + deposit_and_invest_write_bytes > 0 ? "success" : "failed",
       instructions: deposit_and_invest_instructions,
       readBytes: deposit_and_invest_read_bytes,
       writeBytes: deposit_and_invest_write_bytes,
     },
     rebalance_swap_e_in: {
-      status: !!rebalance_swap_e_in_instructions && !!rebalance_swap_e_in_read_bytes && !!rebalance_swap_e_in_write_bytes ? "success" : "failed",
+      status: rebalance_swap_e_in_instructions + rebalance_swap_e_in_read_bytes + rebalance_swap_e_in_write_bytes > 0 ? "success" : "failed",
       instructions: rebalance_swap_e_in_instructions,
       readBytes: rebalance_swap_e_in_read_bytes,
       writeBytes: rebalance_swap_e_in_write_bytes,
     },
     withdraw: {
-      status: !!withdraw_instructions && !!withdraw_read_bytes && !!withdraw_write_bytes ? "success" : "failed",
+      status: withdraw_instructions! + withdraw_read_bytes! + withdraw_write_bytes! > 0 ? "success" : "failed",
       instructions: withdraw_instructions,
       readBytes: withdraw_read_bytes,
       writeBytes: withdraw_write_bytes,

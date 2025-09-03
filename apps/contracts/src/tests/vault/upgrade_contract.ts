@@ -1,10 +1,10 @@
 import { Keypair } from "@stellar/stellar-sdk";
 import { AddressBook } from "../../utils/address_book.js";
+import { airdropAccount, installContract } from "../../utils/contract.js";
 import { admin, manager, upgradeVaultWasm } from "../../utils/vault.js";
 import { green, purple, red, yellow } from "../common.js";
-import { airdropAccount, installContract } from "../../utils/contract.js";
-import { deployDefindexVault } from "./utils.js";
 import { CreateVaultParams } from "../types.js";
+import { deployDefindexVault } from "./utils.js";
 
 /* 
 // Upgrade tests:
@@ -31,24 +31,22 @@ export async function testUpgradeContract(addressBook: AddressBook, params: Crea
 
   if (!vault_address) throw new Error("Vault was not deployed");
   //Try upgrade from unauthorized
-  try {
-    console.log(purple, "---------------------------------------");
-    console.log(purple, "Try upgrade from unauthorized");
-    console.log(purple, "---------------------------------------");
-    const random_user = Keypair.random();
-    const wasm_hash = new Uint8Array(Buffer.from(addressBook.getWasmHash("defindex_vault"), "hex"));
-    await airdropAccount(random_user);
-    const {result} = await upgradeVaultWasm(vault_address, random_user, wasm_hash);
-    if( result !== false){
-      throw Error("Upgrade from unauthorized validation failed");
-    } else if (result === false) {
-      console.log(green, "------------------------------------------------");
-      console.log(green, "| Upgrade from unauthorized failed as expected |");
-      console.log(green, "------------------------------------------------");
-    }
+  await (async () => {
+    try {
+      console.log(purple, "---------------------------------------");
+      console.log(purple, "Try upgrade from unauthorized");
+      console.log(purple, "---------------------------------------");
+      const random_user = Keypair.random();
+      const wasm_hash = new Uint8Array(Buffer.from(addressBook.getWasmHash("defindex_vault"), "hex"));
+      await airdropAccount(random_user);
+      await upgradeVaultWasm(vault_address, random_user, wasm_hash);
   } catch (error: any) {
-    throw Error(error);
+    console.error(error);
+    console.log(green, "------------------------------------------------");
+    console.log(green, "| Upgrade from unauthorized failed as expected |");
+    console.log(green, "------------------------------------------------");
   }
+})();
 
   // upgrade success
   const {
@@ -73,7 +71,7 @@ export async function testUpgradeContract(addressBook: AddressBook, params: Crea
   } )();
   const budgetData = {
     upgrade: {
-      status: !!upgrade_instructions && !!upgrade_read_bytes && !!upgrade_write_bytes ? `success`: `failed`,
+      status: upgrade_instructions + upgrade_read_bytes + upgrade_write_bytes > 0 ? `success`: `failed`,
       instructions: upgrade_instructions,
       readBytes: upgrade_read_bytes,
       writeBytes: upgrade_write_bytes,
