@@ -1,20 +1,22 @@
-# DeFindex Integration Guide for Beginners
+# Beginner Guide
 
 ## 📖 What You'll Learn
 
 This guide teaches you how to integrate DeFindex API into your application using:
-- **Freighter Wallet** for secure wallet connection and transaction signing
-- **DeFindex API** for creating yield-generating vault deposits and withdrawals
-- **Vault concepts** like dfTokens (vault shares) and investment strategies
+
+* **Freighter Wallet** for secure wallet connection and transaction signing
+* **DeFindex API** for creating yield-generating vault deposits and withdrawals
+* **Vault concepts** like dfTokens (vault shares) and investment strategies
 
 ## 🎯 Prerequisites
 
 Before starting, make sure you have:
-- Basic knowledge of **HTML, CSS, and JavaScript**
-- **Freighter Wallet** extension installed
-- An **API key** from DeFindex (contact team on [Discord](https://discord.gg/ftPKMPm38f) for access)
-- A **web browser** with developer tools
-- **5-10 minutes** of focused time
+
+* Basic knowledge of **HTML, CSS, and JavaScript**
+* **Freighter Wallet** extension installed
+* An **API key** from DeFindex (contact team on [Discord](https://discord.gg/ftPKMPm38f) for access)
+* A **web browser** with developer tools
+* **5-10 minutes** of focused time
 
 ## 🏗️ Project Structure Overview
 
@@ -59,14 +61,16 @@ async function connectStellarWallet() {
 ```
 
 **🔍 What this function does:**
+
 1. **Checks** if Freighter wallet is available
 2. **Requests** permission to access the wallet
 3. **Stores** the wallet address for later use
 4. **Updates** the UI to show connection status
 
 **🚨 Common issues:**
-- User doesn't have Freighter installed → Show installation instructions
-- User denies permission → Ask them to try again
+
+* User doesn't have Freighter installed → Show installation instructions
+* User denies permission → Ask them to try again
 
 ### Function 2: Get Vault Info and Build Deposit Transaction 💰
 
@@ -111,6 +115,7 @@ async function getVaultInfoAndDeposit() {
 ```
 
 **🔍 What this function does:**
+
 1. **Validates** wallet connection first
 2. **Fetches** vault information (name, assets, strategies)
 3. **Builds** a deposit transaction for the specified amount
@@ -118,10 +123,11 @@ async function getVaultInfoAndDeposit() {
 5. **Updates** the UI to enable the next step
 
 **🚨 Common issues:**
-- Wallet not connected → Connect wallet first
-- API key expired → Contact DeFindex team for new key
-- Insufficient balance → Make sure wallet has enough XLM
-- Vault not found → Check vault address and network
+
+* Wallet not connected → Connect wallet first
+* API key expired → Contact DeFindex team for new key
+* Insufficient balance → Make sure wallet has enough XLM
+* Vault not found → Check vault address and network
 
 ### Function 3: Sign the Transaction ✍️
 
@@ -164,15 +170,17 @@ async function signTransaction() {
 ```
 
 **🔍 What this function does:**
+
 1. **Validates** wallet connection and transaction availability
 2. **Calls** Freighter to sign the transaction
 3. **Stores** the signed transaction in app state
 4. **Updates** UI to enable final step
 
 **🚨 Common issues:**
-- User rejects signing → Ask them to try again
-- Freighter not connected → Check wallet connection
-- Wrong network → Ensure Freighter is on testnet
+
+* User rejects signing → Ask them to try again
+* Freighter not connected → Check wallet connection
+* Wrong network → Ensure Freighter is on testnet
 
 ### Function 4: Send Transaction to Network 🚀
 
@@ -221,6 +229,7 @@ async function sendTransaction() {
 ```
 
 **🔍 What this function does:**
+
 1. **Validates** we have a signed transaction ready
 2. **Submits** the transaction to the Stellar network via Soroswap API
 3. **Shows** success message with transaction hash and explorer link
@@ -260,60 +269,76 @@ App broadcasts to Stellar network ✅
 ## 🛠️ Key Concepts for Beginners
 
 ### What is XDR?
+
 **XDR** (External Data Representation) is how Stellar transactions are encoded:
-- **Unsigned XDR**: Transaction ready to be signed
-- **Signed XDR**: Transaction with digital signature, ready to submit
+
+* **Unsigned XDR**: Transaction ready to be signed
+* **Signed XDR**: Transaction with digital signature, ready to submit
 
 ### What is a Vault?
+
 A **vault** is a smart contract that:
-- Holds multiple users' assets
-- Automatically invests them in yield-generating strategies
-- Issues **dfTokens** (vault shares) representing ownership
+
+* Holds multiple users' assets
+* Automatically invests them in yield-generating strategies
+* Issues **dfTokens** (vault shares) representing ownership
 
 ### What are dfTokens?
+
 **dfTokens** are like receipts for your vault deposit:
-- Represent your proportional share of the vault
-- Increase in value as the vault earns yield
-- Can be redeemed for underlying assets + profits
+
+* Represent your proportional share of the vault
+* Increase in value as the vault earns yield
+* Can be redeemed for underlying assets + profits
 
 ### What are Strategies?
+
 **Strategies** are investment protocols that:
-- Generate yield on deposited assets
-- Examples: Blend Capital lending, liquidity providing
-- Vaults can use multiple strategies to maximize returns
+
+* Generate yield on deposited assets
+* Examples: Blend Capital lending, liquidity providing
+* Vaults can use multiple strategies to maximize returns
 
 ### What is Signing?
+
 **Signing** a transaction means:
-- Proving you own the wallet
-- Authorizing the vault deposit
-- Making it ready for the network
+
+* Proving you own the wallet
+* Authorizing the vault deposit
+* Making it ready for the network
 
 ## 🚨 Security Best Practices
 
 ### ✅ DO:
-- Use testnet for learning and testing
-- Keep your API keys secure
-- Verify transaction details before signing
-- Start with small amounts
+
+* Use testnet for learning and testing
+* Keep your API keys secure
+* Verify transaction details before signing
+* Start with small amounts
 
 ### ❌ DON'T:
-- Put API keys in public code repositories
-- Sign transactions you don't understand
-- Use mainnet while learning
-- Hardcode private keys (never!)
+
+* Put API keys in public code repositories
+* Sign transactions you don't understand
+* Use mainnet while learning
+* Hardcode private keys (never!)
 
 ## 🔧 Common Troubleshooting
 
 ### Problem: "Freighter not found"
+
 **Solution**: Install Freighter wallet extension
 
 ### Problem: "403 Forbidden" error
+
 **Solution**: Check your API key is correct and not expired
 
 ### Problem: "Insufficient balance"
+
 **Solution**: Make sure you have enough XLM in your wallet for the deposit
 
 ### Problem: Transaction fails
+
 **Solution**: Check you have enough XLM for fees and minimum deposit requirements
 
 ## 🎓 Next Steps
@@ -321,21 +346,21 @@ A **vault** is a smart contract that:
 Once you understand this basic example:
 
 1. **Customize the UI** with better styling
-2. **Add error handling** for better user experience  
+2. **Add error handling** for better user experience
 3. **Support multiple vaults** with different asset combinations
 4. **Add APY tracking** to show vault performance
 5. **Try withdrawal functionality** to redeem your dfTokens
-6. **Explore the SDKs** from [DeFindex](SDKs/README.md)
+6. **Explore the SDKs** from [DeFindex](../SDKs/)
 7. **Learn about strategies** and how they generate yield
 
 ## 📚 Additional Resources
 
-- **DeFindex API Docs**: https://api.defindex.io/docs
-- **DeFindex Discord**: https://discord.gg/ftPKMPm38f
-- **Freighter Docs**: https://freighter.app/docs
-- **Stellar Docs**: https://developers.stellar.org
-- **Stellar Expert**: https://stellar.expert (blockchain explorer)
-- **DeFindex**: https://defindex.io
+* **DeFindex API Docs**: https://api.defindex.io/docs
+* **DeFindex Discord**: https://discord.gg/ftPKMPm38f
+* **Freighter Docs**: https://freighter.app/docs
+* **Stellar Docs**: https://developers.stellar.org
+* **Stellar Expert**: https://stellar.expert (blockchain explorer)
+* **DeFindex**: https://defindex.io
 
 ## 💡 Pro Tips
 

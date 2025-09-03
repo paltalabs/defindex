@@ -1,21 +1,22 @@
-# Quick Start Guide - DeFindex API Integration
+# Quick Start Guide
 
 Get your DeFindex API integration running in **under 5 minutes**. This guide is for developers who want to integrate yield-generating vaults quickly.
 
 ## 📚 Documentation Hierarchy
 
 **Choose your path:**
-- 🐶 **New to blockchain/Stellar?** → Start with [`beginner-guide.md`](./beginner-guide.md)
-- 🎮 **Want to see it working?** → Try [`beginner-example.html`](./beginner-example.html) 
-- ⚡ **Experienced developer?** → Continue with this Quick Start
-- 📖 **Full API reference?** → See [api.defindex.io/docs](https://api.defindex.io/docs)
+
+* 🐶 **New to blockchain/Stellar?** → Start with [`beginner-guide.md`](beginner-guide.md)
+* 🎮 **Want to see it working?** → Try [`beginner-example.html`](../beginner-example.html)
+* ⚡ **Experienced developer?** → Continue with this Quick Start
+* 📖 **Full API reference?** → See [api.defindex.io/docs](https://api.defindex.io/docs)
 
 ## Prerequisites
 
-- **JavaScript/TypeScript** experience
-- **Wallet integration** knowledge (Freighter/StellarWalletsKit)
-- **API integration** experience
-- **3-5 minutes** of your time
+* **JavaScript/TypeScript** experience
+* **Wallet integration** knowledge (Freighter/StellarWalletsKit)
+* **API integration** experience
+* **3-5 minutes** of your time
 
 ## 🚀 Step 1: Get Your API Key (1 minute)
 
@@ -60,6 +61,7 @@ const CONFIG = {
 ```
 
 ### Quick Testnet Setup
+
 ```bash
 # Get testnet XLM
 curl "https://friendbot.stellar.org?addr=YOUR_ADDRESS"
@@ -180,24 +182,26 @@ async function executeDeposit() {
 }
 ```
 
-### Or you can just use the [DeFindex SDK](SDKs/README.md) for a more streamlined experience.
+### Or you can just use the [DeFindex SDK](../SDKs/) for a more streamlined experience.
 
 ### Working Examples
 
 📂 **Complete examples available:**
-- **[`beginner-example.html`](./beginner-example.html)** - Full interactive tutorial with vault deposit/withdraw
-- **Typescript SDK examples** - Available in the [DeFindex SDK repository](SDKs/README.md)
 
+* [**`beginner-example.html`**](../beginner-example.html) - Full interactive tutorial with vault deposit/withdraw
+* **Typescript SDK examples** - Available in the [DeFindex SDK repository](../SDKs/)
 
 ## 📤 Advanced Options
 
 ### Gasless Transactions
+
 ```javascript
 // For users without XLM for fees (using Launchtube)
 const result = await client.sendTransaction(signedXdr, true);
 ```
 
 ### Custom Transaction Submission
+
 ```javascript
 // Submit through your own infrastructure
 import { Server } from '@stellar/stellar-sdk';
@@ -209,6 +213,7 @@ const result = await server.submitTransaction(signedTransaction);
 ### Request Parameters
 
 #### Deposit Request
+
 ```javascript
 {
     amounts: [10000000],     // Array of amounts for each vault asset (7 decimals for XLM)
@@ -219,6 +224,7 @@ const result = await server.submitTransaction(signedTransaction);
 ```
 
 #### Withdraw Request
+
 ```javascript
 {
     amounts: [5000000],      // Array of amounts to withdraw from each asset
@@ -228,6 +234,7 @@ const result = await server.submitTransaction(signedTransaction);
 ```
 
 #### Send Request
+
 ```javascript
 {
     xdr: signedXdr,         // Signed transaction XDR
@@ -238,43 +245,50 @@ const result = await server.submitTransaction(signedTransaction);
 ## ❓ Common Issues & Solutions
 
 ### "403 Forbidden" errors
+
 1. API key starts with `sk_`
 2. Using `Authorization: Bearer <key>` header
 3. Using correct base URL
 4. API key hasn't been revoked
 
-### "Insufficient balance" 
+### "Insufficient balance"
+
 1. Ensure wallet has enough tokens for deposit
 2. Check minimum deposit requirements
 3. Verify vault is active and accepting deposits
 
 ### Network mismatch
+
 ```javascript
 // Ensure vault exists on the correct network
 const vaultUrl = `${API_BASE_URL}/vault/${vaultAddress}?network=testnet`;
 ```
 
 ### Expected Response Times
-- `/vault/{address}`: 1-2 seconds
-- `/vault/{address}/deposit`: 2-5 seconds  
-- `/send`: 3-10 seconds
+
+* `/vault/{address}`: 1-2 seconds
+* `/vault/{address}/deposit`: 2-5 seconds
+* `/send`: 3-10 seconds
 
 ## 🚨 Production Considerations
 
 ### Security
-- Never expose API keys in frontend code for production
-- Use environment variables for sensitive data
-- Implement proper error handling and retry logic
+
+* Never expose API keys in frontend code for production
+* Use environment variables for sensitive data
+* Implement proper error handling and retry logic
 
 ### Performance
-- Add request timeouts (30s recommended)
-- Implement exponential backoff for retries
-- Cache quotes for better UX (but respect freshness)
+
+* Add request timeouts (30s recommended)
+* Implement exponential backoff for retries
+* Cache quotes for better UX (but respect freshness)
 
 ### Monitoring
-- Track transaction success rates
-- Monitor API response times
-- Log error patterns for debugging
+
+* Track transaction success rates
+* Monitor API response times
+* Log error patterns for debugging
 
 ## 🎯 Next Steps
 
@@ -286,10 +300,10 @@ const vaultUrl = `${API_BASE_URL}/vault/${vaultAddress}?network=testnet`;
 
 ## 📚 Additional Resources
 
-- **🔗 API Documentation**: [api.defindex.io/docs](https://api.defindex.io/docs)
-- **🌍 Stellar Expert (Testnet)**: https://stellar.expert/explorer/testnet
-- **🏦 DeFindex Interface**: https://app.defindex.io
-- **💬 Discord Support**: https://discord.gg/ftPKMPm38f
-- **📚 SDK Documentation**: [DeFindex SDK](SDKs/README.md)
+* **🔗 API Documentation**: [api.defindex.io/docs](https://api.defindex.io/docs)
+* **🌍 Stellar Expert (Testnet)**: https://stellar.expert/explorer/testnet
+* **🏦 DeFindex Interface**: https://app.defindex.io
+* **💬 Discord Support**: https://discord.gg/ftPKMPm38f
+* **📚 SDK Documentation**: [DeFindex SDK](../SDKs/)
 
 🎉 **Ready to build?** You now have everything needed for a production-ready DeFindex vault integration!

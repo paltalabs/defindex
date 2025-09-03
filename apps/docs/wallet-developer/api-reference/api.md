@@ -1,32 +1,33 @@
-# DeFindex API Integration Tutorial
+# API Integration Tutorial
 
 This guide will walk you through integrating DeFindex into your app using the provided API. We'll use TypeScript for the examples, but the concepts apply to any language.
 
 ## 🚀 TypeScript SDK Available!
 
 If you're developing in TypeScript, we highly recommend using our official SDK instead of direct API integration. The SDK provides:
-- Type safety and comprehensive TypeScript definitions
-- Simplified authentication with API keys
-- Built-in error handling and validation
-- Complete coverage of all API endpoints
-- Working examples and detailed documentation
 
-**[Check out the DeFindex TypeScript SDK documentation](./03-defindex-sdk.md) for the easiest integration experience.**
+* Type safety and comprehensive TypeScript definitions
+* Simplified authentication with API keys
+* Built-in error handling and validation
+* Complete coverage of all API endpoints
+* Working examples and detailed documentation
+
+[**Check out the DeFindex TypeScript SDK documentation**](../03-defindex-sdk.md) **for the easiest integration experience.**
 
 For non-TypeScript projects or custom integrations, continue with this direct API guide below.
 
----
+***
 
 Complete reference: [API Reference](https://api.defindex.io/docs)
 
 ## Prerequisites
 
-- Basic knowledge of TypeScript or JavaScript
-- Node.js environment
-- [Stellar SDK](https://www.stellar.org/developers/reference/) installed (`npm install stellar-sdk`)
-- DeFindex API key (contact PaltaLabs team for access)
+* Basic knowledge of TypeScript or JavaScript
+* Node.js environment
+* [Stellar SDK](https://www.stellar.org/developers/reference/) installed (`npm install stellar-sdk`)
+* DeFindex API key (contact PaltaLabs team for access)
 
----
+***
 
 ## 1. Setting Up the API Client
 
@@ -73,7 +74,7 @@ class ApiClient {
 }
 ```
 
----
+***
 
 ## 2. Implementing Core Functions
 
@@ -156,7 +157,7 @@ async function apy(apiClient: ApiClient): number {
 }
 ```
 
----
+***
 
 ## 3. Usage Example
 
@@ -189,18 +190,17 @@ async function main() {
 main();
 ```
 
----
+***
 
 ## 4. Notes
 
-- **API Key:** Contact the PaltaLabs team to obtain your API key. Store it securely as an environment variable.
-- **Signer Function:** You must implement the `signerFunction` to sign transactions using your wallet or key management system.
-- **Error Handling:** Add appropriate error handling for production use.
-- **Security:** Never expose your private keys, API keys, or sensitive credentials in your code.
+* **API Key:** Contact the PaltaLabs team to obtain your API key. Store it securely as an environment variable.
+* **Signer Function:** You must implement the `signerFunction` to sign transactions using your wallet or key management system.
+* **Error Handling:** Add appropriate error handling for production use.
+* **Security:** Never expose your private keys, API keys, or sensitive credentials in your code.
 
----
+***
 
 For more details, refer to the [DeFindex API documentation](https://api.defindex.io/docs).
 
-Postman collection json [here](postman_collection.json)
-
+Postman collection json [here](../postman_collection.json)
