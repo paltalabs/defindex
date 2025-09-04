@@ -21,7 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '22.0.0'
           cache: 'npm'
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
@@ -36,7 +36,7 @@ jobs:
 
       - name: Install Stellar CLI via Cargo
         run: |
-          cargo install --locked stellar-cli@22.1.0 --features opt
+          cargo install --locked stellar-cli@23.0.1 --features opt
           stellar --version
 
       - name: build contracts

@@ -27,7 +27,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4.0.2
         with:
-          node-version: '20.18.0'
+          node-version: '22.0.0'
 
       - name: Install dependencies
         run: yarn install
@@ -35,25 +35,24 @@ jobs:
       - name: Build app
         run: cd apps/dapp && yarn build
 
-  #run-tests:
-  #  runs-on: ubuntu-latest
-  #  needs: build
-  #  steps:
-  #    - uses: actions/checkout@v4.1.1
-  #    - uses: actions/cache@v3
-  #      with:
-  #        path: |
-  #          node_modules
-  #        key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-  #        restore-keys: |
-  #          ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
-  #
-  #    - name: Set up Node.js
-  #      uses: actions/setup-node@v4.0.2
-  #      with:
-  #        node-version: '20.18.0'
-  #
-  #    - name: Run jest tests in dapp directory
-  #      run: |
-  #        cd apps/dapp
-  #        yarn test
+  run-tests:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - uses: actions/cache@v3
+        with:
+          path: |
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+  
+      - name: Set up Node.js
+        uses: actions/setup-node@v4.0.2
+        with:
+          node-version: '22.0.0'
+      - name: Run jest tests in dapp directory
+        run: |
+          cd apps/dapp
+          yarn test testnet -a
