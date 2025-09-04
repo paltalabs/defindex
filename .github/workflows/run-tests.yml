@@ -1,4 +1,4 @@
-name: Run dapp tests
+name: Build dapp
 
 on:
   pull_request:
