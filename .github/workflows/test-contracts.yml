@@ -34,6 +34,9 @@ jobs:
 
       - uses: stellar/actions/rust-cache@main
 
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libdbus-1-dev pkg-config
+
       - name: Install Stellar CLI via Cargo
         run: |
           cargo install --locked stellar-cli@23.0.1
