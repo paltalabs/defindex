@@ -326,7 +326,7 @@ namespace DeFindex.Sdk.Services
                     Console.WriteLine($"Could not find strategy address for ID: {strategyId}");
                     continue;
                 }
-                var args = new SCVal[] { new SCContractId(asset) };
+                var args = new SCVal[] { new ScContractId(asset) };
                 var blendPoolReserves = await Helpers.CallContractMethod(poolAddress, "get_reserve", args, server);
                 if (blendPoolReserves is null || blendPoolReserves.Error != null || blendPoolReserves.Results == null || blendPoolReserves.Results.Count() == 0)
                 {
