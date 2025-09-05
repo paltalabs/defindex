@@ -21,7 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '22.0.0'
           cache: 'npm'
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
@@ -34,9 +34,12 @@ jobs:
 
       - uses: stellar/actions/rust-cache@main
 
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libdbus-1-dev pkg-config libudev-dev
+
       - name: Install Stellar CLI via Cargo
         run: |
-          cargo install --locked stellar-cli@22.1.0 --features opt
+          cargo install --locked stellar-cli@23.0.1
           stellar --version
 
       - name: build contracts

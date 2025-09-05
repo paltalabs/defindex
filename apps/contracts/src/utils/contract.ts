@@ -22,17 +22,17 @@ import { createTxBuilder, invoke, invokeTransaction } from "./tx.js";
 // Relative paths from __dirname
 const CONTRACT_REL_PATH: object = {
   defindex_vault:
-    "../../target/wasm32-unknown-unknown/release/defindex_vault.optimized.wasm",
+    "../../target/wasm32v1-none/release/defindex_vault.optimized.wasm",
   defindex_factory:
-    "../../target/wasm32-unknown-unknown/release/defindex_factory.optimized.wasm",
+    "../../target/wasm32v1-none/release/defindex_factory.optimized.wasm",
   soroswap_adapter:
-    "../../target/wasm32-unknown-unknown/release/soroswap_adapter.optimized.wasm",
+    "../../target/wasm32v1-none/release/soroswap_adapter.optimized.wasm",
   hodl_strategy:
-    "../../target/wasm32-unknown-unknown/release/hodl_strategy.optimized.wasm",
+    "../../target/wasm32v1-none/release/hodl_strategy.optimized.wasm",
   blend_strategy:
-    "../../target/wasm32-unknown-unknown/release/blend_strategy.optimized.wasm",
+    "../../target/wasm32v1-none/release/blend_strategy.optimized.wasm",
   fixed_apr_strategy:
-    "../../target/wasm32-unknown-unknown/release/fixed_apr_strategy.optimized.wasm",
+    "../../target/wasm32v1-none/release/fixed_apr_strategy.optimized.wasm",
 };
 
 const network = process.argv[2];

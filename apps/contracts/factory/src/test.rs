@@ -11,7 +11,7 @@ use std::vec;
 // DeFindex Hodl Strategy Contract
 mod hodl_strategy {
     soroban_sdk::contractimport!(
-        file = "../target/wasm32-unknown-unknown/release/hodl_strategy.optimized.wasm"
+        file = "../target/wasm32v1-none/release/hodl_strategy.optimized.wasm"
     );
     pub type StrategyContractClient<'a> = Client<'a>;
 }
@@ -45,7 +45,7 @@ fn create_defindex_factory<'a>(
 // DeFindex Vault Contract
 mod defindex_vault_contract {
     soroban_sdk::contractimport!(
-        file = "../target/wasm32-unknown-unknown/release/defindex_vault.optimized.wasm"
+        file = "../target/wasm32v1-none/release/defindex_vault.optimized.wasm"
     );
 }
 

@@ -1,8 +1,14 @@
-# 📊 DeFindex Monorepo
+# 📊 DeFindex Monorepo.
+
+Check the documentation in https://docs.defindex.io/ and find the Audit Report by [OtterSec](https://osec.io/) in [./audits/2025](audits/2025_03_18_ottersec_defindex_audit.pdf)
 
 # How to validate the code?
+First a commit, for example for mainnet deployment https://github.com/paltalabs/defindex/releases/tag/1.0.0
+
 ```
+git checkout f2d2785a805f40f5cb05921648ceec345168b7ed
 docker compose up -d
+
 cd contracts
 make build
 sha256sum ./target/wasm32-unknown-unknown/release/blend_strategy.optimized.wasm | cut -d ' ' -f 1

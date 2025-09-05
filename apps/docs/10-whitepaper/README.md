@@ -5,31 +5,9 @@ coverY: 0
 
 # Whitepaper
 
-This protocol by Palta Labs. Francisco Catrileo | Joaquin Soza | Esteban Iglesias
+This protocol has been designed and developed by PaltaLabs
 
-### Introduction
-
-* [Introduction](01-introduction/)
-* [Core Concepts](01-introduction/02-core-concepts.md)
-
-### The DeFindex Approach
-
-* [Overview](03-the-defindex-approach/)
-* [Design Decisions](03-the-defindex-approach/01-design-decisions.md)
-
-### Contracts
-
-* [Vault Contract](../whitepaper/10-whitepaper/02-contracts/01-vault-contract.md)
-* [Strategy Contract](../whitepaper/10-whitepaper/02-contracts/02-strategy-contract.md)
-* [Zapper Contract](../whitepaper/10-whitepaper/02-contracts/02-zapper-contract.md)
-
-### State of the Art
-
-* [State of the Art](04-state-of-the-art/)
-
-### Appendix
-
-* [Appendix](05-appendix/)
+Francisco Catrileo | Joaquin Soza | Esteban Iglesias
 
 ### Abstract
 
@@ -53,3 +31,27 @@ To ensure robust functionality and security, DeFindex implements a role-based ma
 * **Fee Receiver:** Collects and manages strategy-related fees.
 
 By combining simplicity for newcomers with advanced features for seasoned users, DeFindex aims to make DeFi more accessible and efficient on the Stellar Blockchain.
+
+### Introduction
+
+* [Introduction](../whitepaper/10-whitepaper/01-introduction.md)
+* [Core Concepts](../whitepaper/10-whitepaper/02-core-concepts.md)
+
+### The DeFindex Approach
+
+* [Overview](03-the-defindex-approach/)
+* [Design Decisions](03-the-defindex-approach/01-design-decisions.md)
+
+### Contracts
+
+* [Vault Contract](../whitepaper/10-whitepaper/02-contracts/01-vault-contract.md)
+* [Strategy Contract](../whitepaper/10-whitepaper/02-contracts/02-strategy-contract.md)
+* [Zapper Contract](../whitepaper/10-whitepaper/02-contracts/02-zapper-contract.md)
+
+### State of the Art
+
+* [State of the Art](04-state-of-the-art/)
+
+### Appendix
+
+* [Appendix](05-appendix/)

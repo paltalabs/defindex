@@ -1,6 +1,6 @@
 // DeFindex Blend Strategy Contract
 mod blend_strategy {
-    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/blend_strategy.optimized.wasm");
+    soroban_sdk::contractimport!(file = "../target/wasm32v1-none/release/blend_strategy.optimized.wasm");
     pub type BlendStrategyClient<'a> = Client<'a>;
 }
 

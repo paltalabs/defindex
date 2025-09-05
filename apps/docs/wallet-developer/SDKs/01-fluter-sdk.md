@@ -1,9 +1,10 @@
 ---
-cover: ../.gitbook/assets/image 31.png
+hidden: true
+cover: ../../.gitbook/assets/image 31.png
 coverY: 0
 ---
 
-# DeFindex Flutter SDK
+# Flutter SDK
 
 Welcome to the DeFindex Flutter SDK documentation! This SDK enables you to integrate DeFindex's savings account functionality into your Flutter application. With this SDK, your users can:
 
@@ -16,7 +17,7 @@ Welcome to the DeFindex Flutter SDK documentation! This SDK enables you to integ
 
 Before integrating the SDK, you'll need to deploy a vault contract for your application. You can do this through our [DeFindex DApp](https://app.defindex.io/). Make sure to thoroughly understand vault management and operations before proceeding.
 
-For detailed instructions on creating, deploying, and managing vaults, please refer to our [Creating a DeFindex Vault](../getting-started/creating-a-defindex-vault.md) guide.
+For detailed instructions on creating, deploying, and managing vaults, please refer to our [Creating a DeFindex Vault](../creating-a-defindex-vault/) guide.
 
 ## Integration Guide
 

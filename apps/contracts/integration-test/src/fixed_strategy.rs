@@ -1,7 +1,7 @@
 // DeFindex Hodl Strategy Contract
 mod fixed_strategy {
     soroban_sdk::contractimport!(
-        file = "../target/wasm32-unknown-unknown/release/fixed_apr_strategy.optimized.wasm"
+        file = "../target/wasm32v1-none/release/fixed_apr_strategy.optimized.wasm"
     );
     pub type FixedStrategyClient<'a> = Client<'a>;
 }

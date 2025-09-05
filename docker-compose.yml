@@ -1,6 +1,6 @@
 services:
   defindex-soroban:
-    image: esteblock/soroban-preview:22.0.1@sha256:186404e5df5d0a791d31807958486ef1d5549c1bc90e96ebabb7cc0fdd195740
+    image: esteblock/soroban-preview:23@sha256:2981e593f04a0fa11f704c83d1a6a2fc86ae76ce9f74a4e365ed6da579430c1c
     container_name: defindex-soroban
     volumes:
       - .:/workspace
@@ -21,7 +21,7 @@ services:
       - defindex-network
     ports:
       - "8000:8000"
-    command: --local --protocol-version 22
+    command: --local --protocol-version 23
     stdin_open: true
     tty: true
 
