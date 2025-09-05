@@ -1,0 +1,37 @@
+name: .NET SDK Build and Test
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'packages/dotnet-sdk/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'packages/dotnet-sdk/**'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./packages/dotnet-sdk
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
