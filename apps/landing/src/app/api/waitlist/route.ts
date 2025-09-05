@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
 
+import { NextResponse } from 'next/server'
 interface WaitlistFormData {
   email: string;
   userType: string;
