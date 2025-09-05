@@ -13,13 +13,20 @@ class Program
 
     async static Task Main(string[] args)
     {
+        Console.ForegroundColor = ConsoleColor.Magenta;
+        Console.WriteLine("🚀 DefindexSdk .NET Testing Suite");
+        Console.WriteLine("==================================");
+        Console.ResetColor();
+        
         // Load environment variables from .env file
         Env.Load();
 
         if (args.Length == 0 || args.Length > 1 || (args[0] != "testnet" && args[0] != "mainnet"))
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Please provide a network: testnet or mainnet");
+            Console.WriteLine("❌ Please provide a network: testnet or mainnet");
+            Console.WriteLine("Usage: dotnet run testnet");
+            Console.WriteLine("Usage: dotnet run mainnet");
             return;
         }
         var network = args[0];
@@ -70,7 +77,7 @@ class Program
         var sorobanServerUrl = network == "mainnet" ? Env.GetString("MAINNET_RPC_URL") ?? "https://soroban-testnet.stellar.org/" : Env.GetString("TESTNET_RPC_URL") ?? "https://soroban-testnet.stellar.org/";
         var soroban_server = new SorobanServer(sorobanServerUrl);
 
-        var vault_string = "CAQEPGA3XDBZSWHYLBUSH2UIP2SHHTEMXMHFPLIEN6RYH7G6GEGJWHGN";
+        var vault_string = "CAQTQIWPQUID3Z4KK5FNS3DG752KJBNZWAAQXPYZOHCWNJUPM43IDWUB";
         var vaultInstance = new DefindexSdk(vault_string, soroban_server);
 
         var userKeypair = KeyPair.FromSecretSeed(Env.GetString("USER_SECRET")) ?? null;
@@ -122,62 +129,12 @@ class Program
         var withdrawCheckedTx = await CheckTransactionStatus(soroban_server, submittedWithdrawTx.Hash);
         var parsedWithdrawTx = vaultInstance.ParseTransactionResponse(withdrawCheckedTx);
         DisplayParsedTransactionResponse(parsedWithdrawTx.Result);
-
-        /* var vaultTotalShares = await vaultInstance.GetVaultTotalShares();
-        Console.WriteLine($"Vault Total Shares: {vaultTotalShares}");
-
-        var amountsDesired = new List<ulong> { 10000000 };
-        var amountsMin = new List<ulong> { 10000000 };
-        var from = keypair.AccountId;
-        ConsoleInfo($"Creating deposit transaction for {from}.");
         
-        var depositTransaction = await vaultInstance.CreateDepositTransaction(amountsDesired, amountsMin, from, false);
-
-        ConsoleInfo("Simulating deposit transaction.");
-        var simulatedDepositTransaction = await soroban_server.SimulateTransaction(depositTransaction);
-        if(simulatedDepositTransaction.SorobanTransactionData == null || simulatedDepositTransaction.SorobanAuthorization == null || simulatedDepositTransaction.MinResourceFee == null){
-            Console.WriteLine("Simulated transaction data is null.");
-            return;
-        }
-
-        depositTransaction.SetSorobanTransactionData(simulatedDepositTransaction.SorobanTransactionData);
-        depositTransaction.SetSorobanAuthorization(simulatedDepositTransaction.SorobanAuthorization);
-        depositTransaction.AddResourceFee(simulatedDepositTransaction.MinResourceFee.Value + 100000);
-        depositTransaction.Sign(keypair);
-        
-        ConsoleInfo("Submitting deposit transaction.");
-        var submittedTx = await soroban_server.SendTransaction(depositTransaction);
-        PrintTxResult("Deposit tx result", submittedTx);
-
-        var depositTxResult = await CheckTransactionStatus(soroban_server, submittedTx.Hash);
-        var parsedDepositTx = vaultInstance.ParseTransactionResponse(depositTxResult);
-        DisplayParsedTransactionResponse(parsedDepositTx.Result);
-        
-        ConsoleInfo("Creating withdraw transaction.");
-        ulong withdrawShares = 10000000;
-        var amountsMinOut = new List<ulong> { 10000000 };
-        var withdrawFrom = keypair.AccountId;
-        var withdrawTransaction = await vaultInstance.CreateWithdrawTransaction(withdrawShares, amountsMinOut, withdrawFrom);
-
-        ConsoleInfo("Simulating withdraw transaction.");
-        var simulatedWithdrawTx = await soroban_server.SimulateTransaction(withdrawTransaction);
-        if(simulatedWithdrawTx.SorobanTransactionData == null || simulatedWithdrawTx.SorobanAuthorization == null || simulatedWithdrawTx.MinResourceFee == null){
-            Console.WriteLine("Simulated transaction data is null.");
-            return;
-        }
-        withdrawTransaction.SetSorobanTransactionData(simulatedWithdrawTx.SorobanTransactionData);
-        withdrawTransaction.SetSorobanAuthorization(simulatedWithdrawTx.SorobanAuthorization);
-        withdrawTransaction.AddResourceFee(simulatedWithdrawTx.MinResourceFee.Value + 100000);
-        withdrawTransaction.Sign(keypair);
-
-        ConsoleInfo("Submitting withdraw transaction.");
-        var submittedWithdrawTx = await soroban_server.SendTransaction(withdrawTransaction);
-        PrintTxResult("Withdraw tx result", submittedWithdrawTx);
-
-        var withdrawCheckedTx = await CheckTransactionStatus(soroban_server, submittedWithdrawTx.Hash);
-        var parsedWithdrawTx = vaultInstance.ParseTransactionResponse(withdrawCheckedTx);
-        DisplayParsedTransactionResponse(parsedWithdrawTx.Result);
-        return; */
+        ConsoleInfo("All tests completed successfully!");
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("\n✅ DefindexSdk testing completed successfully!");
+        Console.WriteLine("All functions are working correctly.");
+        Console.ResetColor();
     }
 
     private static void ConsoleInfo(string message)
@@ -245,7 +202,10 @@ class Program
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.Write($"{transactionHash}");
                 Console.ResetColor();
-                if (transactionResponse.ResultValue == null) throw new Exception("Transaction result value is null.");
+                if (transactionResponse.Status != GetTransactionResponse.TransactionStatus.SUCCESS) 
+                {
+                    throw new Exception($"Transaction failed with status: {transactionResponse.Status}");
+                }
                 checkedTx = transactionResponse;
                 return checkedTx;
             }

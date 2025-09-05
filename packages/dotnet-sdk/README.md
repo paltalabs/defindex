@@ -323,5 +323,56 @@ public sealed record TransactionResult(
 | `GetAssetAmountsPerShares(BigInteger vaultShares)` | Converts vault shares to underlying asset amounts |
 | `CreateWithdrawUnderlyingTx(BigInteger withdrawAmount, int toleranceBPS, string from)` | Creates an unsigned transaction to withdraw underlying assets from a vault |
 
+## Development & upgrade guide,
+
+1. **Installing dependencies**
+
+```bash
+dotnet restore
+```
+
+2. **Building the project**
+
+```bash
+dotnet build
+```
+
+3. **Running tests**
+
+```bash
+dotnet test
+```
+
+If you need to update dependencies, just edit the `*.csproj` files and run `dotnet restore` again.
+
+### Build and deployment
+
+To build and deploy the project, you can use the following commands:
+
+1. **Building the project**
+
+Update the version number in the `*.csproj` file and add some release notes and run.
+
+```bash
+dotnet build
+```
+
+2. **Publishing the project**
+
+Manually publish the build from `bin/Debug/DeFindex.Sdk.${your_version}.nupkg` to the [DeFindex nuget page](https://www.nuget.org/packages/DeFindex.Sdk/).
+
+### Run the test example
+copy the .env.example to a .env file using 
+
+```bash
+cp .env.example .env
+```
+
+Then run the testnet example using
+
+```bash
+dotnet run testnet
+```
+
 Made with ❤️ by [PaltaLabs🥑](https://github.com/paltalabs)
 
