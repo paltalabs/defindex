@@ -1,5 +1,10 @@
-import { WaitlistFormData } from '@/types'
-import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server';
+
+interface WaitlistFormData {
+  email: string;
+  userType: string;
+  interest: string;
+}
 
 export async function POST(request: Request) {
   try {

@@ -7,7 +7,7 @@ test: build
 
 build:
 	cargo build --target wasm32v1-none --release
-	soroban contract optimize --wasm ../../target/wasm32v1-none/release/blend_strategy.wasm
+	stellar contract optimize --wasm ../../target/wasm32v1-none/release/blend_strategy.wasm
 	@rm ../../target/wasm32v1-none/release/blend_strategy.wasm
 
 fmt:

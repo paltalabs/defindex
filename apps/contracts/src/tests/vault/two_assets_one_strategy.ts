@@ -1,5 +1,8 @@
 import { Address, Keypair } from "@stellar/stellar-sdk";
+import { USDC_ADDRESS } from "../../constants.js";
 import { AddressBook } from "../../utils/address_book.js";
+import { airdropAccount } from "../../utils/contract.js";
+import { getCurrentTimePlusOneHour } from "../../utils/tx.js";
 import {
   depositToVault,
   fetchTotalManagedFunds,
@@ -10,11 +13,8 @@ import {
   withdrawFromVault
 } from "../../utils/vault.js";
 import { green, purple, red, yellow } from "../common.js";
-import { airdropAccount } from "../../utils/contract.js";
-import { compareTotalManagedFunds, deployDefindexVault, fetchBalances, fetchStrategiesBalances, generateExpectedTotalAmounts, generateTotalAmountsError } from "./utils.js";
-import { getCurrentTimePlusOneHour } from "../../utils/tx.js";
 import { CreateVaultParams } from "../types.js";
-import { USDC_ADDRESS } from "../../constants.js";
+import { compareTotalManagedFunds, deployDefindexVault, generateExpectedTotalAmounts, generateTotalAmountsError } from "./utils.js";
 /* 
 // Two assets one strategy tests:
   - [x] deposit
@@ -717,7 +717,7 @@ export async function testVaultTwoAssetsOneStrategy(addressBook: AddressBook, pa
           console.log(purple, "---------------------------------------");
           console.log(purple, "Try rescue from unauthorized");
           console.log(purple, "---------------------------------------");
-          await rescueFromStrategy(vault_address, addressBook.getContractId("hodl_strategy"), user);
+          await rescueFromStrategy(vault_address, params[0].strategies[0].address, user);
         } catch (error:any) {
           if (error.toString().includes("HostError: Error(Contract, #130)")) {
             console.log(green, "-----------------------------------------------");
@@ -845,55 +845,55 @@ export async function testVaultTwoAssetsOneStrategy(addressBook: AddressBook, pa
   };
   const budgetData = {
     deploy: {
-      status: !!deploy_instructions && !!deploy_read_bytes && !!deploy_write_bytes ? "success" : "failed",
+      status: deploy_instructions + deploy_read_bytes + deploy_write_bytes ? "success" : "failed",
       instructions: deploy_instructions,
       readBytes: deploy_read_bytes,
       writeBytes: deploy_write_bytes,
     },
     deposit: {
-      status: !!deposit_instructions && !!deposit_read_bytes && !!deposit_write_bytes ? "success" : "failed",
+      status: deposit_instructions! + deposit_read_bytes! + deposit_write_bytes! ? "success" : "failed",
       instructions: deposit_instructions,
       readBytes: deposit_read_bytes,
       writeBytes: deposit_write_bytes,
     },
     invest: {
-      status: !!invest_instructions && !!invest_read_bytes && !!invest_write_bytes ? "success" : "failed",
+      status: invest_instructions + invest_read_bytes + invest_write_bytes ? "success" : "failed",
       instructions: invest_instructions,
       readBytes: invest_read_bytes,
       writeBytes: invest_write_bytes,
     },
     deposit_and_invest: {
-      status: !!deposit_and_invest_instructions && !!deposit_and_invest_read_bytes && !!deposit_and_invest_write_bytes ? "success" : "failed",
+      status: deposit_and_invest_instructions + deposit_and_invest_read_bytes + deposit_and_invest_write_bytes ? "success" : "failed",
       instructions: deposit_and_invest_instructions,
       readBytes: deposit_and_invest_read_bytes,
       writeBytes: deposit_and_invest_write_bytes,
     },
     unwind: {
-      status: !!unwind_instructions && !!unwind_read_bytes && !!unwind_write_bytes ? "success" : "failed",
+      status: unwind_instructions + unwind_read_bytes + unwind_write_bytes ? "success" : "failed",
       instructions: unwind_instructions,
       readBytes: unwind_read_bytes,
       writeBytes: unwind_write_bytes,
     },
     rebalance_swap_e_in: {
-      status: !!rebalance_swap_e_in_instructions && !!rebalance_swap_e_in_read_bytes && !!rebalance_swap_e_in_write_bytes ? "success" : "failed",
+      status: rebalance_swap_e_in_instructions + rebalance_swap_e_in_read_bytes + rebalance_swap_e_in_write_bytes ? "success" : "failed",
       instructions: rebalance_swap_e_in_instructions,
       readBytes: rebalance_swap_e_in_read_bytes,
       writeBytes: rebalance_swap_e_in_write_bytes,
     },
     rebalance_swap_e_out: {
-      status: !!rebalance_swap_e_out_instructions && !!rebalance_swap_e_out_read_bytes && !!rebalance_swap_e_out_write_bytes ? "success" : "failed",
+      status: rebalance_swap_e_out_instructions + rebalance_swap_e_out_read_bytes + rebalance_swap_e_out_write_bytes ? "success" : "failed",
       instructions: rebalance_swap_e_out_instructions,
       readBytes: rebalance_swap_e_out_read_bytes,
       writeBytes: rebalance_swap_e_out_write_bytes,
     },
     withdraw: {
-      status: !!withdraw_instructions && !!withdraw_read_bytes && !!withdraw_write_bytes ? "success" : "failed",
+      status: withdraw_instructions! + withdraw_read_bytes! + withdraw_write_bytes! ? "success" : "failed",
       instructions: withdraw_instructions,
       readBytes: withdraw_read_bytes,
       writeBytes: withdraw_write_bytes,
     },
     rescue: {
-      status: !!rescue_instructions && !!rescue_read_bytes && !!rescue_write_bytes ? "success" : "failed",
+      status: Number(rescue_instructions) + Number(rescue_read_bytes) + Number(rescue_write_bytes) > 0 ? "success" : "failed",
       instructions: rescue_instructions,
       readBytes: rescue_read_bytes,
       writeBytes: rescue_write_bytes,

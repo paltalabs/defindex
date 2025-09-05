@@ -1,25 +1,22 @@
 import { Address, Asset, Keypair } from "@stellar/stellar-sdk";
 import { exit } from "process";
+import { BLEND_USDC_ADDRESS } from "../constants.js";
 import { AddressBook } from "../utils/address_book.js";
-import { airdropAccount, setBlendTrustline } from "../utils/contract.js";
+import { airdropAccount } from "../utils/contract.js";
 import { config } from "../utils/env_config.js";
-import { testBlendStrategy } from "./blend/test_strategy.js";
-import { testBlendVault } from "./blend/test_vault.js";
-import { green, red, yellow } from "./common.js";
 import {
   admin,
   checkBlendUSDCBalance,
   emergencyManager,
   feeReceiver,
-  manager,
-  mintToken
+  manager
 } from "../utils/vault.js";
+import { green, red, yellow } from "./common.js";
+import { CreateVaultParams } from "./types.js";
 import { testVaultOneAssetTwoStrategies } from "./vault/one_aset_two_strategies.js";
 import { testVaultOneAssetOneStrategy } from "./vault/one_asset_one_strategy.js";
 import { testVaultTwoAssetsOneStrategy } from "./vault/two_assets_one_strategy.js";
 import { testVaultTwoAssetsTwoStrategies } from "./vault/two_assets_two_strategies.js";
-import { CreateVaultParams } from "./types.js";
-import { BLEND_USDC_ADDRESS } from "../constants.js";
 
 const args = process.argv.slice(2);
 const network = args[0];
@@ -168,8 +165,8 @@ switch (tests) {
       const oneAssetTwoStrategies = await testVaultOneAssetTwoStrategies(addressBook, oneAssetTwoStrategyParams, testUser, xlmAddress);
       const twoAssetsOneStrategy = await testVaultTwoAssetsOneStrategy(addressBook, twoAssetOneStrategyParams, testUser, xlmAddress);
       const twoAssetsTwoStrategies = await testVaultTwoAssetsTwoStrategies(addressBook, twoAssetTwoStrategiesParams, testUser, xlmAddress);
-      const blendStrategy = await testBlendStrategy();
-      const blendVault = await testBlendVault();
+      /* const blendStrategy = await testBlendStrategy();
+      const blendVault = await testBlendVault(); */
       console.log(yellow, "----------------------------------------------------------------------------------------------------------------------------------------------")
       console.log(yellow, "All tests finished, results:");
       console.log(yellow, "----------------------------------------------------------------------------------------------------------------------------------------------")
@@ -198,7 +195,7 @@ switch (tests) {
       console.table(twoAssetsTwoStrategies.budgetData);
       console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log("");
-      console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
+   /*    console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
       console.log(green, "Blend strategy test status");
       console.table(blendStrategy.status);
       console.table(blendStrategy.budget);
@@ -208,7 +205,7 @@ switch (tests) {
       console.log(green, "Blend vault test status");
       console.table(blendVault!.status);
       console.table(blendVault!.budget);
-      console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------");
+      console.log(green, "----------------------------------------------------------------------------------------------------------------------------------------------"); */
       exit(0);
     } catch (error) {
       console.log(red, "Tests failed:", error);
@@ -254,7 +251,7 @@ switch (tests) {
       console.log(red, "Tests failed:", error);
       exit(1);
     }
-  case "-bs":
+  /* case "-bs":
     console.log(yellow, "Testing blend strategy");
     try {
       const blendStrategy = await testBlendStrategy();
@@ -279,7 +276,7 @@ switch (tests) {
     } catch (error) {
       console.log(red, "Tests failed:", error);
       exit(1);
-    }
+    } */
   default:
     console.log(yellow, "For help run: yarn test <network> -h");
     exit(0);

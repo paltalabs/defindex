@@ -8,7 +8,7 @@ test: build
 
 build: ../target/wasm32v1-none/release/defindex_vault.optimized.wasm
 	cargo build --target wasm32v1-none --release
-	soroban contract optimize --wasm ../target/wasm32v1-none/release/defindex_factory.wasm
+	stellar contract optimize --wasm ../target/wasm32v1-none/release/defindex_factory.wasm
 	@rm ../target/wasm32v1-none/release/defindex_factory.wasm
 
 ../target/wasm32v1-none/release/defindex_vault.optimized.wasm:

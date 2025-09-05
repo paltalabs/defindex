@@ -134,7 +134,7 @@ export function getTransactionBudget(tx: any): { instructions: number, readBytes
   const MAXINSTRUCTIONS = 100000000
   const budget= {
       instructions: resources.instructions(),
-      readBytes: resources.readBytes(),
+      readBytes: resources.diskReadBytes(),
       writeBytes: resources.writeBytes(),
   }
   const getPercentage = (value: number, max: number)=>{
