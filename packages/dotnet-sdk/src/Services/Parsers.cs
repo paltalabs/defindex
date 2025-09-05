@@ -2,6 +2,7 @@ using DeFindex.Sdk.Interfaces;
 using DeFindex.Sdk.Services;
 using StellarDotnetSdk.Responses.SorobanRpc;
 using StellarDotnetSdk.Soroban;
+
 using System.Numerics;
 
 public class DefindexResponseParser
@@ -55,7 +56,7 @@ public class DefindexResponseParser
                 switch (j.Key.Sym.InnerValue)
                 {
                     case "asset":
-                        var contractId = (SCContractId)SCContractId.FromSCValXdr(j.Val);
+                        var contractId = (ScContractId)ScContractId.FromSCValXdr(j.Val);
                         Asset = contractId.InnerValue;
                         break;
                     case "idle_amount":
@@ -92,7 +93,7 @@ public class DefindexResponseParser
                                         Paused = paused.InnerValue;
                                         break;
                                     case "strategy_address":
-                                        var strategyAddress = (SCContractId)SCContractId.FromSCValXdr(entry.Value.ToXdr());
+                                        var strategyAddress = (ScContractId)ScContractId.FromSCValXdr(entry.Value.ToXdr());
                                         StrategyAddress = strategyAddress.InnerValue;
                                         break;
                                 }
@@ -204,15 +205,15 @@ public class DefindexResponseParser
                         }
                         break;
                     case "oracle":
-                        if (entry.Value is SCAddress valOracleAddress)
+                        if (entry.Value is ScAddress valOracleAddress)
                         {
-                            var tempOracleAddress = (SCContractId)SCContractId.FromSCValXdr(entry.Value.ToXdr());
+                            var tempOracleAddress = (ScContractId)ScContractId.FromSCValXdr(entry.Value.ToXdr());
                             oracleAddress = tempOracleAddress.InnerValue;
                         }
-                        else if (entry.Value is SCContractId valOracleContractId)
+                        else if (entry.Value is ScContractId valOracleContractId)
                              oracleAddress = valOracleContractId.InnerValue;
                         break;
-                    case "status":
+                    case "status":  
                         if (entry.Value is SCUint32 valStatus)
                             status = valStatus.InnerValue;
                         break;
@@ -262,11 +263,11 @@ public class DefindexResponseParser
                 switch (keySymbol.InnerValue)
                 {
                     case "asset":
-                        if (entry.Value is SCAddress scAddressValue){
-                            var tempAddress = (SCContractId)SCContractId.FromSCValXdr(entry.Value.ToXdr());
+                        if (entry.Value is ScAddress scAddressValue){
+                            var tempAddress = (ScContractId)ScContractId.FromSCValXdr(entry.Value.ToXdr());
                             asset = tempAddress.InnerValue;
                         }
-                        else if (entry.Value is SCContractId scContractIdValue)
+                        else if (entry.Value is ScContractId scContractIdValue)
                             asset = scContractIdValue.InnerValue;
                         break;
                     case "config":

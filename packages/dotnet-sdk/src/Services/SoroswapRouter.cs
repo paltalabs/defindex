@@ -10,8 +10,8 @@ namespace Paltalabs.Defindex.Services
     public string Address { get; set; } = "CAG5LRYQ5JVEUI5TEID72EYOVX44TTUJT5BQR2J6J77FH65PCCFAJDDH";
     private async Task<string> RouterPairFor(string tokenA, string tokenB, SorobanServer server)
     {
-      var tokenACID = new SCContractId(tokenA);
-      var tokenBCID = new SCContractId(tokenB);
+      var tokenACID = new ScContractId(tokenA);
+      var tokenBCID = new ScContractId(tokenB);
       var PairAddress = await Helpers.CallContractMethod(
         this.Address,
         "router_pair_for",
@@ -23,8 +23,8 @@ namespace Paltalabs.Defindex.Services
         throw new Exception("Pair address is null");
       }
       var rawAddress = PairAddress.Results[0].Xdr!;
-      var xdr = StellarDotnetSdk.Soroban.SCAddress.FromXdrBase64(rawAddress);
-      var pairAddress = (SCContractId)SCContractId.FromXdrBase64(xdr.ToXdrBase64());
+      var xdr = ScAddress.FromXdrBase64(rawAddress);
+      var pairAddress = (ScContractId)ScContractId.FromXdrBase64(xdr.ToXdrBase64());
       return pairAddress.InnerValue;
     }
 
@@ -44,8 +44,8 @@ namespace Paltalabs.Defindex.Services
         throw new Exception("Token0 is null");
       }
       var RawAddress = Token0.Results[0].Xdr!;
-      var Xdr = StellarDotnetSdk.Soroban.SCAddress.FromXdrBase64(RawAddress);
-      var Token0Address = (SCContractId)SCContractId.FromXdrBase64(Xdr.ToXdrBase64());
+      var Xdr = ScAddress.FromXdrBase64(RawAddress);
+      var Token0Address = (ScContractId)ScContractId.FromXdrBase64(Xdr.ToXdrBase64());
       var Token1 = await Helpers.CallContractMethod(
         PairAddress,
         "token_1",
@@ -57,8 +57,8 @@ namespace Paltalabs.Defindex.Services
         throw new Exception("Token1 is null");
       }
       var RawAddress1 = Token1.Results[0].Xdr!;
-      var Xdr1 = StellarDotnetSdk.Soroban.SCAddress.FromXdrBase64(RawAddress1);
-      var Token1Address = (SCContractId)SCContractId.FromXdrBase64(Xdr1.ToXdrBase64());
+      var Xdr1 = ScAddress.FromXdrBase64(RawAddress1);
+      var Token1Address = (ScContractId)ScContractId.FromXdrBase64(Xdr1.ToXdrBase64());
 
       OrderedTokens.Add(Token0Address.InnerValue);
       OrderedTokens.Add(Token1Address.InnerValue);
