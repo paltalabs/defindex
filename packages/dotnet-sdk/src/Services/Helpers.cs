@@ -117,7 +117,7 @@ public class DefindexHelpers
     {
         var keypair = KeyPair.Random();
         var loadedAccount = new Account(keypair.AccountId, 0);
-        var invokeContractOperation = new InvokeContractOperation(new SCContractId(contractAddress), new SCSymbol(methodName), args);
+        var invokeContractOperation = new InvokeContractOperation(new ScContractId(contractAddress), new SCSymbol(methodName), args);
         var transaction = new TransactionBuilder(loadedAccount)
             .AddOperation(invokeContractOperation)
             .Build();

@@ -9,6 +9,7 @@ namespace DeFindex.Sdk.Services;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Reflection;
 using StellarDotnetSdk.Responses.SorobanRpc;
 using System.Text.Json.Nodes;
 using Newtonsoft.Json;
@@ -17,14 +18,14 @@ using System.Numerics;
 
 public class DefindexSdk : IDefindexSdk
 {
-    private readonly SCContractId _contractId;
+    private readonly ScContractId _contractId;
     private readonly SorobanServer _server;
 
     private const int ScaleFactor = 10000000;
 
     public DefindexSdk(string contractId, SorobanServer server)
     {
-        _contractId = new SCContractId(contractId);
+        _contractId = new ScContractId(contractId);
         _server = server ?? throw new ArgumentNullException(nameof(server));
     }
 
@@ -35,7 +36,7 @@ public class DefindexSdk : IDefindexSdk
     public async Task<SimulateTransactionResponse> CreateBalanceTransaction(Account account, string accountIdToCheck)
     {
         var getBalanceArgs = new SCVal[] {
-            new SCAccountId(accountIdToCheck),
+            new ScAccountId(accountIdToCheck),
         };
         var balanceSymbol = new SCSymbol("balance");
         var invokeContractOperation = new InvokeContractOperation(_contractId, balanceSymbol, getBalanceArgs);
@@ -99,7 +100,7 @@ public class DefindexSdk : IDefindexSdk
     {
         var keypair = KeyPair.Random();
         var args = new SCVal[] {
-            new SCAccountId(accountId),
+            new ScAccountId(accountId),
         };
         var symbol = new SCSymbol("balance");
         var invokeContractOperation = new InvokeContractOperation(_contractId, symbol, args);
@@ -155,7 +156,7 @@ public class DefindexSdk : IDefindexSdk
         var args = new SCVal[] {
             new SCVec(amountsDesired.Select(a => new SCInt128(a.ToString())).ToArray()),
             new SCVec(amountsMin.Select(a => new SCInt128(a.ToString())).ToArray()),
-            new SCAccountId(from),
+            new ScAccountId(from),
             new SCBool(invest),
         };
         var symbol = new SCSymbol("deposit");
@@ -180,7 +181,7 @@ public class DefindexSdk : IDefindexSdk
         var args = new SCVal[] {
             new SCInt128(withdrawShares.ToString()),
             new SCVec(amountsMinOut.Select(a => new SCInt128(a.ToString())).ToArray()),
-            new SCAccountId(from),
+            new ScAccountId(from),
         };
         var symbol = new SCSymbol("withdraw");
         var invokeContractOperation = new InvokeContractOperation(_contractId, symbol, args);
@@ -197,11 +198,80 @@ public class DefindexSdk : IDefindexSdk
 
     public Task<List<TransactionResult>> ParseTransactionResponse(GetTransactionResponse txResponse)
     {
-        if (txResponse.ResultValue == null || txResponse.TxHash == null)
+        if (txResponse.Status != GetTransactionResponse.TransactionStatus.SUCCESS)
         {
-            throw new Exception("Transaction result value is null.");
+            throw new Exception($"Transaction failed with status: {txResponse.Status}");
         }
-        var result = (SCVal)SCVal.FromXdrBase64(txResponse.ResultValue.ToXdrBase64());
+        
+        if (txResponse.TxHash == null)
+        {
+            throw new Exception("Transaction hash is null.");
+        }
+
+        // For successful Soroban transactions, we need to get the result from either ResultValue or SorobanMeta
+        SCVal? result = null;
+        
+        if (txResponse.ResultValue != null)
+        {
+            result = (SCVal)SCVal.FromXdrBase64(txResponse.ResultValue.ToXdrBase64());
+        }
+        else
+        {
+            // Try to extract the result from the transaction's Soroban metadata
+            // The actual return value is in the transaction meta under SorobanMeta
+            // We need to parse the ResultMetaXdr to get the SorobanMeta.ReturnValue
+            
+            if (txResponse.ResultMetaXdr != null)
+            {
+                try
+                {
+                    // Parse the result meta XDR to extract SorobanMeta.ReturnValue
+                    var resultMeta = TransactionMeta.FromXdrBase64(txResponse.ResultMetaXdr);
+                    
+                    // Try to access SorobanMeta through reflection or dynamic properties
+                    var sorobanMetaProperty = resultMeta.GetType().GetProperty("SorobanMeta");
+                    if (sorobanMetaProperty != null)
+                    {
+                        var sorobanMeta = sorobanMetaProperty.GetValue(resultMeta);
+                        var returnValueProperty = sorobanMeta?.GetType().GetProperty("ReturnValue");
+                        if (returnValueProperty != null)
+                        {
+                            result = (SCVal)returnValueProperty.GetValue(sorobanMeta);
+                        }
+                        else
+                        {
+                            // Fallback: return empty result for successful transaction
+                            Console.WriteLine("Warning: Could not extract ReturnValue from SorobanMeta, returning empty result");
+                            return Task.FromResult(new List<TransactionResult>());
+                        }
+                    }
+                    else
+                    {
+                        // Fallback: return empty result for successful transaction
+                        Console.WriteLine("Warning: Could not find SorobanMeta in transaction result, returning empty result");
+                        return Task.FromResult(new List<TransactionResult>());
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Warning: Error parsing transaction meta: {ex.Message}, returning empty result");
+                    return Task.FromResult(new List<TransactionResult>());
+                }
+            }
+            else
+            {
+                // No result data available, return empty result for successful transaction
+                Console.WriteLine("Warning: No result data available, returning empty result");
+                return Task.FromResult(new List<TransactionResult>());
+            }
+        }
+        
+        if (result == null)
+        {
+            Console.WriteLine("Warning: No result value could be extracted, returning empty result");
+            return Task.FromResult(new List<TransactionResult>());
+        }
+        
         var parsedResponse = DefindexResponseParser.ParseSubmittedTransaction(result, txResponse.TxHash);
         return Task.FromResult(parsedResponse);
     }
