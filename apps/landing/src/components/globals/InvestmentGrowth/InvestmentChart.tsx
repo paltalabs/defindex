@@ -85,7 +85,7 @@ export default function InvestmentChart({ data, years }: InvestmentChartProps) {
         <h3 className="text-white text-sm md:text-base font-manrope mb-3">
           In {displayData?.year || years} years you will have
         </h3>
-        <div className="text-white text-xl md:text-2xl lg:text-3xl font-bold mb-3 break-words">
+        <div className="text-white text-[48px] md:text-2xl lg:text-3xl font-bold mb-3 break-words">
           {formatCurrency(displayData?.projectedTotal || 0)}
         </div>
         <div className="text-white/90 space-y-1 text-sm md:text-base">

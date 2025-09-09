@@ -1,7 +1,118 @@
 "use client";
-
 import { useInvestmentCalculator } from '@/hooks/useInvestmentCalculator';
+import Link from 'next/link';
 import { FiExternalLink } from 'react-icons/fi';
+import InvestmentChart from './InvestmentChart';
+import InvestmentInputs from './InvestmentInputs';
+
+export function APYInfo({ apy }: { apy: number }) {
+  return (
+    <div 
+          className="border border-cyan-900/50 rounded-lg p-6"
+          style={{ background: 'linear-gradient(115deg, rgba(4, 74, 84, 1) 0%, rgba(3, 48, 54, 1) 100%)' }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-manrope font-semibold text-white">
+                Current APY
+              </h3>
+              <span className="text-2xl font-bold text-lime-200">
+                {apy.toFixed(1)}%
+              </span>
+            </div>
+            <p className="text-white/70 text-sm mb-4">
+              Explore the top-performing vaults and their APY rates with Soroswap Earn!
+            </p>
+            <Link
+              href="https://v2.soroswap.finance/earn"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Start earning now"
+              className="inline-block text-center"
+              style={{
+                width: '100%',
+                background: 'linear-gradient(to right, rgba(8, 120, 120, 1), rgba(2, 80, 80, 1))',
+                color: 'rgba(255, 255, 255, 1)',
+                fontFamily: 'Manrope, sans-serif',
+                fontWeight: 'bold',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '0.5rem',
+                transition: 'all 0.2s',
+                transform: 'scale(1)',
+                cursor: 'pointer',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'linear-gradient(to right, rgba(6, 95, 95, 1), rgba(1, 60, 60, 1))';
+                e.currentTarget.style.transform = 'scale(1.025)';
+                e.currentTarget.style.transition = 'ease-in 0.1s';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'linear-gradient(to right, rgba(8, 120, 120, 1), rgba(2, 80, 80, 1))';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+            >
+            Start earning now <FiExternalLink className="inline-block ml-2 align-middle" />
+          </Link>
+        </div> 
+  );
+    
+}
+
+export function ChartSection({
+  initialDeposit,
+  setInitialDeposit,
+  monthlyContribution,
+  setMonthlyContribution,
+  years,
+  setYears,
+  apy,
+  investmentData,
+  isLoading,
+}: {
+  initialDeposit: number;
+  setInitialDeposit: (value: number) => void;
+  monthlyContribution: number;
+  setMonthlyContribution: (value: number) => void;
+  years: number;
+  setYears: (value: number) => void;
+  apy: number;
+  investmentData: any[];
+  isLoading: boolean;
+}) {
+
+    return (
+      <div className="flex flex-col lg:grid lg:grid-cols-2 gap-4 md:gap-8 lg:gap-12 items-start max-w-full lg:max-w-[80dvw] mx-auto px-2 sm:px-4">
+          {/* Left Column - Content and Controls */}
+          <div className="space-y-4 md:space-y-8 w-full">
+            {/* APY Info */}
+            <APYInfo apy={apy} />   
+
+            {/* Input Controls */}
+            <InvestmentInputs
+              initialDeposit={initialDeposit}
+              monthlyContribution={monthlyContribution}
+              years={years}
+              onInitialDepositChange={setInitialDeposit}
+              onMonthlyContributionChange={setMonthlyContribution}
+              onYearsChange={setYears}
+            /> 
+          </div>
+
+          {/* Right Column - Chart */}
+          <div className="w-full order-first lg:order-last">
+            <InvestmentChart data={investmentData} years={years} />
+          </div> 
+          {/* Mobile Layout Adjustments */}
+          <div className="lg:hidden mt-12">
+            <div className="text-center space-y-4">
+              <p className="text-white/60 text-sm">
+                Drag on the chart above to see projections at different time periods
+              </p>
+            </div>
+          </div>
+        </div>
+    )
+
+}
 
 export default function InvestmentGrowth() {
   const {
@@ -85,143 +196,19 @@ export default function InvestmentGrowth() {
       </div>
 
       <div className="max-w-7xl mx-auto">
-        <div 
-              className="border border-cyan-900/50 rounded-lg p-6"
-              style={{ background: 'linear-gradient(115deg, rgba(4, 74, 84, 1) 0%, rgba(3, 48, 54, 1) 100%)' }}
-              >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-manrope font-semibold text-white">
-                  Current APY
-                </h3>
-                <span className="text-2xl font-bold text-lime-200">
-                  {apy.toFixed(1)}%
-                </span>
-              </div>
-              <p className="text-white/70 text-sm mb-4">
-                Check the current APY % in the app!
-              </p>
-                <button
-                onClick={() => {
-                  const ctaForm = document.getElementById('cta-form');
-                  if (ctaForm) {
-                    const offset = -150;
-                    const ctaFormPosition = ctaForm.getBoundingClientRect().top + window.scrollY + offset;
-                    window.scrollTo({ 
-                      top: ctaFormPosition, 
-                      behavior: 'smooth',
-                    });
-                  }
-                }}
-                style={{
-                  width: '100%',
-                  background: 'linear-gradient(to right, rgba(8, 120, 120, 1), rgba(2, 80, 80, 1))',
-                  color: 'rgba(255, 255, 255, 1)',
-                  fontFamily: 'Manrope, sans-serif',
-                  fontWeight: 'bold',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '0.5rem',
-                  transition: 'all 0.2s',
-                  transform: 'scale(1)',
-                  cursor: 'pointer',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'linear-gradient(to right, rgba(6, 95, 95, 1), rgba(1, 60, 60, 1))';
-                  e.currentTarget.style.transform = 'scale(1.025)';
-                  e.currentTarget.style.transition = 'ease-in 0.1s';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'linear-gradient(to right, rgba(8, 120, 120, 1), rgba(2, 80, 80, 1))';
-                  e.currentTarget.style.transform = 'scale(1)';
-                }}
-                >
-                  <a href="https://v2.soroswap.finance/earn" target="_blank" rel="noopener noreferrer">
-                    Start earning now <FiExternalLink className="inline-block ml-2 align-middle" />
-                  </a>
-                </button>
-            </div>
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-          {/* Left Column - Content and Controls */}
-          <div className="space-y-8">
-            {/* Input Controls */}
-            {/* APY Info */}
-            {/* <div 
-              className="border border-cyan-900/50 rounded-lg p-6"
-              style={{ background: 'linear-gradient(115deg, rgba(4, 74, 84, 1) 0%, rgba(3, 48, 54, 1) 100%)' }}
-              >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-manrope font-semibold text-white">
-                  Current APY
-                </h3>
-                <span className="text-2xl font-bold text-lime-200">
-                  {apy.toFixed(1)}%
-                </span>
-              </div>
-              <p className="text-white/70 text-sm mb-4">
-                Check the current APY % in the app!
-              </p>
-                <button
-                onClick={() => {
-                  const ctaForm = document.getElementById('cta-form');
-                  if (ctaForm) {
-                    const offset = -150;
-                    const ctaFormPosition = ctaForm.getBoundingClientRect().top + window.scrollY + offset;
-                    window.scrollTo({ 
-                      top: ctaFormPosition, 
-                      behavior: 'smooth',
-                    });
-                  }
-                }}
-                style={{
-                  width: '100%',
-                  background: 'linear-gradient(to right, rgba(8, 120, 120, 1), rgba(2, 80, 80, 1))',
-                  color: 'rgba(255, 255, 255, 1)',
-                  fontFamily: 'Manrope, sans-serif',
-                  fontWeight: 'bold',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '0.5rem',
-                  transition: 'all 0.2s',
-                  transform: 'scale(1)',
-                  cursor: 'pointer',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'linear-gradient(to right, rgba(6, 95, 95, 1), rgba(1, 60, 60, 1))';
-                  e.currentTarget.style.transform = 'scale(1.025)';
-                  e.currentTarget.style.transition = 'ease-in 0.1s';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'linear-gradient(to right, rgba(8, 120, 120, 1), rgba(2, 80, 80, 1))';
-                  e.currentTarget.style.transform = 'scale(1)';
-                }}
-                >
-                Start earning now
-                </button>
-            </div> */}
-            {/* 
-            <InvestmentInputs
-              initialDeposit={initialDeposit}
-              monthlyContribution={monthlyContribution}
-              years={years}
-              onInitialDepositChange={setInitialDeposit}
-              onMonthlyContributionChange={setMonthlyContribution}
-              onYearsChange={setYears}
-            /> */}
+         {/* <ChartSection
+          initialDeposit={initialDeposit}
+          setInitialDeposit={setInitialDeposit}
+          monthlyContribution={monthlyContribution}
+          setMonthlyContribution={setMonthlyContribution}
+          years={years}
+          setYears={setYears}
+          apy={apy}
+          investmentData={investmentData}
+          isLoading={isLoading}
+        />  */}
+        <APYInfo apy={apy} />
 
-          </div>
-
-          {/* Right Column - Chart */}
-          {/* <div className="w-full">
-            <InvestmentChart data={investmentData} years={years} />
-          </div> */}
-        </div>
-      </div>
-
-      {/* Mobile Layout Adjustments */}
-      <div className="lg:hidden mt-12">
-        <div className="text-center space-y-4">
-          <p className="text-white/60 text-sm">
-            Drag on the chart above to see projections at different time periods
-          </p>
-        </div>
       </div>
     </section>
   );
