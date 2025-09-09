@@ -13,7 +13,7 @@
     
     <!-- Package Information -->
     <PackageId>DeFindex.Sdk</PackageId>
-    <Version>0.3.0</Version>
+    <Version>0.3.1</Version>
     <Authors>paltalabs</Authors>
     <Company>paltalabs</Company>
     <Description>Defindex core SDK.</Description>
@@ -24,16 +24,12 @@
     <PackageTags>Defindex;SDK;.Net;Paltalabs;Stellar</PackageTags>
     <PackageProjectUrl>https://github.com/paltalabs/defindex/tree/main/packages/dotnet-sdk</PackageProjectUrl>
     <PackageReleaseNotes>
-      • Updated dependencies to support protocol23
-      • Added comprehensive test suite for SDK
-      • Implemented friendbot integration for testnet
-      • Fixed transaction creation and submission pipeline
-      • Added full deposit-withdraw flow testing
+      • Updated stellar-dotnet-sdk to version 14.0.1
     </PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="stellar-dotnet-sdk" Version="14.0.0" />
+    <PackageReference Include="stellar-dotnet-sdk" Version="14.0.1" />
     <PackageReference Include="xunit" Version="2.6.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.8" />
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
