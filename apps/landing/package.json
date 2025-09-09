@@ -30,6 +30,7 @@
     "@types/react-dom": "^19",
     "@types/react-scroll": "^1.8.10",
     "@types/react-slick": "^0.23.13",
+    "dotenv": "^17.2.2",
     "eslint": "^8",
     "eslint-config-next": "14.2.15",
     "minimatch": "^10.0.3",
