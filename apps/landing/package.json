@@ -20,6 +20,7 @@
     "react-smooth-collapse": "^2.1.2",
     "react-social-icons": "^6.18.0",
     "react-tabs": "^6.0.2",
+    "recharts": "^3.1.2",
     "simplebar-react": "^3.2.6",
     "slick-carousel": "^1.8.1"
   },
