@@ -7,7 +7,7 @@
 
 ***
 
-* [Getting Started](getting-started/README.md)
+* [Understanding DeFindex](getting-started/README.md)
   * [How DeFindex Works](getting-started/how-defindex-works.md)
   * [Concepts](getting-started/01-concepts.md)
   * [Vault Roles](getting-started/vault-roles.md)
@@ -51,7 +51,7 @@
   * [API Documentation](https://api.defindex.io/docs)
   * [Postman Collection](https://drive.google.com/drive/folders/1hp02ySFWFeunRCwiZ6oLCjHzcJXpWhX8?usp=drive_link)
   * [API Integration Tutorial](wallet-developer/api-reference/api.md)
-* [SDKs](wallet-developer/SDKs/README.md)
+* [Frameworks](wallet-developer/SDKs/README.md)
   * [Typescript SDK](wallet-developer/SDKs/02-defindex-sdk.md)
   * [Flutter SDK](wallet-developer/SDKs/01-fluter-sdk.md)
 * [Guides and Tutorials](wallet-developer/guides-and-tutorials/README.md)
