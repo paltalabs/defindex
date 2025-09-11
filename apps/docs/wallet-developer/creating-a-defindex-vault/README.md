@@ -54,12 +54,12 @@ You can deploy your Vault in two ways:
 * [**Using GUI (Basic)**](using-gui-basic.md)
 * [Using the Factory Contract (Advanced)](using-the-factory-advanced.md)
 
-### Step 4: Do a First Investment&#x20;
+### Step 4: Do a First Deposit&#x20;
 
-A **minimum first investment of 1001 units** of your supported asset is required.
+A **minimum first deposit of 1001 units** of your supported asset is required.
 
 * **Why?**
-  * **1000 units** will be permanently locked in the Vault for security.
+  * **1001 units** will be permanently locked in the Vault for security.
 * **Example:**\
   If you are depositing **USDC**, this equals just **0.0001001 USDC** — practically nothing!
 
