@@ -15,10 +15,10 @@ export default function PrivacyPolicy(){
         alt=""
       />
       <Navbar/>
-      <main className="container mx-auto max-w-4xl px-4 sm:px-6 py-12 sm:py-16 lg:py-20">
+      <main className="container mx-auto max-w-4xl px-4 sm:px-6 py-12 sm:py-16 lg:py-20 mt-20">
         <div className="bg-cyan-950/30 backdrop-blur-sm border border-cyan-800/30 rounded-2xl p-4 sm:p-8 lg:p-12 overflow-hidden">
           <header className="mb-12">
-            <h1 className="font-manrope font-bold text-2xl sm:text-3xl lg:text-4xl xl:text-5xl text-white mb-4 text-pretty break-words">
+            <h1 className="font-manrope font-bold text-3xl text-white mb-4 text-pretty break-words">
               DeFindex Privacy Policy
             </h1>
             <p className="font-inter text-gray-300 text-sm text-pretty">
