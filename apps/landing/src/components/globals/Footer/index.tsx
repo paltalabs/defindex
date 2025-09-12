@@ -46,6 +46,12 @@ function Footer() {
                                 </b>
                                 <Link
                                     className="font-manrope text-xs leading-normal text-white duration-200 hover:text-lime-200"
+                                    href={'/privacy-policy'}
+                                >
+                                    Privacy Policy
+                                </Link>
+                                <Link
+                                    className="font-manrope text-xs leading-normal text-white duration-200 hover:text-lime-200"
                                     href="#FAQ"
                                 >
                                     FAQ
