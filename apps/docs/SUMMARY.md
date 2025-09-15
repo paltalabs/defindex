@@ -11,10 +11,12 @@
   * [How DeFindex Works](getting-started/how-defindex-works.md)
   * [Concepts](getting-started/01-concepts.md)
   * [Vault Roles](getting-started/vault-roles.md)
-  * [Mainnet Deployment](getting-started/mainnet-deployment.md)
   * [Troubleshooting](getting-started/troubleshooting.md)
   * [General/FAQ](getting-started/general-faq/README.md)
     * [Additional Resources](getting-started/general-faq/additional-resources.md)
+* [Contract Deployments](contract-deployments/README.md)
+  * [Mainnet Deployment](contract-deployments/mainnet-deployment.md)
+  * [Testnet Deployment](contract-deployments/testnet-deployment.md)
 
 ## Whitepaper
 
