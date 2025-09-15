@@ -42,7 +42,7 @@ Welcome to the DeFindex SDK documentation! Choose the SDK that best fits your de
 * **Use Case:** Web backends, API integrations, server-side applications
 * **Features:** Complete vault management, factory operations, admin functions, full type safety
 
-[**View TypeScript SDK Documentation**](../02-defindex-sdk.md)
+[**View TypeScript SDK Documentation**](../../wallet-developer/02-defindex-sdk.md)
 
 ### Flutter SDK (Deprecated)
 
@@ -52,7 +52,7 @@ Welcome to the DeFindex SDK documentation! Choose the SDK that best fits your de
 * **Use Case:** Mobile wallets, cross-platform apps
 * **Features:** Simplified vault operations, APY tracking, native Flutter integration
 
-[**View Flutter SDK Documentation**](../01-fluter-sdk.md)
+[**View Flutter SDK Documentation**](../../wallet-developer/01-fluter-sdk.md)
 
 ## Need Help?
 

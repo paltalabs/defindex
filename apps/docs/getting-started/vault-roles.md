@@ -45,4 +45,4 @@ Before deploying a vault, you’ll need to establish the following roles (each t
 
 
 
-If you need more information about the roles, you can check the [Roles](../wallet-developer/creating-a-defindex-vault/#core-roles) section at the "getting started" page.
+If you need more information about the roles, you can check the [Roles](../wallet-developer-and-vault-managers/creating-a-defindex-vault/#core-roles) section at the "getting started" page.

@@ -12,7 +12,7 @@ If you're developing in TypeScript, we highly recommend using our official SDK i
 * Complete coverage of all API endpoints
 * Working examples and detailed documentation
 
-[**Check out the DeFindex TypeScript SDK documentation**](../03-defindex-sdk.md) **for the easiest integration experience.**
+[**Check out the DeFindex TypeScript SDK documentation**](../../wallet-developer/03-defindex-sdk.md) **for the easiest integration experience.**
 
 For non-TypeScript projects or custom integrations, continue with this direct API guide below.
 
@@ -203,4 +203,4 @@ main();
 
 For more details, refer to the [DeFindex API documentation](https://api.defindex.io/docs).
 
-Postman collection json [here](../postman_collection.json)
+Postman collection json [here](../../wallet-developer/postman_collection.json)

@@ -1,9 +1,9 @@
 ---
-cover: ../.gitbook/assets/image 31.png
+cover: ../../wallet-developer/.gitbook/assets/image%2031.png
 coverY: 0
 ---
 
-# DeFindex TypeScript SDK
+# Typescript SDK
 
 Welcome to the DeFindex TypeScript SDK documentation! This SDK provides server-side access to DeFindex's vault management system through a comprehensive TypeScript interface. With this SDK, you can:
 
@@ -16,10 +16,11 @@ Welcome to the DeFindex TypeScript SDK documentation! This SDK provides server-s
 ## Prerequisites
 
 Before integrating the SDK, ensure you have:
-- Node.js environment (version 16 or higher)
-- TypeScript knowledge for optimal development experience
-- API key from DeFindex (contact paltalabs team for access)
-- Understanding of Stellar/Soroban blockchain concepts
+
+* Node.js environment (version 16 or higher)
+* TypeScript knowledge for optimal development experience
+* API key from DeFindex (contact paltalabs team for access)
+* Understanding of Stellar/Soroban blockchain concepts
 
 ## Integration Guide
 
@@ -183,13 +184,14 @@ async function completeVaultFlow() {
 }
 ```
 
----
+***
 
 ## Core Functions
 
 ### System Operations
 
 #### Health Check
+
 Monitor API availability and system status:
 
 ```typescript
@@ -204,6 +206,7 @@ if (health.status.reachable) {
 ### Factory Operations
 
 #### Get Factory Address
+
 Retrieve the factory contract address for vault creation:
 
 ```typescript
@@ -212,6 +215,7 @@ console.log('Factory contract:', factory.address);
 ```
 
 #### Create Vault
+
 Deploy a new vault with custom configuration:
 
 ```typescript
@@ -246,6 +250,7 @@ const response = await sdk.createVault(vaultConfig, SupportedNetworks.TESTNET);
 ### Vault Operations
 
 #### Get Vault Information
+
 Query comprehensive vault details:
 
 ```typescript
@@ -264,6 +269,7 @@ vaultInfo.assets.forEach((asset, index) => {
 ```
 
 #### Get User Balance
+
 Check user's vault position:
 
 ```typescript
@@ -277,6 +283,7 @@ console.log(`Underlying Value: ${balance.underlyingBalance}`);
 ```
 
 #### Deposit to Vault
+
 Add funds to a vault:
 
 ```typescript
@@ -292,6 +299,7 @@ const response = await sdk.depositToVault(vaultAddress, depositData, SupportedNe
 ```
 
 #### Withdraw from Vault
+
 Remove funds by specifying amounts:
 
 ```typescript
@@ -306,6 +314,7 @@ const response = await sdk.withdrawFromVault(vaultAddress, withdrawData, Support
 ```
 
 #### Withdraw by Shares
+
 Remove funds by burning vault shares:
 
 ```typescript
@@ -320,6 +329,7 @@ const response = await sdk.withdrawShares(vaultAddress, shareData, SupportedNetw
 ```
 
 #### Get Vault APY
+
 Query current Annual Percentage Yield:
 
 ```typescript
@@ -331,6 +341,7 @@ console.log(`Calculation period: ${apy.period}`);
 ### Administrative Operations
 
 #### Emergency Rescue
+
 Execute emergency asset recovery and pauses strategy (requires Emergency Manager role):
 
 ```typescript
@@ -345,6 +356,7 @@ console.log('Emergency rescue XDR:', response.transactionXDR);
 ```
 
 #### Pause/Unpause Strategy
+
 Control strategy operations (requires appropriate role):
 
 ```typescript
@@ -365,6 +377,7 @@ await sdk.unpauseStrategy(vaultAddress, {
 ### Transaction Management
 
 #### Submit Signed Transactions
+
 Send signed XDR to the Stellar network:
 
 ```typescript
@@ -386,7 +399,7 @@ console.log('Transaction hash:', response.hash);
 console.log('Status:', response.status);
 ```
 
----
+***
 
 ## Error Handling
 
@@ -421,6 +434,7 @@ try {
 ## Security Best Practices
 
 1. **Environment Variables**: Always store API keys in environment variables
+
 ```typescript
 const sdk = new DefindexSDK({
   apiKey: process.env.DEFINDEX_API_KEY // Never hardcode credentials
@@ -428,6 +442,7 @@ const sdk = new DefindexSDK({
 ```
 
 2. **Error Handling**: Always wrap API calls in try-catch blocks
+
 ```typescript
 try {
   const result = await sdk.someOperation();
@@ -441,7 +456,7 @@ try {
 3. **Server-Side Only**: This SDK is designed for server-side use only
 4. **Role Management**: Understand vault roles and permissions before administrative operations
 
----
+***
 
 ## Running Examples
 
@@ -465,12 +480,13 @@ pnpm run example
 ```
 
 The example demonstrates:
-- SDK initialization and authentication
-- API health checking
-- Factory operations and vault creation
-- Vault deposits and withdrawals
-- Administrative vault management
-- Error handling patterns
+
+* SDK initialization and authentication
+* API health checking
+* Factory operations and vault creation
+* Vault deposits and withdrawals
+* Administrative vault management
+* Error handling patterns
 
 ## TypeScript Support
 
@@ -492,8 +508,8 @@ import {
 
 ## Support and Resources
 
-- **API Documentation**: [https://api.defindex.io/docs](https://api.defindex.io/docs)
-- **GitHub Repository / SDK documentation**: [https://github.com/paltalabs/defindex-sdk](https://github.com/paltalabs/defindex-sdk)
-- **Developer Support / Discord Community**: [Join our Discord](https://discord.gg/ftPKMPm38f)
+* **API Documentation**: [https://api.defindex.io/docs](https://api.defindex.io/docs)
+* **GitHub Repository / SDK documentation**: [https://github.com/paltalabs/defindex-sdk](https://github.com/paltalabs/defindex-sdk)
+* **Developer Support / Discord Community**: [Join our Discord](https://discord.gg/ftPKMPm38f)
 
 For additional questions or integration support, please reach out to our developer support team.

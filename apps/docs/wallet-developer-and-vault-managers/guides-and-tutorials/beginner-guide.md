@@ -350,7 +350,7 @@ Once you understand this basic example:
 3. **Support multiple vaults** with different asset combinations
 4. **Add APY tracking** to show vault performance
 5. **Try withdrawal functionality** to redeem your dfTokens
-6. **Explore the SDKs** from [DeFindex](../SDKs/)
+6. **Explore the SDKs** from [DeFindex](../sdks/)
 7. **Learn about strategies** and how they generate yield
 
 ## 📚 Additional Resources
