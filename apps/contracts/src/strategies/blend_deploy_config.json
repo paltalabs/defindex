@@ -91,6 +91,42 @@
                 "reward_threshold": "40",
                 "blend_pool_address": "CCCCIQSDILITHMM7PBSLVDT5MISSY7R26MNZXCX4H7J5JQ5FPIYOGYFS",
                 "blend_pool_name": "yieldblox"
+            },
+            {
+                "name": "autocompound",
+                "keeper": "GC7LSNNCRW4PNLLHIXE53RB7N5BKSQVXTGWYHIYBA7LAWY7XYPC4JGCP",
+                "asset": "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA",
+                "asset_symbol": "XLM",
+                "reward_threshold": "40",
+                "blend_pool_address": "CAE7QVOMBLZ53CDRGK3UNRRHG5EZ5NQA7HHTFASEMYBWHG6MDFZTYHXC",
+                "blend_pool_name": "Orbit"
+            },
+            {
+                "name": "autocompound",
+                "keeper": "GC7LSNNCRW4PNLLHIXE53RB7N5BKSQVXTGWYHIYBA7LAWY7XYPC4JGCP",
+                "asset": "CBLV4ATSIWU67CFSQU2NVRKINQIKUZ2ODSZBUJTJ43VJVRSBTZYOPNUR",
+                "asset_symbol": "USTRY",
+                "reward_threshold": "40",
+                "blend_pool_address": "CAE7QVOMBLZ53CDRGK3UNRRHG5EZ5NQA7HHTFASEMYBWHG6MDFZTYHXC",
+                "blend_pool_name": "Orbit"
+            },
+            {
+                "name": "autocompound",
+                "keeper": "GC7LSNNCRW4PNLLHIXE53RB7N5BKSQVXTGWYHIYBA7LAWY7XYPC4JGCP",
+                "asset": "CAL6ER2TI6CTRAY6BFXWNWA7WTYXUXTQCHUBCIBU5O6KM3HJFG6Z6VXV",
+                "asset_symbol": "CETES",
+                "reward_threshold": "40",
+                "blend_pool_address": "CAE7QVOMBLZ53CDRGK3UNRRHG5EZ5NQA7HHTFASEMYBWHG6MDFZTYHXC",
+                "blend_pool_name": "Orbit"
+            },
+            {
+                "name": "autocompound",
+                "keeper": "GC7LSNNCRW4PNLLHIXE53RB7N5BKSQVXTGWYHIYBA7LAWY7XYPC4JGCP",
+                "asset": "CBZPEXQLJCGUYTAQRQ4FGCXUV5O4TZER5WSOMCGNDNIIO4EJ4FU5GQNZ",
+                "asset_symbol": "oUSD",
+                "reward_threshold": "40",
+                "blend_pool_address": "CAE7QVOMBLZ53CDRGK3UNRRHG5EZ5NQA7HHTFASEMYBWHG6MDFZTYHXC",
+                "blend_pool_name": "Orbit"
             }
         ]
     },
