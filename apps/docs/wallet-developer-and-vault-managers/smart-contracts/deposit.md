@@ -70,46 +70,34 @@ fn deposit(
 
 ### Parameters
 
-- **`amounts_desired`**: Vector specifying the desired quantities of each asset you wish to deposit
-- **`amounts_min`**: Vector specifying the minimum quantities of each asset to be transferred (slippage protection)  
-- **`from`**: Soroban address of the user making the deposit
-- **`invest`**: Boolean indicating whether deposited funds should be automatically invested in vault strategies (`true`) or remain as idle funds (`false`)
+* **`amounts_desired`**: Vector specifying the desired quantities of each asset you wish to deposit
+* **`amounts_min`**: Vector specifying the minimum quantities of each asset to be transferred (slippage protection)
+* **`from`**: Soroban address of the user making the deposit
+* **`invest`**: Boolean indicating whether deposited funds should be automatically invested in vault strategies (`true`) or remain as idle funds (`false`)
 
 ### Implementation Example
 
 ```rust
-use soroban_sdk::{contract, contractimpl, Address, Env, Vec};
-
-#[contract]
-pub struct VaultContract;
-
-#[contractimpl]
-impl VaultContract {
-    pub fn make_deposit(
-        env: Env,
-        vault_address: Address,
-        amounts_desired: Vec<i128>,
-        amounts_min: Vec<i128>,
-        user_address: Address,
-        auto_invest: bool,
-    ) -> Result<(Vec<i128>, i128), ContractError> {
-        // Call the vault's deposit function
-        let client = VaultContractClient::new(&env, &vault_address);
-        
-        client.deposit(
+let deposit_args = vec![
+            e,
             &amounts_desired,
             &amounts_min,
             &user_address,
             &auto_invest,
-        )
-    }
-}
+        ]
+let result = e.try_invoke_contract::(
+            &vault_address,
+            &Symbol::new(&e, "deposit"),
+            deposit_args.into_val(e),
+    ).unwrap_or_else(|_| {
+        panic_with_error!(e, SomeError::SomeError);
+    }).unwrap();
 ```
 
 ## Return Values
 
 All deposit methods return information about the completed transaction:
 
-- **Deposited amounts**: The actual amounts deposited for each asset
-- **Vault shares minted**: Number of vault shares issued to the depositor
-- **Investment allocations** (if `invest = true`): Details of how funds were allocated across strategies
+* **Deposited amounts**: The actual amounts deposited for each asset
+* **Vault shares minted**: Number of vault shares issued to the depositor
+* **Investment allocations** (if `invest = true`): Details of how funds were allocated across strategies
