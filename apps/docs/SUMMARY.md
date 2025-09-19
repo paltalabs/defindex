@@ -48,7 +48,7 @@
   * [Get Balance](wallet-developer-and-vault-managers/smart-contracts/get-balance.md)
   * [Get Vault Info](wallet-developer-and-vault-managers/smart-contracts/get-vault-info.md)
   * [Manage your Vault](wallet-developer-and-vault-managers/smart-contracts/manage-your-vault.md)
-* [API Reference](wallet-developer-and-vault-managers/api-reference/README.md)
+* [API Integration](wallet-developer-and-vault-managers/api-reference/README.md)
   * [Generate API Key](wallet-developer-and-vault-managers/api-reference/generate-api-key.md)
   * [API Documentation](https://api.defindex.io/docs)
   * [Postman Collection](https://drive.google.com/drive/folders/1hp02ySFWFeunRCwiZ6oLCjHzcJXpWhX8?usp=drive_link)
