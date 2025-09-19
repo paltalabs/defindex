@@ -42,6 +42,7 @@ DeFindex offers **curated and audited strategies**, currently live for:
 
 * **Blend Autocompound – Fixed Pool**: USDC, EURC, XLM
 * **Blend Autocompound – YieldBlox Pool**: USDC, EURC, XLM, CETES, USTRY, AQUA
+* **Blend Autocompound – Orbit Pool**: XLM, CETES, USTRY, oUSD
 
 👉 Need support for additional pools? Just ping us.
 
