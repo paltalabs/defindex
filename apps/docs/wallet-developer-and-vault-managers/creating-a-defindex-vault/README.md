@@ -41,7 +41,7 @@ Before deployment, you must configure the following **roles** (each tied to an a
 DeFindex offers **curated and audited strategies**, currently live for:
 
 * **Blend Autocompound – Fixed Pool**: USDC, EURC, XLM
-* **Blend Autocompound – YieldBlox Pool**: USDC, EURC, XLM
+* **Blend Autocompound – YieldBlox Pool**: USDC, EURC, XLM, CETES, USTRY, AQUA
 
 👉 Need support for additional pools? Just ping us.
 
