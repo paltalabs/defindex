@@ -11,10 +11,12 @@
   * [How DeFindex Works](getting-started/how-defindex-works.md)
   * [Concepts](getting-started/01-concepts.md)
   * [Vault Roles](getting-started/vault-roles.md)
-  * [Mainnet Deployment](getting-started/mainnet-deployment.md)
   * [Troubleshooting](getting-started/troubleshooting.md)
   * [General/FAQ](getting-started/general-faq/README.md)
     * [Additional Resources](getting-started/general-faq/additional-resources.md)
+* [Contract Deployments](contract-deployments/README.md)
+  * [Mainnet Deployment](contract-deployments/mainnet-deployment.md)
+  * [Testnet Deployment](contract-deployments/testnet-deployment.md)
 
 ## Whitepaper
 
@@ -46,11 +48,11 @@
   * [Get Balance](wallet-developer-and-vault-managers/smart-contracts/get-balance.md)
   * [Get Vault Info](wallet-developer-and-vault-managers/smart-contracts/get-vault-info.md)
   * [Manage your Vault](wallet-developer-and-vault-managers/smart-contracts/manage-your-vault.md)
-* [API Reference](wallet-developer-and-vault-managers/api-reference/README.md)
+* [API Integration](wallet-developer-and-vault-managers/api-reference/README.md)
   * [Generate API Key](wallet-developer-and-vault-managers/api-reference/generate-api-key.md)
+  * [API Integration Tutorial](wallet-developer-and-vault-managers/api-reference/api.md)
   * [API Documentation](https://api.defindex.io/docs)
   * [Postman Collection](https://drive.google.com/drive/folders/1hp02ySFWFeunRCwiZ6oLCjHzcJXpWhX8?usp=drive_link)
-  * [API Integration Tutorial](wallet-developer-and-vault-managers/api-reference/api.md)
 * [Frameworks](wallet-developer-and-vault-managers/sdks/README.md)
   * [Typescript SDK](wallet-developer-and-vault-managers/sdks/02-defindex-sdk.md)
   * [Flutter SDK](wallet-developer-and-vault-managers/sdks/01-fluter-sdk.md)

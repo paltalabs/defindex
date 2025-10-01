@@ -1,4 +1,12 @@
+---
+description: >-
+  This section covers the withdraw functions on a Vault. You can do this in 3
+  ways: through Smart Contract, Through API or through SDK.
+---
+
 # Withdraw
+
+### Method 1: Smart Contract call
 
 #### Withdraw
 
@@ -8,7 +16,7 @@ To withdraw assets from the vault, use the `withdraw` method. Here are the steps
    * `withdraw_shares`: The amount of vault shares you wish to withdraw.
    * `min_amounts_out`: A vector specifying the minimum amounts required to receive before the transaction fails (tolerance). This amount is represented in underlying assets.
    * `from`: The address of the user performing the withdrawal, who will receive the funds. Represents a Soroban address.
-2.  **Example transaction**:
+2.  **Example arguments transaction**:
 
     ```json
     {
@@ -21,9 +29,35 @@ To withdraw assets from the vault, use the `withdraw` method. Here are the steps
     }
     ```
 
+In code it should look like something like this
+
+```rust
+let withdraw_args = vec![
+            e,
+            &withdraw_shares,
+            &min_amounts_out,
+            &from
+        ]
+let result = e.try_invoke_contract::(
+            &vault_address,
+            &Symbol::new(&e, "withdraw"),
+            withdraw_args.into_val(e),
+    ).unwrap_or_else(|_| {
+        panic_with_error!(e, SomeError::SomeError);
+    }).unwrap();
+```
+
+If you want to withdraw specifying the underlying asset, you need to do a "simple rule of three".
+
+So first you call `total_supply` to get the total amount of shares of the vault, then you need to call `fetch_total_managed_funds` to get the `total_amount` of the asset&#x20;
+
+_(Note that DeFindex support multiple assets, so if you are using a vault with only one asset, you should take the first element and get the `total_amount`)_&#x20;
+
+Then, the needed shares to withdraw will be `shares_to_withdraw=total_supply*amount_to_withdraw/total_amount`
+
 ***
 
-### Withdraw
+### Method 2: Withdraw using API
 
 Withdraws funds from the DeFindex vault.
 
@@ -46,6 +80,8 @@ async function withdraw(amount: number, user: string, apiClient: ApiClient, sign
     return response;
 }
 ```
+
+### Method 3: Using SDK
 
 #### Withdraw from Vault
 
