@@ -41,14 +41,14 @@ function NavDrawer({ toggleDrawer, isOpen }: Props) {
                     <SimpleBar style={{ height: "calc(100vh - 150px)" }}>
                         <div className="p-4">
                             <div className="flex items-center justify-between gap-2 mb-12">
-                                <NextLink href="/">
-                                    <img className="h-7" src="/images/defindex.svg" alt="" />
+                                <NextLink href="/" aria-label="Go to homepage">
+                                    <Image className="h-7" src="/images/defindex.svg" alt="DeFindex logo" width={120} height={28} />
                                 </NextLink>
                                 <button
                                     onClick={toggleDrawer}
-                                    role="butotn"
+                                    role="button"
                                     className="text-[22px]"
-                                    aria-label="drawer close"
+                                    aria-label="Close navigation drawer"
                                 >
                                     <IoCloseOutline />
                                 </button>

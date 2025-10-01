@@ -1,10 +1,10 @@
 "use client";
+import ScheduleDemoButton from "@/components/common/ScheduleDemoButton";
 import NavDrawer from "@/components/globals/navbar/NavDrawer";
 import useNavbarEffect from "@/hooks/useNavbarEffect";
 import NextLink from "next/link";
 import React from "react";
 import { FiMenu } from "react-icons/fi";
-import { Link } from "react-scroll";
 import Lists from "./Lists";
 
 function Navbar() {
@@ -16,10 +16,10 @@ function Navbar() {
     };
 
     return (
-        <div>
-            <nav className={`fixed top-0 left-0 z-[1020] right-0 duration-200 ${nav}`}>
-                <div className="container">
-                    <div className="grid grid-cols-2 lg:grid-cols-[200px_1fr_200px] items-center max-w-[1210px] mx-auto">
+        <div className="w-full">
+            <nav className={`fixed top-0 left-0 z-[1020] right-0 duration-200 w-full ${nav}`}>
+                <div className="container w-full max-w-full">
+                    <div className="grid grid-cols-2 lg:grid-cols-[200px_1fr_200px] items-center w-full px-4">
                         <div>
                             <NextLink href="/">
                                 <img
@@ -33,16 +33,9 @@ function Navbar() {
                             <Lists />
                         </div>
                         <div className="flex justify-end items-center gap-6">
-                            <Link
-                                className="hidden outlined-button rounded-3xl border border-lime-200 px-6 py-3 lg:min-h-[60px] sm:flex gap-2.5 items-center justify-center"
-                                to="cta-form"
-                                offset={-150}
-                                style={{ cursor: 'pointer' }}
-                            >
-                                <span className="font-extrabold font-manrope text-[14px] lg:text-xs lg:leading-tight text-lime-200">
-                                    Contact Us
-                                </span>
-                            </Link>
+                            <div className="hidden sm:block">
+                                <ScheduleDemoButton />
+                            </div>
                             <button
                                 onClick={toggleDrawer}
                                 role="button"

@@ -1,104 +1,117 @@
-import Link from "next/link";
+"use client";
 
-interface Props {
-    label: string;
-    title: string;
-    learn_more: string;
-    thumb: string;
-    strategies: {
-        id: string | number;
-        description: string;
-        icon: string;
-    }[];
-    advices: { title: string; describe: string }[];
-    color: "red" | "green";
-}
+import GradientText from "@/components/common/GradientText";
+import ScheduleDemoButton from "@/components/common/ScheduleDemoButton";
+import { CONTAINER_MAX_WIDTH } from "@/constants/design";
+import Image from "next/image";
 
-import { useEffect, useState } from "react";
-
-function Solutions(props: Props) {
-    const { advices, learn_more, thumb, label, title, strategies, color } = props;
-    const [activeStrategy, setActiveStrategy] = useState<string | number>(strategies[0]?.id);
-
-    const [visible, setVisible] = useState(false);
-
-    useEffect(() => {
-        setVisible(true);
-    }, [activeStrategy]);
-
+export default function Solutions() {
     return (
-        <div className={`
-                transition-opacity duration-1000
-                ${visible ? "opacity-100" : "opacity-0"}
-            `}>
-            <div className="flex gap-4 justify-center flex-col max-w-w-[629px] mb-16 lg:mb-20">
-                <p className="font-familjen-grotesk text-[20px] lg:text-lg uppercase leading-[1.425em] tracking-[-0.03em] text-uppercase text-cyan-950">
-                    {label}
-                </p>
-                <h4
-                    className="font-familjen-grotesk max-w-[600px] text-[56px] xl:text-3xl leading-[1.04em] tracking-[-0.03em] text-cyan-950"
-                    dangerouslySetInnerHTML={{
-                        __html: title.replace(/\*\*(.*?)\*\*/g, "<b>$1</b>"),
-                    }}
-                />
-                <div className="flex">
-                    <Link
-                        href={learn_more}
-                        className="font-extrabold font-manrope text-[14px] xl:text-xs leading-none xl:leading-none text-cyan-950 rounded-3xl bg-lime-200 px-6 py-4 xl:p-6 flex gap-2.5 items-center justify-center"
+        <section id="why-integrate-yield" className="py-20 px-4 md:px-8 xl:px-64 overflow-hidden w-full">
+            {/* Main container with white background and rounded corners */}
+            <div className="max-w-full mx-auto bg-white rounded-3xl p-4 sm:p-8 xl:px-32 md:p-24 w-full" style={{zIndex: 1, position: 'relative', maxWidth: CONTAINER_MAX_WIDTH}}>
+                {/* Title and Schedule Demo button */}
+                <div className="text-center mb-12 sm:mb-16">
+                    <GradientText
+                        as="h2"
+                        variant="green"
+                        className="font-familjen-grotesk text-[32px] sm:text-[48px] md:text-[60px] lg:text-[72px] mb-6 sm:mb-8 mx-[15%] font-extrabold"
                     >
-                        Learn More About Integration
-                    </Link>
+                        Why Integrate Yield with DeFindex
+                    </GradientText>
+                    <ScheduleDemoButton className="min-w-[200px] max-w-[20%] justify-self-center" />
+                </div>
+
+                {/* FOR WALLETS Section */}
+                <div className="mb-12 sm:mb-20">
+                    <div className="text-center mb-8 sm:mb-12 px-4">
+                        <h3 className="font-familjen-grotesk text-[24px] text-[#014751] mb-3 sm:mb-4" style={{letterSpacing: '0.2em', lineHeight: '2.5em', fontWeight: 400}}>
+                            FOR WALLETS
+                        </h3>
+                        <h4 className="font-familjen-grotesk text-2xl sm:text-2xl md:text-[48px] font-semibold text-[#014751] mb-4 sm:mb-6">
+                            Make stablecoin holders stick around
+                        </h4>
+                        <p className="text-base sm:text-[28px] text-[#014751]/80 font-normal mx-auto">
+                            Give your users compelling reasons to stay engaged with automated yield strategies.
+                        </p>
+                    </div>
+
+                    {/* Cards Grid */}
+                    <div className="grid rounded-2xl grid-cols-1 md:grid-cols-3 border border-[#FC5B31] overflow-hidden">
+                        <div className="p-6 md:border-r border-b md:border-b-0 border-[#FC5B31] text-center bg-gradient-card-orange">
+                            <div className="mb-6 flex justify-center">
+                                <Image src="/images/icon-shield-check.svg" alt="Shield Check" width={48} height={48} className="w-12 h-12" />
+                            </div>
+                            <p className="font-inter text-[#014751]">
+                                Safe, automated ways to grow USD balances - without users leaving your app
+                            </p>
+                        </div>
+
+                        <div className="p-6 md:border-r border-b md:border-b-0 border-[#FC5B31] text-center bg-gradient-card-orange">
+                            <div className="mb-6 flex justify-center">
+                                <Image src="/images/icon-sack-money.svg" alt="Sack Money" width={48} height={48} className="w-12 h-12" />
+                            </div>
+                            <p className="font-inter text-[#014751]">
+                                Reduce churn in uncertain economies with capital-preserving vaults
+                            </p>
+                        </div>
+
+                        <div className="p-6 text-center bg-gradient-card-orange">
+                            <div className="mb-6 flex justify-center">
+                                <Image src="/images/icon-profit.svg" alt="Revenue Up" width={48} height={48} className="w-12 h-12" />
+                            </div>
+                            <p className="font-inter text-[#014751]">
+                                Capture 80% of vault fee revenue
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* FOR DEFI APPS Section */}
+                <div>
+                    <div className="text-center mb-8 sm:mb-12 px-4">
+                        <h3 className="font-familjen-grotesk text-[24px] text-[#014751] mb-3 sm:mb-4" style={{letterSpacing: '0.2em', lineHeight: '2.5em', fontWeight: 400}}>
+                            FOR DEFI APPS
+                        </h3>
+                        <h4 className="font-familjen-grotesk text-2xl sm:text-2xl md:text-[48px] font-semibold text-[#014751] mb-4 sm:mb-6">
+                            Unlock new TVL with safer yield
+                        </h4>
+                        <p className="text-base sm:text-[28px] text-[#014751]/80 font-normal mx-auto">
+                            Attract stablecoin holders and convert them into active users
+                        </p>
+                    </div>
+
+                    {/* Cards Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 rounded-2xl border border-[#afd395] overflow-hidden">
+                        <div className="p-6 text-center md:border-r border-b md:border-b-0 border-[#afd395] bg-gradient-card-purple">
+                            <div className="mb-6 flex justify-center">
+                                <Image src="/images/icon-coin.svg" alt="Stablecoin" width={48} height={48} className="w-12 h-12 [filter:brightness(0)_saturate(100%)_invert(49%)_sepia(96%)_saturate(445%)_hue-rotate(75deg)_brightness(108%)_contrast(101%)]" />
+                            </div>
+                            <p className="font-inter text-[#014751]">
+                                Stablecoins are the #1 held asset in emerging markets - we help you attract them
+                            </p>
+                        </div>
+
+                        <div className="p-6 text-center md:border-r border-b md:border-b-0 border-[#afd395] bg-gradient-card-purple">
+                            <div className="mb-6 flex justify-center">
+                                <Image src="/images/icon-scalability.svg" alt="Scalability" width={48} height={48} className="w-12 h-12 [filter:brightness(0)_saturate(100%)_invert(49%)_sepia(96%)_saturate(445%)_hue-rotate(75deg)_brightness(108%)_contrast(101%)]" />
+                            </div>
+                            <p className="font-inter text-[#014751]">
+                                Convert passive holders into active depositors with automated strategies
+                            </p>
+                        </div>
+
+                        <div className="p-6 text-center bg-gradient-card-purple">
+                            <div className="mb-6 flex justify-center">
+                                <Image src="/images/icon-profit.svg" alt="Revenue Up" width={48} height={48} className="w-12 h-12 [filter:brightness(0)_saturate(100%)_invert(49%)_sepia(96%)_saturate(445%)_hue-rotate(75deg)_brightness(108%)_contrast(101%)]" />
+                            </div>
+                            <p className="font-inter text-[#014751]">
+                                Take 80% of all yield fees in your app
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div className="grid sm:grid-cols-4 mb-12 md:mb-16 lg:mb-20">
-                <img
-                    loading="lazy"
-                    width={'auto'}
-                    height={'full'}
-                    src={thumb}
-                    className="rounded-t-xl sm:rounded-t-none sm:rounded-tl-3xl sm:rounded-l-3xl sm:w-auto w-full"
-                    alt=""
-                />
-                {strategies.map(({ icon, description, id }) => (
-                    <div
-                        key={id}
-                        className={`
-                            group grid place-content-center border p-4 xl:p-10 sm:last:rounded-r-3xl last:rounded-b-xl sm:last:rounded-b-none sm:last:rounded-br-3xl sm:border-r-0 border-b-0 sm:border-b last:border-b last:border-r
-                            ${
-                                activeStrategy === id
-                                    ? (color === "red"
-                                        ? "bg-orange-500/20 border-orange-500"
-                                        : "bg-green-700/20 border-green-700")
-                                    : (color === "red"
-                                        ? "border-orange-500/40"
-                                        : "border-green-700/40 opacity-50")
-                            }
-                        `}
-                        onClick={() => setActiveStrategy(id)}
-                    >
-                        <div className={`mb-6 flex justify-center ${activeStrategy !== id ? "opacity-30 contrast-0" : ""}`}>
-                            <img src={icon} alt="" className="md:w-auto w-6" />
-                        </div>
-                        <p className={`font-inter-tight text-center text-[16px] xl:text-md text-cyan-950 line-clamp-3 ${activeStrategy !== id ? "text-opacity-30" : ""}`}>
-                            {description}
-                        </p>
-                    </div>
-                ))}
-            </div>
-            <div className="flex gap-20">
-                {advices.map(({ describe, title }, index) => (
-                    <div key={index} className="">
-                        <b className="font-extrabold font-inter-tight text-[16px] md:text-[20px] xl:text-lg leading-[1.6075em] text-cyan-900/80">
-                            {title}
-                        </b>{" "}
-                        <p className="inline font-inter-tight text-[16px] md:text-[20px] xl:text-lg leading-[1.6075em] text-cyan-900/80">
-                            {describe}
-                        </p>
-                    </div>
-                ))}
-            </div>
-        </div>
+        </section>
     );
 }
-
-export default Solutions;
