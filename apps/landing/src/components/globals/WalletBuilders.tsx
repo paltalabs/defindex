@@ -1,4 +1,4 @@
-"use client";
+/* "use client";
 import Solutions from "@/components/globals/Solutions";
 import NavigateTab from "@/context/NavigateTab";
 import { useContext } from "react";
@@ -123,3 +123,4 @@ function WalletBuilders() {
 }
 
 export default WalletBuilders;
+ */
