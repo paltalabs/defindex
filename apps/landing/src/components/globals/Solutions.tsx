@@ -7,7 +7,7 @@ import Image from "next/image";
 
 export default function Solutions() {
     return (
-        <section id="why-integrate-yield" className="py-20 px-4 md:px-8 xl:px-64 overflow-hidden w-full">
+        <section id="why-integrate-yield" className="py-20 px-4 md:px-8 overflow-hidden w-full">
             {/* Main container with white background and rounded corners */}
             <div className="max-w-full mx-auto bg-white rounded-3xl p-4 sm:p-8 xl:px-32 md:p-24 w-full" style={{zIndex: 1, position: 'relative', maxWidth: CONTAINER_MAX_WIDTH}}>
                 {/* Title and Schedule Demo button */}
@@ -15,7 +15,8 @@ export default function Solutions() {
                     <GradientText
                         as="h2"
                         variant="green"
-                        className="font-familjen-grotesk text-[32px] sm:text-[48px] md:text-[60px] lg:text-[72px] mb-6 sm:mb-8 mx-[15%] font-extrabold"
+                        className="font-familjen-grotesk text-[32px] sm:text-[48px] md:text-[60px] lg:text-[72px] mb-6 sm:mb-8 mx-[20%] font-extrabold"
+                        style={{lineHeight: '1.0em'}}
                     >
                         Why Integrate Yield with DeFindex
                     </GradientText>

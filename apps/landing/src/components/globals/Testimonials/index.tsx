@@ -34,7 +34,7 @@ export default function Testimonials() {
         <section id="what-builders-are-doing" className="py-20 px-4 md:px-8 lg:px-16 overflow-hidden w-full">
             <div className="max-w-full mx-auto w-full" style={{maxWidth: 'calc(100vw - 2rem)'}}>
                 {/* Section Header */}
-                <div className="text-center mb-12 sm:mb-16 mx-[27%]" style={{lineHeight: '2.5em'}}>
+                <div className="text-center mb-12 sm:mb-16 mx-[25%]" style={{lineHeight: '2.5em'}}>
                     <GradientText
                         variant="tertiary" 
                         className="

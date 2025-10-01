@@ -1,4 +1,5 @@
 "use client";
+import CodeExample from "@/components/globals/CodeExample";
 import Footer from "@/components/globals/Footer";
 import Frequently from "@/components/globals/Frequently";
 import Hero from "@/components/globals/Hero";
@@ -7,7 +8,6 @@ import OurTeam from "@/components/globals/OurTeam";
 import Security from "@/components/globals/Security";
 import Solutions from "@/components/globals/Solutions";
 import Testimonials from "@/components/globals/Testimonials";
-import CodeExample from "@/components/globals/CodeExample";
 import NavigateTab from "@/context/NavigateTab";
 import Image from "next/image";
 import { useState } from "react";
@@ -26,19 +26,20 @@ function Home() {
                     className="object-cover opacity-20"
                 />
             </div>
+            <div className="w-[90%] max-w-[1440px] mx-auto">
+                <NavigateTab.Provider value={{ index, setIndex }}>
+                    <Navbar />
+                    <Hero />
+                    <Solutions />
+                    <Testimonials />
+                    <CodeExample />
+                    <Security />
+                    <OurTeam />
+                    <Frequently />
+                </NavigateTab.Provider>
 
-            <NavigateTab.Provider value={{ index, setIndex }}>
-                <Navbar />
-                <Hero />
-                <Solutions />
-                <Testimonials />
-                <CodeExample />
-                <Security />
-                <OurTeam />
-                <Frequently />
-            </NavigateTab.Provider>
-
-            <Footer />
+                <Footer />
+            </div>
         </div>
     );
 }
