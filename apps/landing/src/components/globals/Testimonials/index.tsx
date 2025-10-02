@@ -76,7 +76,7 @@ export default function Testimonials() {
                                 "Our users don't care about blockchain — they care about saving and sending money safely. DeFindex vaults fit that promise: tested, reliable components that help them grow stablecoin savings inside the Beans wallet"
                             </blockquote>
                             <cite className="font-inter text-sm sm:text-base text-cyan-950 not-italic block mt-3 sm:mt-4">
-                                Wouter, CMO Beans
+                                Wouter, CEO & Founder, Beans.
                             </cite>
                         </div>
                         <div className="absolute bottom-0 right-0 w-[45%] sm:w-[40%] md:w-[35%] h-full flex items-end justify-end">
@@ -100,7 +100,7 @@ export default function Testimonials() {
                                 "With DeFindex, we unlock new TVL by giving our users simple, automated ways to grow their stablecoins. It keeps them engaged longer — without adding complexity for our team."
                             </blockquote>
                             <cite className="font-inter text-sm sm:text-base text-cyan-950 not-italic block mt-3 sm:mt-4">
-                                Esteban, CEO Soroswap
+                                Esteban, CEO & Founder, Soroswap.
                             </cite>
                         </div>
                         <div className="md:order-1 flex justify-center">
