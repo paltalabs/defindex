@@ -19,7 +19,7 @@ function Hero() {
     return (
         <section
             id="hero"
-            className="pt-24 pb-12 mb-[400px] lg:mb-[400px] xl:mb-[200px] md:pb-6 md:pt-28 lg:pt-[180px] bg-[#033036] overflow-hidden w-full"
+            className="pt-16 pb-12 mb-[400px] lg:mb-[400px] xl:mb-[200px] md:pb-6 md:pt-20 lg:pt-24 bg-[#033036] overflow-hidden w-full"
         >
             <div className="container w-full max-w-full px-4">
                 <div className="grid lg:grid-cols-3 items-center gap-8 w-full">

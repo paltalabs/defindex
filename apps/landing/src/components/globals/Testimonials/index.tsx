@@ -11,7 +11,7 @@ const features = [
         id: 0,
         icon: "/images/network-wired.svg",
         title: "Simple Integration",
-        description: "Get started with our SDK in under an hour.",
+        description: "Get started with our API in under an hour.",
     },
     {
         id: 1,
@@ -23,7 +23,7 @@ const features = [
         id: 2,
         icon: "/images/icon-exchange.svg",
         title: "Multi-Token Support",
-        description: "Support for USDC, EURC, and other stablecoins.",
+        description: "Support for USDC, EURC, and any asset.",
     },
 ];
 
@@ -97,14 +97,14 @@ export default function Testimonials() {
                                 Integrated in under 1 week
                             </h3>
                             <blockquote className="font-inter text-sm sm:text-base md:text-lg text-cyan-950/80 italic">
-                                "With DeFindex, we unlock new TVL by giving our users simple, automated ways to grow their stablecoins. It keeps them engaged longer — without adding complexity for our team."
+                                "With DeFindex, we unlock new TVL by giving our users simple, automated ways to grow their balance. It keeps them engaged longer — without adding complexity for our team."
                             </blockquote>
                             <cite className="font-inter text-sm sm:text-base text-cyan-950 not-italic block mt-3 sm:mt-4">
                                 Esteban, CEO & Founder, Soroswap.
                             </cite>
                         </div>
-                        <div className="md:order-1 flex justify-center">
-                            <Image src="/images/soroswap-preview.png" alt="Soroswap App Mockup" width={600} height={400} className="max-w-full h-auto rounded-lg" style={{filter: 'drop-shadow(5px 5px 10px rgba(0, 0, 0, 0.3))'}} />
+                        <div className="md:order-1 flex justify-center ">
+                            <Image src="/images/soroswap-earn.webp" alt="Soroswap App Mockup" width={200} height={600} className="max-h-full w-auto rounded-lg" style={{ filter: 'drop-shadow(5px 5px 10px rgba(0, 0, 0, 0.1))', transform: 'rotate(-10deg)' }} />
                         </div>
                     </div>
                 </div>

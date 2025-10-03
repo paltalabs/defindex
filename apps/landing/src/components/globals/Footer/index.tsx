@@ -98,7 +98,7 @@ export default function Footer() {
                                 <img src="/images/icon-discord-black.svg" alt="Discord" className="w-3 h-3 sm:w-4 sm:h-4" />
                             </Link>
                             <Link
-                                href="https://www.linkedin.com/company/paltalabs"
+                                href="https://www.linkedin.com/company/defindex"
                                 className="w-8 h-8 sm:w-10 sm:h-10 lg:w-8 lg:h-8 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-200"
                             >
                                 <img src="/images/icon-linkedin-black.svg" alt="LinkedIn" className="w-3 h-3 sm:w-4 sm:h-4" />

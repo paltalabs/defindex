@@ -28,10 +28,10 @@ function Lists({ toggle }: { toggle?: () => void }) {
                             target="_blank"
                             rel="noopener noreferrer"
                         >
-                            <span className="text-white leading-none text-[14px] lg:text-xs font-manrope hover:underline transition-colors duration-200 hover:text-[#D3FFB4]" style={{lineHeight: '16px'}}>
+                            <span className="text-white leading-none text-[14px] lg:text-xs font-manrope hover:underline transition-colors duration-200 hover:text-[#D3FFB4]" style={{lineHeight: '16px', textShadow: '0 2px 4px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4)'}}>
                                 {name}
                             </span>
-                            <FiExternalLink className="text-white text-[12px] lg:text-[10px] transition-colors duration-200 group-hover:text-[#D3FFB4]" />
+                            <FiExternalLink className="text-white text-[12px] lg:text-[10px] transition-colors duration-200 group-hover:text-[#D3FFB4]" style={{filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))'}} />
                         </a>
                     ) : (
                         <Link
@@ -45,7 +45,7 @@ function Lists({ toggle }: { toggle?: () => void }) {
                             spy={true}
                             smooth={true}
                         >
-                            <span className="text-white leading-none text-[14px] lg:text-xs font-manrope hover:underline transition-colors duration-200 hover:text-[#D3FFB4]"  style={{lineHeight: '16px'}}>
+                            <span className="text-white leading-none text-[14px] lg:text-xs font-manrope hover:underline transition-colors duration-200 hover:text-[#D3FFB4]"  style={{lineHeight: '16px', textShadow: '0 2px 4px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4)'}}>
                                 {name}
                             </span>
                         </Link>

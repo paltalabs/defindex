@@ -29,8 +29,8 @@ const securityFeatures: SecurityFeature[] = [
     {
         id: 3,
         icon: "/images/icon-stablecoin-first.svg",
-        title: "Stablecoin-First",
-        description: "USDC, EURC, and more stablecoins",
+        title: "Support for Any Asset",
+        description: "USDC, EURC, and more stellar assets",
     },
 ];
 

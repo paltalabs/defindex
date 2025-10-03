@@ -44,7 +44,7 @@ export default function Solutions() {
                                 <Image src="/images/icon-shield-check.svg" alt="Shield Check" width={48} height={48} className="w-12 h-12" />
                             </div>
                             <p className="font-inter text-[#014751]">
-                                Safe, automated ways to grow USD balances - without users leaving your app
+                                Safe, automated ways to grow USD balances - without users leaving your app.
                             </p>
                         </div>
 
@@ -53,7 +53,7 @@ export default function Solutions() {
                                 <Image src="/images/icon-sack-money.svg" alt="Sack Money" width={48} height={48} className="w-12 h-12" />
                             </div>
                             <p className="font-inter text-[#014751]">
-                                Reduce churn in uncertain economies with capital-preserving vaults
+                                Reduce churn in uncertain economies with capital-preserving vaults.
                             </p>
                         </div>
 
@@ -62,7 +62,7 @@ export default function Solutions() {
                                 <Image src="/images/icon-profit.svg" alt="Revenue Up" width={48} height={48} className="w-12 h-12" />
                             </div>
                             <p className="font-inter text-[#014751]">
-                                Capture 80% of vault fee revenue
+                                Capture revenue.
                             </p>
                         </div>
                     </div>
@@ -78,7 +78,7 @@ export default function Solutions() {
                             Unlock new TVL with safer yield
                         </h4>
                         <p className="text-base sm:text-[28px] text-[#014751]/80 font-normal mx-auto">
-                            Attract stablecoin holders and convert them into active users
+                            Attract new users and convert them into active users.
                         </p>
                     </div>
 
@@ -89,7 +89,7 @@ export default function Solutions() {
                                 <Image src="/images/icon-coin.svg" alt="Stablecoin" width={48} height={48} className="w-12 h-12 [filter:brightness(0)_saturate(100%)_invert(49%)_sepia(96%)_saturate(445%)_hue-rotate(75deg)_brightness(108%)_contrast(101%)]" />
                             </div>
                             <p className="font-inter text-[#014751]">
-                                Stablecoins are the #1 held asset in emerging markets - we help you attract them
+                                Stablecoins are the #1 held asset in emerging markets - we help you attract them.
                             </p>
                         </div>
 
@@ -98,7 +98,7 @@ export default function Solutions() {
                                 <Image src="/images/icon-scalability.svg" alt="Scalability" width={48} height={48} className="w-12 h-12 [filter:brightness(0)_saturate(100%)_invert(49%)_sepia(96%)_saturate(445%)_hue-rotate(75deg)_brightness(108%)_contrast(101%)]" />
                             </div>
                             <p className="font-inter text-[#014751]">
-                                Convert passive holders into active depositors with automated strategies
+                                Unlock new TVL.
                             </p>
                         </div>
 
@@ -107,7 +107,7 @@ export default function Solutions() {
                                 <Image src="/images/icon-profit.svg" alt="Revenue Up" width={48} height={48} className="w-12 h-12 [filter:brightness(0)_saturate(100%)_invert(49%)_sepia(96%)_saturate(445%)_hue-rotate(75deg)_brightness(108%)_contrast(101%)]" />
                             </div>
                             <p className="font-inter text-[#014751]">
-                                Take 80% of all yield fees in your app
+                                Increase distribution of your DeFi protocol.
                             </p>
                         </div>
                     </div>

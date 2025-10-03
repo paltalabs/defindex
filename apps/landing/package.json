@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@types/react-syntax-highlighter": "^15.5.13",
+    "clsx": "^2.1.1",
     "minimatch": "^10.0.3",
     "next": "14.2.15",
     "react": "^19",
@@ -22,8 +23,10 @@
     "react-social-icons": "^6.18.0",
     "react-syntax-highlighter": "^15.6.6",
     "react-tabs": "^6.0.2",
+    "shadcn": "^3.3.1",
     "simplebar-react": "^3.2.6",
-    "slick-carousel": "^1.8.1"
+    "slick-carousel": "^1.8.1",
+    "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
     "@types/node": "^20",
