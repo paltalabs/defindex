@@ -7,7 +7,7 @@ import Image from "next/image";
 
 export default function Solutions() {
     return (
-        <section id="why-integrate-yield" className="py-20 px-4 md:px-8 overflow-hidden w-full">
+        <section id="why-integrate-yield" className="py-10 px-4 md:px-8 overflow-hidden w-full">
             {/* Main container with white background and rounded corners */}
             <div className="max-w-full mx-auto bg-white rounded-3xl p-4 sm:p-8 xl:px-32 md:p-24 w-full" style={{zIndex: 1, position: 'relative', maxWidth: CONTAINER_MAX_WIDTH}}>
                 {/* Title and Schedule Demo button */}
@@ -15,7 +15,7 @@ export default function Solutions() {
                     <GradientText
                         as="h2"
                         variant="green"
-                        className="font-familjen-grotesk text-[32px] sm:text-[48px] md:text-[60px] lg:text-[72px] mb-6 sm:mb-8 mx-[20%] font-extrabold"
+                        className="font-familjen-grotesk text-[32px] sm:text-[48px] md:text-[60px] lg:text-[72px] mb-6 sm:mb-8 mx-4 font-extrabold"
                         style={{lineHeight: '1.0em'}}
                     >
                         Why Integrate Yield with DeFindex
@@ -30,10 +30,10 @@ export default function Solutions() {
                             FOR WALLETS
                         </h3>
                         <h4 className="font-familjen-grotesk text-2xl sm:text-2xl md:text-[48px] font-semibold text-[#014751] mb-4 sm:mb-6">
-                            Make stablecoin holders stick around
+                            Make users stick around
                         </h4>
                         <p className="text-base sm:text-[28px] text-[#014751]/80 font-normal mx-auto">
-                            Give your users compelling reasons to stay engaged with automated yield strategies.
+                            Give your users reasons to stay engaged with automated yield strategies.
                         </p>
                     </div>
 
@@ -44,7 +44,7 @@ export default function Solutions() {
                                 <Image src="/images/icon-shield-check.svg" alt="Shield Check" width={48} height={48} className="w-12 h-12" />
                             </div>
                             <p className="font-inter text-[#014751]">
-                                Safe, automated ways to grow USD balances - without users leaving your app.
+                                Safe, automated ways to grow balances - without users leaving your app.
                             </p>
                         </div>
 

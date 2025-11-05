@@ -38,13 +38,13 @@ export default function Security() {
     const [activeCard, setActiveCard] = useState(1);
 
     return (
-        <section id="secure-by-design" className="py-20 px-4 md:px-8 lg:px-16 overflow-hidden w-full">
+        <section id="secure-by-design" className="py-10 px-4 md:px-8 lg:px-16 overflow-hidden w-full">
             <div className="max-w-full mx-auto w-full" style={{maxWidth: 'calc(100vw - 2rem)'}}>
                 {/* Title */}
                 <div className="text-center mb-16">
                     <GradientText 
                         variant="secondary"
-                        className="font-familjen-grotesk text-[28px] sm:text-[38px] md:text-[48px] lg:text-[60px] font-bold px-4">
+                        className="font-familjen-grotesk text-[32px] sm:text-[42px] md:text-[48px] lg:text-[60px] font-bold px-4">
                         Secure by design
                     </GradientText>
 

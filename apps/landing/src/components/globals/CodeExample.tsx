@@ -56,7 +56,7 @@ async function performDepositAndSendTransaction() {
 }`;
 
     return (
-        <section id="quick-deposit-example" className="py-20 px-4 md:px-8 lg:px-16 overflow-hidden w-full">
+        <section id="quick-deposit-example" className="py-10 px-4 md:px-8 lg:px-16 overflow-hidden w-full">
             <div className="max-w-full mx-auto bg-white rounded-3xl p-4 sm:p-8 md:p-16 w-full" style={{maxWidth: 'calc(100vw - 2rem)'}}>
                 <div className="flex flex-col items-center text-center gap-8 sm:gap-12">
                     {/* Left side - Text and buttons */}
