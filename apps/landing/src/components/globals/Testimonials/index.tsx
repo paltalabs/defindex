@@ -22,8 +22,8 @@ const features = [
     {
         id: 2,
         icon: "/images/icon-exchange.svg",
-        title: "Multi-Token Support",
-        description: "Support for USDC, EURC, and any asset.",
+        title: "Multi-Token Vault",
+        description: "Support for USDC, EURC, and any asset. Support major Stellar protocols.",
     },
 ];
 
@@ -31,23 +31,22 @@ export default function Testimonials() {
     const [activeCard, setActiveCard] = useState(0);
 
     return (
-        <section id="what-builders-are-doing" className="py-20 px-4 md:px-8 lg:px-16 overflow-hidden w-full">
+        <section id="what-builders-are-doing" className="py-10 px-4 md:px-8 lg:px-16 overflow-hidden w-full">
             <div className="max-w-full mx-auto w-full" style={{maxWidth: 'calc(100vw - 2rem)'}}>
                 {/* Section Header */}
-                <div className="text-center mb-12 sm:mb-16 mx-[25%]" style={{lineHeight: '2.5em'}}>
+                <div className="text-center mb-12 sm:mb-16 mx-4">
                     <GradientText
                         variant="tertiary" 
                         className="
                             font-familjen-grotesk 
-                            text-[28px] 
-                            sm:text-[38px] 
-                            md:text-[48px] 
+                            text-[32px] 
+                            sm:text-[46px] 
+                            md:text-[52px] 
                             lg:text-[72px] 
                             font-bold 
                             text-white 
                             mb-4
                             "
-                        style={{}}
                         >
                         What builders are doing with DeFindex
                     </GradientText>
@@ -59,17 +58,17 @@ export default function Testimonials() {
                 {/* Testimonial 1 - Beans */}
                 <div className="mb-8 sm:mb-12">
                     <div
-                        className="rounded-2xl relative overflow-hidden min-h-[400px] sm:min-h-[500px]"
+                        className="rounded-2xl p-6 sm:p-8 md:p-12 pb-0 sm:pb-0 md:pb-0 lg:pb-0 grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-stretch"
                         style={{
                             background: 'linear-gradient(100deg, #FFFFFF 0%, #DEC9F4 70%, #024852 100%)',
                         }}
                     >
-                        <div className="relative z-10 p-6 sm:p-8 md:p-12 max-w-[60%] md:max-w-[55%]">
+                        <div className="md:order-0 pb-12">
                             <div className="inline-block bg-[#D3FFB4] text-[#014751] px-3 py-1 rounded-full text-xs sm:text-sm font-semibold mb-4 sm:mb-6">
                                 Case Study
                             </div>
-                            <Image src="/images/beans-logo.svg" alt="Beans" width={150} height={48} className="h-8 sm:h-12 mb-4 sm:mb-6" />
-                            <h3 className="font-familjen-grotesk text-xl sm:text-2xl md:text-3xl font-semibold text-cyan-950 mb-3 sm:mb-4">
+                            <Image src="/images/beans-logo.svg" alt="Beans logo" width={150} height={48} className="h-auto mb-4 sm:mb-6 aspect-auto" />
+                            <h3 className="font-familjen-grotesk text-lg sm:text-xl md:text-3xl font-semibold text-cyan-950 mb-3 sm:mb-4">
                                 $610K in stablecoin deposits within 3 months
                             </h3>
                             <blockquote className="font-inter text-sm sm:text-base md:text-lg text-cyan-950/80 italic">
@@ -79,8 +78,9 @@ export default function Testimonials() {
                                 Wouter, CEO & Founder, Beans.
                             </cite>
                         </div>
-                        <div className="absolute bottom-0 right-0 w-[45%] sm:w-[40%] md:w-[35%] h-full flex items-end justify-end">
-                            <Image src="/images/testimonial-mockup.png" alt="Beans App Mockup" width={500} height={600} className="w-full h-auto max-h-full object-contain object-bottom" />
+                        <div className="md:order-1 flex items-end justify-center w-full">
+                            <Image src="/images/testimonial-mockup.webp" alt="Beans App Mockup" width={500} height={600} className="w-full h-auto max-h-full object-contain object-bottom" />
+
                         </div>
                     </div>
                 </div>
@@ -89,22 +89,21 @@ export default function Testimonials() {
                 <div className="mb-12 sm:mb-16">
                     <div className="bg-[#D3FFB4] rounded-2xl p-6 sm:p-8 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-center">
                         <div className="md:order-2">
-                            <div className="inline-block bg-[#033036] text-[#D3FFB4] px-3 py-1 rounded-full text-xs sm:text-sm font-semibold mb-4 sm:mb-6">
+                            <a className="inline-block bg-[#033036] text-[#D3FFB4] px-3 py-1 rounded-full text-xs sm:text-sm font-semibold mb-4 sm:mb-6" href="https://docs.defindex.io/" target="_blank" rel="noopener noreferrer">
                                 Case Study
-                            </div>
-                            <Image src="/images/soroswap-logo.svg" alt="Soroswap" width={150} height={48} className="h-8 sm:h-12 mb-4 sm:mb-6" />
-                            <h3 className="font-familjen-grotesk text-xl sm:text-2xl md:text-3xl font-semibold text-cyan-950 mb-3 sm:mb-4">
-                                Integrated in under 1 week
+                            </a>
+                            <Image src="/images/seevcash-logo.svg" alt="Seevcash" width={185} height={0} className="h-auto mb-4 sm:mb-6 aspect-auto" />
+                            <h3 className="font-familjen-grotesk text-[46px] sm:text-[48px] md:text-[56px] lg:text-3xl font-semibold text-cyan-950 mb-3 sm:mb-4">
+                                "Users love check their growing balances."
                             </h3>
                             <blockquote className="font-inter text-sm sm:text-base md:text-lg text-cyan-950/80 italic">
-                                "With DeFindex, we unlock new TVL by giving our users simple, automated ways to grow their balance. It keeps them engaged longer — without adding complexity for our team."
                             </blockquote>
                             <cite className="font-inter text-sm sm:text-base text-cyan-950 not-italic block mt-3 sm:mt-4">
-                                Esteban, CEO & Founder, Soroswap.
+                                Dawuda Iddrisu, CEO Seevcash.
                             </cite>
                         </div>
                         <div className="md:order-1 flex justify-center ">
-                            <Image src="/images/soroswap-earn.webp" alt="Soroswap App Mockup" width={200} height={600} className="max-h-full w-auto rounded-lg" style={{ filter: 'drop-shadow(5px 5px 10px rgba(0, 0, 0, 0.1))', transform: 'rotate(-10deg)' }} />
+                            <Image src="/images/seevcash-mockup.webp" alt="Seevcash App Mockup" width={200} height={600} className="max-h-full w-auto max-w-[80%] rounded-lg" style={{ filter: 'drop-shadow(5px 5px 10px rgba(0, 0, 0, 0.1))', transform: 'rotate(-10deg)' }} />
                         </div>
                     </div>
                 </div>
