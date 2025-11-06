@@ -9,7 +9,7 @@ export default function Footer() {
             <div className="absolute inset-0">
                 <Image
                     src="/images/footer-background-asset.png"
-                    alt=""
+                    alt="DeFindex Stellar ecosystem footer background"
                     fill
                     className="object-cover opacity-30"
                 />
@@ -93,30 +93,49 @@ export default function Footer() {
                         <div className="flex gap-3 sm:gap-4 lg:flex-col lg:justify-end">
                             <Link
                                 href="https://x.com/defindex_"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="Follow DeFindex on X/Twitter for Stellar ecosystem updates"
                                 className="w-8 h-8 sm:w-10 sm:h-10 lg:w-8 lg:h-8 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-normal"
                             >
                                 <img src="/images/icon-x-black.svg" alt="X/Twitter" className="w-3 h-3 sm:w-4 sm:h-4" />
                             </Link>
                             <Link
                                 href="https://discord.gg/CUC26qUTw7"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="Join DeFindex Discord community for Stellar DeFi discussions"
                                 className="w-8 h-8 sm:w-10 sm:h-10 lg:w-8 lg:h-8 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-normal"
                             >
                                 <img src="/images/icon-discord-black.svg" alt="Discord" className="w-3 h-3 sm:w-4 sm:h-4" />
                             </Link>
                             <Link
                                 href="https://www.linkedin.com/company/defindex"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="Connect with DeFindex on LinkedIn"
                                 className="w-8 h-8 sm:w-10 sm:h-10 lg:w-8 lg:h-8 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-normal"
                             >
                                 <img src="/images/icon-linkedin-black.svg" alt="LinkedIn" className="w-3 h-3 sm:w-4 sm:h-4" />
                             </Link>
                             <Link
                                 href="https://github.com/paltalabs/defindex"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="View DeFindex Stellar SDK repository on GitHub"
                                 className="w-8 h-8 sm:w-10 sm:h-10 lg:w-8 lg:h-8 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-normal"
                             >
                                 <img src="/images/icon-github-black.svg" alt="GitHub" className="w-3 h-3 sm:w-4 sm:h-4" />
                             </Link>
                         </div>
                     </div>
+                </div>
+
+                {/* Stellar ecosystem mention */}
+                <div className="mt-8 pt-6 border-t border-white/10 text-center">
+                    <p className="font-manrope text-xs sm:text-sm text-white/70">
+                        Built on <span className="text-lime-200 font-semibold">Stellar Network</span> | Powered by <span className="text-lime-200 font-semibold">Soroban</span>
+                    </p>
                 </div>
             </div>
         </footer>
