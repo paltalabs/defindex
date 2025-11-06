@@ -124,7 +124,7 @@ async function completeVaultFlow() {
       assets: [{
         address: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC", // XLM asset
         strategies: [{
-          address: "CBO77JLVAT54YBRHBY4PSITLILWAAXX5JHPXGBFRW2XUFQKXZ3ZLJ7MJ", // Strategy contract
+          address: "CCEE2VAGPXKVIZXTVIT4O5B7GCUDTZTJ5RIXBPJSZ7JWJCJ2TLK75WVW", // Strategy contract
           name: "XLM HODL Strategy",
           paused: false
         }]
