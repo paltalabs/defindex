@@ -9,8 +9,8 @@ interface CaseStudyButtonProps {
 }
 
 const variantStyles: Record<CaseStudyVariant, string> = {
-    light: "bg-[#D3FFB4] text-[#014751] hover:bg-[#E5FFCF] hover:shadow-md",
-    dark: "bg-[#033036] text-[#D3FFB4] hover:bg-[#014751] hover:shadow-md",
+    light: "bg-lime-200 text-cyan-950 hover:bg-brand-primary-hover hover:shadow-md",
+    dark: "bg-cyan-900 text-lime-200 hover:bg-cyan-950 hover:shadow-md",
 };
 
 function CaseStudyButton({
@@ -23,7 +23,7 @@ function CaseStudyButton({
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className={`inline-block px-3 py-1 rounded-full text-xs sm:text-sm font-semibold transition-all duration-200 hover:scale-105 active:scale-95 ${variantStyles[variant]} ${className}`}
+            className={`inline-block px-3 py-1 rounded-full text-xs sm:text-sm font-semibold transition-all duration-normal hover:scale-105 active:scale-95 ${variantStyles[variant]} ${className}`}
         >
             Case Study
         </Link>
