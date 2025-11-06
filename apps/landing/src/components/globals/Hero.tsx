@@ -1,5 +1,6 @@
 import GradientText from "@/components/common/GradientText";
 import ScheduleDemoButton from "@/components/common/ScheduleDemoButton";
+import { COLORS } from "@/constants/design";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -21,7 +22,7 @@ function Hero() {
     return (
         <section
             id="hero"
-            className="pt-16 pb-12 mb-[400px] lg:mb-[400px] xl:mb-[200px] md:pb-6 md:pt-20 lg:pt-24 bg-[#033036] overflow-none w-full max-w-[90dvw] "
+            className="pt-16 pb-12 mb-[400px] lg:mb-[400px] xl:mb-[200px] md:pb-6 md:pt-20 lg:pt-24 bg-cyan-900 overflow-none w-full max-w-[90dvw] "
         >
             <div className="container w-full px-4">
                 <div className="grid lg:grid-cols-3 items-center gap-8 w-full">
@@ -36,7 +37,7 @@ function Hero() {
                         priority
                     />
                     </div>
-                    <div style={heroBackgroundCssSm} className="xs:block top-[700px] sm:top-[450px] md:top-[500px] justify-self-center lg:hidden max-w-fit">
+                    <div style={heroBackgroundCssSm} className="xs:block top-[850px] sm:top-[600px] md:top-[500px] justify-self-center lg:hidden max-w-fit">
                     <Image
                         src="/images/demo_hand.webp"
                         alt="Phone with 15% APY showing hand holding device with glass gradient background"
@@ -51,13 +52,13 @@ function Hero() {
                         <GradientText
                             as="h1"
                             variant="primary"
-                            textStroke="#033036"
+                            textStroke={COLORS.dark}
                             className="
                                 font-familjen-grotesk
-                                text-[48px]
-                                sm:text-[48px]
-                                md:text-[60px]
-                                lg:text-[80px]
+                                text-2xl
+                                sm:text-2xl
+                                md:text-3xl
+                                lg:text-5xl
                                 leading-[1.1em]
                                 sm:leading-[1.04em]
                                 tracking-[0.05em]
@@ -74,18 +75,18 @@ function Hero() {
                                 textAlign: 'center',
                             }}
                         >
-                            YIELD-AS-A-SERVICE    
+                            YIELD-AS-A-SERVICE
                         </GradientText>
-                        <GradientText 
+                        <GradientText
                             as="h1"
                             variant="primary"
-                            textStroke="#033036"
+                            textStroke={COLORS.dark}
                             className="
                                 font-familjen-grotesk
-                                text-[48px]
-                                sm:text-[48px]
-                                md:text-[60px]
-                                lg:text-[80px]
+                                text-2xl
+                                sm:text-2xl
+                                md:text-3xl
+                                lg:text-5xl
                                 leading-[1.1em]
                                 sm:leading-[1.04em]
                                 tracking-[0.05em]
@@ -94,11 +95,11 @@ function Hero() {
                                 sm:mb-6
                             "
                             style={{
-                                fontWeight: '400 !important', 
-                                fontStyle: 'Regular', 
+                                fontWeight: '400 !important',
+                                fontStyle: 'Regular',
                                 fontSize: 'auto',
-                                lineHeight: '108%', 
-                                letterSpacing: '0.2em', 
+                                lineHeight: '108%',
+                                letterSpacing: '0.2em',
                                 textAlign: 'center'
                             }}
                             >
@@ -108,11 +109,11 @@ function Hero() {
                             className="
                                 font-inter
                                 text-center
-                                text-[16px]
-                                sm:text-[18px]
-                                md:text-[20px]
-                                lg:text-[24px]
-                                text-[#b3d5d8]
+                                text-xs
+                                sm:text-sm
+                                md:text-md
+                                lg:text-lg
+                                text-brand-light-cyan-text
                                 mx-[17%]
                                 mb-6
                                 sm:mb-8
@@ -126,7 +127,7 @@ function Hero() {
                             <Link
                                 href="https://github.com/paltalabs/defindex"
                                 target="blank"
-                                className="flex items-center justify-center bg-transparent] text-[#D3FFB4] font-manrope font-[800] text-sm rounded-3xl px-6 py-4 sm:py-6 transition-all duration-200 hover:scale-105 hover:bg-[#D3FFB4]/10 hover:shadow-lg active:scale-95"
+                                className="flex items-center justify-center bg-transparent text-lime-200 font-manrope font-extrabold text-sm rounded-3xl px-6 py-4 sm:py-6 transition-all duration-normal hover:scale-105 hover:bg-lime-200/10 hover:shadow-lg active:scale-95"
                             >
                                 View on GitHub
                             </Link>

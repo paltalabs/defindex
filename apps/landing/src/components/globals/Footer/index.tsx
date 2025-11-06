@@ -4,7 +4,7 @@ import Image from "next/image";
 
 export default function Footer() {
     return (
-        <footer className="bg-[#033036] relative overflow-hidden w-full">
+        <footer className="bg-cyan-900 relative overflow-hidden w-full">
             {/* Background assets */}
             <div className="absolute inset-0">
                 <Image
@@ -39,21 +39,27 @@ export default function Footer() {
                                 </h3>
                                 <Link
                                     href="https://docs.defindex.io/wallet-developer/introduction"
-                                    className="font-manrope text-xs sm:text-sm text-white hover:text-[#D3FFB4] transition-colors duration-200"
+                                    className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
                                 >
                                     For Wallets Builders
                                 </Link>
                                 <Link
                                     href="https://docs.defindex.io/defi-developers/developer-introduction"
-                                    className="font-manrope text-xs sm:text-sm text-white hover:text-[#D3FFB4] transition-colors duration-200"
+                                    className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
                                 >
                                     For Developers
                                 </Link>
                                 <Link
                                     href="/privacy-policy"
-                                    className="font-manrope text-xs sm:text-sm text-white hover:text-[#D3FFB4] transition-colors duration-200"
+                                    className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
                                 >
                                     Privacy Policy
+                                </Link>
+                                <Link
+                                    href="/blog"
+                                    className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
+                                >
+                                    Blog
                                 </Link>
                             </div>
 
@@ -64,19 +70,19 @@ export default function Footer() {
                                 </h3>
                                 <Link
                                     href="#faq"
-                                    className="font-manrope text-xs sm:text-sm text-white hover:text-[#D3FFB4] transition-colors duration-200"
+                                    className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
                                 >
                                     FAQ
                                 </Link>
                                 <Link
                                     href="mailto:dev@paltalabs.io"
-                                    className="font-manrope text-xs sm:text-sm text-white hover:text-[#D3FFB4] transition-colors duration-200"
+                                    className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
                                 >
                                     Contact Us
                                 </Link>
                                 <Link
                                     href="https://paltalabs.io/"
-                                    className="font-manrope text-xs sm:text-sm text-white hover:text-[#D3FFB4] transition-colors duration-200"
+                                    className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
                                 >
                                     About Us
                                 </Link>
@@ -87,25 +93,25 @@ export default function Footer() {
                         <div className="flex gap-3 sm:gap-4 lg:flex-col lg:justify-end">
                             <Link
                                 href="https://x.com/defindex_"
-                                className="w-8 h-8 sm:w-10 sm:h-10 lg:w-8 lg:h-8 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-200"
+                                className="w-8 h-8 sm:w-10 sm:h-10 lg:w-8 lg:h-8 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-normal"
                             >
                                 <img src="/images/icon-x-black.svg" alt="X/Twitter" className="w-3 h-3 sm:w-4 sm:h-4" />
                             </Link>
                             <Link
                                 href="https://discord.gg/CUC26qUTw7"
-                                className="w-8 h-8 sm:w-10 sm:h-10 lg:w-8 lg:h-8 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-200"
+                                className="w-8 h-8 sm:w-10 sm:h-10 lg:w-8 lg:h-8 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-normal"
                             >
                                 <img src="/images/icon-discord-black.svg" alt="Discord" className="w-3 h-3 sm:w-4 sm:h-4" />
                             </Link>
                             <Link
                                 href="https://www.linkedin.com/company/defindex"
-                                className="w-8 h-8 sm:w-10 sm:h-10 lg:w-8 lg:h-8 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-200"
+                                className="w-8 h-8 sm:w-10 sm:h-10 lg:w-8 lg:h-8 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-normal"
                             >
                                 <img src="/images/icon-linkedin-black.svg" alt="LinkedIn" className="w-3 h-3 sm:w-4 sm:h-4" />
                             </Link>
                             <Link
                                 href="https://github.com/paltalabs/defindex"
-                                className="w-8 h-8 sm:w-10 sm:h-10 lg:w-8 lg:h-8 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-200"
+                                className="w-8 h-8 sm:w-10 sm:h-10 lg:w-8 lg:h-8 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-normal"
                             >
                                 <img src="/images/icon-github-black.svg" alt="GitHub" className="w-3 h-3 sm:w-4 sm:h-4" />
                             </Link>
