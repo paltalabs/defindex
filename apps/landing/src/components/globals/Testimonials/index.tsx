@@ -1,5 +1,6 @@
 "use client";
 
+import CaseStudyButton from "@/components/common/CaseStudyButton";
 import GradientText from "@/components/common/GradientText";
 import InteractiveCard from "@/components/common/InteractiveCard";
 import { ICON_FILTER } from "@/constants/design";
@@ -64,9 +65,11 @@ export default function Testimonials() {
                         }}
                     >
                         <div className="md:order-0 pb-12">
-                            <div className="inline-block bg-[#D3FFB4] text-[#014751] px-3 py-1 rounded-full text-xs sm:text-sm font-semibold mb-4 sm:mb-6">
-                                Case Study
-                            </div>
+                            <CaseStudyButton
+                                variant="light"
+                                href="https://docs.defindex.io/use-cases/beans-app"
+                                className="mb-4 sm:mb-6"
+                            />
                             <Image src="/images/beans-logo.svg" alt="Beans logo" width={150} height={48} className="h-auto mb-4 sm:mb-6 aspect-auto" />
                             <h3 className="font-familjen-grotesk text-lg sm:text-xl md:text-3xl font-semibold text-cyan-950 mb-3 sm:mb-4">
                                 $610K in stablecoin deposits within 3 months
@@ -89,9 +92,11 @@ export default function Testimonials() {
                 <div className="mb-12 sm:mb-16">
                     <div className="bg-[#D3FFB4] rounded-2xl p-6 sm:p-8 md:p-12 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-center">
                         <div className="md:order-2">
-                            <a className="inline-block bg-[#033036] text-[#D3FFB4] px-3 py-1 rounded-full text-xs sm:text-sm font-semibold mb-4 sm:mb-6" href="https://docs.defindex.io/" target="_blank" rel="noopener noreferrer">
-                                Case Study
-                            </a>
+                            <CaseStudyButton
+                                variant="dark"
+                                href="https://docs.defindex.io/use-cases/seevcash"
+                                className="mb-4 sm:mb-6"
+                            />
                             <Image src="/images/seevcash-logo.svg" alt="Seevcash" width={185} height={0} className="h-auto mb-4 sm:mb-6 aspect-auto" />
                             <h3 className="font-familjen-grotesk text-[46px] sm:text-[48px] md:text-[56px] lg:text-3xl font-semibold text-cyan-950 mb-3 sm:mb-4">
                                 "Users love check their growing balances."
