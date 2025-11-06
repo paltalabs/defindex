@@ -1,5 +1,4 @@
 import type { Config } from "tailwindcss";
-import { fontFamily } from "tailwindcss/defaultTheme";
 
 const config: Config = {
     content: [
@@ -39,6 +38,13 @@ const config: Config = {
                 "linear-gradient(180deg, rgba(255, 220, 211, 0.4) 0%, rgba(255, 255, 255, 0.4) 148.8%)",
             "item-linear-green":
                 "linear-gradient(176deg, rgb(211 255 180 / 40%) 3.5%, rgb(255 255 255 / 40%) 113.2%)",
+            "gradient-primary": "linear-gradient(137deg, #FFFFFF 0%, #DEC9F4 20%)",
+            "gradient-secondary": "linear-gradient(91deg, #FFF -5.52%, #DEC9F4 84.31%, #024852 101.37%)",
+            "gradient-purple": "linear-gradient(137deg, #DEC9F4 7%, #024852 100%)",
+            "gradient-green": "linear-gradient(137deg, #D3FFB4 0%, #024852 10%, #0FFF 100%)",
+            "gradient-card-green": "linear-gradient(135deg, #D3FFB4 0%, #024852 100%)",
+            "gradient-card-purple": "linear-gradient(135deg, rgba(211, 255, 180, 0.3) 0%, rgba(255, 255, 255, 1) 100%)",
+            "gradient-card-orange": "linear-gradient(135deg, rgba(255, 220, 211, 1) 0%, rgba(255, 255, 255, 1) 100%)",
         },
         fontFamily: {
             manrope: ["var(--font-manrope)", "serif"],
@@ -49,6 +55,13 @@ const config: Config = {
         container: {
             center: true,
             padding: "1rem",
+            screens: {
+                sm: '100%',
+                md: '100%',
+                lg: '100%',
+                xl: '100%',
+                '2xl': '100%',
+            },
         },
     },
     plugins: [],

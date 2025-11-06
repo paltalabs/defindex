@@ -4,43 +4,58 @@ import SmoothCollapse from "react-smooth-collapse";
 
 interface Props {
     title: string;
-    description: string;
+    description: React.ReactNode;
     isOpen?: boolean;
-    auditLink?: string;
 }
 
 function Unit(props: Props) {
-    const { title, description, isOpen = false, auditLink } = props;
+    const { title, description, isOpen = false } = props;
 
     const [open, setOpen] = useState(isOpen);
     const handleToggle = () => setOpen((v) => !v);
 
     return (
-        <div className="rounded-2xl px-5 md:px-8 pt-6 md:pt-10 pb-8 md:pb-12 bg-white shadow-[0px_5px_16px_0px_rgba(8,_15,_52,_0.06)]">
-            <div onClick={handleToggle} className="flex items-center gap-4 mb-1" role="button">
-                <b className="flex-grow font-bold font-familjen-grotesk italic text-[20px] md:text-base text-cyan-950">
+        <div
+            className={`rounded-2xl px-6 py-6 transition-all duration-300 ${
+                open
+                    ? "bg-white"
+                    : "bg-[#014751] text-white"
+            }`}
+        >
+            <div
+                onClick={handleToggle}
+                className="flex items-center justify-between cursor-pointer"
+                role="button"
+            >
+                <h3 className={`font-familjen-grotesk text-lg font-semibold ${
+                    open ? "text-cyan-950" : "text-white"
+                }`}>
                     {title}
-                </b>
-                <img
-                    className="md:w-auto w-7"
-                    src={open ? "/images/Group 482262.svg" : "/images/Group 36813.svg"}
-                    alt=""
-                />
+                </h3>
+                <button
+                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                        open
+                            ? "bg-[#DEC9F4]"
+                            : "bg-[#D3FFB4]"
+                    }`}
+                >
+                    <img
+                        src={open ? "/images/icon-minus.svg" : "/images/icon-plus.svg"}
+                        alt={open ? "Collapse" : "Expand"}
+                        className="w-4 h-4"
+                        style={{ color: '#033036' }}
+                    />
+                </button>
             </div>
             <SmoothCollapse expanded={open}>
-                <div className="w-[calc(100%-80px)]">
-                    <p className="font-inter-tight text-[16px] md:text-sm text-cyan-950">
+                <div className="mt-4 pr-10">
+                    <p 
+                        className={`font-inter text-[18px] text-[#014751] ${
+                            open ? "text-cyan-950" : "text-white"
+                        }`}
+                        style={{fontWeight: 400,}}
+                    >
                         {description}
-                        {auditLink && (
-                            <a 
-                                href={auditLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-800 ml-1"
-                            >
-                                here
-                            </a>
-                        )}
                     </p>
                 </div>
             </SmoothCollapse>

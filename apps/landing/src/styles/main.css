@@ -8,10 +8,14 @@
 
 html {
   @apply scroll-smooth;
+  overflow-x: hidden;
 }
 
 body {
-  @apply p-0 m-0 font-inter-tight;
+  @apply p-0 m-0;
+  font-family: var(--font-inter), serif;
+  overflow-x: hidden;
+  width: 100dvw !important
 }
 
 @layer components {
@@ -22,7 +26,6 @@ body {
     @apply focus:outline-0 bg-transparent;
   }
 
-
   .text-linear {
     background-clip: text;
     -webkit-background-clip: text;
@@ -32,6 +35,10 @@ body {
   [role="button"],
   button {
     @apply select-none;
+  }
+
+  section {
+    max-width: 100dvw !important;
   }
 
   .outlined-button {

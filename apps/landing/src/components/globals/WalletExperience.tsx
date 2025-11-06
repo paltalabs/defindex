@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import ScheduleDemoButton from "@/components/common/ScheduleDemoButton";
 
 function WalletExperience() {
     return (
@@ -22,12 +22,7 @@ function WalletExperience() {
                         simplifies DeFi
                     </p>
                     <div className="flex sm:flex-row flex-col justify-center gap-2 sm:gap-4">
-                        <Link
-                            className="rounded-3xl bg-lime-200 px-6 contained-button py-4 lg:py-5 lg:min-h-[60px] leading-none flex gap-2.5 items-center justify-center font-extrabold font-manrope text-[14px] md:leading-none md:text-xs text-cyan-950"
-                            href="mailto:dev@paltalabs.io"
-                        >
-                            Schedule a Demo
-                        </Link>
+                        <ScheduleDemoButton className="lg:py-5 lg:min-h-[60px]" />
                     </div>
                 </div>
             </div>

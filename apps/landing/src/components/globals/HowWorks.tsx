@@ -1,9 +1,10 @@
-import React from "react";
+import { Strategy } from "@/types";
+import Image from "next/image";
 
-const strategies = [
-    { id: 1, title: "Diversified DeFi strategies for your users" },
-    { id: 2, title: "Secure and automated smart contracts handle everything" },
-    { id: 3, title: "Reinvest earnings automatically to maximize returns" },
+const strategies: Strategy[] = [
+    { id: 1, title: "Diversified DeFi strategies for your users", description: "" },
+    { id: 2, title: "Secure and automated smart contracts handle everything", description: "" },
+    { id: 3, title: "Reinvest earnings automatically to maximize returns", description: "" },
 ];
 
 function HowWorks() {
@@ -50,7 +51,7 @@ function HowWorks() {
                             </div>
                         </div>
                         <div>
-                            <img className="lg:w-auto w-full" src="/images/Infograph.svg" alt="" />
+                            <Image className="lg:w-auto w-full" src="/images/Infograph.svg" alt="DeFindex Infographic" width={600} height={400} />
                         </div>
                     </div>
                 </div>
