@@ -1,13 +1,13 @@
 "use client";
-import CTAForm from "@/components/common/CTAFrom";
+import CodeExample from "@/components/globals/CodeExample";
 import Footer from "@/components/globals/Footer";
 import Frequently from "@/components/globals/Frequently";
 import Hero from "@/components/globals/Hero";
-import HowWorks from "@/components/globals/HowWorks";
 import Navbar from "@/components/globals/navbar/Navbar";
 import OurTeam from "@/components/globals/OurTeam";
 import Security from "@/components/globals/Security";
-import WalletBuilders from "@/components/globals/WalletBuilders";
+import Solutions from "@/components/globals/Solutions";
+import Testimonials from "@/components/globals/Testimonials";
 import NavigateTab from "@/context/NavigateTab";
 import Image from "next/image";
 import { useState } from "react";
@@ -16,26 +16,30 @@ function Home() {
     const [index, setIndex] = useState(0);
 
     return (
-        <div className="min-h-screen bg-black relative z-0 ">
-            <Image
-                width={1440}
-                height={6797}
-                className="w-full h-full inset-0 absolute -z-10"
-                src="/images/web-background.png"
-                alt=""
-            />
-            <NavigateTab.Provider value={{ index, setIndex }}>
-                <Navbar />
-                <Hero />
-                <HowWorks />
-                <WalletBuilders />
-            <Security />
-            <OurTeam />
-            <Frequently />
-            {/* <WalletExperience /> */}
-            <CTAForm className="mt-20" />
-            </NavigateTab.Provider>
-            <Footer />
+        <div className="min-h-screen bg-[#033036] relative overflow-x-hidden w-full" style={{maxWidth:'100dvw'}}>
+            {/* Background image */}
+            <div className="absolute inset-0 -z-10">
+                <Image
+                    src="/images/hero-background.png"
+                    alt=""
+                    fill
+                    className="object-cover opacity-20"
+                />
+            </div>
+            <div className="w-[90%] max-w-[1440px] mx-auto">
+                <NavigateTab.Provider value={{ index, setIndex }}>
+                    <Navbar />
+                    <Hero />
+                    <Solutions />
+                    <Testimonials />
+                    <CodeExample />
+                    <Security />
+                    <OurTeam />
+                    <Frequently />
+                </NavigateTab.Provider>
+
+                <Footer />
+            </div>
         </div>
     );
 }
