@@ -84,8 +84,8 @@ export const SEMANTIC_COLORS = {
 
 export const GRADIENTS = {
   // Primary gradients
-  primary: "linear-gradient(137deg, #FFFFFF -20%, #DEC9F4 100%)",
-  secondary: "linear-gradient(91deg, #FFF -5.52%, #DEC9F4 84.31%, #024852 101.37%)",
+  primary: "linear-gradient(137deg, #FFFFFF -20%, #DEC9F4 40%)",
+  secondary: "linear-gradient(91deg, #FFF -20%, #DEC9F4 70%, #024852 101.37%)",
   tertiary: "linear-gradient(135deg, #D3FFB4 0%, #DEC9F4 50%, #024852 100%)",
 
   // Color-specific gradients
