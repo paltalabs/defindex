@@ -3,15 +3,33 @@ import BlogPost from '@/components/blog/BlogPost';
 import GradientText from '@/components/common/GradientText';
 import Footer from '@/components/globals/Footer';
 import Navbar from '@/components/globals/navbar/Navbar';
-import { getPostBySlug, getRelatedPosts } from '@/lib/blog';
+import { getPostBySlug, getRelatedPosts, getAllPostSlugs } from '@/lib/blog';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import Content from './content.mdx';
 
-const slug = 'building-defi-vaults-guide';
+interface BlogPostPageProps {
+  params: {
+    slug: string;
+  };
+}
 
-export async function generateMetadata(): Promise<Metadata> {
+/**
+ * Generate static params for all blog posts
+ */
+export async function generateStaticParams() {
+  const slugs = await getAllPostSlugs();
+  return slugs.map((slug) => ({
+    slug,
+  }));
+}
+
+/**
+ * Generate metadata for SEO
+ */
+export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
+  const { slug } = params;
+
   try {
     const post = await getPostBySlug(slug);
     const { frontmatter: fm } = post;
@@ -52,21 +70,39 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default async function BuildingDeFiVaultsGuidePage() {
+/**
+ * Dynamic blog post page
+ */
+export default async function BlogPostPage({ params }: BlogPostPageProps) {
+  const { slug } = params;
   let post;
+  let Content;
 
+  // Get post metadata
   try {
     post = await getPostBySlug(slug);
   } catch (error) {
     notFound();
   }
 
+  // Check if post is published
   if (!post.frontmatter.published) {
     notFound();
   }
 
+  // Dynamically import the MDX content
+  try {
+    const mdxModule = await import(`@/../../content/blog/${slug}.mdx`);
+    Content = mdxModule.default;
+  } catch (error) {
+    console.error(`Error loading MDX content for ${slug}:`, error);
+    notFound();
+  }
+
+  // Fetch related posts
   const relatedPosts = await getRelatedPosts(slug);
 
+  // JSON-LD structured data for SEO
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -95,12 +131,14 @@ export default async function BuildingDeFiVaultsGuidePage() {
 
   return (
     <>
+      {/* JSON-LD structured data */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
       <div className="min-h-screen w-full bg-[#043036] relative overflow-hidden">
+        {/* Background gradient effects */}
         <div className="absolute inset-0 bg-gradient-to-b from-dark via-darkCyan to-dark opacity-50" />
         <div className="absolute inset-0 w-full h-full">
           <div className="absolute -top-1/4 -left-1/4 w-[800px] h-[800px] bg-cyan-500/20 rounded-full blur-3xl" />
@@ -112,6 +150,7 @@ export default async function BuildingDeFiVaultsGuidePage() {
           <Navbar />
 
           <main className="container mx-auto max-w-4xl px-4 pt-28 pb-12">
+            {/* Back to Blog Button */}
             <Link
               href="/blog"
               className="inline-flex items-center gap-2 mb-8 px-4 py-2 bg-cyan-900/50 border border-cyan-800/30 rounded-lg text-cyan-200 hover:border-lime-200/50 hover:text-lime-200 transition-all duration-300 hover:scale-105 group cursor-pointer"
@@ -132,10 +171,12 @@ export default async function BuildingDeFiVaultsGuidePage() {
               <span className="font-inter text-sm">Back to Blog</span>
             </Link>
 
+            {/* Blog Post Content */}
             <BlogPost post={post} url={`https://defindex.io/blog/${slug}`}>
               <Content />
             </BlogPost>
 
+            {/* Related Posts Section */}
             {relatedPosts.length > 0 && (
               <section className="mt-12">
                 <GradientText
