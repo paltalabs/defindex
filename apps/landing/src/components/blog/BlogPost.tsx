@@ -1,4 +1,3 @@
-'use client';
 import GradientText from '@/components/common/GradientText';
 import { formatDate, getCategoryUrl, getTagUrl } from '@/lib/blog-client';
 import type { BlogPost as BlogPostType } from '@/lib/blog-types';
