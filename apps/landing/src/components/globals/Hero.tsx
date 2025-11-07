@@ -67,8 +67,7 @@ function Hero() {
                                 mb-4
                                 sm:mb-6
                                 uppercase
-                                max-w-full
-                                break-words
+                                w-[100%]
                             "
                             style={{
                                 fontWeight: 700,
@@ -76,7 +75,7 @@ function Hero() {
                                 textAlign: 'center',
                             }}
                         >
-                            Stellar Yield Infrastructure
+                            DeFindex
                         </GradientText>
                         <GradientText
                             as="h2"
@@ -87,7 +86,7 @@ function Hero() {
                                 text-lg
                                 sm:text-2xl
                                 md:text-3xl
-                                lg:text-5xl
+                                lg:text-3xl
                                 leading-[1.1em]
                                 sm:leading-[1.04em]
                                 tracking-normal
@@ -105,7 +104,7 @@ function Hero() {
                                 textAlign: 'center'
                             }}
                             >
-                                for Wallets & DeFi Apps
+                                Yield Infrastructure for Stellar Wallets & DeFi Apps
                         </GradientText>
                         <p
                             className="

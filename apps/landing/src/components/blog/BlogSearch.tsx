@@ -94,7 +94,7 @@ export default function BlogSearch({ posts }: BlogSearchProps) {
         <>
           {/* Bento Grid - First 6 posts */}
           {results.length >= 1 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6 lg:grid-rows-[repeat(2,minmax(400px,auto))]">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
               {results.slice(0, 6).map((post, index) => {
                 // Featured post (first with featured: true) gets larger size
                 const isFeatured = index === 0 && post.featured;
@@ -103,7 +103,7 @@ export default function BlogSearch({ posts }: BlogSearchProps) {
                     key={post.slug}
                     className={`${
                       isFeatured
-                        ? 'md:col-span-2 md:row-span-2 lg:col-span-2 lg:row-span-2'
+                        ? 'md:col-span-2 lg:col-span-2'
                         : ''
                     }`}
                   >

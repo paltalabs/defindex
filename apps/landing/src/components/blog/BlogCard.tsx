@@ -45,7 +45,7 @@ export default function BlogCard({ post, featured = false }: BlogCardProps) {
       {/* Cover Image */}
       <Link
         href={getPostUrl(slug)}
-        className={`relative overflow-hidden ${featured ? 'md:w-1/2' : 'w-full h-48'}`}
+        className={`relative overflow-hidden ${featured ? 'md:w-1/2 md:h-auto h-48' : 'w-full h-48'}`}
       >
         <Image
           src={coverImage}
@@ -56,8 +56,8 @@ export default function BlogCard({ post, featured = false }: BlogCardProps) {
         />
         {/* Featured badge */}
         {post.featured && (
-          <div className="absolute top-4 left-4 bg-gradient-to-r from-lime-200 to-purple px-3 rounded-full">
-            <span className="text-dark font-manrope font-bold text-xs uppercase">
+          <div className="absolute top-4 left-4 bg-green-400 px-4 py-0 rounded-full h-12 justify-center flex items-center">
+            <span className="text-dark font-manrope font-bold text-xs uppercase py-0">
               Featured
             </span>
           </div>
@@ -113,32 +113,21 @@ export default function BlogCard({ post, featured = false }: BlogCardProps) {
         </div>
 
         {/* Meta Info */}
-        <div className="flex items-center justify-between pt-4 border-t border-cyan-800/30">
-          {/* Author & Date */}
-          <div className="flex items-center gap-3">
-            {author.avatar && (
-              <Image
-                src={author.avatar}
-                alt={author.name}
-                width={32}
-                height={32}
-                className="rounded-full border border-cyan-800/30"
-              />
-            )}
-            <div className="flex flex-col">
-              <span className="text-cyan-100 font-inter text-sm font-medium">
-                {author.name}
-              </span>
-              <span className="text-cyan-400 font-inter text-xs">
-                {formatDate(date)}
-              </span>
-            </div>
+        <div className="flex flex-col gap-1.5 pt-4 border-t border-cyan-800/30">
+          {/* Author */}
+          <div className="text-cyan-100 font-inter text-sm font-medium truncate">
+            {author.name}
+          </div>
+
+          {/* Date */}
+          <div className="text-cyan-400 font-inter text-xs">
+            {formatDate(date)}
           </div>
 
           {/* Reading Time */}
           <div className="flex items-center gap-1 text-cyan-400 text-xs font-inter">
             <svg
-              className="w-4 h-4"
+              className="w-4 h-4 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
