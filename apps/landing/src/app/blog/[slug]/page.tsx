@@ -11,6 +11,7 @@ import {
 } from '@/lib/blog';
 import { Metadata } from 'next';
 import { MDXRemote } from 'next-mdx-remote/rsc';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypePrismPlus from 'rehype-prism-plus';
@@ -151,7 +152,28 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         <div className="relative z-10">
           <Navbar />
 
-          <main className="container mx-auto max-w-4xl px-4 py-12">
+          <main className="container mx-auto max-w-4xl px-4 pt-28 pb-12">
+            {/* Back to Blog Button */}
+            <Link
+              href="/blog"
+              className="inline-flex items-center gap-2 mb-8 px-4 py-2 bg-cyan-900/50 border border-cyan-800/30 rounded-lg text-cyan-200 hover:border-lime-200/50 hover:text-lime-200 transition-all duration-300 hover:scale-105 group cursor-pointer"
+            >
+              <svg
+                className="w-5 h-5 transition-transform duration-300 group-hover:-translate-x-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+              <span className="font-inter text-sm">Back to Blog</span>
+            </Link>
+
             {/* Blog Post Content */}
             <BlogPost post={post} url={`https://defindex.io/blog/${params.slug}`}>
               <MDXRemote
