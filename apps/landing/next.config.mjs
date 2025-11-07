@@ -1,12 +1,14 @@
 import createMDX from '@next/mdx';
 import remarkGfm from 'remark-gfm';
+import remarkFrontmatter from 'remark-frontmatter';
+import remarkMdxFrontmatter from 'remark-mdx-frontmatter';
 import rehypePrismPlus from 'rehype-prism-plus';
 import rehypeSlug from 'rehype-slug';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Configure pageExtensions to include MDX files
+  // Configure MDX page extensions
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
 
   // Configure image domains
@@ -51,10 +53,14 @@ const nextConfig = {
   }
 };
 
+// MDX configuration with plugins
 const withMDX = createMDX({
-  extension: /\.mdx?$/,
   options: {
-    remarkPlugins: [remarkGfm],
+    remarkPlugins: [
+      remarkGfm,
+      remarkFrontmatter,
+      [remarkMdxFrontmatter, { name: 'frontmatter' }],
+    ],
     rehypePlugins: [
       rehypePrismPlus,
       rehypeSlug,
@@ -63,12 +69,12 @@ const withMDX = createMDX({
         {
           behavior: 'wrap',
           properties: {
-            className: ['anchor-link']
-          }
-        }
-      ]
-    ]
-  }
+            className: ['anchor-link'],
+          },
+        },
+      ],
+    ],
+  },
 });
 
 export default withMDX(nextConfig);
