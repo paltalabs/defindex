@@ -51,7 +51,7 @@ function Hero() {
                     <div className="text-center lg:text-left z-10 col-span-2 lg:col-span-2 lg:col-start-2 px-2 sm:px-4 lg:px-6 lg:mr-6 sm:h-100 w-full">
                         <GradientText
                             as="h1"
-                            variant="primary"
+                            variant="secondary"
                             textStroke={COLORS.dark}
                             className="
                                 font-familjen-grotesk
@@ -59,19 +59,12 @@ function Hero() {
                                 sm:text-2xl
                                 md:text-3xl
                                 lg:text-5xl
-                                leading-[1.1em]
-                                sm:leading-[1.04em]
-                                tracking-tight
-                                sm:tracking-[0.05em]
-                                md:tracking-[0.1em]
                                 mb-4
                                 sm:mb-6
-                                uppercase
                                 w-[100%]
                             "
                             style={{
-                                fontWeight: 700,
-                                fontStyle: 'Bold',
+                                fontWeight: 300,
                                 textAlign: 'center',
                             }}
                         >
@@ -129,13 +122,11 @@ function Hero() {
                         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full">
                             <ScheduleDemoButton />
                             <Link
-                                href="https://github.com/paltalabs/defindex"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label="View DeFindex Stellar SDK source code on GitHub"
+                                href="/blog"
+                                aria-label="Visit DeFindex blog"
                                 className="flex items-center justify-center bg-transparent text-lime-200 font-manrope font-extrabold text-sm rounded-3xl px-6 py-4 sm:py-6 transition-all duration-normal hover:scale-105 hover:bg-lime-200/10 hover:shadow-lg active:scale-95"
                             >
-                                View on GitHub
+                                Read our blog
                             </Link>
                         </div>
                     </div>

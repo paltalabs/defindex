@@ -1,6 +1,6 @@
 "use client";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Footer() {
     return (
@@ -38,28 +38,42 @@ export default function Footer() {
                                     Links
                                 </h3>
                                 <Link
-                                    href="https://docs.defindex.io/wallet-developer/introduction"
+                                    href="/"
                                     className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
                                 >
-                                    For Wallets Builders
+                                    Home
                                 </Link>
                                 <Link
-                                    href="https://docs.defindex.io/defi-developers/developer-introduction"
+                                    href="/#why-integrate-yield"
                                     className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
                                 >
-                                    For Developers
+                                    Why Integrate
                                 </Link>
                                 <Link
-                                    href="/privacy-policy"
+                                    href="/#what-builders-are-doing"
                                     className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
                                 >
-                                    Privacy Policy
+                                    Case Studies
                                 </Link>
                                 <Link
                                     href="/blog"
                                     className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
                                 >
                                     Blog
+                                </Link>
+                                <Link
+                                    href="https://docs.defindex.io"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
+                                >
+                                    Documentation
+                                </Link>
+                                <Link
+                                    href="/privacy-policy"
+                                    className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
+                                >
+                                    Privacy Policy
                                 </Link>
                             </div>
 
@@ -126,6 +140,15 @@ export default function Footer() {
                                 className="w-8 h-8 sm:w-10 sm:h-10 lg:w-8 lg:h-8 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-normal"
                             >
                                 <img src="/images/icon-github-black.svg" alt="GitHub" className="w-3 h-3 sm:w-4 sm:h-4" />
+                            </Link>
+                            <Link
+                                href="https://dune.com/paltalabs/defindex"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="View DeFindex analytics dashboards on Dune"
+                                className="w-8 h-8 sm:w-10 sm:h-10 lg:w-8 lg:h-8 bg-white rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-normal"
+                            >
+                                <img src="/images/dune-logo.svg" alt="Dune Analytics" className="w-4 h-4 sm:w-5 sm:h-5" />
                             </Link>
                         </div>
                     </div>

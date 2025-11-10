@@ -11,6 +11,7 @@ const menuItems = [
     { id: 3, name: "Case Studies", to: "what-builders-are-doing" },
     { id: 4, name: "Blog", to: "/blog", external: true, isInternal: true },
     { id: 5, name: "Documentation", to: "https://docs.defindex.io", external: true },
+    { id: 6, name: "Dashboards", to: "https://dune.com/paltalabs/defindex", external: true },
 ];
 /* eslint-disable @typescript-eslint/no-unused-vars */
 function Lists({ toggle }: { toggle?: () => void }) {
