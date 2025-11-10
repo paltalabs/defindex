@@ -4,6 +4,8 @@ import GradientText from "@/components/common/GradientText";
 import ScheduleDemoButton from "@/components/common/ScheduleDemoButton";
 import { CONTAINER_MAX_WIDTH, ICON_FILTER } from "@/constants/design";
 import Image from "next/image";
+import Link from "next/link";
+import { FiExternalLink } from "react-icons/fi";
 
 export default function Solutions() {
     return (
@@ -20,7 +22,19 @@ export default function Solutions() {
                     >
                         Why Integrate Yield with DeFindex
                     </GradientText>
-                    <ScheduleDemoButton className="min-w-[200px] max-w-[20%] justify-self-center" />
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full">
+                        <ScheduleDemoButton />
+                        <Link
+                            href="https://docs.defindex.io/defindex-protocol/what-is-defindex#solutions-for-wallet-builders"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label="View DeFindex solutions documentation"
+                            className="flex items-center justify-center bg-cyan-900 text-lime-200 font-manrope font-extrabold text-sm rounded-3xl px-6 py-4 sm:py-6 transition-all duration-normal hover:scale-105 hover:bg-cyan-900/90 hover:shadow-lg active:scale-95"
+                        >
+                            Open documentation
+                             <FiExternalLink className="text-lime-200 text-xs lg:text-xs transition-colors duration-normal group-hover:text-lime-200 ml-2" style={{filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))'}} />
+                        </Link>
+                    </div>
                 </div>
 
                 {/* FOR WALLETS Section */}
