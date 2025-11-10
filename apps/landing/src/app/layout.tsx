@@ -1,7 +1,8 @@
+import { OrganizationSchema, SoftwareApplicationSchema, WebSiteSchema } from "@/components/SEO/JsonLd";
+import { PostHogProvider } from "@/components/providers/provider";
 import type { Metadata } from "next";
 import { Familjen_Grotesk, Inter, Inter_Tight, Manrope } from "next/font/google";
 import "../styles/main.css";
-import { SoftwareApplicationSchema, OrganizationSchema, WebSiteSchema } from "@/components/SEO/JsonLd";
 
 const manrope = Manrope({
     subsets: ["latin"],
@@ -65,7 +66,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <OrganizationSchema />
                 <WebSiteSchema />
             </head>
-            <body className={`${fonts} max-w-[100dvw]`}>{children}</body>
+            <body className={`${fonts} max-w-[100dvw]`}>
+                <PostHogProvider>
+
+                    {children}
+                </PostHogProvider>
+            </body>
         </html>
     );
 }
