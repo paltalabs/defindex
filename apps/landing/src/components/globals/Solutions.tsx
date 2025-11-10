@@ -29,10 +29,10 @@ export default function Solutions() {
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label="View DeFindex solutions documentation"
-                            className="flex items-center justify-center bg-cyan-900 text-lime-200 font-manrope font-extrabold text-sm rounded-3xl px-6 py-4 sm:py-6 transition-all duration-normal hover:scale-105 hover:bg-cyan-900/90 hover:shadow-lg active:scale-95"
+                            className="flex items-center justify-center bg-cyan-950 text-lime-200 font-manrope font-extrabold text-sm rounded-3xl px-6 py-4 sm:py-6 transition-all duration-normal hover:scale-105 hover:bg-cyan-950/70 hover:shadow-lg active:scale-95"
                         >
-                            Open documentation
-                             <FiExternalLink className="text-lime-200 text-xs lg:text-xs transition-colors duration-normal group-hover:text-lime-200 ml-2" style={{filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))'}} />
+                            Read Documentation
+                            <FiExternalLink className="text-lime-200 text-xs lg:text-xs transition-colors duration-normal group-hover:text-lime-200 ml-2" style={{filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))'}} />
                         </Link>
                     </div>
                 </div>

@@ -124,9 +124,9 @@ function Hero() {
                             <Link
                                 href="/blog"
                                 aria-label="Visit DeFindex blog"
-                                className="flex items-center justify-center bg-transparent text-lime-200 font-manrope font-extrabold text-sm rounded-3xl px-6 py-4 sm:py-6 transition-all duration-normal hover:scale-105 hover:bg-lime-200/10 hover:shadow-lg active:scale-95"
+                                className="flex items-center justify-center bg-cyan-950/45 text-lime-200 font-manrope font-extrabold text-sm rounded-3xl px-6 py-4 sm:py-6 transition-all duration-normal hover:scale-105 hover:bg-lime-200/10 hover:shadow-lg active:scale-95"
                             >
-                                Read our blog
+                                Read our Blog
                             </Link>
                         </div>
                     </div>
