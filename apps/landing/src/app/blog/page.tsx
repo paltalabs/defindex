@@ -1,10 +1,10 @@
 import BlogSearch from '@/components/blog/BlogSearch';
 import CategoryFilter from '@/components/blog/CategoryFilter';
-import GradientText from '@/components/common/GradientText';
 import Footer from '@/components/globals/Footer';
 import Navbar from '@/components/globals/navbar/Navbar';
 import { getAllCategories, getPostPreviews } from '@/lib/blog';
 import { Metadata } from 'next';
+import Link from 'next/link';
 
 /**
  * Metadata for the blog listing page
@@ -55,13 +55,14 @@ export default async function BlogPage() {
         <main className="container mx-auto max-w-full px-4 py-12">
           {/* Header Section */}
           <header className="text-center mb-12 px-4 align-middle">
-            <GradientText
-              as="h1"
-              variant="primary"
-              className="text-xl sm:text-2xl md:text-3xl mb-4 font-familjen-grotesk font-bold leading-normal pb-2"
-            >
-              DeFindex Blog
-            </GradientText>
+            <Link href="/" className="inline-block mb-4">
+              <img
+                className="h-[48px] md:h-[64px] lg:h-[84px] mx-auto"
+                src="/images/defindex.svg"
+                alt="DeFindex"
+                style={{filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))'}}
+              />
+            </Link>
             <p className="text-cyan-100 font-inter text-base sm:text-lg md:text-lg max-w-2xl mx-auto leading-relaxed">
               Insights, tutorials, and updates from the world of decentralized
               finance. Stay informed about the latest in DeFi yield optimization
