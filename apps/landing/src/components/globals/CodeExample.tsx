@@ -1,6 +1,8 @@
 "use client";
 
 import ScheduleDemoButton from "@/components/common/ScheduleDemoButton";
+import Link from "next/link";
+import { FiExternalLink } from "react-icons/fi";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import GradientText from "../common/GradientText";
@@ -79,13 +81,16 @@ async function performDepositAndSendTransaction() {
                         </div>
                         <div className="flex mt-6 col-span-2 xl:col-span-1 flex-col sm:flex-row gap-4 items-end justify-center ">
                             <ScheduleDemoButton className="w-full sm:w-auto max-h-16" />
-                            <a
-                                className="w-full sm:w-auto font-manrope font-extrabold text-sm bg-[#014751] text-[#FFFF] px-6 py-4 rounded-3xl"
-                                href='https://github.com/paltalabs/defindex-sdk'
-                                target='_blank'
-                                >
-                                Explore SDK / View on GitHub
-                            </a>
+                            <Link
+                                href="https://github.com/paltalabs/defindex-sdk"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="View DeFindex SDK source code on GitHub"
+                                className="flex items-center justify-center bg-cyan-950 text-lime-200 font-manrope font-extrabold text-sm rounded-3xl px-6 py-4 transition-all duration-normal hover:scale-105 hover:bg-cyan-950/70 hover:shadow-lg active:scale-95"
+                            >
+                                Explore SDK on GitHub
+                                <FiExternalLink className="text-lime-200 text-xs lg:text-xs transition-colors duration-normal group-hover:text-lime-200 ml-2" style={{filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))'}} />
+                            </Link>
                         </div>
                     </div>
 

@@ -67,7 +67,7 @@ export default function Testimonials() {
                         <div className="md:order-0 pb-12">
                             <CaseStudyButton
                                 variant="light"
-                                href="https://docs.defindex.io/use-cases/beans-app"
+                                href="/blog/beans-case-study"
                                 className="mb-4 sm:mb-6"
                             />
                             <Image src="/images/beans-logo.svg" alt="Beans logo" width={150} height={48} className="h-auto mb-4 sm:mb-6 aspect-auto" />

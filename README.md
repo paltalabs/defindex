@@ -1,4 +1,5 @@
 # 📊 DeFindex Monorepo :)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/paltalabs/defindex)
 
 Check the documentation in https://docs.defindex.io/ and find the Audit Report by [OtterSec](https://osec.io/) in [./audits/2025](audits/2025_03_18_ottersec_defindex_audit.pdf)
 
