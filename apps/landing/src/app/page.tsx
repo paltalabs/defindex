@@ -21,7 +21,7 @@ function Home() {
             <div className="absolute inset-0 -z-10">
                 <Image
                     src="/images/hero-background.png"
-                    alt=""
+                    alt="DeFindex Stellar blockchain background pattern"
                     fill
                     className="object-cover opacity-20"
                 />

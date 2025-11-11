@@ -1,4 +1,4 @@
-import 'dotenv/config';
+/* import 'dotenv/config';
 import { NextResponse } from 'next/server';
 export async function GET() {
   try {
@@ -51,4 +51,4 @@ export async function GET() {
       status: 300, // Still return 300 with fallback data
     });
   }
-}
+} */

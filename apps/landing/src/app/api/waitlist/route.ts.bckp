@@ -1,4 +1,4 @@
-
+/* 
 import { NextResponse } from 'next/server'
 interface WaitlistFormData {
   email: string;
@@ -47,4 +47,4 @@ export async function POST(request: Request) {
       { status: 500 }
     )
   }
-}
+} */
