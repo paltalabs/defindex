@@ -1,7 +1,4 @@
----
-cover: .gitbook/assets/image 31.png
-coverY: 0
----
+
 
 # What is DeFindex?
 
