@@ -23,7 +23,6 @@
   * [Deposit](wallet-developer-and-vault-managers/smart-contracts/deposit.md)
   * [Withdraw](wallet-developer-and-vault-managers/smart-contracts/withdraw.md)
   * [Get Balance](wallet-developer-and-vault-managers/smart-contracts/get-balance.md)
-  * [Get Vault Info](wallet-developer-and-vault-managers/smart-contracts/get-vault-info.md)
   * [Manage your Vault](wallet-developer-and-vault-managers/smart-contracts/manage-your-vault.md)
 * [Guides and Tutorials](wallet-developer-and-vault-managers/guides-and-tutorials/README.md)
   * [Beginner Guide](wallet-developer-and-vault-managers/guides-and-tutorials/beginner-guide.md)
@@ -42,20 +41,15 @@
   * [Typescript SDK](wallet-developer-and-vault-managers/sdks/02-defindex-sdk.md)
   * [Flutter SDK](wallet-developer-and-vault-managers/sdks/01-fluter-sdk.md)
 
-
 ## Advanced Documentation
 
-### Smartcontracts Development
+* [Smartcontracts Development](strategy-developers/developer-introduction.md)
+  * [What is a strategy?](strategy-developers/what-is-a-strategy.md)
+  * [What is Blend Capital?](strategy-developers/what-is-blend-capital.md)
+  * [Strategies APY](strategy-developers/strategies-apy.md)
+  * [Building the Blend Strategy](strategy-developers/03-how-to-create-a-strategy.md)
 
-* [Developer Introduction](strategy-developers/developer-introduction.md)
-* [What is a strategy?](strategy-developers/what-is-a-strategy.md)
-* [What is Blend Capital?](strategy-developers/what-is-blend-capital.md)
-* [Strategies APY](strategy-developers/strategies-apy.md)
-* [Building the Blend Strategy](strategy-developers/03-how-to-create-a-strategy.md)
-
-### Protocol Deep Dive
-
-* [Whitepaper](10-whitepaper/README.md)
+* [WhitePaper](10-whitepaper/README.md)
   * [The DeFindex Approach](10-whitepaper/03-the-defindex-approach/README.md)
     * [Design Decisions](10-whitepaper/03-the-defindex-approach/01-design-decisions.md)
   * [State of the Art](10-whitepaper/04-state-of-the-art/README.md)
@@ -64,9 +58,10 @@
   * [Strategy Examples](10-whitepaper/04-strategies-examples.md)
   * [Appendix](10-whitepaper/05-appendix/README.md)
     * [Why We Can't Swap on Deposit or Withdraw](10-whitepaper/05-appendix/01-why-we-cant-swap-on-deposit-or-withdraw.md)
-### Risks and Audits
+
 * [Risks and Audits](security/risks-and-audits.md)
-### Contact us
+
+## Contact us
 * [About Us](community/about-us.md)
 * [Twitter](https://x.com/defindex_)
 * [Discord](https://discord.gg/e2qAhJCBmx)
