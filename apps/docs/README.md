@@ -13,14 +13,16 @@ coverY: 235
 
 * **Plug-and-play yield** → no need for deep DeFi expertise.
 * **Composable strategies** → support multiple assets and strategies per asset.
-* **Secure architecture** → with built-in safeguards like **rebalance** and **rescue** functions.
+* **Secure architecture** → audited, with built-in safeguards like **rebalance** and **rescue** functions.
 * **Aligned incentives** → wallets earn whenever their users earn.
 * **Future-proof** → easily extend strategies, integrate real-world assets, and unlock new income streams.
 
+<figure><img src=".gitbook/assets/happy_path_diagram_defindex.drawio (3).png" alt=""><figcaption></figcaption></figure>
+
 #### What will you find here?
 
-* [**Wallet Developer Documentation**](broken-reference): Learn how to implement DeFindex in your application and make your user earn yield while monetizing.
-* [**DeFi Developer Documentation**](broken-reference): Practical tools and guides to integrate DeFindex into your applications, offering yield-generating accounts to your users. Also how to develop strategies to be included in DeFindex.
+* [**Wallet Developer Documentation**](api-and-sdks-integration-guide/introduction.md): Learn how to implement DeFindex in your application and make your user earn yield while monetizing. Using APIs or SDKs.
+* [**Smart Contract Developer Documentation**](strategy-developers/developer-introduction.md)**:** Guides to integrate DeFindex into your contracts. Also how to develop strategies to be included in DeFindex. So, if you are a protocol developer, you may want to create a strategy that uses your protocol.
 * **Tutorials**: coming soon...
 
 If you’re new, start with the **"Getting Started"** section to learn the basics or explore [**What is DeFindex**](https://app.gitbook.com/o/CL0VfO2AdQ9HkYTcTiO5/s/nOjEfj1qCoVgPEQ3cl02/) for a more detailed overview of our platform.

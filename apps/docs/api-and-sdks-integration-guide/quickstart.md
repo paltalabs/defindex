@@ -1,4 +1,4 @@
-# Quick Start Guide
+# Quick Start
 
 Get your DeFindex API integration running in **under 5 minutes**. This guide is for developers who want to integrate yield-generating vaults quickly.
 
@@ -6,8 +6,8 @@ Get your DeFindex API integration running in **under 5 minutes**. This guide is 
 
 **Choose your path:**
 
-* 🐶 **New to blockchain/Stellar?** → Start with [`beginner-guide.md`](beginner-guide.md)
-* 🎮 **Want to see it working?** → Try [`beginner-example.html`](../../wallet-developer/beginner-example.html)
+* 🐶 **New to blockchain/Stellar?** → Start with [`beginner-guide.md`](guides-and-tutorials/beginner-guide.md)
+* 🎮 **Want to see it working?** → Try [`beginner-example.html`](../wallet-developer/beginner-example.html)
 * ⚡ **Experienced developer?** → Continue with this Quick Start
 * 📖 **Full API reference?** → See [api.defindex.io/docs](https://api.defindex.io/docs)
 
@@ -20,7 +20,7 @@ Get your DeFindex API integration running in **under 5 minutes**. This guide is 
 
 ## 🚀 Step 1: Get Your API Key (1 minute)
 
-1. Contact the DeFindex team on [Discord](https://discord.gg/ftPKMPm38f) to request API access
+1. Go to [Generate API Key](generate-api-key.md)
 2. You'll receive an API key (starts with `sk_`)
 3. Copy and store securely
 
@@ -182,14 +182,14 @@ async function executeDeposit() {
 }
 ```
 
-### Or you can just use the [DeFindex SDK](../sdks/) for a more streamlined experience.
+### Or you can just use the [DeFindex SDK](sdks/) for a more streamlined experience.
 
 ### Working Examples
 
 📂 **Complete examples available:**
 
-* [**`beginner-example.html`**](../../wallet-developer/beginner-example.html) - Full interactive tutorial with vault deposit/withdraw
-* **Typescript SDK examples** - Available in the [DeFindex SDK repository](../sdks/)
+* [**`beginner-example.html`**](../wallet-developer/beginner-example.html) - Full interactive tutorial with vault deposit/withdraw
+* **Typescript SDK examples** - Available in the [DeFindex SDK repository](sdks/)
 
 ## 📤 Advanced Options
 
@@ -304,6 +304,6 @@ const vaultUrl = `${API_BASE_URL}/vault/${vaultAddress}?network=testnet`;
 * **🌍 Stellar Expert (Testnet)**: https://stellar.expert/explorer/testnet
 * **🏦 DeFindex Interface**: https://app.defindex.io
 * **💬 Discord Support**: https://discord.gg/ftPKMPm38f
-* **📚 SDK Documentation**: [DeFindex SDK](../sdks/)
+* **📚 SDK Documentation**: [DeFindex SDK](sdks/)
 
 🎉 **Ready to build?** You now have everything needed for a production-ready DeFindex vault integration!
