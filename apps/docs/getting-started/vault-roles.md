@@ -1,3 +1,8 @@
+---
+cover: ../../.gitbook/assets/Captura de pantalla 2025-04-30 a las 15.21.10.png
+coverY: 0
+---
+
 # Vault Roles
 
 **Roles** are unique identifiers that assign specific responsibilities within the vault and are the only entities with privileges to perform critical actions. Each role is associated with an `Address` that represents the entity responsible for that function. None of these roles can withdraw funds from the users.

@@ -1,5 +1,5 @@
 ---
-cover: ../.gitbook/assets/Captura de pantalla 2024-12-03 a las 18.12.14.png
+cover: ../../.gitbook/assets/image 31.png
 coverY: 0
 ---
 

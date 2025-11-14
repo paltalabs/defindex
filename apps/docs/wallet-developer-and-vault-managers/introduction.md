@@ -1,3 +1,8 @@
+---
+cover: ../.gitbook/assets/image 31.png
+coverY: 0
+---
+
 # Introduction
 
 Welcome to the DeFindex Wallet Developer Guide! This documentation will help you integrate DeFindex's yield-generating capabilities into your wallet application, enabling your users to access DeFi strategies and maximize their returns.
