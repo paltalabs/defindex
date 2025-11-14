@@ -42,11 +42,10 @@
   * [Typescript SDK](wallet-developer-and-vault-managers/sdks/02-defindex-sdk.md)
   * [Flutter SDK](wallet-developer-and-vault-managers/sdks/01-fluter-sdk.md)
 
-***
 
 ## Advanced Documentation
 
-### Strategy Development
+### Smartcontracts Development
 
 * [Developer Introduction](strategy-developers/developer-introduction.md)
 * [What is a strategy?](strategy-developers/what-is-a-strategy.md)
