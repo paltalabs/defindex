@@ -105,13 +105,13 @@ To illustrate, consider the following scenario:
 The Total Assets would be:
 
 $$
-50,000 + 30,000 + 20,000 + 10,000 = 110,000 \text{ USDC} 
+50,000 + 30,000 + 20,000 + 10,000 = 110,000 \text{ USDC} 
 $$
 
 If the Total Supply of dfTokens is 100,000, the PPS would be:
 
 $$
-\text{PPS} = \frac{110,000 \text{ USDC}}{100,000 \text{ dfTokens}} = 1.1 \text{ USDC per dfToken} 
+\text{PPS} = \frac{110,000 \text{ USDC}}{100,000 \text{ dfTokens}} = 1.1 \text{ USDC per dfToken} 
 $$
 
 This calculation ensures users can accurately determine the value of their holdings in DeFindex, promoting transparency and trust.

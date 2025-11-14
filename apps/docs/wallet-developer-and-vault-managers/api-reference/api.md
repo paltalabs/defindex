@@ -1,5 +1,7 @@
 # API Integration Tutorial
 
+First[ generate API Key](generate-api-key.md) 
+
 For more details, refer to the [DeFindex API documentation](https://api.defindex.io/docs).
 
 Postman collection json [here](../../wallet-developer/postman_collection.json)

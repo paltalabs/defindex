@@ -81,7 +81,7 @@ pub struct VaultDepositEvent {
     pub df_tokens_minted: i128,
     pub total_supply_before: i128,
     pub total_managed_funds_before: Vec<CurrentAssetInvestmentAllocation>,
-} 
+}
 ```
 
 Each event includes:

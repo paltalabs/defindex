@@ -48,10 +48,10 @@ const CONFIG = {
     API_BASE_URL: 'https://api.defindex.io',  // Production
     API_KEY: 'sk_your_api_key_here',
     NETWORK: 'testnet', // or 'mainnet'
-    
+
     // Example vault address (replace with actual vault)
     VAULT_ADDRESS: 'CAQEPGA3XDBZSWHYLBUSH2UIP2SHHTEMXMHFPLIEN6RYH7G6GEGJWHGN',
-    
+
     // Testnet token addresses
     TOKENS: {
         XLM: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
@@ -94,18 +94,18 @@ class DeFindexClient {
                 'Content-Type': 'application/json'
             }
         };
-        
+
         if (method === 'POST' && data) {
             options.body = JSON.stringify(data);
         }
-        
+
         const response = await fetch(url, options);
-        
+
         if (!response.ok) {
             const error = await response.json();
             throw new Error(`API Error: ${error.message}`);
         }
-        
+
         return response.json();
     }
 
@@ -155,11 +155,11 @@ async function executeDeposit() {
         // 1. Get Vault Info
         const vaultInfo = await client.getVaultInfo(CONFIG.VAULT_ADDRESS);
         console.log('Vault info:', vaultInfo);
-        
+
         // 2. Check current balance
         const balance = await client.getVaultBalance(CONFIG.VAULT_ADDRESS, userAddress);
         console.log('Current vault shares:', balance.dfTokens);
-        
+
         // 3. Build deposit transaction (1 XLM)
         const { xdr } = await client.deposit(
             CONFIG.VAULT_ADDRESS,
@@ -168,13 +168,13 @@ async function executeDeposit() {
             true, // auto-invest
             50 // 0.5% slippage
         );
-        
+
         // 4. Sign (using your preferred wallet)
         const signedXdr = await signWithWallet(xdr);
-        
+
         // 5. Send
         const result = await client.sendTransaction(signedXdr);
-        
+
         console.log('Deposit completed!', result.txHash);
     } catch (error) {
         console.error('Deposit failed:', error);

@@ -24,7 +24,7 @@ Our vault deposit application consists of **6 main parts**:
 
 ```
 1. HTML Structure     → User interface elements with professional styling
-2. External Libraries → Freighter API for wallet integration  
+2. External Libraries → Freighter API for wallet integration
 3. Configuration     → Centralized CONFIG object with vault and API settings
 4. Application State  → Tracks wallet connection and vault transaction status
 5. Utility Functions  → Helper functions for UI updates and API calls
@@ -42,18 +42,18 @@ async function connectStellarWallet() {
     // Step 1: Check if Freighter wallet is installed
     const hasFreighter = await freighter.isConnected();
     console.log('Freighter connected:', hasFreighter);
-    
+
     // Step 2: If not installed, show error message
     if (!hasFreighter.isConnected) {
         alert('Please install the Freighter wallet extension first.');
         return; // Stop function execution
     }
-    
+
     // Step 3: Request permission to connect
     console.log('Connecting to Freighter...');
     account = await freighter.requestAccess();
     account = account.address; // Extract just the address
-    
+
     // Step 4: Update the user interface
     connectButton.disabled = true; // Disable connect button
     document.getElementById('account').innerText = `Connected account: ${account}`;
@@ -85,9 +85,9 @@ async function getVaultInfoAndDeposit() {
 
         // PHASE 1: Get Vault Information
         updateStatus('🔄 Getting vault information...', 'info');
-        
+
         appState.vaultInfo = await makeAPIRequest(`/vault/${CONFIG.VAULT_ADDRESS}`, null, 'GET');
-        
+
         updateStatus(`✅ Vault loaded: ${appState.vaultInfo.name}<br>🔄 Building deposit transaction...`, 'info');
 
         // PHASE 2: Build Deposit Transaction
@@ -100,7 +100,7 @@ async function getVaultInfoAndDeposit() {
 
         const buildResult = await makeAPIRequest(`/vault/${CONFIG.VAULT_ADDRESS}/deposit`, depositRequest);
         appState.unsignedXdr = buildResult.xdr;
-        
+
         // Show the unsigned transaction for educational purposes
         ELEMENTS.unsignedXdr.value = buildResult.xdr;
         ELEMENTS.technicalDetails.classList.remove('hidden');
@@ -139,7 +139,7 @@ async function signTransaction() {
             updateStatus('❌ Please connect your wallet first!', 'error');
             return;
         }
-        
+
         if (!appState.unsignedXdr) {
             updateStatus('❌ No transaction to sign. Please get a quote first!', 'error');
             return;
@@ -155,10 +155,10 @@ async function signTransaction() {
         });
 
         appState.signedTransaction = signResult.signedTxXdr;
-        
+
         // Show the signed transaction for educational purposes
         ELEMENTS.signedXdr.value = appState.signedTransaction;
-        
+
         const depositAmount = formatAmount(CONFIG.DEPOSIT.AMOUNT, 7);
         updateStatus(`✅ Transaction signed successfully!<br>📋 Ready to deposit ${depositAmount} XLM into vault`, 'success');
         updateButtonStates();
@@ -205,7 +205,7 @@ async function sendTransaction() {
 
         // Create link to view transaction on Stellar Expert
         const explorerUrl = `https://stellar.expert/explorer/${CONFIG.NETWORK}/tx/${sendResult.txHash}`;
-        
+
         // Show success message
         ELEMENTS.transactionLink.innerHTML = `
             <strong>Transaction Hash:</strong> <code>${sendResult.txHash}</code><br>

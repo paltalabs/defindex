@@ -18,9 +18,9 @@ The API approach abstracts away smart contract complexity and handles transactio
 const vaultAddress = 'CAQ6PAG4X6L7LJVGOKSQ6RU2LADWK4EQXRJGMUWL7SECS7LXUEQLM5U7';
 
 async function deposit(
-  amount: number, 
-  user: string, 
-  apiClient: ApiClient, 
+  amount: number,
+  user: string,
+  apiClient: ApiClient,
   signerFunction: (tx: string) => string
 ) {
   // Step 1: Request an unsigned transaction from the API

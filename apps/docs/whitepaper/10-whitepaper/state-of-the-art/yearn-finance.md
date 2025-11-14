@@ -161,7 +161,7 @@ The PPS is calculated based on the total assets and total supply of shares withi
 @view
 @internal
 def _convert_to_assets(shares: uint256, rounding: Rounding) -> uint256:
-    """ 
+    """
     assets = shares * (total_assets / total_supply) --- (== price_per_share * shares)
     """
     if shares == max_value(uint256) or shares == 0:
@@ -169,7 +169,7 @@ def _convert_to_assets(shares: uint256, rounding: Rounding) -> uint256:
 
     total_supply: uint256 = self._total_supply()
     # if total_supply is 0, price_per_share is 1
-    if total_supply == 0: 
+    if total_supply == 0:
         return shares
 
     numerator: uint256 = shares * self._total_assets()
