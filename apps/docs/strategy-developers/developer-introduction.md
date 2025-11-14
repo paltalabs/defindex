@@ -11,5 +11,5 @@ It only needs to comply with the strategy interface, which can be found in [gith
 ## Resources
 
 1. Review the [Strategy Contract ](../whitepaper/10-whitepaper/02-contracts/02-strategy-contract.md)on whitepaper docs
-2. Check out our [Strategies](https://github.com/paltalabs/defindex/tree/main/apps/contracts/strategies)
+2. Check out our [Strategies](https://github.com/paltalabs/defindex/blob/main/public/mainnet.contracts.json)
 3. Join our [developer community](https://discord.gg/ftPKMPm38f) for support

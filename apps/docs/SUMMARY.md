@@ -9,16 +9,13 @@
   * [General/FAQ](getting-started/general-faq/README.md)
     * [Additional Resources](getting-started/general-faq/additional-resources.md)
   * [Troubleshooting](getting-started/troubleshooting.md)
+  * [What is DeFindex?](defindex-protocol/what-is-defindex.md)
+  * [Concepts](getting-started/01-concepts.md)
+  * [Contract Deployments](contract-deployments/README.md)
+    * [Mainnet Deployment](contract-deployments/mainnet-deployment.md)
+    * [Testnet Deployment](contract-deployments/testnet-deployment.md)
 
-## What is DeFindex?
-
-* [What is DeFindex?](defindex-protocol/what-is-defindex.md)
-* [Concepts](getting-started/01-concepts.md)
-* [Contract Deployments](contract-deployments/README.md)
-  * [Mainnet Deployment](contract-deployments/mainnet-deployment.md)
-  * [Testnet Deployment](contract-deployments/testnet-deployment.md)
-
-## Wallet Developer Guide
+## How to integrate
 
 * [Introduction](wallet-developer-and-vault-managers/introduction.md)
 * [Quick Start](wallet-developer-and-vault-managers/guides-and-tutorials/quickstart.md)
@@ -57,9 +54,7 @@
 * [Developer Introduction](strategy-developers/developer-introduction.md)
 * [What is a strategy?](strategy-developers/what-is-a-strategy.md)
 * [What is Blend Capital?](strategy-developers/what-is-blend-capital.md)
-* [The Blend Autocompound Strategy](strategy-developers/the-blend-autocompound-strategy.md)
 * [Strategies APY](strategy-developers/strategies-apy.md)
-* [Build your Strategy](strategy-developers/build-your-strategy.md)
 * [Building the Blend Strategy](strategy-developers/03-how-to-create-a-strategy.md)
 
 ### Protocol Deep Dive
