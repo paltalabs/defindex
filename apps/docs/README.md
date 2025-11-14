@@ -1,7 +1,7 @@
 ---
 favicon: .gitbook/assets/favicon.svg
 icon: hand-wave
-cover: .gitbook/assets/image 31.png
+cover: .gitbook/assets/Component 12.png
 coverY: 235
 ---
 
