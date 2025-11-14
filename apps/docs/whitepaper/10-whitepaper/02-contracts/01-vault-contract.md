@@ -194,10 +194,10 @@ fn report(strategy: Address) -> (u256, u256) {
     let current_balance = get_current_balance(strategy);
     let prev_balance = get_prev_balance(strategy);
     let previous_gains_or_losses = get_gains_or_losses(strategy);
-    
+
     let gains_or_losses = current_balance - prev_balance;
     let current_gains_or_losses = previous_gains_or_losses + gains_or_losses;
-    
+
     store_gains_or_losses(strategy, current_gains_or_losses);
     store_prev_balance(strategy, current_balance);
 }
@@ -225,7 +225,7 @@ fn lock_fees(new_fee_bps: Option<i128>) {
         if gains_or_losses > 0 {
             let fee = gains_or_losses * new_fee_bps.unwrap_or(vault_fee_bps) / MAX_BPS;
             let previous_locked_fee = get_locked_fee(strategy.asset)
-            lock_fee(strategy.asset, fee + previous_locked_fee ); 
+            lock_fee(strategy.asset, fee + previous_locked_fee );
             reset_gains_or_losses(strategy);
         }
     }

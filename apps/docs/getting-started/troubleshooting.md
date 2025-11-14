@@ -19,21 +19,21 @@ Event log (newest first):
 **Breakdown:**
 
 1.  **Identify the Error:**
-    
+
     -   Events `0` and `1` indicate the error: `Error(Contract, #160)`.
     -   Error code: `160` (InsufficientOutputAmount)
 2.  **Understand the Context:**
-    
+
     -   Event `0`: The contract explicitly triggered an error.
     -   Event `1`: Confirms the contract error code is 160.
 3.  **Determine Function Arguments:**
-    
+
     -   Event `11` shows the `withdraw` function call and its arguments:
         -   `9999563`: `withdraw_shares` (number of shares to burn)
         -   `[10000065]`: `min_amounts_out` (minimum expected output amount)
         -   `GBI6SIGPSKXTBLXGSAFT2TN5DYFBHIJXKO7IGGQTR7DKO2ANWILGXIDA`: `to` (recipient address)
 4.  **Interpret the Error in Context:**
-    
+
     -   The `withdraw` transaction failed because the vault could not provide at least 10000065 stroops of the underlying asset when burning 9999563 shares.
 
 

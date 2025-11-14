@@ -68,21 +68,21 @@ async function quickStart() {
     // Check API health
     const health = await sdk.healthCheck();
     console.log('API Status:', health.status.reachable);
-    
+
     // Get factory address
     const factory = await sdk.getFactoryAddress(SupportedNetworks.TESTNET);
     console.log('Factory Address:', factory.address);
-    
+
     // Get vault information
     const vaultAddress = 'CVAULT_CONTRACT_ADDRESS...';
     const vaultInfo = await sdk.getVaultInfo(vaultAddress, SupportedNetworks.TESTNET);
     console.log(`Vault: ${vaultInfo.name} (${vaultInfo.symbol})`);
-    
+
     // Check user balance
     const userAddress = 'GUSER_ADDRESS...';
     const balance = await sdk.getVaultBalance(vaultAddress, userAddress, SupportedNetworks.TESTNET);
     console.log(`Vault Shares: ${balance.dfTokens}`);
-    
+
   } catch (error) {
     console.error('Operation failed:', error.message);
   }
@@ -98,12 +98,12 @@ quickStart();
 Here's a comprehensive example demonstrating vault creation, deposits, and withdrawals:
 
 ```typescript
-import { 
-  DefindexSDK, 
-  SupportedNetworks, 
+import {
+  DefindexSDK,
+  SupportedNetworks,
   CreateDefindexVault,
   DepositToVaultParams,
-  WithdrawFromVaultParams 
+  WithdrawFromVaultParams
 } from '@defindex/sdk';
 
 const sdk = new DefindexSDK({
@@ -116,7 +116,7 @@ async function completeVaultFlow() {
     const vaultConfig: CreateDefindexVault = {
       roles: {
         0: "GEMERGENCY_MANAGER_ADDRESS...", // Emergency Manager
-        1: "GFEE_RECEIVER_ADDRESS...",      // Fee Receiver  
+        1: "GFEE_RECEIVER_ADDRESS...",      // Fee Receiver
         2: "GVAULT_MANAGER_ADDRESS...",     // Vault Manager
         3: "GREBALANCE_MANAGER_ADDRESS..."  // Rebalance Manager
       },
@@ -129,9 +129,9 @@ async function completeVaultFlow() {
           paused: false
         }]
       }],
-      name_symbol: { 
+      name_symbol: {
         name: "My DeFi Vault", //Max 20 characters
-        symbol: "MDV" 
+        symbol: "MDV"
       },
       upgradable: true,
       caller: "GCREATOR_ADDRESS..." // Public key of the signer account
@@ -139,11 +139,11 @@ async function completeVaultFlow() {
 
     const createResponse = await sdk.createVault(vaultConfig, SupportedNetworks.TESTNET);
     console.log('Vault XDR for signing:', createResponse.xdr);
-    
+
     // Sign the XDR with your wallet here
     // const signedXDR = await yourWallet.sign(createResponse.xdr);
     // const txResult = await sdk.sendTransaction(signedXDR, SupportedNetworks.TESTNET);
-    
+
     // 2. Deposit to vault
     const vaultAddress = 'CVAULT_CONTRACT_ADDRESS...';
     const depositData: DepositToVaultParams = {
@@ -155,19 +155,19 @@ async function completeVaultFlow() {
 
     const depositResponse = await sdk.depositToVault(vaultAddress, depositData, SupportedNetworks.TESTNET);
     console.log('Deposit XDR for signing:', depositResponse.xdr);
-    
+
     // Sign the deposit XDR with your wallet here
     // const signedDepositXDR = await yourWallet.sign(depositResponse.xdr);
     // const depositResult = await sdk.sendTransaction(signedDepositXDR, SupportedNetworks.TESTNET);
-    
+
     // 3. Check balance after deposit
     const balance = await sdk.getVaultBalance(
-      vaultAddress, 
-      'GUSER_ADDRESS...', 
+      vaultAddress,
+      'GUSER_ADDRESS...',
       SupportedNetworks.TESTNET
     );
     console.log(`New vault shares: ${balance.dfTokens}`);
-    
+
     // 4. Withdraw from vault
     const withdrawData: WithdrawFromVaultParams = {
       amounts: [500000], // 0.5 XLM
@@ -177,7 +177,7 @@ async function completeVaultFlow() {
 
     const withdrawResponse = await sdk.withdrawFromVault(vaultAddress, withdrawData, SupportedNetworks.TESTNET);
     console.log('Withdrawal XDR for signing:', withdrawResponse.xdr);
-    
+
   } catch (error) {
     console.error('Vault operation failed:', error.message);
   }
@@ -235,9 +235,9 @@ const vaultConfig: CreateDefindexVault = {
       paused: false
     }]
   }],
-  name_symbol: { 
-    name: "Vault Name", 
-    symbol: "VLT" 
+  name_symbol: {
+    name: "Vault Name",
+    symbol: "VLT"
   },
   upgradable: true,
   caller: "GCALLER_ADDRESS..."
@@ -274,8 +274,8 @@ Check user's vault position:
 
 ```typescript
 const balance = await sdk.getVaultBalance(
-  vaultAddress, 
-  userAddress, 
+  vaultAddress,
+  userAddress,
   SupportedNetworks.TESTNET
 );
 console.log(`Vault Shares: ${balance.dfTokens}`);
@@ -383,14 +383,14 @@ Send signed XDR to the Stellar network:
 ```typescript
 // Submit via Stellar directly
 const response = await sdk.sendTransaction(
-  signedXDR, 
+  signedXDR,
   SupportedNetworks.TESTNET,
   false // Don't use LaunchTube
 );
 
 // Submit via LaunchTube
 const response = await sdk.sendTransaction(
-  signedXDR, 
+  signedXDR,
   SupportedNetworks.TESTNET,
   true // Use LaunchTube
 );
@@ -406,11 +406,11 @@ console.log('Status:', response.status);
 The SDK provides comprehensive error handling with specific error types:
 
 ```typescript
-import { 
-  isApiError, 
-  isAuthError, 
-  isValidationError, 
-  isNetworkError 
+import {
+  isApiError,
+  isAuthError,
+  isValidationError,
+  isNetworkError
 } from '@defindex/sdk';
 
 try {

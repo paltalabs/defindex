@@ -50,11 +50,11 @@ crate-type = ["cdylib"]
 soroban-sdk = "22.0.0-rc.2.1"
 defindex-strategy-core = "0.2.0"
 soroban-fixed-point-math = "1.3.0"
-  
+
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
 sep-40-oracle = { version = "1.2.0", features = ["testutils"] }
-sep-41-token = { version = "1.2.0", features = ["testutils"] }  
+sep-41-token = { version = "1.2.0", features = ["testutils"] }
 ```
 
 ***
@@ -88,7 +88,7 @@ pub use defindex_strategy_core::{
 	DeFindexStrategyTrait,
 	StrategyError,
 	event
-};  
+};
 
 pub fn check_nonnegative_amount(amount: i128) -> Result<(), StrategyError> {
 	if amount < 0 {
@@ -131,8 +131,8 @@ impl DeFindexStrategyTrait for BlendStrategy {
 			blend_token,
 			router: soroswap_router,
 		};
-		
-		// Storing the configuration in Config		
+
+		// Storing the configuration in Config
 		storage::set_config(&e, config);
 	}
 
@@ -140,7 +140,7 @@ impl DeFindexStrategyTrait for BlendStrategy {
 	fn asset(e: Env) -> Result<Address, StrategyError> {
 		check_initialized(&e)?;
 		extend_instance_ttl(&e);
-		
+
 		Ok(storage::get_config(&e).asset)
 	}
 
@@ -153,29 +153,29 @@ impl DeFindexStrategyTrait for BlendStrategy {
 		check_nonnegative_amount(amount)?;
 		extend_instance_ttl(&e);
 		from.require_auth();
-		
+
 		if amount < MIN_DUST {
-			return Err(StrategyError::AmountBelowMinDust); 
+			return Err(StrategyError::AmountBelowMinDust);
 		}
-		
+
 		let config = storage::get_config(&e);
 		// It claims any available BLND tokens and if its greater than the threshold it swaps them to the underlying asset and reinvest into the pool
 		blend_pool::claim(&e, &e.current_contract_address(), &config);
-		perform_reinvest(&e, &config)?;		
-		  
-		let reserves = storage::get_strategy_reserves(&e);				  
-		
+		perform_reinvest(&e, &config)?;
+
+		let reserves = storage::get_strategy_reserves(&e);
+
 		// transfer tokens from the vault to the strategy contract
 		TokenClient::new(&e, &config.asset).transfer(&from, &e.current_contract_address(), &amount);
-		
+
 		let b_tokens_minted = blend_pool::supply(&e, &from, &amount, &config);
-		  
+
 		// Keeping track of the total deposited amount and the total bTokens owned by the strategy depositors
 		let vault_shares = reserves::deposit(&e, reserves.clone(), &from, amount, b_tokens_minted);
-		
+
 		// Getting the underlying asset balance from the shares holded by the "from" address
 		let underlying_balance = shares_to_underlying(vault_shares, reserves);
-		
+
 		event::emit_deposit(&e, String::from_str(&e, STRATEGY_NAME), amount, from);
 		// It is required by the vault that the strategy returns the balance of the "from" address to keep track of the status and health of the strategy
 		Ok(underlying_balance)
@@ -184,16 +184,16 @@ impl DeFindexStrategyTrait for BlendStrategy {
 	fn harvest(e: Env, from: Address, data: Option<Bytes>) -> Result<(), StrategyError> {
 		check_initialized(&e)?;
 		extend_instance_ttl(&e);
-		
+
 		let config = storage::get_config(&e);
-		
+
 		// Claims BLND tokens
 		let harvested_blend = blend_pool::claim(&e, &e.current_contract_address(), &config);
 		// If the threshold is greater than X it will swap and reinvest the claimed BLND tokens
 		perform_reinvest(&e, &config)?;
-	  
+
 		event::emit_harvest(&e, String::from_str(&e, STRATEGY_NAME), harvested_blend, from);
-	
+
 		Ok(())
 	}
 
@@ -207,17 +207,17 @@ impl DeFindexStrategyTrait for BlendStrategy {
 		check_nonnegative_amount(amount)?;
 		extend_instance_ttl(&e);
 		from.require_auth();
-		
+
 		// protect against rouding of reserve_vault::update_rate, as small amounts
 		// can cause incorrect b_rate calculations due to the pool rounding
 		if amount < MIN_DUST {
 			return Err(StrategyError::AmountBelowMinDust)
 		}
-		
-		let reserves = storage::get_strategy_reserves(&e);  
-		
+
+		let reserves = storage::get_strategy_reserves(&e);
+
 		let config = storage::get_config(&e);
-		
+
 		// It withdraws the underlying asset from the blend pool
 		let (tokens_withdrawn, b_tokens_burnt) = blend_pool::withdraw(&e, &to, &amount, &config);
 
@@ -226,9 +226,9 @@ impl DeFindexStrategyTrait for BlendStrategy {
 
 		// Getting the underlying asset balance from the shares holded by the "from" address
 		let underlying_balance = shares_to_underlying(vault_shares, reserves);
-		  
+
 		event::emit_withdraw(&e, String::from_str(&e, STRATEGY_NAME), amount, from);
-		
+
 		Ok(underlying_balance)
 	}
 
@@ -238,14 +238,14 @@ impl DeFindexStrategyTrait for BlendStrategy {
 	) -> Result<i128, StrategyError> {
 		check_initialized(&e)?;
 		extend_instance_ttl(&e);
-		
+
 		// Get the vault's shares
 		let vault_shares = storage::get_vault_shares(&e, &from);
-		
+
 		// Get the strategy's total shares and bTokens
 		let reserves = storage::get_strategy_reserves(&e);
 		let underlying_balance = shares_to_underlying(vault_shares, reserves);
-		
+
 		Ok(underlying_balance)
 	}
 }
@@ -253,15 +253,15 @@ impl DeFindexStrategyTrait for BlendStrategy {
 fn shares_to_underlying(shares: i128, reserves: StrategyReserves) -> i128 {
 	let total_shares = reserves.total_shares;
 	let total_b_tokens = reserves.total_b_tokens;
-	
-	if total_shares == 0 || total_b_tokens == 0 {	
+
+	if total_shares == 0 || total_b_tokens == 0 {
 		// No shares or bTokens in the strategy
 		return 0i128;
 	}
 
 	// Calculate the bTokens corresponding to the vault's shares
 	let vault_b_tokens = (shares * total_b_tokens) / total_shares;
-	
+
 	// Use the b_rate to convert bTokens to underlying assets
 	(vault_b_tokens * reserves.b_rate) / SCALAR_9
 }
@@ -363,7 +363,7 @@ pub fn get_vault_shares(e: &Env, address: &Address) -> i128 {
 pub fn set_strategy_reserves(e: &Env, new_reserves: StrategyReserves) {
 	e.storage().instance().set(&DataKey::Reserves, &new_reserves);
 }
-  
+
 pub fn get_strategy_reserves(e: &Env) -> StrategyReserves {
 	e.storage().instance().get(&DataKey::Reserves).unwrap_or(
 		StrategyReserves {
@@ -471,14 +471,14 @@ pub fn supply(e: &Env, from: &Address, amount: &i128, config: &Config) -> i128 {
 			sub_invocations: vec![&e],
 		}),
 	]);
-  
+
 	let new_positions = pool_client.submit(
 		&e.current_contract_address(),
 		&e.current_contract_address(),
 		&from,
 		&requests
 	);
-  
+
 	// Calculate the amount of bTokens received
 	let b_tokens_amount = new_positions.supply.get_unchecked(config.reserve_id) - pre_supply;
 
@@ -488,7 +488,7 @@ pub fn supply(e: &Env, from: &Address, amount: &i128, config: &Config) -> i128 {
 // Withdraws the underlying asset from the Blend Pool and calculates the actual amount received.
 pub fn withdraw(e: &Env, to: &Address, amount: &i128, config: &Config) -> (i128, i128) {
 	let pool_client = BlendPoolClient::new(e, &config.pool);
-	
+
 	// Get withdraw amount pre-withdraw used to then calculate the bTokens burned
 	let pre_withdraw_btokens = pool_client
 		.get_positions(&e.current_contract_address())
@@ -516,7 +516,7 @@ pub fn withdraw(e: &Env, to: &Address, amount: &i128, config: &Config) -> (i128,
 	let post_withdrawal_balance = TokenClient::new(&e, &config.asset).balance(&to);
 
 	let real_amount = post_withdrawal_balance - pre_withdrawal_balance;
-  
+
 	// Calculates the amount of bToken burned
 	let b_tokens_amount = pre_withdraw_btokens - new_positions.supply.get(config.reserve_id).unwrap_or(0);
 
@@ -533,7 +533,7 @@ pub fn claim(e: &Env, from: &Address, config: &Config) -> i128 {
 pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError> {
 	// Getting the BLND Token balance to check if it needs to reinvest
 	let blnd_balance = TokenClient::new(e, &config.blend_token).balance(&e.current_contract_address());
-  
+
 	// If balance does not exceed threshold, skip reinvest
 	if blnd_balance < REWARD_THRESHOLD {
 		return Ok(false);
@@ -561,7 +561,7 @@ pub fn perform_reinvest(e: &Env, config: &Config) -> Result<bool, StrategyError>
 		.get(1)
 		.ok_or(StrategyError::InvalidArgument)?
 		.into_val(e);
-  
+
 	// Supplying underlying asset into blend pool
 	let b_tokens_minted = supply(&e, &e.current_contract_address(), &amount_out, &config);
 
@@ -610,7 +610,7 @@ pub fn internal_swap_exact_tokens_for_tokens(
 	deadline: &u64,
 	config: &Config,
 ) -> Result<Vec<i128>, StrategyError> {
-	
+
 	let mut swap_args: Vec<Val> = vec![&e];
 	swap_args.push_back(amount_in.into_val(e));
 	swap_args.push_back(amount_out_min.into_val(e));
@@ -639,7 +639,7 @@ pub fn internal_swap_exact_tokens_for_tokens(
 			sub_invocations: vec![&e],
 		}),
 	]);
-  
+
 	e.invoke_contract(
 		&config.router,
 		&Symbol::new(&e, "swap_exact_tokens_for_tokens"),

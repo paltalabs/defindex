@@ -11,8 +11,7 @@
   },
   "plugins": [
     "favicon",
-    "katex",
-    "mathjax"
+    "katex"
   ],
   "pluginsConfig": {
     "favicon": {

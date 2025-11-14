@@ -66,7 +66,7 @@ $$
 $$
 
 $$
-\text{APY} = (1 + 0.10)^{\left(\frac{365.2425}{30}\right)} - 1 \approx 2.138 - 1 = \boxed{113.8\%}
+\text{APY} = (1 + 0.10)^{\left(\frac{365.2425}{30}\right)} - 1 \approx 2.138 - 1 = \mathbf{113.8\%}
 $$
 
 This means if the strategy keeps performing the same way, the estimated yearly return is **113.8%**.
