@@ -10,6 +10,14 @@
     * [Additional Resources](getting-started/general-faq/additional-resources.md)
   * [Troubleshooting](getting-started/troubleshooting.md)
 
+## What is DeFindex?
+
+* [What is DeFindex?](defindex-protocol/what-is-defindex.md)
+* [Concepts](getting-started/01-concepts.md)
+* [Contract Deployments](contract-deployments/README.md)
+  * [Mainnet Deployment](contract-deployments/mainnet-deployment.md)
+  * [Testnet Deployment](contract-deployments/testnet-deployment.md)
+
 ## Wallet Developer Guide
 
 * [Introduction](wallet-developer-and-vault-managers/introduction.md)
@@ -40,7 +48,11 @@
   * [Typescript SDK](wallet-developer-and-vault-managers/sdks/02-defindex-sdk.md)
   * [Flutter SDK](wallet-developer-and-vault-managers/sdks/01-fluter-sdk.md)
 
-## Strategy Developers
+***
+
+## Advanced Documentation
+
+### Strategy Development
 
 * [Developer Introduction](strategy-developers/developer-introduction.md)
 * [What is a strategy?](strategy-developers/what-is-a-strategy.md)
@@ -50,15 +62,8 @@
 * [Build your Strategy](strategy-developers/build-your-strategy.md)
 * [Building the Blend Strategy](strategy-developers/03-how-to-create-a-strategy.md)
 
-***
+### Protocol Deep Dive
 
-## Advanced Documentation
-
-* [What is DeFindex?](defindex-protocol/what-is-defindex.md)
-* [Concepts](getting-started/01-concepts.md)
-* [Contract Deployments](contract-deployments/README.md)
-  * [Mainnet Deployment](contract-deployments/mainnet-deployment.md)
-  * [Testnet Deployment](contract-deployments/testnet-deployment.md)
 * [Whitepaper](10-whitepaper/README.md)
   * [The DeFindex Approach](10-whitepaper/03-the-defindex-approach/README.md)
     * [Design Decisions](10-whitepaper/03-the-defindex-approach/01-design-decisions.md)
