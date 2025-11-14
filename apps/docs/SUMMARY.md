@@ -4,16 +4,13 @@
 
 * [Welcome](README.md)
 * [Understanding DeFindex](getting-started/README.md)
-  * [How DeFindex Works](getting-started/how-defindex-works.md)
-  * [Vault Roles](getting-started/vault-roles.md)
-  * [General/FAQ](getting-started/general-faq/README.md)
-    * [Additional Resources](getting-started/general-faq/additional-resources.md)
-  * [Troubleshooting](getting-started/troubleshooting.md)
   * [What is DeFindex?](defindex-protocol/what-is-defindex.md)
-  * [Concepts](getting-started/01-concepts.md)
+  * [Vault Roles](getting-started/vault-roles.md)
   * [Contract Deployments](contract-deployments/README.md)
     * [Mainnet Deployment](contract-deployments/mainnet-deployment.md)
     * [Testnet Deployment](contract-deployments/testnet-deployment.md)
+  * [General/FAQ](getting-started/general-faq/README.md)
+
 
 ## How to integrate
 
@@ -30,10 +27,10 @@
   * [Manage your Vault](wallet-developer-and-vault-managers/smart-contracts/manage-your-vault.md)
 * [Guides and Tutorials](wallet-developer-and-vault-managers/guides-and-tutorials/README.md)
   * [Beginner Guide](wallet-developer-and-vault-managers/guides-and-tutorials/beginner-guide.md)
+  * [Additional Resources](getting-started/general-faq/additional-resources.md)
+  * [Troubleshooting](getting-started/troubleshooting.md)
 
 ## API Integration Guide
-
-* [API Overview](wallet-developer-and-vault-managers/api-reference/README.md)
 * [Getting Started with API](wallet-developer-and-vault-managers/api-reference/api.md)
 * [Generate API Key](wallet-developer-and-vault-managers/api-reference/generate-api-key.md)
 * [API Documentation](https://api.defindex.io/docs)
@@ -68,7 +65,9 @@
   * [Strategy Examples](10-whitepaper/04-strategies-examples.md)
   * [Appendix](10-whitepaper/05-appendix/README.md)
     * [Why We Can't Swap on Deposit or Withdraw](10-whitepaper/05-appendix/01-why-we-cant-swap-on-deposit-or-withdraw.md)
+### Risks and Audits
 * [Risks and Audits](security/risks-and-audits.md)
+### Contact us
 * [About Us](community/about-us.md)
 * [Twitter](https://x.com/defindex_)
 * [Discord](https://discord.gg/e2qAhJCBmx)
