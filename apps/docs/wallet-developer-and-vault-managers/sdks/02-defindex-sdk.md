@@ -1,5 +1,6 @@
 ---
-cover: ../../wallet-developer/.gitbook/assets/image%2031.png
+hidden: true
+cover: ../../.gitbook/assets/image 31.png
 coverY: 0
 ---
 

@@ -1,12 +1,9 @@
 ---
-icon: repeat
-cover: ../.gitbook/assets/image 31.png
+cover: ../.gitbook/assets/Captura de pantalla 2024-12-03 a las 18.12.14.png
 coverY: 0
 ---
 
 # What is DeFindex?
-
-<figure><img src="../.gitbook/assets/Captura de pantalla 2024-12-03 a las 18.12.14.png" alt=""><figcaption></figcaption></figure>
 
 **DeFindex** is a decentralized yield protocol designed to make DeFi simple.
 It enables **wallet providers** to launch **yield-generating accounts** for their users—fast, secure, and without needing deep DeFi expertise. By connecting to a broad range of decentralized strategies, DeFindex makes it effortless to earn **passive income on crypto assets**.

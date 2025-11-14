@@ -7,8 +7,6 @@ coverY: 235
 
 # Welcome
 
-<figure><img src=".gitbook/assets/Component 12.png" alt=""><figcaption></figcaption></figure>
-
 **We are DeFindex** 🔁, a decentralized protocol that makes yield simple and accessible. DeFindex empowers wallet providers, developers, and crypto users to integrate and access a wide range of strategies—bridging DeFi complexity into a plug-and-play solution for yield generation.
 
 ### ✨ Why DeFindex?

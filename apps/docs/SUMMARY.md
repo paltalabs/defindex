@@ -4,7 +4,7 @@
 
 * [Welcome](README.md)
 * [Understanding DeFindex](getting-started/README.md)
-  * [What is DeFindex?](defindex-protocol/what-is-defindex.md)
+  * [What is DeFindex](defindex-protocol/what-is-defindex.md)
   * [Vault Roles](getting-started/vault-roles.md)
   * [Contract Deployments](contract-deployments/README.md)
     * [Mainnet Deployment](contract-deployments/mainnet-deployment.md)
