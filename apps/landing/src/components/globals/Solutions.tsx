@@ -25,7 +25,7 @@ export default function Solutions() {
                     <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full">
                         <ScheduleDemoButton />
                         <Link
-                            href="https://docs.defindex.io/defindex-protocol/what-is-defindex#solutions-for-wallet-builders"
+                            href="https://docs.defindex.io/getting-started/getting-started/what-is-defindex#solutions-for-wallet-builders"
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label="View DeFindex solutions documentation"
