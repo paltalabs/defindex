@@ -3,17 +3,16 @@ import { useState, useEffect, useMemo } from "react"
 import { Asset, AssetContext, AssetContextType } from "@/contexts"
 import useMounted from "@/hooks/useMounted"
 import { extractStrategies, usePublicAddresses } from "@/hooks/usePublicAddresses"
-import { useSorobanReact } from "stellar-react"
+import { useUser } from "@/contexts/UserContext"
 import { StrategyMethod, useStrategyCallback } from "@/hooks/useStrategy"
 import { scValToNative, xdr } from "@stellar/stellar-sdk"
-import { getNetworkName } from "@/helpers/networkName"
 
 
 export const StrategiesProvider = ({ children }: { children: React.ReactNode }) => {
   const [assets, setAssets] = useState<Asset[]>([]);
 
-  const sorobanContext = useSorobanReact();
-  const { data: publicAddresses } = usePublicAddresses(getNetworkName(sorobanContext!.activeNetwork));
+  const { activeNetwork } = useUser();
+  const { data: publicAddresses } = usePublicAddresses(activeNetwork);
   const isMounted = useMounted();
   const strategyCallback = useStrategyCallback();
 
@@ -72,7 +71,7 @@ export const StrategiesProvider = ({ children }: { children: React.ReactNode }) 
 
     fetchStrategies();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sorobanContext.activeNetwork, publicAddresses]);
+  }, [activeNetwork, publicAddresses]);
 
   const AssetContextValue: AssetContextType = useMemo(() => ({
     assets,

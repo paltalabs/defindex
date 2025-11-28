@@ -1,0 +1,19 @@
+[data-scope="checkbox"][data-part="control"] {
+  border-radius: 25%;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(211, 255, 180, 0.5) !important;
+}
+
+[data-scope="checkbox"][data-part="control"][data-state="checked"] {
+  background-color: rgba(211, 255, 180, 0.2) !important;
+  border-color: #D3FFB4 !important;
+}
+
+[data-scope="checkbox"][data-part="indicator"],
+[data-scope="checkbox"][data-part="indicator"] svg,
+.checkbox,
+.checkbox svg {
+  color: #D3FFB4 !important;
+  stroke: #D3FFB4 !important;
+  fill: none !important;
+}
