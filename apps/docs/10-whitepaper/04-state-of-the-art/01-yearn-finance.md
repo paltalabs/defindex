@@ -103,18 +103,18 @@ This function calculates and issues new shares based on the amount of assets dep
 What these functions do is to maintain the relation between shares and assets invested. In fact, if S<sub>t</sub> is the Total Share Supply at time t, A<sub>t</sub> is the total amount of Assets at time t, s is the new amount of shares to be minted and a is the amount of assets being invested, what this code is doing is to maintain the following relationship
 
 $$
-\frac{S_t}{A_t} = \frac{s}{a} 
+\frac{S_t}{A_t} = \frac{s}{a}
 $$
 
 Because, when `_issue_shares_for_amount` is being called, `total_assets` is already A<sub>0</sub> + a = A<sub>1</sub>, but `total_supply` is still S<sub>0</sub> then the relationship will be
 
 $$
-\frac{S_1}{A_1} = \frac{S_0 + s}{A_1} = \frac{s}{a}  
+\frac{S_1}{A_1} = \frac{S_0 + s}{A_1} = \frac{s}{a}
 $$
 
 
 $$
-(S_0 + s) \cdot a = S_0 \cdot a + s \cdot a = s \cdot A_1  
+(S_0 + s) \cdot a = S_0 \cdot a + s \cdot a = s \cdot A_1
 $$
 
 $$
@@ -163,7 +163,7 @@ The PPS is calculated based on the total assets and total supply of shares withi
 @view
 @internal
 def _convert_to_assets(shares: uint256, rounding: Rounding) -> uint256:
-    """ 
+    """
     assets = shares * (total_assets / total_supply) --- (== price_per_share * shares)
     """
     if shares == max_value(uint256) or shares == 0:
@@ -171,7 +171,7 @@ def _convert_to_assets(shares: uint256, rounding: Rounding) -> uint256:
 
     total_supply: uint256 = self._total_supply()
     # if total_supply is 0, price_per_share is 1
-    if total_supply == 0: 
+    if total_supply == 0:
         return shares
 
     numerator: uint256 = shares * self._total_assets()
@@ -222,7 +222,7 @@ All info is in the this website; https://docs.yearn.fi/developers/v3/protocol_fe
 Yearn collects fees through a performance-based system defined by governance, which controls the percentage of protocol fees and allows customization for each vault and strategy. This ensures flexibility and precise tuning of the fee structure.
 Yearn Governance dictates the amount of the Protocol fee and can be set anywhere between 0 - 50%. Yearn governance also holds the ability to set custom protocol fees for individual vaults and strategies. Allowing full customization of the system.
 
-Example 
+Example
 ```
 profit = 100
 performance_fee = 20%
@@ -234,11 +234,11 @@ performance_fees = total_fees - protocol_fees = 18
 
 18 would get paid to the vault managers performance_fee_recipient.
 2 would get paid to the Yearn Treasury.
-``` 
+```
 
 ### When Fees Are Collected
 
-Fees are collected when a strategy reports gains or losses via the report() function. During the report, the strategy will calculate the gains since the last report and then calculate the fees based on the gains. This fees are then distributed as shares of the vault. 
+Fees are collected when a strategy reports gains or losses via the report() function. During the report, the strategy will calculate the gains since the last report and then calculate the fees based on the gains. This fees are then distributed as shares of the vault.
 Then, fees are collected per strategy.
 
 Accountant reports the fees or refunds to the vault, from the gains or losses of the strategy. Then, the vault will calculate the fees and the protocol fees and then distribute the fees to the vault manager and the protocol fee recipient. This accountant is an interface and apparently it depends on the vault.
@@ -247,7 +247,6 @@ Yearn burns shares when there is fees or losses. When there is a loss and there 
 
 The Vaults utilizes several mechanisms to mitigate price per share (pps) fluctuations and manipulation:
 1. Internal accounting is used instead of balanceOf() to keep track of the vault's debt and idle.
-2. A profit locking machenism designed by V3 Vaults locks profits or accountant's refunds by issuing new shares to the vault itself that are slowly burnt over the  unlock perior. 
+2. A profit locking machenism designed by V3 Vaults locks profits or accountant's refunds by issuing new shares to the vault itself that are slowly burnt over the  unlock perior.
 3. In the event of losses or fees, the vault will always try to offset them by butning locked shares it owns. the price per share is expected to decrease only when excess losses or fees occur upon processing a report, or a loss occurs upon force revoking a strategy.
  [reference](https://github.com/yearn/yearn-security/blob/master/audits/20240504_ChainSecurity_Yearn_V3/Yearn-Smart-Contract-Audit_V3_Vaults_-ChainSecurity.pdf)
- 

@@ -1,9 +1,4 @@
----
-cover: ../../.gitbook/assets/image 31.png
-coverY: 0
----
-
-# Frameworks
+# Available SDKs
 
 Welcome to the DeFindex SDK documentation! Choose the SDK that best fits your development environment and integration requirements.
 
@@ -15,7 +10,7 @@ Welcome to the DeFindex SDK documentation! Choose the SDK that best fits your de
 * **Use Case:** Any app
 * **Features:** Complete API access, maximum flexibility, Bearer token authentication
 
-[**View API Integration Guide**](../api-reference/api.md)
+[**View API Integration Guide**](../api.md)
 
 ## Getting Started
 
@@ -26,7 +21,7 @@ Welcome to the DeFindex SDK documentation! Choose the SDK that best fits your de
 
 ## Available SDKs
 
-### DotNet SDK&#x20;
+### DotNet SDK
 
 **Perfect for:** server-side development
 
@@ -34,7 +29,7 @@ Welcome to the DeFindex SDK documentation! Choose the SDK that best fits your de
 * **Use Case:** Web backends, server-side applications
 * **Features:** Only deposit, withdraw, balance and APY
 
-### TypeScript SDK (Deprecated)
+### TypeScript SDK
 
 **Perfect for:** Web applications and server-side development
 
@@ -42,17 +37,9 @@ Welcome to the DeFindex SDK documentation! Choose the SDK that best fits your de
 * **Use Case:** Web backends, API integrations, server-side applications
 * **Features:** Complete vault management, factory operations, admin functions, full type safety
 
-[**View TypeScript SDK Documentation**](../../wallet-developer/02-defindex-sdk.md)
+[**View TypeScript SDK Documentation**](./#typescript-sdk)
 
 ### Flutter SDK (Deprecated)
-
-**Perfect for:** Mobile applications and cross-platform development
-
-* **Platform:** Flutter/Dart
-* **Use Case:** Mobile wallets, cross-platform apps
-* **Features:** Simplified vault operations, APY tracking, native Flutter integration
-
-[**View Flutter SDK Documentation**](../../wallet-developer/01-fluter-sdk.md)
 
 ## Need Help?
 

@@ -19,11 +19,11 @@ DeFindex is a decentralized protocol that allows Wallets to define and manage th
 
 ## Getting Started
 
-To begin integrating DeFindex into your wallet:
+To begin the integration of DeFindex, Go to [quickstart.md](quickstart.md "mention") or:
 
 1. Learn About [vault roles](../getting-started/vault-roles.md).
 2. (Skip if your vault is setup by DeFindex team) Learn how to create a Vault with the best practices in the [Creating a DeFindex Vault](creating-a-defindex-vault/) guide.
-3. [Implement API](api-reference/)
+3. [Implement API](../wallet-developer-and-vault-managers/api-reference/)
 
 ## Support and Resources
 
