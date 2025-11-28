@@ -15,3 +15,36 @@
   width: 100vw;
   backdrop-filter: blur(18px);
 }
+
+.network-selector-btn {
+  font-weight: 500;
+  text-transform: capitalize;
+  background-color: #ffffff00 !important;
+  border: solid 1px #d3ffb4 !important;
+  color: #D3FFB4;
+  font-family: var(--font-inter);
+  font-weight: 600;
+  line-height: 60px;
+  letter-spacing: 0%;
+}
+
+.network-menu-content {
+  background: rgba(26, 44, 34, 0.063);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  min-width: 170px;
+  z-index: 1001;
+}
+
+.network-item-active {
+  background-color: #49ff7d0e !important;
+}
+
+.network-item {
+  padding: 8px 16px;
+}
+
+.network-item:hover {
+  background-color: #5eff8c23 !important;
+}

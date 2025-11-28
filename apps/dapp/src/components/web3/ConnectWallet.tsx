@@ -1,17 +1,17 @@
 import React from "react"
 import { Button } from '@chakra-ui/react'
-import { useSorobanReact } from 'stellar-react'
+import { useUser } from "@/contexts/UserContext"
 import { shortenAddress } from "@/helpers/address"
 import './ConnectWallet.css'
 
 export const ConnectButton = () => {
-  const { address, disconnect, connect } = useSorobanReact();
+  const { address, disconnect, connectWallet } = useUser();
 
   const handleConnect = async () => {
     if (address) {
-      await disconnect();
+      disconnect();
     } else {
-      await connect();
+      await connectWallet();
     }
   }
   return (

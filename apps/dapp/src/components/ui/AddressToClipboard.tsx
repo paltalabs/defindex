@@ -3,11 +3,11 @@ import { HStack, IconButton, Text } from '@chakra-ui/react';
 import React from 'react'
 import { FaCopy, FaExternalLinkAlt } from "react-icons/fa";
 import './AddressToClipboard.css'
-import { useSorobanReact, WalletNetwork } from 'stellar-react';
+import { useUser } from '@/contexts/UserContext';
 import { toaster } from './toaster';
 
 function AddressToClipboard({ label, vaultAddress }: { label: string, vaultAddress: string }) {
-  const sorobanContext = useSorobanReact();
+  const { activeNetwork } = useUser();
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(vaultAddress).then(() => {
@@ -27,7 +27,7 @@ function AddressToClipboard({ label, vaultAddress }: { label: string, vaultAddre
   };
 
   const openInExplorer = () => {
-    const networkName = sorobanContext.activeNetwork === WalletNetwork.PUBLIC ? 'public' : 'testnet';
+    const networkName = activeNetwork === 'mainnet' ? 'public' : 'testnet';
     const url = `https://stellar.expert/explorer/${networkName}/contract/${vaultAddress}`;
     window.open(url, '_blank');
   }
