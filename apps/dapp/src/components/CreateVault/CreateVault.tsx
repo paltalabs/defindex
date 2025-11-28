@@ -1,14 +1,12 @@
 import { Asset, AssetContext, Strategy, Vault, VaultContext } from '@/contexts'
+import { useUser } from '@/contexts/UserContext'
 import { isValidAddress } from '@/helpers/address'
 import { decimalRegex, parseNumericInput } from '@/helpers/input'
 import { parsePascalCase } from '@/helpers/utils'
-import { getAssetParamsSCVal, getCreateDeFindexVaultDepositParams, getCreateDeFindexVaultParams } from '@/helpers/vault'
-import { FactoryMethod, useFactoryCallback } from '@/hooks/useFactory'
-import { soroswapRouterAddress } from '@/hooks/usePublicAddresses'
-import { Button, createListCollection, Fieldset, Flex, HStack, Stack } from '@chakra-ui/react'
-import { xdr } from '@stellar/stellar-sdk'
+import { useDefindexSDK } from '@/hooks/useDefindexSDK'
+import { Box, Button, Checkbox, createListCollection, Fieldset, Flex, HStack, IconButton, Slider, Stack, Text } from '@chakra-ui/react'
 import React, { useContext, useEffect, useState } from 'react'
-import { useSorobanReact, WalletNetwork } from 'stellar-react'
+import { HiExternalLink } from 'react-icons/hi'
 import BackgroundCard from '../ui/BackgroundCard'
 import { baseMargin } from '../ui/Common'
 import { CustomSelect, FormField } from '../ui/CustomInputFields'
@@ -87,7 +85,20 @@ function SelectStrategies({ asset }: { asset: Asset }) {
   }
 
   useEffect(() => {
-    const newStrategies: Strategy[] = asset.strategies.filter((strategy) => selectedStrategies.includes(strategy.address))
+    const newStrategies: Strategy[] = asset.strategies
+      .filter((strategy) => selectedStrategies.includes(strategy.address))
+      .map((strategy, _, arr) => ({
+        ...strategy,
+        // Initialize with equal distribution
+        amount: arr.length > 0 ? Math.floor(100 / arr.length) : 0,
+      }));
+
+    // Adjust last strategy to ensure sum is exactly 100
+    if (newStrategies.length > 0) {
+      const sum = newStrategies.reduce((acc, s) => acc + (s.amount || 0), 0);
+      newStrategies[newStrategies.length - 1].amount = (newStrategies[newStrategies.length - 1].amount || 0) + (100 - sum);
+    }
+
     const assetAllocation = vaultContext?.newVault.assetAllocation.map((item) => {
       if (item.address === asset.address) {
         return {
@@ -112,6 +123,122 @@ function SelectStrategies({ asset }: { asset: Asset }) {
       onSelect={handleSelect}
     />
   )
+}
+
+interface StrategyAllocationSlidersProps {
+  assetIndex: number;
+  assetAmount: number;
+  assetSymbol: string;
+}
+
+function StrategyAllocationSliders({ assetIndex, assetAmount, assetSymbol }: StrategyAllocationSlidersProps) {
+  const vaultContext = useContext(VaultContext);
+  const strategies = vaultContext?.newVault.assetAllocation[assetIndex]?.strategies || [];
+
+  if (strategies.length === 0 || assetAmount <= 0) {
+    return null;
+  }
+
+  const handlePercentageChange = (strategyIndex: number, newPercentage: number) => {
+    if (!vaultContext) return;
+
+    const currentStrategies = [...strategies];
+    const oldPercentage = currentStrategies[strategyIndex].amount || 0;
+    const diff = newPercentage - oldPercentage;
+
+    // Update the changed strategy
+    currentStrategies[strategyIndex] = {
+      ...currentStrategies[strategyIndex],
+      amount: newPercentage,
+    };
+
+    // Distribute the difference among other strategies proportionally
+    const otherStrategies = currentStrategies.filter((_, i) => i !== strategyIndex);
+    const otherTotal = otherStrategies.reduce((sum, s) => sum + (s.amount || 0), 0);
+
+    if (otherTotal > 0 && diff !== 0) {
+      const remaining = -diff;
+      otherStrategies.forEach((_, i) => {
+        const actualIndex = i >= strategyIndex ? i + 1 : i;
+        const currentAmount = currentStrategies[actualIndex].amount || 0;
+        const proportion = currentAmount / otherTotal;
+        const adjustment = Math.round(remaining * proportion);
+        const newAmount = Math.max(0, Math.min(100, currentAmount + adjustment));
+        currentStrategies[actualIndex] = {
+          ...currentStrategies[actualIndex],
+          amount: newAmount,
+        };
+      });
+
+      // Ensure total is exactly 100
+      const total = currentStrategies.reduce((sum, s) => sum + (s.amount || 0), 0);
+      if (total !== 100 && currentStrategies.length > 1) {
+        const lastOtherIndex = strategyIndex === currentStrategies.length - 1 ? 0 : currentStrategies.length - 1;
+        currentStrategies[lastOtherIndex] = {
+          ...currentStrategies[lastOtherIndex],
+          amount: (currentStrategies[lastOtherIndex].amount || 0) + (100 - total),
+        };
+      }
+    }
+
+    const newAssetAllocation = vaultContext.newVault.assetAllocation.map((item, i) => {
+      if (i === assetIndex) {
+        return { ...item, strategies: currentStrategies };
+      }
+      return item;
+    });
+
+    vaultContext.setNewVault({
+      ...vaultContext.newVault,
+      assetAllocation: newAssetAllocation,
+    });
+  };
+
+  const formatAmount = (percentage: number) => {
+    const amount = (assetAmount * percentage) / 100;
+    return amount.toFixed(2);
+  };
+
+  return (
+    <Box w="full" mt={4}>
+      <Text fontSize="sm" fontWeight="medium" mb={2} color="gray.400">
+        Strategy Allocation
+      </Text>
+      <Stack gap={3}>
+        {strategies.map((strategy, idx) => (
+          <Box key={strategy.address} p={3} borderRadius="md" bg="whiteAlpha.50">
+            <Flex justify="space-between" align="center" mb={2}>
+              <Text fontSize="sm" color="gray.300">
+                {parsePascalCase(strategy.name)}
+              </Text>
+              <Text fontSize="sm" fontWeight="bold" color="green.400">
+                {strategy.amount || 0}% = {formatAmount(strategy.amount || 0)} {assetSymbol}
+              </Text>
+            </Flex>
+            <Slider.Root
+              value={[strategy.amount || 0]}
+              min={0}
+              max={100}
+              step={1}
+              onValueChange={(details) => handlePercentageChange(idx, details.value[0])}
+            >
+              <Slider.Control>
+                <Slider.Track>
+                  <Slider.Range />
+                </Slider.Track>
+                <Slider.Thumb index={0} />
+              </Slider.Control>
+            </Slider.Root>
+          </Box>
+        ))}
+        <Flex justify="flex-end">
+          <Text fontSize="xs" color={strategies.reduce((sum, s) => sum + (s.amount || 0), 0) === 100 ? 'green.400' : 'red.400'}>
+            Total: {strategies.reduce((sum, s) => sum + (s.amount || 0), 0)}%
+          </Text>
+        </Flex>
+      </Stack>
+    </Box>
+  );
 }
 
 function AddStrategies() {
@@ -140,7 +267,7 @@ function AddStrategies() {
 
   return (
     <BackgroundCard title='Add Strategies' titleFontWeight='bold' titleFontSize='xl'>
-      <HStack>
+      <HStack alignItems="flex-start">
         {vaultContext?.newVault.assetAllocation.map((item, index) => (
           <Stack key={index} w={'full'} alignContent={'center'} justifyContent={'center'} mt={baseMargin} gap={4}>
             <FormField
@@ -152,6 +279,11 @@ function AddStrategies() {
               onChange={(e) => handleDepositAmount(e, index)}
             />
             <SelectStrategies asset={assetContext!.assets.find((a) => a.address === item.address)!} />
+            <StrategyAllocationSliders
+              assetIndex={index}
+              assetAmount={item.amount}
+              assetSymbol={item.symbol?.toUpperCase() || ''}
+            />
           </Stack>
         ))}
       </HStack>
@@ -203,23 +335,28 @@ function VaultConfig() {
       />
       <SelectAssets />
 
-      <Button
-        variant={upgradable ? 'solid' : 'outline'}
-        size={'lg'}
-        colorPalette={'green'}
-        alignSelf={'end'}
-        p={4}
-        rounded={16}
-        onClick={() => {
-          setUpgradable(!upgradable)
-          vaultContext?.setNewVault({
-            ...vaultContext.newVault,
-            upgradable: !upgradable,
-          })
-        }}
-      >
-        {upgradable ? 'Upgradable' : 'Non Upgradable'}
-      </Button>
+      <Flex direction="column" align="center" justifyContent="center" alignSelf="center" gap={1} w="110px">
+        <Text fontSize="xs" color={upgradable ? 'green.400' : 'gray.400'} whiteSpace="nowrap">
+          {upgradable ? 'Upgradable' : 'Non-Upgradable'}
+        </Text>
+        <Checkbox.Root
+          checked={upgradable}
+          onCheckedChange={(e) => {
+            setUpgradable(!!e.checked)
+            vaultContext?.setNewVault({
+              ...vaultContext.newVault,
+              upgradable: !!e.checked,
+            })
+          }}
+          size="lg"
+        >
+          <Checkbox.HiddenInput />
+          <Checkbox.Control>
+            <Checkbox.Indicator strokeWidth={1} />
+          </Checkbox.Control>
+        </Checkbox.Root>
+        
+      </Flex>
 
     </VaultConfigSection>
   );
@@ -346,14 +483,14 @@ function FeeConfig() {
 
 function CreateVaultButton() {
   const vaultContext = useContext(VaultContext);
-  const factoryCallback = useFactoryCallback();
-  const sorobanContext = useSorobanReact();
+  const { address, activeNetwork } = useUser();
+  const { createVault, createVaultAutoInvest } = useDefindexSDK();
   const [loading, setLoading] = useState(false);
   const [disabled, setDisabled] = useState(false);
 
   useEffect(() => {
     if (
-      !sorobanContext.address
+      !address
       || !vaultContext
       || !vaultContext.newVault.name
       || !vaultContext.newVault.symbol
@@ -368,9 +505,8 @@ function CreateVaultButton() {
     } else {
       setDisabled(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    sorobanContext.address,
+    address,
     vaultContext?.newVault.name,
     vaultContext?.newVault.symbol,
     vaultContext?.newVault.vaultManager,
@@ -378,107 +514,188 @@ function CreateVaultButton() {
     vaultContext?.newVault.rebalanceManager,
     vaultContext?.newVault.feeReceiver,
     vaultContext?.newVault.feePercent,
-    vaultContext?.newVault.assetAllocation.length
+    vaultContext?.newVault.assetAllocation.length,
+    vaultContext
   ]);
 
   const handleCreateVault = async () => {
-    if (!vaultContext) return;
+    if (!vaultContext || !address) return;
     setLoading(true);
-    const soroswapRouter = await soroswapRouterAddress(sorobanContext.activeNetwork);
 
     const newVault = vaultContext.newVault;
     if (!newVault) return;
 
-    const assetParams = getAssetParamsSCVal(
-      newVault.assetAllocation
-    );
-    let params: xdr.ScVal[] = [];
+    // Convert fee percentage to basis points (1% = 100 bps)
+    const vaultFeeBps = Math.round(newVault.feePercent * 100);
 
-    const isCreateAndDeposit = newVault.assetAllocation.some((asset) => asset.amount > 0);
-    if (isCreateAndDeposit) {
-      if (!sorobanContext.address) return;
-      params = getCreateDeFindexVaultDepositParams(
-        sorobanContext.address,
-        newVault.emergencyManager,
-        newVault.rebalanceManager,
-        newVault.feeReceiver,
-        newVault.vaultManager,
-        newVault.feePercent,
-        newVault.name,
-        newVault.symbol,
-        assetParams,
-        soroswapRouter,
-        newVault.upgradable,
-        newVault.assetAllocation
-      );
-      try {
-        const result = await factoryCallback(FactoryMethod.CREATE_DEFINDEX_VAULT_DEPOSIT, params, true);
+    // Check if there's a deposit with strategy allocation
+    const hasDeposit = newVault.assetAllocation.some((asset) => asset.amount > 0);
+    const hasStrategyAllocation = newVault.assetAllocation.some((asset) =>
+      asset.strategies.some((strategy) => (strategy.amount || 0) > 0)
+    );
+
+    try {
+      let result;
+
+      if (hasDeposit && hasStrategyAllocation) {
+        // Use createVaultAutoInvest - creates vault, deposits, and invests in strategies
+        const autoInvestConfig = {
+          caller: address,
+          roles: {
+            emergencyManager: newVault.emergencyManager,
+            rebalanceManager: newVault.rebalanceManager,
+            feeReceiver: newVault.feeReceiver,
+            manager: newVault.vaultManager,
+          },
+          name: newVault.name,
+          symbol: newVault.symbol,
+          vaultFee: vaultFeeBps,
+          upgradable: newVault.upgradable,
+          assets: newVault.assetAllocation.map((asset) => ({
+            address: asset.address,
+            symbol: asset.symbol || '',
+            amount: Math.round(asset.amount * 10_000_000), // Convert to stroops
+            strategies: asset.strategies.map((strategy) => ({
+              address: strategy.address,
+              name: strategy.name,
+              // Calculate amount based on percentage
+              amount: Math.round((asset.amount * (strategy.amount || 0) / 100) * 10_000_000),
+            })),
+          })),
+        };
+
+        result = await createVaultAutoInvest(autoInvestConfig);
+
+        const txHash = result.txHash || result.hash;
+        const vaultAddress = result.predictedVaultAddress;
+        const network = activeNetwork === 'mainnet' ? 'public' : 'testnet';
+
         toaster.create({
-          title: 'Vault created',
-          description: 'Vault created successfully',
+          title: 'Vault created with auto-invest',
+          description: vaultAddress ? (
+            <Flex align="center" gap={2}>
+              <Text
+                as="span"
+                cursor="pointer"
+                _hover={{ textDecoration: 'underline' }}
+                onClick={() => {
+                  navigator.clipboard.writeText(vaultAddress);
+                  toaster.create({
+                    title: 'Address copied',
+                    type: 'success',
+                    duration: 2000,
+                  });
+                }}
+              >
+                {vaultAddress.slice(0, 8)}...{vaultAddress.slice(-8)}
+              </Text>
+              <IconButton
+                aria-label="View on Stellar Expert"
+                size="xs"
+                variant="ghost"
+                onClick={() => {
+                  window.open(`https://stellar.expert/explorer/${network}/contract/${vaultAddress}`, '_blank');
+                }}
+              >
+                <HiExternalLink />
+              </IconButton>
+            </Flex>
+          ) : 'Vault created and funds invested successfully',
           type: 'success',
-          duration: 5000,
+          duration: 10000,
           action: {
             label: 'View transaction',
             onClick: () => {
-              window.open(`https://stellar.expert/explorer/${sorobanContext.activeNetwork == WalletNetwork.PUBLIC ? 'public' : 'testnet'}/search?term=${result.txHash}`, '_blank');
+              window.open(`https://stellar.expert/explorer/${network}/search?term=${txHash}`, '_blank');
             }
           }
         });
-        setLoading(false);
-      } catch (error: unknown) {
-        console.error('Error creating vault:', error);
-        toaster.create({
-          title: 'Error creating vault',
-          description: error instanceof Error ? error.message : 'An error occurred',
-          type: 'error',
-          duration: 5000,
-        });
-        setLoading(false);
-        return;
-      }
-    } else {
-      params = getCreateDeFindexVaultParams(
-        newVault.emergencyManager,
-        newVault.rebalanceManager,
-        newVault.feeReceiver,
-        newVault.vaultManager,
-        newVault.feePercent,
-        newVault.name,
-        newVault.symbol,
-        assetParams,
-        soroswapRouter,
-        newVault.upgradable,
-      );
-      try {
-        const result = await factoryCallback(FactoryMethod.CREATE_DEFINDEX_VAULT, params, true);
+      } else {
+        // Use createVault - creates vault without deposit
+        const vaultConfig = {
+          roles: {
+            0: newVault.emergencyManager,
+            1: newVault.feeReceiver,
+            2: newVault.vaultManager,
+            3: newVault.rebalanceManager,
+          },
+          vault_fee_bps: vaultFeeBps,
+          assets: newVault.assetAllocation.map((asset) => ({
+            address: asset.address,
+            strategies: asset.strategies.map((strategy) => ({
+              address: strategy.address,
+              name: strategy.name,
+              paused: strategy.paused,
+            })),
+          })),
+          name_symbol: {
+            name: newVault.name,
+            symbol: newVault.symbol,
+          },
+          upgradable: newVault.upgradable,
+          caller: address,
+        };
+
+        result = await createVault(vaultConfig);
+
+        const txHash = result.txHash || result.hash;
+        const vaultAddr = result.predictedVaultAddress;
+        const net = activeNetwork === 'mainnet' ? 'public' : 'testnet';
+
         toaster.create({
           title: 'Vault created',
-          description: `Vault created successfully`,
+          description: vaultAddr ? (
+            <Flex align="center" gap={2}>
+              <Text
+                as="span"
+                cursor="pointer"
+                _hover={{ textDecoration: 'underline' }}
+                onClick={() => {
+                  navigator.clipboard.writeText(vaultAddr);
+                  toaster.create({
+                    title: 'Address copied',
+                    type: 'success',
+                    duration: 2000,
+                  });
+                }}
+              >
+                {vaultAddr.slice(0, 8)}...{vaultAddr.slice(-8)}
+              </Text>
+              <IconButton
+                aria-label="View on Stellar Expert"
+                size="xs"
+                variant="ghost"
+                onClick={() => {
+                  window.open(`https://stellar.expert/explorer/${net}/contract/${vaultAddr}`, '_blank');
+                }}
+              >
+                <HiExternalLink />
+              </IconButton>
+            </Flex>
+          ) : 'Vault created successfully',
           type: 'success',
-          duration: 5000,
+          duration: 10000,
           action: {
             label: 'View transaction',
             onClick: () => {
-              window.open(`https://stellar.expert/explorer/${sorobanContext.activeNetwork == WalletNetwork.PUBLIC ? 'public' : 'testnet'}/search?term=${result.txHash}`, '_blank');
+              window.open(`https://stellar.expert/explorer/${net}/search?term=${txHash}`, '_blank');
             }
           }
         });
-        setLoading(false);
-      } catch (error: unknown) {
-        console.error('Error creating vault:', error);
-        toaster.create({
-          title: 'Error creating vault',
-          description: error instanceof Error ? error.message : 'An error occurred',
-          type: 'error',
-          duration: 5000,
-        });
-        setLoading(false);
-        return;
       }
+    } catch (error: unknown) {
+      console.error('Error creating vault:', error);
+      toaster.create({
+        title: 'Error creating vault',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        type: 'error',
+        duration: 5000,
+      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
+
   return (
     <Flex w={'full'} h={'full'} alignItems={'center'} justifyContent={'end'}>
       <Button
@@ -493,7 +710,7 @@ function CreateVaultButton() {
         disabled={disabled}
         className='custom-button'
       >
-        {sorobanContext.address ? 'Launch Vault' : 'Connect Wallet'}
+        {address ? 'Launch Vault' : 'Connect Wallet'}
       </Button>
     </Flex>
   )
