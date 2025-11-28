@@ -1,6 +1,5 @@
 import { Strategy } from '@/contexts';
-import { getNetworkName } from '@/helpers/networkName';
-import { WalletNetwork } from 'stellar-react';
+import { NetworkType } from '@/helpers/networkName';
 import useSWR from 'swr';
 
 
@@ -14,7 +13,7 @@ export enum AllowedAssets {
   USDGLO = 'usdglo'
 }
 
-export const usePublicAddresses = (network: string) => {
+export const usePublicAddresses = (network: NetworkType) => {
   const fetcher = async (url: string) => {
     const response = await fetch(url, {cache: 'reload'});
     const result = await response.json();
@@ -32,17 +31,17 @@ export const usePublicAddresses = (network: string) => {
   };
 };
 
-export const soroswapRouterAddress = async (network: WalletNetwork | undefined) => {
+export const soroswapRouterAddress = async (network: NetworkType | undefined) => {
   if (!network) {
     throw new Error('Network is undefined');
   }
 
-  const response = await fetch(`https://raw.githubusercontent.com/soroswap/core/refs/heads/main/public/${network === WalletNetwork.PUBLIC ? 'mainnet' : 'testnet'}.contracts.json`, {
+  const response = await fetch(`https://raw.githubusercontent.com/soroswap/core/refs/heads/main/public/${network}.contracts.json`, {
     cache: 'reload',
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch router address for network: ${getNetworkName(network)}`);
+    throw new Error(`Failed to fetch router address for network: ${network}`);
   }
 
   const data = await response.json();
