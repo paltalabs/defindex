@@ -10,7 +10,7 @@ Welcome to the DeFindex SDK documentation! Choose the SDK that best fits your de
 * **Use Case:** Any app
 * **Features:** Complete API access, maximum flexibility, Bearer token authentication
 
-[**View API Integration Guide**](../api.md)
+[**View API Integration Guide**](../../api-integration-guide/api.md)
 
 ## Getting Started
 

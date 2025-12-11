@@ -19,7 +19,7 @@ Before integrating the SDK, ensure you have:
 
 * Node.js environment (version 16 or higher)
 * TypeScript knowledge for optimal development experience
-* [API key from DeFindex](../generate-api-key.md)
+* [API key from DeFindex](/broken/pages/YmeWgFDW9EOdGu89JLGb)
 * Understanding of Stellar/Soroban blockchain concepts
 
 ## Integration Guide

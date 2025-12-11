@@ -6,34 +6,34 @@
 * [Understanding DeFindex](getting-started/README.md)
   * [What is DeFindex](defindex-protocol/what-is-defindex.md)
   * [Vault Roles](getting-started/vault-roles.md)
-  * [Contract Deployments](contract-deployments/README.md)
-    * [Mainnet Deployment](contract-deployments/mainnet-deployment.md)
-    * [Testnet Deployment](contract-deployments/testnet-deployment.md)
   * [General/FAQ](getting-started/general-faq/README.md)
 
-## API & SDKs Integration Guide
+***
 
-* [Introduction](api-and-sdks-integration-guide/introduction.md)
-* [Quick Start](api-and-sdks-integration-guide/quickstart.md)
-* [Getting Started with API](api-and-sdks-integration-guide/api.md)
-* [Generate API Key](api-and-sdks-integration-guide/generate-api-key.md)
-* [Available SDKs](api-and-sdks-integration-guide/sdks/README.md)
-  * [Typescript SDK](api-and-sdks-integration-guide/sdks/02-defindex-sdk.md)
-  * [Flutter SDK](api-and-sdks-integration-guide/sdks/01-fluter-sdk.md)
-* [Interact with your Vault](api-and-sdks-integration-guide/smart-contracts/README.md)
-  * [Deposit](api-and-sdks-integration-guide/smart-contracts/deposit.md)
-  * [Withdraw](api-and-sdks-integration-guide/smart-contracts/withdraw.md)
-  * [Get Balance](api-and-sdks-integration-guide/smart-contracts/get-balance.md)
-  * [Manage your Vault](api-and-sdks-integration-guide/smart-contracts/manage-your-vault.md)
+* [Contract Deployments](contract-deployments/README.md)
+  * [Mainnet Deployment](contract-deployments/mainnet-deployment.md)
+  * [Testnet Deployment](contract-deployments/testnet-deployment.md)
+
+## API Integration Guide
+
+* [Introduction](api-integration-guide/introduction.md)
+* [Quick Start](api-integration-guide/quickstart.md)
+* [Getting Started with API](api-integration-guide/api.md)
+* [Interact with your Vault](api-integration-guide/smart-contracts/README.md)
+  * [Deposit](api-integration-guide/smart-contracts/deposit.md)
+  * [Withdraw](api-integration-guide/smart-contracts/withdraw.md)
+  * [Get Balance](api-integration-guide/smart-contracts/get-balance.md)
+  * [Get APY](api-integration-guide/smart-contracts/get-apy.md)
+  * [Manage your Vault](api-integration-guide/smart-contracts/manage-your-vault.md)
 * [API Documentation](https://api.defindex.io/docs)
 * [Postman Collection](https://drive.google.com/drive/folders/1hp02ySFWFeunRCwiZ6oLCjHzcJXpWhX8?usp=drive_link)
-* [Create a Vault](api-and-sdks-integration-guide/creating-a-defindex-vault/README.md)
-  * [Using GUI (Basic)](api-and-sdks-integration-guide/creating-a-defindex-vault/using-gui-basic.md)
-  * [Using the Factory (Advanced)](api-and-sdks-integration-guide/creating-a-defindex-vault/using-the-factory-advanced.md)
-* [Guides and Tutorials](api-and-sdks-integration-guide/guides-and-tutorials/README.md)
-  * [Beginner Guide](api-and-sdks-integration-guide/guides-and-tutorials/beginner-guide.md)
-  * [Additional Resources](api-and-sdks-integration-guide/guides-and-tutorials/additional-resources.md)
-* [Troubleshooting](api-and-sdks-integration-guide/troubleshooting.md)
+* [Create a Vault](api-integration-guide/creating-a-defindex-vault/README.md)
+  * [Using GUI (Basic)](api-integration-guide/creating-a-defindex-vault/using-gui-basic.md)
+  * [Using the Factory (Advanced)](api-integration-guide/creating-a-defindex-vault/using-the-factory-advanced.md)
+* [Guides and Tutorials](api-integration-guide/guides-and-tutorials/README.md)
+  * [Beginner Guide](api-integration-guide/guides-and-tutorials/beginner-guide.md)
+  * [Additional Resources](api-integration-guide/guides-and-tutorials/additional-resources.md)
+* [Troubleshooting](api-integration-guide/troubleshooting.md)
 
 ## Advanced Documentation
 
@@ -52,6 +52,9 @@
   * [Appendix](10-whitepaper/05-appendix/README.md)
     * [Why We Can't Swap on Deposit or Withdraw](10-whitepaper/05-appendix/01-why-we-cant-swap-on-deposit-or-withdraw.md)
 * [Risks and Audits](security/risks-and-audits.md)
+* [Available SDKs](advanced-documentation/sdks/README.md)
+  * [Typescript SDK](advanced-documentation/sdks/02-defindex-sdk.md)
+  * [Flutter SDK](advanced-documentation/sdks/01-fluter-sdk.md)
 
 ## Contact us
 

@@ -21,7 +21,7 @@ coverY: 235
 
 #### What will you find here?
 
-* [**Wallet Developer Documentation**](api-and-sdks-integration-guide/introduction.md): Learn how to implement DeFindex in your application and make your user earn yield while monetizing. Using APIs or SDKs.
+* [**Wallet Developer Documentation**](api-integration-guide/introduction.md): Learn how to implement DeFindex in your application and make your user earn yield while monetizing. Using APIs or SDKs.
 * [**Smart Contract Developer Documentation**](strategy-developers/developer-introduction.md)**:** Guides to integrate DeFindex into your contracts. Also how to develop strategies to be included in DeFindex. So, if you are a protocol developer, you may want to create a strategy that uses your protocol.
 * **Tutorials**: coming soon...
 

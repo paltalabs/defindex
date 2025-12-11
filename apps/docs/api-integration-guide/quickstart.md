@@ -1,26 +1,14 @@
+---
+hidden: true
+---
+
 # Quick Start
 
 Get your DeFindex API integration running in **under 5 minutes**. This guide is for developers who want to integrate yield-generating vaults quickly.
 
-## 📚 Documentation Hierarchy
-
-**Choose your path:**
-
-* 🐶 **New to blockchain/Stellar?** → Start with [`beginner-guide.md`](guides-and-tutorials/beginner-guide.md)
-* 🎮 **Want to see it working?** → Try [`beginner-example.html`](../wallet-developer/beginner-example.html)
-* ⚡ **Experienced developer?** → Continue with this Quick Start
-* 📖 **Full API reference?** → See [api.defindex.io/docs](https://api.defindex.io/docs)
-
-## Prerequisites
-
-* **JavaScript/TypeScript** experience
-* **Wallet integration** knowledge (Freighter/StellarWalletsKit)
-* **API integration** experience
-* **3-5 minutes** of your time
-
 ## 🚀 Step 1: Get Your API Key (1 minute)
 
-1. Go to [Generate API Key](generate-api-key.md)
+1. Go to [Generate API Key](/broken/pages/YmeWgFDW9EOdGu89JLGb)
 2. You'll receive an API key (starts with `sk_`)
 3. Copy and store securely
 
@@ -123,9 +111,7 @@ class DeFindexClient {
     async deposit(vaultAddress, amounts, callerAddress, invest = true, slippageBps = 0) {
         return this.apiRequest(`/vault/${vaultAddress}/deposit`, {
             amounts,
-            caller: callerAddress,
-            invest,
-            slippageBps
+            caller: callerAddress
         });
     }
 
@@ -133,8 +119,7 @@ class DeFindexClient {
     async withdraw(vaultAddress, amounts, callerAddress, slippageBps = 0) {
         return this.apiRequest(`/vault/${vaultAddress}/withdraw`, {
             amounts,
-            caller: callerAddress,
-            slippageBps
+            caller: callerAddress
         });
     }
 
@@ -164,9 +149,7 @@ async function executeDeposit() {
         const { xdr } = await client.deposit(
             CONFIG.VAULT_ADDRESS,
             [10000000], // 1 XLM (7 decimals)
-            userAddress,
-            true, // auto-invest
-            50 // 0.5% slippage
+            userAddress
         );
 
         // 4. Sign (using your preferred wallet)
@@ -182,14 +165,14 @@ async function executeDeposit() {
 }
 ```
 
-### Or you can just use the [DeFindex SDK](sdks/) for a more streamlined experience.
+### Or you can just use the [DeFindex SDK](../advanced-documentation/sdks/) for a more streamlined experience.
 
 ### Working Examples
 
 📂 **Complete examples available:**
 
 * [**`beginner-example.html`**](../wallet-developer/beginner-example.html) - Full interactive tutorial with vault deposit/withdraw
-* **Typescript SDK examples** - Available in the [DeFindex SDK repository](sdks/)
+* **Typescript SDK examples** - Available in the [DeFindex SDK repository](../advanced-documentation/sdks/)
 
 ## 📤 Advanced Options
 
@@ -218,8 +201,6 @@ const result = await server.submitTransaction(signedTransaction);
 {
     amounts: [10000000],     // Array of amounts for each vault asset (7 decimals for XLM)
     caller: userAddress,     // User's wallet address
-    invest: true,           // Auto-invest into strategies (recommended: true)
-    slippageBps: 50         // 0.5% slippage tolerance (optional, default: 0)
 }
 ```
 
@@ -229,7 +210,6 @@ const result = await server.submitTransaction(signedTransaction);
 {
     amounts: [5000000],      // Array of amounts to withdraw from each asset
     caller: userAddress,     // User's wallet address
-    slippageBps: 50         // 0.5% slippage tolerance (optional, default: 0)
 }
 ```
 
@@ -304,6 +284,6 @@ const vaultUrl = `${API_BASE_URL}/vault/${vaultAddress}?network=testnet`;
 * **🌍 Stellar Expert (Testnet)**: https://stellar.expert/explorer/testnet
 * **🏦 DeFindex Interface**: https://app.defindex.io
 * **💬 Discord Support**: https://discord.gg/ftPKMPm38f
-* **📚 SDK Documentation**: [DeFindex SDK](sdks/)
+* **📚 SDK Documentation**: [DeFindex SDK](../advanced-documentation/sdks/)
 
 🎉 **Ready to build?** You now have everything needed for a production-ready DeFindex vault integration!
