@@ -34,8 +34,8 @@ By combining simplicity for newcomers with advanced features for seasoned users,
 
 ### Introduction
 
-* [Introduction](../whitepaper/10-whitepaper/01-introduction.md)
-* [Core Concepts](../whitepaper/10-whitepaper/02-core-concepts.md)
+* [Introduction](01-introduction.md)
+* [Core Concepts](02-core-concepts.md)
 
 ### The DeFindex Approach
 
@@ -44,9 +44,9 @@ By combining simplicity for newcomers with advanced features for seasoned users,
 
 ### Contracts
 
-* [Vault Contract](../whitepaper/10-whitepaper/02-contracts/01-vault-contract.md)
-* [Strategy Contract](../whitepaper/10-whitepaper/02-contracts/02-strategy-contract.md)
-* [Zapper Contract](../whitepaper/10-whitepaper/02-contracts/02-zapper-contract.md)
+* [Vault Contract](02-contracts/01-vault-contract.md)
+* [Strategy Contract](02-contracts/02-strategy-contract.md)
+* [Zapper Contract](02-contracts/02-zapper-contract.md)
 
 ### State of the Art
 
