@@ -42,6 +42,12 @@ const DEFAULT_ADOPTION_RATE = 15;
 const DEFAULT_WALLET_FEE_PERCENT = 10;
 const DEFAULT_INTEGRATION_COST = 4000;
 
+/**
+ * Custom React hook for managing and calculating revenue projections, ROI, and related metrics
+ * for a wallet integration scenario. Maintains state for user inputs and provides setters with validation.
+ *
+ * @returns {UseRevenueCalculatorReturn} An object containing input values, setters, and computed metrics.
+ */
 export function useRevenueCalculator(): UseRevenueCalculatorReturn {
   // State for inputs
   const [activeUsers, setActiveUsersState] = useState(DEFAULT_ACTIVE_USERS);

@@ -17,7 +17,6 @@ export default function RevenueCalculator() {
     integrationCost,
     selectedScenario,
     tvl,
-    defindexFee,
     partnerFee,
     projections,
     roiMetrics,
@@ -53,7 +52,7 @@ export default function RevenueCalculator() {
             adoptionRate={adoptionRate}
             walletFeePercent={walletFeePercent}
             integrationCost={integrationCost}
-            defindexFee={defindexFee}
+            partnerFee={partnerFee}
             onActiveUsersChange={setActiveUsers}
             onAvgBalanceChange={setAvgBalance}
             onAdoptionRateChange={setAdoptionRate}

@@ -2,7 +2,7 @@ export interface RevenueInputs {
   activeUsers: number;
   avgBalance: number;
   adoptionRate: number; // 0-100 (percentage)
-  walletFeePercent: number; // Partner's fee percentage
+  walletFeePercent: number; // Total wallet fee charged to users (partner receives 50% of this; split handled in calculation logic)
   integrationCost: number;
 }
 
