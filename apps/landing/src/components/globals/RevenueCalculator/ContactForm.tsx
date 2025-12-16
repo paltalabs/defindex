@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { gradients } from './styles';
 
 interface FormData {
   name: string;
@@ -98,15 +99,12 @@ export default function ContactForm() {
   if (isSuccess) {
     return (
       <div
-        className="rounded-2xl p-8 border border-lime-200/30 text-center"
-        style={{
-          background:
-            'linear-gradient(135deg, rgba(3, 48, 54, 0.9) 0%, rgba(1, 71, 81, 0.6) 100%)',
-        }}
+        className="rounded-lg p-4 border border-lime-200/30 text-center"
+        style={{ background: gradients.cardDark }}
       >
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-lime-200/20 flex items-center justify-center">
+        <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-lime-200/20 flex items-center justify-center">
           <svg
-            className="w-8 h-8 text-lime-200"
+            className="w-6 h-6 text-lime-200"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -119,10 +117,10 @@ export default function ContactForm() {
             />
           </svg>
         </div>
-        <h3 className="text-xl font-familjen-grotesk font-semibold text-white mb-2">
+        <h3 className="text-base font-familjen-grotesk font-semibold text-white mb-1">
           Thank You!
         </h3>
-        <p className="text-white/75">
+        <p className="text-white/75 text-sm">
           We&apos;ve received your inquiry and will be in touch soon.
         </p>
       </div>
@@ -131,133 +129,141 @@ export default function ContactForm() {
 
   return (
     <div
-      className="rounded-2xl p-6 md:p-8 border border-cyan-800/50"
-      style={{
-        background:
-          'linear-gradient(135deg, rgba(3, 48, 54, 0.9) 0%, rgba(1, 71, 81, 0.6) 100%)',
-      }}
+      className="rounded-lg p-4 border border-cyan-800/50 mt-12"
+      style={{ background: gradients.cardDark }}
     >
-      <h3 className="text-xl font-familjen-grotesk font-semibold text-white mb-2">
-        Request Integration Info
-      </h3>
-      <p className="text-white/60 text-sm mb-6">
-        Get in touch with our team to learn more about integrating DeFindex
-      </p>
+      {/* Title and Description */}
+      <div className="text-center mb-3">
+        <h3 className="text-2xl font-familjen-grotesk font-semibold text-white mb-1">
+          Request Integration Info
+        </h3>
+        <p className="text-white/60 text-xs">
+          Get in touch with our team to learn more about integrating DeFindex
+        </p>
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 text-left">
-        {/* Name */}
-        <div>
-          <label className="block text-sm font-medium text-white/75 mb-2">
-            Name <span className="text-orange-400">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.name}
-            onChange={(e) => handleInputChange('name', e.target.value)}
-            placeholder="Your name"
-            className={`w-full h-12 px-4 bg-cyan-950 border rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-              errors.name ? 'border-orange-400' : 'border-cyan-800'
-            }`}
-          />
-          {errors.name && (
-            <p className="mt-1 text-xs text-orange-400">{errors.name}</p>
-          )}
+      {/* Form Fields - 2 columns on desktop, two rows */}
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
+        
+        {/* Left Column */}
+        <div className='flex flex-col gap-3 col-span-1'>
+         {/* Name */}
+          <div>
+            <label className="block text-xs font-medium text-white/75 mb-1">
+              Name <span className="text-orange-400">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              placeholder="Your name"
+              className={`w-full h-9 px-3 text-sm bg-cyan-950 border rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-lime-200 ${
+                errors.name ? 'border-orange-400' : 'border-cyan-800'
+              }`}
+            />
+            {errors.name && (
+              <p className="mt-0.5 text-[10px] text-orange-400">{errors.name}</p>
+            )}
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="block text-xs font-medium text-white/75 mb-1">
+              Email <span className="text-orange-400">*</span>
+            </label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              placeholder="you@company.com"
+              className={`w-full h-9 px-3 text-sm bg-cyan-950 border rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-lime-200 ${
+                errors.email ? 'border-orange-400' : 'border-cyan-800'
+              }`}
+            />
+            {errors.email && (
+              <p className="mt-0.5 text-[10px] text-orange-400">{errors.email}</p>
+            )}
+          </div>
         </div>
+        {/* Right Column */}
+        <div className='flex flex-col gap-3 col-span-1'>
+          {/* Company */}
+          <div>
+            <label className="block text-xs font-medium text-white/75 mb-1">
+              Company <span className="text-orange-400">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.company}
+              onChange={(e) => handleInputChange('company', e.target.value)}
+              placeholder="Your company name"
+              className={`w-full h-9 px-3 text-sm bg-cyan-950 border rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-lime-200 ${
+                errors.company ? 'border-orange-400' : 'border-cyan-800'
+              }`}
+            />
+            {errors.company && (
+              <p className="mt-0.5 text-[10px] text-orange-400">{errors.company}</p>
+            )}
+          </div>
 
-        {/* Email */}
-        <div>
-          <label className="block text-sm font-medium text-white/75 mb-2">
-            Email <span className="text-orange-400">*</span>
-          </label>
-          <input
-            type="email"
-            value={formData.email}
-            onChange={(e) => handleInputChange('email', e.target.value)}
-            placeholder="you@company.com"
-            className={`w-full h-12 px-4 bg-cyan-950 border rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-              errors.email ? 'border-orange-400' : 'border-cyan-800'
-            }`}
-          />
-          {errors.email && (
-            <p className="mt-1 text-xs text-orange-400">{errors.email}</p>
-          )}
-        </div>
-
-        {/* Company */}
-        <div>
-          <label className="block text-sm font-medium text-white/75 mb-2">
-            Company <span className="text-orange-400">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.company}
-            onChange={(e) => handleInputChange('company', e.target.value)}
-            placeholder="Your company name"
-            className={`w-full h-12 px-4 bg-cyan-950 border rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-              errors.company ? 'border-orange-400' : 'border-cyan-800'
-            }`}
-          />
-          {errors.company && (
-            <p className="mt-1 text-xs text-orange-400">{errors.company}</p>
-          )}
-        </div>
-
-        {/* Telegram */}
-        <div>
-          <label className="block text-sm font-medium text-white/75 mb-2">
-            Telegram Handle{' '}
-            <span className="text-white/40 font-normal">(optional)</span>
-          </label>
-          <input
-            type="text"
-            value={formData.telegram}
-            onChange={(e) => handleInputChange('telegram', e.target.value)}
-            placeholder="@username"
-            className="w-full h-12 px-4 bg-cyan-950 border border-cyan-800 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-orange-500"
-          />
+          {/* Telegram */}
+          <div>
+            <label className="block text-xs font-medium text-white/75 mb-1">
+              Telegram <span className="text-white/40 font-normal">(optional)</span>
+            </label>
+            <input
+              type="text"
+              value={formData.telegram}
+              onChange={(e) => handleInputChange('telegram', e.target.value)}
+              placeholder="@username"
+              className="w-full h-9 px-3 text-sm bg-cyan-950 border border-cyan-800 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-lime-200"
+            />
+          </div>
         </div>
 
         {/* Submit Error */}
         {submitError && (
-          <div className="p-3 rounded-lg bg-orange-400/10 border border-orange-400/30">
-            <p className="text-sm text-orange-400">{submitError}</p>
+          <div className="md:col-span-4 p-2 rounded-lg bg-orange-400/10 border border-orange-400/30">
+            <p className="text-xs text-orange-400">{submitError}</p>
           </div>
         )}
 
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full h-12 bg-lime-200 text-cyan-900 font-semibold rounded-lg hover:bg-lime-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isSubmitting ? (
-            <span className="flex items-center justify-center gap-2">
-              <svg
-                className="animate-spin h-5 w-5"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-              Sending...
-            </span>
-          ) : (
-            'Request Integration Info'
-          )}
-        </button>
+        {/* Submit Button - Full Width */}
+        <div className="md:col-span-4">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full h-9 bg-lime-200 text-cyan-900 text-sm font-semibold rounded-lg hover:bg-lime-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg
+                  className="animate-spin h-4 w-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Sending...
+              </span>
+            ) : (
+              'Request Integration Info'
+            )}
+          </button>
+        </div>
       </form>
     </div>
   );

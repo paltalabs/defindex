@@ -30,7 +30,7 @@ export default function RevenueCalculatorPage() {
           <Navbar />
 
           {/* Main Content */}
-          <section className="pt-12 pb-6 lg:pt-24 lg:pb-10">
+          <section className="pt-12 pb-6 lg:pt-12 lg:pb-10">
             <RevenueCalculator />
           </section>
 
