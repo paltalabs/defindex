@@ -76,14 +76,16 @@ export default function ContactForm() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to submit form');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to submit form');
       }
 
       setIsSuccess(true);
       setFormData({ name: '', email: '', company: '', telegram: '' });
     } catch (error) {
       console.error('Error submitting form:', error);
-      setSubmitError('Something went wrong. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Something went wrong';
+      setSubmitError(errorMessage === 'Failed to submit form' ? 'Something went wrong. Please try again.' : errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -149,10 +151,11 @@ export default function ContactForm() {
         <div className='flex flex-col gap-3 col-span-1'>
          {/* Name */}
           <div>
-            <label className="block text-xs font-medium text-white/75 mb-1">
+            <label htmlFor="contact-name" className="block text-xs font-medium text-white/75 mb-1">
               Name <span className="text-orange-400">*</span>
             </label>
             <input
+              id="contact-name"
               type="text"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
@@ -168,10 +171,11 @@ export default function ContactForm() {
 
           {/* Email */}
           <div>
-            <label className="block text-xs font-medium text-white/75 mb-1">
+            <label htmlFor="contact-email" className="block text-xs font-medium text-white/75 mb-1">
               Email <span className="text-orange-400">*</span>
             </label>
             <input
+              id="contact-email"
               type="email"
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
@@ -189,10 +193,11 @@ export default function ContactForm() {
         <div className='flex flex-col gap-3 col-span-1'>
           {/* Company */}
           <div>
-            <label className="block text-xs font-medium text-white/75 mb-1">
+            <label htmlFor="contact-company" className="block text-xs font-medium text-white/75 mb-1">
               Company <span className="text-orange-400">*</span>
             </label>
             <input
+              id="contact-company"
               type="text"
               value={formData.company}
               onChange={(e) => handleInputChange('company', e.target.value)}
@@ -208,10 +213,11 @@ export default function ContactForm() {
 
           {/* Telegram */}
           <div>
-            <label className="block text-xs font-medium text-white/75 mb-1">
+            <label htmlFor="contact-telegram" className="block text-xs font-medium text-white/75 mb-1">
               Telegram <span className="text-white/40 font-normal">(optional)</span>
             </label>
             <input
+              id="contact-telegram"
               type="text"
               value={formData.telegram}
               onChange={(e) => handleInputChange('telegram', e.target.value)}

@@ -16,7 +16,7 @@ interface CalculatorInputsProps {
   adoptionRate: number;
   walletFeePercent: number;
   integrationCost: number;
-  defindexFee: number;
+  partnerFee: number;
   onActiveUsersChange: (value: number) => void;
   onAvgBalanceChange: (value: number) => void;
   onAdoptionRateChange: (value: number) => void;
@@ -32,7 +32,7 @@ export default function CalculatorInputs({
   adoptionRate,
   walletFeePercent,
   integrationCost,
-  defindexFee,
+  partnerFee,
   onActiveUsersChange,
   onAvgBalanceChange,
   onAdoptionRateChange,
@@ -73,6 +73,7 @@ export default function CalculatorInputs({
               onChange={(e) => onActiveUsersChange(Number(e.target.value))}
               className="custom-slider"
               style={{ background: getSliderBackground(activeUsers, 1000, 5000000) }}
+              aria-label="Active Users"
             />
             <div className="flex justify-between mt-1 text-[10px] text-white/50">
               <span>1K</span>
@@ -125,6 +126,7 @@ export default function CalculatorInputs({
               onChange={(e) => onAdoptionRateChange(Number(e.target.value))}
               className="custom-slider"
               style={{ background: getSliderBackground(adoptionRate, 5, 100) }}
+              aria-label="Adoption Percentage"
             />
             <div className="flex justify-between text-[10px] text-white/50">
               <span>5%</span>
@@ -154,6 +156,7 @@ export default function CalculatorInputs({
               onChange={(e) => onWalletFeePercentChange(Number(e.target.value))}
               className="custom-slider"
               style={{ background: getSliderBackground(walletFeePercent, 0.5, 10) }}
+              aria-label="Wallet Fee Percentage"
             />
             <div className="flex justify-between mt-1 text-[10px] text-white/50">
               <span>0.5%</span>
@@ -166,7 +169,7 @@ export default function CalculatorInputs({
                   style={getIndicatorDot('primary')}
                 ></span>
                 <span className="text-white/75">
-                  Your share: <span className="text-white font-medium">{defindexFee}%</span>
+                  Your share: <span className="text-white font-medium">{partnerFee}%</span>
                 </span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -175,7 +178,7 @@ export default function CalculatorInputs({
                   style={getIndicatorDot('secondary')}
                 ></span>
                 <span className="text-white/75">
-                  DeFindex: <span className="text-white font-medium">{defindexFee}%</span>
+                  DeFindex: <span className="text-white font-medium">{partnerFee}%</span>
                 </span>
               </div>
             </div>
