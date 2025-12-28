@@ -1,6 +1,6 @@
 'use client';
 import NavigateTab from "@/context/NavigateTab";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useContext } from "react";
 import { FiExternalLink } from "react-icons/fi";
 import { Link } from "react-scroll";
@@ -9,9 +9,10 @@ const menuItems = [
     { id: 1, name: "Home", to: "hero" },
     { id: 2, name: "Why Integrate", to: "why-integrate-yield" },
     { id: 3, name: "Case Studies", to: "what-builders-are-doing" },
-    { id: 4, name: "Blog", to: "/blog", external: true, isInternal: true },
-    { id: 5, name: "Documentation", to: "https://docs.defindex.io", external: true },
-    { id: 6, name: "Dashboards", to: "https://dune.com/paltalabs/defindex", external: true },
+    { id: 4, name: "Simulate Revenue", to: "/revenue-calculator", external: true, isInternal: true },
+    { id: 5, name: "Blog", to: "/blog", external: true, isInternal: true },
+    { id: 6, name: "Documentation", to: "https://docs.defindex.io", external: true },
+    { id: 7, name: "Dashboards", to: "https://dune.com/paltalabs/defindex", external: true },
 ];
 /* eslint-disable @typescript-eslint/no-unused-vars */
 function Lists({ toggle }: { toggle?: () => void }) {
