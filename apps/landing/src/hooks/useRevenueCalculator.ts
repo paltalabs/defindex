@@ -76,7 +76,7 @@ export function useRevenueCalculator(): UseRevenueCalculatorReturn {
   }, []);
 
   const setWalletFeePercent = useCallback((value: number) => {
-    setWalletFeePercentState(Math.max(0.5, Math.min(10, value)));
+    setWalletFeePercentState(Math.max(0.5, Math.min(100, value)));
   }, []);
 
   const setIntegrationCost = useCallback((value: number) => {
