@@ -1,7 +1,7 @@
 'use client';
 
 import { RevenueProjection, formatCurrency } from '@/utils/revenueCalculations';
-import { gradients, getSelectedCardStyles } from './styles';
+import { getSelectedCardStyles, gradients } from './styles';
 
 interface RevenueProjectionsProps {
   projections: RevenueProjection[];
@@ -43,7 +43,7 @@ export default function RevenueProjections({
             <button
               key={projection.scenario}
               onClick={() => onScenarioChange(projection.scenario)}
-              className={`relative rounded-lg p-3 border transition-all text-left cursor-pointer hover:scale-[1.02] active:scale-[0.98] flex flex-col justify-between min-h-[120px] ${
+              className={`relative rounded-lg p-3 border transition-all text-left cursor-pointer hover:scale-[1.02] active:scale-[0.98] flex flex-col justify-between min-h-[150px] ${
                 isSelected
                   ? 'border-lime-200/80'
                   : 'border-cyan-800/50 hover:border-cyan-600'
@@ -57,20 +57,20 @@ export default function RevenueProjections({
               {/* Header: Scenario name + APY */}
               <div>
                 <h4
-                  className={`text-[10px] font-semibold mb-0.5 ${
+                  className={`text-[16px] font-extrabold mb-0.5 ${
                     isSelected ? 'text-lime-200' : 'text-white/75'
                   }`}
                 >
-                  {getScenarioLabel(projection.scenario)}
+                  {getScenarioLabel(projection.scenario)} <span className="text-[10px] font-thin text-white/50 h-full absolute top-3"> *</span>
                 </h4>
-                <p className="text-[9px] text-white/50 mb-2">
+                <p className="text-base font-bold mb-1 text-white ">
                   {projection.apy}% APY
                 </p>
               </div>
 
               {/* Values */}
               <div>
-                <p className="text-[9px] text-white/50">Monthly</p>
+                <p className="text-[12px] text-white/50">Monthly</p>
                 <p
                   className={`text-base font-bold mb-1 ${
                     isSelected ? 'text-lime-200' : 'text-white'
@@ -78,13 +78,13 @@ export default function RevenueProjections({
                 >
                   {formatCurrency(projection.monthlyRevenue)}
                 </p>
-                <p className="text-[9px] text-white/50">Yearly</p>
+                <p className="text-[12px] text-white/50">Yearly</p>
                 <p
                   className={`text-lg font-bold ${
                     isSelected ? 'text-lime-200' : 'text-white/90'
                   }`}
                 >
-                  {formatCurrency(projection.yearlyRevenue)}
+                  {formatCurrency(projection.yearlyRevenue)} <span className="text-[10px] font-thin text-white/50 h-full absolute top-32"> **</span>
                 </p>
               </div>
             </button>
@@ -92,9 +92,13 @@ export default function RevenueProjections({
         })}
       </div>
 
-      <p className="text-[10px] text-white/50 text-center mt-2">
-        Based on {partnerFeePercent}% partner revenue share
+      <p className="text-[10px] text-white/40 text-center mt-1">
+        *APY values shown are for reference only. Actual rates vary based on market conditions.
       </p>
+      <p className="text-[10px] text-white/50 text-center mt-1">
+        **Based on {partnerFeePercent}% partner revenue share.
+      </p>
+    
     </div>
   );
 }
