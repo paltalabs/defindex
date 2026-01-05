@@ -35,13 +35,13 @@ export default function ROIAnalysis({
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-3 text-center">
         {/* Integration Cost */}
         <div>
           <p className="text-white/50 text-[10px] mb-0.5">
             Integration Cost
           </p>
-          <p className="text-base font-bold text-white">
+          <p className="text-base font-bold text-white pt-4">
             {formatCurrency(integrationCost)}
           </p>
         </div>
@@ -51,7 +51,7 @@ export default function ROIAnalysis({
           <p className="text-white/50 text-[10px] mb-0.5">
             Payback Period
           </p>
-          <p className="text-base font-bold text-white">
+          <p className="text-base font-bold text-white pt-0.5">
             {paybackWeeks > 0 ? (
               <>
                 <span className="text-lime-200">{paybackWeeks.toFixed(1)}</span>{' '}
@@ -68,7 +68,7 @@ export default function ROIAnalysis({
           <p className="text-white/50 text-[10px] mb-0.5">
             First-Year Profit Margin
           </p>
-          <p className="text-base font-bold text-white">
+          <p className="text-base font-bold text-white pt-4">
             {firstYearProfitMargin !== 0 ? (
               <span className={firstYearProfitMargin >= 0 ? 'text-lime-200' : 'text-orange-400'}>
                 {firstYearProfitMargin.toFixed(1)}%
