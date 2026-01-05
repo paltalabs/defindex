@@ -16,7 +16,7 @@ export default function RevenueCalculatorPage() {
       style={{ maxWidth: '100dvw' }}
     >
       {/* Background image */}
-      <div className="absolute inset-0 -z-10">
+      <div className="absolute bg-full inset-0 -z-10">
         <Image
           src="/images/hero-background.png"
           alt="DeFindex background pattern"
@@ -25,17 +25,26 @@ export default function RevenueCalculatorPage() {
         />
       </div>
 
-      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 mx-auto">
+      <div className="w-full h-full mx-auto">
         <NavigateTab.Provider value={{ index, setIndex }}>
           <Navbar />
 
-          {/* Main Content */}
-          <section className="pt-12 pb-6 lg:pt-12 lg:pb-10">
-            <RevenueCalculator />
-          </section>
+          {/* Main Content with animated background */}
+          <div
+            className="relative"
+            style={{
+              backgroundImage: 'url(/images/bg-defindex.svg)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+            }}
+          >
+            <section className="pb-6 lg:pb-10">
+              <RevenueCalculator />
+            </section>
 
-          {/* Testimonial Section */}
-          <section className="max-w-full pb-24 px-1">
+            {/* Testimonial Section */}
+            <section className="max-w-full pb-24 px-4 md:px-12 lg:px-6 xl:px-16">
             <div
               className="rounded-2xl p-6 md:p-8 border border-cyan-800/50"
               style={{
@@ -62,6 +71,7 @@ export default function RevenueCalculatorPage() {
               </blockquote>
             </div>
           </section>
+          </div>
         </NavigateTab.Provider>
 
         <Footer />

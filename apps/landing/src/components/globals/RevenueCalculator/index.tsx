@@ -29,7 +29,7 @@ export default function RevenueCalculator() {
   } = useRevenueCalculator();
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 relative py-24">
       {/* Header Section - Centered */}
       <div className="text-center mb-4">
         <h1 className="text-2xl md:text-3xl lg:text-4xl font-familjen-grotesk font-bold text-white mb-2">
@@ -65,8 +65,8 @@ export default function RevenueCalculator() {
         <div className="lg:col-span-5 flex flex-col gap-4">
           {/* TVL Summary Card */}
           <div
-            className="rounded-xl p-4 border border-cyan-800/50 text-center"
-            style={{ background: gradients.card }}
+            className="rounded-xl p-4 border border-cyan-800/50 text-center backdrop-blur-md"
+            style={{ background: gradients.cardDark }}
           >
             <p className="text-white/60 text-xs mb-1">
               Estimated Total Value Locked
