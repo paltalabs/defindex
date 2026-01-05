@@ -2,12 +2,11 @@
 
 import { formatNumber } from '@/utils/revenueCalculations';
 import {
-  getIndicatorDot,
   getSelectedStyles,
   getSliderBackground,
   gradients,
   shadows,
-  sliderStyles,
+  sliderStyles
 } from './styles';
 
 interface CalculatorInputsProps {
@@ -50,10 +49,10 @@ export default function CalculatorInputs({
     <>
       <style>{sliderStyles}</style>
       <div
-        className="border border-cyan-800/50 rounded-xl p-4 md:p-5 h-full"
+        className="border border-cyan-800/50 rounded-xl px-6 py-4 md:py-8 md:px-10 h-full"
         style={{ background: gradients.inputsPanel }}
       >
-        <div className="space-y-4">
+        <div className="space-y-4 h-full flex flex-col justify-between">
           {/* Active Users Slider */}
           <div>
             <div className="flex justify-between items-center mb-2">
@@ -78,32 +77,6 @@ export default function CalculatorInputs({
             <div className="flex justify-between mt-1 text-[10px] text-white/50">
               <span>1K</span>
               <span>5M</span>
-            </div>
-          </div>
-
-          {/* Average Stablecoin Balance */}
-          <div>
-            <label className="block text-sm font-manrope font-medium text-white mb-2">
-              Average Stablecoin Balance
-            </label>
-            <div className="flex flex-wrap gap-1.5">
-              {BALANCE_OPTIONS.map((balance) => {
-                const isSelected = avgBalance === balance;
-                return (
-                  <button
-                    key={balance}
-                    onClick={() => onAvgBalanceChange(balance)}
-                    className={`px-3 py-1.5 text-sm rounded-full font-medium transition-all duration-200 ${
-                      isSelected
-                        ? 'text-cyan-900'
-                        : 'bg-cyan-950 text-white border border-cyan-800 hover:bg-cyan-900 hover:border-cyan-600'
-                    }`}
-                    style={isSelected ? getSelectedStyles() : undefined}
-                  >
-                    ${formatNumber(balance)}
-                  </button>
-                );
-              })}
             </div>
           </div>
 
@@ -137,6 +110,32 @@ export default function CalculatorInputs({
             </p>
           </div>
 
+          {/* Average Stablecoin Balance */}
+          <div>
+            <label className="block text-sm font-manrope font-medium text-white mb-2">
+              Average Stablecoin Balance
+            </label>
+            <div className="flex flex-wrap w-full justify-evenly gap-1.5">
+              {BALANCE_OPTIONS.map((balance) => {
+                const isSelected = avgBalance === balance;
+                return (
+                  <button
+                    key={balance}
+                    onClick={() => onAvgBalanceChange(balance)}
+                    className={`px-3 py-1.5 text-sm rounded-full font-medium transition-all duration-200 ${
+                      isSelected
+                        ? 'text-cyan-900'
+                        : 'bg-cyan-950 text-white border border-cyan-800 hover:bg-cyan-900 hover:border-cyan-600'
+                    }`}
+                    style={isSelected ? getSelectedStyles() : undefined}
+                  >
+                    ${formatNumber(balance)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Wallet Fee Slider */}
           <div>
             <div className="flex justify-between items-center mb-2">
@@ -150,37 +149,17 @@ export default function CalculatorInputs({
             <input
               type="range"
               min={0.5}
-              max={10}
+              max={100}
               step={0.5}
               value={walletFeePercent}
               onChange={(e) => onWalletFeePercentChange(Number(e.target.value))}
               className="custom-slider"
-              style={{ background: getSliderBackground(walletFeePercent, 0.5, 10) }}
+              style={{ background: getSliderBackground(walletFeePercent, 0.5, 100) }}
               aria-label="Wallet Fee Percentage"
             />
             <div className="flex justify-between mt-1 text-[10px] text-white/50">
               <span>0.5%</span>
-              <span>10%</span>
-            </div>
-            <div className="flex gap-3 text-[10px] mt-1">
-              <div className="flex items-center gap-1.5">
-                <span
-                  className="w-2 h-2 rounded-full"
-                  style={getIndicatorDot('primary')}
-                ></span>
-                <span className="text-white/75">
-                  Your share: <span className="text-white font-medium">{partnerFee}%</span>
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span
-                  className="w-2 h-2 rounded-full"
-                  style={getIndicatorDot('secondary')}
-                ></span>
-                <span className="text-white/75">
-                  DeFindex: <span className="text-white font-medium">{partnerFee}%</span>
-                </span>
-              </div>
+              <span>100%</span>
             </div>
           </div>
 
@@ -224,6 +203,9 @@ export default function CalculatorInputs({
                 +
               </button>
             </div>
+            <p className="text-[10px] text-white/50 mt-2 text-center">
+              Your estimated development cost to integrate DeFindex. A one time setup that drives ongoing revenue.
+            </p>
           </div>
         </div>
       </div>
