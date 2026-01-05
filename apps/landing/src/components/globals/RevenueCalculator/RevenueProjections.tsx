@@ -51,7 +51,7 @@ export default function RevenueProjections({
               style={
                 isSelected
                   ? getSelectedCardStyles()
-                  : { background: gradients.card }
+                  : { background: gradients.cardDark }
               }
             >
               {/* Header: Scenario name + APY */}
@@ -63,7 +63,7 @@ export default function RevenueProjections({
                 >
                   {getScenarioLabel(projection.scenario)} <span className="text-[10px] font-thin text-white/50 h-full absolute top-3"> *</span>
                 </h4>
-                <p className="text-base font-bold mb-1 text-white ">
+                <p className="text-base text-[15px] md:text-[22px] font-bold mb-1 text-white ">
                   {projection.apy}% APY
                 </p>
               </div>
@@ -72,7 +72,7 @@ export default function RevenueProjections({
               <div>
                 <p className="text-[12px] text-white/50">Monthly</p>
                 <p
-                  className={`text-base font-bold mb-1 ${
+                  className={`text-base text-[15px] md:text-[22px] font-bold mb-1 ${
                     isSelected ? 'text-lime-200' : 'text-white'
                   }`}
                 >
@@ -80,7 +80,7 @@ export default function RevenueProjections({
                 </p>
                 <p className="text-[12px] text-white/50">Yearly</p>
                 <p
-                  className={`text-lg font-bold ${
+                  className={`text-lg font-bold text-[13px] md:text-[22px] ${
                     isSelected ? 'text-lime-200' : 'text-white/90'
                   }`}
                 >

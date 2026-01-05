@@ -49,8 +49,8 @@ export default function CalculatorInputs({
     <>
       <style>{sliderStyles}</style>
       <div
-        className="border border-cyan-800/50 rounded-xl px-6 py-4 md:py-8 md:px-10 h-full"
-        style={{ background: gradients.inputsPanel }}
+        className="border border-cyan-800/50 rounded-xl px-6 py-4 md:py-8 md:px-10 h-full backdrop-blur-md"
+        style={{ background: gradients.cardDark }}
       >
         <div className="space-y-4 h-full flex flex-col justify-between">
           {/* Active Users Slider */}
@@ -122,12 +122,14 @@ export default function CalculatorInputs({
                   <button
                     key={balance}
                     onClick={() => onAvgBalanceChange(balance)}
-                    className={`px-3 py-1.5 text-sm rounded-full font-medium transition-all duration-200 ${
+                    className={`px-6 py-4 text-sm rounded-full font-medium transition-all duration-200 ${
                       isSelected
                         ? 'text-cyan-900'
                         : 'bg-cyan-950 text-white border border-cyan-800 hover:bg-cyan-900 hover:border-cyan-600'
                     }`}
-                    style={isSelected ? getSelectedStyles() : undefined}
+                    style={
+                      isSelected ? getSelectedStyles() : {boxShadow: shadows.cyanGlow, background: gradients.cardDark}
+                    }
                   >
                     ${formatNumber(balance)}
                   </button>
@@ -169,9 +171,9 @@ export default function CalculatorInputs({
               Integration Cost
             </label>
             <div
-              className="flex items-center rounded-xl overflow-hidden border border-cyan-700/50 transition-all duration-200 hover:border-cyan-600/70"
+              className="flex items-center py-4 px-4 rounded-full overflow-hidden border border-cyan-700/50 transition-all duration-200 hover:border-cyan-600/70"
               style={{
-                background: gradients.costInput,
+                background: gradients.cardDark,
                 boxShadow: shadows.cyanGlow,
               }}
             >
@@ -179,7 +181,7 @@ export default function CalculatorInputs({
                 onClick={() =>
                   onIntegrationCostChange(Math.max(0, integrationCost - 500))
                 }
-                className="flex items-center justify-center w-10 h-10 text-white/80 hover:text-white hover:bg-cyan-800/30 transition-all text-xl font-light"
+                className="flex rounded-full items-center justify-center w-10 h-10 text-white/80 hover:text-white hover:bg-cyan-800/30 transition-all text-xl font-light"
               >
                 −
               </button>
@@ -198,7 +200,7 @@ export default function CalculatorInputs({
               </div>
               <button
                 onClick={() => onIntegrationCostChange(integrationCost + 500)}
-                className="flex items-center justify-center w-10 h-10 text-white/80 hover:text-white hover:bg-cyan-800/30 transition-all text-xl font-light"
+                className="flex rounded-full items-center justify-center w-10 h-10 text-white/80 hover:text-white hover:bg-cyan-800/30 transition-all text-xl font-light"
               >
                 +
               </button>

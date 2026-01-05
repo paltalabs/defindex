@@ -44,7 +44,7 @@ export const gradients = {
   card: 'linear-gradient(135deg, rgba(3, 48, 54, 0.8) 0%, rgba(1, 71, 81, 0.5) 100%)',
 
   // Card background - darker (for forms)
-  cardDark: 'linear-gradient(135deg, rgba(3, 48, 54, 0.9) 0%, rgba(1, 71, 81, 0.6) 100%)',
+  cardDark: 'linear-gradient(135deg, rgba(3, 48, 54, 0.8) 0%, rgba(1, 71, 81, 0.7) 100%)',
 
   // Calculator inputs panel
   inputsPanel: 'linear-gradient(115deg, rgba(4, 74, 84, 1) 0%, rgba(3, 48, 54, 1) 100%)',
@@ -105,6 +105,9 @@ export const classes = {
 
   // Accent text
   accentText: 'text-lime-200',
+
+  //Backdrop blur
+  backdropBlur: 'backdrop-blur-sm',
 } as const;
 
 // =============================================================================

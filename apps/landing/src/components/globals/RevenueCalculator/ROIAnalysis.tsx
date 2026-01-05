@@ -23,8 +23,8 @@ export default function ROIAnalysis({
 
   return (
     <div
-      className="rounded-lg p-4 border border-cyan-800/50"
-      style={{ background: gradients.card }}
+      className="rounded-lg p-4 border border-cyan-800/50 backdrop-blur-md"
+      style={{ background: gradients.cardDark }}
     >
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-familjen-grotesk font-bold text-white">
