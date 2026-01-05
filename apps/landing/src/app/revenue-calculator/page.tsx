@@ -4,7 +4,6 @@ import Footer from '@/components/globals/Footer';
 import Navbar from '@/components/globals/navbar/Navbar';
 import RevenueCalculator from '@/components/globals/RevenueCalculator';
 import NavigateTab from '@/context/NavigateTab';
-import Image from 'next/image';
 import { useState } from 'react';
 
 export default function RevenueCalculatorPage() {
@@ -15,30 +14,9 @@ export default function RevenueCalculatorPage() {
       className="min-h-screen bg-[#033036] relative overflow-x-hidden w-full"
       style={{ maxWidth: '100dvw' }}
     >
-      {/* Background image */}
-      <div className="absolute bg-full inset-0 -z-10">
-        <Image
-          src="/images/hero-background.png"
-          alt="DeFindex background pattern"
-          fill
-          className="object-cover opacity-20"
-        />
-      </div>
-
       <div className="w-full h-full mx-auto">
         <NavigateTab.Provider value={{ index, setIndex }}>
           <Navbar />
-
-          {/* Main Content with animated background */}
-          <div
-            className="relative"
-            style={{
-              backgroundImage: 'url(/images/bg-defindex.svg)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-            }}
-          >
             <section className="pb-6 lg:pb-10">
               <RevenueCalculator />
             </section>
@@ -71,7 +49,6 @@ export default function RevenueCalculatorPage() {
               </blockquote>
             </div>
           </section>
-          </div>
         </NavigateTab.Provider>
 
         <Footer />
