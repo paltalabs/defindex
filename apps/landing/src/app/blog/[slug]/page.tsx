@@ -62,7 +62,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
         canonical: `https://defindex.io/blog/${slug}`,
       },
     };
-  } catch (error) {
+  } catch {
     return {
       title: 'Post Not Found | DeFindex Blog',
       description: 'The requested blog post could not be found.',
@@ -81,7 +81,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   // Get post metadata
   try {
     post = await getPostBySlug(slug);
-  } catch (error) {
+  } catch {
     notFound();
   }
 
