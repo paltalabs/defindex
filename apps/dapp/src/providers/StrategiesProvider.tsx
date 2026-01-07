@@ -23,6 +23,7 @@ export const StrategiesProvider = ({ children }: { children: React.ReactNode }) 
       try {
         const results = await Promise.allSettled(
           extractedStrategies.map(async (strategy) => {
+            console.log("🚀 | fetchStrategies | strategy:", strategy)
             const assetAddress = await strategyCallback(
               strategy.address,
               StrategyMethod.ASSET,
