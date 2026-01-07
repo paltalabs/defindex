@@ -94,8 +94,12 @@ export function calculateROI(
   const firstYearProfitMargin =
     yearlyRevenue > 0 ? (firstYearProfit / yearlyRevenue) * 100 : 0;
 
+  // If paybackWeeks is positive but rounds to 0, keep a small positive value
+  const roundedPayback = Math.round(paybackWeeks * 10) / 10;
+  const finalPaybackWeeks = paybackWeeks > 0 && roundedPayback === 0 ? 0.1 : roundedPayback;
+
   return {
-    paybackWeeks: Math.round(paybackWeeks * 10) / 10, // Round to 1 decimal
+    paybackWeeks: finalPaybackWeeks,
     firstYearProfitMargin: Math.round(firstYearProfitMargin * 10) / 10,
   };
 }

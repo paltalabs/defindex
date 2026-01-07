@@ -53,10 +53,17 @@ export default function ROIAnalysis({
           </p>
           <p className="text-base font-bold text-white pt-0.5">
             {paybackWeeks > 0 ? (
-              <>
-                <span className="text-lime-200">{paybackWeeks.toFixed(1)}</span>{' '}
-                <span className="text-xs font-normal text-white/75">weeks</span>
-              </>
+              paybackWeeks < 1 ? (
+                <>
+                  <span className="text-lime-200">&lt; 1</span>{' '}
+                  <span className="text-xs font-normal text-white/75">week</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-lime-200">{paybackWeeks.toFixed(1)}</span>{' '}
+                  <span className="text-xs font-normal text-white/75">weeks</span>
+                </>
+              )
             ) : (
               <span className="text-white/50">N/A</span>
             )}
