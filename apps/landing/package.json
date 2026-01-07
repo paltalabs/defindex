@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
-    "build": "next build && npm run generate-rss",
+    "build": "next build --webpack && npm run generate-rss",
     "generate-rss": "tsx src/lib/generate-rss.ts",
     "start": "next start",
     "lint": "next lint"
