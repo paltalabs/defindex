@@ -75,7 +75,7 @@ export default function Testimonials() {
                                 $610K in stablecoin deposits within 3 months
                             </h3>
                             <blockquote className="font-inter text-sm sm:text-base md:text-lg text-cyan-950/80 italic">
-                                "Our users don't care about blockchain — they care about saving and sending money safely. DeFindex vaults fit that promise: tested, reliable components that help them grow stablecoin savings inside the Beans wallet"
+                                &quot;Our users don&apos;t care about blockchain — they care about saving and sending money safely. DeFindex vaults fit that promise: tested, reliable components that help them grow stablecoin savings inside the Beans wallet&quot;
                             </blockquote>
                             <cite className="font-inter text-sm sm:text-base text-cyan-950 not-italic block mt-3 sm:mt-4">
                                 Wouter, CEO & Founder, Beans.
@@ -99,7 +99,7 @@ export default function Testimonials() {
                             />
                             <Image src="/images/seevcash-logo.svg" alt="Seevcash" width={185} height={0} className="h-auto mb-4 sm:mb-6 aspect-auto" />
                             <h3 className="font-familjen-grotesk text-[46px] sm:text-[48px] md:text-[56px] lg:text-3xl font-semibold text-cyan-950 mb-3 sm:mb-4">
-                                "Users love check their growing balances."
+                                &quot;Users love check their growing balances.&quot;
                             </h3>
                             <blockquote className="font-inter text-sm sm:text-base md:text-lg text-cyan-950/80 italic">
                             </blockquote>
