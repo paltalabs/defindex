@@ -8,9 +8,9 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 interface TagPageProps {
-  params: {
+  params: Promise<{
     tag: string;
-  };
+  }>;
 }
 
 /**
@@ -31,8 +31,9 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: TagPageProps): Promise<Metadata> {
+  const { tag } = await params;
   // Normalize tag slug back to display name
-  const tagName = params.tag
+  const tagName = tag
     .split('-')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
@@ -44,7 +45,7 @@ export async function generateMetadata({
       title: `#${tagName} Articles | DeFindex Blog`,
       description: `Browse all articles tagged with #${tagName} on DeFindex.`,
       type: 'website',
-      url: `https://defindex.io/blog/tag/${params.tag}`,
+      url: `https://defindex.io/blog/tag/${tag}`,
     },
     twitter: {
       card: 'summary_large_image',
@@ -59,8 +60,9 @@ export async function generateMetadata({
  * Shows all posts with a specific tag
  */
 export default async function TagPage({ params }: TagPageProps) {
+  const { tag } = await params;
   // Normalize tag slug back to display name
-  const tagName = params.tag
+  const tagName = tag
     .split('-')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
