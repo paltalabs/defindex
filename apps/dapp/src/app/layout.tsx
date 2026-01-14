@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Inter, Familjen_Grotesk } from "next/font/google";
 import "./globals.css";
 import { MainProvider } from "@/providers/MainProvider";
@@ -26,11 +27,15 @@ export const metadata: Metadata = {
   description: "A GUI for the DeFindex protocol",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || "";
+  const isBlockedPage = pathname === "/blocked";
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={customFontClass} style={{ backgroundColor }}>
@@ -38,7 +43,7 @@ export default function RootLayout({
         <MainProvider>
           <Stack w={"100dvw"} h="100dvh">
 
-            <NavBar />
+            {!isBlockedPage && <NavBar />}
             <Toaster />
             {children}
           </Stack>
