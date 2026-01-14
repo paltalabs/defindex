@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Box, Flex, Text, VStack } from "@chakra-ui/react";
+import Link from "next/link";
+import { Box, Button, Flex, Text, VStack } from "@chakra-ui/react";
 import { RiShieldLine } from "react-icons/ri";
 
 export const metadata: Metadata = {
@@ -60,6 +61,21 @@ export default function BlockedPage() {
             restrictions.
           </Text>
         </VStack>
+
+        <Button
+          asChild
+          px={4}
+          rounded={15}
+          bg="transparent"
+          border="1px solid"
+          borderColor="#D3FFB4"
+          color="#D3FFB4"
+          fontFamily="var(--font-inter)"
+          fontWeight={600}
+          _hover={{ bg: "rgba(211, 255, 180, 0.1)" }}
+        >
+          <Link href="https://defindex.io">Back to Home</Link>
+        </Button>
       </VStack>
     </Flex>
   );
