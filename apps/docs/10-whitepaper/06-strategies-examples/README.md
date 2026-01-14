@@ -1,5 +1,5 @@
 ---
-cover: ../.gitbook/assets/image 31.png
+cover: ../../../.gitbook/assets/image 31.png
 coverY: 0
 ---
 
@@ -24,3 +24,5 @@ D. Autocompund AMM Staking.
 Manager Example: Beans App Team Manager decides to diversify investment in Fixed USDC/XLM (Strategy B) and YieldBox USDC/XLM/EUR/AQUA (Strategy C) Because the best yield comes from Strategy B, the initial ratio will be 1:0
 
 If in the future, YieldBox USDC Supply APY is better than the Strategy A USDC supply apy, the Manager can decide to change the ratio to be 0:1
+
+

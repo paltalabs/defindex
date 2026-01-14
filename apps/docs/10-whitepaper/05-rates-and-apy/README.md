@@ -1,4 +1,4 @@
-# Vault APY
+# Rates and APY
 
 The **Vault APY** shows how much the value of a vault shares grows over time — similar to earning interest on  savings.
 
@@ -45,7 +45,7 @@ You can get the real-time vault PPS by calling&#x20;
 get_asset_amounts_per_shares(1_000_000_000_000) // 1 Vault Share is SCALAR_12
 ```
 
-This function returns a `Vec`of asset amounts per share. Each amount matches the asset at the same index in the vault’s asset list.
+This function returns a `Vec`of asset amounts per share. Each amount matches the asset at the same index in the vault's asset list.
 
 To calculate the vault share price in a specific pricing currency (e.g. USD):
 
@@ -137,3 +137,4 @@ $$
 
 
 Where `days` is the number of days between the two PPS values.
+
