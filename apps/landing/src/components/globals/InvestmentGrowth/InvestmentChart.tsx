@@ -61,6 +61,7 @@ export default function InvestmentChart({ data, years }: InvestmentChartProps) {
   const finalData = data[data.length - 1];
   const displayData = hoveredData || finalData;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleMouseMove = (state: any) => {
     if (state && state.activePayload && state.activePayload[0]) {
       const activeData = state.activePayload[0].payload;

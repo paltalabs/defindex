@@ -14,6 +14,7 @@ const config: Config = {
         "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
         "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
         "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+        "./content/**/*.{md,mdx}",
     ],
     theme: {
         extend: {
@@ -38,10 +39,19 @@ const config: Config = {
                     ...COLORS.gray
                 },
                 orange: { "500": COLORS.orange },
-                lime: { "200": COLORS.primary },
+                lime: {
+                    "200": COLORS.primary,
+                    "300": "#bef264",
+                    "400": "#a3e635",
+                },
                 cyan: {
+                    "100": "#cffafe",
+                    "200": "#a5f3fc",
+                    "300": "#67e8f9",
+                    "400": "#22d3ee",
+                    "800": "#155e75",
+                    "900": COLORS.dark,
                     "950": COLORS.darkCyan,
-                    "900": COLORS.dark
                 },
                 blue: { "100": COLORS.lightCyan },
             },

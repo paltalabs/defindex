@@ -12,9 +12,9 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 interface CategoryPageProps {
-  params: {
+  params: Promise<{
     category: string;
-  };
+  }>;
 }
 
 /**
@@ -35,8 +35,9 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: CategoryPageProps): Promise<Metadata> {
+  const { category } = await params;
   // Normalize category slug to match enum
-  const categoryName = params.category
+  const categoryName = category
     .split('-')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
@@ -60,7 +61,7 @@ export async function generateMetadata({
       title: `${categoryName} Articles | DeFindex Blog`,
       description: `Browse all ${categoryName.toLowerCase()} articles on DeFindex.`,
       type: 'website',
-      url: `https://defindex.io/blog/category/${params.category}`,
+      url: `https://defindex.io/blog/category/${category}`,
     },
     twitter: {
       card: 'summary_large_image',
@@ -75,8 +76,9 @@ export async function generateMetadata({
  * Shows all posts in a specific category
  */
 export default async function CategoryPage({ params }: CategoryPageProps) {
+  const { category } = await params;
   // Normalize category slug to match enum
-  const categoryName = params.category
+  const categoryName = category
     .split('-')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');

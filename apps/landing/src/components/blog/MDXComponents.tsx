@@ -3,9 +3,8 @@ import Link from 'next/link';
 import GradientText from '@/components/common/GradientText';
 import dynamic from 'next/dynamic';
 
-// Import CodeBlock as client-side only to avoid hydration issues
+// Import CodeBlock dynamically for code splitting
 const CodeBlock = dynamic(() => import('./CodeBlock'), {
-  ssr: false,
   loading: () => (
     <div className="relative my-6 rounded-xl overflow-hidden bg-gradient-to-br from-cyan-900 to-cyan-950 border border-cyan-800/30 p-6">
       <div className="animate-pulse bg-cyan-800/30 h-24 rounded" />
@@ -153,7 +152,7 @@ const CustomImage = (props: ImageProps) => {
   const { src = '', alt = '' } = props;
 
   return (
-    <div className="relative w-full h-auto my-8 rounded-xl overflow-hidden border border-cyan-800/30">
+    <span className="relative w-full h-auto my-8 rounded-xl overflow-hidden border border-cyan-800/30 block">
       <Image
         src={src}
         alt={alt}
@@ -161,7 +160,7 @@ const CustomImage = (props: ImageProps) => {
         height={450}
         className="w-full h-auto"
       />
-    </div>
+    </span>
   );
 };
 

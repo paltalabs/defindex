@@ -2,15 +2,10 @@
 import NavDrawer from "@/components/globals/navbar/NavDrawer";
 import useNavbarEffect from "@/hooks/useNavbarEffect";
 import useScrollOpacity from "@/hooks/useScrollOpacity";
-import dynamic from "next/dynamic";
 import NextLink from "next/link";
 import React from "react";
 import { FiMenu } from "react-icons/fi";
 import Lists from "./Lists";
-
-const GlassSurface = dynamic(() => import("@/components/GlassSurface"), {
-    ssr: false,
-});
 
 function Navbar() {
     const nav = useNavbarEffect("pb-7 lg:pb-10", "pb-4 lg:pb-6");

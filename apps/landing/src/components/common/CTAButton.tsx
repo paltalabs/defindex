@@ -26,7 +26,6 @@ function CTAButton({
     className = "",
     target,
     rel,
-    style,
 }: CTAButtonProps) {
     return (
         <Link

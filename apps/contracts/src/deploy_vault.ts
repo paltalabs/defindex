@@ -43,7 +43,7 @@ const params: CreateVaultParams[] = [
     strategies: allowedStrategies.map((strategy) => {
       return {
         name: `${asset} ${strategy.charAt(0).toUpperCase() + strategy.slice(1)} Strategy`,
-        address: publicAddressBook.getContractId(`${asset.toLowerCase()}_${strategy}_strategy`),
+        address: publicAddressBook.getContractId(`${asset}_${strategy}_strategy`),
         paused: false,
       };
     })

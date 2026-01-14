@@ -139,7 +139,7 @@
                 "asset": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
                 "asset_symbol": "XLM",
                 "reward_threshold": "40",
-                "blend_pool_address": "CDDG7DLOWSHRYQ2HWGZEZ4UTR7LPTKFFHN3QUCSZEXOWOPARMONX6T65",
+                "blend_pool_address": "CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF",
                 "blend_pool_name": "fixed_xlm_usdc"
             },
             {
@@ -148,7 +148,7 @@
                 "asset": "CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU",
                 "asset_symbol": "USDC",
                 "reward_threshold": "40",
-                "blend_pool_address": "CDDG7DLOWSHRYQ2HWGZEZ4UTR7LPTKFFHN3QUCSZEXOWOPARMONX6T65",
+                "blend_pool_address": "CCEBVDYM32YNYCVNRXQKDFFPISJJCV557CDZEIRBEE4NCV4KHPQ44HGF",
                 "blend_pool_name": "fixed_xlm_usdc"
             }
         ]

@@ -4,7 +4,17 @@ import React from "react";
 import { IoCloseOutline } from "react-icons/io5";
 import "react-modern-drawer/dist/index.css";
 
-const Drawer = dynamic(() => import("react-modern-drawer"), { ssr: false });
+interface DrawerProps {
+  open: boolean;
+  onClose?: () => void;
+  direction: "left" | "right" | "top" | "bottom";
+  children: React.ReactNode;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const Drawer = dynamic<DrawerProps>(() => import("react-modern-drawer") as any, {
+  ssr: false,
+});
 
 import Image from "next/image";
 import { default as Link, default as NextLink } from "next/link";

@@ -33,11 +33,11 @@ export default function PrivacyPolicy(){
               </h2>
               <div className="space-y-4 text-gray-200 font-inter leading-relaxed text-pretty">
                 <p className="break-words text-pretty">
-                  Welcome to DeFindex ("DeFindex", "we", "our", or "us"). This Privacy Policy explains how we collect, use, and protect your personal data when you visit our website at{' '}
+                  Welcome to DeFindex (&quot;DeFindex&quot;, &quot;we&quot;, &quot;our&quot;, or &quot;us&quot;). This Privacy Policy explains how we collect, use, and protect your personal data when you visit our website at{' '}
                   <a href="https://defindex.io" className="text-lime-200 hover:text-lime-100 underline transition-colors">
                     https://defindex.io
                   </a>{' '}
-                  (the "Site") and use our decentralized yield and vault services ("Services").
+                  (the &quot;Site&quot;) and use our decentralized yield and vault services (&quot;Services&quot;).
                 </p>
                 <p className="break-words text-pretty">
                   For any questions about this Privacy Policy or our privacy practices, please contact our Data Privacy Manager at{' '}
@@ -53,7 +53,7 @@ export default function PrivacyPolicy(){
                 2. Changes to This Privacy Policy
               </h2>
               <p className="text-gray-200 font-inter leading-relaxed text-pretty break-words">
-                We may update this Privacy Policy from time to time. When we do, we will post the updated version on the Site and update the "Last Updated" date. Your continued use of the Services after changes are posted constitutes acceptance of the revised Privacy Policy.
+                We may update this Privacy Policy from time to time. When we do, we will post the updated version on the Site and update the &quot;Last Updated&quot; date. Your continued use of the Services after changes are posted constitutes acceptance of the revised Privacy Policy.
               </p>
             </section>
 
@@ -65,7 +65,7 @@ export default function PrivacyPolicy(){
                 <div>
                   <h3 className="font-manrope font-semibold text-base sm:text-lg text-white mb-3 text-pretty break-words">a) Blockchain Data</h3>
                   <p className="text-gray-200 font-inter leading-relaxed text-pretty break-words">
-                    DeFindex does not collect or store personal data from your interactions on the Stellar network or any other blockchain. Please note that all blockchain transactions are public, immutable, and outside DeFindex's control.
+                    DeFindex does not collect or store personal data from your interactions on the Stellar network or any other blockchain. Please note that all blockchain transactions are public, immutable, and outside DeFindex&apos;s control.
                   </p>
                 </div>
 
@@ -101,7 +101,7 @@ export default function PrivacyPolicy(){
                 <div>
                   <h3 className="font-manrope font-semibold text-base sm:text-lg text-white mb-3 text-pretty break-words">e) Social Networks</h3>
                   <p className="text-gray-200 font-inter leading-relaxed text-pretty break-words">
-                    If you share DeFindex content on third-party social networks (e.g., Twitter, LinkedIn), your interactions are governed by those platforms' privacy policies.
+                    If you share DeFindex content on third-party social networks (e.g., Twitter, LinkedIn), your interactions are governed by those platforms&apos; privacy policies.
                   </p>
                 </div>
               </div>
@@ -199,7 +199,7 @@ export default function PrivacyPolicy(){
 
             <section>
               <h2 className="font-manrope font-bold text-lg sm:text-xl lg:text-2xl text-lime-200 mb-4 text-pretty break-words">
-                11. Children's Privacy
+                11. Children&apos;s Privacy
               </h2>
               <p className="text-gray-200 font-inter leading-relaxed text-pretty break-words">
                 Our Services are not directed to or intended for children under 18. We do not knowingly collect personal data from users under 13 (or the minimum legal age in your jurisdiction). If we become aware that we have collected such data, we will delete it promptly.

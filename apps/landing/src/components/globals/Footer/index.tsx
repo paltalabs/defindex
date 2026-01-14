@@ -56,6 +56,12 @@ export default function Footer() {
                                     Case Studies
                                 </Link>
                                 <Link
+                                    href="/revenue-calculator"
+                                    className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
+                                >
+                                    Partner Revenue
+                                </Link>
+                                <Link
                                     href="/blog"
                                     className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
                                 >

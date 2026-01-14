@@ -6,7 +6,7 @@ import { EnvConfig } from "./env_config.js";
 
 
 export enum Strategies {
-  BLEND = "blend_autocompound_fixed_xlm_usdc",
+  BLEND = "blend",
   HODL = "hodl",
   FIXED_APR = "fixed_apr",
 }

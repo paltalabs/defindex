@@ -66,7 +66,6 @@ export function ChartSection({
   setYears,
   apy,
   investmentData,
-  isLoading,
 }: {
   initialDeposit: number;
   setInitialDeposit: (value: number) => void;
@@ -75,8 +74,8 @@ export function ChartSection({
   years: number;
   setYears: (value: number) => void;
   apy: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   investmentData: any[];
-  isLoading: boolean;
 }) {
 
     return (
@@ -116,14 +115,8 @@ export function ChartSection({
 
 export default function InvestmentGrowth() {
   const {
-    initialDeposit,
-    monthlyContribution,
     years,
     apy,
-    investmentData,
-    setInitialDeposit,
-    setMonthlyContribution,
-    setYears,
     isLoading,
   } = useInvestmentCalculator();
 
