@@ -4,7 +4,8 @@ import { Inter, Familjen_Grotesk } from "next/font/google";
 import "./globals.css";
 import { MainProvider } from "@/providers/MainProvider";
 import NavBar from "@/components/NavBar/NavBar";
-import { Stack } from "@chakra-ui/react";
+import Footer from "@/components/Footer/Footer";
+import { Box, Stack } from "@chakra-ui/react";
 import { Toaster } from "@/components/ui/toaster";
 import './background.css';
 
@@ -41,11 +42,12 @@ export default async function RootLayout({
       <body className={customFontClass} style={{ backgroundColor }}>
 
         <MainProvider>
-          <Stack w={"100dvw"} h="100dvh">
+          <Stack w={"100dvw"} minH="100dvh">
 
             {!isBlockedPage && <NavBar />}
             <Toaster />
-            {children}
+            <Box flex="1">{children}</Box>
+            {!isBlockedPage && <Footer />}
           </Stack>
         </MainProvider>
       </body>
