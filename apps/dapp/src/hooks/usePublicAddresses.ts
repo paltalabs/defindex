@@ -55,7 +55,7 @@ export async function extractStrategies(publicAddresses: Record<string, string>)
     if (key.endsWith('_strategy')) {
       const address = publicAddresses[key];
       let assetSymbol: AllowedAssets;
-      const name = key.replace('_strategy', '');
+      const name = key.replace('_strategy', '').toLowerCase();
 
       Object.values(AllowedAssets).forEach((asset) => {
         if (name.startsWith(asset)) {

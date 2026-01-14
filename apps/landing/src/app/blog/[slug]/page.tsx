@@ -9,9 +9,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 interface BlogPostPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 /**
@@ -28,7 +28,7 @@ export async function generateStaticParams() {
  * Generate metadata for SEO
  */
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
-  const { slug } = params;
+  const { slug } = await params;
 
   try {
     const post = await getPostBySlug(slug);
@@ -62,7 +62,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
         canonical: `https://defindex.io/blog/${slug}`,
       },
     };
-  } catch (error) {
+  } catch {
     return {
       title: 'Post Not Found | DeFindex Blog',
       description: 'The requested blog post could not be found.',
@@ -74,14 +74,14 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
  * Dynamic blog post page
  */
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const { slug } = params;
+  const { slug } = await params;
   let post;
   let Content;
 
   // Get post metadata
   try {
     post = await getPostBySlug(slug);
-  } catch (error) {
+  } catch {
     notFound();
   }
 
@@ -134,6 +134,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       {/* JSON-LD structured data */}
       <script
         type="application/ld+json"
+        suppressHydrationWarning
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 

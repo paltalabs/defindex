@@ -47,6 +47,7 @@ export async function deployContracts(addressBook: AddressBook, assetAddress: Ad
     console.log(`Deploying ${strategy.name}...`);
     console.log("-------------------------------------------------------");
     if (forceInstall) {
+      console.log("Installing contract")
       await installContract(strategy.wasm_key, addressBook, loadedConfig.admin);
     }
 

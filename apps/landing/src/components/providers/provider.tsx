@@ -26,6 +26,7 @@ if (typeof window !== 'undefined' && !posthog.__loaded) {
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   return (
     <PHProvider client={posthog}>
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       {children as any}
     </PHProvider>
   )

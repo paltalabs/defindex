@@ -20,7 +20,7 @@ export default function OurTeam() {
 
                     <p className="font-inter text-sm sm:text-base md:text-lg text-gray-500 max-w-4xl mx-auto mb-6 sm:mb-8 leading-relaxed px-4">
                         A team of DeFi builders focused on making stablecoin yield accessible, automated, and safe.
-                        We're committed to transparency, security, and helping developers build the future of decentralized finance.
+                        We&apos;re committed to transparency, security, and helping developers build the future of decentralized finance.
                     </p>
 
                     <CTAButton
