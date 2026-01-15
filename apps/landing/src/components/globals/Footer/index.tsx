@@ -87,6 +87,12 @@ export default function Footer() {
                                 >
                                     Terms of Service
                                 </Link>
+                                <Link
+                                    href="/tos-raffle"
+                                    className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
+                                >
+                                    Raffle Terms
+                                </Link>
                             </div>
 
                             {/* Information column */}
