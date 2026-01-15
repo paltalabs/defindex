@@ -127,9 +127,9 @@ function SoroswapTerms() {
         </h2>
         <div className="space-y-4 text-gray-200 font-inter leading-relaxed">
           <p>
-            Prizes will each amount to one hundred (100) USDC tokens, with three (3)
-            delivered each week over four (4) weeks. Prizes will be delivered to the
-            winning Stellar wallets via the Soroswap deposit contract{" "}
+            Prizes will each amount to one hundred (100) USDC tokens, with five (5)
+            delivered each week until February 1st 2026. Prizes will be delivered to
+            the winning Stellar wallets via the Soroswap deposit contract{" "}
             <code className="break-all rounded bg-white/10 px-1.5 py-0.5 text-sm">
               CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK
             </code>
@@ -148,9 +148,9 @@ function SoroswapTerms() {
           6. Winner Selection
         </h2>
         <p className="text-gray-200 font-inter leading-relaxed">
-          Five (5) winners will be selected at random on or around Friday 16th,
-          Friday 23rd and Sunday 1st. Odds of winning depend on the number of
-          eligible entries received.
+          Five (5) winners will be selected at random on or around each Friday
+          until February 1st 2026. Odds of winning depend on the number of eligible
+          entries received.
         </p>
       </section>
 
