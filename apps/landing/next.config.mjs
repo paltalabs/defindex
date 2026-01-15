@@ -37,6 +37,62 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'pbs.twimg.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'ipfs.io',
+      },
+      {
+        protocol: 'https',
+        hostname: 'stellar.myfilebase.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'stablebonds.s3.us-west-2.amazonaws.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'xlmeme.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'app.glodollar.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'imagedelivery.net',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.ondo.finance',
+      },
+      {
+        protocol: 'https',
+        hostname: 'reflector.network',
+      },
+      {
+        protocol: 'https',
+        hostname: 'uploads-ssl.webflow.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'skyhitz.io',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.lu.meme',
+      },
+      {
+        protocol: 'https',
+        hostname: 'testnet.orbitcdp.finance',
+      },
+      {
+        protocol: 'https',
+        hostname: '424565.fs1.hubspotusercontent-na1.net',
+      },
+      {
+        protocol: 'https',
+        hostname: 'static.anclap.com',
+      },
     ],
   },
 

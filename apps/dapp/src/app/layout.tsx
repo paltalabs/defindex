@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { Inter, Familjen_Grotesk } from "next/font/google";
 import "./globals.css";
 import { MainProvider } from "@/providers/MainProvider";
 import NavBar from "@/components/NavBar/NavBar";
-import { Stack } from "@chakra-ui/react";
+import Footer from "@/components/Footer/Footer";
+import { Box, Stack } from "@chakra-ui/react";
 import { Toaster } from "@/components/ui/toaster";
 import './background.css';
 
@@ -26,21 +28,26 @@ export const metadata: Metadata = {
   description: "A GUI for the DeFindex protocol",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || "";
+  const isBlockedPage = pathname === "/blocked";
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={customFontClass} style={{ backgroundColor }}>
 
         <MainProvider>
-          <Stack w={"100dvw"} h="100dvh">
+          <Stack w={"100dvw"} minH="100dvh">
 
-            <NavBar />
+            {!isBlockedPage && <NavBar />}
             <Toaster />
-            {children}
+            <Box flex="1">{children}</Box>
+            {!isBlockedPage && <Footer />}
           </Stack>
         </MainProvider>
       </body>
