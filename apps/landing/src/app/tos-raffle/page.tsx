@@ -847,7 +847,7 @@ export default function RaffleTermsPage() {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-2 sm:gap-3 mb-8 flex-wrap justify-center sm:justify-start">
+          <div className="flex gap-2 sm:gap-3 mb-8 flex-wrap justify-center mx-auto">
             {tabs.map((tab) => (
               tab.visible &&
               <button
