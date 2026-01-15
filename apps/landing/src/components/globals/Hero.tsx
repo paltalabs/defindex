@@ -5,18 +5,18 @@ import Image from "next/image";
 import Link from "next/link";
 
 const heroBackgroundBase = {
-    position: 'absolute' as const,
+    position: "absolute" as const,
     zIndex: 1,
-}
+};
 const heroBackgroundCss = {
     ...heroBackgroundBase,
-    left: 'clamp(-100px, -5vw, 0px)',
-    top: '200px',
-}
+    left: "clamp(-100px, -5vw, 0px)",
+    top: "200px",
+};
 const heroBackgroundCssSm = {
     ...heroBackgroundBase,
-    justify: 'center'
-}
+    justify: "center",
+};
 
 function Hero() {
     return (
@@ -28,24 +28,27 @@ function Hero() {
                 <div className="grid lg:grid-cols-3 items-center gap-4 sm:gap-8 w-full max-w-full">
                     {/* Hero Image */}
                     <div style={heroBackgroundCss} className="hidden lg:block">
-                    <Image
-                        src="/images/demo_hand.webp"
-                        alt="DeFindex Stellar wallet interface showing stablecoin yield dashboard with 15% APY"
-                        className="mx-auto object-contain"
-                        width={800}
-                        height={700}
-                        priority
-                    />
+                        <Image
+                            src="/images/demo_hand.webp"
+                            alt="DeFindex Stellar wallet interface showing stablecoin yield dashboard with 15% APY"
+                            className="mx-auto object-contain"
+                            width={800}
+                            height={700}
+                            priority
+                        />
                     </div>
-                    <div style={heroBackgroundCssSm} className="xs:block top-[650px] sm:top-[600px] md:top-[500px] justify-self-center lg:hidden max-w-fit">
-                    <Image
-                        src="/images/demo_hand.webp"
-                        alt="DeFindex Stellar wallet interface showing stablecoin yield dashboard with 15% APY"
-                        className="mx-auto object-contain"
-                        width={500}
-                        height={500}
-                        priority
-                    />
+                    <div
+                        style={heroBackgroundCssSm}
+                        className="xs:block top-[650px] sm:top-[600px] md:top-[500px] justify-self-center lg:hidden max-w-fit"
+                    >
+                        <Image
+                            src="/images/demo_hand.webp"
+                            alt="DeFindex Stellar wallet interface showing stablecoin yield dashboard with 15% APY"
+                            className="mx-auto object-contain"
+                            width={500}
+                            height={500}
+                            priority
+                        />
                     </div>
                     {/*Text and buttons */}
                     <div className="text-center lg:text-left z-10 col-span-2 lg:col-span-2 lg:col-start-2 px-2 sm:px-4 lg:px-6 lg:mr-6 sm:h-100 w-full">
@@ -65,7 +68,7 @@ function Hero() {
                             "
                             style={{
                                 fontWeight: 300,
-                                textAlign: 'center',
+                                textAlign: "center",
                             }}
                         >
                             DeFindex
@@ -92,12 +95,12 @@ function Hero() {
                                 break-words
                             "
                             style={{
-                                fontWeight: '400 !important',
-                                fontStyle: 'Regular',
-                                textAlign: 'center'
+                                fontWeight: "400 !important",
+                                fontStyle: "Regular",
+                                textAlign: "center",
                             }}
-                            >
-                                Yield Infrastructure for Stellar Wallets & DeFi Apps
+                        >
+                            Yield Infrastructure for Stellar Wallets & DeFi Apps
                         </GradientText>
                         <p
                             className="
@@ -117,16 +120,17 @@ function Hero() {
                                 max-w-full
                                 "
                         >
-                            Plug-and-play SDKs built on Stellar that let users grow and protect stablecoin savings — while you earn TVL and revenue.
+                            Plug-and-play SDKs built on Stellar that let users grow and protect
+                            stablecoin savings — while you earn TVL and revenue.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full">
                             <ScheduleDemoButton />
                             <Link
-                                href="/blog"
-                                aria-label="Visit DeFindex blog"
+                                href="/vaults"
+                                aria-label="Explore DeFindex Vaults"
                                 className="flex items-center justify-center bg-cyan-950/45 text-lime-200 font-manrope font-extrabold text-sm rounded-3xl px-6 py-4 sm:py-6 transition-all duration-normal hover:scale-105 hover:bg-lime-200/10 hover:shadow-lg active:scale-95"
                             >
-                                Read our Blog
+                                Explore Vaults
                             </Link>
                         </div>
                     </div>
