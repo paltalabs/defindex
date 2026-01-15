@@ -1,5 +1,5 @@
 ---
-cover: ../../.gitbook/assets/image 31.png
+cover: ../../../.gitbook/assets/image 31.png
 coverY: 0
 ---
 
@@ -18,3 +18,4 @@ This is particularly useful for wallets users (even web2 users) that prefer a ve
 We want to make DeFi investing easy, simple and accessible for everyone!
 
 In this whitepaper we will explain core concepts to understand DeFindex. Then, design decisions, how it works, which contracts are involved, the current state of the art.
+

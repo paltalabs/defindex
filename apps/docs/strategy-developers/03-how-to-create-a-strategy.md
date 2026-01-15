@@ -657,7 +657,7 @@ pub fn internal_swap_exact_tokens_for_tokens(
 
 * [DeFindex GitHub Repository](https://github.com/paltalabs/defindex/)
 * [Script3 "Fee Vault" Contract](https://github.com/script3/fee-vault/)
-* [DeFindex Whitepaper - Strategy Section](https://docs.defindex.io/whitepaper/10-whitepaper/03-the-defindex-approach/02-contracts/02-strategy-contract)
+* [DeFindex Whitepaper - Strategy Section](https://docs.defindex.io/10-whitepaper/02-contracts/02-strategy-contract.md)
 
 The Blend Strategy for DeFindex showcases the power of modular architecture in decentralized finance. By acting as a proxy between the Vault and external protocols, the strategy ensures seamless integration while maintaining flexibility and security.
 

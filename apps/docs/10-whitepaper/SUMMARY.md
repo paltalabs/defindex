@@ -4,19 +4,28 @@
 
 # Introduction
 - [Introduction](./01-introduction/README.md)
-- [Core Concepts](./01-introduction/02-core-concepts.md)
+- [Core Concepts](./02-core-concepts/README.md)
 
 # The DeFindex Approach
-- [Overview](./03-the-defindex-approach/README.md)
-- [Design Decisions](./03-the-defindex-approach/01-design-decisions.md)
+- [The DeFindex Approach](./03-the-defindex-approach/README.md)
 
 # Contracts
-- [Vault Contract](./03-the-defindex-approach/02-contracts/01-vault-contract.md)
-- [Strategy Contract](./03-the-defindex-approach/02-contracts/02-strategy-contract.md)
-- [Zapper Contract](./03-the-defindex-approach/02-contracts/02-zapper-contract.md)
+- [Smart Contracts](./04-contracts/README.md)
+- [Vault Contract](./04-contracts/01-vault-contract.md)
+- [Strategy Contract](./04-contracts/02-strategy-contract.md)
+- [Zapper Contract](./04-contracts/02-zapper-contract.md)
+
+# Rates and APY
+- [Rates and APY](./05-rates-and-apy/README.md)
+
+# Strategy Examples
+- [Strategy Examples](./06-strategies-examples/README.md)
 
 # State of the Art
-- [State of the Art](./04-state-of-the-art/README.md)
+- [State of the Art](./07-state-of-the-art/README.md)
+- [Yearn.Finance](./07-state-of-the-art/01-yearn-finance.md)
+- [SetProtocol](./07-state-of-the-art/02-set-protocol.md)
 
 # Appendix
-- [Appendix](./05-appendix/README.md)
+- [Appendix](./08-appendix/README.md)
+- [Why we can't swap on deposit or withdraw](./08-appendix/01-why-we-cant-swap-on-deposit-or-withdraw.md)
