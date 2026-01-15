@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import NavigateTab from "@/context/NavigateTab";
 import { usePathname, useRouter } from "next/navigation";
 import { useContext } from "react";
@@ -8,8 +8,14 @@ import { Link } from "react-scroll";
 const menuItems = [
     { id: 1, name: "Home", to: "hero" },
     { id: 2, name: "Why Integrate", to: "why-integrate-yield" },
-    { id: 3, name: "Case Studies", to: "what-builders-are-doing" },
-    { id: 4, name: "Simulate Revenue", to: "/revenue-calculator", external: true, isInternal: true },
+    { id: 3, name: "Vaults", to: "/vaults", external: true, isInternal: true },
+    {
+        id: 4,
+        name: "Simulate Revenue",
+        to: "/revenue-calculator",
+        external: true,
+        isInternal: true,
+    },
     { id: 5, name: "Blog", to: "/blog", external: true, isInternal: true },
     { id: 6, name: "Documentation", to: "https://docs.defindex.io", external: true },
     { id: 7, name: "Dashboards", to: "https://dune.com/paltalabs/defindex", external: true },
@@ -19,7 +25,7 @@ function Lists({ toggle }: { toggle?: () => void }) {
     const { setIndex } = useContext(NavigateTab);
     const router = useRouter();
     const pathname = usePathname();
-    const isHomePage = pathname === '/';
+    const isHomePage = pathname === "/";
 
     return (
         <div>
@@ -36,10 +42,22 @@ function Lists({ toggle }: { toggle?: () => void }) {
                                 target={isInternal ? "_self" : "_blank"}
                                 rel={isInternal ? undefined : "noopener noreferrer"}
                             >
-                                <span className="text-white leading-none text-sm lg:text-xs font-manrope hover:underline transition-colors duration-normal hover:text-lime-200" style={{lineHeight: '16px', textShadow: '0 2px 4px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4)'}}>
+                                <span
+                                    className="text-white leading-none text-sm lg:text-xs font-manrope hover:underline transition-colors duration-normal hover:text-lime-200"
+                                    style={{
+                                        lineHeight: "16px",
+                                        textShadow:
+                                            "0 2px 4px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4)",
+                                    }}
+                                >
                                     {name}
                                 </span>
-                                {!isInternal && <FiExternalLink className="text-white text-xs lg:text-xs transition-colors duration-normal group-hover:text-lime-200" style={{filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))'}} />}
+                                {!isInternal && (
+                                    <FiExternalLink
+                                        className="text-white text-xs lg:text-xs transition-colors duration-normal group-hover:text-lime-200"
+                                        style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.6))" }}
+                                    />
+                                )}
                             </a>
                         );
                     }
@@ -57,7 +75,14 @@ function Lists({ toggle }: { toggle?: () => void }) {
                                 spy={true}
                                 smooth={true}
                             >
-                                <span className="text-white leading-none text-sm lg:text-xs font-manrope hover:underline transition-colors duration-normal hover:text-lime-200"  style={{lineHeight: '16px', textShadow: '0 2px 4px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4)'}}>
+                                <span
+                                    className="text-white leading-none text-sm lg:text-xs font-manrope hover:underline transition-colors duration-normal hover:text-lime-200"
+                                    style={{
+                                        lineHeight: "16px",
+                                        textShadow:
+                                            "0 2px 4px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4)",
+                                    }}
+                                >
                                     {name}
                                 </span>
                             </Link>
@@ -72,7 +97,14 @@ function Lists({ toggle }: { toggle?: () => void }) {
                             aria-label={name}
                             className="px-3 py-2 cursor-pointer transition-all ease-in hover:scale-105 active:scale-95"
                         >
-                            <span className="text-white leading-none text-sm lg:text-xs font-manrope hover:underline transition-colors duration-normal hover:text-lime-200"  style={{lineHeight: '16px', textShadow: '0 2px 4px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4)'}}>
+                            <span
+                                className="text-white leading-none text-sm lg:text-xs font-manrope hover:underline transition-colors duration-normal hover:text-lime-200"
+                                style={{
+                                    lineHeight: "16px",
+                                    textShadow:
+                                        "0 2px 4px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4)",
+                                }}
+                            >
                                 {name}
                             </span>
                         </a>
