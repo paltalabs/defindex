@@ -44,27 +44,18 @@ APY is calculated by comparing the PPS now versus the PPS in the past. For techn
 
 Even vaults using similar strategies can show different APYs. Here's why:
 
-### 1. Harvest Timing and Frequency
-
-Harvesting converts earned rewards into vault value. More frequent harvests mean more compounding, which increases APY.
-
-* **Daily harvests**: Higher compounding effect
-* **Weekly harvests**: Lower compounding, but reduced gas costs
-* **Example**: A strategy earning 10% base rate could show 10.5% APY with daily harvests vs 10.2% with weekly harvests
-
-### 2. Vault Fees
+### 1. Vault Fees
 
 The **Vault Manager** sets performance fees that reduce net APY. Lower fees mean more returns for depositors.
-
 | Strategy APY | Performance Fee | Net Vault APY |
 |--------------|-----------------|---------------|
-| 10%          | 10%             | ~9%           |
-| 10%          | 20%             | ~8%           |
-| 10%          | 30%             | ~7%           |
+| 15%          | 50%             | ~7.5%         |
+| 15%          | 30%             | ~10.5%        |
+| 15%          | 15%             | ~12.75%       |
 
 See [Vault Roles](vault-roles.md) for more on how managers configure fees.
 
-### 3. Rebalancer Decisions
+### 2. Rebalancer Decisions
 
 The **Rebalance Manager** allocates funds across strategies. Smart rebalancing can optimize returns:
 
@@ -74,10 +65,11 @@ The **Rebalance Manager** allocates funds across strategies. Smart rebalancing c
 
 Poor rebalancing decisions can reduce overall vault performance.
 
-### 4. Entry Timing
+### 3. Entry Timing
 
-APY reflects **historical performance**, not future guarantees. If you deposit right after a high-yield period, your personal returns may differ from the displayed APY.
+APY reflects **historical performance**, not future guarantees. DeFindex calculates APY based on Price Per Share (PPS) changes over a recent time window (typically the last 7 days).
 
+This means two vaults with identical configurations created at different times will show different APYs. Each vault has its own history: a vault created during a high-yield market period will display higher APY than one created during lower yields, even if both use the same strategies and fees.
 ---
 
 ## How to Interpret APY
@@ -94,23 +86,6 @@ APY reflects **historical performance**, not future guarantees. If you deposit r
 * Risk level of underlying strategies
 * Liquidity conditions
 
-### Factors to Evaluate
-
-| Factor | What to Look For |
-|--------|------------------|
-| APY Consistency | Stable APY over time suggests reliable strategy |
-| Fee Structure | Lower fees = more returns for the users |
-| Strategy Diversity | Multiple strategies can reduce risk |
-| Harvest Frequency | More frequent = better compounding |
-| Track Record | Longer history provides more confidence |
-
-### Best Practices for Vault Managers
-
-* Set competitive but sustainable fees
-* Maintain consistent harvest schedules
-* Communicate strategy changes to depositors
-* Monitor and optimize rebalancing decisions
-
 ---
 
 ## Common Misconceptions
@@ -118,10 +93,6 @@ APY reflects **historical performance**, not future guarantees. If you deposit r
 ### "APY is a guarantee"
 
 APY is an estimate based on past performance. Market conditions, strategy yields, and other factors can change at any time.
-
-### "Higher APY is always better"
-
-High APY often comes with higher risk. A 50% APY vault might be using leveraged or volatile strategies. Always understand what strategies a vault uses.
 
 ### "APY stays constant"
 
