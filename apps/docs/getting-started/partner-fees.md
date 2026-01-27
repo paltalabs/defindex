@@ -10,7 +10,7 @@ coverY: 0
 DeFindex operates with three key participants working together:
 
 * **DeFindex**: The protocol that provides the infrastructure, smart contracts, and yield-generating strategies.
-* **Partners**: Wallets, fintechs, or applications that integrate DeFindex to offer yield products to their users. Partners configure fees for their specific integration.
+* **Partners**: Assets managers, Wallets, fintechs, or applications that integrate DeFindex to offer yield products to their users. Partners configure fees for their specific integration.
 * **End Users**: People who deposit funds through a partner's application and earn yield on their assets.
 
 This model allows partners to monetize their user base while offering competitive yield products, and users benefit from easy access to DeFi opportunities through trusted applications.
@@ -30,7 +30,7 @@ Partner fees in DeFindex follow a simple principle: **fees are only charged on t
 ### Fee Limits
 
 * **Maximum fee**: 90% of generated yield
-* **Typical range**: 10-50% of generated yield
+* **Typical range**: 50%-30% of generated yield
 
 This performance-based model ensures that partners only earn when users earn. There's no incentive to charge fees on idle capital.
 
@@ -48,7 +48,7 @@ One of DeFindex's core principles is transparency. When a user sees an APY displ
 
 | Displayed | Meaning |
 |-----------|---------|
-| 8% APY | User will earn approximately 8% annually on their deposit |
+| 15% APY | User will earn 15% annually on their deposit if the market conditions stays stable |
 | Vault performance | Already accounts for partner fees |
 | Balance growth | Reflects actual returns after all fees |
 
@@ -84,7 +84,7 @@ This alignment means everyone benefits from the same goal: generating real yield
 
 ## Fee Distribution
 
-When yield is generated, fees are distributed automatically on-chain:
+When yield is generated, fees are distributed completely on-chain:
 
 1. **Yield is generated** by the vault's strategies
 2. **Partner fee is calculated** based on their configured percentage
@@ -100,23 +100,23 @@ The split between partner and DeFindex is handled internally by the protocol.
 Let's walk through a concrete scenario:
 
 ### Setup
-* User deposits **$1,000 USDC** through a partner's app
-* The vault generates **$100 in yield** over time (10% return)
-* Partner has configured a **20% performance fee**
+* User deposits **$10,000 USDC** through a partner's app
+* The vault's strategy generates **15% APY**
+* Partner has configured a **50% performance fee**
 
-### Calculation
+### After One Year
 | Item | Amount |
 |------|--------|
-| Gross yield generated | $100 |
-| Partner fee (20% of yield) | $20 |
-| Net yield to user | $80 |
+| Gross yield generated (15% APY) | $1,500 |
+| Partner fee (50% of yield) | $750 |
+| Net yield to user | $750 |
 
 ### Result
-* **User receives**: $80 in yield (8% effective APY)
-* **User's capital**: $1,000 remains untouched
-* **Partner + DeFindex share**: $20
+* **User receives**: $750 in yield (**7.5% net APY**) — passive income with zero effort
+* **User's capital**: $10,000 remains fully protected
+* **Partner revenue**: $750 annually per user — recurring revenue stream
 
-The user's displayed APY of 8% already reflected this fee structure from the start.
+For a partner with 1,000 active users, this represents **$750,000 in annual revenue** while providing real value to their users.
 
 ---
 
@@ -127,7 +127,7 @@ The user's displayed APY of 8% already reflected this fee structure from the sta
 | Performance-based | Fees only on yield, never on capital |
 | Net APY display | Users see what they actually earn |
 | Aligned incentives | Partners profit when users profit |
-| On-chain distribution | Transparent, automated fee handling |
+| On-chain distribution | Transparent, on-chain fee handling |
 | Protected principal | Deposits are never reduced by fees |
 
 ---
