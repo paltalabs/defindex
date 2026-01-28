@@ -7,8 +7,9 @@ description: ⏱️ 2 min read
 
 Prefer learning by watching? Check out our integration walkthrough:
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/yWgOj7jtpAc?si=h0lD_W5qWjycvrkQ&amp;start=140" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
+<video width="560" height="315" controls>
+  <source src="https://www.youtube.com/embed/yWgOj7jtpAc?si=h0lD_W5qWjycvrkQ&amp;start=140" type="video/mp4">
+</video>
 ---
 
 ## Generate your API Key

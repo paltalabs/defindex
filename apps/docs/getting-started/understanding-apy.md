@@ -26,10 +26,10 @@ A vault with a 10% strategy APY and 20% performance fee would have approximately
 
 **Example:**
 * You deposit $100
-* The strategy generates $10 in yield (10% APY)
-* The manager takes 20% of those gains: $10 × 0.20 = $2
-* You receive $8 in net yield
-* Your effective return: $8 / $100 = **8% Vault APY**
+* The strategy generates $20 in yield (20% APY)
+* The manager takes 50% of those gains: $20 × 0.50 = $10
+* You receive $10 in net yield
+* Your effective return: $10 / $100 = **10% Vault APY**
 
 The formula is: `Net Vault APY = Strategy APY × (1 - Performance Fee)`
 
@@ -70,7 +70,8 @@ Poor rebalancing decisions can reduce overall vault performance.
 
 APY reflects **historical performance**, not future guarantees. DeFindex calculates APY based on Price Per Share (PPS) changes over a recent time window (typically the last 7 days).
 
-This means two vaults with identical configurations created at different times will show different APYs. Each vault has its own history: a vault created during a high-yield market period will display higher APY than one created during lower yields, even if both use the same strategies and fees.
+This means two vaults with identical configurations created at different times will show different APYs.
+
 ---
 
 ## How to Interpret APY

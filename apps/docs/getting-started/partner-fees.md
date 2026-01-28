@@ -108,14 +108,14 @@ Let's walk through a concrete scenario:
 ### After One Year
 | Item | Amount |
 |------|--------|
-| Gross yield generated (15% APY) | $1,500 |
-| Partner fee (50% of yield) | $750 |
+| Gross yield generated before fees (15% APY) | $1,500 |
+| Partner + Defindex fee (50% of yield) | $750 |
 | Net yield to user | $750 |
 
 ### Result
 * **User receives**: $750 in yield (**7.5% net APY**) — passive income with zero effort
 * **User's capital**: $10,000 remains fully protected
-* **Partner revenue**: $750 annually per user — recurring revenue stream
+* **Partner revenue befroe Defindex fee**: $750 annually per user — recurring revenue stream
 
 For a partner with 1,000 active users, this represents **$750,000 in annual revenue** while providing real value to their users.
 
