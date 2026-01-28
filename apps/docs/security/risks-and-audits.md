@@ -1,3 +1,6 @@
+---
+description: ⏱️ 1 min read
+---
 # Risks and Audits
 
 ## **Smart Contracts**

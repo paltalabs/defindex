@@ -1,3 +1,6 @@
+---
+description: ⏱️ 2 min read
+---
 # Using the Factory (Advanced)
 
 If you prefer to interact directly with the DeFindex Factory contract to create a vault, here's a step-by-step guide:

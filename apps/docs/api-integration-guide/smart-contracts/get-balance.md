@@ -1,3 +1,6 @@
+---
+description: ⏱️ 1 min read
+---
 # Get Balance
 
 #### Balance

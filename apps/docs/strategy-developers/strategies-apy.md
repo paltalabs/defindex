@@ -1,3 +1,6 @@
+---
+description: ⏱️ 2 min read
+---
 # Strategies APY
 
 Each **strategy** will give a different **APY (Annual Percentage Yield)** depending on what the strategy does — for example lending, swapping, farming or even leverage lending, etc...

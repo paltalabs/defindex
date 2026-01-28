@@ -1,6 +1,7 @@
 ---
 cover: ../../.gitbook/assets/Captura de pantalla 2025-04-30 a las 15.21.10.png
 coverY: 0
+description: ⏱️ 3 min read
 ---
 
 # Create a Vault

@@ -1,7 +1,7 @@
 ---
 description: >-
-  This section covers the withdraw functions on a Vault. You can do this in 3
-  ways: through Smart Contract, Through API or through SDK.
+  ⏱️ 2 min read — This section covers the withdraw functions on a Vault. You can
+  do this in 3 ways: through Smart Contract, Through API or through SDK.
 ---
 
 # Withdraw

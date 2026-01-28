@@ -1,3 +1,6 @@
+---
+description: ⏱️ 3 min read
+---
 # Vault APY
 
 The **Vault APY** shows how much the value of a vault shares grows over time — similar to earning interest on  savings.
