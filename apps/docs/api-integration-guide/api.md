@@ -7,9 +7,8 @@ description: ⏱️ 2 min read
 
 Prefer learning by watching? Check out our integration walkthrough:
 
-<video width="560" height="315" controls>
-  <source src="https://www.youtube.com/embed/yWgOj7jtpAc?si=h0lD_W5qWjycvrkQ&amp;start=140" type="video/mp4">
-</video>
+{% embed url="https://www.youtube.com/embed/yWgOj7jtpAc?si=h0lD_W5qWjycvrkQ&amp;start=140" %}
+
 ---
 
 ## Generate your API Key
