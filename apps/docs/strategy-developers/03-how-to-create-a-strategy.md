@@ -1,6 +1,7 @@
 ---
 cover: ../.gitbook/assets/image 31.png
 coverY: 0
+description: ⏱️ 5 min read
 ---
 
 # Building the Blend Strategy

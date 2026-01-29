@@ -1,8 +1,8 @@
 ---
 description: >-
-  DeFindex is a yield optimization platform that enables users to create and
-  manage yield-generating vaults through an intuitive interface. Here's how it
-  works:
+  ⏱️ 2 min read — DeFindex is a yield optimization platform that enables users
+  to create and manage yield-generating vaults through an intuitive interface.
+  Here's how it works:
 cover: ../.gitbook/assets/image 31.png
 coverY: 0
 ---

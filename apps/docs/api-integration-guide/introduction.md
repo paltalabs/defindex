@@ -1,5 +1,6 @@
 ---
 hidden: true
+description: ⏱️ 2 min read
 ---
 
 # Introduction

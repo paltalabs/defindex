@@ -2,6 +2,7 @@
 hidden: true
 cover: ../../.gitbook/assets/image 31.png
 coverY: 0
+description: ⏱️ 2 min read
 ---
 
 # Flutter SDK

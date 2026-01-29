@@ -1,3 +1,6 @@
+---
+description: ⏱️ 1 min read
+---
 # Available SDKs
 
 Welcome to the DeFindex SDK documentation! Choose the SDK that best fits your development environment and integration requirements.

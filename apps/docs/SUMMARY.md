@@ -6,6 +6,8 @@
 * [Understanding DeFindex](getting-started/README.md)
   * [What is DeFindex](defindex-protocol/what-is-defindex.md)
   * [Vault Roles](getting-started/vault-roles.md)
+  * [Understanding APY](getting-started/understanding-apy.md)
+  * [Partner Fees](getting-started/partner-fees.md)
   * [General/FAQ](getting-started/general-faq/README.md)
 
 ***

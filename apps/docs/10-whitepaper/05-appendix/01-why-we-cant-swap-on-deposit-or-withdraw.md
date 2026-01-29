@@ -1,3 +1,6 @@
+---
+description: ⏱️ 4 min read
+---
 # Why We Can't Swap on Deposit or Withdraw
 
 When depositing (or investing) in DeFindex, a user receives dfTokens, which represent their share of the DeFindex portfolio. These tokens are minted based on the amount of assets deposited and the current price per share (denoted as p<sub>ps</sub>). Later, the user can burn these tokens to withdraw their assets.

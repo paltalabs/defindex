@@ -1,6 +1,7 @@
 ---
 cover: ../.gitbook/assets/image 31.png
 coverY: 0
+description: ⏱️ 1 min read
 ---
 
 # Strategy Examples

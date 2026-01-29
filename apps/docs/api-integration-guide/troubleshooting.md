@@ -1,3 +1,6 @@
+---
+description: ⏱️ 5 min read
+---
 # Troubleshooting Guide
 
 This guide provides solutions and explanations for common issues encountered when using the DeFindex .NET SDK and interacting with DeFindex smart contracts on Soroban. It covers transaction failures, contract error codes, environment setup, and frequently asked questions.
