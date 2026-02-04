@@ -1,3 +1,6 @@
+---
+description: ⏱️ 4 min read
+---
 # Set Protocol
 https://www.tokensets.com/#/
 https://docs.tokensets.com/protocol/litepaper

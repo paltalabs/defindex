@@ -5,10 +5,13 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "docs:reading-time": "node apps/docs/scripts/update-reading-time.js"
   },
   "devDependencies": {
+    "gray-matter": "^4.0.3",
     "prettier": "^3.2.5",
+    "reading-time": "^1.5.0",
     "turbo": "^2.0.6",
     "typescript": "^5.4.5"
   },

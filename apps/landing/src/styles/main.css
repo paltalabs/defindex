@@ -81,7 +81,26 @@ body {
 }
 
 
-/* 
+/* Partners Slider Animation */
+@keyframes scroll-partners {
+  0% {
+    transform: translateX(-0.85%);
+  }
+  100% {
+    transform: translateX(-35%);
+  }
+}
+
+.partners-slider {
+  animation: scroll-partners 20s linear infinite;
+  will-change: transform;
+}
+
+.partners-slider:hover {
+  animation-play-state: paused;
+}
+
+/*
  Mobile Responsiveness
 */
 @media screen and (max-width: 1040px) {

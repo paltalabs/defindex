@@ -1,10 +1,10 @@
 {
   "info": {
-    "_postman_id": "ae601432-93b3-46c1-9a88-682a18cee79b",
+    "_postman_id": "1ec31767-fa90-44f9-9eda-408da2d6d4c2",
     "name": "DeFindex API Public",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "46319029",
-    "_collection_link": "https://solar-zodiac-853470.postman.co/workspace/DeFindex-API~fb912f0b-2acf-4607-a902-1e0fd7af9a21/collection/46319029-ae601432-93b3-46c1-9a88-682a18cee79b?action=share&source=collection_link&creator=46319029"
+    "_collection_link": "https://go.postman.co/collection/46319029-1ec31767-fa90-44f9-9eda-408da2d6d4c2?source=collection_link"
   },
   "item": [
     {
@@ -16,9 +16,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{host}}/health",
+              "raw": "https://api.defindex.io/health",
               "host": [
-                "{{host}}"
+                "https://api.defindex.io"
               ],
               "path": [
                 "health"
@@ -61,9 +61,9 @@
               ]
             },
             "url": {
-              "raw": "{{host}}/register",
+              "raw": "https://api.defindex.io/register",
               "host": [
-                "{{host}}"
+                "https://api.defindex.io"
               ],
               "path": [
                 "register"
@@ -79,34 +79,44 @@
               "listen": "test",
               "script": {
                 "exec": [
+                  "// Parse the JSON response",
+                  "const response = pm.response.json();",
+                  "",
+                  "// Check if the response contains an access_token",
+                  "if (response && response.access_token) {",
+                  "    // Set the jwt_token environment variable with the access_token value",
+                  "    pm.environment.set(\"jwt_token\", response.access_token);",
+                  "    ",
+                  "    // Optional: Log success message to console",
+                  "    console.log(\"JWT token successfully set in environment variables\");",
+                  "    console.log(\"Token:\", response.access_token);",
+                  "} else {",
+                  "    // Log error if access_token is not found",
+                  "    console.error(\"Access token not found in response\");",
+                  "}",
+                  "",
+                  "// Optional: Also save the refresh_token if needed",
+                  "if (response && response.refresh_token) {",
+                  "    pm.environment.set(\"refresh_token\", response.refresh_token);",
+                  "    console.log(\"Refresh token also saved\");",
+                  "}",
+                  "",
+                  "// Optional: Add test to verify the response",
                   "pm.test(\"Status code is 200\", function () {",
-                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    pm.response.to.have.status(200);",
                   "});",
                   "",
-                  "// Assuming the response contains tokens in a JSON object",
-                  "const responseJson = pm.response.json();",
-                  "",
-                  "// Check if tokens exist in the response",
-                  "pm.test(\"JWT token is present\", function () {",
-                  "    pm.expect(responseJson.jwt).to.exist;",
+                  "pm.test(\"Response has access_token\", function () {",
+                  "    pm.expect(response).to.have.property('access_token');",
                   "});",
                   "",
-                  "pm.test(\"Refresh token is present\", function () {",
-                  "    pm.expect(responseJson.refreshToken).to.exist;",
-                  "});",
-                  "",
-                  "// Update environment variables with the extracted tokens",
-                  "if (responseJson.jwt) {",
-                  "    pm.environment.set(\"jwt_token\", responseJson.jwt);",
-                  "}",
-                  "",
-                  "if (responseJson.refreshToken) {",
-                  "    pm.environment.set(\"refresh_token\", responseJson.refreshToken);",
-                  "}",
-                  ""
+                  "pm.test(\"Response has refresh_token\", function () {",
+                  "    pm.expect(response).to.have.property('refresh_token');",
+                  "});"
                 ],
                 "type": "text/javascript",
-                "packages": {}
+                "packages": {},
+                "requests": {}
               }
             }
           ],
@@ -124,12 +134,12 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}\n"
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}\n"
             },
             "url": {
-              "raw": "{{host}}/login",
+              "raw": "https://api.defindex.io/login",
               "host": [
-                "{{host}}"
+                "https://api.defindex.io"
               ],
               "path": [
                 "login"
@@ -195,17 +205,138 @@
                 {
                   "key": "access_token",
                   "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoiZGV2QHBhbHRhbGFicy5pbyIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc1MDI2OTE2NCwiZXhwIjoxNzUwMjcyNzY0fQ.QyPmLMWsEcJkLr86RdTFiNemuTmkpkQX3Uru7Vi4Nyg",
-                  "type": "text"
+                  "type": "text",
+                  "uuid": "e2cfe996-5f7a-498b-831a-ff25f1ad1c1d"
                 }
               ]
             },
             "url": {
-              "raw": "{{host}}/refresh",
+              "raw": "https://api.defindex.io/refresh",
               "host": [
-                "{{host}}"
+                "https://api.defindex.io"
               ],
               "path": [
                 "refresh"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Api Key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse the JSON response",
+                  "const response = pm.response.json();",
+                  "",
+                  "// Check if the response exists and has a key property",
+                  "if (response && response.key) {",
+                  "    // Set the api_key environment variable with the key value",
+                  "    pm.environment.set(\"api_key\", response.key);",
+                  "    ",
+                  "    // Optional: Log success message to console",
+                  "    console.log(\"API key successfully set in environment variables\");",
+                  "    console.log(\"Key:\", response.key);",
+                  "    console.log(\"ID:\", response.id);",
+                  "} else if (response && Array.isArray(response) && response.length > 0) {",
+                  "    // Fallback: Handle array response (your original logic)",
+                  "    const firstItem = response[0];",
+                  "    if (firstItem && firstItem.key) {",
+                  "        pm.environment.set(\"api_key\", firstItem.key);",
+                  "        console.log(\"API key successfully set from array response\");",
+                  "        console.log(\"Key:\", firstItem.key);",
+                  "    } else {",
+                  "        console.error(\"Key not found in the first array element\");",
+                  "    }",
+                  "} else {",
+                  "    // Log error if response doesn't have expected structure",
+                  "    console.error(\"Response doesn't contain expected key property\");",
+                  "    console.log(\"Response structure:\", response);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "https://api.defindex.io/api-keys/generate",
+              "host": [
+                "https://api.defindex.io"
+              ],
+              "path": [
+                "api-keys",
+                "generate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Revoke Api Key",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"keyId\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.defindex.io/api-keys/5/revoke",
+              "host": [
+                "https://api.defindex.io"
+              ],
+              "path": [
+                "api-keys",
+                "5",
+                "revoke"
               ]
             }
           },
@@ -231,7 +362,8 @@
                   ""
                 ],
                 "type": "text/javascript",
-                "packages": {}
+                "packages": {},
+                "requests": {}
               }
             }
           ],
@@ -255,12 +387,85 @@
               }
             ],
             "url": {
-              "raw": "{{host}}/api-keys",
+              "raw": "https://api.defindex.io/api-keys",
               "host": [
-                "{{host}}"
+                "https://api.defindex.io"
               ],
               "path": [
                 "api-keys"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Accounts",
+      "item": [
+        {
+          "name": "Account Performance",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "https://api.defindex.io/account/:walletAddress/vault/:vaultAddress/?network=mainnet",
+              "host": [
+                "https://api.defindex.io"
+              ],
+              "path": [
+                "account",
+                ":walletAddress",
+                "vault",
+                ":vaultAddress",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "network",
+                  "value": "mainnet"
+                },
+                {
+                  "key": "interval",
+                  "value": "daily",
+                  "description": "hourly, daily, weekly, monthly / defaults to daily",
+                  "disabled": true
+                },
+                {
+                  "key": "startDate",
+                  "value": "",
+                  "description": "ISO 8601 Format",
+                  "disabled": true
+                },
+                {
+                  "key": "endDate",
+                  "value": "",
+                  "description": "ISO 8601 Format",
+                  "disabled": true
+                },
+                {
+                  "key": "includeEvents",
+                  "value": "true",
+                  "description": "Defaults to false",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "walletAddress",
+                  "value": "CCTKOZCEYT2UR7HYAMGVMVWDFB7XTIRRISXJJY7OAPRJD5ZCMUC43E5R"
+                },
+                {
+                  "key": "vaultAddress",
+                  "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                }
               ]
             }
           },
@@ -281,7 +486,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"strategy_address\": \"CC5CE6MWISDXT3MLNQ7R3FVILFVFEIH3COWGH45GJKL6BD2ZHF7F7JVI\",\n    \"caller\": \"GA3GWDNI6KYNXPJQVAXMKW6O47ADEQ25KWAEWZKA5JCXQ5APL6VKZR2N\"\n}",
+                  "raw": "{\n    \"strategy_address\": \"CCSRX5E4337QMCMC3KO3RDFYI57T5NZV5XB3W3TWE4USCASKGL5URKJL\",\n    \"caller\": \"{{caller_address}}\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -289,9 +494,9 @@
                   }
                 },
                 "url": {
-                  "raw": "{{host}}/vault/:vaultAddress/rescue?network=mainnet",
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/rescue?network=mainnet",
                   "host": [
-                    "{{host}}"
+                    "https://api.defindex.io"
                   ],
                   "path": [
                     "vault",
@@ -307,7 +512,7 @@
                   "variable": [
                     {
                       "key": "vaultAddress",
-                      "value": "CAIZ3NMNPEN5SQISJV7PD2YY6NI6DIPFA4PCRUBOGDE4I7A3DXDLK5OI"
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
                     }
                   ]
                 }
@@ -321,7 +526,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"strategy_address\": \"CC5CE6MWISDXT3MLNQ7R3FVILFVFEIH3COWGH45GJKL6BD2ZHF7F7JVI\",\n    \"caller\": \"GA3GWDNI6KYNXPJQVAXMKW6O47ADEQ25KWAEWZKA5JCXQ5APL6VKZR2N\"\n}",
+                  "raw": "{\n    \"strategy_address\": \"CCSRX5E4337QMCMC3KO3RDFYI57T5NZV5XB3W3TWE4USCASKGL5URKJL\",\n    \"caller\": \"{{caller_address}}\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -329,9 +534,9 @@
                   }
                 },
                 "url": {
-                  "raw": "{{host}}/vault/:vaultAddress/pause-strategy?network=mainnet",
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/pause-strategy?network=mainnet",
                   "host": [
-                    "{{host}}"
+                    "https://api.defindex.io"
                   ],
                   "path": [
                     "vault",
@@ -347,7 +552,7 @@
                   "variable": [
                     {
                       "key": "vaultAddress",
-                      "value": "CAIZ3NMNPEN5SQISJV7PD2YY6NI6DIPFA4PCRUBOGDE4I7A3DXDLK5OI"
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
                     }
                   ]
                 }
@@ -361,7 +566,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"strategy_address\": \"CC5CE6MWISDXT3MLNQ7R3FVILFVFEIH3COWGH45GJKL6BD2ZHF7F7JVI\",\n    \"caller\": \"GA3GWDNI6KYNXPJQVAXMKW6O47ADEQ25KWAEWZKA5JCXQ5APL6VKZR2N\"\n}",
+                  "raw": "{\n    \"strategy_address\": \"CCSRX5E4337QMCMC3KO3RDFYI57T5NZV5XB3W3TWE4USCASKGL5URKJL\",\n    \"caller\": \"{{caller_address}}\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -369,9 +574,9 @@
                   }
                 },
                 "url": {
-                  "raw": "{{host}}/vault/:vaultAddress/unpause-strategy?network=mainnet",
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/unpause-strategy?network=mainnet",
                   "host": [
-                    "{{host}}"
+                    "https://api.defindex.io"
                   ],
                   "path": [
                     "vault",
@@ -387,7 +592,7 @@
                   "variable": [
                     {
                       "key": "vaultAddress",
-                      "value": "CAIZ3NMNPEN5SQISJV7PD2YY6NI6DIPFA4PCRUBOGDE4I7A3DXDLK5OI"
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
                     }
                   ]
                 }
@@ -401,7 +606,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"caller\": \"GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE\",\n    \"new_address\": \"GBZXUKUYGXLASTLIXGIV2RJGWQHVRIS7AANR7AHXFPA67LNSAGO6WPPE\"\n}",
+                  "raw": "{\n    \"caller\": \"{{caller_address}}\",\n    \"new_address\": \"{{caller_address}}\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -409,9 +614,9 @@
                   }
                 },
                 "url": {
-                  "raw": "{{host}}/vault/:vaultAddress/set/fee-receiver?network=testnet",
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/set/fee-receiver?network=mainnet",
                   "host": [
-                    "{{host}}"
+                    "https://api.defindex.io"
                   ],
                   "path": [
                     "vault",
@@ -422,13 +627,13 @@
                   "query": [
                     {
                       "key": "network",
-                      "value": "testnet"
+                      "value": "mainnet"
                     }
                   ],
                   "variable": [
                     {
                       "key": "vaultAddress",
-                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
                     }
                   ]
                 }
@@ -441,9 +646,9 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{host}}/vault/:vaultAddress/get/manager?network=testnet",
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/get/manager?network=mainnet",
                   "host": [
-                    "{{host}}"
+                    "https://api.defindex.io"
                   ],
                   "path": [
                     "vault",
@@ -454,13 +659,13 @@
                   "query": [
                     {
                       "key": "network",
-                      "value": "testnet"
+                      "value": "mainnet"
                     }
                   ],
                   "variable": [
                     {
                       "key": "vaultAddress",
-                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
                     }
                   ]
                 }
@@ -474,7 +679,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"caller\": \"GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE\",\n    \"instructions\": [\n        {\n            \"type\": \"Invest\",\n            \"strategy_address\": \"CBX562AQZZRGIFBLVTQAGIHXOQX6L2MXJLJNL5O2GUZ7EZ6HSKB36BKY\",\n            \"amount\": 10000000\n        }\n    ]\n}",
+                  "raw": "{\n    \"caller\": \"{{caller_address}}\",\n    \"instructions\": [\n        {\n            \"type\": \"Invest\",\n            \"strategy_address\": \"CCSRX5E4337QMCMC3KO3RDFYI57T5NZV5XB3W3TWE4USCASKGL5URKJL\",\n            \"amount\": 10000000\n        }\n    ]\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -482,9 +687,9 @@
                   }
                 },
                 "url": {
-                  "raw": "{{host}}/vault/:vaultAddress/rebalance?network=testnet",
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/rebalance?network=mainnet",
                   "host": [
-                    "{{host}}"
+                    "https://api.defindex.io"
                   ],
                   "path": [
                     "vault",
@@ -494,13 +699,53 @@
                   "query": [
                     {
                       "key": "network",
-                      "value": "testnet"
+                      "value": "mainnet"
                     }
                   ],
                   "variable": [
                     {
                       "key": "vaultAddress",
-                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Rebalance swap",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"caller\": \"{{caller_address}}\",\n    \"instructions\": [\n        {\n            \"type\": \"SwapExactIn\",\n            \"token_in\": \"CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC\",\n            \"token_out\": \"CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU\",\n            \"amount\": 1000000,\n            \"slippageToleranceBps\": 10000\n        }\n    ]\n}\n\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/rebalance?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "rebalance"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
                     }
                   ]
                 }
@@ -522,9 +767,9 @@
                   }
                 },
                 "url": {
-                  "raw": "{{host}}/vault/:vaultAddress/lock-fees?network=testnet",
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/lock-fees?network=mainnet",
                   "host": [
-                    "{{host}}"
+                    "https://api.defindex.io"
                   ],
                   "path": [
                     "vault",
@@ -534,13 +779,13 @@
                   "query": [
                     {
                       "key": "network",
-                      "value": "testnet"
+                      "value": "mainnet"
                     }
                   ],
                   "variable": [
                     {
                       "key": "vaultAddress",
-                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
                     }
                   ]
                 }
@@ -554,7 +799,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"amount\": 1000000,\n    \"caller\": \"GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE\",\n    \"strategy_address\": \"CBX562AQZZRGIFBLVTQAGIHXOQX6L2MXJLJNL5O2GUZ7EZ6HSKB36BKY\"    \n}",
+                  "raw": "{\n    \"amount\": 1000000,\n    \"caller\": \"GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE\",\n    \"strategy_address\": \"CCSRX5E4337QMCMC3KO3RDFYI57T5NZV5XB3W3TWE4USCASKGL5URKJL\"    \n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -562,9 +807,9 @@
                   }
                 },
                 "url": {
-                  "raw": "{{host}}/vault/:vaultAddress/release-fees?network=testnet",
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/release-fees?network=mainnet",
                   "host": [
-                    "{{host}}"
+                    "https://api.defindex.io"
                   ],
                   "path": [
                     "vault",
@@ -574,13 +819,13 @@
                   "query": [
                     {
                       "key": "network",
-                      "value": "testnet"
+                      "value": "mainnet"
                     }
                   ],
                   "variable": [
                     {
                       "key": "vaultAddress",
-                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
                     }
                   ]
                 }
@@ -594,7 +839,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"caller\": \"GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE\"\n}",
+                  "raw": "{\n    \"caller\": \"{{caller_address}}\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -602,9 +847,9 @@
                   }
                 },
                 "url": {
-                  "raw": "{{host}}/vault/:vaultAddress/distribute-fees?network=testnet",
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/distribute-fees?network=mainnet",
                   "host": [
-                    "{{host}}"
+                    "https://api.defindex.io"
                   ],
                   "path": [
                     "vault",
@@ -614,13 +859,13 @@
                   "query": [
                     {
                       "key": "network",
-                      "value": "testnet"
+                      "value": "mainnet"
                     }
                   ],
                   "variable": [
                     {
                       "key": "vaultAddress",
-                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
                     }
                   ]
                 }
@@ -642,9 +887,9 @@
                   }
                 },
                 "url": {
-                  "raw": "{{host}}/vault/:vaultAddress/upgrade?network=testnet",
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/upgrade?network=mainnet",
                   "host": [
-                    "{{host}}"
+                    "https://api.defindex.io"
                   ],
                   "path": [
                     "vault",
@@ -654,13 +899,13 @@
                   "query": [
                     {
                       "key": "network",
-                      "value": "testnet"
+                      "value": "mainnet"
                     }
                   ],
                   "variable": [
                     {
                       "key": "vaultAddress",
-                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
                     }
                   ]
                 }
@@ -681,13 +926,13 @@
                 "method": "GET",
                 "header": [],
                 "body": {
-                  "mode": "urlencoded",
-                  "urlencoded": []
+                  "mode": "raw",
+                  "raw": ""
                 },
                 "url": {
-                  "raw": "{{host}}/vault/:vaultAddress?network=testnet",
+                  "raw": "https://api.defindex.io/vault/:vaultAddress?network=mainnet",
                   "host": [
-                    "{{host}}"
+                    "https://api.defindex.io"
                   ],
                   "path": [
                     "vault",
@@ -696,13 +941,13 @@
                   "query": [
                     {
                       "key": "network",
-                      "value": "testnet"
+                      "value": "mainnet"
                     }
                   ],
                   "variable": [
                     {
                       "key": "vaultAddress",
-                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
                     }
                   ]
                 }
@@ -722,9 +967,9 @@
                   "urlencoded": []
                 },
                 "url": {
-                  "raw": "{{host}}/vault/:vaultAddress/apy",
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/apy?network=mainnet",
                   "host": [
-                    "{{host}}"
+                    "https://api.defindex.io"
                   ],
                   "path": [
                     "vault",
@@ -734,14 +979,62 @@
                   "query": [
                     {
                       "key": "network",
-                      "value": "testnet",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Vault Historical Data",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": []
+                },
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/history?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "history"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    },
+                    {
+                      "key": "period",
+                      "value": "30d",
+                      "disabled": true
+                    },
+                    {
+                      "key": "startDate",
+                      "value": "2025-05-29",
+                      "type": "text",
                       "disabled": true
                     }
                   ],
                   "variable": [
                     {
                       "key": "vaultAddress",
-                      "value": "CAIZ3NMNPEN5SQISJV7PD2YY6NI6DIPFA4PCRUBOGDE4I7A3DXDLK5OI"
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
                     }
                   ]
                 }
@@ -761,9 +1054,9 @@
                   "urlencoded": []
                 },
                 "url": {
-                  "raw": "{{host}}/vault/:vaultAddress/balance?from=GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE&network=testnet",
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/balance?from=GAHF3QTOKBQ6HZ2J3XS4KMFV5E5IBDESG3A4JGCLBLOUKTEYGERIPPER&network=mainnet",
                   "host": [
-                    "{{host}}"
+                    "https://api.defindex.io"
                   ],
                   "path": [
                     "vault",
@@ -773,17 +1066,48 @@
                   "query": [
                     {
                       "key": "from",
-                      "value": "GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE"
+                      "value": "GAHF3QTOKBQ6HZ2J3XS4KMFV5E5IBDESG3A4JGCLBLOUKTEYGERIPPER"
                     },
                     {
                       "key": "network",
-                      "value": "testnet"
+                      "value": "mainnet"
                     }
                   ],
                   "variable": [
                     {
                       "key": "vaultAddress",
-                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Report",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/report?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "report"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
                     }
                   ]
                 }
@@ -797,7 +1121,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"amounts\": [\n        10000000\n    ],\n    \"caller\": \"GBZXUKUYGXLASTLIXGIV2RJGWQHVRIS7AANR7AHXFPA67LNSAGO6WPPE\",\n    \"invest\": false,\n    \"slippageBps\": 100\n}",
+                  "raw": "{\n    \"amounts\": [\n        1000000\n    ],\n    \"caller\": \"CBZQ7MCDJUESRN62SHLVYBEHWDW35MJT7F4C3DYPGJWSXNCNDUL3AK53\",\n    \"invest\": false,\n    \"slippageBps\": 100\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -805,9 +1129,9 @@
                   }
                 },
                 "url": {
-                  "raw": "{{host}}/vault/:vaultAddress/deposit?network=testnet",
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/deposit?network=mainnet",
                   "host": [
-                    "{{host}}"
+                    "https://api.defindex.io"
                   ],
                   "path": [
                     "vault",
@@ -817,13 +1141,13 @@
                   "query": [
                     {
                       "key": "network",
-                      "value": "testnet"
+                      "value": "mainnet"
                     }
                   ],
                   "variable": [
                     {
                       "key": "vaultAddress",
-                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
                     }
                   ]
                 }
@@ -845,9 +1169,9 @@
                   }
                 },
                 "url": {
-                  "raw": "{{host}}/vault/:vaultAddress/withdraw",
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/withdraw",
                   "host": [
-                    "{{host}}"
+                    "https://api.defindex.io"
                   ],
                   "path": [
                     "vault",
@@ -864,7 +1188,7 @@
                   "variable": [
                     {
                       "key": "vaultAddress",
-                      "value": "CAIZ3NMNPEN5SQISJV7PD2YY6NI6DIPFA4PCRUBOGDE4I7A3DXDLK5OI"
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
                     }
                   ]
                 }
@@ -878,7 +1202,7 @@
                 "header": [],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n    \"caller\": \"GAWXKXDQ4ZNNVFZLBQHSGAUQ242O3F5ASWLTPGFPZK4EM7JSDJMAWY5C\",\n    \"shares\": 49610635,\n    \"slippageBps\": 100\n}",
+                  "raw": "{\n    \"caller\": \"GB7NTQG4EXB7NZEA5GNFHIHEQVTGQTZ6OWKWUD535FBEHNSEVCKZULIY\",\n    \"shares\": 49610635,\n    \"slippageBps\": 100\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -886,9 +1210,9 @@
                   }
                 },
                 "url": {
-                  "raw": "{{host}}/vault/:vaultAddress/withdraw-shares",
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/withdraw-shares?network=mainnet",
                   "host": [
-                    "{{host}}"
+                    "https://api.defindex.io"
                   ],
                   "path": [
                     "vault",
@@ -898,82 +1222,13 @@
                   "query": [
                     {
                       "key": "network",
-                      "value": "mainnet",
-                      "disabled": true
+                      "value": "mainnet"
                     }
                   ],
                   "variable": [
                     {
                       "key": "vaultAddress",
-                      "value": "CAIZ3NMNPEN5SQISJV7PD2YY6NI6DIPFA4PCRUBOGDE4I7A3DXDLK5OI"
-                    }
-                  ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "Send",
-              "request": {
-                "method": "POST",
-                "header": [],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n    \"xdr\": \"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\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                },
-                "url": {
-                  "raw": "{{host}}/send?network=testnet",
-                  "host": [
-                    "{{host}}"
-                  ],
-                  "path": [
-                    "send"
-                  ],
-                  "query": [
-                    {
-                      "key": "network",
-                      "value": "mainnet",
-                      "disabled": true
-                    },
-                    {
-                      "key": "network",
-                      "value": "testnet"
-                    }
-                  ]
-                }
-              },
-              "response": []
-            },
-            {
-              "name": "Report",
-              "request": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": "{{host}}/vault/:vaultAddress/report?network=testnet",
-                  "host": [
-                    "{{host}}"
-                  ],
-                  "path": [
-                    "vault",
-                    ":vaultAddress",
-                    "report"
-                  ],
-                  "query": [
-                    {
-                      "key": "network",
-                      "value": "testnet"
-                    }
-                  ],
-                  "variable": [
-                    {
-                      "key": "vaultAddress",
-                      "value": "CDIGHZMXAPBIMOAJNNH4Y7Z67DZMX4IRMHXFBFEJMXJTCMSKKYZGMEHL"
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
                     }
                   ]
                 }
@@ -985,99 +1240,41 @@
       ]
     },
     {
-      "name": "Factory",
-      "item": [
-        {
-          "name": "address",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{host}}/factory/address?network=testnet",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "factory",
-                "address"
-              ],
-              "query": [
-                {
-                  "key": "network",
-                  "value": "testnet"
-                }
-              ]
+      "name": "Send",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"xdr\": \"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\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
             }
-          },
-          "response": []
+          }
         },
-        {
-          "name": "create vault deposit",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"roles\": {\n        \"0\": \"GCKW55QPHVNG4OFJF3CNH3C5BJPFQOQI3JIG4LIDTA4EKUQVASUCNJXY\",\n        \"1\": \"GCKW55QPHVNG4OFJF3CNH3C5BJPFQOQI3JIG4LIDTA4EKUQVASUCNJXY\",\n        \"2\": \"GCKW55QPHVNG4OFJF3CNH3C5BJPFQOQI3JIG4LIDTA4EKUQVASUCNJXY\",\n        \"3\": \"GCKW55QPHVNG4OFJF3CNH3C5BJPFQOQI3JIG4LIDTA4EKUQVASUCNJXY\"\n    },\n    \"vault_fee_bps\": 100,\n    \"assets\": [\n        {\n            \"address\": \"CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU\",\n            \"strategies\": [\n                {\n                    \"address\": \"CA57GWLEGS2N5GLSKHQGAA4LKVKFL3MROF2SPFY6CVNDYWH3BUU5VKK7\",\n                    \"name\": \"any_name\",\n                    \"paused\": false\n\n                }\n            ]\n        }\n    ],\n    \"name_symbol\": {\n        \"name\": \"Vault\",\n        \"symbol\": \"vltsym\"\n    },\n    \"caller\": \"GCKW55QPHVNG4OFJF3CNH3C5BJPFQOQI3JIG4LIDTA4EKUQVASUCNJXY\",\n    \"deposit_amounts\": [10000000],\n    \"upgradable\": true\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
+        "url": {
+          "raw": "https://api.defindex.io/send?network=mainnet",
+          "host": [
+            "https://api.defindex.io"
+          ],
+          "path": [
+            "send"
+          ],
+          "query": [
+            {
+              "key": "network",
+              "value": "mainnet",
+              "disabled": true
             },
-            "url": {
-              "raw": "{{host}}/factory/create-vault-deposit?network=testnet",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "factory",
-                "create-vault-deposit"
-              ],
-              "query": [
-                {
-                  "key": "network",
-                  "value": "testnet"
-                }
-              ]
+            {
+              "key": "network",
+              "value": "mainnet"
             }
-          },
-          "response": []
-        },
-        {
-          "name": "create vault",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"roles\": {\n        \"0\": \"GCKW55QPHVNG4OFJF3CNH3C5BJPFQOQI3JIG4LIDTA4EKUQVASUCNJXY\",\n        \"1\": \"GCKW55QPHVNG4OFJF3CNH3C5BJPFQOQI3JIG4LIDTA4EKUQVASUCNJXY\",\n        \"2\": \"GCKW55QPHVNG4OFJF3CNH3C5BJPFQOQI3JIG4LIDTA4EKUQVASUCNJXY\",\n        \"3\": \"GCKW55QPHVNG4OFJF3CNH3C5BJPFQOQI3JIG4LIDTA4EKUQVASUCNJXY\"\n    },\n    \"vault_fee_bps\": 100,\n    \"assets\": [\n        {\n            \"address\": \"CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU\",\n            \"strategies\": [\n                {\n                    \"address\": \"CA57GWLEGS2N5GLSKHQGAA4LKVKFL3MROF2SPFY6CVNDYWH3BUU5VKK7\",\n                    \"name\": \"any_name\",\n                    \"paused\": false\n\n                }\n            ]\n        }\n    ],\n    \"name_symbol\": {\n        \"name\": \"Vault\",\n        \"symbol\": \"vltsym\"\n    },\n    \"upgradable\": true,\n    \"caller\": \"GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{host}}/factory/create-vault?network=testnet",
-              "host": [
-                "{{host}}"
-              ],
-              "path": [
-                "factory",
-                "create-vault"
-              ],
-              "query": [
-                {
-                  "key": "network",
-                  "value": "testnet"
-                }
-              ]
-            }
-          },
-          "response": []
+          ]
         }
-      ]
+      },
+      "response": []
     }
   ],
   "auth": {
@@ -1085,7 +1282,7 @@
     "bearer": [
       {
         "key": "token",
-        "value": "{{jwt_token}}",
+        "value": "{{api_key}}",
         "type": "string"
       }
     ]
@@ -1097,27 +1294,7 @@
         "type": "text/javascript",
         "packages": {},
         "exec": [
-          "pm.sendRequest({",
-          "    url: `${pm.environment.get(\"host\")}/login`,",
-          "    method: \"POST\",",
-          "    header: {",
-          "        \"Content-Type\": \"application/json\"",
-          "    },",
-          "    body: {",
-          "        mode: \"raw\",",
-          "        raw: JSON.stringify({",
-          "            email: pm.environment.get(\"admin_email\"),",
-          "            password: pm.environment.get(\"admin_password\")",
-          "        })",
-          "    }",
-          "}, function (err, res) {",
-          "    if (!err) {",
-          "        let access_token = res.json().access_token;",
-          "        let refresh_token = res.json().refresh_token;",
-          "        pm.environment.set(\"jwt_token\", access_token);",
-          "        pm.environment.set(\"refresh_token\", refresh_token);",
-          "    }",
-          "});"
+          ""
         ]
       }
     },

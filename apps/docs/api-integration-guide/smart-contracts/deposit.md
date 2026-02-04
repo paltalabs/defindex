@@ -1,3 +1,6 @@
+---
+description: ⏱️ 2 min read
+---
 # Deposit
 
 This section explains how to deposit funds into a DeFindex vault. You can choose from two different approaches depending on your use case and technical requirements.

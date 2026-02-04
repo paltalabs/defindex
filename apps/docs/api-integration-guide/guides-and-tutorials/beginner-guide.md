@@ -1,3 +1,6 @@
+---
+description: ⏱️ 5 min read
+---
 # Beginner Guide
 
 ## 📖 What You'll Learn

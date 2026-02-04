@@ -1,3 +1,6 @@
+---
+description: ⏱️ 9 min read
+---
 # Yearn Finance V3
 [Yearn Finance V3](https://yearn.fi/v3) represents the latest evolution of the Yearn Finance protocol, a decentralized platform focused on optimizing yield farming strategies. Leveraging advanced automation and smart contract technology, Yearn V3 introduces enhanced modularity, allowing for more flexible and efficient strategy deployments across various DeFi protocols. This iteration aims to provide users with higher returns, reduced risks, and greater customization in managing their assets. By continuously **aggregating yields from different lending protocols**, Yearn V3 ensures that users' assets are **dynamically allocated** to the most profitable opportunities, streamlining the complex process of yield farming.
 

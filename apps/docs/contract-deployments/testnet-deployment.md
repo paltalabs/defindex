@@ -1,3 +1,6 @@
+---
+description: ⏱️ 1 min read
+---
 # Testnet Deployment
 
 For latest testnet deployment check\
