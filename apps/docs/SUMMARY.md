@@ -18,8 +18,7 @@
 
 ## API Integration Guide
 
-* [Introduction](api-integration-guide/introduction.md)
-* [Quick Start](api-integration-guide/quickstart.md)
+* [Introduction](api-integration-guide/api.md)
 * [Getting Started with API](api-integration-guide/api.md)
 * [Interact with your Vault](api-integration-guide/smart-contracts/README.md)
   * [Deposit](api-integration-guide/smart-contracts/deposit.md)
@@ -67,5 +66,6 @@
 ## Contact us
 
 * [About Us](community/about-us.md)
+* [Media Kit](media-kit/README.md)
 * [Twitter](https://x.com/defindex_)
 * [Discord](https://discord.gg/e2qAhJCBmx)
