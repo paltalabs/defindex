@@ -49,8 +49,8 @@ Official brand assets and design guidelines for DeFindex.
 
 Two intertwined arrows forming a cyclical pattern, representing automated reinvest.
 
-| Gradient | White | Black |
-|----------|-------|-------|
+| Light Background | Dark Background | Monochrome |
+|------------------|-----------------|------------|
 | ![Symbol Gradient](assets/symbol-gradient.svg) | ![Symbol White](assets/symbol-white.svg) | ![Symbol Black](assets/symbol-black.svg) |
 
 ---
@@ -61,14 +61,14 @@ Complete signature: Symbol + Wordmark in Familjen Grotesk Bold.
 
 ### Horizontal
 
-| Gradient | White | Black |
-|----------|-------|-------|
+| Light Background | Dark Background | Monochrome |
+|------------------|-----------------|------------|
 | ![Logo Horizontal Gradient](assets/logo-horizontal-gradient.svg) | ![Logo Horizontal White](assets/logo-horizontal-white.svg) | ![Logo Horizontal Black](assets/logo-horizontal-black.svg) |
 
 ### Vertical
 
-| Gradient | White | Black |
-|----------|-------|-------|
+| Light Background | Dark Background | Monochrome |
+|------------------|-----------------|------------|
 | ![Logo Vertical Gradient](assets/logo-vertical-gradient.svg) | ![Logo Vertical White](assets/logo-vertical-white.svg) | ![Logo Vertical Black](assets/logo-vertical-black.svg) |
 
 ### Logo Color Variants
