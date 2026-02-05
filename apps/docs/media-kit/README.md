@@ -86,12 +86,12 @@ Complete signature: Symbol + Wordmark in Familjen Grotesk Bold.
 
 | Color | HEX | RGB | Usage |
 |-------|-----|-----|-------|
-| ![#FFFFFF](https://via.placeholder.com/20/FFFFFF/FFFFFF) **White** | `#FFFFFF` | 255, 255, 255 | Light backgrounds, text on dark |
-| ![#014751](https://via.placeholder.com/20/014751/014751) **Dark Green** | `#014751` | 1, 71, 81 | Primary. Titles, text, backgrounds |
-| ![#DEC9F4](https://via.placeholder.com/20/DEC9F4/DEC9F4) **Lavender** | `#DEC9F4` | 221, 201, 244 | Primary. Logo symbol, accents |
-| ![#D3FFB4](https://via.placeholder.com/20/D3FFB4/D3FFB4) **Light Green** | `#D3FFB4` | 211, 255, 180 | Accent. Highlights, soft backgrounds |
-| ![#D3FBFF](https://via.placeholder.com/20/D3FBFF/D3FBFF) **Light Cyan** | `#D3FBFF` | 211, 251, 255 | Accent. Backgrounds, graphic elements |
-| ![#FC5B31](https://via.placeholder.com/20/FC5B31/FC5B31) **Coral** | `#FC5B31` | 252, 91, 49 | Strong accent. Emphasis, CTAs |
+| <span style="display:inline-block;width:20px;height:20px;background:#FFFFFF;border:1px solid #ccc;border-radius:4px;vertical-align:middle;"></span> **White** | `#FFFFFF` | 255, 255, 255 | Light backgrounds, text on dark |
+| <span style="display:inline-block;width:20px;height:20px;background:#014751;border-radius:4px;vertical-align:middle;"></span> **Dark Green** | `#014751` | 1, 71, 81 | Primary. Titles, text, backgrounds |
+| <span style="display:inline-block;width:20px;height:20px;background:#DEC9F4;border-radius:4px;vertical-align:middle;"></span> **Lavender** | `#DEC9F4` | 221, 201, 244 | Primary. Logo symbol, accents |
+| <span style="display:inline-block;width:20px;height:20px;background:#D3FFB4;border-radius:4px;vertical-align:middle;"></span> **Light Green** | `#D3FFB4` | 211, 255, 180 | Accent. Highlights, soft backgrounds |
+| <span style="display:inline-block;width:20px;height:20px;background:#D3FBFF;border-radius:4px;vertical-align:middle;"></span> **Light Cyan** | `#D3FBFF` | 211, 251, 255 | Accent. Backgrounds, graphic elements |
+| <span style="display:inline-block;width:20px;height:20px;background:#FC5B31;border-radius:4px;vertical-align:middle;"></span> **Coral** | `#FC5B31` | 252, 91, 49 | Strong accent. Emphasis, CTAs |
 
 ### Color Usage Rules
 
