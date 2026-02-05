@@ -63,7 +63,7 @@ For a full list of contract errors, see the `error.rs` file in the contract sour
 ### 1. Check Environment Variables
 - Ensure all required environment variables (e.g., `MAINNET_RPC_URL`) are set correctly.
 - Example (.env):
-  ```dotenv
+  ```bash
   MAINNET_RPC_URL="https://soroban-mainnet.stellar.org"
   ```
 
@@ -111,6 +111,64 @@ For a full list of contract errors, see the `error.rs` file in the contract sour
 - A: No. Similar to withdrawals, the number of shares you receive when depositing a fixed amount of the underlying asset can vary. This is because the ratio between the asset and shares changes constantly. A deposit made moments apart can yield slightly different share amounts.
 
 
+
+## API Integration Errors
+
+### "403 Forbidden" errors
+
+1. Check that your API key starts with `sk_`
+2. Ensure you're using `Authorization: Bearer <key>` header format
+3. Verify you're using the correct base URL (`https://api.defindex.io`)
+4. Check that your API key hasn't been revoked or expired
+
+### "Insufficient balance"
+
+1. Ensure wallet has enough tokens for the deposit amount
+2. Check minimum deposit requirements for the vault
+3. Verify the vault is active and accepting deposits
+
+### Network mismatch
+
+```javascript
+// Ensure vault exists on the correct network
+const vaultUrl = `${API_BASE_URL}/vault/${vaultAddress}?network=testnet`;
+```
+
+Make sure your API requests include the correct `network` parameter (`testnet` or `mainnet`).
+
+---
+
+## Expected Response Times
+
+| Endpoint | Typical Time |
+|----------|--------------|
+| `/vault/{address}` | 1-2 seconds |
+| `/vault/{address}/deposit` | 2-5 seconds |
+| `/send` | 3-10 seconds |
+
+---
+
+## Production Best Practices
+
+### Security
+
+- Never expose API keys in frontend code for production
+- Use environment variables for sensitive data
+- Implement proper error handling and retry logic
+
+### Performance
+
+- Add request timeouts (30s recommended)
+- Implement exponential backoff for retries
+- Cache vault info for better UX (but respect freshness)
+
+### Monitoring
+
+- Track transaction success rates
+- Monitor API response times
+- Log error patterns for debugging
+
+---
 
 ## Additional Resources
 - [DeFindex Protocol Documentation](https://github.com/paltalabs)
