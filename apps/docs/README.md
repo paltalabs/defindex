@@ -18,7 +18,7 @@ description: ⏱️ 2 min read
 * **Aligned incentives** → wallets earn whenever their users earn.
 * **Future-proof** → easily extend strategies, integrate real-world assets, and unlock new income streams.
 
-<figure><img src=".gitbook/assets/happy_path_diagram_defindex.drawio (3).png" alt=""><figcaption></figcaption></figure>
+<figure><img src=".gitbook/assets/how-it-works.png" alt=""><figcaption></figcaption></figure>
 
 #### What will you find here?
 

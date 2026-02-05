@@ -97,10 +97,6 @@ class ApiClient {
 }
 ```
 
-***
-
-```typescript
-```
 
 Go to[ interact with vault](smart-contracts/), see the implementations of the functions:
 
