@@ -34,6 +34,7 @@
   * [Using the Factory (Advanced)](api-integration-guide/creating-a-defindex-vault/using-the-factory-advanced.md)
 * [Guides and Tutorials](api-integration-guide/guides-and-tutorials/README.md)
   * [Beginner Guide](api-integration-guide/guides-and-tutorials/beginner-guide.md)
+  * [Sponsored Transactions (Fee Bump Tx)](api-integration-guide/guides-and-tutorials/sponsored-transactions.md)
   * [Additional Resources](api-integration-guide/guides-and-tutorials/additional-resources.md)
 * [Troubleshooting](api-integration-guide/troubleshooting.md)
 
