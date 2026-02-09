@@ -51,7 +51,7 @@ The **caller** signs the inner transaction to authorize the operation. The **spo
 * **Two Stellar keypairs:**
   * **Sponsor** — A native `G...` account funded with XLM to pay fees
   * **Caller** — The account executing vault operations (can be `G...` or `C...`)
-* **DeFindex API key** (contact the team on [Discord](https://discord.gg/ftPKMPm38f))
+* **DeFindex API key** (get it at the  [API Dashboard](https://api.defindex.io/login))
 
 ### Environment Configuration
 
@@ -117,7 +117,7 @@ const defindexSdk = new DefindexSDK({
 const vaultAddress = process.env.VAULT_ADDRESS as string;
 
 const depositData: DepositToVaultParams = {
-  amounts: [10],                      // Amount in stroops
+  amounts: [10000000],                      // Amount in stroops
   invest: true,                        // Auto-invest into strategies
   caller: callerKeypair.publicKey(),
 };
@@ -321,7 +321,7 @@ npm run withdraw   # Run withdraw example
 
 ## Additional Resources
 
-* [Stellar Fee-Bump Transactions](https://developers.stellar.org/docs/learn/encyclopedia/transactions/fee-bump)
+* [Stellar Fee-Bump Transactions](https://developers.stellar.org/docs/build/guides/transactions/fee-bump-transactions)
 * [DeFindex SDK (TypeScript)](../../advanced-documentation/sdks/02-defindex-sdk.md)
 * [Deposit](../smart-contracts/deposit.md)
 * [Withdraw](../smart-contracts/withdraw.md)
