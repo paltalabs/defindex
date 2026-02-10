@@ -7,7 +7,7 @@ description: ⏱️ 2 min read
 
 Prefer learning by watching? Check out our integration walkthrough:
 
-{% embed url="https://www.youtube.com/embed/yWgOj7jtpAc?si=h0lD_W5qWjycvrkQ&amp;start=140" %}
+[Watch the integration walkthrough on YouTube](https://www.youtube.com/watch?v=gz6GU5kAUXY&t=145s)
 
 ---
 
@@ -21,7 +21,7 @@ First generate API Key:
 
 For more details, refer to the [DeFindex API documentation](https://api.defindex.io/docs).
 
-Postman collection json [here](../wallet-developer/postman_collection.json)
+Postman collection json [here](postman_collection.json)
 
 This guide will walk you through integrating DeFindex into your app using the provided API. We'll use TypeScript for the examples, but the concepts apply to any language.
 
@@ -97,10 +97,6 @@ class ApiClient {
 }
 ```
 
-***
-
-```typescript
-```
 
 Go to[ interact with vault](smart-contracts/), see the implementations of the functions:
 
@@ -108,3 +104,35 @@ Go to[ interact with vault](smart-contracts/), see the implementations of the fu
 * Withdraw
 * Balance
 * APY
+
+---
+
+## Request Parameters Reference
+
+### Deposit Request
+
+```javascript
+{
+    amounts: [10000000],     // Array of amounts for each vault asset (7 decimals for XLM)
+    caller: userAddress,     // User's wallet address
+}
+```
+
+### Withdraw Request
+
+```javascript
+{
+    amounts: [5000000],      // Array of amounts to withdraw from each asset
+    caller: userAddress,     // User's wallet address
+}
+```
+
+### Send Request
+
+```javascript
+{
+    xdr: signedXdr,         // Signed transaction XDR
+    launchtube: false       // Set true for gasless transactions
+}
+```
+
