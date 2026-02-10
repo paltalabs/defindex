@@ -19,7 +19,6 @@
 ## API Integration Guide
 
 * [Introduction](api-integration-guide/api.md)
-* [Getting Started with API](api-integration-guide/api.md)
 * [Interact with your Vault](api-integration-guide/smart-contracts/README.md)
   * [Deposit](api-integration-guide/smart-contracts/deposit.md)
   * [Withdraw](api-integration-guide/smart-contracts/withdraw.md)
