@@ -1,0 +1,1312 @@
+{
+  "info": {
+    "_postman_id": "1ec31767-fa90-44f9-9eda-408da2d6d4c2",
+    "name": "DeFindex API Public",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "46319029",
+    "_collection_link": "https://go.postman.co/collection/46319029-1ec31767-fa90-44f9-9eda-408da2d6d4c2?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "App",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://api.defindex.io/health",
+              "host": [
+                "https://api.defindex.io"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "username",
+                  "value": "usertest",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "password",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "example@gmail.com",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "https://api.defindex.io/register",
+              "host": [
+                "https://api.defindex.io"
+              ],
+              "path": [
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse the JSON response",
+                  "const response = pm.response.json();",
+                  "",
+                  "// Check if the response contains an access_token",
+                  "if (response && response.access_token) {",
+                  "    // Set the jwt_token environment variable with the access_token value",
+                  "    pm.environment.set(\"jwt_token\", response.access_token);",
+                  "    ",
+                  "    // Optional: Log success message to console",
+                  "    console.log(\"JWT token successfully set in environment variables\");",
+                  "    console.log(\"Token:\", response.access_token);",
+                  "} else {",
+                  "    // Log error if access_token is not found",
+                  "    console.error(\"Access token not found in response\");",
+                  "}",
+                  "",
+                  "// Optional: Also save the refresh_token if needed",
+                  "if (response && response.refresh_token) {",
+                  "    pm.environment.set(\"refresh_token\", response.refresh_token);",
+                  "    console.log(\"Refresh token also saved\");",
+                  "}",
+                  "",
+                  "// Optional: Add test to verify the response",
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has access_token\", function () {",
+                  "    pm.expect(response).to.have.property('access_token');",
+                  "});",
+                  "",
+                  "pm.test(\"Response has refresh_token\", function () {",
+                  "    pm.expect(response).to.have.property('refresh_token');",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}\n"
+            },
+            "url": {
+              "raw": "https://api.defindex.io/login",
+              "host": [
+                "https://api.defindex.io"
+              ],
+              "path": [
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "// Assuming the response contains tokens in a JSON object",
+                  "const responseJson = pm.response.json();",
+                  "",
+                  "// Check if tokens exist in the response",
+                  "pm.test(\"JWT token is present\", function () {",
+                  "    pm.expect(responseJson.jwt).to.exist;",
+                  "});",
+                  "",
+                  "pm.test(\"Refresh token is present\", function () {",
+                  "    pm.expect(responseJson.refreshToken).to.exist;",
+                  "});",
+                  "",
+                  "// Update environment variables with the extracted tokens",
+                  "if (responseJson.jwt) {",
+                  "    pm.environment.set(\"jwt_token\", responseJson.jwt);",
+                  "}",
+                  "",
+                  "if (responseJson.refreshToken) {",
+                  "    pm.environment.set(\"refresh_token\", responseJson.refreshToken);",
+                  "}",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{refresh_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "access_token",
+                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOjEsImVtYWlsIjoiZGV2QHBhbHRhbGFicy5pbyIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc1MDI2OTE2NCwiZXhwIjoxNzUwMjcyNzY0fQ.QyPmLMWsEcJkLr86RdTFiNemuTmkpkQX3Uru7Vi4Nyg",
+                  "type": "text",
+                  "uuid": "e2cfe996-5f7a-498b-831a-ff25f1ad1c1d"
+                }
+              ]
+            },
+            "url": {
+              "raw": "https://api.defindex.io/refresh",
+              "host": [
+                "https://api.defindex.io"
+              ],
+              "path": [
+                "refresh"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Api Key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Parse the JSON response",
+                  "const response = pm.response.json();",
+                  "",
+                  "// Check if the response exists and has a key property",
+                  "if (response && response.key) {",
+                  "    // Set the api_key environment variable with the key value",
+                  "    pm.environment.set(\"api_key\", response.key);",
+                  "    ",
+                  "    // Optional: Log success message to console",
+                  "    console.log(\"API key successfully set in environment variables\");",
+                  "    console.log(\"Key:\", response.key);",
+                  "    console.log(\"ID:\", response.id);",
+                  "} else if (response && Array.isArray(response) && response.length > 0) {",
+                  "    // Fallback: Handle array response (your original logic)",
+                  "    const firstItem = response[0];",
+                  "    if (firstItem && firstItem.key) {",
+                  "        pm.environment.set(\"api_key\", firstItem.key);",
+                  "        console.log(\"API key successfully set from array response\");",
+                  "        console.log(\"Key:\", firstItem.key);",
+                  "    } else {",
+                  "        console.error(\"Key not found in the first array element\");",
+                  "    }",
+                  "} else {",
+                  "    // Log error if response doesn't have expected structure",
+                  "    console.error(\"Response doesn't contain expected key property\");",
+                  "    console.log(\"Response structure:\", response);",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "https://api.defindex.io/api-keys/generate",
+              "host": [
+                "https://api.defindex.io"
+              ],
+              "path": [
+                "api-keys",
+                "generate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Revoke Api Key",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"keyId\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://api.defindex.io/api-keys/5/revoke",
+              "host": [
+                "https://api.defindex.io"
+              ],
+              "path": [
+                "api-keys",
+                "5",
+                "revoke"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "User Api Key",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "});",
+                  "",
+                  "// Extract the api_key from the response",
+                  "const response = pm.response.json();",
+                  "const newApiKey = response[0].key;",
+                  "",
+                  "// Update the environment variable with the new api_key",
+                  "pm.environment.set(\"api_key\", newApiKey);",
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "https://api.defindex.io/api-keys",
+              "host": [
+                "https://api.defindex.io"
+              ],
+              "path": [
+                "api-keys"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Accounts",
+      "item": [
+        {
+          "name": "Account Performance",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "https://api.defindex.io/account/:walletAddress/vault/:vaultAddress/?network=mainnet",
+              "host": [
+                "https://api.defindex.io"
+              ],
+              "path": [
+                "account",
+                ":walletAddress",
+                "vault",
+                ":vaultAddress",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "network",
+                  "value": "mainnet"
+                },
+                {
+                  "key": "interval",
+                  "value": "daily",
+                  "description": "hourly, daily, weekly, monthly / defaults to daily",
+                  "disabled": true
+                },
+                {
+                  "key": "startDate",
+                  "value": "",
+                  "description": "ISO 8601 Format",
+                  "disabled": true
+                },
+                {
+                  "key": "endDate",
+                  "value": "",
+                  "description": "ISO 8601 Format",
+                  "disabled": true
+                },
+                {
+                  "key": "includeEvents",
+                  "value": "true",
+                  "description": "Defaults to false",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "walletAddress",
+                  "value": "CCTKOZCEYT2UR7HYAMGVMVWDFB7XTIRRISXJJY7OAPRJD5ZCMUC43E5R"
+                },
+                {
+                  "key": "vaultAddress",
+                  "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Vault",
+      "item": [
+        {
+          "name": "Admin",
+          "item": [
+            {
+              "name": "Rescue",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"strategy_address\": \"CCSRX5E4337QMCMC3KO3RDFYI57T5NZV5XB3W3TWE4USCASKGL5URKJL\",\n    \"caller\": \"{{caller_address}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/rescue?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "rescue"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Pause Strategy",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"strategy_address\": \"CCSRX5E4337QMCMC3KO3RDFYI57T5NZV5XB3W3TWE4USCASKGL5URKJL\",\n    \"caller\": \"{{caller_address}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/pause-strategy?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "pause-strategy"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Unpause Strategy",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"strategy_address\": \"CCSRX5E4337QMCMC3KO3RDFYI57T5NZV5XB3W3TWE4USCASKGL5URKJL\",\n    \"caller\": \"{{caller_address}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/unpause-strategy?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "unpause-strategy"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Set Role",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"caller\": \"{{caller_address}}\",\n    \"new_address\": \"{{caller_address}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/set/fee-receiver?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "set",
+                    "fee-receiver"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Role",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/get/manager?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "get",
+                    "manager"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Rebalance",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"caller\": \"{{caller_address}}\",\n    \"instructions\": [\n        {\n            \"type\": \"Invest\",\n            \"strategy_address\": \"CCSRX5E4337QMCMC3KO3RDFYI57T5NZV5XB3W3TWE4USCASKGL5URKJL\",\n            \"amount\": 10000000\n        }\n    ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/rebalance?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "rebalance"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Rebalance swap",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"caller\": \"{{caller_address}}\",\n    \"instructions\": [\n        {\n            \"type\": \"SwapExactIn\",\n            \"token_in\": \"CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC\",\n            \"token_out\": \"CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU\",\n            \"amount\": 1000000,\n            \"slippageToleranceBps\": 10000\n        }\n    ]\n}\n\n",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/rebalance?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "rebalance"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Lock fees",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"caller\": \"GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE\"//,\n    //\"new_fee_bps\": 100\n}   ",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/lock-fees?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "lock-fees"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Release fees",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"amount\": 1000000,\n    \"caller\": \"GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE\",\n    \"strategy_address\": \"CCSRX5E4337QMCMC3KO3RDFYI57T5NZV5XB3W3TWE4USCASKGL5URKJL\"    \n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/release-fees?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "release-fees"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Distribute fees",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"caller\": \"{{caller_address}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/distribute-fees?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "distribute-fees"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Upgrade WASM",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"caller\": \"GCH6YKNJ3KPESGSAIGBNHRNCIYXXXSRVU7OC552RDGQFHZ4SYRI26DQE\",\n    \"new_wasm_hash\": \"ae3409a4090bc087b86b4e9b444d2b8017ccd97b90b069d44d005ab9f8e1468b\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/upgrade?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "upgrade"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Public",
+          "item": [
+            {
+              "name": "Vault Info",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Vault APY",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": []
+                },
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/apy?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "apy"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Vault Historical Data",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": []
+                },
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/history?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "history"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    },
+                    {
+                      "key": "period",
+                      "value": "30d",
+                      "disabled": true
+                    },
+                    {
+                      "key": "startDate",
+                      "value": "2025-05-29",
+                      "type": "text",
+                      "disabled": true
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "User Balance",
+              "protocolProfileBehavior": {
+                "disableBodyPruning": true
+              },
+              "request": {
+                "method": "GET",
+                "header": [],
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": []
+                },
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/balance?from=GAHF3QTOKBQ6HZ2J3XS4KMFV5E5IBDESG3A4JGCLBLOUKTEYGERIPPER&network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "balance"
+                  ],
+                  "query": [
+                    {
+                      "key": "from",
+                      "value": "GAHF3QTOKBQ6HZ2J3XS4KMFV5E5IBDESG3A4JGCLBLOUKTEYGERIPPER"
+                    },
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Report",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/report?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "report"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Deposit",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"amounts\": [\n        1000000\n    ],\n    \"caller\": \"CBZQ7MCDJUESRN62SHLVYBEHWDW35MJT7F4C3DYPGJWSXNCNDUL3AK53\",\n    \"invest\": false,\n    \"slippageBps\": 100\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/deposit?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "deposit"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Withdraw",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"amounts\": [\n        49852148\n    ],\n    \"caller\": \"GAWXKXDQ4ZNNVFZLBQHSGAUQ242O3F5ASWLTPGFPZK4EM7JSDJMAWY5C\",\n    \"slippageBps\": 100\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/withdraw",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "withdraw"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet",
+                      "disabled": true
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "WithdrawShares",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"caller\": \"GB7NTQG4EXB7NZEA5GNFHIHEQVTGQTZ6OWKWUD535FBEHNSEVCKZULIY\",\n    \"shares\": 49610635,\n    \"slippageBps\": 100\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "https://api.defindex.io/vault/:vaultAddress/withdraw-shares?network=mainnet",
+                  "host": [
+                    "https://api.defindex.io"
+                  ],
+                  "path": [
+                    "vault",
+                    ":vaultAddress",
+                    "withdraw-shares"
+                  ],
+                  "query": [
+                    {
+                      "key": "network",
+                      "value": "mainnet"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "vaultAddress",
+                      "value": "CA2FIPJ7U6BG3N7EOZFI74XPJZOEOD4TYWXFVCIO5VDCHTVAGS6F4UKK"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Send",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"xdr\": \"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\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://api.defindex.io/send?network=mainnet",
+          "host": [
+            "https://api.defindex.io"
+          ],
+          "path": [
+            "send"
+          ],
+          "query": [
+            {
+              "key": "network",
+              "value": "mainnet",
+              "disabled": true
+            },
+            {
+              "key": "network",
+              "value": "mainnet"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{api_key}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}
