@@ -19,9 +19,8 @@ On Stellar, there are two types of accounts:
 * **Native accounts** (`G...` addresses) — Standard Stellar accounts that hold XLM and can pay transaction fees. They also serve as the **source account** (sequence number provider) for transactions.
 * **Smart accounts** (`C...` addresses) — Soroban contract-based accounts. These accounts **cannot be the source account** of a transaction and **cannot pay transaction fees** because Stellar requires fees and sequence numbers from a native `G...` account.
 
-> [!IMPORTANT]
-> **Source** = always a native `G...` account (provides the sequence number). In a fee-bump transaction, the **sponsor** pays the fee, not the source account.
-> **Caller (from)** = can be `G...` or `C...` (the account that authorizes the vault operation)
+> - **Source** = always a native `G...` account (provides the sequence number). In a fee-bump transaction, the **sponsor** pays the fee, not the source account.
+> - **Caller (from)** = can be `G...` or `C...` (the account that authorizes the vault operation)
 
 When a DeFindex vault is operated by a smart account, the transaction will fail if no one covers the fee.
 
