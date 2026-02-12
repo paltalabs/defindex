@@ -7,6 +7,7 @@ description: ⏱️ 2 min read
 
 Prefer learning by watching? Check out our integration walkthrough:
 
+{% embed url="https://www.youtube.com/embed/gz6GU5kAUXY?si=54lqva3t6lzKjvdH&amp;start=145" %}
 [Watch the integration walkthrough on YouTube](https://www.youtube.com/watch?v=gz6GU5kAUXY&t=145s)
 
 ---
