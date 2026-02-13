@@ -533,7 +533,7 @@ Dev dependencies: `typescript`, `tsx`, `@types/node`
 DEFINDEX_API_KEY=     # DeFindex API key (sk_...)
 STELLAR_SECRET_KEY=   # Wallet A secret key (depositor/signer)
 RECEIVER_ADDRESS=     # Wallet B public key (receives dfTokens)
-SOROBAN_RPC="your mainnet soroban rpc url",
+SOROBAN_RPC=your testnet soroban rpc url
 ```
 
 ## Implementation Requirements
