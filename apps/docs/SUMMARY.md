@@ -32,6 +32,7 @@
   * [Using the Factory (Advanced)](api-integration-guide/creating-a-defindex-vault/using-the-factory-advanced.md)
 * [Guides and Tutorials](api-integration-guide/guides-and-tutorials/README.md)
   * [Beginner Guide](api-integration-guide/guides-and-tutorials/beginner-guide.md)
+  * [Mint & Transfer dfTokens](api-integration-guide/guides-and-tutorials/deposit-and-transfer-dftokens.md)
   * [Additional Resources](api-integration-guide/guides-and-tutorials/additional-resources.md)
 * [Troubleshooting](api-integration-guide/troubleshooting.md)
 
