@@ -126,7 +126,7 @@ Create a `.env` file with your configuration:
 DEFINDEX_API_KEY=sk_your_api_key_here
 STELLAR_SECRET_KEY=S_your_wallet_secret_key
 RECEIVER_ADDRESS=G_receiver_wallet_public_key
-SOROBAN_RPC=your mainnet soroban rpc url
+SOROBAN_RPC=your testnet soroban rpc url (e.g., https://soroban-testnet.stellar.org)
 ```
 
 > ⚠️ **Never commit your `.env` file to version control.** Add it to your `.gitignore`.
