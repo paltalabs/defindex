@@ -73,44 +73,219 @@ yarn  test  testnet  -h
 ```
 it will show the next message where you can see all the available tests and the specific flags to run them.
 
-## Production deployment
+## Deployments
 
-### Factory
-Make sure you have compiled the contracts:
-```
-make  build
-```
-and then you can deploy the factory with the following command:
-```
-yarn deploy-factory <network>
-```
-Copy the deployed factory address from the output on `.soroban/<network>.contracts.json` and paste it in `public/<network>.contracts.json`
-or just run the following command to copy it automatically:
+---
 
-```
-    yarn publish-addresses <network>
+### Configuration files
+
+Before deploying anything, understand the three configuration sources:
+
+#### `configs.json`
+
+Located at `apps/contracts/configs.json`. Contains network-level settings and vault role assignments. Each network entry includes:
+
+| Field | Description |
+|---|---|
+| `network` | Network identifier: `mainnet`, `testnet`, `standalone` |
+| `horizon_rpc_url` | Horizon REST API endpoint |
+| `soroban_rpc_url` | Soroban RPC endpoint |
+| `soroban_network_passphrase` | Network passphrase for transaction signing |
+| `friendbot_url` | (testnet only) Friendbot URL for account funding |
+| `defindex_factory_admin` | Public key of the factory admin |
+| `defindex_fee` | Protocol fee in basis points (e.g. `2000` = 20%) |
+| `defindex_fee_receiver` | Public key that receives protocol fees |
+| `vault_fee_receiver` | Public key that receives vault-level fees |
+| `vault_manager` | Can call operational functions (e.g. `investVault`) |
+| `vault_emergency_manager` | Can pause the vault in emergencies |
+| `vault_rebalance_manager` | Can rebalance allocations between strategies |
+| `blend_keeper` | Account authorized to call `harvest` on Blend strategies |
+| `vault_name` | Display name stored in the vault contract |
+| `vault_symbol` | Token symbol for vault shares (e.g. `DFXV`) |
+
+> The deployer's secret key must be set in `.env` as `DEPLOYER_SECRET_KEY`. On testnet/standalone, the admin account is airdropped automatically.
+
+---
+
+#### `public/<network>.contracts.json`
+
+Located at `public/testnet.contracts.json` (root of the monorepo, **not** inside `apps/contracts`). This is the **shared address book** used as input by both `deploy_blend.ts` and `deploy_vault.ts`.
+
+It must contain the addresses of all external dependencies:
+
+```json
+{
+  "ids": {
+    "soroswap_router":         "<address>",
+    "blend_fixed_xlm_usdc_pool": "<address>",
+    "blend_pool_usdc":         "<address>",
+    "blend_pool_cetes":        "<address>",
+    "blnd_token":              "<address>",
+    "cetes_token":             "<address>",
+    "soroswap_usdc":           "<address>",
+    "XLM_blend_strategy":      "<address after strategy deploy>",
+    "USDC_blend_strategy":     "<address after strategy deploy>",
+    "CETES_blend_strategy":    "<address after strategy deploy>"
+  }
+}
 ```
 
-### blend strategies
-First you need to complete the following steps:
-1. review the `blend_deploy_config.json` file to ensure that the strategies are correctly configured. In this file you can see a list of the strategies to deploy and the parameters for each one.
-2. ensure that the addresses in the `<network>.contracts.json` file are correct and match the ones in the `blend_deploy_config.json` file.
-3. ensure that the blend_keeper and blend_deployer secret keys are set in the `.env` file. Also, make sure that the `BLEND_KEEPER_SECRET_KEY` and `BLEND_DEPLOYER_SECRET_KEY` has trustlines set with all the assets that will be used in the strategies.
-4. run the deploy_blend script to deploy the strategies:
-```
-yarn deploy-blend <network>
-```
-5. Then, to make it available for the frontend, you need to copy the new deployed strategies from `.soroban/<network>.contracts.json` into the `~/public/<network>.contracts.json` file.
+**Strategy addresses** (keys like `<ASSET>_blend_strategy`) must be added manually after running `deploy-blend`. The vault deployment reads from this file to find the strategy address.
 
-### Deploy vault
-Before deploying a vault, ensure that you have the `~/public/<network>.contracts.json` file updated with the latest contract addresses. This file should contain the addresses of all the necesary contracts deployed on the specified network, such as the factory, strategies, and blend addresses.
+---
 
-To deploy a vault, you need to run the following command:
+#### `apps/contracts/public/<network>.contracts.json`
+
+A secondary address book scoped to the contracts workspace. Used by `constants.ts` to load token and pool addresses. Must contain the same external dependency addresses as the root-level public file. Updated when running `yarn publish-addresses`.
+
+---
+
+#### `.soroban/<network>.contracts.json`
+
+Located at `apps/contracts/.soroban/`. This is the **internal address book** written automatically by deployment scripts. It stores every deployed contract address using the key format:
+
+- Strategies: `<asset_symbol>_blend_<name>_<pool_name>_strategy`
+  e.g. `cetes_blend_autocompound_cetes_rsp_strategy`
+- Vaults: `<asset>_paltalabs_vault`
+  e.g. `cetes_paltalabs_vault`
+
+Do not edit this file manually — it is managed by the scripts.
+
+---
+
+#### `src/strategies/blend_deploy_config.json`
+
+Contains the list of Blend strategies to deploy, organized by network. Each strategy entry:
+
+```json
+{
+  "name": "autocompound",
+  "keeper": "<keeper public key>",
+  "asset": "<token contract address>",
+  "asset_symbol": "CETES",
+  "reward_threshold": "40",
+  "blend_pool_address": "<blend pool contract address>",
+  "blend_pool_name": "cetes_rsp"
+}
 ```
-yarn deploy-vault <network> <asset>
+
+| Field | Description |
+|---|---|
+| `name` | Strategy variant name, used in the resulting contract key |
+| `keeper` | Public key authorized to call `harvest` |
+| `asset` | The underlying token address the strategy manages |
+| `asset_symbol` | Symbol used to filter deploys and build contract keys |
+| `reward_threshold` | Minimum BLND reward amount that triggers auto-compounding |
+| `blend_pool_address` | The Blend pool where assets are deposited |
+| `blend_pool_name` | Short name for the pool, used in the resulting contract key |
+
+The resulting contract key is: `<asset_symbol>_blend_<name>_<pool_name>_strategy`
+
+> `install_contract: "true"` at the network level controls whether the WASM is re-uploaded. Set to `"false"` to reuse an already-installed WASM hash.
+
+### Deploying a Blend strategy
+
+**1. Configure `blend_deploy_config.json`**
+Add or verify the entry for your asset under the target network. Example for CETES on testnet:
+
+```json
+{
+  "name": "autocompound",
+  "keeper": "G...",
+  "asset": "CC72F57YTPX76HAA64JQOEGHQAPSADQWSY5DWVBR66JINPFDLNCQYHIC",
+  "asset_symbol": "CETES",
+  "reward_threshold": "40",
+  "blend_pool_address": "CAPBMXIQTICKWFPWFDJWMAKBXBPJZUKLNONQH3MLPLLBKQ643CYN5PRW",
+  "blend_pool_name": "cetes_rsp"
+}
 ```
-where `<network>` is the network you want to deploy to (e.g., `testnet`, `mainnet`) and `<asset>` is the asset you want to use (e.g., `usdc`, `xlm`). 
->[!NOTE] Make sure to double-check that the configuration in the `./configs.json` and the addresses at the public/`<network>`.contracts.json files are correct before deploying.
+
+**2. Ensure the deployer has a trustline for the asset**
+The deployer account (from `DEPLOYER_SECRET_KEY`) must have a trustline for the asset token and hold at least a small balance (~1001 stroops worth), which is required for the bootstrap deposit made automatically on first deploy.
+
+**3. Run the deploy script**
+To deploy all strategies for a network:
+```bash
+npm run deploy-blend -- <network>
+```
+
+To deploy only a specific asset (avoids re-deploying existing strategies):
+```bash
+npm run deploy-blend -- <network> <ASSET_SYMBOL>
+```
+
+Example:
+```bash
+npm run deploy-blend -- testnet CETES
+```
+
+The script will:
+- Airdrop the admin account (testnet only)
+- Install the `blend_strategy` WASM (if `install_contract: "true"`)
+- Deploy the strategy contract
+- Make an automatic bootstrap deposit to prevent the first-depositor vulnerability
+- Save the address to `.soroban/<network>.contracts.json`
+
+**4. Publish the strategy address**
+After deploying, copy the new strategy address from `.soroban/<network>.contracts.json` and add it to `public/<network>.contracts.json` (root level) using the key `<ASSET_SYMBOL>_blend_strategy`:
+
+```json
+"CETES_blend_strategy": "C..."
+```
+
+---
+
+### Deployment instructions
+
+**Prerequisites:**
+
+- Factory deployed and address in `public/<network>.contracts.json`
+- Strategy deployed and its address added to `public/<network>.contracts.json` as `<ASSET>_blend_strategy`
+- `configs.json` has correct vault roles for the target network
+
+**Run the deploy script:**
+```bash
+npm run deploy-vault -- <network> <ASSET_SYMBOL>
+```
+
+Example:
+```bash
+npm run deploy-vault -- testnet XLM
+```
+
+The script reads:
+
+- The strategy address from `public/<network>.contracts.json` → key `<ASSET>_blend_strategy`
+- The factory address from the same file → key `defindex_factory`
+- Vault roles (manager, fee receiver, etc.) from `configs.json`
+
+On success it prints the vault address and saves it to `.soroban/<network>.contracts.json` as `<asset>_paltalabs_vault`.
+
+> After vault deployment, users deposit into the vault and the vault manager calls `investVault` to allocate funds to the strategy. This is a separate operational step.
+
+---
+
+### Full deployment sequence (new asset)
+
+```bash
+# 1. Build contracts
+make build
+
+# 2. Deploy factory (first time only)
+npm run deploy-factory -- testnet
+npm run publish-addresses -- testnet
+
+# 3. Add strategy config to blend_deploy_config.json (manual)
+
+# 4. Deploy the strategy
+npm run deploy-blend -- testnet CETES
+
+# 5. Add strategy address to public/testnet.contracts.json (manual)
+#    "CETES_blend_strategy": "<address from .soroban/testnet.contracts.json>"
+
+# 6. Deploy the vault
+npm run deploy-vault -- testnet CETES
+```
 
 ## Generate Docs
 ```bash
