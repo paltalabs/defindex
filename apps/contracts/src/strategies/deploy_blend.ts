@@ -154,7 +154,18 @@ export async function deployBlendStrategy(addressBook: AddressBook, asset_symbol
     console.log("Not enough balance to deploy the strategy");
     return;
   }
-  for (const strategy of blendDeployConfig[network].strategies) {
+  let strategies = blendDeployConfig[network].strategies;
+  if (asset_symbol) {
+    strategies = strategies.filter(
+      (s: any) => s.asset_symbol.toUpperCase() === asset_symbol.toUpperCase()
+    );
+    if (strategies.length === 0) {
+      console.error(`No strategies found for asset: ${asset_symbol}`);
+      return;
+    }
+  }
+
+  for (const strategy of strategies) {
     const depositAmount = await calculateDepositAmount(
       strategy.blend_pool_address,
       strategy.asset,
@@ -180,7 +191,7 @@ export async function deployBlendStrategy(addressBook: AddressBook, asset_symbol
   }
 
 
-  for (const strategy of blendDeployConfig[network].strategies) {
+  for (const strategy of strategies) {
     const args = constructBlendStrategyArgs(strategy);
     
     let contractKey = `${strategy.asset_symbol.toLowerCase()}_blend_${strategy.name}_${strategy.blend_pool_name}_strategy`
