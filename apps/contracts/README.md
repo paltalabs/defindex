@@ -109,7 +109,7 @@ Located at `apps/contracts/configs.json`. Contains network-level settings and va
 
 #### `public/<network>.contracts.json`
 
-Located at `public/testnet.contracts.json` (root of the monorepo, **not** inside `apps/contracts`). This is the **shared address book** used as input by both `deploy_blend.ts` and `deploy_vault.ts`.
+Located at `public/testnet.contracts.json` (root of the monorepo, **not** inside `apps/contracts`). This is the **shared address book** used as input by `deploy_vault.ts`. It is also written to by `yarn publish-addresses` (which copies from `apps/contracts/.soroban/`).
 
 It must contain the addresses of all external dependencies:
 
@@ -136,7 +136,7 @@ It must contain the addresses of all external dependencies:
 
 #### `apps/contracts/public/<network>.contracts.json`
 
-A secondary address book scoped to the contracts workspace. Used by `constants.ts` to load token and pool addresses. Must contain the same external dependency addresses as the root-level public file. Updated when running `yarn publish-addresses`.
+A secondary address book scoped to the contracts workspace. Read by `deploy_blend.ts` and `constants.ts` to load token and pool addresses. Must contain the external dependency addresses (tokens, pools, router). **Must be populated manually** — `yarn publish-addresses` writes to the root-level `public/`, not to this file.
 
 ---
 
@@ -145,7 +145,7 @@ A secondary address book scoped to the contracts workspace. Used by `constants.t
 Located at `apps/contracts/.soroban/`. This is the **internal address book** written automatically by deployment scripts. It stores every deployed contract address using the key format:
 
 - Strategies: `<asset_symbol>_blend_<name>_<pool_name>_strategy`
-  e.g. `cetes_blend_autocompound_cetes_rsp_strategy`
+  e.g. `cetes_blend_regional_starter_pack_rsp_strategy`
 - Vaults: `<asset>_paltalabs_vault`
   e.g. `cetes_paltalabs_vault`
 
@@ -159,13 +159,13 @@ Contains the list of Blend strategies to deploy, organized by network. Each stra
 
 ```json
 {
-  "name": "autocompound",
+  "name": "regional_starter_pack",
   "keeper": "<keeper public key>",
   "asset": "<token contract address>",
   "asset_symbol": "CETES",
   "reward_threshold": "40",
   "blend_pool_address": "<blend pool contract address>",
-  "blend_pool_name": "cetes_rsp"
+  "blend_pool_name": "rsp"
 }
 ```
 
@@ -175,7 +175,7 @@ Contains the list of Blend strategies to deploy, organized by network. Each stra
 | `keeper` | Public key authorized to call `harvest` |
 | `asset` | The underlying token address the strategy manages |
 | `asset_symbol` | Symbol used to filter deploys and build contract keys |
-| `reward_threshold` | Minimum BLND reward amount that triggers auto-compounding |
+| `reward_threshold` | Minimum BLND reward amount that triggers auto-compounding. **Note:** currently hardcoded to `40` in `deploy_blend.ts`; this field is not yet read by the deploy script. |
 | `blend_pool_address` | The Blend pool where assets are deposited |
 | `blend_pool_name` | Short name for the pool, used in the resulting contract key |
 
@@ -190,13 +190,13 @@ Add or verify the entry for your asset under the target network. Example for CET
 
 ```json
 {
-  "name": "autocompound",
+  "name": "regional_starter_pack",
   "keeper": "G...",
   "asset": "CC72F57YTPX76HAA64JQOEGHQAPSADQWSY5DWVBR66JINPFDLNCQYHIC",
   "asset_symbol": "CETES",
   "reward_threshold": "40",
   "blend_pool_address": "CAPBMXIQTICKWFPWFDJWMAKBXBPJZUKLNONQH3MLPLLBKQ643CYN5PRW",
-  "blend_pool_name": "cetes_rsp"
+  "blend_pool_name": "rsp"
 }
 ```
 

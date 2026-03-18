@@ -1,6 +1,6 @@
 import { Address, Asset, nativeToScVal, xdr } from "@stellar/stellar-sdk";
 import { exit } from "process";
-import { BLEND_POOL, BLEND_TOKEN, CETES_TOKEN, SOROSWAP_ROUTER } from "../constants.js";
+import { BLEND_POOL, BLEND_TOKEN, SOROSWAP_ROUTER } from "../constants.js";
 import { AddressBook } from "./address_book.js";
 import { EnvConfig } from "./env_config.js";
 
@@ -48,7 +48,7 @@ export function AssetFromString(asset: string, config: EnvConfig, externalAddres
       assetAddress = new Address(externalAddressBook.getContractId("blend_pool_usdc"));
       break;
     case Assets.CETES:
-      assetAddress = new Address(CETES_TOKEN);
+      assetAddress = new Address(externalAddressBook.getContractId("cetes_token"));
       break;
     default:
       throw new Error("Invalid asset symbol");
