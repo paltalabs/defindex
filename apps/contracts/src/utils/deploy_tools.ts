@@ -14,6 +14,7 @@ export enum Strategies {
 export enum Assets {
   XLM = "XLM",
   USDC = "USDC",
+  CETES = "CETES",
 }
 
 export interface StrategyDeployArgs {
@@ -30,7 +31,7 @@ export interface StrategyData {
 export function AssetFromString(asset: string, config: EnvConfig, externalAddressBook:AddressBook): Address {
   if (!asset || !Object.values(Assets).includes(asset.toUpperCase() as Assets)) {
     console.warn("Please provide a valid asset symbol");
-    console.warn("Allowed assets are: \n - XLM \n - USDC");
+    console.warn("Allowed assets are: \n - XLM \n - USDC \n - CETES");
     throw new Error("Invalid asset symbol");
   }
   const xlmAddress = new Address(
@@ -45,6 +46,9 @@ export function AssetFromString(asset: string, config: EnvConfig, externalAddres
       break;
     case Assets.USDC:
       assetAddress = new Address(externalAddressBook.getContractId("blend_pool_usdc"));
+      break;
+    case Assets.CETES:
+      assetAddress = new Address(externalAddressBook.getContractId("cetes_token"));
       break;
     default:
       throw new Error("Invalid asset symbol");
