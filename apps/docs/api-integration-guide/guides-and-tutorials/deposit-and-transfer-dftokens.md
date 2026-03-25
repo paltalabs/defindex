@@ -2,7 +2,7 @@
 description: ⏱️ 7 min read
 ---
 
-# Mint & Transfer dfTokens
+# Deposit & Transfer dfTokens
 
 ## 📖 What You'll Learn
 
@@ -34,7 +34,7 @@ This means a vault manager can deposit funds, receive dfTokens, and then **distr
 
 Before starting, make sure you have:
 
-* **Node.js** (v18+) and a package manager (`pnpm`, `npm`, or `yarn`)
+* **Node.js** (v18+) and a package manager (`npm`, `yarn`, or similar)
 * A **Stellar wallet** with enough balance for the deposit + transaction fees
 * A **DeFindex API key** (register at [api.defindex.io](https://api.defindex.io/register) or contact us on [Discord](https://discord.gg/ftPKMPm38f))
 * Basic knowledge of **TypeScript** and the **Stellar network**
@@ -85,9 +85,9 @@ Create a new project and install the required dependencies:
 ```bash
 mkdir defindex-deposit-transfer
 cd defindex-deposit-transfer
-pnpm init
-pnpm add @defindex/sdk @stellar/stellar-sdk dotenv
-pnpm add -D typescript tsx @types/node
+npm init -y
+npm install @defindex/sdk @stellar/stellar-sdk
+npm install -D typescript tsx @types/node dotenv
 ```
 
 Add a run script to your `package.json`:
@@ -139,16 +139,18 @@ Create `src/index.ts` and start by importing dependencies and loading environmen
 
 ```typescript
 import { DefindexSDK, SupportedNetworks } from '@defindex/sdk';
-import * as StellarSdk from '@stellar/stellar-sdk';
 import {
   rpc,
   Keypair,
   Networks,
   TransactionBuilder,
+  Transaction,
   Contract,
   Address,
   BASE_FEE,
   xdr,
+  scValToNative,
+  nativeToScVal,
 } from '@stellar/stellar-sdk';
 import { config } from 'dotenv';
 
@@ -161,11 +163,11 @@ Define your constants. You'll need to update `VAULT_ADDRESS` to match the vault 
 // ─── Constants ───────────────────────────────────────────────
 const VAULT_ADDRESS = 'YOUR_VAULT_ADDRESS_HERE'; // ← Replace with your vault
 const DECIMALS = 7;
-const DEPOSIT_AMOUNT = 10;  // Human-readable amount
-const DEPOSIT_AMOUNT_RAW = DEPOSIT_AMOUNT * 10 ** DECIMALS; // In stroops
+const DEPOSIT_AMOUNT = 10; // Human-readable amount
+const DEPOSIT_AMOUNT_RAW = BigInt(Math.round(DEPOSIT_AMOUNT * 10 ** DECIMALS));
 ```
 
-> **About decimals:** Stellar uses 7 decimal places for most assets. So `10 XLM` = `100,000,000` stroops. Always convert to raw amounts before calling contract functions.
+> **About decimals:** Stellar uses 7 decimal places for most assets. So `10 XLM` = `100,000,000` stroops (base units). Always convert to raw amounts before calling contract functions. We use `BigInt(Math.round(...))` to avoid floating-point precision issues with non-integer amounts like `0.5`.
 
 Now load and validate the environment variables:
 
@@ -215,9 +217,11 @@ interface TxResult {
   returnValue?: xdr.ScVal;
 }
 
+const MAX_POLLS = 30; // 30 polls × 2s = 60s max wait
+
 async function sendAndConfirm(
   rpcServer: rpc.Server,
-  transaction: StellarSdk.Transaction
+  transaction: Transaction
 ): Promise<TxResult> {
   const response = await rpcServer.sendTransaction(transaction);
 
@@ -236,8 +240,8 @@ async function sendAndConfirm(
   console.log(`  Submitted: ${txHash}`);
   console.log('  Waiting for confirmation...');
 
-  // Poll until confirmed or failed
-  while (true) {
+  // Poll until confirmed, failed, or timeout
+  for (let i = 0; i < MAX_POLLS; i++) {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     const txResponse = await rpcServer.getTransaction(txHash);
 
@@ -251,6 +255,10 @@ async function sendAndConfirm(
       throw new Error(`Transaction failed on-chain: ${txHash}`);
     }
   }
+
+  throw new Error(
+    `Transaction not confirmed after ${MAX_POLLS * 2}s: ${txHash}`
+  );
 }
 ```
 
@@ -258,7 +266,7 @@ async function sendAndConfirm(
 
 1. **Submits** the signed transaction to the Soroban RPC
 2. **Validates** the transaction was accepted (status `PENDING`)
-3. **Polls** every 2 seconds until the transaction is confirmed or fails
+3. **Polls** every 2 seconds (up to 60s) until the transaction is confirmed or fails
 4. **Returns** the transaction hash and the on-chain return value
 
 ### Step 4: The Deposit Function 💰
@@ -285,7 +293,7 @@ async function deposit(
   const tx = TransactionBuilder.fromXDR(
     depositResponse.xdr,
     Networks.TESTNET
-  ) as StellarSdk.Transaction;
+  ) as Transaction;
   tx.sign(keypair);
 
   console.log('  Sending deposit...');
@@ -299,7 +307,12 @@ async function deposit(
   //   Index 0: Vec<i128> → actual amounts deposited
   //   Index 1: i128      → dfTokens minted  ← this is what we need
   //   Index 2: Option     → investment allocations
-  const nativeResult = StellarSdk.scValToNative(returnValue) as unknown[];
+  const nativeResult = scValToNative(returnValue);
+
+  if (!Array.isArray(nativeResult) || nativeResult[1] == null) {
+    throw new Error('Unexpected deposit return shape');
+  }
+
   const dfTokensMinted = BigInt(nativeResult[1] as string | number | bigint);
 
   return { txHash, dfTokensMinted };
@@ -314,6 +327,10 @@ async function deposit(
 4. **Parses** the return value to extract how many dfTokens were minted
 
 > **Why `invest: true`?** When set to `true`, the vault automatically allocates your deposited funds into its yield-generating strategies. Set to `false` if you want the funds to remain idle in the vault.
+>
+> **Tip:** You can also pass `slippageBps` in the deposit params (e.g., `slippageBps: 100` for 1% tolerance) to control slippage during deposit.
+>
+> **Note:** The number of dfTokens minted is **not** 1:1 with the deposited amount. dfTokens represent your proportional share of the vault — their quantity depends on the vault's current share price, which changes as the vault earns yield.
 
 ### Step 5: The Transfer Function 🔄
 
@@ -335,7 +352,7 @@ async function transferDfTokens(
     'transfer',
     new Address(from).toScVal(),
     new Address(toAddress).toScVal(),
-    StellarSdk.nativeToScVal(amount, { type: 'i128' })
+    nativeToScVal(amount, { type: 'i128' })
   );
 
   // Create the transaction
@@ -376,6 +393,8 @@ async function transferDfTokens(
 5. **Signs** and **submits** it to the network
 
 > **Why simulate first?** Soroban smart contract calls require accurate resource estimation. The simulation step calculates CPU instructions, memory bytes, and ledger operations needed, so the transaction has the right resource limits to succeed on-chain.
+>
+> **About fees:** `BASE_FEE` is the minimum fee (100 stroops). On a congested network, transactions with the minimum fee may be dropped. For production, consider using a higher fee (e.g., `String(100 * 10)`) or implementing a fee-bumping strategy.
 
 ### Step 6: Put It All Together 🚀
 
@@ -445,7 +464,7 @@ main().catch((error: unknown) => {
 ### Run It
 
 ```bash
-pnpm start
+npm start
 ```
 
 You should see output similar to:
@@ -489,6 +508,7 @@ DONE
 | `Transfer simulation failed` | Confirm the vault address is correct and Wallet A holds dfTokens |
 | `Deposit returned no value` | May be a network issue — check your Soroban RPC endpoint |
 | `Transaction failed on-chain` | Check the transaction on [Stellar Expert](https://stellar.expert) for details |
+| `Transaction not confirmed after 60s` | The RPC node may have dropped the tx — check your Soroban RPC endpoint or retry with a higher fee |
 
 ## 🎓 Next Steps
 
@@ -517,15 +537,12 @@ dfTokens to another wallet on the Stellar testnet.
 
 ## Required Dependencies
 
-```json
-{
-  "@defindex/sdk": "^0.1.2",
-  "@stellar/stellar-sdk": "^14.5.0",
-  "dotenv": "^17.2.4"
-}
+```bash
+npm install @defindex/sdk @stellar/stellar-sdk
+npm install -D typescript tsx @types/node dotenv
 ```
 
-Dev dependencies: `typescript`, `tsx`, `@types/node`
+Use your preferred package manager (`npm`, `yarn`, etc.). Install the latest versions.
 
 ## Environment Variables (.env)
 
@@ -553,7 +570,7 @@ Create `src/index.ts` with the following structure:
 ### 3. `sendAndConfirm(rpcServer, transaction)` helper
 - Send transaction to Soroban RPC via `rpcServer.sendTransaction()`
 - Check status is 'PENDING', otherwise parse error from `response.errorResult`
-- Poll `rpcServer.getTransaction(hash)` every 2 seconds until SUCCESS or FAILED
+- Poll `rpcServer.getTransaction(hash)` every 2 seconds until SUCCESS or FAILED (max 30 polls / 60s timeout)
 - On SUCCESS, return `{ txHash, returnValue }` from `GetSuccessfulTransactionResponse`
 
 ### 4. `deposit(sdk, rpcServer, keypair)` function
@@ -593,5 +610,6 @@ Add `"start": "tsx src/index.ts"` to package.json scripts.
 - All amounts use 7 decimals (stroops)
 - The vault contract address is used both for deposit (via SDK) and for the
   transfer call (as a Contract instance)
-- Handle errors with try/catch and provide meaningful error messages
+- Handle errors with try/catch — re-throw or call `process.exit(1)` on fatal errors
+- Validate the deposit return shape before accessing positional indices
 ````
