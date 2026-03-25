@@ -33,6 +33,8 @@
 * [Guides and Tutorials](api-integration-guide/guides-and-tutorials/README.md)
   * [Beginner Guide](api-integration-guide/guides-and-tutorials/beginner-guide.md)
   * [Setting Partner Fees](api-integration-guide/guides-and-tutorials/setting-partner-fees.md)
+  * [Deposit & Transfer dfTokens](api-integration-guide/guides-and-tutorials/deposit-and-transfer-dftokens.md)
+  * [Sponsored Transactions (Fee Bump Tx)](api-integration-guide/guides-and-tutorials/sponsored-transactions.md)
   * [Additional Resources](api-integration-guide/guides-and-tutorials/additional-resources.md)
 * [Troubleshooting](api-integration-guide/troubleshooting.md)
 
