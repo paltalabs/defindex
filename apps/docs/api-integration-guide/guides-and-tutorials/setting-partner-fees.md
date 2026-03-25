@@ -55,7 +55,7 @@ Before making changes, verify the current fee settings on your vault.
 
 ```bash
 curl -X GET "https://api.defindex.io/vault/YOUR_VAULT_ADDRESS?network=mainnet" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+  -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 The response includes fee configuration:
@@ -80,7 +80,7 @@ The response includes fee configuration:
 
 ```bash
 curl -X GET "https://api.defindex.io/vault/YOUR_VAULT_ADDRESS/get/fee-receiver?network=mainnet" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+  -H "Authorization: Bearer YOUR_API_KEY"
 ```
 
 Response:
@@ -101,7 +101,7 @@ To change the fee rate on your vault, use the `lock-fees` endpoint. This endpoin
 
 ```bash
 curl -X POST "https://api.defindex.io/vault/YOUR_VAULT_ADDRESS/lock-fees?network=mainnet" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "new_fee_bps": 3000,
@@ -136,7 +136,7 @@ The response contains an unsigned XDR transaction:
 
 ```bash
 curl -X POST "https://api.defindex.io/send" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "xdr": "SIGNED_XDR_HERE...",
@@ -160,7 +160,7 @@ To redirect fee payments to a different address, use the `set/fee-receiver` endp
 
 ```bash
 curl -X POST "https://api.defindex.io/vault/YOUR_VAULT_ADDRESS/set/fee-receiver?network=mainnet" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "new_address": "GNEW_RECEIVER_ADDRESS...",
@@ -200,7 +200,7 @@ Fees accumulate in the vault as yield is generated. To distribute them, use the 
 
 ```bash
 curl -X POST "https://api.defindex.io/vault/YOUR_VAULT_ADDRESS/distribute-fees?network=mainnet" \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "caller": "GMANAGER_ADDRESS..."
