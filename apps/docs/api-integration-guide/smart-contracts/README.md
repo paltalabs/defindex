@@ -1,3 +1,6 @@
+---
+description: ⏱️ 4 min read
+---
 # Interact with your Vault
 
 To integrate DeFindex into your wallet, you can choose between two approaches:

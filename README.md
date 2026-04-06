@@ -1,5 +1,10 @@
-# 📊 DeFindex Monorepo :)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/paltalabs/defindex)
+# 📊 DeFindex Monorepo :) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/paltalabs/defindex)
+
+> [!IMPORTANT]
+> This documentation is focused on development and contributions for the DeFindex protocol.
+> If you're looking for information about the integration process, please visit the [API Integration Guide](https://docs.defindex.io/api-integration-guide/introduction).
+
+
 
 Check the documentation in https://docs.defindex.io/ and find the Audit Report by [OtterSec](https://osec.io/) in [./audits/2025](audits/2025_03_18_ottersec_defindex_audit.pdf)
 

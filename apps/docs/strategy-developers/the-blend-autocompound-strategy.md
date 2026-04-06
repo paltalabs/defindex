@@ -1,2 +1,0 @@
-# The Blend Autocompound Strategy
-

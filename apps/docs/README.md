@@ -3,6 +3,7 @@ favicon: .gitbook/assets/favicon.svg
 icon: hand-wave
 cover: .gitbook/assets/Component 12.png
 coverY: 235
+description: ⏱️ 2 min read
 ---
 
 # Welcome
@@ -17,15 +18,20 @@ coverY: 235
 * **Aligned incentives** → wallets earn whenever their users earn.
 * **Future-proof** → easily extend strategies, integrate real-world assets, and unlock new income streams.
 
-<figure><img src=".gitbook/assets/happy_path_diagram_defindex.drawio (3).png" alt=""><figcaption></figcaption></figure>
+<figure><img src=".gitbook/assets/how-it-works.png" alt=""><figcaption></figcaption></figure>
 
 #### What will you find here?
 
-* [**Wallet Developer Documentation**](api-integration-guide/introduction.md): Learn how to implement DeFindex in your application and make your user earn yield while monetizing. Using APIs or SDKs.
-* [**Smart Contract Developer Documentation**](strategy-developers/developer-introduction.md)**:** Guides to integrate DeFindex into your contracts. Also how to develop strategies to be included in DeFindex. So, if you are a protocol developer, you may want to create a strategy that uses your protocol.
-* **Tutorials**: coming soon...
+* [**API Integration Guide**](api-integration-guide/api.md): Start here! Learn how to integrate DeFindex into your wallet or application. Access our APIs, SDKs, and quickstart guides to enable yield for your users.
+* [**Understanding DeFindex**](getting-started/README.md): Core concepts to understand how DeFindex works:
+  * [Understanding APY](getting-started/understanding-apy.md) — How yields are calculated
+  * [Vault Roles](getting-started/vault-roles.md) — Manager, rebalancer, and fee receiver responsibilities
+  * [Partner Fees](getting-started/partner-fees.md) — How the fee model works for partners
+* [**SDKs**](advanced-documentation/sdks/README.md): TypeScript and Flutter SDKs for seamless integration.
+* [**Postman Collection**](https://drive.google.com/drive/folders/1hp02ySFWFeunRCwiZ6oLCjHzcJXpWhX8?usp=drive_link): Ready-to-use API collection to test and explore DeFindex endpoints.
+* [**Smart Contract Development**](strategy-developers/developer-introduction.md): For protocol developers creating new strategies.
 
-If you’re new, start with the **"Getting Started"** section to learn the basics or explore [**What is DeFindex**](https://app.gitbook.com/o/CL0VfO2AdQ9HkYTcTiO5/s/nOjEfj1qCoVgPEQ3cl02/) for a more detailed overview of our platform.
+If you're new, start with the [**API Integration Guide**](api-integration-guide/api.md) to integrate DeFindex, or explore [**What is DeFindex**](defindex-protocol/what-is-defindex.md) for a detailed overview of the protocol.
 
 With **DeFindex** 🔁, we are offering a secure, efficient, and user-friendly solution to optimize your asset returns.
 

@@ -1,3 +1,6 @@
+---
+description: ⏱️ 3 min read
+---
 
 
 # What is DeFindex?

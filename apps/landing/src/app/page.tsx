@@ -5,6 +5,7 @@ import Frequently from "@/components/globals/Frequently";
 import Hero from "@/components/globals/Hero";
 import Navbar from "@/components/globals/navbar/Navbar";
 import OurTeam from "@/components/globals/OurTeam";
+import PartnersSlider from "@/components/globals/PartnersSlider";
 import Security from "@/components/globals/Security";
 import Solutions from "@/components/globals/Solutions";
 import Testimonials from "@/components/globals/Testimonials";
@@ -30,6 +31,7 @@ function Home() {
                 <NavigateTab.Provider value={{ index, setIndex }}>
                     <Navbar />
                     <Hero />
+                    <PartnersSlider />
                     <Solutions />
                     <Testimonials />
                     <CodeExample />

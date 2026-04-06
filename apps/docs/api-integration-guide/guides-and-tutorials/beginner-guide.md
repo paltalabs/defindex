@@ -1,4 +1,13 @@
+---
+description: ⏱️ 5 min read
+---
 # Beginner Guide
+
+## Interactive Tutorial
+
+Want to see a working example? Try our hands-on HTML tutorial that demonstrates a complete vault deposit flow: [beginner-example.html](beginner-example.html)
+
+---
 
 ## 📖 What You'll Learn
 

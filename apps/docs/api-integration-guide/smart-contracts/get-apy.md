@@ -1,3 +1,6 @@
+---
+description: ⏱️ 1 min read
+---
 # Get APY
 
 Fetches the current APY for the vault. It considers the fee charged by the vault.

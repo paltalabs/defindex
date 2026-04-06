@@ -1,3 +1,6 @@
+---
+description: ⏱️ 2 min read
+---
 # Using GUI (Basic)
 
 If you want to create a vault using the strategies available in DeFindex without writing any code, you can use the DeFindex user interface. Here's how:

@@ -1,3 +1,6 @@
+---
+description: ⏱️ 1 min read
+---
 # Smart Contracts Development
 
 Welcome to the DeFindex Smart Contract Development Guide! This guide will help you understand how to create a strategy that uses your protocol.
