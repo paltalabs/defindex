@@ -25,6 +25,7 @@ The roles are:
   * Executes rebalancing instructions that move funds across strategies
   * _Recommendation_: Implement as an automated bot or delegate it
 * **Fee Receiver** (`VaultFeeReceiver`)
+  * Receives fees collected by the vault
   * Triggers distribution of already-locked fees to vault and protocol receivers by calling `distribute_fees`
   * Can also update the fee receiver address (shared with Manager)
   * Cannot lock or release fees — that is Manager-only
@@ -44,6 +45,7 @@ The roles are:
 | Pause strategy | ✅ | ✅ | — | — |
 | Unpause strategy | ✅ | ✅ | — | — |
 | Rebalance across strategies | ✅ | — | ✅ | — |
+| Receive fees | — | — | — | ✅ |
 | Distribute fees | ✅ | — | — | ✅ |
 | Lock / release fees | ✅ | — | — | — |
 | Upgrade contract code | ✅ | — | — | — |
