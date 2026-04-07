@@ -54,6 +54,10 @@ The roles are:
 | Change Rebalance Manager | ✅ | — | — | — |
 | Change Fee Receiver | ✅ | — | — | ✅ |
 
+## Protocol Fee Receiver
+
+In addition to the vault roles above, each vault also stores a **DeFindex Protocol Fee Receiver** (`DeFindexProtocolFeeReceiver`). This is not a vault role — it cannot call any function on the vault. It is a passive recipient address set at vault initialization that automatically receives a portion of the fees whenever `distribute_fees` is called. The split between the Protocol Fee Receiver and the Vault Fee Receiver is determined by the `DeFindexProtocolFeeRate` (in basis points), also set at initialization and fixed thereafter.
+
 ## Role Assignment and Updates
 
 Roles are set at deployment and can be updated afterward by calling the corresponding setter function. Only the Manager can change most roles — the Fee Receiver address is the only one that either the Manager or the current Fee Receiver can update.
