@@ -8,11 +8,11 @@ description: ⏱️ 2 min read
 
 **Roles** are unique identifiers that assign specific responsibilities within the vault and are the only entities with privileges to perform critical actions. Each role is associated with an `Address` that represents the entity responsible for that function. None of these roles can withdraw funds from the users.
 
+Since each role is just an `Address`, any role can be assigned to a **smart contract** instead of a regular wallet. This enables policy-based or role-access control patterns — for example, a contract acting as the Manager could define its own internal rules, conditions, or sub-roles to govern who is allowed to trigger actions on behalf of that role.
+
 Also, when deploying a vault, the deploying address can be any address — it doesn't need to be tied to the Manager or any other role. In other words, a vault can be set up on behalf of someone else.
 
-All four roles **must** be assigned at deployment — none are optional. If any role address is missing, the contract will reject the deployment with a `RolesIncomplete` error.
-
-These are:
+The roles are:
 
 * **Vault Manager** (`Manager`)
   * Primary owner of the vault
