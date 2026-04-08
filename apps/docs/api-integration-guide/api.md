@@ -134,8 +134,7 @@ Go to[ interact with vault](smart-contracts/), see the implementations of the fu
 
 ```javascript
 {
-    xdr: signedXdr,         // Signed transaction XDR
-    launchtube: false       // Set true for gasless transactions
+    xdr: signedXdr          // Signed transaction XDR
 }
 ```
 

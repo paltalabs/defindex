@@ -206,8 +206,7 @@ async function sendTransaction() {
 
         // Send the signed transaction
         const sendRequest = {
-            xdr: appState.signedTransaction,    // The signed transaction
-            launchtube: false                   // Use normal fees (not gasless)
+            xdr: appState.signedTransaction     // The signed transaction
         };
 
         const sendResult = await makeAPIRequest('/send', sendRequest);
