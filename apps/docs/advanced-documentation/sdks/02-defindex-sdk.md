@@ -102,8 +102,8 @@ Here's a comprehensive example demonstrating vault creation, deposits, and withd
 import {
   DefindexSDK,
   SupportedNetworks,
-  CreateDefindexVault,
-  DepositToVaultParams,
+  CreateVaultParams,
+  DepositParams,
   WithdrawFromVaultParams
 } from '@defindex/sdk';
 
@@ -114,14 +114,14 @@ const sdk = new DefindexSDK({
 async function completeVaultFlow() {
   try {
     // 1. Create a new vault
-    const vaultConfig: CreateDefindexVault = {
+    const vaultConfig: CreateVaultParams = {
       roles: {
-        0: "GEMERGENCY_MANAGER_ADDRESS...", // Emergency Manager
-        1: "GFEE_RECEIVER_ADDRESS...",      // Fee Receiver
-        2: "GVAULT_MANAGER_ADDRESS...",     // Vault Manager
-        3: "GREBALANCE_MANAGER_ADDRESS..."  // Rebalance Manager
+        emergencyManager: "GEMERGENCY_MANAGER_ADDRESS...",
+        feeReceiver: "GFEE_RECEIVER_ADDRESS...",
+        manager: "GVAULT_MANAGER_ADDRESS...",
+        rebalanceManager: "GREBALANCE_MANAGER_ADDRESS..."
       },
-      vault_fee_bps: 100, // 1% fee (100 basis points)
+      vaultFeeBps: 100, // 1% fee (100 basis points)
       assets: [{
         address: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC", // XLM asset
         strategies: [{
@@ -130,10 +130,8 @@ async function completeVaultFlow() {
           paused: false
         }]
       }],
-      name_symbol: {
-        name: "My DeFi Vault", //Max 20 characters
-        symbol: "MDV"
-      },
+      name: "My DeFi Vault",  // 1-32 characters
+      symbol: "MDV",           // 1-10 characters
       upgradable: true,
       caller: "GCREATOR_ADDRESS..." // Public key of the signer account
     };
@@ -147,7 +145,7 @@ async function completeVaultFlow() {
 
     // 2. Deposit to vault
     const vaultAddress = 'CVAULT_CONTRACT_ADDRESS...';
-    const depositData: DepositToVaultParams = {
+    const depositData: DepositParams = {
       amounts: [1000000], // 1 XLM (7 decimals)
       caller: 'GUSER_ADDRESS...', // User's public key from which to sign and deposit
       invest: true, // Auto-invest after deposit
@@ -220,14 +218,14 @@ console.log('Factory contract:', factory.address);
 Deploy a new vault with custom configuration:
 
 ```typescript
-const vaultConfig: CreateDefindexVault = {
+const vaultConfig: CreateVaultParams = {
   roles: {
-    0: "GEMERGENCY_MANAGER...",  // Emergency Manager role
-    1: "GFEE_RECEIVER...",       // Fee Receiver role
-    2: "GVAULT_MANAGER...",      // Vault Manager role
-    3: "GREBALANCE_MANAGER..."   // Rebalance Manager role
+    emergencyManager: "GEMERGENCY_MANAGER...",
+    feeReceiver: "GFEE_RECEIVER...",
+    manager: "GVAULT_MANAGER...",
+    rebalanceManager: "GREBALANCE_MANAGER..."
   },
-  vault_fee_bps: 100,            // 1% vault fee
+  vaultFeeBps: 100,            // 1% vault fee
   assets: [{
     address: "CASSET_ADDRESS...", // Asset contract address
     strategies: [{
@@ -236,10 +234,8 @@ const vaultConfig: CreateDefindexVault = {
       paused: false
     }]
   }],
-  name_symbol: {
-    name: "Vault Name",
-    symbol: "VLT"
-  },
+  name: "Vault Name",
+  symbol: "VLT",
   upgradable: true,
   caller: "GCALLER_ADDRESS..."
 };
@@ -288,7 +284,7 @@ console.log(`Underlying Value: ${balance.underlyingBalance}`);
 Add funds to a vault:
 
 ```typescript
-const depositData: DepositToVaultParams = {
+const depositData: DepositParams = {
   amounts: [1000000, 2000000], // Amounts for each vault asset
   caller: userAddress,
   invest: true, // Automatically invest after deposit
@@ -382,22 +378,14 @@ await sdk.unpauseStrategy(vaultAddress, {
 Send signed XDR to the Stellar network:
 
 ```typescript
-// Submit via Stellar directly
 const response = await sdk.sendTransaction(
   signedXDR,
-  SupportedNetworks.TESTNET,
-  false // Don't use LaunchTube
+  SupportedNetworks.TESTNET
 );
 
-// Submit via LaunchTube
-const response = await sdk.sendTransaction(
-  signedXDR,
-  SupportedNetworks.TESTNET,
-  true // Use LaunchTube
-);
-
-console.log('Transaction hash:', response.hash);
-console.log('Status:', response.status);
+console.log('Transaction hash:', response.txHash);
+console.log('Success:', response.success);
+console.log('Result:', response.result);
 ```
 
 ***
@@ -498,9 +486,9 @@ import {
   DefindexSDK,
   DefindexSDKConfig,
   SupportedNetworks,
-  CreateDefindexVault,
-  DepositToVaultParams,
-  WithdrawFromVaultParams,
+  CreateVaultParams,
+  DepositParams,
+  WithdrawParams,
   VaultInfo,
   VaultBalance,
   VaultAPY

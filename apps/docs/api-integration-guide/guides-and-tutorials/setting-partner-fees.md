@@ -139,8 +139,7 @@ curl -X POST "https://api.defindex.io/send" \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
-    "xdr": "SIGNED_XDR_HERE...",
-    "launchtube": false
+    "xdr": "SIGNED_XDR_HERE..."
   }'
 ```
 
