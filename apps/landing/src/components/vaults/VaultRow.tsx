@@ -11,6 +11,7 @@ import {
 import { getTokenSymbol } from "@/lib/tokenIcons";
 import { getVaultLogo, formatVaultName } from "@/lib/vaultLogos";
 import TokenExposure from "./TokenExposure";
+import { VAULT_ROW_GRID } from "./VaultsTable";
 
 interface VaultRowProps {
     vault: VaultWithAddress;
@@ -28,9 +29,9 @@ export default function VaultRow({ vault }: VaultRowProps) {
     const isXPortal = vault.address === "CD4JGS6BB5NZVSNKRNI43GUC6E3OBYLCLBQZJVTZLDVHQ5KDAOHVOIQF";
 
     return (
-        <tr className="border-b border-cyan-800/30 hover:bg-cyan-900/20 transition-colors">
+        <tr className={`${VAULT_ROW_GRID} border-b border-cyan-800/30 hover:bg-cyan-900/20 transition-colors`}>
             {/* Vault Name */}
-            <td className="px-4 py-4">
+            <td className="pl-6 pr-4 py-4">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-cyan-900/50 border border-cyan-800/50 flex items-center justify-center flex-shrink-0 overflow-hidden">
                         {vaultLogo ? (
@@ -70,7 +71,7 @@ export default function VaultRow({ vault }: VaultRowProps) {
             </td>
 
             {/* APY */}
-            <td className="px-4 py-4">
+            <td className="pl-4 pr-6 py-4">
                 <span className="font-manrope font-bold text-lime-200">{formatAPY(vault.apy)}</span>
             </td>
         </tr>

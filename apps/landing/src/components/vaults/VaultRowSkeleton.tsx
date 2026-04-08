@@ -1,12 +1,14 @@
 'use client';
 
+import { VAULT_ROW_GRID } from "./VaultsTable";
+
 export default function VaultRowSkeleton() {
   return (
-    <tr className="animate-pulse border-b border-cyan-800/30">
+    <tr className={`${VAULT_ROW_GRID} animate-pulse border-b border-cyan-800/30`}>
       {/* Vault Name */}
-      <td className="px-4 py-4">
+      <td className="pl-6 pr-4 py-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-cyan-800/40 rounded-full" />
+          <div className="w-10 h-10 bg-cyan-800/40 rounded-full flex-shrink-0" />
           <div className="space-y-2">
             <div className="h-4 w-32 bg-cyan-800/40 rounded" />
             <div className="h-3 w-16 bg-cyan-800/30 rounded" />
@@ -15,12 +17,12 @@ export default function VaultRowSkeleton() {
       </td>
 
       {/* TVL */}
-      <td className="px-4 py-4">
+      <td className="px-4 py-4 flex items-center">
         <div className="h-4 w-24 bg-cyan-800/40 rounded" />
       </td>
 
       {/* Exposure */}
-      <td className="px-4 py-4">
+      <td className="px-4 py-4 flex items-center">
         <div className="flex -space-x-2">
           {[1, 2, 3].map((i) => (
             <div key={i} className="w-6 h-6 bg-cyan-800/40 rounded-full border-2 border-cyan-950" />
@@ -29,7 +31,7 @@ export default function VaultRowSkeleton() {
       </td>
 
       {/* APY */}
-      <td className="px-4 py-4">
+      <td className="pl-4 pr-6 py-4 flex items-center">
         <div className="h-4 w-16 bg-cyan-800/40 rounded" />
       </td>
     </tr>

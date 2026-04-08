@@ -18,6 +18,8 @@ export const VAULT_LOGOS: Record<string, string> = {
   'CC767WIU5QGJMXYHDDYJAJEF2YWPHOXOZDWD3UUAZVS4KQPRXCKPT2YZ': '/images/logos/seevcash.webp',
   // Rozo
   'CCDRFMZ7CH364ATQ5YSVTEJ3G3KPNFVM6TTC6N4T5REHWJS6LGVFP7MY': '/images/logos/rozo.webp',
+  // Meru USDC
+  'CCA2ZJP5BVRXYTQH4FAGHCAUMRYCXVC4CRYC2NXHWMR7TIVX36U7F5HR': '/images/logos/meru.svg',
 };
 
 export function getVaultLogo(vaultAddress: string): string | null {
