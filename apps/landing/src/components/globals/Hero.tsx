@@ -1,8 +1,7 @@
-import GradientText from "@/components/common/GradientText";
+import HeroTypewriterHeadline from "@/components/globals/HeroTypewriterHeadline";
 import ScheduleDemoButton from "@/components/common/ScheduleDemoButton";
-import { COLORS } from "@/constants/design";
-import Image from "next/image";
 import Link from "next/link";
+import Image from "next/image";
 
 const heroBackgroundBase = {
     position: "absolute" as const,
@@ -39,69 +38,20 @@ function Hero() {
                     </div>
                     <div
                         style={heroBackgroundCssSm}
-                        className="xs:block top-[650px] sm:top-[600px] md:top-[500px] justify-self-center lg:hidden max-w-fit"
+                        className="xs:block top-[450px] sm:top-[500px] md:top-[500px] justify-self-center lg:hidden max-w-fit"
                     >
                         <Image
                             src="/images/demo_hand.webp"
                             alt="DeFindex Stellar wallet interface showing stablecoin yield dashboard with 15% APY"
-                            className="mx-auto object-contain"
+                            className="mx-auto object-contain -z-10"
                             width={500}
                             height={500}
                             priority
                         />
                     </div>
                     {/*Text and buttons */}
-                    <div className="text-center lg:text-left z-10 col-span-2 lg:col-span-2 lg:col-start-2 px-2 sm:px-4 lg:px-6 lg:mr-6 sm:h-100 w-full">
-                        <GradientText
-                            as="h1"
-                            variant="secondary"
-                            textStroke={COLORS.dark}
-                            className="
-                                font-familjen-grotesk
-                                text-xl
-                                sm:text-2xl
-                                md:text-3xl
-                                lg:text-5xl
-                                mb-4
-                                sm:mb-6
-                                w-[100%]
-                            "
-                            style={{
-                                fontWeight: 300,
-                                textAlign: "center",
-                            }}
-                        >
-                            DeFindex
-                        </GradientText>
-                        <GradientText
-                            as="h2"
-                            variant="secondary"
-                            textStroke={COLORS.dark}
-                            className="
-                                font-familjen-grotesk
-                                text-lg
-                                sm:text-2xl
-                                md:text-3xl
-                                lg:text-3xl
-                                leading-[1.1em]
-                                sm:leading-[1.04em]
-                                tracking-normal
-                                sm:tracking-[0.05em]
-                                md:tracking-[0.1em]
-                                mb-4
-                                sm:mb-6
-                                uppercase
-                                max-w-full
-                                break-words
-                            "
-                            style={{
-                                fontWeight: "400 !important",
-                                fontStyle: "Regular",
-                                textAlign: "center",
-                            }}
-                        >
-                            Yield Infrastructure for Stellar Wallets & DeFi Apps
-                        </GradientText>
+                    <div className="text-center lg:text-left z-10 col-span-2 lg:col-span-2 lg:col-start-2 px-2 sm:px-4 lg:px-6 lg:mr-6 sm:h-200 w-full">
+                        <HeroTypewriterHeadline />
                         <p
                             className="
                                 font-inter
