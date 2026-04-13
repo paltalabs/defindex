@@ -16,10 +16,10 @@ Prefer learning by watching? Check out our integration walkthrough:
 
 ## Generate your API Key
 
-Fogister** → [https://api.defindex.io/register](https://api.defindex.io/register)
-2. **Lollow these steps to get your API key:
+Follow these steps to get your API key:
 
-1. **Regin** → [https://api.defindex.io/login](https://api.defindex.io/login)
+1. **Register** → [https://api.defindex.io/register](https://api.defindex.io/register)
+2. **Login** → [https://api.defindex.io/login](https://api.defindex.io/login)
 3. **Create API Key** — from your dashboard, generate your `api_key` and `refresh_token`.
 
 For a detailed walkthrough with examples, see the [**Getting Your API Key guide**](guides-and-tutorials/getting-api-key.md).
