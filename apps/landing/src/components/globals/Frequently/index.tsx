@@ -34,7 +34,7 @@ export default function Frequently() {
                         />
                         <Unit
                             title="How do revenue shares work?"
-                            description="Partners choose any percentage of the revenue that they want to charge their users. Then, DeFindex takes an agreed percentage of what the partners charge. For example, if a partner charges 50% of the revenue, and DeFindex takes 30% of that, the partner will receive 35% of the revenue, and DeFindex will receive 15%."
+                            description="Partners choose any percentage of the revenue that they want to charge their users. Then, DeFindex takes an agreed percentage of what the partners charge."
                         />
                         <Unit
                             title="Is DeFindex secure and audited?"
