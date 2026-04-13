@@ -16,13 +16,15 @@ Prefer learning by watching? Check out our integration walkthrough:
 
 ## Generate your API Key
 
-First generate API Key:
+Fogister** → [https://api.defindex.io/register](https://api.defindex.io/register)
+2. **Lollow these steps to get your API key:
 
-1. Register -> [https://api.defindex.io/register](https://api.defindex.io/register)
-2. Login ->[ https://api.defindex.io/login](https://api.defindex.io/login)
-3. Create api\_key and refresh
+1. **Regin** → [https://api.defindex.io/login](https://api.defindex.io/login)
+3. **Create API Key** — from your dashboard, generate your `api_key` and `refresh_token`.
 
-For more details, refer to the [DeFindex API documentation](https://api.defindex.io/docs).
+For a detailed walkthrough with examples, see the [**Getting Your API Key guide**](guides-and-tutorials/getting-api-key.md).
+
+For the full API reference, see the [DeFindex API documentation](https://api.defindex.io/docs).
 
 Postman collection json [here](postman_collection.json)
 
@@ -51,7 +53,7 @@ Complete reference: [API Reference](https://api.defindex.io/docs)
 * Basic knowledge of TypeScript or JavaScript
 * Node.js environment
 * [Stellar SDK](https://www.stellar.org/developers/reference/) installed (`npm install stellar-sdk`)
-* DeFindex API key (contact PaltaLabs team for access)
+* DeFindex API key — see [Getting Your API Key](guides-and-tutorials/getting-api-key.md)
 
 ***
 
