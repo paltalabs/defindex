@@ -23,7 +23,7 @@ Before starting, make sure you have:
 
 * Basic knowledge of **HTML, CSS, and JavaScript**
 * **Freighter Wallet** extension installed
-* An **API key** from DeFindex (contact team on [Discord](https://discord.gg/ftPKMPm38f) for access)
+* An **API key** from DeFindex — follow the [Getting Your API Key guide](./getting-api-key.md) to register and create one
 * A **web browser** with developer tools
 * **5-10 minutes** of focused time
 
@@ -134,7 +134,7 @@ async function getVaultInfoAndDeposit() {
 **🚨 Common issues:**
 
 * Wallet not connected → Connect wallet first
-* API key expired → Contact DeFindex team for new key
+* API key expired → Refresh it using your `refresh_token` (see [Getting Your API Key](./getting-api-key.md#refreshing-an-expired-key))
 * Insufficient balance → Make sure wallet has enough XLM
 * Vault not found → Check vault address and network
 

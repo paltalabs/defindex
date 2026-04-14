@@ -31,10 +31,12 @@
   * [Using GUI (Basic)](api-integration-guide/creating-a-defindex-vault/using-gui-basic.md)
   * [Using the Factory (Advanced)](api-integration-guide/creating-a-defindex-vault/using-the-factory-advanced.md)
 * [Guides and Tutorials](api-integration-guide/guides-and-tutorials/README.md)
+  * [Getting Your API Key](api-integration-guide/guides-and-tutorials/getting-api-key.md)
   * [Beginner Guide](api-integration-guide/guides-and-tutorials/beginner-guide.md)
   * [Setting Partner Fees](api-integration-guide/guides-and-tutorials/setting-partner-fees.md)
   * [Deposit & Transfer dfTokens](api-integration-guide/guides-and-tutorials/deposit-and-transfer-dftokens.md)
   * [Sponsored Transactions (Fee Bump Tx)](api-integration-guide/guides-and-tutorials/sponsored-transactions.md)
+  * [Privy Server Wallets](api-integration-guide/guides-and-tutorials/privy-server-wallets.md)
   * [Additional Resources](api-integration-guide/guides-and-tutorials/additional-resources.md)
 * [Troubleshooting](api-integration-guide/troubleshooting.md)
 
