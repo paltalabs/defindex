@@ -31,7 +31,7 @@ const PartnersSlider = () => {
                 alt={`${partner.name} logo`}
                 width={140}
                 height={48}
-                className="h-10 md:h-12 w-auto mx-auto opacity-60 hover:opacity-100 transition-opacity duration-150"
+                className="h-10 md:h-12 w-auto mx-auto opacity-60 hover:opacity-100 hover:transform hover:scale-110 transition-opacity duration-200"
                 style={{
                   maxWidth: "140px",
                   objectFit: "contain",
