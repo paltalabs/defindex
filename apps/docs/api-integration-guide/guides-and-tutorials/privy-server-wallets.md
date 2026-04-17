@@ -12,7 +12,7 @@ The pattern relies on Privy's **Authorization Key** (TEE-backed) to sign Stellar
 
 ## Repository
 
-[**paltalabs/privy-defindex-guide**](https://github.com/paltalabs/privy-defindex-guide)
+[**defindex-io/privy-defindex-guide**](https://github.com/defindex-io/privy-defindex-guide)
 
 ## What the Repository Covers
 
