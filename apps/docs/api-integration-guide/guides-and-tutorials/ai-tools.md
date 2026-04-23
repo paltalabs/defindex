@@ -8,13 +8,13 @@ DeFindex provides two complementary AI integrations that let you query documenta
 
 ---
 
-## 1. Defindex MCP Server
+## 1. DeFindex MCP Server
 
 The **Model Context Protocol (MCP)** server exposes the full DeFindex documentation to any compatible AI assistant, including Claude, so it can answer questions about vaults, strategies, API endpoints, and SDK usage without you having to paste docs manually.
 
 ### What is it?
 
-The Defindex MCP server (`https://docs.defindex.io/~gitbook/mcp`) gives AI tools direct, searchable access to these docs. Ask your AI assistant about deposit flows, vault roles, APY calculations, or any other Defindex concept and it will answer from the latest documentation.
+The DeFindex MCP server (`https://docs.defindex.io/~gitbook/mcp`) gives AI tools direct, searchable access to these docs. Ask your AI assistant about deposit flows, vault roles, APY calculations, or any other DeFindex concept and it will answer from the latest documentation.
 
 ### Add to Claude Code (CLI)
 
@@ -37,7 +37,7 @@ After saving, restart Claude Code. The server will be available as `mcp__Definde
 
 1. Open **Claude.ai → Settings → Integrations → Add MCP Server**
 2. Enter the server URL: `https://docs.defindex.io/~gitbook/mcp`
-3. Give it a name (e.g. `Defindex Docs`) and save
+3. Give it a name (e.g. `DeFindex Docs`) and save
 
 ### Add to Claude Desktop
 
