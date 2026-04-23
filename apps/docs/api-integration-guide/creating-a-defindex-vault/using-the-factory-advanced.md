@@ -12,7 +12,7 @@ This guide documents every argument involved in deploying a DeFindex vault — w
 
 ### Testnet
 
-Testnet addresses may be not valid after June 17 or December 16 of 2026 testnet resets. if that is the case let us know via Discord to update the docs.
+Testnet addresses may be not valid after the June 17 or December 16, 2026, testnet resets. If that's the case let us know via Discord so we can update the docs.
 
 | Contract | Address |
 |---|---|

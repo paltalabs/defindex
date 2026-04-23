@@ -30,7 +30,7 @@ DeFindex operates on **Stellar Mainnet** and **Stellar Testnet**. The two networ
 
 **On Testnet**, DeFindex strategies use a test USDC issued by the Blend Capital testnet deployment — referred to here as **BlendUSDC**. This is **not** Soroswap or regular USDC; it is a separate test token you must obtain from [testnet.blend.capital](https://testnet.blend.capital).
 
-**On Mainnet**, strategies use real USDC (Circle) and other well known tokens.
+**On Mainnet**, strategies use real USDC (Circle) and other well-known tokens.
 
 
 #### Token addresses
@@ -65,8 +65,7 @@ You need testnet tokens to deploy and interact with a vault on testnet:
 
 A **minimum first deposit of 1001 units** (in the asset's smallest denomination — stroops) of your vault's underlying asset is required immediately after deployment.
 
-* **1 unit is permanently locked** in the vault as an inflation-attack defense mechanism.
-* **1000 units** represent the effective minimum deposit.
+* On the **first deposit**, the vault locks **1000 shares** as an inflation-attack defense mechanism.
 * **Example**: For a USDC vault (7 decimals), 1001 stroops = **0.0001001 USDC** — practically free.
 * **Example**: For an XLM vault (7 decimals), 1001 stroops = **0.0001001 XLM** — also negligible.
 
