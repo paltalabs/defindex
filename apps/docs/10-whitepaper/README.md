@@ -35,24 +35,24 @@ By combining simplicity for newcomers with advanced features for seasoned users,
 
 ### Introduction
 
-* [Introduction](01-introduction.md)
-* [Core Concepts](02-core-concepts.md)
+* [Introduction](01-introduction/)
+* [Core Concepts](02-core-concepts/)
 
 ### The DeFindex Approach
 
 * [Overview](03-the-defindex-approach/)
-* [Design Decisions](03-the-defindex-approach/01-design-decisions.md)
+* [Design Decisions](03-the-defindex-approach/)
 
 ### Contracts
 
-* [Vault Contract](02-contracts/01-vault-contract.md)
-* [Strategy Contract](02-contracts/02-strategy-contract.md)
-* [Zapper Contract](02-contracts/02-zapper-contract.md)
+* [Vault Contract](04-contracts/01-vault-contract.md)
+* [Strategy Contract](04-contracts/02-strategy-contract.md)
+* [Zapper Contract](04-contracts/02-zapper-contract.md)
 
 ### State of the Art
 
-* [State of the Art](04-state-of-the-art/)
+* [State of the Art](07-state-of-the-art/)
 
 ### Appendix
 
-* [Appendix](05-appendix/)
+* [Appendix](08-appendix/)
