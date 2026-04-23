@@ -145,7 +145,7 @@ See the full walkthrough: [Getting Your API Key](./getting-api-key.md)
 
 ## Additional Resources
 
-- [DeFindex Skill](https://github.com/defindex-io/defindex-skill)
+- [DeFindex API Claude Code Skill](https://github.com/defindex-io/defindex-skill)
 - [Full API Reference](https://api.defindex.io/docs)
 - [Postman Collection](https://drive.google.com/drive/folders/1hp02ySFWFeunRCwiZ6oLCjHzcJXpWhX8?usp=drive_link)
 - [Discord — developer channel](https://discord.gg/e2qAhJCBmx)
