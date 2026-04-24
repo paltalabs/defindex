@@ -126,10 +126,10 @@ Each vault supports one or more assets, and each asset can be backed by one or m
 
 You can deploy your Vault in two ways:
 
-* [**Using GUI (Basic)**](using-gui-basic.md)
+* [**Using GUI (Basic)**](using-gui-basic.md) **Skip next steps if using the GUI**
 * [**Using the Factory Contract or API (Advanced)**](using-the-factory-advanced.md)
 
-### Step 4: Do a First Deposit
+### Step 4: Do a First Deposit (Skip if using the GUI)
 
 A **minimum first deposit of 1001 units** of your supported asset is required.
 
@@ -140,7 +140,7 @@ A **minimum first deposit of 1001 units** of your supported asset is required.
 
 This is because these vaults are protected from something called "inflation attacks" you can read more about this kind of attacks on [OpenZeppelin blog](https://blog.openzeppelin.com/a-novel-defense-against-erc4626-inflation-attacks)
 
-### Step 5: First Rebalance
+### Step 5: First Rebalance (Skip if using the GUI)
 
 After deployment, perform the **first rebalance** to define allocations across chosen strategies. This may be a bit confusing right? but How the vault is going to know how to distribute the funds across the different strategies? This step only need to be done once.
 
