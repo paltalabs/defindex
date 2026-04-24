@@ -37,6 +37,8 @@
   * [Deposit & Transfer dfTokens](api-integration-guide/guides-and-tutorials/deposit-and-transfer-dftokens.md)
   * [Sponsored Transactions (Fee Bump Tx)](api-integration-guide/guides-and-tutorials/sponsored-transactions.md)
   * [Privy Server Wallets](api-integration-guide/guides-and-tutorials/privy-server-wallets.md)
+  * [Crossmint Smart Wallets](api-integration-guide/guides-and-tutorials/crossmint-smart-wallets.md)
+  * [AI Tools (MCP & Skill)](api-integration-guide/guides-and-tutorials/ai-tools.md)
   * [Additional Resources](api-integration-guide/guides-and-tutorials/additional-resources.md)
 * [Troubleshooting](api-integration-guide/troubleshooting.md)
 

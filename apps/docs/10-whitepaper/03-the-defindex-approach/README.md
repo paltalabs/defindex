@@ -24,7 +24,7 @@ When supporting a AMM Liquity Pool, the underlying asset will be considered as t
 
 Even if we would provide the best user experience, every Vault only accepts the corresponding assets it will be using for its strategies. We can help the user to get these assets before investing in the Vault(See Zapper contract). However it is a decision that the Vault will only accept the desired assets in the correct ratio.
 
-To understand better why we decide this please check the [Why we can\`t swap on deposit](../05-appendix/01-why-we-cant-swap-on-deposit-or-withdraw.md) section.
+To understand better why we decide this please check the [Why we can\`t swap on deposit](../08-appendix/01-why-we-cant-swap-on-deposit-or-withdraw.md) section.
 
 ### IDLE funds.
 

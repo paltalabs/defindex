@@ -419,6 +419,6 @@ These are Stellar/Soroban transaction-level errors that occur before or outside 
 
 ## Additional Resources
 - [DeFindex Protocol Documentation](https://github.com/paltalabs)
-- [Smart Contract Error Codes](../contracts/vault/src/error.rs)
+- [Smart Contract Error Codes](../../contracts/vault/src/error.rs)
 
 If you encounter an issue not covered here, please open an issue on the project's GitHub repository.
