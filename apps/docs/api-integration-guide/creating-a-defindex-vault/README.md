@@ -1,7 +1,7 @@
 ---
+description: ⏱️ 3 min read
 cover: ../../.gitbook/assets/Captura de pantalla 2025-04-30 a las 15.21.10.png
 coverY: 0
-description: ⏱️ 3 min read
 ---
 
 # Create a Vault
@@ -19,12 +19,12 @@ Before you deploy a vault, make sure you meet the following requirements. These 
 
 DeFindex operates on **Stellar Mainnet** and **Stellar Testnet**. The two networks are completely independent and use different contract addresses and token types.
 
-| Requirement | Testnet | Mainnet |
-|---|---|---|
-| Network Passphrase | `Test SDF Network ; September 2015` | `Public Global Stellar Network ; September 2015` |
-| Factory contract | See [Testnet Deployment](../../contract-deployments/testnet-deployment.md) | See [Mainnet Deployment](../../contract-deployments/mainnet-deployment.md) |
-| RPC URL | `https://soroban-testnet.stellar.org` | `https://soroban.stellar.org` or another provider |
-| Horizon URL | `https://horizon-testnet.stellar.org` | `https://horizon.stellar.org` |
+| Requirement        | Testnet                                                                    | Mainnet                                                                    |
+| ------------------ | -------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Network Passphrase | `Test SDF Network ; September 2015`                                        | `Public Global Stellar Network ; September 2015`                           |
+| Factory contract   | See [Testnet Deployment](../../contract-deployments/testnet-deployment.md) | See [Mainnet Deployment](../../contract-deployments/mainnet-deployment.md) |
+| RPC URL            | `https://soroban-testnet.stellar.org`                                      | `https://soroban.stellar.org` or another provider                          |
+| Horizon URL        | `https://horizon-testnet.stellar.org`                                      | `https://horizon.stellar.org`                                              |
 
 ### Tokens
 
@@ -32,15 +32,14 @@ DeFindex operates on **Stellar Mainnet** and **Stellar Testnet**. The two networ
 
 **On Mainnet**, strategies use real USDC (Circle) and other well-known tokens.
 
-
 #### Token addresses
 
-| Token | Network | Contract Address |
-|---|---|---|
+| Token            | Network           | Contract Address                                           |
+| ---------------- | ----------------- | ---------------------------------------------------------- |
 | XLM (native SAC) | Testnet & Mainnet | `CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC` |
-| BlendUSDC | **Testnet only** | `CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU` |
-| USDC (Circle) | **Mainnet only** | `CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75` |
-| CETES | Testnet | `CC72F57YTPX76HAA64JQOEGHQAPSADQWSY5DWVBR66JINPFDLNCQYHIC` |
+| BlendUSDC        | **Testnet only**  | `CAQCFVLOBK5GIULPNZRGATJJMIZL5BSP7X5YJVMGCPTUEPFM4AVSRCJU` |
+| USDC (Circle)    | **Mainnet only**  | `CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75` |
+| CETES            | Testnet           | `CC72F57YTPX76HAA64JQOEGHQAPSADQWSY5DWVBR66JINPFDLNCQYHIC` |
 
 For a full list of deployed strategy contract addresses, see the [Contract Deployments](../../contract-deployments/) section.
 
@@ -48,16 +47,17 @@ For a full list of deployed strategy contract addresses, see the [Contract Deplo
 
 You need testnet tokens to deploy and interact with a vault on testnet:
 
-1. **XLM (for fees)**: Use [Friendbot](https://friendbot.stellar.org/) to fund your testnet account.
-   ```
-   https://friendbot.stellar.org/?addr=YOUR_STELLAR_ADDRESS
-   ```
+1.  **XLM (for fees)**: Use [Friendbot](https://friendbot.stellar.org/) to fund your testnet account.
+
+    ```
+    https://friendbot.stellar.org/?addr=YOUR_STELLAR_ADDRESS
+    ```
 2. **BlendUSDC** (required for USDC vaults on testnet):
-   - Go to [testnet.blend.capital](https://testnet.blend.capital).
-   - Connect your Freighter wallet (switch to Testnet in wallet settings first).
-   - Click **"Faucet"** or use the asset menu to add a BlendUSDC trustline and receive test tokens.
+   * Go to [testnet.blend.capital](https://testnet.blend.capital).
+   * Connect your Freighter wallet (switch to Testnet in wallet settings first).
+   * Click **"Faucet"** or use the asset menu to add a BlendUSDC trustline and receive test tokens.
 3. **CETES** (required for CETES vaults on testnet):
-   - Contact Etherfuse team to get the official test CETES
+   * Contact Etherfuse team to get the official test CETES
 
 > **Why BlendUSDC?** On testnet, DeFindex strategies are deployed against the Blend Capital testnet pools, which use their own test USDC. Real Circle USDC does not support large amounts minting on Stellar Testnet.
 
@@ -71,7 +71,11 @@ A **minimum first deposit of 1001 units** (in the asset's smallest denomination 
 
 This is required to prevent the [ERC-4626 inflation attack](https://blog.openzeppelin.com/a-novel-defense-against-erc4626-inflation-attacks) (the same class of attack applies to Soroban vaults).
 
-> Funds are **not** automatically invested on deposit. After the first deposit you must perform a [**first rebalance**](#step-5-first-rebalance) to allocate funds across strategies.
+> Funds are **not** automatically invested on deposit. After the first deposit you must perform a [**first rebalance**](./#step-5-first-rebalance) to allocate funds across strategies.
+
+{% hint style="info" %}
+A first deposit of 20 USDC prevents historical APY endpoint from having approximation errors
+{% endhint %}
 
 ***
 
@@ -79,9 +83,9 @@ This is required to prevent the [ERC-4626 inflation attack](https://blog.openzep
 
 Before deployment, you must configure the following **roles** (each tied to an address):
 
-* **Manager** – primary owner, manages settings, upgrades, and other roles (_use a multisig for security_)
-* **Emergency Manager** – rescues funds and pauses risky strategies (_automate for faster response_)
-* **Rebalance Manager** – allocates funds across strategies (_can be automated, or managed by a third party_)
+* **Manager** – primary owner, manages settings, upgrades, and other roles (use a secure wallet, ex. multisig, cold or MPC)
+* **Emergency Manager** – rescues funds and pauses risky strategies (use a hot wallet with fast access or automate it for faster response)
+* **Rebalance Manager** – allocates funds across strategies (use a hot wallet or it can be managed by a third party)
 * **Fee Receiver** – collects performance fees (_use a secure, dedicated wallet_)
 
 > All four roles must be assigned. You may use the same address for multiple roles, but this is not recommended for production.
@@ -98,9 +102,9 @@ Before deployment, you must configure the following **roles** (each tied to an a
 
 **Upgradability**
 
-* You may choose whether the vault contract is **upgradable**.
-* If enabled, the Manager can update the contract's WASM code **without user signatures**.
-* This allows improvements or bug fixes without interrupting vault operations.
+* Choose whether this vault can be upgraded after deployment.
+* If enabled, you can migrate to a new vault version in the future.
+* Your users' funds and positions remain unaffected — no action required on their end.
 
 ***
 
@@ -138,9 +142,9 @@ This is because these vaults are protected from something called "inflation atta
 
 ### Step 5: First Rebalance
 
-After deployment, perform the **first rebalance** to define allocations across chosen strategies. This may be a bit confusing right? but How the vault is going to know how to distribute the funds across the different strategies? This step only need to be done once.&#x20;
+After deployment, perform the **first rebalance** to define allocations across chosen strategies. This may be a bit confusing right? but How the vault is going to know how to distribute the funds across the different strategies? This step only need to be done once.
 
-You have 3 ways to make the first rebalance: using API, using a script  ([discussed here](../smart-contracts/#using-the-example-script-vault_usage_example.ts)) or using [stellar-cli](https://developers.stellar.org/docs/build/guides/cli)
+You have 3 ways to make the first rebalance: using API, using a script ([discussed here](../smart-contracts/#using-the-example-script-vault_usage_example.ts)) or using [stellar-cli](https://developers.stellar.org/docs/build/guides/cli)
 
 #### Using API
 
