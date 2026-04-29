@@ -84,10 +84,10 @@ body {
 /* Partners Slider Animation */
 @keyframes scroll-partners {
   0% {
-    transform: translateX(-0.85%);
+    transform: translateX(-0.7%);
   }
   100% {
-    transform: translateX(-35%);
+    transform: translateX(-34.55%);
   }
 }
 

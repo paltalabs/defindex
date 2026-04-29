@@ -12,7 +12,7 @@ const PartnersSlider = () => {
       >
         Trusted by
       </h3>
-      <div className="px-8 md:px-52">
+      <div className="px-8 md:px-16">
         <div
           className="flex items-center partners-slider"
           style={{

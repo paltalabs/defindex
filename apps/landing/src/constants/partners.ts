@@ -9,4 +9,8 @@ export const PARTNERS: Partner[] = [
   { name: "Soroswap", logo: "/images/soroswap-logo.svg" },
   { name: "xPortal", logo: "/images/xportal-logo.svg" },
   { name: "Hana Wallet", logo: "/images/hanaWallet-logo.svg" },
+  { name: "Meru", logo: "/images/meru-logo.svg" },
+  { name: "Rozo Pay", logo: "/images/rozo-logo.svg" },
+  { name: "Stellar", logo: "/images/stellar-logo.svg" },
+  { name: "Draper University", logo: "/images/draper-university-logo.svg" },
 ];
