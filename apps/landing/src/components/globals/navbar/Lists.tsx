@@ -8,7 +8,7 @@ import { Link } from "react-scroll";
 const menuItems = [
     { id: 1, name: "Home", to: "hero" },
     { id: 2, name: "Why Integrate", to: "why-integrate-yield" },
-    { id: 3, name: "Vaults", to: "/vaults", external: true, isInternal: true },
+    { id: 3, name: "Deployments", to: "/deployments", external: true, isInternal: true },
     {
         id: 4,
         name: "Simulate Revenue",

@@ -26,6 +26,15 @@ export function getVaultLogo(vaultAddress: string): string | null {
   return VAULT_LOGOS[vaultAddress] ?? null;
 }
 
+// Logos that need a specific bg color to be visible (e.g. dark SVGs need white)
+const VAULT_LOGO_BG: Record<string, string> = {
+  'CD4JGS6BB5NZVSNKRNI43GUC6E3OBYLCLBQZJVTZLDVHQ5KDAOHVOIQF': '#ffffff', // xPortal
+};
+
+export function getVaultLogoBg(vaultAddress: string): string | undefined {
+  return VAULT_LOGO_BG[vaultAddress];
+}
+
 /**
  * Strip common prefixes from vault names for cleaner display
  */
@@ -33,4 +42,27 @@ export function formatVaultName(name: string): string {
   return name
     .replace(/^DeFindex-Vault-/i, '')
     .replace(/^DeFindex-/i, '');
+}
+
+export interface PartnerInfo {
+  name: string;
+  color: string;
+  glyph: string;
+}
+
+const PARTNER_RULES: Array<{ re: RegExp } & PartnerInfo> = [
+  { re: /Soroswap/i, name: 'Soroswap', color: '#3A1B5C', glyph: 'S' },
+  { re: /^Beans/i,   name: 'Beans',    color: '#DEC9F4', glyph: 'B' },
+  { re: /^Hana/i,    name: 'HANA',     color: '#FFFFFF', glyph: 'H' },
+  { re: /Seev/i,     name: 'Seevcash', color: '#34C759', glyph: 'S' },
+  { re: /^Meru/i,    name: 'Meru',     color: '#FFFFFF', glyph: 'M' },
+  { re: /^Rozo/i,    name: 'Rozo',     color: '#0F0F0F', glyph: 'R' },
+  { re: /^xPortal/i, name: 'xPortal',  color: '#000000', glyph: 'X' },
+];
+
+export function getPartnerInfo(cleanVaultName: string): PartnerInfo {
+  const match = PARTNER_RULES.find(r => r.re.test(cleanVaultName));
+  if (match) return { name: match.name, color: match.color, glyph: match.glyph };
+  const firstLetter = cleanVaultName[0]?.toUpperCase() ?? '?';
+  return { name: cleanVaultName, color: '#444', glyph: firstLetter };
 }

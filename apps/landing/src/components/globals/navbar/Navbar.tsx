@@ -11,6 +11,7 @@ function Navbar() {
     const nav = useNavbarEffect("pb-7 lg:pb-10", "pb-4 lg:pb-6");
     const opacity = useScrollOpacity(200);
 
+    const [isHovered, setIsHovered] = React.useState(false);
     const [isOpen, setIsOpen] = React.useState(false);
     const toggleDrawer = () => {
         setIsOpen((prevState) => !prevState);
@@ -21,9 +22,11 @@ function Navbar() {
             <nav
                 className={`fixed top-0 left-0 z-[1020] right-0 duration-200 w-full ${nav}`}
                 style={{
-                    opacity,
+                    opacity: isHovered ? 1 : opacity,
                     transition: 'opacity 0.3s ease-out'
                 }}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
             >
                 <div className="container w-full max-w-full px-4 py-2 md:py-6 md:px-6" style={{backgroundColor: "rgb(3, 48, 54)"}}>
                     <div className="grid grid-cols-2 lg:grid-cols-[200px_1fr_200px] items-center w-full">
