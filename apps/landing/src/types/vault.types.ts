@@ -47,6 +47,8 @@ export interface StrategyApySnapshot {
   apy7d: number | null;
 }
 
+export type SortKey = 'TVL' | 'APY' | 'Name';
+
 // API response types
 export interface SingleVaultAPIResponse {
   address: string;

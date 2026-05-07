@@ -261,6 +261,7 @@ function VaultSubRow({
 export default function PartnerGroupRow({ group }: PartnerGroupRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   const isSingle = group.vaults.length === 1;
   const singleVault = isSingle ? group.vaults[0] : null;
@@ -301,14 +302,10 @@ export default function PartnerGroupRow({ group }: PartnerGroupRowProps) {
           transition: 'background 200ms cubic-bezier(0.4,0,0.2,1)',
           cursor: isSingle ? 'default' : 'pointer',
           borderTop: '1px solid rgba(193,200,201,.07)',
-          outline: 'none',
+          outline: isFocused && !isSingle ? '4px solid rgba(217,249,157,.40)' : 'none',
         }}
-        onFocus={e =>
-          !isSingle && ((e.currentTarget as HTMLElement).style.outline = '4px solid rgba(217,249,157,.40)')
-        }
-        onBlur={e =>
-          ((e.currentTarget as HTMLElement).style.outline = 'none')
-        }
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
       >
         {/* Caret */}
         <div style={{ flex: '0 0 16px', display: 'flex', justifyContent: 'center' }}>

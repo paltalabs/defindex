@@ -2,11 +2,12 @@
 
 import { useMemo } from "react";
 import { useVaults } from "@/hooks/useVaultInfo";
-import { formatVaultName } from "@/lib/vaultLogos";
-import { getPartnerInfo } from "@/lib/vaultLogos";
+import { formatVaultName, getPartnerInfo } from "@/lib/vaultLogos";
 import { stroopsToNum } from "@/utils/vaultFormatters";
 import type { ManagedFunds } from "@/types/vault.types";
 import PartnerGroupRow, { buildPartnerGroups } from "./PartnerGroupRow";
+import { HeaderCell, GLASS_CARD } from "./TableCard";
+import type { SortKey } from "@/types/vault.types";
 
 const VAULT_ADDRESSES = [
     "CBNKCU3HGFKHFOF7JTGXQCNKE3G3DXS5RDBQUKQMIIECYKXPIOUGB2S3",
@@ -20,8 +21,6 @@ const VAULT_ADDRESSES = [
     "CCDRFMZ7CH364ATQ5YSVTEJ3G3KPNFVM6TTC6N4T5REHWJS6LGVFP7MY",
     "CCA2ZJP5BVRXYTQH4FAGHCAUMRYCXVC4CRYC2NXHWMR7TIVX36U7F5HR",
 ];
-
-type SortKey = "TVL" | "APY" | "Name";
 
 interface VaultsTableProps {
     search?: string;
@@ -65,32 +64,6 @@ function SkeletonRow({ index }: { index: number }) {
     );
 }
 
-function HeaderCell({ children, width, align = "left" }: { children: React.ReactNode; width?: string; align?: "left" | "right" }) {
-    return (
-        <div
-            style={{
-                flex: width ? `0 0 ${width}` : 1,
-                textAlign: align,
-                fontSize: 12,
-                fontWeight: 600,
-                letterSpacing: "0.04em",
-                textTransform: "uppercase",
-                color: "rgba(255,255,255,.4)",
-            }}
-        >
-            {children}
-        </div>
-    );
-}
-
-const GLASS_CARD = {
-    background: "rgba(29,57,62,.40)",
-    border: "1px solid rgba(193,200,201,.10)",
-    borderRadius: 20,
-    overflow: "hidden",
-    backdropFilter: "blur(14px)",
-    WebkitBackdropFilter: "blur(14px)",
-} as const;
 
 export default function VaultsTable({ search = "", sort = "TVL" }: VaultsTableProps) {
     const { vaultStates, sortedVaults, isAnyLoading } = useVaults({ vaultIds: VAULT_ADDRESSES });

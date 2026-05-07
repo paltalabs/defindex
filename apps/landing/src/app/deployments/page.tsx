@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Navbar from '@/components/globals/navbar/Navbar';
 import Footer from '@/components/globals/Footer';
@@ -13,10 +13,9 @@ import { useVaults } from '@/hooks/useVaultInfo';
 import { useStrategies } from '@/hooks/useStrategies';
 import { stroopsToNum } from '@/utils/vaultFormatters';
 import { formatVaultName, getPartnerInfo } from '@/lib/vaultLogos';
-import type { ManagedFunds } from '@/types/vault.types';
+import type { ManagedFunds, SortKey } from '@/types/vault.types';
 
 type Tab = 'partners' | 'strategies';
-type SortKey = 'TVL' | 'APY' | 'Name';
 
 function DeploymentsContent() {
   const router = useRouter();
@@ -28,9 +27,7 @@ function DeploymentsContent() {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('TVL');
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
-  const updatedAtRef = useRef(updatedAt);
-  updatedAtRef.current = updatedAt;
-
+  const [focusedTab, setFocusedTab] = useState<Tab | null>(null);
   const { sortedVaults } = useVaults({ vaultIds: VAULT_ADDRESSES });
   const { strategies } = useStrategies();
 
@@ -100,7 +97,7 @@ function DeploymentsContent() {
     WebkitBackdropFilter: 'blur(8px)',
   } as const;
 
-  const makeTabBtnStyle = (active: boolean) => ({
+  const makeTabBtnStyle = (active: boolean, focused: boolean) => ({
     all: 'unset' as const,
     cursor: 'pointer',
     padding: '8px 18px',
@@ -114,6 +111,7 @@ function DeploymentsContent() {
     color: active ? ACCENT : 'rgba(255,255,255,.6)',
     background: active ? `${ACCENT}1A` : 'transparent',
     transition: 'all 200ms cubic-bezier(0.4,0,0.2,1)',
+    outline: focused ? '4px solid rgba(217,249,157,.40)' : 'none',
   });
 
   const makeCountStyle = (active: boolean) => ({
@@ -169,9 +167,9 @@ function DeploymentsContent() {
                     role="tab"
                     aria-selected={active}
                     onClick={() => setTab(t)}
-                    style={makeTabBtnStyle(active)}
-                    onFocus={e => ((e.target as HTMLButtonElement).style.outline = '4px solid rgba(217,249,157,.40)')}
-                    onBlur={e => ((e.target as HTMLButtonElement).style.outline = 'none')}
+                    style={makeTabBtnStyle(active, focusedTab === t)}
+                    onFocus={() => setFocusedTab(t)}
+                    onBlur={() => setFocusedTab(null)}
                   >
                     {label}
                     <span style={makeCountStyle(active)}>{count}</span>

@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-
-type SortKey = 'TVL' | 'APY' | 'Name';
+import type { SortKey } from '@/types/vault.types';
 
 interface FilterBarProps {
   onSearch: (q: string) => void;
@@ -14,6 +13,7 @@ const SORT_OPTIONS: SortKey[] = ['TVL', 'APY', 'Name'];
 
 export default function FilterBar({ onSearch, sort, onSort }: FilterBarProps) {
   const [inputValue, setInputValue] = useState('');
+  const [focusedOpt, setFocusedOpt] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -87,15 +87,10 @@ export default function FilterBar({ onSearch, sort, onSort }: FilterBarProps) {
               fontSize: 12,
               fontWeight: 600,
               transition: 'all 200ms cubic-bezier(0.4,0,0.2,1)',
-              outline: 'none',
+              outline: focusedOpt === opt ? '4px solid rgba(217,249,157,.40)' : 'none',
             }}
-            onFocus={e =>
-              ((e.target as HTMLButtonElement).style.outline =
-                '4px solid rgba(217,249,157,.40)')
-            }
-            onBlur={e =>
-              ((e.target as HTMLButtonElement).style.outline = 'none')
-            }
+            onFocus={() => setFocusedOpt(opt)}
+            onBlur={() => setFocusedOpt(null)}
           >
             ↓ {opt}
           </button>
