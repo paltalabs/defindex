@@ -16,9 +16,10 @@ export default function StrategyRow({ strategy }: StrategyRowProps) {
 
     // TOKEN_ICONS is the source of truth: look up by contract address, then fall back to
     // 'native' if the API reports the symbol as 'XLM' (Stellar native XLM may not use key 'native').
+    const isNativeXlm = strategy.asset === 'native' || strategy.assetSymbol === 'XLM' || strategy.assetSymbol === 'native';
     const tokenInfo =
         getTokenInfo(strategy.asset) ??
-        (strategy.assetSymbol === 'XLM' ? getTokenInfo('native') : null);
+        (isNativeXlm ? getTokenInfo('native') : null);
     const tokenIcon = tokenInfo?.icon ?? null;
     const displayAssetSymbol = tokenInfo?.symbol ?? strategy.assetSymbol;
     const tvlNum = stroopsToNum(strategy.tvl, strategy.assetDecimals);
