@@ -2,15 +2,14 @@
 
 import { fmtUsd, fmtApy } from '@/utils/vaultFormatters';
 
-type Tab = 'partners' | 'strategies';
-
-interface PageHeaderProps {
-  tab: Tab;
-  partnerCount?: number;
+type PageHeaderProps = {
   strategyCount: number;
   totalTvl: number;
   avgApy: number | null;
-}
+} & (
+  | { tab: 'partners'; partnerCount: number }
+  | { tab: 'strategies'; partnerCount?: never }
+);
 
 const COPY = {
   partners: {
