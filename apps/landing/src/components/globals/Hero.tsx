@@ -76,11 +76,11 @@ function Hero() {
                         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full">
                             <ScheduleDemoButton />
                             <Link
-                                href="/vaults"
-                                aria-label="Explore DeFindex Vaults"
+                                href="/strategies"
+                                aria-label="Explore DeFindex Strategies"
                                 className="flex items-center justify-center bg-cyan-950/45 text-lime-200 font-manrope font-extrabold text-sm rounded-3xl px-6 py-4 sm:py-6 transition-all duration-normal hover:scale-105 hover:bg-lime-200/10 hover:shadow-lg active:scale-95"
                             >
-                                Explore Vaults
+                                Explore Strategies
                             </Link>
                         </div>
                     </div>

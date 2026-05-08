@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useVaults } from "@/hooks/useVaultInfo";
+import { useTokenPrices } from "@/hooks/useTokenPrices";
 import { formatVaultName, getPartnerInfo } from "@/lib/vaultLogos";
 import { stroopsToNum } from "@/utils/vaultFormatters";
 import type { ManagedFunds } from "@/types/vault.types";
@@ -67,13 +68,14 @@ function SkeletonRow({ index }: { index: number }) {
 
 export default function VaultsTable({ search = "", sort = "TVL" }: VaultsTableProps) {
     const { vaultStates, sortedVaults, isAnyLoading } = useVaults({ vaultIds: VAULT_ADDRESSES });
+    const { prices } = useTokenPrices();
 
     const pendingCount = vaultStates.filter(
         v => v.status === "pending" || v.status === "loading"
     ).length;
 
     const groups = useMemo(() => {
-        const allGroups = buildPartnerGroups(sortedVaults);
+        const allGroups = buildPartnerGroups(sortedVaults, prices);
 
         const filtered = search
             ? allGroups.filter(g => {
@@ -89,12 +91,12 @@ export default function VaultsTable({ search = "", sort = "TVL" }: VaultsTablePr
             : allGroups;
 
         return [...filtered].sort((a, b) => {
-            if (sort === "TVL") return b.tvlSum - a.tvlSum;
+            if (sort === "TVL") return b.tvlUsdSum - a.tvlUsdSum;
             if (sort === "APY") return b.weightedApy - a.weightedApy;
             if (sort === "Name") return a.partnerName.localeCompare(b.partnerName);
             return 0;
         });
-    }, [sortedVaults, search, sort]);
+    }, [sortedVaults, prices, search, sort]);
 
     const errorVaults = vaultStates.filter(v => v.status === "error");
 
@@ -119,7 +121,7 @@ export default function VaultsTable({ search = "", sort = "TVL" }: VaultsTablePr
 
             {/* Partner groups */}
             {groups.map(group => (
-                <PartnerGroupRow key={group.partnerName} group={group} />
+                <PartnerGroupRow key={group.partnerName} group={group} prices={prices} />
             ))}
 
             {/* Loading skeletons */}

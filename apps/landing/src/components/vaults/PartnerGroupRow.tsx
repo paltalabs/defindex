@@ -13,16 +13,17 @@ import { getPartnerInfo, getVaultLogo, getVaultLogoBg, formatVaultName } from '@
 import TokenExposure from './TokenExposure';
 import PartnerAvatar from './PartnerAvatar';
 
-interface PartnerGroup {
+export interface PartnerGroup {
   partnerName: string;
   vaults: VaultWithAddress[];
-  tvlSum: number;
+  tvlUsdSum: number;
   weightedApy: number;
   exposureSymbols: string[];
 }
 
 interface PartnerGroupRowProps {
   group: PartnerGroup;
+  prices: Record<string, number>;
 }
 
 function Caret({ open }: { open: boolean }) {
@@ -56,6 +57,14 @@ function getPrimaryTvlNum(vault: VaultWithAddress): number {
   return stroopsToNum(funds[0].total_amount);
 }
 
+function getPrimaryTvlUsd(vault: VaultWithAddress, prices: Record<string, number>): number {
+  const funds = vault.totalManagedFunds as ManagedFunds[];
+  if (!funds?.length) return 0;
+  const amount = stroopsToNum(funds[0].total_amount);
+  const price = prices[funds[0].asset] ?? 1;
+  return amount * price;
+}
+
 function getPrimaryAssetSymbol(vault: VaultWithAddress): string {
   const funds = vault.totalManagedFunds as ManagedFunds[];
   if (!funds?.length) return '';
@@ -69,7 +78,10 @@ function getPrimaryStrategy(vault: VaultWithAddress): string {
   return (live ?? firstAsset.strategies[0])?.name ?? '';
 }
 
-export function buildPartnerGroups(vaults: VaultWithAddress[]): PartnerGroup[] {
+export function buildPartnerGroups(
+  vaults: VaultWithAddress[],
+  prices: Record<string, number> = {}
+): PartnerGroup[] {
   const map = new Map<string, VaultWithAddress[]>();
   for (const vault of vaults) {
     const clean = formatVaultName(vault.name);
@@ -79,31 +91,34 @@ export function buildPartnerGroups(vaults: VaultWithAddress[]): PartnerGroup[] {
   }
 
   return Array.from(map.entries()).map(([partnerName, groupVaults]) => {
-    const tvlSum = groupVaults.reduce((s, v) => s + getPrimaryTvlNum(v), 0);
+    const tvlUsdSum = groupVaults.reduce((s, v) => s + getPrimaryTvlUsd(v, prices), 0);
 
     const liveVaults = groupVaults.filter(v => (v.apy ?? 0) > 0);
-    const wTotal = liveVaults.reduce((s, v) => s + getPrimaryTvlNum(v), 0);
+    const wTotal = liveVaults.reduce((s, v) => s + getPrimaryTvlUsd(v, prices), 0);
     const weightedApy =
       wTotal > 0
-        ? liveVaults.reduce((s, v) => s + (v.apy ?? 0) * getPrimaryTvlNum(v), 0) / wTotal
+        ? liveVaults.reduce((s, v) => s + (v.apy ?? 0) * getPrimaryTvlUsd(v, prices), 0) / wTotal
         : 0;
 
     const exposureSymbols = Array.from(
       new Set(groupVaults.flatMap(v => v.assets?.map(a => a.symbol) ?? []))
     );
 
-    return { partnerName, vaults: groupVaults, tvlSum, weightedApy, exposureSymbols };
+    return { partnerName, vaults: groupVaults, tvlUsdSum, weightedApy, exposureSymbols };
   });
 }
 
 function VaultSubRow({
   vault,
+  prices,
   isLast,
 }: {
   vault: VaultWithAddress;
+  prices: Record<string, number>;
   isLast: boolean;
 }) {
   const tvlNum = getPrimaryTvlNum(vault);
+  const tvlUsd = getPrimaryTvlUsd(vault, prices);
   const tvlSymbol = getPrimaryAssetSymbol(vault);
   const strategyName = getPrimaryStrategy(vault);
   const isIdle = (vault.apy ?? 0) === 0;
@@ -227,7 +242,7 @@ function VaultSubRow({
           {fmtTVL(tvlNum, tvlSymbol)}
         </div>
         <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 1 }}>
-          {fmtUsd(tvlNum)}
+          {fmtUsd(tvlUsd)}
         </div>
       </div>
 
@@ -258,7 +273,7 @@ function VaultSubRow({
   );
 }
 
-export default function PartnerGroupRow({ group }: PartnerGroupRowProps) {
+export default function PartnerGroupRow({ group, prices }: PartnerGroupRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -271,6 +286,7 @@ export default function PartnerGroupRow({ group }: PartnerGroupRowProps) {
   const partnerLogoBg = getVaultLogoBg(firstVaultAddress);
 
   const singleTvlNum = singleVault ? getPrimaryTvlNum(singleVault) : 0;
+  const singleTvlUsd = singleVault ? getPrimaryTvlUsd(singleVault, prices) : 0;
   const singleTvlSymbol = singleVault ? getPrimaryAssetSymbol(singleVault) : '';
   const singleStrategy = singleVault ? getPrimaryStrategy(singleVault) : '';
   const singleIsIdle = singleVault ? (singleVault.apy ?? 0) === 0 : false;
@@ -362,16 +378,31 @@ export default function PartnerGroupRow({ group }: PartnerGroupRowProps) {
         <div style={{ flex: '0 0 180px' }}>
           <div
             style={{
-              fontSize: 15,
-              fontWeight: 600,
-              color: '#fff',
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: 6,
               fontFeatureSettings: '"tnum"',
             }}
           >
-            {isSingle ? fmtTVL(singleTvlNum, singleTvlSymbol) : fmtUsd(group.tvlSum)}
+            <span style={{ fontSize: 15, fontWeight: 600, color: '#fff' }}>
+              {isSingle ? fmtTVL(singleTvlNum, singleTvlSymbol) : fmtUsd(group.tvlUsdSum)}
+            </span>
+            {!isSingle && (
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  color: 'rgba(255,255,255,.35)',
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                USD
+              </span>
+            )}
           </div>
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,.45)', marginTop: 2 }}>
-            {isSingle ? fmtUsd(singleTvlNum) : 'across all vaults'}
+            {isSingle ? fmtUsd(singleTvlUsd) : 'across all vaults'}
           </div>
         </div>
 
@@ -417,6 +448,7 @@ export default function PartnerGroupRow({ group }: PartnerGroupRowProps) {
             <VaultSubRow
               key={vault.address}
               vault={vault}
+              prices={prices}
               isLast={i === group.vaults.length - 1}
             />
           ))}

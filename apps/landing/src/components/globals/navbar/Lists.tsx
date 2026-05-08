@@ -7,8 +7,7 @@ import { Link } from "react-scroll";
 
 const menuItems = [
     { id: 1, name: "Home", to: "hero" },
-    { id: 2, name: "Why Integrate", to: "why-integrate-yield" },
-    { id: 3, name: "Deployments", to: "/deployments", external: true, isInternal: true },
+    { id: 3, name: "Strategies", to: "/strategies", external: true, isInternal: true },
     {
         id: 4,
         name: "Simulate Revenue",
@@ -17,8 +16,9 @@ const menuItems = [
         isInternal: true,
     },
     { id: 5, name: "Blog", to: "/blog", external: true, isInternal: true },
+    { id: 3, name: "Partners", to: "/partners", external: true, isInternal: true },
     { id: 6, name: "Documentation", to: "https://docs.defindex.io", external: true },
-    { id: 7, name: "Dashboards", to: "https://dune.com/paltalabs/defindex", external: true },
+    { id: 7, name: "Dune", to: "https://dune.com/paltalabs/defindex", external: true },
 ];
 /* eslint-disable @typescript-eslint/no-unused-vars */
 function Lists({ toggle }: { toggle?: () => void }) {
