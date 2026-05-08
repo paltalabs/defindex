@@ -30,7 +30,7 @@ export async function GET() {
   try {
     const res = await fetch(
       `https://api.coingecko.com/api/v3/simple/price?ids=${geckoIds}&vs_currencies=usd`,
-      { next: { revalidate: 300 } }
+      { next: { revalidate: 7200 } }
     );
 
     if (!res.ok) throw new Error(`CoinGecko responded ${res.status}`);
@@ -43,7 +43,7 @@ export async function GET() {
       if (usd != null) prices[address] = usd;
     }
 
-    cache = { prices, expiresAt: Date.now() + 5 * 60 * 1000 };
+    cache = { prices, expiresAt: Date.now() + 2 * 60 * 60 * 1000 };
     return NextResponse.json(prices);
   } catch {
     return NextResponse.json(FALLBACK_PRICES);

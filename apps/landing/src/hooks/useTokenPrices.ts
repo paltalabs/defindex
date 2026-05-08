@@ -10,7 +10,7 @@ export function useTokenPrices() {
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
-      dedupingInterval: 300_000, // 5 min — matches server cache
+      dedupingInterval: 7_200_000, // 2 h — matches server cache
     }
   );
 
