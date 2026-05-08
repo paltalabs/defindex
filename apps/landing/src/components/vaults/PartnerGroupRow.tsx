@@ -252,7 +252,7 @@ function VaultSubRow({
       </div>
 
       {/* APY */}
-      <div style={{ flex: 1, textAlign: 'right' }}>
+      <div style={{ flex: 1, textAlign: 'right', overflow: 'hidden' }}>
         <div
           style={{
             fontFamily: 'Familjen Grotesk, sans-serif',
@@ -265,7 +265,7 @@ function VaultSubRow({
         >
           {(vault.apy ?? 0).toFixed(2)}%
         </div>
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 1 }}>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {strategyName}
         </div>
       </div>
@@ -420,7 +420,7 @@ export default function PartnerGroupRow({ group, prices }: PartnerGroupRowProps)
         </div>
 
         {/* APY */}
-        <div style={{ flex: 1, textAlign: 'right' }}>
+        <div style={{ flex: 1, textAlign: 'right', overflow: 'hidden' }}>
           <div
             style={{
               fontFamily: 'Familjen Grotesk, sans-serif',
@@ -435,7 +435,7 @@ export default function PartnerGroupRow({ group, prices }: PartnerGroupRowProps)
               ? `${(singleVault!.apy ?? 0).toFixed(2)}%`
               : `${group.weightedApy.toFixed(2)}%`}
           </div>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {isSingle ? (singleStrategy ? `via ${singleStrategy}` : '') : 'TVL-weighted avg'}
           </div>
         </div>

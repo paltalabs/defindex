@@ -39,9 +39,6 @@ function SkeletonRow({ index }: { index: number }) {
                 <div style={{ height: 14, width: 80, background: "rgba(255,255,255,.08)", borderRadius: 4, marginBottom: 6 }} />
                 <div style={{ height: 11, width: 50, background: "rgba(255,255,255,.06)", borderRadius: 4 }} />
             </div>
-            <div style={{ flex: "0 0 100px" }}>
-                <div style={{ height: 24, width: 80, background: "rgba(255,255,255,.06)", borderRadius: 4 }} />
-            </div>
             <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
                 <div style={{ height: 18, width: 55, background: "rgba(255,255,255,.08)", borderRadius: 4 }} />
             </div>
@@ -73,46 +70,50 @@ export default function StrategiesTable({ search = "", sort = "TVL" }: Strategie
 
     return (
         <div style={GLASS_CARD}>
-            {/* Table header */}
-            <div
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 16,
-                    padding: "16px 28px",
-                    borderBottom: "1px solid rgba(193,200,201,.10)",
-                }}
-            >
-                <HeaderCell width="320px">Strategy</HeaderCell>
-                <HeaderCell width="120px">Type</HeaderCell>
-                <HeaderCell width="140px">Asset</HeaderCell>
-                <HeaderCell width="180px">TVL</HeaderCell>
-                <HeaderCell align="right">APY · 7d</HeaderCell>
-            </div>
+            <div style={{ overflowX: "auto" }}>
+                <div style={{ minWidth: 1000 }}>
+                    {/* Table header */}
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 16,
+                            padding: "16px 28px",
+                            borderBottom: "1px solid rgba(193,200,201,.10)",
+                        }}
+                    >
+                        <HeaderCell width="320px">Strategy</HeaderCell>
+                        <HeaderCell width="120px">Type</HeaderCell>
+                        <HeaderCell width="140px">Asset</HeaderCell>
+                        <HeaderCell width="180px">TVL</HeaderCell>
+                        <HeaderCell align="right">APY · 7d</HeaderCell>
+                    </div>
 
-            {/* Rows */}
-            {filtered.map(s => (
-                <StrategyRow key={s.address} strategy={s} />
-            ))}
+                    {/* Rows */}
+                    {filtered.map(s => (
+                        <StrategyRow key={s.address} strategy={s} />
+                    ))}
 
-            {/* Loading skeletons */}
-            {isLoading && filtered.length === 0 &&
-                [0, 1, 2].map(i => <SkeletonRow key={`sk-${i}`} index={i} />)
-            }
+                    {/* Loading skeletons */}
+                    {isLoading && filtered.length === 0 &&
+                        [0, 1, 2].map(i => <SkeletonRow key={`sk-${i}`} index={i} />)
+                    }
 
-            {/* Error */}
-            {error && (
-                <div
-                    style={{
-                        padding: "24px 28px",
-                        textAlign: "center",
-                        color: "#FC5B31",
-                        fontSize: 13,
-                    }}
-                >
-                    Couldn&apos;t load strategies. Please retry.
+                    {/* Error */}
+                    {error && (
+                        <div
+                            style={{
+                                padding: "24px 28px",
+                                textAlign: "center",
+                                color: "#FC5B31",
+                                fontSize: 13,
+                            }}
+                        >
+                            Couldn&apos;t load strategies. Please retry.
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
 
             {/* Empty search state */}
             {!isLoading && !error && filtered.length === 0 && search && (

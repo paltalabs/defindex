@@ -102,48 +102,52 @@ export default function VaultsTable({ search = "", sort = "TVL" }: VaultsTablePr
 
     return (
         <div style={GLASS_CARD}>
-            {/* Table header */}
-            <div
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 16,
-                    padding: "16px 28px",
-                    borderBottom: "1px solid rgba(193,200,201,.10)",
-                }}
-            >
-                <div style={{ flex: "0 0 16px" }} />
-                <HeaderCell width="280px">Partner</HeaderCell>
-                <HeaderCell width="180px">TVL</HeaderCell>
-                <HeaderCell width="280px">Token exposure</HeaderCell>
-                <HeaderCell align="right">APY</HeaderCell>
-            </div>
+            <div style={{ overflowX: "auto" }}>
+                <div style={{ minWidth: 1000 }}>
+                    {/* Table header */}
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 16,
+                            padding: "16px 28px",
+                            borderBottom: "1px solid rgba(193,200,201,.10)",
+                        }}
+                    >
+                        <div style={{ flex: "0 0 16px" }} />
+                        <HeaderCell width="280px">Partner</HeaderCell>
+                        <HeaderCell width="180px">TVL</HeaderCell>
+                        <HeaderCell width="280px">Token exposure</HeaderCell>
+                        <HeaderCell align="right">APY</HeaderCell>
+                    </div>
 
-            {/* Partner groups */}
-            {groups.map(group => (
-                <PartnerGroupRow key={group.partnerName} group={group} prices={prices} />
-            ))}
+                    {/* Partner groups */}
+                    {groups.map(group => (
+                        <PartnerGroupRow key={group.partnerName} group={group} prices={prices} />
+                    ))}
 
-            {/* Loading skeletons */}
-            {Array.from({ length: Math.min(pendingCount, 4) }).map((_, i) => (
-                <SkeletonRow key={`sk-${i}`} index={i} />
-            ))}
+                    {/* Loading skeletons */}
+                    {Array.from({ length: Math.min(pendingCount, 4) }).map((_, i) => (
+                        <SkeletonRow key={`sk-${i}`} index={i} />
+                    ))}
 
-            {/* Error rows */}
-            {errorVaults.map(v => (
-                <div
-                    key={`err-${v.address}`}
-                    style={{
-                        padding: "16px 28px",
-                        borderTop: "1px solid rgba(193,200,201,.07)",
-                        color: "#FC5B31",
-                        fontSize: 13,
-                        textAlign: "center",
-                    }}
-                >
-                    Failed to load vault: {v.error}
+                    {/* Error rows */}
+                    {errorVaults.map(v => (
+                        <div
+                            key={`err-${v.address}`}
+                            style={{
+                                padding: "16px 28px",
+                                borderTop: "1px solid rgba(193,200,201,.07)",
+                                color: "#FC5B31",
+                                fontSize: 13,
+                                textAlign: "center",
+                            }}
+                        >
+                            Failed to load vault: {v.error}
+                        </div>
+                    ))}
                 </div>
-            ))}
+            </div>
 
             {/* Empty search state */}
             {!isAnyLoading && groups.length === 0 && search && (

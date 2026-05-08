@@ -75,7 +75,7 @@ function PartnersContent() {
       <div style={{ position: 'relative', zIndex: 1 }}>
         <Navbar />
 
-        <div style={{ maxWidth: 1240, margin: '0 auto', padding: '0 32px' }}>
+        <div style={{ maxWidth: 1240, margin: '0 auto' }} className="px-4 sm:px-8">
           <PageHeader
             tab="partners"
             partnerCount={partnerCount}

@@ -6,7 +6,7 @@ type Tab = 'partners' | 'strategies';
 
 interface PageHeaderProps {
   tab: Tab;
-  partnerCount: number;
+  partnerCount?: number;
   strategyCount: number;
   totalTvl: number;
   avgApy: number | null;
@@ -72,7 +72,10 @@ function Stat({ label, value, highlight }: { label: string; value: string; highl
 
 function StatDivider() {
   return (
-    <div style={{ width: 1, alignSelf: 'stretch', background: 'rgba(255,255,255,.08)' }} />
+    <div
+      className="hidden sm:block"
+      style={{ width: 1, alignSelf: 'stretch', background: 'rgba(255,255,255,.08)' }}
+    />
   );
 }
 
@@ -81,7 +84,7 @@ export default function PageHeader({ tab, partnerCount, strategyCount, totalTvl,
   const subtitle = tab === 'partners' ? copy.sub(partnerCount) : copy.sub(strategyCount);
 
   return (
-    <div style={{ position: 'relative', padding: '64px 0 40px' }}>
+    <div style={{ position: 'relative', padding: '40px 0 32px' }} className="sm:pt-16 sm:pb-10">
       {/* Pill */}
       <div
         key={`pill-${tab}`}
@@ -116,9 +119,9 @@ export default function PageHeader({ tab, partnerCount, strategyCount, totalTvl,
       {/* H1 */}
       <h1
         key={`h1-${tab}`}
+        className="text-[36px] sm:text-[52px] lg:text-[64px]"
         style={{
           fontFamily: 'Familjen Grotesk, sans-serif',
-          fontSize: 64,
           fontWeight: 700,
           color: '#fff',
           margin: 0,
@@ -136,8 +139,8 @@ export default function PageHeader({ tab, partnerCount, strategyCount, totalTvl,
       {/* Subtitle */}
       <p
         key={`p-${tab}`}
+        className="text-[15px] sm:text-[17px]"
         style={{
-          fontSize: 17,
           color: 'rgba(255,255,255,.6)',
           maxWidth: 640,
           marginTop: 16,
@@ -150,11 +153,17 @@ export default function PageHeader({ tab, partnerCount, strategyCount, totalTvl,
         {subtitle}
       </p>
 
-      {/* Stat strip */}
-      <div style={{ display: 'flex', gap: 48, marginTop: 36, alignItems: 'center' }}>
+      {/* Stat strip — 2×2 grid on mobile, single row on sm+ */}
+      <div
+        className="grid grid-cols-2 gap-x-6 gap-y-6 mt-8 sm:flex sm:gap-12 sm:mt-9 sm:items-center"
+      >
         <Stat label="Total TVL" value={fmtUsd(totalTvl)} />
-        <StatDivider />
-        <Stat label="Active partners" value={String(partnerCount)} />
+        {tab === 'partners' && partnerCount !== undefined && (
+          <>
+            <StatDivider />
+            <Stat label="Active partners" value={String(partnerCount)} />
+          </>
+        )}
         <StatDivider />
         <Stat label="Strategies" value={String(strategyCount)} />
         <StatDivider />

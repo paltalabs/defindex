@@ -25,7 +25,7 @@ export default function FilterBar({ onSearch, sort, onSort }: FilterBarProps) {
   }, [inputValue, onSearch]);
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+    <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
       {/* Search */}
       <div
         style={{
@@ -69,33 +69,35 @@ export default function FilterBar({ onSearch, sort, onSort }: FilterBarProps) {
         />
       </div>
 
-      {/* Sort chips */}
-      {SORT_OPTIONS.map(opt => {
-        const active = sort === opt;
-        return (
-          <button
-            key={opt}
-            onClick={() => onSort(opt)}
-            style={{
-              all: 'unset',
-              cursor: 'pointer',
-              padding: '8px 14px',
-              borderRadius: 999,
-              border: '1px solid rgba(193,200,201,.12)',
-              background: active ? 'rgba(217,249,157,.06)' : 'rgba(29,57,62,.4)',
-              color: active ? '#D9F99D' : 'rgba(255,255,255,.6)',
-              fontSize: 12,
-              fontWeight: 600,
-              transition: 'all 200ms cubic-bezier(0.4,0,0.2,1)',
-              outline: focusedOpt === opt ? '4px solid rgba(217,249,157,.40)' : 'none',
-            }}
-            onFocus={() => setFocusedOpt(opt)}
-            onBlur={() => setFocusedOpt(null)}
-          >
-            ↓ {opt}
-          </button>
-        );
-      })}
+      {/* Sort chips — centered on mobile, inline on sm+ */}
+      <div className="flex justify-center sm:justify-start gap-2">
+        {SORT_OPTIONS.map(opt => {
+          const active = sort === opt;
+          return (
+            <button
+              key={opt}
+              onClick={() => onSort(opt)}
+              style={{
+                all: 'unset',
+                cursor: 'pointer',
+                padding: '8px 14px',
+                borderRadius: 999,
+                border: '1px solid rgba(193,200,201,.12)',
+                background: active ? 'rgba(217,249,157,.06)' : 'rgba(29,57,62,.4)',
+                color: active ? '#D9F99D' : 'rgba(255,255,255,.6)',
+                fontSize: 12,
+                fontWeight: 600,
+                transition: 'all 200ms cubic-bezier(0.4,0,0.2,1)',
+                outline: focusedOpt === opt ? '4px solid rgba(217,249,157,.40)' : 'none',
+              }}
+              onFocus={() => setFocusedOpt(opt)}
+              onBlur={() => setFocusedOpt(null)}
+            >
+              ↓ {opt}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

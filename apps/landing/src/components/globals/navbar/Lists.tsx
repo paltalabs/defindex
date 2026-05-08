@@ -16,7 +16,7 @@ const menuItems = [
         isInternal: true,
     },
     { id: 5, name: "Blog", to: "/blog", external: true, isInternal: true },
-    { id: 3, name: "Partners", to: "/partners", external: true, isInternal: true },
+    { id: 8, name: "Partners", to: "/partners", external: true, isInternal: true },
     { id: 6, name: "Documentation", to: "https://docs.defindex.io", external: true },
     { id: 7, name: "Dune", to: "https://dune.com/paltalabs/defindex", external: true },
 ];
