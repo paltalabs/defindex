@@ -17,7 +17,7 @@ async function fetchMainnetStrategyAddresses(): Promise<Set<string>> {
 export async function GET() {
   try {
     const [strategiesRes, mainnetAddresses] = await Promise.all([
-      fetch(`${baseUrl}/strategies/apy?network=mainnet`, { next: { revalidate: 60 } }),
+      fetch(`${baseUrl}/strategies/apy?network=mainnet`, { next: { revalidate: 7200 } }),
       fetchMainnetStrategyAddresses(),
     ]);
 

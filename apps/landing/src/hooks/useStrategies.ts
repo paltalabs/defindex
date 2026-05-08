@@ -24,7 +24,7 @@ export function useStrategies(): UseStrategiesReturn {
     {
       revalidateOnFocus: false,
       revalidateOnReconnect: false,
-      dedupingInterval: 60000,
+      dedupingInterval: 7_200_000, // 2 h cache
     }
   );
 

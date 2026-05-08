@@ -44,7 +44,7 @@ export function useVaults({ vaultIds }: UseVaultsProps): UseVaultsReturn {
       {
         revalidateOnFocus: false,
         revalidateOnReconnect: false,
-        dedupingInterval: 300000, // 5 min cache
+        dedupingInterval: 7_200_000, // 2 h cache
       }
     );
 
