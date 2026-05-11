@@ -108,7 +108,7 @@ function Hero() {
                                         "rgba(255,255,255,.30)";
                                 }}
                             >
-                                Explore Vaults
+                                Explore Strategies
                             </Link>
                         </div>
                     </div>
