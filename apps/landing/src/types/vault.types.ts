@@ -33,6 +33,22 @@ export interface VaultState {
   error: string | null;
 }
 
+export interface StrategyApySnapshot {
+  address: string;
+  type: string;
+  name: string;
+  asset: string;
+  assetSymbol: string;
+  assetName: string;
+  assetDecimals: number;
+  tvl: string;
+  ppsNow: string;
+  pps7dAgo: string | null;
+  apy7d: number | null;
+}
+
+export type SortKey = 'TVL' | 'APY' | 'Name';
+
 // API response types
 export interface SingleVaultAPIResponse {
   address: string;

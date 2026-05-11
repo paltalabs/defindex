@@ -1,6 +1,6 @@
 'use client';
 
-import { VAULT_ROW_GRID } from "./VaultsTable";
+const VAULT_ROW_GRID = "grid grid-cols-[4fr_3fr_3fr_1fr] items-center";
 
 export default function VaultRowSkeleton() {
   return (

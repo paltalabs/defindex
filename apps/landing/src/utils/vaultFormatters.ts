@@ -99,3 +99,39 @@ export function truncateAddress(address: string, chars = 4): string {
   }
   return `${address.slice(0, chars)}...${address.slice(-chars)}`;
 }
+
+export const stroopsToNum = (s: string, d = 7): number => Number(s) / 10 ** d;
+
+export const fmtAmount = (n: number): string => {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(2)}K`;
+  return n.toFixed(2);
+};
+
+export const fmtTVL = (n: number, sym: string): string => `${fmtAmount(n)} ${sym}`;
+
+export const fmtUsd = (n: number): string => {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(2)}K`;
+  return `$${n.toFixed(2)}`;
+};
+
+export const fmtApy = (v: number | null | undefined): string =>
+  v == null ? '—' : `${v.toFixed(2)}%`;
+
+const UPPERCASE_TOKENS = new Set(['USDC', 'EURC', 'XLM', 'CETES', 'USTRY', 'BLND', 'BTC', 'ETH']);
+
+export function formatStrategyName(raw: string): string {
+  return raw
+    .replace(/_strategy$/i, '')
+    .replace(/_autocompound/i, '')
+    .split('_')
+    .filter(Boolean)
+    .map(word => {
+      const upper = word.toUpperCase();
+      return UPPERCASE_TOKENS.has(upper)
+        ? upper
+        : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(' ');
+}

@@ -58,7 +58,7 @@ export default function TokenExposure({ assets, maxDisplay = 4 }: TokenExposureP
           </div>
         )}
       </div>
-      <span className="text-xs text-white/60 font-manrope">{symbolLabel}</span>
+      <span className="text-xs text-white/60 font-manrope whitespace-nowrap">{symbolLabel}</span>
     </div>
   );
 }

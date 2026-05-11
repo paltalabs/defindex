@@ -11,7 +11,8 @@ import {
 import { getTokenSymbol } from "@/lib/tokenIcons";
 import { getVaultLogo, formatVaultName } from "@/lib/vaultLogos";
 import TokenExposure from "./TokenExposure";
-import { VAULT_ROW_GRID } from "./VaultsTable";
+
+const VAULT_ROW_GRID = "grid grid-cols-[4fr_3fr_3fr_1fr] items-center";
 
 interface VaultRowProps {
     vault: VaultWithAddress;
