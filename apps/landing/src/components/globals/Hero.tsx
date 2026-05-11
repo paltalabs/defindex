@@ -82,8 +82,7 @@ function Hero() {
                             className="font-inter-tight text-white/70 max-w-[60ch] mb-7"
                             style={{ fontSize: "clamp(17px, 1.6vw, 20px)", lineHeight: "1.55" }}
                         >
-                            Plug-and-play SDKs built on Stellar that let users grow and protect
-                            stablecoin savings — while you earn TVL and revenue.
+                            DeFindex plugs stablecoin savings into your app via API in hours. 100% non-custodial. 7 partners live across LATAM, EMEA and APAC.
                         </p>
 
                         <div className="flex flex-wrap gap-3">
