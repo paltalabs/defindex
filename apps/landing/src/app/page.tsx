@@ -10,24 +10,16 @@ import Security from "@/components/globals/Security";
 import Solutions from "@/components/globals/Solutions";
 import Testimonials from "@/components/globals/Testimonials";
 import NavigateTab from "@/context/NavigateTab";
-import Image from "next/image";
+import BackgroundLayers from "@/components/vaults/BackgroundLayers";
 import { useState } from "react";
 
 function Home() {
     const [index, setIndex] = useState(0);
 
     return (
-        <div className="min-h-screen bg-[#033036] relative overflow-x-hidden w-full" style={{maxWidth:'100dvw'}}>
-            {/* Background image */}
-            <div className="absolute inset-0 -z-10">
-                <Image
-                    src="/images/hero-background.png"
-                    alt="DeFindex Stellar blockchain background pattern"
-                    fill
-                    className="object-cover opacity-20"
-                />
-            </div>
-            <div className="w-[90%] max-w-[1440px] mx-auto">
+        <div className="min-h-screen relative overflow-x-hidden w-full" style={{ maxWidth: '100dvw' }}>
+            <BackgroundLayers />
+            <div className="relative z-[1] w-[90%] max-w-[1440px] mx-auto">
                 <NavigateTab.Provider value={{ index, setIndex }}>
                     <Navbar />
                     <Hero />

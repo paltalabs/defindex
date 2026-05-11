@@ -23,7 +23,7 @@ function SoroswapTerms() {
         </h2>
         <p className="text-gray-200 font-inter leading-relaxed">
           Open to legal residents who are 18 years or older. Employees, affiliates,
-          and immediate family members of Palta Labs are not eligible to participate.
+          and immediate family members of PaltaLabs are not eligible to participate.
         </p>
       </section>
 
