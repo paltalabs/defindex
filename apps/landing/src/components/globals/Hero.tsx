@@ -1,88 +1,148 @@
-import HeroTypewriterHeadline from "@/components/globals/HeroTypewriterHeadline";
+"use client";
+
 import ScheduleDemoButton from "@/components/common/ScheduleDemoButton";
 import Link from "next/link";
 import Image from "next/image";
+import { useState, useEffect } from "react";
 
-const heroBackgroundBase = {
-    position: "absolute" as const,
-    zIndex: 1,
-};
-const heroBackgroundCss = {
-    ...heroBackgroundBase,
-    left: "clamp(-100px, -5vw, 0px)",
-    top: "200px",
-};
-const heroBackgroundCssSm = {
-    ...heroBackgroundBase,
-    justify: "center",
-};
+const ROTATING_WORDS = ["wallet", "bank", "app", "neobank"];
+const TYPING_SPEED_MS = 80;
+const DELETING_SPEED_MS = 50;
+const PAUSE_AFTER_TYPED_MS = 1800;
+const CURSOR_BLINK_INTERVAL_MS = 530;
 
 function Hero() {
+    const [wordIndex, setWordIndex] = useState(0);
+    const [displayedWord, setDisplayedWord] = useState("wallet");
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [cursorVisible, setCursorVisible] = useState(true);
+
+    useEffect(() => {
+        const id = setInterval(() => setCursorVisible((v) => !v), CURSOR_BLINK_INTERVAL_MS);
+        return () => clearInterval(id);
+    }, []);
+
+    useEffect(() => {
+        const currentWord = ROTATING_WORDS[wordIndex];
+        if (!isDeleting && displayedWord === currentWord) {
+            const id = setTimeout(() => setIsDeleting(true), PAUSE_AFTER_TYPED_MS);
+            return () => clearTimeout(id);
+        }
+        if (isDeleting && displayedWord === "") {
+            setIsDeleting(false);
+            setWordIndex((i) => (i + 1) % ROTATING_WORDS.length);
+            return;
+        }
+        const delay = isDeleting ? DELETING_SPEED_MS : TYPING_SPEED_MS;
+        const id = setTimeout(() => {
+            setDisplayedWord(
+                isDeleting
+                    ? currentWord.slice(0, displayedWord.length - 1)
+                    : currentWord.slice(0, displayedWord.length + 1)
+            );
+        }, delay);
+        return () => clearTimeout(id);
+    }, [displayedWord, isDeleting, wordIndex]);
+
     return (
         <section
             id="hero"
-            className="pt-16 pb-12 mb-[400px] lg:mb-[400px] xl:mb-[200px] md:pb-6 md:pt-20 lg:pt-24 bg-cyan-900 overflow-hidden w-full max-w-[100vw]"
+            className="relative overflow-hidden pt-14 pb-0 md:pt-20 lg:pt-24"
         >
-            <div className="container w-full px-2 sm:px-4 max-w-full">
-                <div className="grid lg:grid-cols-3 items-center gap-4 sm:gap-8 w-full max-w-full">
-                    {/* Hero Image */}
-                    <div style={heroBackgroundCss} className="hidden lg:block">
-                        <Image
-                            src="/images/demo_hand.webp"
-                            alt="DeFindex Stellar wallet interface showing stablecoin yield dashboard with 15% APY"
-                            className="mx-auto object-contain"
-                            width={800}
-                            height={700}
-                            priority
-                        />
-                    </div>
-                    <div
-                        style={heroBackgroundCssSm}
-                        className="xs:block top-[450px] sm:top-[500px] md:top-[500px] justify-self-center lg:hidden max-w-fit"
-                    >
-                        <Image
-                            src="/images/demo_hand.webp"
-                            alt="DeFindex Stellar wallet interface showing stablecoin yield dashboard with 15% APY"
-                            className="mx-auto object-contain -z-10"
-                            width={500}
-                            height={500}
-                            priority
-                        />
-                    </div>
-                    {/*Text and buttons */}
-                    <div className="text-center lg:text-left z-10 col-span-2 lg:col-span-2 lg:col-start-2 px-2 sm:px-4 lg:px-6 lg:mr-6 sm:h-200 w-full">
-                        <HeroTypewriterHeadline />
+            <div className="max-w-[1180px] mx-auto px-5">
+                {/* Two-column grid: text left, art right */}
+                <div className="grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr] gap-8 md:gap-12 items-center">
+                    {/* Left: text */}
+                    <div className="z-10 py-10 md:py-16">
+                        {/* h1 with animated coral italic word */}
+                        <h1
+                            className="font-familjen-grotesk font-bold text-white mb-5"
+                            style={{
+                                fontSize: "clamp(40px, 8.5vw, 84px)",
+                                lineHeight: "1.02",
+                                letterSpacing: "-0.02em",
+                                textWrap: "balance",
+                            }}
+                        >
+                            Yield infrastructure for every{" "}
+                            <br />
+                            <em
+                                style={{
+                                    fontStyle: "italic",
+                                    color: "#FC5B31",
+                                    fontWeight: "inherit",
+                                }}
+                            >
+                                {displayedWord}
+                                <span style={{ opacity: cursorVisible ? 1 : 0 }}>|</span>
+                            </em>
+                        </h1>
+
                         <p
-                            className="
-                                font-inter
-                                text-center
-                                text-xs
-                                sm:text-sm
-                                md:text-md
-                                lg:text-lg
-                                text-brand-light-cyan-text
-                                mx-0
-                                sm:mx-[10%]
-                                lg:mx-[17%]
-                                mb-6
-                                sm:mb-8
-                                [text-shadow:_-1px_0px_8px_rgba(0,0,0,0.7)]
-                                max-w-full
-                                "
+                            className="font-inter-tight text-white/70 max-w-[60ch] mb-7"
+                            style={{ fontSize: "clamp(17px, 1.6vw, 20px)", lineHeight: "1.55" }}
                         >
                             Plug-and-play SDKs built on Stellar that let users grow and protect
                             stablecoin savings — while you earn TVL and revenue.
                         </p>
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full">
+
+                        <div className="flex flex-wrap gap-3">
                             <ScheduleDemoButton />
                             <Link
                                 href="/strategies"
                                 aria-label="Explore DeFindex Strategies"
-                                className="flex items-center justify-center bg-cyan-950/45 text-lime-200 font-manrope font-extrabold text-sm rounded-3xl px-6 py-4 sm:py-6 transition-all duration-normal hover:scale-105 hover:bg-lime-200/10 hover:shadow-lg active:scale-95"
+                                className="inline-flex items-center gap-2 rounded-full font-inter-tight font-bold text-sm text-white px-6 py-3.5 transition-all duration-200 hover:scale-[1.04] active:scale-95"
+                                style={{
+                                    border: "1.5px solid rgba(255,255,255,.30)",
+                                    background: "transparent",
+                                }}
+                                onMouseEnter={(e) => {
+                                    (e.currentTarget as HTMLAnchorElement).style.background =
+                                        "rgba(255,255,255,.06)";
+                                    (e.currentTarget as HTMLAnchorElement).style.borderColor =
+                                        "rgba(255,255,255,.55)";
+                                }}
+                                onMouseLeave={(e) => {
+                                    (e.currentTarget as HTMLAnchorElement).style.background =
+                                        "transparent";
+                                    (e.currentTarget as HTMLAnchorElement).style.borderColor =
+                                        "rgba(255,255,255,.30)";
+                                }}
                             >
-                                Explore Strategies
+                                Explore Vaults
                             </Link>
                         </div>
+                    </div>
+
+                    {/* Right: glass art */}
+                    <div
+                        className="relative flex items-center justify-center min-h-[280px] md:min-h-[400px]"
+                        aria-hidden="true"
+                    >
+                        {/* Conic gradient ring */}
+                        <div
+                            className="absolute inset-0 m-auto rounded-full"
+                            style={{
+                                width: "min(92%, 440px)",
+                                aspectRatio: "1",
+                                background:
+                                    "conic-gradient(from 200deg, rgba(222,201,244,.0) 0%, rgba(222,201,244,.35) 25%, rgba(211,255,180,.25) 55%, rgba(252,91,49,.18) 75%, rgba(222,201,244,.0) 100%)",
+                                filter: "blur(28px)",
+                                opacity: 0.85,
+                            }}
+                        />
+                        <Image
+                            src="/images/glass-02.png"
+                            alt=""
+                            width={420}
+                            height={420}
+                            className="relative w-[min(86%,420px)] h-auto"
+                            style={{
+                                filter:
+                                    "drop-shadow(-12px 18px 50px rgba(218,242,236,.18)) drop-shadow(0 30px 60px rgba(0,0,0,.45))",
+                            }}
+                            priority
+                        />
                     </div>
                 </div>
             </div>

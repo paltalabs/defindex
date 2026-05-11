@@ -84,36 +84,6 @@ export default function PageHeader({ tab, partnerCount, strategyCount, totalTvl,
 
   return (
     <div style={{ position: 'relative', padding: '40px 0 32px' }} className="sm:pt-16 sm:pb-10">
-      {/* Pill */}
-      <div
-        key={`pill-${tab}`}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '5px 12px 5px 8px',
-          borderRadius: 999,
-          background: 'rgba(29,57,62,.5)',
-          border: '1px solid rgba(193,200,201,.12)',
-          fontSize: 12,
-          color: 'rgba(255,255,255,.7)',
-          fontWeight: 500,
-          marginBottom: 20,
-          animation: 'subSlide 240ms cubic-bezier(0.4,0,0.2,1) both',
-        }}
-      >
-        <span
-          style={{
-            width: 6,
-            height: 6,
-            borderRadius: '50%',
-            background: '#D9F99D',
-            boxShadow: '0 0 8px #D9F99D',
-            flexShrink: 0,
-          }}
-        />
-        {copy.pill} · Live on Stellar
-      </div>
 
       {/* H1 */}
       <h1
@@ -156,6 +126,8 @@ export default function PageHeader({ tab, partnerCount, strategyCount, totalTvl,
       <div
         className="grid grid-cols-2 gap-x-6 gap-y-6 mt-8 sm:flex sm:gap-12 sm:mt-9 sm:items-center"
       >
+        <Stat label="Strategies" value={String(strategyCount)} />
+        <StatDivider />
         <Stat label="Total TVL" value={fmtUsd(totalTvl)} />
         {tab === 'partners' && partnerCount !== undefined && (
           <>
@@ -163,10 +135,6 @@ export default function PageHeader({ tab, partnerCount, strategyCount, totalTvl,
             <Stat label="Active partners" value={String(partnerCount)} />
           </>
         )}
-        <StatDivider />
-        <Stat label="Strategies" value={String(strategyCount)} />
-        <StatDivider />
-        <Stat label="Avg APY · 7d" value={fmtApy(avgApy)} highlight />
       </div>
     </div>
   );

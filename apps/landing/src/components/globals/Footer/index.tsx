@@ -4,18 +4,16 @@ import Link from "next/link";
 
 export default function Footer() {
     return (
-        <footer className="bg-cyan-900 relative overflow-hidden w-full">
-            {/* Background assets */}
-            <div className="absolute inset-0">
-                <Image
-                    src="/images/footer-background-asset.png"
-                    alt="DeFindex Stellar ecosystem footer background"
-                    fill
-                    className="object-cover opacity-30"
-                />
-            </div>
-
-            <div className="relative max-w-7xl mx-auto px-4 md:px-8 lg:px-16 py-12 sm:py-16 w-full">
+        <footer className="px-4 sm:px-6 pb-8">
+            <div
+                className="relative rounded-[28px] px-6 md:px-12 lg:px-16 py-12 sm:py-16 w-full overflow-hidden"
+                style={{
+                    background: "rgba(255,255,255,.04)",
+                    border: "1px solid rgba(255,255,255,.08)",
+                    backdropFilter: "blur(12px)",
+                    WebkitBackdropFilter: "blur(12px)",
+                }}
+            >
                 <div className="flex flex-col lg:flex-row items-start justify-between">
                     {/* Left side - Stickers */}
                     <div className="flex-shrink-0 mb-8 lg:mb-0">
@@ -172,10 +170,10 @@ export default function Footer() {
                     </div>
                 </div>
 
-                {/* Stellar ecosystem mention */}
+
                 <div className="mt-8 pt-6 border-t border-white/10 text-center">
                     <p className="font-manrope text-xs sm:text-sm text-white/70">
-                        Built on <span className="text-lime-200 font-semibold">Stellar Network</span> | Powered by <span className="text-lime-200 font-semibold">Soroban</span>
+                        Made with ♥️ by PaltaLabs
                     </p>
                 </div>
             </div>

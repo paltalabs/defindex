@@ -105,6 +105,20 @@ body {
   animation-play-state: paused;
 }
 
+/* Hero "Trusted by" Marquee */
+@keyframes hero-marquee {
+  to { transform: translateX(-50%); }
+}
+
+.hero-marquee-track {
+  animation: hero-marquee 30s linear infinite;
+  will-change: transform;
+}
+
+.hero-marquee-track:hover {
+  animation-play-state: paused;
+}
+
 /*
  Mobile Responsiveness
 */
