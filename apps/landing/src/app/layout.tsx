@@ -33,12 +33,12 @@ const favicon = "/images/favicon.ico";
 const fonts = [manrope, familjenGrotesk, interTight, inter].map((font) => font.variable).join(" ");
 
 export const metadata: Metadata = {
-    title: "DeFindex - Stellar Yield Infrastructure for Wallets & DeFi Apps | Stablecoin Vaults SDK",
-    description: "Plug-and-play yield infrastructure for Stellar wallets and DeFi apps. Automated stablecoin vault SDKs built on Soroban with 80% revenue share. Integrate in hours, not months.",
+    title: "DeFindex: Yield Infrastructure for Wallets, Neobanks & Fintech Apps",
+    description: "DeFindex plugs stablecoin savings into your app via API in hours. 100% non-custodial. REST API only — no smart contract work needed. 7 partners live across LATAM, EMEA and APAC.",
     icons: {
         icon: favicon,
     },
-    keywords: ["Stellar", "Soroban", "DeFi", "yield", "stablecoin", "vaults", "SDK", "wallet integration", "blockchain"],
+    keywords: ["yield infrastructure", "stablecoin savings", "wallet API", "neobank", "fintech", "USDC yield", "non-custodial", "REST API", "remittance", "DeFi"],
     authors: [{ name: "DeFindex" }],
     creator: "DeFindex",
     publisher: "DeFindex",
@@ -46,15 +46,24 @@ export const metadata: Metadata = {
         type: "website",
         locale: "en_US",
         url: "https://defindex.io",
-        title: "DeFindex - Stellar Yield Infrastructure for Wallets & DeFi Apps",
-        description: "Plug-and-play yield infrastructure for Stellar wallets and DeFi apps. Built on Soroban with 80% revenue share.",
+        title: "DeFindex: Yield Infrastructure for Wallets, Neobanks & Fintech Apps",
+        description: "Plug stablecoin savings into your app via API in hours. 100% non-custodial. 7 partners live across LATAM, EMEA and APAC.",
         siteName: "DeFindex",
+        images: [
+            {
+                url: "https://defindex.io/images/glass-02.png",
+                width: 1200,
+                height: 630,
+                alt: "DeFindex — Yield Infrastructure for Wallets, Neobanks & Fintech Apps",
+            },
+        ],
     },
     twitter: {
         card: "summary_large_image",
-        title: "DeFindex - Stellar Yield Infrastructure",
-        description: "Plug-and-play yield infrastructure for Stellar wallets and DeFi apps. Built on Soroban with 80% revenue share.",
+        title: "DeFindex: Yield Infrastructure for Wallets, Neobanks & Fintech Apps",
+        description: "Plug stablecoin savings into your app via API in hours. 100% non-custodial. 7 partners live across LATAM, EMEA and APAC.",
         creator: "@defindex_",
+        images: ["https://defindex.io/images/glass-02.png"],
     },
 };
 
