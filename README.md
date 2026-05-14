@@ -255,3 +255,5 @@ cd apps/docs/10-whitepaper
 mdbook build
 
 ```
+
+claude was here 2026-05-14
