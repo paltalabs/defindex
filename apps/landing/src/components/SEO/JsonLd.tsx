@@ -2,15 +2,15 @@ export function SoftwareApplicationSchema() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "DeFindex SDK",
+    "name": "DeFindex API",
     "applicationCategory": "DeveloperApplication",
-    "operatingSystem": "Stellar Blockchain",
-    "description": "Yield infrastructure SDK for Stellar wallets and DeFi applications. Automated stablecoin vault SDKs built on Soroban with 80% revenue share.",
+    "operatingSystem": "Web",
+    "description": "Yield infrastructure for wallets, neobanks, and fintech apps. Plug stablecoin savings into your app via REST API in hours. 100% non-custodial.",
     "offers": {
       "@type": "Offer",
       "price": "0",
       "priceCurrency": "USD",
-      "description": "Free to integrate with revenue sharing model"
+      "description": "Free to integrate"
     },
     "provider": {
       "@type": "Organization",
@@ -18,13 +18,13 @@ export function SoftwareApplicationSchema() {
       "url": "https://defindex.io"
     },
     "featureList": [
-      "Automated yield strategies",
-      "Stablecoin vault management",
-      "Wallet integration SDK",
-      "80% revenue share",
-      "Built on Soroban smart contracts"
+      "REST API integration — no smart contract work needed",
+      "2-hour MVP, full integration in days",
+      "100% non-custodial — users keep custody at the wallet level",
+      "Rescue mechanics at the contract layer",
+      "7 partners live across LATAM, EMEA and APAC"
     ],
-    "keywords": "Stellar, Soroban, DeFi, yield, stablecoin, vaults, SDK, wallet integration, blockchain"
+    "keywords": "yield infrastructure, stablecoin savings, wallet API, neobank, fintech, USDC yield, non-custodial, REST API, remittance"
   };
 
   return (
@@ -42,7 +42,7 @@ export function OrganizationSchema() {
     "name": "DeFindex",
     "url": "https://defindex.io",
     "logo": "https://defindex.io/images/logo.png",
-    "description": "Leading yield infrastructure provider for Stellar wallets and DeFi applications. Built on Soroban smart contracts.",
+    "description": "Yield infrastructure for wallets, neobanks, and fintech apps. 7 partners live across LATAM, EMEA and APAC. $1.1M TVL, 3k+ users.",
     "foundingDate": "2023",
     "sameAs": [
       "https://twitter.com/defindex_",
@@ -71,7 +71,7 @@ export function WebSiteSchema() {
     "@type": "WebSite",
     "name": "DeFindex",
     "url": "https://defindex.io",
-    "description": "Stellar yield infrastructure for wallets and DeFi apps",
+    "description": "Yield infrastructure for wallets, neobanks, and fintech apps",
     "potentialAction": {
       "@type": "SearchAction",
       "target": "https://defindex.io/search?q={search_term_string}",
