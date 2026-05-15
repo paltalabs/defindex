@@ -255,3 +255,4 @@ cd apps/docs/10-whitepaper
 mdbook build
 
 ```
+Fix for #869
