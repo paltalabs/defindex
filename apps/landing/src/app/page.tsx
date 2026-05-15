@@ -4,6 +4,7 @@ import Footer from "@/components/globals/Footer";
 import Frequently from "@/components/globals/Frequently";
 import Hero from "@/components/globals/Hero";
 import Navbar from "@/components/globals/navbar/Navbar";
+import NewsletterForm from "@/components/globals/NewsletterForm";
 import OurTeam from "@/components/globals/OurTeam";
 import PartnersSlider from "@/components/globals/PartnersSlider";
 import Security from "@/components/globals/Security";
@@ -32,6 +33,7 @@ function Home() {
                     <Frequently />
                 </NavigateTab.Provider>
 
+                <NewsletterForm />
                 <Footer />
             </div>
         </div>
