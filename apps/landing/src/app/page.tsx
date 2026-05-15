@@ -3,6 +3,7 @@ import CodeExample from "@/components/globals/CodeExample";
 import Footer from "@/components/globals/Footer";
 import Frequently from "@/components/globals/Frequently";
 import Hero from "@/components/globals/Hero";
+import MeruTVLWidget from "@/components/globals/MeruTVLWidget";
 import Navbar from "@/components/globals/navbar/Navbar";
 import OurTeam from "@/components/globals/OurTeam";
 import PartnersSlider from "@/components/globals/PartnersSlider";
@@ -23,6 +24,7 @@ function Home() {
                 <NavigateTab.Provider value={{ index, setIndex }}>
                     <Navbar />
                     <Hero />
+                    <MeruTVLWidget />
                     <PartnersSlider />
                     <Solutions />
                     <Testimonials />
