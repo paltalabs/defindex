@@ -165,7 +165,7 @@ export default function TvlWidget() {
                         </div>
 
                         {/* CTA */}
-                        <div className="hidden sm:block sm:flex-none text-center sm:text-right" style={{ minWidth: 130 }}>
+                        <div className="hidden lg:block lg:flex-none text-center lg:text-right" style={{ minWidth: 130 }}>
                             <Link
                                 href="/partners"
                                 style={{
