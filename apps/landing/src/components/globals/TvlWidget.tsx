@@ -29,24 +29,23 @@ function StatItem({
     loading?: boolean;
 }) {
     return (
-        <div style={{ textAlign: "center" }}>
+        <div className="text-center">
             <div
                 style={{
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: 500,
                     color: "rgba(255,255,255,.4)",
                     letterSpacing: "0.08em",
                     textTransform: "uppercase",
-                    marginBottom: 8,
+                    marginBottom: 6,
                 }}
             >
                 {label}
             </div>
             {loading ? (
                 <div
+                    className="h-7 w-16 sm:h-9 sm:w-28"
                     style={{
-                        height: 36,
-                        width: 120,
                         background: "rgba(255,255,255,.08)",
                         borderRadius: 8,
                         margin: "0 auto",
@@ -55,9 +54,9 @@ function StatItem({
                 />
             ) : (
                 <div
+                    className="text-xl sm:text-3xl lg:text-4xl"
                     style={{
                         fontFamily: "Familjen Grotesk, sans-serif",
-                        fontSize: "clamp(24px, 3vw, 36px)",
                         fontWeight: 700,
                         color: highlight ? "#D9F99D" : "#fff",
                         letterSpacing: "-0.02em",
@@ -75,7 +74,7 @@ function StatItem({
 function Divider() {
     return (
         <div
-            className="hidden sm:block"
+            className="hidden sm:block flex-shrink-0"
             style={{
                 width: 1,
                 height: 48,
@@ -113,11 +112,12 @@ export default function TvlWidget() {
             <div className="max-w-[1180px] mx-auto">
                 <div
                     style={GLASS_CARD}
-                    className="px-8 py-7 sm:px-12 sm:py-8"
+                    className="px-5 py-6 sm:px-10 sm:py-8 lg:px-12"
                 >
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-0">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-4 lg:gap-0">
+
                         {/* Left label */}
-                        <div className="sm:flex-none text-center sm:text-left" style={{ minWidth: 160 }}>
+                        <div className="text-center sm:text-left sm:flex-none" style={{ minWidth: 130 }}>
                             <div
                                 style={{
                                     fontSize: 11,
@@ -128,7 +128,7 @@ export default function TvlWidget() {
                                     marginBottom: 4,
                                 }}
                             >
-                                Live on Stellar
+                                Live
                             </div>
                             <div
                                 style={{
@@ -143,8 +143,8 @@ export default function TvlWidget() {
                             </div>
                         </div>
 
-                        {/* Stats */}
-                        <div className="flex flex-row items-center gap-8 sm:gap-16 flex-1 justify-center">
+                        {/* Stats — grid on mobile so each item gets equal width, flex on sm+ */}
+                        <div className="grid grid-cols-3 items-center gap-3 w-full sm:flex sm:flex-row sm:w-auto sm:flex-1 sm:justify-center sm:gap-10 lg:gap-16">
                             <StatItem
                                 label="Total TVL"
                                 value={fmtUsd(totalTvl)}
@@ -165,7 +165,7 @@ export default function TvlWidget() {
                         </div>
 
                         {/* CTA */}
-                        <div className="sm:flex-none text-center sm:text-right" style={{ minWidth: 160 }}>
+                        <div className="sm:flex-none text-center sm:text-right" style={{ minWidth: 130 }}>
                             <Link
                                 href="/partners"
                                 style={{
@@ -207,6 +207,7 @@ export default function TvlWidget() {
                                 </svg>
                             </Link>
                         </div>
+
                     </div>
                 </div>
             </div>
