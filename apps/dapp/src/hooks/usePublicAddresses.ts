@@ -10,7 +10,8 @@ export enum AllowedAssets {
   CETES = 'cetes',
   USTRY = 'ustry',
   AQUA = 'aqua',
-  USDGLO = 'usdglo'
+  USDGLO = 'usdglo',
+  TESOURO = 'tesouro'
 }
 
 export const usePublicAddresses = (network: NetworkType) => {
