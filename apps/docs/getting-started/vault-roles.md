@@ -18,21 +18,24 @@ The roles are:
   * Primary owner of the vault
   * Controls vault settings, role assignments, and contract upgrades
   * Is included in the authorization check for every role-restricted function — can perform any action that Emergency Manager, Rebalance Manager, or Fee Receiver can perform, without needing to hold those roles
-  * The only role that can lock or release fees and upgrade the contract code
+  * The only role that can manually lock fees (`lock_fees`) or release fees (`release_fees`). Note that fee locking also happens automatically on every deposit and withdraw — `lock_fees` is for triggering it manually
+  * The only role that can upgrade the contract code (only if the vault was deployed as upgradable)
+  * The only role that can change the vault's performance fee (the new rate is supplied as the optional `new_fee_bps` argument when calling `lock_fees`)
   * Can update any role address, including its own
-  * _Recommendation_: Use a multisig wallet
+  * _Recommendation_: Use a multisig wallet or a policy-based smart contract.
 * **Rebalance Manager** (`RebalanceManager`)
   * Executes rebalancing instructions that move funds across strategies
-  * _Recommendation_: Implement as an automated bot or delegate it
+  * _Recommendation_: Use a multisig wallet or a policy-based smart contract.
 * **Fee Receiver** (`VaultFeeReceiver`)
   * Receives fees collected by the vault
   * Triggers distribution of already-locked fees to vault and protocol receivers by calling `distribute_fees`
   * Can also update the fee receiver address (shared with Manager)
-  * Cannot lock or release fees — that is Manager-only
-  * _Recommendation_: Use a secure, dedicated wallet
+  * Cannot lock or release fees, nor change the performance fee — those are Manager-only
+  * _Recommendation_: Use a dedicated wallet, and make sure it has trustlines set up for the vault's underlying assets so fee distributions don't fail
 * **Emergency Manager** (`EmergencyManager`)
-  * Can withdraw all funds from a specific strategy and automatically pause it (`rescue`)
-  * Can pause a specific strategy, blocking deposits and withdrawals to it
+  * Can unwind all funds from a specific Strategy and store them as idle funds in the Vault,     
+  automatically pausing that Strategy (`rescue`).
+  * Can pause a specific strategy, blocking deposits to it
   * Can unpause a specific strategy
   * Cannot access the vault balance or withdraw user funds directly
   * _Recommendation_: Implement as an automated bot or delegate it
@@ -47,8 +50,9 @@ The roles are:
 | Rebalance across strategies | ✅ | — | ✅ | — |
 | Receive fees | — | — | — | ✅ |
 | Distribute fees | ✅ | — | — | ✅ |
-| Lock / release fees | ✅ | — | — | — |
-| Upgrade contract code | ✅ | — | — | — |
+| Manually lock / release fees (`lock_fees` / `release_fees`) | ✅ | — | — | — |
+| Change performance fee (via `lock_fees`) | ✅ | — | — | — |
+| Upgrade contract code (if the vault is upgradable) | ✅ | — | — | — |
 | Change Manager | ✅ | — | — | — |
 | Change Emergency Manager | ✅ | — | — | — |
 | Change Rebalance Manager | ✅ | — | — | — |
