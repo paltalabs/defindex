@@ -83,7 +83,7 @@ export default function Footer() {
                                     href="/tos"
                                     className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
                                 >
-                                    Terms of Service
+                                    Terms of Use
                                 </Link>
                                 <Link
                                     href="/tos-raffle"
