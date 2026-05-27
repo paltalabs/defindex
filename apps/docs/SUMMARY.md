@@ -73,5 +73,6 @@
 
 * [About Us](community/about-us.md)
 * [Media Kit](media-kit/README.md)
+* [Terms of Use](community/terms-of-use.md)
 * [Twitter](https://x.com/defindex_)
 * [Discord](https://discord.gg/e2qAhJCBmx)
