@@ -80,7 +80,7 @@ export default function Footer() {
                                     Privacy Policy
                                 </Link>
                                 <Link
-                                    href="/tos"
+                                    href="/terms"
                                     className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
                                 >
                                     Terms of Use
