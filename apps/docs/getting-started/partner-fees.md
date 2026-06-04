@@ -1,7 +1,7 @@
 ---
+description: ⏱️ 4 min read
 cover: ../.gitbook/assets/image 31.png
 coverY: 0
-description: ⏱️ 4 min read
 ---
 
 # Partner Fees
@@ -16,7 +16,7 @@ DeFindex operates with three key participants working together:
 
 This model allows partners to monetize their user base while offering competitive yield products, and users benefit from easy access to DeFi opportunities through trusted applications.
 
----
+***
 
 ## Performance-Based Fee Model
 
@@ -35,7 +35,7 @@ Partner fees in DeFindex follow a simple principle: **fees are only charged on t
 
 This performance-based model ensures that partners only earn when users earn. There's no incentive to charge fees on idle capital.
 
----
+***
 
 ## Transparency for Users
 
@@ -47,15 +47,15 @@ One of DeFindex's core principles is transparency. When a user sees an APY displ
 
 ### What Users See vs What Happens
 
-| Displayed | Meaning |
-|-----------|---------|
-| 15% APY | User will earn 15% annually on their deposit if the market conditions stays stable |
-| Vault performance | Already accounts for partner fees |
-| Balance growth | Reflects actual returns after all fees |
+| Displayed         | Meaning                                                                            |
+| ----------------- | ---------------------------------------------------------------------------------- |
+| 15% APY           | User will earn 15% annually on their deposit if the market conditions stays stable |
+| Vault performance | Already accounts for partner fees                                                  |
+| Balance growth    | Reflects actual returns after all fees                                             |
 
 This approach eliminates confusion. The number users see is the number they get.
 
----
+***
 
 ## Aligned Incentives
 
@@ -81,7 +81,7 @@ The performance-based fee model creates natural alignment between all parties:
 
 This alignment means everyone benefits from the same goal: generating real yield for depositors.
 
----
+***
 
 ## Fee Distribution
 
@@ -94,44 +94,47 @@ When yield is generated, fees are distributed completely on-chain:
 
 The split between partner and DeFindex is handled internally by the protocol.
 
----
+***
 
 ## Practical Example
 
 Let's walk through a concrete scenario:
 
 ### Setup
+
 * User deposits **$10,000 USDC** through a partner's app
 * The vault's strategy generates **15% APY**
 * Partner has configured a **50% performance fee**
 
 ### After One Year
-| Item | Amount |
-|------|--------|
+
+| Item                                        | Amount |
+| ------------------------------------------- | ------ |
 | Gross yield generated before fees (15% APY) | $1,500 |
-| Partner + Defindex fee (50% of yield) | $750 |
-| Net yield to user | $750 |
+| Partner + Defindex fee (50% of yield)       | $750   |
+| Net yield to user                           | $750   |
 
 ### Result
+
 * **User receives**: $750 in yield (**7.5% net APY**) — passive income with zero effort
 * **User's capital**: $10,000 remains fully protected
-* **Partner revenue befroe Defindex fee**: $750 annually per user — recurring revenue stream
+* **Partner revenue before Defindex fee**: $750 annually per user — recurring revenue stream
 
 For a partner with 1,000 active users, this represents **$750,000 in annual revenue** while providing real value to their users.
 
----
+***
 
 ## Key Takeaways
 
-| Principle | What It Means |
-|-----------|---------------|
-| Performance-based | Fees only on yield, never on capital |
-| Net APY display | Users see what they actually earn |
-| Aligned incentives | Partners profit when users profit |
-| On-chain distribution | Transparent, on-chain fee handling |
-| Protected principal | Deposits are never reduced by fees |
+| Principle             | What It Means                        |
+| --------------------- | ------------------------------------ |
+| Performance-based     | Fees only on yield, never on capital |
+| Net APY display       | Users see what they actually earn    |
+| Aligned incentives    | Partners profit when users profit    |
+| On-chain distribution | Transparent, on-chain fee handling   |
+| Protected principal   | Deposits are never reduced by fees   |
 
----
+***
 
 ## Learn More
 
