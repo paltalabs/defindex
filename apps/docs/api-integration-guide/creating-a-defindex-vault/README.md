@@ -113,8 +113,7 @@ Before deployment, you must configure the following **roles** (each tied to an a
 DeFindex offers **curated and audited strategies**, currently live for:
 
 * **Blend Autocompound – Fixed Pool**: USDC, EURC, XLM
-* **Blend Autocompound – YieldBlox Pool**: USDC, EURC, XLM, CETES, USTRY, AQUA
-* **Blend Autocompound – Orbit Pool**: XLM, CETES, USTRY, oUSD
+* **Blend Autocompound – Etherfuse Pool**: USDC, XLM, CETES, USTRY, TESOURO
 
 Each vault supports one or more assets, and each asset can be backed by one or more strategies.
 

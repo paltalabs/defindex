@@ -1,6 +1,7 @@
 ---
 description: ⏱️ 2 min read
 ---
+
 # Using GUI (Basic)
 
 If you want to create a vault using the strategies available in DeFindex without writing any code, you can use the DeFindex user interface. Here's how:
@@ -17,7 +18,7 @@ If you want to create a vault using the strategies available in DeFindex without
 
 <figure><img src="../../.gitbook/assets/GUI_SELECT_ASSET.png" alt=""><figcaption></figcaption></figure>
 
-1. **Select strategies**: Choose the strategies you want to include in your vault. You can select multiple strategies based on your preferences.
+1. **Select strategies and first deposit amount**: Choose the strategies you want to include in your vault. You can select multiple strategies based on your preferences. 20 USDC for first deposit will help to avoid rounding errors when calculating APY
 
 > \[!NOTE]\
 > The available strategies you can select will depend on the asset you have chosen for your vault. Only compatible strategies for the selected asset will be displayed.
