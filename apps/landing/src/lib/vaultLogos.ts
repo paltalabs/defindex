@@ -20,6 +20,8 @@ export const VAULT_LOGOS: Record<string, string> = {
   'CCDRFMZ7CH364ATQ5YSVTEJ3G3KPNFVM6TTC6N4T5REHWJS6LGVFP7MY': '/images/logos/rozo.webp',
   // Meru USDC
   'CCA2ZJP5BVRXYTQH4FAGHCAUMRYCXVC4CRYC2NXHWMR7TIVX36U7F5HR': '/images/logos/meru.svg',
+  // Neko USDC
+  'CANBU7T77SCJOOAU6VQAOGR7DN36JBQFUN56XS2WA2VPJYUSRUBIPYDS': '/images/logos/neko.png',
 };
 
 export function getVaultLogo(vaultAddress: string): string | null {
@@ -58,6 +60,7 @@ const PARTNER_RULES: Array<{ re: RegExp } & PartnerInfo> = [
   { re: /^Meru/i,    name: 'Meru',     color: '#FFFFFF', glyph: 'M' },
   { re: /^Rozo/i,    name: 'Rozo',     color: '#0F0F0F', glyph: 'R' },
   { re: /^xPortal/i, name: 'xPortal',  color: '#000000', glyph: 'X' },
+  { re: /^Neko/i,    name: 'Neko',     color: '#444',     glyph: 'N' },
 ];
 
 export function getPartnerInfo(cleanVaultName: string): PartnerInfo {
