@@ -20,6 +20,16 @@ export const VAULT_LOGOS: Record<string, string> = {
   'CCDRFMZ7CH364ATQ5YSVTEJ3G3KPNFVM6TTC6N4T5REHWJS6LGVFP7MY': '/images/logos/rozo.webp',
   // Meru USDC
   'CCA2ZJP5BVRXYTQH4FAGHCAUMRYCXVC4CRYC2NXHWMR7TIVX36U7F5HR': '/images/logos/meru.svg',
+  // Neko CETES
+  'CANBU7T77SCJOOAU6VQAOGR7DN36JBQFUN56XS2WA2VPJYUSRUBIPYDS': '/images/logos/neko.png',
+  // Neko USDC
+  'CCUZC3HC5TH2VCYZFUG57E6IGKPL45YUN2SI3UEYQUBA7RCYHUIZBSFV': '/images/logos/neko.png',
+  // Neko EURC
+  'CB3FUMFGCF6DHSFK6N2TOKHRMYXS34HFKQR45UKVORCRUM35AF3ES7WQ': '/images/logos/neko.png',
+  // Neko USTRY
+  'CCIRVAW3IZVAYLHR7YYMZFOQVYEW67OKFFXR3J6ZR2T6YJC5V7GTSNQ5': '/images/logos/neko.png',
+  // Neko TESOURO
+  'CBMERS7MJHO6TGKUVWWU34ZSKWCFOWPG2ZCIRIT75IC3YDWBIPBMV5LB': '/images/logos/neko.png',
 };
 
 export function getVaultLogo(vaultAddress: string): string | null {
@@ -29,6 +39,11 @@ export function getVaultLogo(vaultAddress: string): string | null {
 // Logos that need a specific bg color to be visible (e.g. dark SVGs need white)
 const VAULT_LOGO_BG: Record<string, string> = {
   'CD4JGS6BB5NZVSNKRNI43GUC6E3OBYLCLBQZJVTZLDVHQ5KDAOHVOIQF': '#ffffff', // xPortal
+  'CANBU7T77SCJOOAU6VQAOGR7DN36JBQFUN56XS2WA2VPJYUSRUBIPYDS': '#ffffff', // Neko CETES
+  'CCUZC3HC5TH2VCYZFUG57E6IGKPL45YUN2SI3UEYQUBA7RCYHUIZBSFV': '#ffffff', // Neko USDC
+  'CB3FUMFGCF6DHSFK6N2TOKHRMYXS34HFKQR45UKVORCRUM35AF3ES7WQ': '#ffffff', // Neko EURC
+  'CCIRVAW3IZVAYLHR7YYMZFOQVYEW67OKFFXR3J6ZR2T6YJC5V7GTSNQ5': '#ffffff', // Neko USTRY
+  'CBMERS7MJHO6TGKUVWWU34ZSKWCFOWPG2ZCIRIT75IC3YDWBIPBMV5LB': '#ffffff', // Neko TESOURO
 };
 
 export function getVaultLogoBg(vaultAddress: string): string | undefined {
@@ -58,6 +73,7 @@ const PARTNER_RULES: Array<{ re: RegExp } & PartnerInfo> = [
   { re: /^Meru/i,    name: 'Meru',     color: '#FFFFFF', glyph: 'M' },
   { re: /^Rozo/i,    name: 'Rozo',     color: '#0F0F0F', glyph: 'R' },
   { re: /^xPortal/i, name: 'xPortal',  color: '#000000', glyph: 'X' },
+  { re: /^Neko/i,    name: 'Neko',     color: '#444',     glyph: 'N' },
 ];
 
 export function getPartnerInfo(cleanVaultName: string): PartnerInfo {
