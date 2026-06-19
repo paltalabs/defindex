@@ -9,6 +9,7 @@ import PartnersSlider from "@/components/globals/PartnersSlider";
 import Security from "@/components/globals/Security";
 import Solutions from "@/components/globals/Solutions";
 import Testimonials from "@/components/globals/Testimonials";
+import TvlWidget from "@/components/globals/TvlWidget";
 import NavigateTab from "@/context/NavigateTab";
 import BackgroundLayers from "@/components/vaults/BackgroundLayers";
 import { useState } from "react";
@@ -24,6 +25,7 @@ function Home() {
                     <Navbar />
                     <Hero />
                     <PartnersSlider />
+                    <TvlWidget />
                     <Solutions />
                     <Testimonials />
                     <CodeExample />
