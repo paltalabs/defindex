@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useVaults } from "@/hooks/useVaultInfo";
+import { useStrategies } from "@/hooks/useStrategies";
 import { useTokenPrices } from "@/hooks/useTokenPrices";
 import { stroopsToNum, fmtUsd } from "@/utils/vaultFormatters";
 import { formatVaultName, getPartnerInfo } from "@/lib/vaultLogos";
@@ -87,6 +88,7 @@ function Divider() {
 
 export default function TvlWidget() {
     const { sortedVaults, isAnyLoading } = useVaults({ vaultIds: VAULT_ADDRESSES });
+    const { strategies, isLoading: isStrategiesLoading } = useStrategies();
     const { prices } = useTokenPrices();
 
     const { totalTvl, partnerCount } = useMemo(() => {
@@ -159,15 +161,15 @@ export default function TvlWidget() {
                             />
                             <Divider />
                             <StatItem
-                                label="Vaults"
-                                value={String(VAULT_ADDRESSES.length)}
+                                label="Strategies"
+                                value={isStrategiesLoading ? "—" : String(strategies.length)}
                             />
                         </div>
 
                         {/* CTA */}
                         <div className="hidden lg:block lg:flex-none text-center lg:text-right" style={{ minWidth: 130 }}>
                             <Link
-                                href="/partners"
+                                href="/strategies"
                                 style={{
                                     display: "inline-flex",
                                     alignItems: "center",
@@ -188,7 +190,7 @@ export default function TvlWidget() {
                                         "rgba(255,255,255,.7)";
                                 }}
                             >
-                                View all partners
+                                View all strategies
                                 <svg
                                     width="14"
                                     height="14"
