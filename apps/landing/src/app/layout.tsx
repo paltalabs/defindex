@@ -47,13 +47,13 @@ export const metadata: Metadata = {
         locale: "en_US",
         url: "https://defindex.io",
         title: "DeFindex: Yield Infrastructure for Wallets, Neobanks & Fintech Apps",
-        description: "Plug stablecoin savings into your app via API in hours. 100% non-custodial. 7 partners live across LATAM, EMEA and APAC.",
+        description: "DeFindex plugs stablecoin savings into your app via API in hours. 100% non-custodial. 7 partners live across LATAM, EMEA and APAC.",
         siteName: "DeFindex",
         images: [
             {
-                url: "https://defindex.io/images/glass-02.png",
-                width: 1200,
-                height: 630,
+                url: "https://defindex.io/images/image-preview.png",
+                width: 1201,
+                height: 584,
                 alt: "DeFindex — Yield Infrastructure for Wallets, Neobanks & Fintech Apps",
             },
         ],
@@ -61,9 +61,9 @@ export const metadata: Metadata = {
     twitter: {
         card: "summary_large_image",
         title: "DeFindex: Yield Infrastructure for Wallets, Neobanks & Fintech Apps",
-        description: "Plug stablecoin savings into your app via API in hours. 100% non-custodial. 7 partners live across LATAM, EMEA and APAC.",
+        description: "DeFindex plugs stablecoin savings into your app via API in hours. 100% non-custodial. 7 partners live across LATAM, EMEA and APAC.",
         creator: "@defindex_",
-        images: ["https://defindex.io/images/glass-02.png"],
+        images: ["https://defindex.io/images/image-preview.png"],
     },
 };
 
