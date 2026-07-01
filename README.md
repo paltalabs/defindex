@@ -1,5 +1,8 @@
 # 📊 DeFindex Monorepo :) [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/paltalabs/defindex)
 
+> [!WARNING]
+> **This repository has been archived.** The public smart contracts have been moved to [defindex-io/stellar-contracts](https://github.com/defindex-io/stellar-contracts).
+
 > [!IMPORTANT]
 > This documentation is focused on development and contributions for the DeFindex protocol.
 > If you're looking for information about the integration process, please visit the [API Integration Guide](https://docs.defindex.io/api-integration-guide/introduction).
