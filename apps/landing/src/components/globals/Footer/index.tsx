@@ -99,7 +99,7 @@ export default function Footer() {
                                     Information
                                 </h3>
                                 <Link
-                                    href="#faq"
+                                    href="/#faq"
                                     className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
                                 >
                                     FAQ
@@ -112,6 +112,8 @@ export default function Footer() {
                                 </Link>
                                 <Link
                                     href="https://paltalabs.io/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="font-manrope text-xs sm:text-sm text-white hover:text-lime-200 transition-colors duration-normal"
                                 >
                                     About Us
