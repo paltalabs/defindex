@@ -119,7 +119,7 @@ export const fmtUsd = (n: number): string => {
 export const fmtApy = (v: number | null | undefined): string =>
   v == null ? '—' : `${v.toFixed(2)}%`;
 
-const UPPERCASE_TOKENS = new Set(['USDC', 'EURC', 'XLM', 'CETES', 'USTRY', 'BLND', 'BTC', 'ETH']);
+const UPPERCASE_TOKENS = new Set(['USDC', 'EURC', 'XLM', 'CETES', 'USTRY', 'TESOURO', 'BLND', 'BTC', 'ETH']);
 
 export function formatStrategyName(raw: string): string {
   return raw
