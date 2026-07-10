@@ -55,7 +55,7 @@ export default function FilterBar({ onSearch, sort, onSort }: FilterBarProps) {
         </svg>
         <input
           type="search"
-          placeholder="Search partners or strategies…"
+          placeholder="Search strategies…"
           value={inputValue}
           onChange={e => setInputValue(e.target.value)}
           style={{
